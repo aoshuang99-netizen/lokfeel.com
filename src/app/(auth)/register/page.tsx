@@ -81,7 +81,18 @@ export default function RegisterPage() {
         throw new Error(data.message || "Registration failed");
       }
 
-      router.push("/verify-request");
+      // Auto login after registration
+      const signInResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (signInResult?.ok) {
+        router.push("/dashboard");
+      } else {
+        router.push("/login?registered=true");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

@@ -8,7 +8,8 @@
  */
 
 import 'dotenv/config'
-import { PrismaClient, UserRole } from '../src/generated/client'
+import { hash } from 'bcryptjs'
+import { PrismaClient, UserRole } from '../src/generated'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaPg } = require('@prisma/adapter-pg')
 
@@ -20,7 +21,8 @@ const prisma = new (PrismaClient as any)({ adapter }) as PrismaClient
 const ADMIN_CONFIG = {
   name: 'Nexus Admin',
   email: process.env.ADMIN_EMAIL || 'admin@nexus.app',
-  // 管理员通过 OAuth（Google/GitHub）登录，无需密码
+  // 首次运行时设置的默认密码，之后请立即修改
+  defaultPassword: process.env.ADMIN_PASSWORD || 'Nexus@Admin2026!',
   role: UserRole.SUPER_ADMIN as UserRole,
 }
 // ──────────────────────────────────────────────
@@ -33,26 +35,40 @@ async function main() {
     where: { email: ADMIN_CONFIG.email },
   })
 
+  const hashedPassword = await hash(ADMIN_CONFIG.defaultPassword, 12)
+
   if (existing) {
-    // 更新角色确保是 SUPER_ADMIN
-    await prisma.user.update({
+    // 更新角色确保是 SUPER_ADMIN，同时更新密码
+    await (prisma.user.update as any)({
       where: { email: ADMIN_CONFIG.email },
-      data: { role: UserRole.SUPER_ADMIN },
+      data: { role: UserRole.SUPER_ADMIN, password: hashedPassword },
     })
     console.log(`✅ 管理员账号已存在，确保角色为 SUPER_ADMIN`)
     console.log(`   Email: ${ADMIN_CONFIG.email}`)
+    console.log(`   Password: 已更新（请登录后立即修改！）`)
   } else {
-    const admin = await prisma.user.create({
+    const admin = await (prisma.user.create as any)({
       data: {
         name: ADMIN_CONFIG.name,
         email: ADMIN_CONFIG.email,
         emailVerified: new Date(),
+        password: hashedPassword,
         role: UserRole.SUPER_ADMIN,
+        profile: {
+          create: {
+            displayName: ADMIN_CONFIG.name,
+            age: 30,
+            gender: 'FEMALE',
+            sexuality: 'Straight',
+            bio: 'System Administrator',
+          },
+        },
       },
     })
     console.log(`✅ 管理员账号创建成功`)
     console.log(`   ID:    ${admin.id}`)
     console.log(`   Email: ${admin.email}`)
+    console.log(`   Password: ${ADMIN_CONFIG.defaultPassword} (请登录后立即修改！)`)
     console.log(`   Role:  ${admin.role}`)
   }
 
@@ -80,8 +96,9 @@ async function main() {
   console.log('')
   console.log('🎉 生产数据库初始化完成！')
   console.log(`   管理员登录：${process.env.NEXTAUTH_URL || 'https://your-domain.com'}/login`)
-  console.log(`   使用邮箱 ${ADMIN_CONFIG.email} 通过 Google/GitHub OAuth 登录`)
-  console.log(`   或进入 Admin: /admin`)
+  console.log(`   邮箱密码登录：${ADMIN_CONFIG.email} / ${ADMIN_CONFIG.defaultPassword}`)
+  console.log(`   或通过 Google/GitHub OAuth 登录（需提前配置 OAuth）`)
+  console.log(`   Admin 后台: /admin`)
 }
 
 main()

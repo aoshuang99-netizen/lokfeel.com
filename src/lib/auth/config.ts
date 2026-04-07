@@ -44,17 +44,21 @@ export const authConfig: NextAuthConfig = {
         
         const { email, password } = parsed.data
         
-        // For MVP: check if user exists, credentials login is optional
         const user = await db.user.findUnique({
           where: { email },
         })
         
-        if (!user) {
+        if (!user || !(user as any).password) {
           return null
         }
         
-        // Password check skipped for MVP (OAuth-only for now)
-        // In production, you'd add a password hash column and verify here
+        // Verify password hash
+        const { verifyPassword } = await import('./auth')
+        const isValid = await verifyPassword(password, (user as any).password)
+        
+        if (!isValid) {
+          return null
+        }
         
         return {
           id: user.id,

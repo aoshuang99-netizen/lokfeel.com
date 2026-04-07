@@ -22,6 +22,7 @@ model User {
   image         String?
 
   // Auth
+  password String?
   role     UserRole  @default(USER)
   accounts Account[]
   sessions Session[]
