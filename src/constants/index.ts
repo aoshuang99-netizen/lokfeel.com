@@ -4,13 +4,17 @@
 
 export const APP_CONFIG = {
   name: 'Nexus',
+  company: 'LokFeel Inc.',
   tagline: 'Relationship Structure Matching',
   description: 'Find meaningful connections based on relationship compatibility',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  supportEmail: 'support@nexus.app',
+  supportEmail: 'support@lokfeel.com',
+  contactEmail: 'hello@lokfeel.com',
+  privacyEmail: 'privacy@lokfeel.com',
+  legalEmail: 'legal@lokfeel.com',
   social: {
-    twitter: '@nexusapp',
-    instagram: '@nexus.app',
+    twitter: '@lokfeel',
+    instagram: '@lokfeel',
   },
   features: {
     enableRealTimeChat: true,

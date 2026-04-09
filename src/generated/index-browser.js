@@ -155,9 +155,13 @@ exports.Prisma.SessionScalarFieldEnum = {
 };
 
 exports.Prisma.VerificationTokenScalarFieldEnum = {
+  id: 'id',
   identifier: 'identifier',
   token: 'token',
-  expires: 'expires'
+  expires: 'expires',
+  userId: 'userId',
+  used: 'used',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.ProfileScalarFieldEnum = {

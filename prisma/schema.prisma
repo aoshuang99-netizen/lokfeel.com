@@ -27,6 +27,9 @@ model User {
   accounts      Account[]
   sessions      Session[]
   
+  // Email Verification
+  verificationTokens VerificationToken[] @relation("UserVerificationTokens")
+  
   // Profile
   profile       Profile?
   
@@ -88,11 +91,18 @@ model Session {
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
+  id         String   @id @default(cuid())
+  identifier String   // email address
+  token      String   @unique // the 6-digit code
   expires    DateTime
+  userId     String?  // optional link to user
+  user       User?    @relation("UserVerificationTokens", fields: [userId], references: [id], onDelete: Cascade)
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now())
   
   @@unique([identifier, token])
+  @@index([identifier])
+  @@index([userId])
 }
 
 // ═══════════════════════════════════════════════════════════════

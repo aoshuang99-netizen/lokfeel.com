@@ -1,42 +1,65 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, MessageCircle, User, Sparkles, TrendingUp, ChevronRight, Star } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Heart, MessageCircle, User, Sparkles, TrendingUp, ChevronRight, Star, Loader2 } from "lucide-react";
+import { useApiGet } from "@/hooks/use-api";
 
-const weeklyMatches = [
-  {
-    id: 1,
-    name: "Sarah",
-    age: 28,
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
-    score: 94,
-    reason: "You both have secure attachment styles and value emotional depth in relationships.",
-    isNew: true,
-  },
-  {
-    id: 2,
-    name: "Michael",
-    age: 31,
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-    score: 89,
-    reason: "Your communication preferences align — both prefer direct, honest conversations.",
-    isNew: true,
-  },
-  {
-    id: 3,
-    name: "Emma",
-    age: 29,
-    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop",
-    score: 87,
-    reason: "Complementary attachment patterns — you bring stability, they bring adventure.",
-    isNew: false,
-  },
-];
+interface DashboardData {
+  profile: any;
+  user: any;
+}
+
+interface MatchesData {
+  matches: Array<{
+    id: string;
+    otherUser: {
+      id: string;
+      name: string;
+      age: number;
+      avatar: string | null;
+      city: string | null;
+    };
+    matchScore: number;
+    matchReason: string;
+    status: string;
+    myReaction: string | null;
+    createdAt: string;
+  }>;
+}
+
+interface NotificationsData {
+  unreadCount: number;
+}
 
 export default function DashboardPage() {
-  const profileCompletion = 75;
-  const unreadMatches = 2;
-  const unreadMessages = 5;
+  const { data: session } = useSession();
+
+  const { data: profileData, isLoading: profileLoading } = useApiGet<DashboardData>("/api/profile");
+  const { data: matchesData, isLoading: matchesLoading } = useApiGet<MatchesData>("/api/matches?status=PENDING&limit=3");
+  const { data: notificationsData } = useApiGet<NotificationsData>("/api/notifications?filter=unread&limit=1");
+
+  const user = profileData?.user || session?.user;
+  const profile = profileData?.profile;
+  const userName = user?.name || profile?.displayName || "there";
+  const pendingMatches = matchesData?.matches || [];
+  const unreadMatches = pendingMatches.filter((m) => m.myReaction === null).length;
+  const unreadNotifications = notificationsData?.unreadCount || 0;
+
+  // Profile completion calculation
+  const profileCompletion = profile ? calculateProfileCompletion(profile) : 0;
+  const hasSubscription = profileData?.user?.role === "ADMIN" ? true : false;
+
+  const weeklyMatches = pendingMatches.slice(0, 3);
+
+  if (profileLoading || matchesLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <span className="ml-3 text-white/60">Loading your dashboard...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -45,31 +68,57 @@ export default function DashboardPage() {
         <div className="glow-orb glow-orb-primary w-64 h-64 -top-20 -right-20 opacity-20" />
         <div className="relative">
           <h1 className="text-3xl font-bold text-white mb-2">
-            Welcome back, <span className="text-gradient">Alex</span>
+            Welcome back, <span className="text-gradient">{userName.split(" ")[0]}</span>
           </h1>
           <p className="text-white/60">
-            You have {unreadMatches} new matches waiting for you
+            {unreadMatches > 0
+              ? `You have ${unreadMatches} new match${unreadMatches > 1 ? "es" : ""} waiting for you`
+              : unreadNotifications > 0
+              ? `You have ${unreadNotifications} unread notification${unreadNotifications > 1 ? "s" : ""}`
+              : "Your relationship blueprint is working for you"}
           </p>
         </div>
       </div>
 
-      {/* Subscription Banner */}
-      <div className="glass-card border-primary/30 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+      {/* Subscription Banner — show only if free user */}
+      {!hasSubscription && (
+        <div className="glass-card border-primary/30 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">Upgrade to Premium</h3>
+                <p className="text-sm text-white/60">Unlock unlimited matches and advanced filters</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-white">Upgrade to Premium</h3>
-              <p className="text-sm text-white/60">Unlock unlimited matches and advanced filters</p>
-            </div>
+            <Link href="/dashboard/subscription" className="btn-primary">
+              Learn More
+            </Link>
           </div>
-          <Link href="/dashboard/subscription" className="btn-primary">
-            Learn More
-          </Link>
         </div>
-      </div>
+      )}
+
+      {/* Profile not set up — redirect to onboarding */}
+      {!profile && (
+        <div className="glass-card border-warning/30 p-6">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-warning to-orange-500 flex items-center justify-center flex-shrink-0">
+              <User className="w-8 h-8 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-white mb-1">Complete Your Relationship Blueprint</h3>
+              <p className="text-sm text-white/60 mb-3">
+                Your personalized matches start with understanding your relationship patterns
+              </p>
+            </div>
+            <Link href="/dashboard/profile" className="btn-primary whitespace-nowrap">
+              Get Started
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -90,7 +139,7 @@ export default function DashboardPage() {
             </div>
             <span className="text-white/60 text-sm">Unread Messages</span>
           </div>
-          <p className="text-2xl font-bold text-white">{unreadMessages}</p>
+          <p className="text-2xl font-bold text-white">{unreadNotifications}</p>
         </div>
 
         <div className="glass-card p-5">
@@ -110,7 +159,7 @@ export default function DashboardPage() {
             </div>
             <span className="text-white/60 text-sm">Your Tier</span>
           </div>
-          <p className="text-2xl font-bold text-white">Free</p>
+          <p className="text-2xl font-bold text-white">{hasSubscription ? "Premium" : "Free"}</p>
         </div>
       </div>
 
@@ -118,7 +167,7 @@ export default function DashboardPage() {
       <section>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-white">This Week's Matches</h2>
+            <h2 className="text-xl font-semibold text-white">This Week&apos;s Matches</h2>
             <p className="text-sm text-white/60">Curated based on your relationship blueprint</p>
           </div>
           <Link href="/dashboard/matches" className="btn-ghost text-sm flex items-center gap-1">
@@ -126,54 +175,76 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {weeklyMatches.map((match) => (
-            <div key={match.id} className="glass-card overflow-hidden group">
-              <div className="relative h-48">
-                <img
-                  src={match.image}
-                  alt={match.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                {match.isNew && (
-                  <span className="absolute top-3 right-3 badge badge-primary">New</span>
-                )}
-                <div className="absolute bottom-3 right-3">
-                  <span className={`match-score ${match.score >= 90 ? 'match-score-high' : match.score >= 80 ? 'match-score-medium' : 'match-score-low'}`}>
-                    {match.score}%
-                  </span>
+        {weeklyMatches.length > 0 ? (
+          <div className="grid md:grid-cols-3 gap-6">
+            {weeklyMatches.map((match) => (
+              <div key={match.id} className="glass-card overflow-hidden group">
+                <div className="relative h-48">
+                  {match.otherUser.avatar ? (
+                    <img
+                      src={match.otherUser.avatar}
+                      alt={match.otherUser.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                      <User className="w-16 h-16 text-white/20" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                  {match.myReaction === null && (
+                    <span className="absolute top-3 right-3 badge badge-primary">New</span>
+                  )}
+                  <div className="absolute bottom-3 right-3">
+                    <span className={`match-score ${match.matchScore >= 90 ? "match-score-high" : match.matchScore >= 80 ? "match-score-medium" : "match-score-low"}`}>
+                      {Math.round(match.matchScore)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-white">{match.otherUser.name}, {match.otherUser.age}</h3>
+                    {match.otherUser.city && (
+                      <span className="text-xs text-white/40">{match.otherUser.city}</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-white/60 mb-4 line-clamp-2">{match.matchReason}</p>
+
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/dashboard/matches/${match.id}`}
+                      className="btn-primary flex-1 text-sm py-2"
+                    >
+                      View Match
+                    </Link>
+                  </div>
                 </div>
               </div>
-
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-white">{match.name}, {match.age}</h3>
-                </div>
-                <p className="text-sm text-white/60 mb-4 line-clamp-2">{match.reason}</p>
-
-                <div className="flex gap-2">
-                  <Link
-                    href={`/dashboard/matches/${match.id}`}
-                    className="btn-primary flex-1 text-sm py-2"
-                  >
-                    View Match
-                  </Link>
-                  <Link
-                    href={`/dashboard/chat/${match.id}`}
-                    className="btn-secondary flex-1 text-sm py-2"
-                  >
-                    Message
-                  </Link>
-                </div>
-              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="glass-card p-12 text-center">
+            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+              <Heart className="w-8 h-8 text-white/30" />
             </div>
-          ))}
-        </div>
+            <h3 className="text-lg font-semibold text-white mb-2">No matches yet</h3>
+            <p className="text-white/60 mb-4">
+              {profile?.profileStatus === "APPROVED"
+                ? "Your next weekly matches are being prepared!"
+                : "Complete your relationship blueprint to start receiving matches"}
+            </p>
+            {(!profile || profile.profileStatus !== "APPROVED") && (
+              <Link href="/dashboard/profile" className="btn-primary">
+                Complete Blueprint
+              </Link>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Profile Completion CTA */}
-      {profileCompletion < 100 && (
+      {profile && profileCompletion < 100 && (
         <section className="glass-card p-6">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
@@ -202,4 +273,28 @@ export default function DashboardPage() {
       )}
     </div>
   );
+}
+
+// Calculate profile completion percentage
+function calculateProfileCompletion(profile: any): number {
+  if (!profile) return 0;
+
+  const fields = [
+    profile.displayName,
+    profile.bio,
+    profile.avatar,
+    profile.age,
+    profile.attachmentStyle,
+    profile.communicationStyle,
+    profile.conflictResolution,
+    profile.loveLanguage,
+    profile.lifePriorities,
+    profile.relationshipGoal,
+    profile.city,
+    profile.boundaries,
+    profile.emotionalAvailability,
+  ];
+
+  const filled = fields.filter((f) => f && f !== "" && f !== "null").length;
+  return Math.round((filled / fields.length) * 100);
 }

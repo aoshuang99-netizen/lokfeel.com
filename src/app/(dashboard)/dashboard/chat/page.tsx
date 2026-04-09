@@ -1,82 +1,91 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { MessageCircle, Search } from "lucide-react";
+import { MessageCircle, Search, User, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
+import { useApiGet } from "@/hooks/use-api";
 
-const mockChats = [
-  {
-    id: "1",
-    name: "Sarah",
-    age: 28,
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
-    lastMessage: "That sounds amazing! I'd love to explore that coffee shop.",
-    timestamp: "2m ago",
-    unread: 2,
-    isOnline: true,
-  },
-  {
-    id: "2",
-    name: "Michael",
-    age: 31,
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-    lastMessage: "I had a great time chatting with you!",
-    timestamp: "1h ago",
-    unread: 0,
-    isOnline: false,
-  },
-  {
-    id: "3",
-    name: "Emma",
-    age: 29,
-    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop",
-    lastMessage: "Looking forward to our call tomorrow!",
-    timestamp: "3h ago",
-    unread: 1,
-    isOnline: true,
-  },
-  {
-    id: "4",
-    name: "James",
-    age: 33,
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
-    lastMessage: "The hike was incredible. Thanks for suggesting it!",
-    timestamp: "1d ago",
-    unread: 0,
-    isOnline: false,
-  },
-];
+interface ChatData {
+  chats: Array<{
+    id: string;
+    matchId: string | null;
+    otherUser: {
+      id: string;
+      name: string;
+      age: number;
+      avatar: string | null;
+    };
+    lastMessage: {
+      content: string;
+      timestamp: string;
+    } | null;
+    unreadCount: number;
+  }>;
+}
+
+function formatTimestamp(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
 
 export default function ChatListPage() {
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const chats = mockChats.filter((chat) =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data, isLoading, error } = useApiGet<ChatData>("/api/chat");
+
+  const chats = data?.chats || [];
+  const filteredChats = chats.filter((chat) =>
+    chat.otherUser.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (chats.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <span className="ml-3 text-white/60">Loading conversations...</span>
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Messages</h1>
           <p className="text-white/60">Connect with your matches</p>
         </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-          <input
-            type="text"
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-feeld pl-12"
-          />
+        <div className="glass-card p-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+            <MessageCircle className="w-8 h-8 text-white/30" />
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-2">Service Unavailable</h3>
+          <p className="text-white/60">{error}</p>
         </div>
+      </div>
+    );
+  }
 
+  if (filteredChats.length === 0 && !searchQuery) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Messages</h1>
+          <p className="text-white/60">Connect with your matches</p>
+        </div>
         <EmptyState
           icon="message"
           title="No conversations yet"
-          description="Start a conversation with one of your matches"
+          description="Accept a match to start a conversation"
           action={{
             label: "Find Matches",
             onClick: () => (window.location.href = "/dashboard/matches"),
@@ -108,7 +117,7 @@ export default function ChatListPage() {
 
       {/* Chat List */}
       <div className="space-y-2">
-        {chats.map((chat) => (
+        {filteredChats.map((chat) => (
           <Link
             key={chat.id}
             href={`/dashboard/chat/${chat.id}`}
@@ -116,45 +125,51 @@ export default function ChatListPage() {
           >
             {/* Avatar */}
             <div className="relative flex-shrink-0">
-              <div className="w-14 h-14 rounded-full overflow-hidden">
-                <img
-                  src={chat.image}
-                  alt={chat.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-white/5 flex items-center justify-center">
+                {chat.otherUser.avatar ? (
+                  <img
+                    src={chat.otherUser.avatar}
+                    alt={chat.otherUser.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-7 h-7 text-white/30" />
+                )}
               </div>
-              {chat.isOnline && (
-                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-success border-2 border-[#0d0c11] rounded-full" />
-              )}
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <h3 className={`font-semibold truncate ${chat.unread > 0 ? "text-white" : "text-white/80"}`}>
-                  {chat.name}, {chat.age}
+                <h3 className={`font-semibold truncate ${chat.unreadCount > 0 ? "text-white" : "text-white/80"}`}>
+                  {chat.otherUser.name}, {chat.otherUser.age}
                 </h3>
-                <span className="text-xs text-white/40 flex-shrink-0 ml-2">
-                  {chat.timestamp}
-                </span>
+                {chat.lastMessage && (
+                  <span className="text-xs text-white/40 flex-shrink-0 ml-2">
+                    {formatTimestamp(chat.lastMessage.timestamp)}
+                  </span>
+                )}
               </div>
-              <p className={`text-sm truncate ${chat.unread > 0 ? "text-white" : "text-white/60"}`}>
-                {chat.lastMessage}
+              <p className={`text-sm truncate ${chat.unreadCount > 0 ? "text-white" : "text-white/60"}`}>
+                {chat.lastMessage ? chat.lastMessage.content : "Start the conversation!"}
               </p>
             </div>
 
             {/* Unread Badge */}
-            {chat.unread > 0 && (
+            {chat.unreadCount > 0 && (
               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-xs font-bold text-white">{chat.unread}</span>
+                <span className="text-xs font-bold text-white">{chat.unreadCount}</span>
               </div>
             )}
           </Link>
         ))}
+
+        {searchQuery && filteredChats.length === 0 && (
+          <div className="text-center py-8 text-white/40">
+            No conversations match &quot;{searchQuery}&quot;
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
-// Need to import React for useState
-import React from "react";

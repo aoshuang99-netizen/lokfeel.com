@@ -1,4 +1,4 @@
-import { PrismaClient } from "@/generated/client";
+import { PrismaClient } from "@/generated";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -6,28 +6,35 @@ declare global {
 }
 
 function createPrismaClient(): PrismaClient {
-  const databaseUrl = process.env.DATABASE_URL;
-
-  if (!databaseUrl || databaseUrl.startsWith("mysql://")) {
-    // No valid PostgreSQL URL — return a no-op stub for build time
-    // This prevents Prisma from throwing adapter mismatch errors during static analysis
-    return new Proxy({} as PrismaClient, {
-      get() {
-        return () => {
-          throw new Error("DATABASE_URL is not configured for PostgreSQL");
-        };
-      },
-    });
-  }
-
-  // Use PostgreSQL adapter (Neon / Supabase / any pg-compatible DB)
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { PrismaPg } = require("@prisma/adapter-pg");
-  const adapter = new PrismaPg({ connectionString: databaseUrl });
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+  });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new (PrismaClient as any)({ adapter }) as PrismaClient;
 }
 
-export const db: PrismaClient = globalThis.prisma ?? createPrismaClient();
+// Lazy singleton — only instantiated when first accessed at runtime
+let _prisma: PrismaClient | undefined;
 
-if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
+export function getDb(): PrismaClient {
+  if (!_prisma) {
+    if (globalThis.prisma) {
+      _prisma = globalThis.prisma;
+    } else {
+      _prisma = createPrismaClient();
+      if (process.env.NODE_ENV !== "production") {
+        globalThis.prisma = _prisma;
+      }
+    }
+  }
+  return _prisma;
+}
+
+// Backward-compatible default export using a Proxy for lazy access
+export const db: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    return (getDb() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});

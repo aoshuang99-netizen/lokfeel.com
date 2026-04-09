@@ -1,18 +1,15 @@
-export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireAuth, requireAdminAuth } from "@/lib/auth/auth";
-import { success, badRequest, serverError, forbidden } from "@/lib/api-response";
-import { findWeeklyMatches } from "@/lib/matching/engine";
+import { requireAuth, requireAdminAuth } from "@/lib/auth";
+import { generateMatchesForUser, generateAllWeeklyMatches } from "@/lib/matching";
 
-export async function GET(request: NextRequest) {
+export const dynamic = "force-dynamic";
+
+// GET /api/matches/weekly — Get current week's matches
+export async function GET() {
   try {
-    
-
     const { user } = await requireAuth();
 
-    // Get start and end of current week
     const now = new Date();
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
@@ -24,102 +21,66 @@ export async function GET(request: NextRequest) {
     const matches = await db.match.findMany({
       where: {
         OR: [{ senderId: user.id }, { receiverId: user.id }],
-        createdAt: {
-          gte: startOfWeek,
-          lt: endOfWeek,
-        },
+        createdAt: { gte: startOfWeek, lt: endOfWeek },
       },
       include: {
         sender: {
           select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: {
-              select: {
-                id: true,
-                displayName: true,
-                age: true,
-                gender: true,
-                avatar: true,
-                city: true,
-              },
-            },
+            id: true, name: true, image: true,
+            profile: { select: { displayName: true, age: true, avatar: true, city: true } },
           },
         },
         receiver: {
           select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: {
-              select: {
-                id: true,
-                displayName: true,
-                age: true,
-                gender: true,
-                avatar: true,
-                city: true,
-              },
-            },
+            id: true, name: true, image: true,
+            profile: { select: { displayName: true, age: true, avatar: true, city: true } },
           },
-        },
-        chatRoom: {
-          select: { id: true },
         },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return success({
+    return NextResponse.json({
       weekStart: startOfWeek.toISOString(),
       weekEnd: endOfWeek.toISOString(),
       matches,
       count: matches.length,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === "Unauthorized") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
     console.error("Error fetching weekly matches:", error);
-    return serverError("Failed to fetch weekly matches");
+    return NextResponse.json({ message: "Failed to fetch weekly matches" }, { status: 500 });
   }
 }
 
-const triggerSchema = z.object({
-  limitPerUser: z.coerce.number().min(1).max(10).default(5),
-});
-
+// POST /api/matches/weekly — Trigger weekly match generation (admin only)
 export async function POST(request: NextRequest) {
   try {
-    // Allow both admin and authenticated users (for cron jobs)
-    
+    await requireAdminAuth();
 
-    const { user } = await requireAuth();
+    const { searchParams } = new URL(request.url);
+    const scope = searchParams.get("scope") || "all";
+    const limit = parseInt(searchParams.get("limit") || "5");
 
-    // Only admins can trigger match generation
-    if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") {
-      return forbidden("Admin access required");
+    if (scope === "all") {
+      const results = await generateAllWeeklyMatches();
+      return NextResponse.json({
+        message: "Weekly match generation completed",
+        results,
+      }, { status: 201 });
     }
 
-    return triggerMatchGeneration(request);
-  } catch (error) {
-    console.error("Error in weekly match trigger:", error);
-    return serverError("Failed to trigger weekly matches");
-  }
-}
-
-async function triggerMatchGeneration(request: NextRequest) {
-  try {
-    const body = await request.json().catch(() => ({}));
-    const limitPerUser = body.limitPerUser || 5;
-
-    const results = await findWeeklyMatches(limitPerUser);
-
-    return success({
-      message: "Weekly match generation completed",
-      results,
-      totalMatches: Array.isArray(results) ? results.length : 0,
-    }, 201);
-  } catch (error) {
+    return NextResponse.json({ message: "Use ?scope=all for admin batch generation" }, { status: 400 });
+  } catch (error: any) {
+    if (error.message === "Unauthorized") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    if (error.message === "Forbidden: Admin access required") {
+      return NextResponse.json({ message: "Admin access required" }, { status: 403 });
+    }
     console.error("Error generating weekly matches:", error);
-    return serverError("Failed to generate weekly matches");
+    return NextResponse.json({ message: "Failed to generate weekly matches" }, { status: 500 });
   }
 }

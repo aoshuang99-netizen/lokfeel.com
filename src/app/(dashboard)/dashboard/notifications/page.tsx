@@ -1,54 +1,114 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle, Sparkles, Users, Bell, Check, CheckCheck } from "lucide-react";
+import { Heart, MessageCircle, Sparkles, Users, Bell, Check, CheckCheck, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
+import { useApiGet } from "@/hooks/use-api";
 
-const mockNotifications = [
-  { id: 1, type: "match", title: "New Match!", description: "Sarah liked your profile. You have 94% compatibility.", timestamp: "2 minutes ago", read: false, link: "/dashboard/matches/1" },
-  { id: 2, type: "message", title: "New Message", description: "Michael sent you a message: 'Hey! I saw we matched...'", timestamp: "15 minutes ago", read: false, link: "/dashboard/chat/2" },
-  { id: 3, type: "premium", title: "Unlock Premium", description: "See who liked you before matching. Upgrade now!", timestamp: "1 hour ago", read: false, link: "/dashboard/subscription" },
-  { id: 4, type: "match", title: "New Match!", description: "Emma liked your profile. You have 89% compatibility.", timestamp: "3 hours ago", read: true, link: "/dashboard/matches/3" },
-  { id: 5, type: "profile", title: "Complete Your Profile", description: "Adding your relationship goals increases matches by 40%.", timestamp: "1 day ago", read: true, link: "/dashboard/profile" },
-  { id: 6, type: "system", title: "Welcome to Nexus!", description: "Thanks for joining. Start by completing your relationship blueprint.", timestamp: "2 days ago", read: true, link: "/dashboard/profile" },
-];
+interface NotificationData {
+  notifications: Array<{
+    id: string;
+    type: string;
+    title: string;
+    body: string;
+    actionUrl: string | null;
+    isRead: boolean;
+    createdAt: string;
+  }>;
+  unreadCount: number;
+}
 
-const iconMap = {
-  match: Heart,
-  message: MessageCircle,
-  premium: Sparkles,
-  profile: Users,
-  system: Bell,
+const iconMap: Record<string, any> = {
+  NEW_MATCH: Heart,
+  MATCH_ACCEPTED: Heart,
+  MATCH_REJECTED: Heart,
+  NEW_MESSAGE: MessageCircle,
+  SUBSCRIPTION_EXPIRED: Sparkles,
+  PROFILE_APPROVED: Users,
+  PROFILE_REJECTED: Users,
+  SYSTEM_ANNOUNCEMENT: Bell,
+  WEEKLY_DIGEST: Bell,
 };
 
-const colorMap = {
-  match: "text-primary bg-primary/20",
-  message: "text-secondary bg-secondary/20",
-  premium: "text-warning bg-warning/20",
-  profile: "text-success bg-success/20",
-  system: "text-info bg-info/20",
+const colorMap: Record<string, string> = {
+  NEW_MATCH: "text-primary bg-primary/20",
+  MATCH_ACCEPTED: "text-primary bg-primary/20",
+  MATCH_REJECTED: "text-white/40 bg-white/10",
+  NEW_MESSAGE: "text-secondary bg-secondary/20",
+  SUBSCRIPTION_EXPIRED: "text-warning bg-warning/20",
+  PROFILE_APPROVED: "text-success bg-success/20",
+  PROFILE_REJECTED: "text-error bg-error/20",
+  SYSTEM_ANNOUNCEMENT: "text-info bg-info/20",
+  WEEKLY_DIGEST: "text-info bg-info/20",
 };
+
+function formatTimestamp(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  return date.toLocaleDateString();
+}
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(mockNotifications);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const { data, isLoading, error, refetch } = useApiGet<NotificationData>(
+    `/api/notifications?filter=${filter}&limit=50`
+  );
 
-  const filteredNotifications = filter === "unread"
-    ? notifications.filter((n) => !n.read)
-    : notifications;
+  const notifications = data?.notifications || [];
+  const unreadCount = data?.unreadCount || 0;
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const handleMarkAsRead = async (ids: string[]) => {
+    await fetch("/api/notifications", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    refetch();
+  };
 
-  const handleMarkAsRead = (id: number) => {
-    setNotifications((prev) =>
-      prev.map((n) => n.id === id ? { ...n, read: true } : n)
+  const handleMarkAllAsRead = async () => {
+    await fetch("/api/notifications", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ markAll: true }),
+    });
+    refetch();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <span className="ml-3 text-white/60">Loading notifications...</span>
+      </div>
     );
-  };
+  }
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Notifications</h1>
+          <p className="text-white/60">Stay updated on your matches</p>
+        </div>
+        <div className="glass-card p-12 text-center">
+          <Bell className="w-8 h-8 text-white/30 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">Service Unavailable</h3>
+          <p className="text-white/60">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -57,7 +117,7 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Notifications</h1>
           <p className="text-white/60">
-            {unreadCount > 0 ? `${unreadCount} unread notifications` : "All caught up!"}
+            {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up!"}
           </p>
         </div>
 
@@ -102,18 +162,16 @@ export default function NotificationsPage() {
       </div>
 
       {/* Notifications List */}
-      {filteredNotifications.length > 0 ? (
+      {notifications.length > 0 ? (
         <div className="space-y-2">
-          {filteredNotifications.map((notification) => {
-            const Icon = iconMap[notification.type as keyof typeof iconMap];
-            const colorClass = colorMap[notification.type as keyof typeof colorMap];
+          {notifications.map((notification) => {
+            const Icon = iconMap[notification.type] || Bell;
+            const colorClass = colorMap[notification.type] || "text-white bg-white/10";
 
-            return (
-              <Link
-                key={notification.id}
-                href={notification.link}
+            const content = (
+              <div
                 className={`glass-card p-4 flex items-start gap-4 hover:bg-white/10 transition-all ${
-                  !notification.read ? "border-primary/30" : ""
+                  !notification.isRead ? "border-primary/30" : ""
                 }`}
               >
                 {/* Icon */}
@@ -125,32 +183,41 @@ export default function NotificationsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className={`font-medium ${!notification.read ? "text-white" : "text-white/80"}`}>
+                      <h3 className={`font-medium ${!notification.isRead ? "text-white" : "text-white/80"}`}>
                         {notification.title}
                       </h3>
-                      <p className="text-sm text-white/60 mt-0.5">{notification.description}</p>
+                      <p className="text-sm text-white/60 mt-0.5">{notification.body}</p>
                     </div>
-                    {!notification.read && (
+                    {!notification.isRead && (
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          handleMarkAsRead(notification.id);
+                          e.stopPropagation();
+                          handleMarkAsRead([notification.id]);
                         }}
-                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/40 hover:text-white"
+                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/40 hover:text-white flex-shrink-0"
                         title="Mark as read"
                       >
                         <Check className="w-4 h-4" />
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-white/40 mt-2">{notification.timestamp}</p>
+                  <p className="text-xs text-white/40 mt-2">{formatTimestamp(notification.createdAt)}</p>
                 </div>
 
                 {/* Unread Dot */}
-                {!notification.read && (
+                {!notification.isRead && (
                   <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
                 )}
+              </div>
+            );
+
+            return notification.actionUrl ? (
+              <Link key={notification.id} href={notification.actionUrl}>
+                {content}
               </Link>
+            ) : (
+              <div key={notification.id}>{content}</div>
             );
           })}
         </div>

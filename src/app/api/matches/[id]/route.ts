@@ -1,171 +1,161 @@
-export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/auth/auth"
-import { success, badRequest, notFound, serverError, forbidden } from "@/lib/api-response";
-import type { MatchWithProfiles } from "@/types";
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth'
+import { db } from '@/lib/db'
 
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
+export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+// GET /api/matches/[id] — Get a specific match detail
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    
-
-    const { user } = await requireAuth();
-    const { id } = await params;
+    const { user } = await requireAuth()
+    const { id } = await params
 
     const match = await db.match.findUnique({
       where: { id },
       include: {
         sender: {
           select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: {
-              select: {
-                id: true,
-                displayName: true,
-                age: true,
-                gender: true,
-                genderIdentity: true,
-                sexuality: true,
-                bio: true,
-                avatar: true,
-                city: true,
-                country: true,
-                relationshipGoal: true,
-                attachmentStyle: true,
-                communicationStyle: true,
-                conflictResolution: true,
-                loveLanguage: true,
-                boundaries: true,
-                dealbreakers: true,
-                lifePriorities: true,
-                emotionalAvailability: true,
-                preferredAgeMin: true,
-                preferredAgeMax: true,
-                preferredGender: true,
-                preferredDistance: true,
-              },
-            },
+            id: true, name: true, image: true,
+            profile: { select: { displayName: true, age: true, avatar: true, city: true, bio: true, relationshipGoal: true, attachmentStyle: true, communicationStyle: true, loveLanguage: true } },
           },
         },
         receiver: {
           select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: {
-              select: {
-                id: true,
-                displayName: true,
-                age: true,
-                gender: true,
-                genderIdentity: true,
-                sexuality: true,
-                bio: true,
-                avatar: true,
-                city: true,
-                country: true,
-                relationshipGoal: true,
-                attachmentStyle: true,
-                communicationStyle: true,
-                conflictResolution: true,
-                loveLanguage: true,
-                boundaries: true,
-                dealbreakers: true,
-                lifePriorities: true,
-                emotionalAvailability: true,
-                preferredAgeMin: true,
-                preferredAgeMax: true,
-                preferredGender: true,
-                preferredDistance: true,
-              },
-            },
+            id: true, name: true, image: true,
+            profile: { select: { displayName: true, age: true, avatar: true, city: true, bio: true, relationshipGoal: true, attachmentStyle: true, communicationStyle: true, loveLanguage: true } },
           },
         },
-        chatRoom: true,
+        matchReactions: true,
+        chatRoom: {
+          select: { id: true },
+        },
       },
-    });
+    })
 
     if (!match) {
-      return notFound("Match not found");
+      return NextResponse.json({ message: 'Match not found' }, { status: 404 })
     }
 
-    // Check if user is part of this match
+    // Check access: must be sender or receiver
     if (match.senderId !== user.id && match.receiverId !== user.id) {
-      // Allow admins to view any match
-      if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") {
-        return forbidden("You don't have access to this match");
-      }
+      return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
     }
 
-    return success(match);
-  } catch (error) {
-    console.error("Error fetching match:", error);
-    return serverError("Failed to fetch match");
+    const isSender = match.senderId === user.id
+    const otherUser = isSender ? match.receiver : match.sender
+    const myReaction = match.matchReactions.find((r) => r.userId === user.id)
+    const otherReaction = match.matchReactions.find((r) => r.userId !== user.id)
+
+    return NextResponse.json({
+      id: match.id,
+      otherUser: {
+        id: otherUser.id,
+        name: otherUser.profile?.displayName || otherUser.name,
+        age: otherUser.profile?.age,
+        avatar: otherUser.profile?.avatar || otherUser.image,
+        city: otherUser.profile?.city,
+        bio: otherUser.profile?.bio,
+        relationshipGoal: otherUser.profile?.relationshipGoal,
+        attachmentStyle: otherUser.profile?.attachmentStyle,
+        communicationStyle: otherUser.profile?.communicationStyle,
+        loveLanguage: otherUser.profile?.loveLanguage,
+      },
+      matchScore: match.matchScore,
+      matchReason: match.matchReason,
+      conflictWarnings: match.conflictWarnings,
+      compatibilityBreakdown: {
+        attachment: match.attachmentCompat,
+        communication: match.communicationCompat,
+        conflict: match.conflictCompat,
+        values: match.valuesCompat,
+        lifestyle: match.lifestyleCompat,
+      },
+      status: match.status,
+      myReaction: myReaction?.reaction || null,
+      otherReaction: otherReaction?.reaction || null,
+      matchType: match.matchType,
+      expiresAt: match.expiresAt,
+      hasChatRoom: !!match.chatRoom,
+      chatRoomId: match.chatRoom?.id || null,
+      createdAt: match.createdAt,
+    })
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+    console.error('Get match detail error:', error)
+    return NextResponse.json({ message: 'Failed to fetch match' }, { status: 500 })
   }
 }
 
-const updateMatchSchema = z.object({
-  action: z.enum(["INTERESTED", "PASS", "MAYBE", "BLOCK"]).optional(),
-  reviewNotes: z.string().optional(),
-  reviewedBy: z.string().optional(),
-  status: z.enum(["PENDING", "ACCEPTED", "REJECTED", "EXPIRED", "CANCELLED"]).optional(),
-});
-
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+// POST /api/matches/[id]/react — React to a match (INTERESTED / PASS / MAYBE / BLOCK)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    
+    const { user } = await requireAuth()
+    const { id } = await params
+    const { reaction, feedback } = await request.json()
 
-    const { user } = await requireAuth();
-    const { id } = await params;
-    const body = await request.json();
-
-    const parseResult = updateMatchSchema.safeParse(body);
-    if (!parseResult.success) {
-      return badRequest("Invalid request body", parseResult.error.issues);
+    if (!['INTERESTED', 'PASS', 'MAYBE', 'BLOCK'].includes(reaction)) {
+      return NextResponse.json({ message: 'Invalid reaction' }, { status: 400 })
     }
-
-    const { action, reviewNotes, reviewedBy, status } = parseResult.data;
 
     const match = await db.match.findUnique({
       where: { id },
-    });
+    })
 
     if (!match) {
-      return notFound("Match not found");
+      return NextResponse.json({ message: 'Match not found' }, { status: 404 })
     }
 
-    // Handle match reaction
-    if (action) {
-      // Check if user is part of this match
-      const isSender = match.senderId === user.id;
-      const isReceiver = match.receiverId === user.id;
+    if (match.senderId !== user.id && match.receiverId !== user.id) {
+      return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+    }
 
-      if (!isSender && !isReceiver) {
-        return forbidden("You don't have access to this match");
-      }
+    // Upsert reaction
+    const matchReaction = await db.matchReaction.upsert({
+      where: {
+        matchId_userId: { matchId: id, userId: user.id },
+      },
+      update: { reaction, feedback },
+      create: {
+        matchId: id,
+        userId: user.id,
+        reaction,
+        feedback,
+      },
+    })
 
-      // Update the appropriate action field
-      const updateData: Record<string, unknown> = {
-        ...(isSender ? { senderAction: action } : {}),
-        ...(isReceiver ? { receiverAction: action } : {}),
-      };
+    // Update match action
+    const isSender = match.senderId === user.id
+    await db.match.update({
+      where: { id },
+      data: isSender ? { senderAction: reaction } : { receiverAction: reaction },
+    })
 
-      // Check for mutual acceptance
-      const currentSenderAction = isSender ? action : match.senderAction;
-      const currentReceiverAction = isReceiver ? action : match.receiverAction;
+    // Check if both have reacted — update status
+    const allReactions = await db.matchReaction.findMany({
+      where: { matchId: id },
+    })
 
-      if (currentSenderAction === "INTERESTED" && currentReceiverAction === "INTERESTED") {
-        // Mutual interest - create chat room and update status
+    if (allReactions.length === 2) {
+      const reactions = allReactions.map((r) => r.reaction)
+
+      if (reactions.includes('BLOCK')) {
+        await db.match.update({
+          where: { id },
+          data: { status: 'REJECTED' },
+        })
+      } else if (reactions.every((r) => r === 'INTERESTED')) {
+        // Both interested — create chat room
         const chatRoom = await db.chatRoom.create({
           data: {
-            matchId: match.id,
+            matchId: id,
             members: {
               create: [
                 { userId: match.senderId },
@@ -173,145 +163,39 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
               ],
             },
           },
-        });
+        })
 
-        updateData.status = "ACCEPTED";
-        updateData.chatRoom = { connect: { id: chatRoom.id } };
-
-        // Create notifications for both users
-        await db.notification.createMany({
-          data: [
-            {
-              userId: match.senderId,
-              type: "MATCH_ACCEPTED",
-              title: "匹配成功！",
-              body: "你们互相喜欢！现在可以开始聊天了",
-              data: JSON.stringify({ matchId: match.id, chatRoomId: chatRoom.id }),
-            },
-            {
-              userId: match.receiverId,
-              type: "MATCH_ACCEPTED",
-              title: "匹配成功！",
-              body: "你们互相喜欢！现在可以开始聊天了",
-              data: JSON.stringify({ matchId: match.id, chatRoomId: chatRoom.id }),
-            },
-          ],
-        });
-      } else if (action === "BLOCK" || (currentSenderAction === "BLOCK" || currentReceiverAction === "BLOCK")) {
-        // Block or mutual pass
-        updateData.status = "REJECTED";
-      } else if (action === "PASS") {
-        // If one person passes, the match is rejected
-        updateData.status = "REJECTED";
-      }
-
-      const updatedMatch = await db.match.update({
-        where: { id },
-        data: updateData,
-        include: {
-          sender: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-              profile: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  age: true,
-                  gender: true,
-                  avatar: true,
-                  city: true,
-                },
-              },
-            },
+        // System message
+        await db.message.create({
+          data: {
+            roomId: chatRoom.id,
+            senderId: match.senderId,
+            content: "You matched! Start your conversation. Remember: this match is based on your relationship blueprints. Take time to explore your connection.",
+            messageType: 'SYSTEM',
           },
-          receiver: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-              profile: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  age: true,
-                  gender: true,
-                  avatar: true,
-                  city: true,
-                },
-              },
-            },
-          },
-          chatRoom: true,
-        },
-      });
+        })
 
-      return success(updatedMatch);
-    }
-
-    // Handle admin review updates
-    if (reviewNotes !== undefined || reviewedBy !== undefined || status !== undefined) {
-      // Check if user is admin
-      if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") {
-        return forbidden("Admin access required for review updates");
+        await db.match.update({
+          where: { id },
+          data: { status: 'ACCEPTED' },
+        })
+      } else if (reactions.some((r) => r === 'PASS')) {
+        await db.match.update({
+          where: { id },
+          data: { status: 'REJECTED' },
+        })
       }
-
-      const updatedMatch = await db.match.update({
-        where: { id },
-        data: {
-          ...(reviewNotes !== undefined && { reviewNotes }),
-          ...(reviewedBy !== undefined && { reviewedBy }),
-          ...(status !== undefined && { status }),
-        },
-      });
-
-      return success(updatedMatch);
     }
 
-    return badRequest("No valid update fields provided");
-  } catch (error) {
-    console.error("Error updating match:", error);
-    return serverError("Failed to update match");
-  }
-}
-
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  try {
-    
-
-    const { user } = await requireAuth();
-    const { id } = await params;
-
-    const match = await db.match.findUnique({
-      where: { id },
-    });
-
-    if (!match) {
-      return notFound("Match not found");
+    return NextResponse.json({
+      reaction: matchReaction,
+      message: `Reaction recorded: ${reaction}`,
+    })
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
-
-    // Only admins can delete/cancel matches
-    if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") {
-      return forbidden("Admin access required to cancel matches");
-    }
-
-    // Get cancellation reason from query params
-    const { searchParams } = new URL(request.url);
-    const reason = searchParams.get("reason");
-
-    await db.match.update({
-      where: { id },
-      data: {
-        status: "CANCELLED",
-        reviewNotes: reason || "Cancelled by admin",
-        reviewedBy: user.id,
-      },
-    });
-
-    return success({ message: "Match cancelled successfully" });
-  } catch (error) {
-    console.error("Error cancelling match:", error);
-    return serverError("Failed to cancel match");
+    console.error('React to match error:', error)
+    return NextResponse.json({ message: 'Failed to record reaction' }, { status: 500 })
   }
 }

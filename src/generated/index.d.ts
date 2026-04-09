@@ -2414,6 +2414,7 @@ export namespace Prisma {
   export type UserCountOutputType = {
     accounts: number
     sessions: number
+    verificationTokens: number
     sentMatches: number
     receivedMatches: number
     matchReactions: number
@@ -2429,6 +2430,7 @@ export namespace Prisma {
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | UserCountOutputTypeCountAccountsArgs
     sessions?: boolean | UserCountOutputTypeCountSessionsArgs
+    verificationTokens?: boolean | UserCountOutputTypeCountVerificationTokensArgs
     sentMatches?: boolean | UserCountOutputTypeCountSentMatchesArgs
     receivedMatches?: boolean | UserCountOutputTypeCountReceivedMatchesArgs
     matchReactions?: boolean | UserCountOutputTypeCountMatchReactionsArgs
@@ -2464,6 +2466,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SessionWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountVerificationTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VerificationTokenWhereInput
   }
 
   /**
@@ -2810,6 +2819,7 @@ export namespace Prisma {
     updatedAt?: boolean
     accounts?: boolean | User$accountsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
+    verificationTokens?: boolean | User$verificationTokensArgs<ExtArgs>
     profile?: boolean | User$profileArgs<ExtArgs>
     sentMatches?: boolean | User$sentMatchesArgs<ExtArgs>
     receivedMatches?: boolean | User$receivedMatchesArgs<ExtArgs>
@@ -2864,6 +2874,7 @@ export namespace Prisma {
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
+    verificationTokens?: boolean | User$verificationTokensArgs<ExtArgs>
     profile?: boolean | User$profileArgs<ExtArgs>
     sentMatches?: boolean | User$sentMatchesArgs<ExtArgs>
     receivedMatches?: boolean | User$receivedMatchesArgs<ExtArgs>
@@ -2885,6 +2896,7 @@ export namespace Prisma {
     objects: {
       accounts: Prisma.$AccountPayload<ExtArgs>[]
       sessions: Prisma.$SessionPayload<ExtArgs>[]
+      verificationTokens: Prisma.$VerificationTokenPayload<ExtArgs>[]
       profile: Prisma.$ProfilePayload<ExtArgs> | null
       sentMatches: Prisma.$MatchPayload<ExtArgs>[]
       receivedMatches: Prisma.$MatchPayload<ExtArgs>[]
@@ -3303,6 +3315,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     accounts<T extends User$accountsArgs<ExtArgs> = {}>(args?: Subset<T, User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     sessions<T extends User$sessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    verificationTokens<T extends User$verificationTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$verificationTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerificationTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     profile<T extends User$profileArgs<ExtArgs> = {}>(args?: Subset<T, User$profileArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     sentMatches<T extends User$sentMatchesArgs<ExtArgs> = {}>(args?: Subset<T, User$sentMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     receivedMatches<T extends User$receivedMatchesArgs<ExtArgs> = {}>(args?: Subset<T, User$receivedMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3790,6 +3803,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SessionScalarFieldEnum | SessionScalarFieldEnum[]
+  }
+
+  /**
+   * User.verificationTokens
+   */
+  export type User$verificationTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerificationToken
+     */
+    select?: VerificationTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerificationToken
+     */
+    omit?: VerificationTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
+    where?: VerificationTokenWhereInput
+    orderBy?: VerificationTokenOrderByWithRelationInput | VerificationTokenOrderByWithRelationInput[]
+    cursor?: VerificationTokenWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VerificationTokenScalarFieldEnum | VerificationTokenScalarFieldEnum[]
   }
 
   /**
@@ -6319,41 +6356,65 @@ export namespace Prisma {
   }
 
   export type VerificationTokenMinAggregateOutputType = {
+    id: string | null
     identifier: string | null
     token: string | null
     expires: Date | null
+    userId: string | null
+    used: boolean | null
+    createdAt: Date | null
   }
 
   export type VerificationTokenMaxAggregateOutputType = {
+    id: string | null
     identifier: string | null
     token: string | null
     expires: Date | null
+    userId: string | null
+    used: boolean | null
+    createdAt: Date | null
   }
 
   export type VerificationTokenCountAggregateOutputType = {
+    id: number
     identifier: number
     token: number
     expires: number
+    userId: number
+    used: number
+    createdAt: number
     _all: number
   }
 
 
   export type VerificationTokenMinAggregateInputType = {
+    id?: true
     identifier?: true
     token?: true
     expires?: true
+    userId?: true
+    used?: true
+    createdAt?: true
   }
 
   export type VerificationTokenMaxAggregateInputType = {
+    id?: true
     identifier?: true
     token?: true
     expires?: true
+    userId?: true
+    used?: true
+    createdAt?: true
   }
 
   export type VerificationTokenCountAggregateInputType = {
+    id?: true
     identifier?: true
     token?: true
     expires?: true
+    userId?: true
+    used?: true
+    createdAt?: true
     _all?: true
   }
 
@@ -6430,9 +6491,13 @@ export namespace Prisma {
   }
 
   export type VerificationTokenGroupByOutputType = {
+    id: string
     identifier: string
     token: string
     expires: Date
+    userId: string | null
+    used: boolean
+    createdAt: Date
     _count: VerificationTokenCountAggregateOutputType | null
     _min: VerificationTokenMinAggregateOutputType | null
     _max: VerificationTokenMaxAggregateOutputType | null
@@ -6453,38 +6518,72 @@ export namespace Prisma {
 
 
   export type VerificationTokenSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
     identifier?: boolean
     token?: boolean
     expires?: boolean
+    userId?: boolean
+    used?: boolean
+    createdAt?: boolean
+    user?: boolean | VerificationToken$userArgs<ExtArgs>
   }, ExtArgs["result"]["verificationToken"]>
 
   export type VerificationTokenSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
     identifier?: boolean
     token?: boolean
     expires?: boolean
+    userId?: boolean
+    used?: boolean
+    createdAt?: boolean
+    user?: boolean | VerificationToken$userArgs<ExtArgs>
   }, ExtArgs["result"]["verificationToken"]>
 
   export type VerificationTokenSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
     identifier?: boolean
     token?: boolean
     expires?: boolean
+    userId?: boolean
+    used?: boolean
+    createdAt?: boolean
+    user?: boolean | VerificationToken$userArgs<ExtArgs>
   }, ExtArgs["result"]["verificationToken"]>
 
   export type VerificationTokenSelectScalar = {
+    id?: boolean
     identifier?: boolean
     token?: boolean
     expires?: boolean
+    userId?: boolean
+    used?: boolean
+    createdAt?: boolean
   }
 
-  export type VerificationTokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"identifier" | "token" | "expires", ExtArgs["result"]["verificationToken"]>
+  export type VerificationTokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "identifier" | "token" | "expires" | "userId" | "used" | "createdAt", ExtArgs["result"]["verificationToken"]>
+  export type VerificationTokenInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | VerificationToken$userArgs<ExtArgs>
+  }
+  export type VerificationTokenIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | VerificationToken$userArgs<ExtArgs>
+  }
+  export type VerificationTokenIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | VerificationToken$userArgs<ExtArgs>
+  }
 
   export type $VerificationTokenPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "VerificationToken"
-    objects: {}
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs> | null
+    }
     scalars: $Extensions.GetPayloadResult<{
+      id: string
       identifier: string
       token: string
       expires: Date
+      userId: string | null
+      used: boolean
+      createdAt: Date
     }, ExtArgs["result"]["verificationToken"]>
     composites: {}
   }
@@ -6568,8 +6667,8 @@ export namespace Prisma {
      * // Get first 10 VerificationTokens
      * const verificationTokens = await prisma.verificationToken.findMany({ take: 10 })
      * 
-     * // Only select the `identifier`
-     * const verificationTokenWithIdentifierOnly = await prisma.verificationToken.findMany({ select: { identifier: true } })
+     * // Only select the `id`
+     * const verificationTokenWithIdOnly = await prisma.verificationToken.findMany({ select: { id: true } })
      * 
      */
     findMany<T extends VerificationTokenFindManyArgs>(args?: SelectSubset<T, VerificationTokenFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerificationTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -6613,9 +6712,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Create many VerificationTokens and only return the `identifier`
-     * const verificationTokenWithIdentifierOnly = await prisma.verificationToken.createManyAndReturn({
-     *   select: { identifier: true },
+     * // Create many VerificationTokens and only return the `id`
+     * const verificationTokenWithIdOnly = await prisma.verificationToken.createManyAndReturn({
+     *   select: { id: true },
      *   data: [
      *     // ... provide data here
      *   ]
@@ -6704,9 +6803,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more VerificationTokens and only return the `identifier`
-     * const verificationTokenWithIdentifierOnly = await prisma.verificationToken.updateManyAndReturn({
-     *   select: { identifier: true },
+     * // Update zero or more VerificationTokens and only return the `id`
+     * const verificationTokenWithIdOnly = await prisma.verificationToken.updateManyAndReturn({
+     *   select: { id: true },
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6879,6 +6978,7 @@ export namespace Prisma {
    */
   export interface Prisma__VerificationTokenClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends VerificationToken$userArgs<ExtArgs> = {}>(args?: Subset<T, VerificationToken$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6908,9 +7008,13 @@ export namespace Prisma {
    * Fields of the VerificationToken model
    */
   interface VerificationTokenFieldRefs {
+    readonly id: FieldRef<"VerificationToken", 'String'>
     readonly identifier: FieldRef<"VerificationToken", 'String'>
     readonly token: FieldRef<"VerificationToken", 'String'>
     readonly expires: FieldRef<"VerificationToken", 'DateTime'>
+    readonly userId: FieldRef<"VerificationToken", 'String'>
+    readonly used: FieldRef<"VerificationToken", 'Boolean'>
+    readonly createdAt: FieldRef<"VerificationToken", 'DateTime'>
   }
     
 
@@ -6927,6 +7031,10 @@ export namespace Prisma {
      * Omit specific fields from the VerificationToken
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
     /**
      * Filter, which VerificationToken to fetch.
      */
@@ -6946,6 +7054,10 @@ export namespace Prisma {
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
+    /**
      * Filter, which VerificationToken to fetch.
      */
     where: VerificationTokenWhereUniqueInput
@@ -6963,6 +7075,10 @@ export namespace Prisma {
      * Omit specific fields from the VerificationToken
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
     /**
      * Filter, which VerificationToken to fetch.
      */
@@ -7012,6 +7128,10 @@ export namespace Prisma {
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
+    /**
      * Filter, which VerificationToken to fetch.
      */
     where?: VerificationTokenWhereInput
@@ -7059,6 +7179,10 @@ export namespace Prisma {
      * Omit specific fields from the VerificationToken
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
     /**
      * Filter, which VerificationTokens to fetch.
      */
@@ -7108,6 +7232,10 @@ export namespace Prisma {
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
+    /**
      * The data needed to create a VerificationToken.
      */
     data: XOR<VerificationTokenCreateInput, VerificationTokenUncheckedCreateInput>
@@ -7141,6 +7269,10 @@ export namespace Prisma {
      */
     data: VerificationTokenCreateManyInput | VerificationTokenCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -7155,6 +7287,10 @@ export namespace Prisma {
      * Omit specific fields from the VerificationToken
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
     /**
      * The data needed to update a VerificationToken.
      */
@@ -7207,6 +7343,10 @@ export namespace Prisma {
      * Limit how many VerificationTokens to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -7221,6 +7361,10 @@ export namespace Prisma {
      * Omit specific fields from the VerificationToken
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
     /**
      * The filter to search for the VerificationToken to update in case it exists.
      */
@@ -7248,6 +7392,10 @@ export namespace Prisma {
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
+    /**
      * Filter which VerificationToken to delete.
      */
     where: VerificationTokenWhereUniqueInput
@@ -7268,6 +7416,25 @@ export namespace Prisma {
   }
 
   /**
+   * VerificationToken.user
+   */
+  export type VerificationToken$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
    * VerificationToken without action
    */
   export type VerificationTokenDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7279,6 +7446,10 @@ export namespace Prisma {
      * Omit specific fields from the VerificationToken
      */
     omit?: VerificationTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerificationTokenInclude<ExtArgs> | null
   }
 
 
@@ -21423,9 +21594,13 @@ export namespace Prisma {
 
 
   export const VerificationTokenScalarFieldEnum: {
+    id: 'id',
     identifier: 'identifier',
     token: 'token',
-    expires: 'expires'
+    expires: 'expires',
+    userId: 'userId',
+    used: 'used',
+    createdAt: 'createdAt'
   };
 
   export type VerificationTokenScalarFieldEnum = (typeof VerificationTokenScalarFieldEnum)[keyof typeof VerificationTokenScalarFieldEnum]
@@ -21727,6 +21902,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'Gender'
    */
   export type EnumGenderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Gender'>
@@ -21765,13 +21947,6 @@ export namespace Prisma {
    * Reference to a field of type 'ProfileStatus[]'
    */
   export type ListEnumProfileStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProfileStatus[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -21919,6 +22094,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
     sessions?: SessionListRelationFilter
+    verificationTokens?: VerificationTokenListRelationFilter
     profile?: XOR<ProfileNullableScalarRelationFilter, ProfileWhereInput> | null
     sentMatches?: MatchListRelationFilter
     receivedMatches?: MatchListRelationFilter
@@ -21944,6 +22120,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     accounts?: AccountOrderByRelationAggregateInput
     sessions?: SessionOrderByRelationAggregateInput
+    verificationTokens?: VerificationTokenOrderByRelationAggregateInput
     profile?: ProfileOrderByWithRelationInput
     sentMatches?: MatchOrderByRelationAggregateInput
     receivedMatches?: MatchOrderByRelationAggregateInput
@@ -21972,6 +22149,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
     sessions?: SessionListRelationFilter
+    verificationTokens?: VerificationTokenListRelationFilter
     profile?: XOR<ProfileNullableScalarRelationFilter, ProfileWhereInput> | null
     sentMatches?: MatchListRelationFilter
     receivedMatches?: MatchListRelationFilter
@@ -22162,18 +22340,29 @@ export namespace Prisma {
     AND?: VerificationTokenWhereInput | VerificationTokenWhereInput[]
     OR?: VerificationTokenWhereInput[]
     NOT?: VerificationTokenWhereInput | VerificationTokenWhereInput[]
+    id?: StringFilter<"VerificationToken"> | string
     identifier?: StringFilter<"VerificationToken"> | string
     token?: StringFilter<"VerificationToken"> | string
     expires?: DateTimeFilter<"VerificationToken"> | Date | string
+    userId?: StringNullableFilter<"VerificationToken"> | string | null
+    used?: BoolFilter<"VerificationToken"> | boolean
+    createdAt?: DateTimeFilter<"VerificationToken"> | Date | string
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }
 
   export type VerificationTokenOrderByWithRelationInput = {
+    id?: SortOrder
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
+    userId?: SortOrderInput | SortOrder
+    used?: SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
   }
 
   export type VerificationTokenWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
     token?: string
     identifier_token?: VerificationTokenIdentifierTokenCompoundUniqueInput
     AND?: VerificationTokenWhereInput | VerificationTokenWhereInput[]
@@ -22181,12 +22370,20 @@ export namespace Prisma {
     NOT?: VerificationTokenWhereInput | VerificationTokenWhereInput[]
     identifier?: StringFilter<"VerificationToken"> | string
     expires?: DateTimeFilter<"VerificationToken"> | Date | string
-  }, "token" | "identifier_token">
+    userId?: StringNullableFilter<"VerificationToken"> | string | null
+    used?: BoolFilter<"VerificationToken"> | boolean
+    createdAt?: DateTimeFilter<"VerificationToken"> | Date | string
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id" | "token" | "identifier_token">
 
   export type VerificationTokenOrderByWithAggregationInput = {
+    id?: SortOrder
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
+    userId?: SortOrderInput | SortOrder
+    used?: SortOrder
+    createdAt?: SortOrder
     _count?: VerificationTokenCountOrderByAggregateInput
     _max?: VerificationTokenMaxOrderByAggregateInput
     _min?: VerificationTokenMinOrderByAggregateInput
@@ -22196,9 +22393,13 @@ export namespace Prisma {
     AND?: VerificationTokenScalarWhereWithAggregatesInput | VerificationTokenScalarWhereWithAggregatesInput[]
     OR?: VerificationTokenScalarWhereWithAggregatesInput[]
     NOT?: VerificationTokenScalarWhereWithAggregatesInput | VerificationTokenScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"VerificationToken"> | string
     identifier?: StringWithAggregatesFilter<"VerificationToken"> | string
     token?: StringWithAggregatesFilter<"VerificationToken"> | string
     expires?: DateTimeWithAggregatesFilter<"VerificationToken"> | Date | string
+    userId?: StringNullableWithAggregatesFilter<"VerificationToken"> | string | null
+    used?: BoolWithAggregatesFilter<"VerificationToken"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"VerificationToken"> | Date | string
   }
 
   export type ProfileWhereInput = {
@@ -23295,6 +23496,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -23320,6 +23522,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -23345,6 +23548,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -23370,6 +23574,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -23572,45 +23777,72 @@ export namespace Prisma {
   }
 
   export type VerificationTokenCreateInput = {
+    id?: string
     identifier: string
     token: string
     expires: Date | string
+    used?: boolean
+    createdAt?: Date | string
+    user?: UserCreateNestedOneWithoutVerificationTokensInput
   }
 
   export type VerificationTokenUncheckedCreateInput = {
+    id?: string
     identifier: string
     token: string
     expires: Date | string
+    userId?: string | null
+    used?: boolean
+    createdAt?: Date | string
   }
 
   export type VerificationTokenUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     identifier?: StringFieldUpdateOperationsInput | string
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
+    used?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneWithoutVerificationTokensNestedInput
   }
 
   export type VerificationTokenUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     identifier?: StringFieldUpdateOperationsInput | string
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    used?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type VerificationTokenCreateManyInput = {
+    id?: string
     identifier: string
     token: string
     expires: Date | string
+    userId?: string | null
+    used?: boolean
+    createdAt?: Date | string
   }
 
   export type VerificationTokenUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
     identifier?: StringFieldUpdateOperationsInput | string
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
+    used?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type VerificationTokenUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
     identifier?: StringFieldUpdateOperationsInput | string
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    used?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ProfileCreateInput = {
@@ -24903,6 +25135,12 @@ export namespace Prisma {
     none?: SessionWhereInput
   }
 
+  export type VerificationTokenListRelationFilter = {
+    every?: VerificationTokenWhereInput
+    some?: VerificationTokenWhereInput
+    none?: VerificationTokenWhereInput
+  }
+
   export type ProfileNullableScalarRelationFilter = {
     is?: ProfileWhereInput | null
     isNot?: ProfileWhereInput | null
@@ -24972,6 +25210,10 @@ export namespace Prisma {
   }
 
   export type SessionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type VerificationTokenOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -25232,27 +25474,57 @@ export namespace Prisma {
     expires?: SortOrder
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
   export type VerificationTokenIdentifierTokenCompoundUniqueInput = {
     identifier: string
     token: string
   }
 
   export type VerificationTokenCountOrderByAggregateInput = {
+    id?: SortOrder
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
+    userId?: SortOrder
+    used?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type VerificationTokenMaxOrderByAggregateInput = {
+    id?: SortOrder
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
+    userId?: SortOrder
+    used?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type VerificationTokenMinOrderByAggregateInput = {
+    id?: SortOrder
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
+    userId?: SortOrder
+    used?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -25285,11 +25557,6 @@ export namespace Prisma {
     in?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumProfileStatusFilter<$PrismaModel> | $Enums.ProfileStatus
-  }
-
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type ProfileCountOrderByAggregateInput = {
@@ -25462,14 +25729,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumProfileStatusFilter<$PrismaModel>
     _max?: NestedEnumProfileStatusFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type FloatFilter<$PrismaModel = never> = {
@@ -26069,11 +26328,6 @@ export namespace Prisma {
     _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
   }
 
-  export type UserNullableScalarRelationFilter = {
-    is?: UserWhereInput | null
-    isNot?: UserWhereInput | null
-  }
-
   export type AdminLogCountOrderByAggregateInput = {
     id?: SortOrder
     authorId?: SortOrder
@@ -26181,6 +26435,13 @@ export namespace Prisma {
     connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
   }
 
+  export type VerificationTokenCreateNestedManyWithoutUserInput = {
+    create?: XOR<VerificationTokenCreateWithoutUserInput, VerificationTokenUncheckedCreateWithoutUserInput> | VerificationTokenCreateWithoutUserInput[] | VerificationTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VerificationTokenCreateOrConnectWithoutUserInput | VerificationTokenCreateOrConnectWithoutUserInput[]
+    createMany?: VerificationTokenCreateManyUserInputEnvelope
+    connect?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+  }
+
   export type ProfileCreateNestedOneWithoutUserInput = {
     create?: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
     connectOrCreate?: ProfileCreateOrConnectWithoutUserInput
@@ -26269,6 +26530,13 @@ export namespace Prisma {
     connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
     createMany?: SessionCreateManyUserInputEnvelope
     connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
+  }
+
+  export type VerificationTokenUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<VerificationTokenCreateWithoutUserInput, VerificationTokenUncheckedCreateWithoutUserInput> | VerificationTokenCreateWithoutUserInput[] | VerificationTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VerificationTokenCreateOrConnectWithoutUserInput | VerificationTokenCreateOrConnectWithoutUserInput[]
+    createMany?: VerificationTokenCreateManyUserInputEnvelope
+    connect?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
   }
 
   export type ProfileUncheckedCreateNestedOneWithoutUserInput = {
@@ -26393,6 +26661,20 @@ export namespace Prisma {
     update?: SessionUpdateWithWhereUniqueWithoutUserInput | SessionUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: SessionUpdateManyWithWhereWithoutUserInput | SessionUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: SessionScalarWhereInput | SessionScalarWhereInput[]
+  }
+
+  export type VerificationTokenUpdateManyWithoutUserNestedInput = {
+    create?: XOR<VerificationTokenCreateWithoutUserInput, VerificationTokenUncheckedCreateWithoutUserInput> | VerificationTokenCreateWithoutUserInput[] | VerificationTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VerificationTokenCreateOrConnectWithoutUserInput | VerificationTokenCreateOrConnectWithoutUserInput[]
+    upsert?: VerificationTokenUpsertWithWhereUniqueWithoutUserInput | VerificationTokenUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: VerificationTokenCreateManyUserInputEnvelope
+    set?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+    disconnect?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+    delete?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+    connect?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+    update?: VerificationTokenUpdateWithWhereUniqueWithoutUserInput | VerificationTokenUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: VerificationTokenUpdateManyWithWhereWithoutUserInput | VerificationTokenUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: VerificationTokenScalarWhereInput | VerificationTokenScalarWhereInput[]
   }
 
   export type ProfileUpdateOneWithoutUserNestedInput = {
@@ -26571,6 +26853,20 @@ export namespace Prisma {
     update?: SessionUpdateWithWhereUniqueWithoutUserInput | SessionUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: SessionUpdateManyWithWhereWithoutUserInput | SessionUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: SessionScalarWhereInput | SessionScalarWhereInput[]
+  }
+
+  export type VerificationTokenUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<VerificationTokenCreateWithoutUserInput, VerificationTokenUncheckedCreateWithoutUserInput> | VerificationTokenCreateWithoutUserInput[] | VerificationTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VerificationTokenCreateOrConnectWithoutUserInput | VerificationTokenCreateOrConnectWithoutUserInput[]
+    upsert?: VerificationTokenUpsertWithWhereUniqueWithoutUserInput | VerificationTokenUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: VerificationTokenCreateManyUserInputEnvelope
+    set?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+    disconnect?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+    delete?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+    connect?: VerificationTokenWhereUniqueInput | VerificationTokenWhereUniqueInput[]
+    update?: VerificationTokenUpdateWithWhereUniqueWithoutUserInput | VerificationTokenUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: VerificationTokenUpdateManyWithWhereWithoutUserInput | VerificationTokenUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: VerificationTokenScalarWhereInput | VerificationTokenScalarWhereInput[]
   }
 
   export type ProfileUncheckedUpdateOneWithoutUserNestedInput = {
@@ -26759,6 +27055,26 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutSessionsInput, UserUpdateWithoutSessionsInput>, UserUncheckedUpdateWithoutSessionsInput>
   }
 
+  export type UserCreateNestedOneWithoutVerificationTokensInput = {
+    create?: XOR<UserCreateWithoutVerificationTokensInput, UserUncheckedCreateWithoutVerificationTokensInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVerificationTokensInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
+  export type UserUpdateOneWithoutVerificationTokensNestedInput = {
+    create?: XOR<UserCreateWithoutVerificationTokensInput, UserUncheckedCreateWithoutVerificationTokensInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVerificationTokensInput
+    upsert?: UserUpsertWithoutVerificationTokensInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVerificationTokensInput, UserUpdateWithoutVerificationTokensInput>, UserUncheckedUpdateWithoutVerificationTokensInput>
+  }
+
   export type UserCreateNestedOneWithoutProfileInput = {
     create?: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
     connectOrCreate?: UserCreateOrConnectWithoutProfileInput
@@ -26783,10 +27099,6 @@ export namespace Prisma {
 
   export type EnumProfileStatusFieldUpdateOperationsInput = {
     set?: $Enums.ProfileStatus
-  }
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
   }
 
   export type UserUpdateOneRequiredWithoutProfileNestedInput = {
@@ -27387,6 +27699,19 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type NestedEnumGenderFilter<$PrismaModel = never> = {
     equals?: $Enums.Gender | EnumGenderFieldRefInput<$PrismaModel>
     in?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
@@ -27406,11 +27731,6 @@ export namespace Prisma {
     in?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumProfileStatusFilter<$PrismaModel> | $Enums.ProfileStatus
-  }
-
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
@@ -27468,14 +27788,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumProfileStatusFilter<$PrismaModel>
     _max?: NestedEnumProfileStatusFilter<$PrismaModel>
-  }
-
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedEnumMatchStatusFilter<$PrismaModel = never> = {
@@ -27720,6 +28032,34 @@ export namespace Prisma {
 
   export type SessionCreateManyUserInputEnvelope = {
     data: SessionCreateManyUserInput | SessionCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type VerificationTokenCreateWithoutUserInput = {
+    id?: string
+    identifier: string
+    token: string
+    expires: Date | string
+    used?: boolean
+    createdAt?: Date | string
+  }
+
+  export type VerificationTokenUncheckedCreateWithoutUserInput = {
+    id?: string
+    identifier: string
+    token: string
+    expires: Date | string
+    used?: boolean
+    createdAt?: Date | string
+  }
+
+  export type VerificationTokenCreateOrConnectWithoutUserInput = {
+    where: VerificationTokenWhereUniqueInput
+    create: XOR<VerificationTokenCreateWithoutUserInput, VerificationTokenUncheckedCreateWithoutUserInput>
+  }
+
+  export type VerificationTokenCreateManyUserInputEnvelope = {
+    data: VerificationTokenCreateManyUserInput | VerificationTokenCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -28234,6 +28574,35 @@ export namespace Prisma {
     expires?: DateTimeFilter<"Session"> | Date | string
   }
 
+  export type VerificationTokenUpsertWithWhereUniqueWithoutUserInput = {
+    where: VerificationTokenWhereUniqueInput
+    update: XOR<VerificationTokenUpdateWithoutUserInput, VerificationTokenUncheckedUpdateWithoutUserInput>
+    create: XOR<VerificationTokenCreateWithoutUserInput, VerificationTokenUncheckedCreateWithoutUserInput>
+  }
+
+  export type VerificationTokenUpdateWithWhereUniqueWithoutUserInput = {
+    where: VerificationTokenWhereUniqueInput
+    data: XOR<VerificationTokenUpdateWithoutUserInput, VerificationTokenUncheckedUpdateWithoutUserInput>
+  }
+
+  export type VerificationTokenUpdateManyWithWhereWithoutUserInput = {
+    where: VerificationTokenScalarWhereInput
+    data: XOR<VerificationTokenUpdateManyMutationInput, VerificationTokenUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type VerificationTokenScalarWhereInput = {
+    AND?: VerificationTokenScalarWhereInput | VerificationTokenScalarWhereInput[]
+    OR?: VerificationTokenScalarWhereInput[]
+    NOT?: VerificationTokenScalarWhereInput | VerificationTokenScalarWhereInput[]
+    id?: StringFilter<"VerificationToken"> | string
+    identifier?: StringFilter<"VerificationToken"> | string
+    token?: StringFilter<"VerificationToken"> | string
+    expires?: DateTimeFilter<"VerificationToken"> | Date | string
+    userId?: StringNullableFilter<"VerificationToken"> | string | null
+    used?: BoolFilter<"VerificationToken"> | boolean
+    createdAt?: DateTimeFilter<"VerificationToken"> | Date | string
+  }
+
   export type ProfileUpsertWithoutUserInput = {
     update: XOR<ProfileUpdateWithoutUserInput, ProfileUncheckedUpdateWithoutUserInput>
     create: XOR<ProfileCreateWithoutUserInput, ProfileUncheckedCreateWithoutUserInput>
@@ -28634,6 +29003,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -28658,6 +29028,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -28698,6 +29069,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -28722,6 +29094,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -28746,6 +29119,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -28770,6 +29144,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -28810,6 +29185,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -28834,6 +29210,123 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    chatRooms?: ChatRoomMemberUncheckedUpdateManyWithoutUserNestedInput
+    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminLogs?: AdminLogUncheckedUpdateManyWithoutAuthorNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutVerificationTokensInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    chatRooms?: ChatRoomMemberCreateNestedManyWithoutUserInput
+    messages?: MessageCreateNestedManyWithoutSenderInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminLogs?: AdminLogCreateNestedManyWithoutAuthorInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutVerificationTokensInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    chatRooms?: ChatRoomMemberUncheckedCreateNestedManyWithoutUserInput
+    messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminLogs?: AdminLogUncheckedCreateNestedManyWithoutAuthorInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutVerificationTokensInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutVerificationTokensInput, UserUncheckedCreateWithoutVerificationTokensInput>
+  }
+
+  export type UserUpsertWithoutVerificationTokensInput = {
+    update: XOR<UserUpdateWithoutVerificationTokensInput, UserUncheckedUpdateWithoutVerificationTokensInput>
+    create: XOR<UserCreateWithoutVerificationTokensInput, UserUncheckedCreateWithoutVerificationTokensInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutVerificationTokensInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutVerificationTokensInput, UserUncheckedUpdateWithoutVerificationTokensInput>
+  }
+
+  export type UserUpdateWithoutVerificationTokensInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    chatRooms?: ChatRoomMemberUpdateManyWithoutUserNestedInput
+    messages?: MessageUpdateManyWithoutSenderNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminLogs?: AdminLogUpdateManyWithoutAuthorNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutVerificationTokensInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -28859,6 +29352,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
     matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
@@ -28883,6 +29377,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
     matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
@@ -28923,6 +29418,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
     matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
@@ -28947,6 +29443,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
     matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -28971,6 +29468,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
     matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
@@ -28995,6 +29493,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
     matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
@@ -29024,6 +29523,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
@@ -29048,6 +29548,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
@@ -29139,6 +29640,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
     matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
@@ -29163,6 +29665,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
     matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -29198,6 +29701,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
@@ -29222,6 +29726,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -29346,6 +29851,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -29370,6 +29876,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -29469,6 +29976,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -29493,6 +30001,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -29744,6 +30253,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -29768,6 +30278,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -29839,6 +30350,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -29863,6 +30375,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -29912,6 +30425,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -29936,6 +30450,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -30007,6 +30522,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -30031,6 +30547,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -30055,6 +30572,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -30079,6 +30597,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -30119,6 +30638,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -30143,6 +30663,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -30167,6 +30688,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -30191,6 +30713,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -30231,6 +30754,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -30255,6 +30779,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -30279,6 +30804,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -30303,6 +30829,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -30343,6 +30870,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -30367,6 +30895,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -30391,6 +30920,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -30415,6 +30945,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -30455,6 +30986,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -30479,6 +31011,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -30503,6 +31036,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
     profile?: ProfileCreateNestedOneWithoutUserInput
     sentMatches?: MatchCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
@@ -30527,6 +31061,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
     profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
     sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
     receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
@@ -30567,6 +31102,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
     profile?: ProfileUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
@@ -30591,6 +31127,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
     profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
     sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
     receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
@@ -30621,6 +31158,15 @@ export namespace Prisma {
     id?: string
     sessionToken: string
     expires: Date | string
+  }
+
+  export type VerificationTokenCreateManyUserInput = {
+    id?: string
+    identifier: string
+    token: string
+    expires: Date | string
+    used?: boolean
+    createdAt?: Date | string
   }
 
   export type MatchCreateManySenderInput = {
@@ -30815,6 +31361,33 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     sessionToken?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerificationTokenUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    identifier?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    expires?: DateTimeFieldUpdateOperationsInput | Date | string
+    used?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerificationTokenUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    identifier?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    expires?: DateTimeFieldUpdateOperationsInput | Date | string
+    used?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerificationTokenUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    identifier?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    expires?: DateTimeFieldUpdateOperationsInput | Date | string
+    used?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MatchUpdateWithoutSenderInput = {

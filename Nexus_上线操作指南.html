@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus 上线操作指南</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #0a0a0b; color: #e4e4e7; line-height: 1.7; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+  .subtitle { color: #71717a; font-size: 1.05rem; margin-bottom: 40px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; }
+  .badge-green { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .badge-yellow { background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
+  .badge-red { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-blue { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  
+  .status-bar { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 36px; }
+  
+  .card { background: rgba(24,24,27,0.8); border: 1px solid rgba(63,63,70,0.5); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .card-icon-pink { background: linear-gradient(135deg, #ec4899, #f472b6); }
+  .card-icon-purple { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+  .card-icon-blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+  .card-icon-cyan { background: linear-gradient(135deg, #06b6d4, #22d3ee); }
+  .card-icon-green { background: linear-gradient(135deg, #22c55e, #4ade80); }
+  .card-icon-orange { background: linear-gradient(135deg, #f97316, #fb923c); }
+  .card-title { font-size: 1.25rem; font-weight: 700; }
+  .card-desc { color: #a1a1aa; font-size: 0.9rem; }
+  
+  .step { counter-increment: step-counter; position: relative; padding-left: 48px; margin-bottom: 24px; }
+  .step::before { content: counter(step-counter); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #ec4899, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; }
+  .step-title { font-weight: 600; margin-bottom: 6px; }
+  .step-body { color: #a1a1aa; font-size: 0.92rem; }
+  
+  .code-block { background: #18181b; border: 1px solid #27272a; border-radius: 10px; padding: 16px 20px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; color: #a5f3fc; overflow-x: auto; margin: 12px 0; white-space: pre; line-height: 1.6; }
+  .code-inline { background: #27272a; padding: 2px 8px; border-radius: 6px; font-family: monospace; font-size: 0.88rem; color: #fbbf24; }
+  
+  .warning { background: rgba(250,204,21,0.08); border-left: 3px solid #facc15; border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 16px 0; color: #fde68a; font-size: 0.9rem; }
+  .info { background: rgba(59,130,246,0.08); border-left: 3px solid #3b82f6; border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 16px 0; color: #93c5fd; font-size: 0.9rem; }
+  .success { background: rgba(34,197,94,0.08); border-left: 3px solid #22c55e; border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 16px 0; color: #86efac; font-size: 0.9rem; }
+  
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { background: #18181b; text-align: left; padding: 10px 14px; font-size: 0.82rem; text-transform: uppercase; color: #71717a; letter-spacing: 0.05em; border-bottom: 1px solid #27272a; }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(39,39,42,0.5); font-size: 0.9rem; }
+  tr:hover td { background: rgba(39,39,42,0.3); }
+  
+  .checklist { list-style: none; counter-reset: check-counter; }
+  .checklist li { counter-increment: check-counter; padding: 8px 0 8px 32px; position: relative; font-size: 0.92rem; border-bottom: 1px solid rgba(39,39,42,0.3); }
+  .checklist li::before { content: "☐"; position: absolute; left: 0; color: #71717a; }
+  .checklist li.done::before { content: "✅"; }
+  .checklist li.done { color: #4ade80; text-decoration: line-through; opacity: 0.7; }
+  
+  .section-divider { height: 1px; background: linear-gradient(90deg, transparent, #3f3f46, transparent); margin: 40px 0; }
+  
+  .copy-btn { background: #27272a; border: 1px solid #3f3f46; color: #a1a1aa; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+  .copy-btn:hover { background: #3f3f46; color: #e4e4e7; }
+  
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #18181b; border-radius: 10px; padding: 4px; }
+  .tab { padding: 8px 20px; border-radius: 8px; font-size: 0.88rem; cursor: pointer; color: #a1a1aa; transition: all 0.2s; border: none; background: none; }
+  .tab.active { background: linear-gradient(135deg, #ec4899, #8b5cf6); color: white; font-weight: 600; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  
+  .progress-bar { height: 6px; background: #27272a; border-radius: 3px; margin: 20px 0; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #ec4899, #8b5cf6, #06b6d4); border-radius: 3px; transition: width 0.5s ease; }
+  
+  .flow-diagram { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+  .flow-node { background: #18181b; border: 1px solid #3f3f46; border-radius: 10px; padding: 10px 18px; font-size: 0.85rem; font-weight: 600; }
+  .flow-arrow { color: #71717a; font-size: 1.2rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Nexus 生产上线指南</h1>
+  <p class="subtitle">数据库配置 · 域名解析 · Admin后台 · 监控告警 — 完整操作手册</p>
+  
+  <div class="status-bar">
+    <span class="badge badge-green">✓ 代码已部署 (Vercel)</span>
+    <span class="badge badge-yellow">⏳ 数据库待配置 (Neon)</span>
+    <span class="badge badge-yellow">⏳ 域名待解析 (腾讯云)</span>
+    <span class="badge badge-blue">📋 本指南 v1.0</span>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" style="width: 35%"></div>
+  </div>
+  <p style="color: #71717a; font-size: 0.85rem; margin-top: -14px; margin-bottom: 30px;">上线进度: 35% — 已完成代码部署 + Auth加固，待配置基础设施</p>
+
+  <!-- ============================== -->
+  <!-- Section 1: Neon 数据库 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-purple">🐘</div>
+      <div>
+        <div class="card-title">Step 1: 创建 Neon PostgreSQL 数据库</div>
+        <div class="card-desc">免费额度足够 MVP，支持 Serverless，无需管理连接池</div>
+      </div>
+    </div>
+    
+    <div style="counter-reset: step-counter;">
+      <div class="step">
+        <div class="step-title">注册 Neon 账号</div>
+        <div class="step-body">
+          访问 <a href="https://console.neon.tech/signup" target="_blank" style="color: #60a5fa;">console.neon.tech/signup</a>，使用 GitHub 或 Google 账号注册。
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-title">创建 Project</div>
+        <div class="step-body">
+          <ul style="padding-left: 20px; color: #a1a1aa;">
+            <li>点击 <strong style="color: #e4e4e7;">Create Project</strong></li>
+            <li>Project name: <span class="code-inline">nexus-production</span></li>
+            <li>Region: 选择 <strong style="color: #e4e4e7;">AWS US East (Virginia)</strong>（Vercel 默认区域，延迟最低）</li>
+            <li>Branch name: <span class="code-inline">main</span>（默认即可）</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-title">获取连接字符串</div>
+        <div class="step-body">
+          创建完成后，在 Dashboard 的 <strong>Connection Details</strong> 中找到连接字符串。选择 <strong>Pooled connection</strong>（推荐用于 Serverless）：
+        </div>
+        <div class="code-block">postgresql://nexus_owner:xxxxxxxx@ep-cool-name-123456.us-east-2.aws.neon.tech/nexus_production?sslmode=require&pgbouncer=true</div>
+      </div>
+      
+      <div class="warning">
+        ⚠️ 请复制完整的连接字符串并安全保存，后续步骤会用到。Pooled connection 带 <code>pgbouncer=true</code> 参数，对 Serverless 环境更友好。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Section 2: 配置 Vercel 环境变量 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-blue">⚙️</div>
+      <div>
+        <div class="card-title">Step 2: 配置 Vercel 环境变量</div>
+        <div class="card-desc">将数据库连接字符串和认证密钥注入生产环境</div>
+      </div>
+    </div>
+    
+    <div style="counter-reset: step-counter;">
+      <div class="step">
+        <div class="step-title">设置 DATABASE_URL</div>
+        <div class="step-body">在终端执行（替换为你的实际连接字符串）：</div>
+        <div class="code-block">cd nexus-app
+export PATH="$HOME/.npm-global/bin:$PATH"
+
+# 设置数据库连接字符串（Production 环境）
+vercel env add DATABASE_URL production
+# 粘贴上一步获取的 Neon 连接字符串（带 pgbouncer=true）
+
+# 生成 AUTH_SECRET（用于 NextAuth JWT 加密）
+openssl rand -base64 32
+# 复制生成的随机字符串
+
+vercel env add AUTH_SECRET production
+# 粘贴上面生成的随机字符串</div>
+      </div>
+
+      <div class="step">
+        <div class="step-title">更新 NEXTAUTH_URL 和其他变量</div>
+        <div class="step-body">如果使用了自定义域名（Step 4），需要更新：</div>
+        <div class="code-block"># 设置应用 URL（使用自定义域名后更新）
+vercel env add NEXTAUTH_URL production
+# 值: https://your-nexus-domain.com
+
+vercel env add AUTH_URL production
+# 值: https://your-nexus-domain.com
+
+vercel env add NEXT_PUBLIC_APP_URL production
+# 值: https://your-nexus-domain.com</div>
+      </div>
+
+      <div class="step">
+        <div class="step-title">（可选）配置 OAuth Providers</div>
+        <div class="step-body">如果需要 Google/GitHub 登录：</div>
+        <div class="code-block"># Google OAuth
+# 1. 去 https://console.cloud.google.com/apis/credentials 创建 OAuth 2.0 Client ID
+# 2. Authorized redirect URIs: https://your-domain.com/api/auth/callback/google
+vercel env add GOOGLE_CLIENT_ID production
+vercel env add GOOGLE_CLIENT_SECRET production
+
+# GitHub OAuth  
+# 1. 去 https://github.com/settings/developers 创建 OAuth App
+# 2. Authorization callback URL: https://your-domain.com/api/auth/callback/github
+vercel env add GITHUB_CLIENT_ID production
+vercel env add GITHUB_CLIENT_SECRET production</div>
+      </div>
+      
+      <div class="info">
+        💡 当前已配置的环境变量：AUTH_SECRET, NEXTAUTH_URL, AUTH_URL, NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_APP_NAME。<br>
+        需要新增：<strong>DATABASE_URL</strong>（必须）、<strong>GOOGLE_CLIENT_ID/SECRET</strong>（可选）。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Section 3: 初始化数据库 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-cyan">🗄️</div>
+      <div>
+        <div class="card-title">Step 3: 初始化数据库 + 创建管理员</div>
+        <div class="card-desc">推送 Schema 到 Neon + 创建超级管理员账号</div>
+      </div>
+    </div>
+    
+    <div style="counter-reset: step-counter;">
+      <div class="step">
+        <div class="step-title">推送 Prisma Schema 到数据库</div>
+        <div class="step-body">在本地终端执行（需要设置 DATABASE_URL 环境变量）：</div>
+        <div class="code-block">cd nexus-app
+
+# 方法1: 直接使用 db-init.sh 脚本（推荐）
+# 先创建 .env 文件
+echo 'DATABASE_URL="postgresql://nexus_owner:xxx@ep-xxx.neon.tech/nexus_production?sslmode=require&pgbouncer=true"' > .env
+
+# 运行一键初始化脚本
+bash scripts/db-init.sh</div>
+        <div class="code-block"># 方法2: 手动逐步执行
+
+# 生成 Prisma Client
+npx prisma generate
+
+# 推送 Schema 到数据库（创建所有表）
+npx prisma db push
+
+# 创建管理员账号 + 系统配置
+# 默认密码: Nexus@Admin2026! (请立即修改!)
+ADMIN_EMAIL="your-email@example.com" npx tsx prisma/init-admin.ts
+
+# 可选: 导入演示数据
+npx tsx prisma/seed.ts</div>
+      </div>
+      
+      <div class="warning">
+        ⚠️ 管理员默认密码为 <code>Nexus@Admin2026!</code>，首次登录后请立即通过 Admin 后台修改密码。<br>
+        可通过环境变量自定义：<code>ADMIN_EMAIL=xxx ADMIN_PASSWORD=xxx npx tsx prisma/init-admin.ts</code>
+      </div>
+      
+      <div class="step">
+        <div class="step-title">验证数据库连接</div>
+        <div class="step-body">确认数据已正确写入：</div>
+        <div class="code-block"># 方法1: 访问 Vercel 健康检查
+curl https://nexus-app-chi.vercel.app/api/health
+
+# 方法2: 使用 Prisma Studio 查看数据
+DATABASE_URL="你的连接字符串" npx prisma studio
+# 浏览器打开 http://localhost:5555 查看 User 和 SystemConfig 表</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ============================== -->
+  <!-- Section 4: 腾讯云域名解析 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-pink">🌐</div>
+      <div>
+        <div class="card-title">Step 4: 腾讯云域名 DNS 解析</div>
+        <div class="card-desc">将域名指向 Vercel，启用 HTTPS</div>
+      </div>
+    </div>
+    
+    <div style="counter-reset: step-counter;">
+      <div class="step">
+        <div class="step-title">登录腾讯云 DNS 控制台</div>
+        <div class="step-body">
+          访问 <a href="https://console.cloud.tencent.com/cns" target="_blank" style="color: #60a5fa;">console.cloud.tencent.com/cns</a>，找到你的域名。
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-title">在 Vercel 添加自定义域名</div>
+        <div class="step-body">
+          <ul style="padding-left: 20px; color: #a1a1aa;">
+            <li>访问 <a href="https://vercel.com/aoshuang99-2649s-projects/nexus-app/settings/domains" target="_blank" style="color: #60a5fa;">Vercel 项目 Settings → Domains</a></li>
+            <li>添加主域名：<span class="code-inline">your-domain.com</span></li>
+            <li>添加 www 子域名：<span class="code-inline">www.your-domain.com</span></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-title">配置 DNS 解析记录</div>
+        <div class="step-body">
+          Vercel 会告诉你需要添加的 DNS 记录。根据域名是否已经在 Vercel 上，有两种配置方式：
+        </div>
+        
+        <div class="tabs">
+          <button class="tab active" onclick="showTab('dns-a')">方式A: A 记录</button>
+          <button class="tab" onclick="showTab('dns-cname')">方式B: CNAME</button>
+        </div>
+        
+        <div id="dns-a" class="tab-content active">
+          <p style="color: #a1a1aa; font-size: 0.9rem; margin-bottom: 12px;">在腾讯云 DNS 添加以下记录（推荐用于根域名）：</p>
+          <table>
+            <thead>
+              <tr><th>类型</th><th>主机记录</th><th>记录值</th><th>TTL</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="code-inline">A</span></td><td><span class="code-inline">@</span></td><td><span class="code-inline">76.76.21.21</span></td><td>600</td></tr>
+              <tr><td><span class="code-inline">CNAME</span></td><td><span class="code-inline">www</span></td><td><span class="code-inline">cname.vercel-dns.com</span></td><td>600</td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div id="dns-cname" class="tab-content">
+          <p style="color: #a1a1aa; font-size: 0.9rem; margin-bottom: 12px;">如果 Vercel 提示使用 CNAME 验证：</p>
+          <table>
+            <thead>
+              <tr><th>类型</th><th>主机记录</th><th>记录值</th><th>TTL</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="code-inline">CNAME</span></td><td><span class="code-inline">your-domain.com</span></td><td><span class="code-inline">cname.vercel-dns.com</span></td><td>600</td></tr>
+              <tr><td><span class="code-inline">TXT</span></td><td><span class="code-inline">_vercel.your-domain.com</span></td><td><span class="code-inline">vercel-domain-verification=xxx</span></td><td>600</td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="info">
+          💡 Vercel 的 IP 地址：<code>76.76.21.21</code>（这是 Vercel 负载均衡器，不是真实服务器）。<br>
+          如果你使用腾讯云 CDN 或其他代理，也可以用 CNAME 指向 <code>cname.vercel-dns.com</code>。
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-title">等待 DNS 生效 + SSL 证书签发</div>
+        <div class="step-body">
+          <ul style="padding-left: 20px; color: #a1a1aa;">
+            <li>DNS 传播: 通常 <strong style="color: #e4e4e7;">1-5 分钟</strong>（全球最多 48 小时）</li>
+            <li>SSL 证书: Vercel 自动签发 Let's Encrypt，通常 <strong style="color: #e4e4e7;">1-2 分钟</strong></li>
+            <li>在 Vercel Domains 页面查看状态，出现 <span class="badge badge-green" style="font-size: 0.75rem;">Valid</span> 表示成功</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-title">更新环境变量指向新域名</div>
+        <div class="step-body">DNS 生效后，更新 Vercel 环境变量：</div>
+        <div class="code-block">vercel env rm NEXTAUTH_URL production
+vercel env add NEXTAUTH_URL production
+# 值: https://your-domain.com
+
+vercel env rm AUTH_URL production
+vercel env add AUTH_URL production
+# 值: https://your-domain.com
+
+vercel env rm NEXT_PUBLIC_APP_URL production
+vercel env add NEXT_PUBLIC_APP_URL production
+# 值: https://your-domain.com
+
+# 重新部署以使环境变量生效
+vercel --prod</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ============================== -->
+  <!-- Section 5: Admin 后台使用 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-orange">🛡️</div>
+      <div>
+        <div class="card-title">Step 5: Admin 后台使用指南</div>
+        <div class="card-desc">数据监控、用户管理、系统配置</div>
+      </div>
+    </div>
+    
+    <table>
+      <thead>
+        <tr><th>页面</th><th>URL</th><th>功能</th><th>权限</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Admin Dashboard</strong></td><td><span class="code-inline">/admin</span></td><td>总览面板：用户数、匹配数、收入等核心指标</td><td>ADMIN+</td></tr>
+        <tr><td><strong>用户管理</strong></td><td><span class="code-inline">/admin/users</span></td><td>查看/搜索/禁用用户、角色管理</td><td>ADMIN+</td></tr>
+        <tr><td><strong>匹配管理</strong></td><td><span class="code-inline">/admin/matches</span></td><td>查看所有匹配、手动创建/取消匹配</td><td>ADMIN+</td></tr>
+        <tr><td><strong>数据分析</strong></td><td><span class="code-inline">/admin/analytics</span></td><td>用户增长、匹配成功率、留存率图表</td><td>SUPER_ADMIN</td></tr>
+        <tr><td><strong>系统配置</strong></td><td><span class="code-inline">/admin/settings</span></td><td>匹配参数、定价、维护模式等</td><td>SUPER_ADMIN</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="info" style="margin-top: 16px;">
+      🔐 权限控制说明：<br>
+      <strong>middleware.ts</strong> 已配置路由保护 — <code>/admin/*</code> 只允许 ADMIN 和 SUPER_ADMIN 角色访问。<br>
+      <code>/dashboard/*</code> 需要登录（任意角色）。未登录用户自动跳转到 <code>/login</code>。
+    </div>
+    
+    <div class="warning">
+      ⚠️ <strong>安全建议</strong>：首次登录管理员账号后，请立即修改默认密码。建议通过 OAuth (Google/GitHub) 登录管理员账号，避免密码泄露风险。
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Section 6: 冒烟测试 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-green">✅</div>
+      <div>
+        <div class="card-title">Step 6: 上线冒烟测试清单</div>
+        <div class="card-desc">按顺序执行，确保每个环节正常</div>
+      </div>
+    </div>
+    
+    <ul class="checklist">
+      <li><strong>数据库连接</strong> — 访问 <code>/api/health</code>，返回 <code>{"status":"ok"}</code></li>
+      <li><strong>首页加载</strong> — 访问域名，Landing Page 正常渲染</li>
+      <li><strong>注册流程</strong> — 访问 <code>/register</code>，填写信息提交，自动跳转到 <code>/dashboard</code></li>
+      <li><strong>登录流程</strong> — 用刚注册的邮箱密码在 <code>/login</code> 登录</li>
+      <li><strong>Dashboard</strong> — 登录后能看到 Dashboard 页面，显示欢迎信息</li>
+      <li><strong>管理员登录</strong> — 用管理员邮箱+密码登录</li>
+      <li><strong>Admin Dashboard</strong> — 访问 <code>/admin</code>，能看到数据面板</li>
+      <li><strong>用户管理</strong> — <code>/admin/users</code> 能看到刚注册的用户</li>
+      <li><strong>未授权拦截</strong> — 登出后访问 <code>/admin</code>，应跳转到 <code>/login</code></li>
+      <li><strong>HTTPS</strong> — 域名使用 HTTPS，浏览器显示安全锁</li>
+      <li><strong>移动端</strong> — 手机访问，布局正常无错位</li>
+      <li><strong>OAuth 登录</strong>（如已配置）— Google/GitHub 登录按钮可用</li>
+    </ul>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Section 7: 监控配置 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-cyan">📊</div>
+      <div>
+        <div class="card-title">Step 7: 监控与告警配置</div>
+        <div class="card-desc">Vercel 自带监控 + 推荐的外部监控方案</div>
+      </div>
+    </div>
+    
+    <h3 style="font-size: 1rem; margin: 16px 0 12px; color: #e4e4e7;">Vercel 内置监控（免费）</h3>
+    <ul style="padding-left: 20px; color: #a1a1aa; font-size: 0.92rem; line-height: 2;">
+      <li><strong>Speed Insights</strong> — Core Web Vitals (LCP, FID, CLS) 监控</li>
+      <li><strong>Realtime Logs</strong> — 实时日志流，按请求/时间过滤</li>
+      <li><strong>Error Tracking</strong> — 自动捕获运行时错误</li>
+      <li><strong>Analytics</strong> — 访问量、地理分布、设备类型</li>
+    </ul>
+    <div class="code-block"># 启用 Vercel 监控（已自动启用，无需额外配置）
+# 访问: https://vercel.com/aoshuang99-2649s-projects/nexus-app/monitoring</div>
+    
+    <h3 style="font-size: 1rem; margin: 24px 0 12px; color: #e4e4e7;">推荐外部监控（Day 30+ 配置）</h3>
+    <table>
+      <thead>
+        <tr><th>工具</th><th>用途</th><th>费用</th><th>优先级</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Sentry</strong></td><td>错误追踪 + 性能监控</td><td>Free (5000 events/月)</td><td style="color: #f87171;">高</td></tr>
+        <tr><td><strong>UptimeRobot</strong></td><td>站点可用性监控 + 告警</td><td>Free (50 monitors)</td><td style="color: #f87171;">高</td></tr>
+        <tr><td><strong>Plausible / Umami</strong></td><td>隐私友好的流量分析</td><td>Free (开源) / $9/月</td><td style="color: #facc15;">中</td></tr>
+        <tr><td><strong>PostHog</strong></td><td>产品分析 + Feature Flags</td><td>Free (1M events/月)</td><td style="color: #facc15;">中</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ============================== -->
+  <!-- Section 8: 架构总览 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-pink">🏗️</div>
+      <div>
+        <div class="card-title">架构总览</div>
+        <div class="card-desc">当前部署架构和数据流</div>
+      </div>
+    </div>
+    
+    <div class="flow-diagram">
+      <div class="flow-node">用户浏览器</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">腾讯云 DNS</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: #ec4899;">Vercel Edge</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Next.js SSR</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: #8b5cf6;">Neon DB</div>
+    </div>
+    
+    <h3 style="font-size: 1rem; margin: 20px 0 12px; color: #e4e4e7;">当前服务清单</h3>
+    <table>
+      <thead>
+        <tr><th>服务</th><th>URL</th><th>状态</th><th>用途</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Nexus App (主应用)</strong></td>
+          <td><a href="https://nexus-app-chi.vercel.app" target="_blank" style="color: #60a5fa;">nexus-app-chi.vercel.app</a></td>
+          <td><span class="badge badge-green">● Ready</span></td>
+          <td>用户注册/登录/Dashboard/Admin</td>
+        </tr>
+        <tr>
+          <td><strong>Landing Page</strong></td>
+          <td><a href="https://nexus-landing-pink.vercel.app" target="_blank" style="color: #60a5fa;">nexus-landing-pink.vercel.app</a></td>
+          <td><span class="badge badge-green">● Ready</span></td>
+          <td>营销落地页</td>
+        </tr>
+        <tr>
+          <td><strong>Neon Database</strong></td>
+          <td>console.neon.tech</td>
+          <td><span class="badge badge-yellow">⏳ 待配置</span></td>
+          <td>PostgreSQL 数据持久化</td>
+        </tr>
+        <tr>
+          <td><strong>自定义域名</strong></td>
+          <td>TBD</td>
+          <td><span class="badge badge-yellow">⏳ 待解析</span></td>
+          <td>品牌化访问入口</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <h3 style="font-size: 1rem; margin: 24px 0 12px; color: #e4e4e7;">已实现的安全措施</h3>
+    <ul style="padding-left: 20px; color: #a1a1aa; font-size: 0.92rem; line-height: 2;">
+      <li>✅ <strong>Middleware 路由保护</strong> — /admin/* 仅 ADMIN/SUPER_ADMIN 可访问</li>
+      <li>✅ <strong>JWT Session</strong> — HttpOnly + Secure Cookie，30天有效期</li>
+      <li>✅ <strong>Bcrypt 密码哈希</strong> — 12 rounds，防彩虹表攻击</li>
+      <li>✅ <strong>RBAC 权限</strong> — USER / ADMIN / SUPER_ADMIN 三级角色</li>
+      <li>✅ <strong>邮箱唯一约束</strong> — 数据库级别防止重复注册</li>
+      <li>✅ <strong>Input 验证</strong> — Zod Schema 验证 + 前端校验</li>
+    </ul>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Section 9: 快速命令参考 -->
+  <!-- ============================== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon card-icon-blue">⚡</div>
+      <div>
+        <div class="card-title">快速命令参考</div>
+        <div class="card-desc">日常运维常用命令</div>
+      </div>
+    </div>
+    
+    <div class="code-block"># ═══════ 部署 ═══════
+vercel --prod                    # 部署到生产环境
+vercel --prod --yes              # 部署（跳过确认）
+
+# ═══════ 环境变量 ═══════
+vercel env ls                    # 列出所有环境变量
+vercel env add KEY production     # 添加环境变量
+vercel env rm KEY production      # 删除环境变量
+vercel env pull .env.local        # 拉取环境变量到本地
+
+# ═══════ 数据库 ═══════
+npx prisma studio                 # 打开数据库可视化面板
+npx prisma db push                # 推送 Schema 变更
+npx prisma generate               # 重新生成 Client
+
+# ═══════ 管理员 ═══════
+npx tsx prisma/init-admin.ts      # 初始化/重置管理员账号
+DATABASE_URL="xxx" npx tsx prisma/init-admin.ts  # 指定数据库
+
+# ═══════ 日志 ═══════
+vercel logs nexus-app-chi.vercel.app  # 查看实时日志
+vercel logs --follow                   # 持续跟踪日志
+
+# ═══════ 域名 ═══════
+vercel domains ls                  # 列出自定义域名
+vercel domains add your-domain.com # 添加域名</div>
+  </div>
+
+  <div style="text-align: center; margin-top: 40px; color: #52525b; font-size: 0.85rem;">
+    Nexus 上线指南 · 生成时间: 2026-04-07 13:46 CST · 项目: aoshuang99-2649s-projects/nexus-app
+  </div>
+</div>
+
+<script>
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Checklist toggle
+document.querySelectorAll('.checklist li').forEach(li => {
+  li.addEventListener('click', () => li.classList.toggle('done'));
+});
+</script>
+</body>
+</html>

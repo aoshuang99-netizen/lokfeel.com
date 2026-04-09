@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, Heart } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { LokFeelLogo } from "@/components/LokFeelLogo";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -10,61 +11,48 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 30);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const navLinks = [
+    { label: "About", href: "/about" },
+    { label: "Features", href: "/#features" },
+    { label: "How It Works", href: "/#how" },
+  ];
+
   return (
     <>
-      {/* Scroll Progress Bar */}
-      <div
-        className="scroll-progress"
-        style={{ width: `${typeof window !== "undefined" ? (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100 : 0}%` }}
-      />
-
       {/* Navbar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-sticky transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-sticky transition-all duration-500 ${
           isScrolled
-            ? "glass-strong py-3"
-            : "bg-transparent py-5"
+            ? "glass-strong py-3 shadow-lg shadow-black/10"
+            : "bg-transparent py-4"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="relative">
-                <Heart className="w-8 h-8 text-primary group-hover:fill-primary transition-all duration-300" />
-                <div className="absolute inset-0 blur-md bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <span className="text-2xl font-bold text-gradient">Nexus</span>
+            <Link href="/" className="group">
+              <LokFeelLogo size="md" showText={true} animated={true} />
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
-              <Link
-                href="/about"
-                className="text-white/60 hover:text-white transition-colors font-medium"
-              >
-                About
-              </Link>
-              <Link
-                href="/privacy"
-                className="text-white/60 hover:text-white transition-colors font-medium"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="/terms"
-                className="text-white/60 hover:text-white transition-colors font-medium"
-              >
-                Terms
-              </Link>
-              <div className="flex items-center gap-3 ml-4">
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="px-3.5 py-2 text-sm text-white/60 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="flex items-center gap-3 ml-4 pl-4 border-l border-white/10">
                 <Link
                   href="/login"
                   className="btn-ghost text-sm"
@@ -75,7 +63,7 @@ export default function Navbar() {
                   href="/register"
                   className="btn-primary text-sm"
                 >
-                  Join Nexus
+                  Get Started
                 </Link>
               </div>
             </div>
@@ -96,40 +84,58 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu — Feeld-style slide-over */}
       <div
         className={`fixed inset-0 z-dropdown md:hidden transition-all duration-300 ${
           isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       >
         <div
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
-        <div className="absolute top-0 right-0 w-80 h-full bg-background-secondary border-l border-white/10 p-6 pt-20">
-          <div className="flex flex-col gap-4">
-            <Link
-              href="/about"
-              className="text-lg text-white/80 hover:text-white transition-colors py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About
-            </Link>
+        <div className="absolute top-0 right-0 w-80 h-full bg-background-secondary border-l border-white/10 p-6 pt-20 animate-slide-in-right">
+          <div className="flex flex-col gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-lg text-white/80 hover:text-white transition-colors py-2.5 rounded-lg hover:bg-white/5"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="h-px bg-white/10 my-3" />
             <Link
               href="/privacy"
-              className="text-lg text-white/80 hover:text-white transition-colors py-2"
+              className="text-sm text-white/60 hover:text-white transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Privacy
+              Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-lg text-white/80 hover:text-white transition-colors py-2"
+              className="text-sm text-white/60 hover:text-white transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Terms
+              Terms of Service
             </Link>
-            <div className="h-px bg-white/10 my-2" />
+            <Link
+              href="/cookies"
+              className="text-sm text-white/60 hover:text-white transition-colors py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Cookie Policy
+            </Link>
+            <a
+              href="mailto:hello@lokfeel.com"
+              className="text-sm text-white/60 hover:text-white transition-colors py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact Us
+            </a>
+            <div className="h-px bg-white/10 my-3" />
             <Link
               href="/login"
               className="btn-secondary w-full"
@@ -142,7 +148,7 @@ export default function Navbar() {
               className="btn-primary w-full"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Join Nexus
+              Get Started
             </Link>
           </div>
         </div>

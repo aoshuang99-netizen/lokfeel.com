@@ -1,243 +1,96 @@
-export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/auth/auth";
-import { success, badRequest, notFound, serverError } from "@/lib/api-response";
-import type { PaginatedResponse, MatchWithProfiles } from "@/types";
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth'
+import { db } from '@/lib/db'
 
-const querySchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(50).default(10),
-  status: z.enum(["PENDING", "ACCEPTED", "REJECTED", "EXPIRED", "CANCELLED"]).optional(),
-  matchType: z.enum(["WEEKLY", "BOOSTED", "MANUAL", "AI_SUGGESTED"]).optional(),
-});
+export const dynamic = 'force-dynamic'
 
+// GET /api/matches — Get current user's matches
 export async function GET(request: NextRequest) {
   try {
-    
+    const { user } = await requireAuth()
+    const { searchParams } = new URL(request.url)
 
-    const { user } = await requireAuth();
-    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status') // PENDING | ACCEPTED | REJECTED | EXPIRED
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
 
-    const parseResult = querySchema.safeParse({
-      page: searchParams.get("page"),
-      limit: searchParams.get("limit"),
-      status: searchParams.get("status"),
-      matchType: searchParams.get("matchType"),
-    });
-
-    if (!parseResult.success) {
-      return badRequest("Invalid query parameters", parseResult.error.issues);
+    // Build where clause — matches where user is sender OR receiver
+    const where: any = {
+      OR: [
+        { senderId: user.id },
+        { receiverId: user.id },
+      ],
     }
-
-    const { page, limit, status, matchType } = parseResult.data;
-    const skip = (page - 1) * limit;
-
-    const whereClause: Record<string, unknown> = {
-      OR: [{ senderId: user.id }, { receiverId: user.id }],
-    };
 
     if (status) {
-      whereClause.status = status;
-    }
-
-    if (matchType) {
-      whereClause.matchType = matchType;
+      where.status = status
     }
 
     const [matches, total] = await Promise.all([
       db.match.findMany({
-        where: whereClause,
+        where,
         include: {
           sender: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-              profile: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  age: true,
-                  gender: true,
-                  avatar: true,
-                  city: true,
-                },
-              },
-            },
+            select: { id: true, name: true, image: true, profile: { select: { displayName: true, age: true, avatar: true, city: true } } },
           },
           receiver: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-              profile: {
-                select: {
-                  id: true,
-                  displayName: true,
-                  age: true,
-                  gender: true,
-                  avatar: true,
-                  city: true,
-                },
-              },
-            },
+            select: { id: true, name: true, image: true, profile: { select: { displayName: true, age: true, avatar: true, city: true } } },
           },
-          chatRoom: {
-            select: { id: true },
+          matchReactions: {
+            where: { userId: user.id },
           },
         },
-        orderBy: { createdAt: "desc" },
-        skip,
+        orderBy: { createdAt: 'desc' },
         take: limit,
+        skip: offset,
       }),
-      db.match.count({ where: whereClause }),
-    ]);
+      db.match.count({ where }),
+    ])
 
-    const response: PaginatedResponse<MatchWithProfiles[]> = {
-      success: true,
-      data: matches as unknown as MatchWithProfiles[],
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasMore: skip + matches.length < total,
-      },
-    };
+    // Enrich matches with the other user's info
+    const enrichedMatches = matches.map((match) => {
+      const isSender = match.senderId === user.id
+      const otherUser = isSender ? match.receiver : match.sender
+      const myReaction = match.matchReactions.find((r) => r.userId === user.id)
+      const otherReaction = match.matchReactions.find((r) => r.userId !== user.id)
 
-    return success(response);
-  } catch (error) {
-    console.error("Error fetching matches:", error);
-    return serverError("Failed to fetch matches");
-  }
-}
-
-const createMatchSchema = z.object({
-  receiverId: z.string().min(1, "Receiver ID is required"),
-  matchType: z.enum(["WEEKLY", "BOOSTED", "MANUAL", "AI_SUGGESTED"]).default("MANUAL"),
-});
-
-export async function POST(request: NextRequest) {
-  try {
-    
-
-    const { user } = await requireAuth();
-    const body = await request.json();
-
-    const parseResult = createMatchSchema.safeParse(body);
-    if (!parseResult.success) {
-      return badRequest("Invalid request body", parseResult.error.issues);
-    }
-
-    const { receiverId, matchType } = parseResult.data;
-
-    // Check if both users have approved profiles
-    const [senderProfile, receiverProfile] = await Promise.all([
-      db.profile.findUnique({
-        where: { userId: user.id },
-      }),
-      db.profile.findUnique({
-        where: { userId: receiverId },
-      }),
-    ]);
-
-    if (!senderProfile?.isApproved || !receiverProfile?.isApproved) {
-      return badRequest("Both users must have approved profiles");
-    }
-
-    if (senderProfile.profileStatus !== "APPROVED" || receiverProfile.profileStatus !== "APPROVED") {
-      return badRequest("Both profiles must be approved for matching");
-    }
-
-    // Check if match already exists
-    const existingMatch = await db.match.findFirst({
-      where: {
-        OR: [
-          { senderId: user.id, receiverId },
-          { senderId: receiverId, receiverId: user.id },
-        ],
-      },
-    });
-
-    if (existingMatch) {
-      return badRequest("A match already exists between these users");
-    }
-
-    // Generate compatibility
-    const { calculateCompatibility } = await import("@/lib/matching/engine");
-    const compatibility = await calculateCompatibility(senderProfile.id, receiverProfile.id);
-
-    // Create match
-    const match = await db.match.create({
-      data: {
-        senderId: user.id,
-        receiverId,
-        matchScore: compatibility.scores.overall,
-        matchReason: compatibility.explanation.summary,
-        conflictWarnings: JSON.stringify(compatibility.warnings),
-        attachmentCompat: compatibility.scores.attachment,
-        communicationCompat: compatibility.scores.communication,
-        conflictCompat: compatibility.scores.conflict,
-        valuesCompat: compatibility.scores.values,
-        lifestyleCompat: compatibility.scores.lifestyle,
-        matchType: matchType as "WEEKLY" | "BOOSTED" | "MANUAL" | "AI_SUGGESTED",
-        status: "PENDING",
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: {
-              select: {
-                id: true,
-                displayName: true,
-                age: true,
-                gender: true,
-                avatar: true,
-                city: true,
-              },
-            },
-          },
+      return {
+        id: match.id,
+        otherUser: {
+          id: otherUser.id,
+          name: otherUser.profile?.displayName || otherUser.name,
+          age: otherUser.profile?.age,
+          avatar: otherUser.profile?.avatar || otherUser.image,
+          city: otherUser.profile?.city,
         },
-        receiver: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: {
-              select: {
-                id: true,
-                displayName: true,
-                age: true,
-                gender: true,
-                avatar: true,
-                city: true,
-              },
-            },
-          },
+        matchScore: match.matchScore,
+        matchReason: match.matchReason,
+        conflictWarnings: match.conflictWarnings,
+        compatibilityBreakdown: {
+          attachment: match.attachmentCompat,
+          communication: match.communicationCompat,
+          conflict: match.conflictCompat,
+          values: match.valuesCompat,
+          lifestyle: match.lifestyleCompat,
         },
-      },
-    });
+        status: match.status,
+        myReaction: myReaction?.reaction || null,
+        otherReaction: otherReaction?.reaction || null,
+        matchType: match.matchType,
+        expiresAt: match.expiresAt,
+        createdAt: match.createdAt,
+      }
+    })
 
-    // Create notification for receiver
-    await db.notification.create({
-      data: {
-        userId: receiverId,
-        type: "NEW_MATCH",
-        title: "新匹配来了！",
-        body: "有人向你发送了一个新匹配，快来看看吧！",
-        data: JSON.stringify({ matchId: match.id }),
-      },
-    });
-
-    return success(match, 201);
-  } catch (error) {
-    console.error("Error creating match:", error);
-    return serverError("Failed to create match");
+    return NextResponse.json({
+      matches: enrichedMatches,
+      pagination: { total, limit, offset },
+    })
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+    console.error('Get matches error:', error)
+    return NextResponse.json({ message: 'Failed to fetch matches' }, { status: 500 })
   }
 }

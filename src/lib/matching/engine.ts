@@ -1,594 +1,479 @@
-import { db } from '@/lib/db'
-import { Gender, MatchStatus, Profile } from "@/generated/client"
-import { 
-  calculateCompatibilityBreakdown,
-  identifyConflictWarnings,
-  generateMatchExplanation,
-} from './scoring'
-import { 
-  MatchCompatibilityScores, 
-  ConflictWarning, 
-  MatchExplanation,
-  WeeklyMatch,
-  WeeklyDigest,
-  MatchCandidate,
-  MatchWithProfiles,
-} from '@/types'
-import { MATCH_CONFIG } from '@/constants'
+/**
+ * Nexus Relationship Structure Matching Engine
+ * 
+ * Core differentiation: Matches users based on relationship psychology dimensions,
+ * NOT surface-level tags or swipe-based selection.
+ * 
+ * Dimensions:
+ * 1. Attachment Style Compatibility (25%)
+ * 2. Communication Style Compatibility (20%)
+ * 3. Conflict Resolution Compatibility (20%)
+ * 4. Values & Life Priorities Compatibility (20%)
+ * 5. Lifestyle & Logistics Compatibility (15%)
+ */
 
-// ============================================================================
-// Core Matching Functions
-// ============================================================================
+// ─── Type Definitions ───────────────────────────────────────────────
+
+interface UserProfile {
+  id: string;
+  attachmentStyle?: string | null;
+  communicationStyle?: string | null;
+  conflictResolution?: string | null;
+  loveLanguage?: string | null;
+  lifePriorities?: string | null; // JSON array
+  relationshipGoal?: string;
+  boundaries?: string | null; // JSON array
+  dealbreakers?: string | null; // JSON array
+  emotionalAvailability?: string | null;
+  preferredAgeMin?: number | null;
+  preferredAgeMax?: number | null;
+  preferredGender?: string | null;
+  preferredDistance?: number | null;
+  age: number;
+  gender: string;
+  city?: string | null;
+  country?: string | null;
+}
+
+interface MatchScore {
+  total: number;
+  attachment: number;
+  communication: number;
+  conflict: number;
+  values: number;
+  lifestyle: number;
+  reason: string;
+  conflictWarnings: string[];
+}
+
+// ─── Attachment Compatibility Matrix ────────────────────────────────
 
 /**
- * Calculate comprehensive compatibility between two profiles
+ * Based on attachment theory research:
+ * - Secure + Secure: 95% (highest)
+ * - Secure + Anxious: 75% (secure partner stabilizes anxious)
+ * - Secure + Avoidant: 70% (secure partner provides safety)
+ * - Anxious + Avoidant: 30% (anxious-avoidant trap)
+ * - Anxious + Anxious: 50% (mutual anxiety reinforcement)
+ * - Avoidant + Avoidant: 35% (mutual avoidance)
  */
-export async function calculateCompatibility(
-  profile1Id: string,
-  profile2Id: string
-): Promise<{
-  scores: MatchCompatibilityScores
-  explanation: MatchExplanation
-  warnings: ConflictWarning[]
-}> {
-  const [profile1, profile2] = await Promise.all([
-    db.profile.findUnique({ where: { userId: profile1Id } }),
-    db.profile.findUnique({ where: { userId: profile2Id } }),
-  ])
 
-  if (!profile1 || !profile2) {
-    throw new Error('One or both profiles not found')
-  }
+const ATTACHMENT_COMPAT: Record<string, Record<string, number>> = {
+  'Secure': {
+    'Secure': 95,
+    'Anxious-Preoccupied': 75,
+    'Dismissive-Avoidant': 70,
+    'Fearful-Avoidant': 65,
+  },
+  'Anxious-Preoccupied': {
+    'Secure': 75,
+    'Anxious-Preoccupied': 50,
+    'Dismissive-Avoidant': 30,
+    'Fearful-Avoidant': 45,
+  },
+  'Dismissive-Avoidant': {
+    'Secure': 70,
+    'Anxious-Preoccupied': 30,
+    'Dismissive-Avoidant': 35,
+    'Fearful-Avoidant': 55,
+  },
+  'Fearful-Avoidant': {
+    'Secure': 65,
+    'Anxious-Preoccupied': 45,
+    'Dismissive-Avoidant': 55,
+    'Fearful-Avoidant': 40,
+  },
+};
 
-  const scores = calculateCompatibilityBreakdown(profile1, profile2)
-  const explanation = generateMatchExplanation(profile1, profile2, scores)
-  const warnings = identifyConflictWarnings(profile1, profile2)
-
-  return { scores, explanation, warnings }
-}
+// ─── Communication Style Compatibility ──────────────────────────────
 
 /**
- * Generate a human-readable explanation for a match
+ * Communication styles and their compatibility:
+ * - Direct + Direct: 90% (clear, honest exchange)
+ * - Direct + Reflective: 80% (complementary)
+ * - Direct + Expressive: 70% (sometimes intense)
+ * - Direct + Analytical: 75% (logic + directness)
+ * - Reflective + Expressive: 85% (emotional depth)
+ * - Reflective + Analytical: 65% (different pace)
+ * - Expressive + Analytical: 55% (frustration potential)
+ * - Same style bonus: +5%
  */
-export async function generateMatchExplanationAsync(
-  profile1Id: string,
-  profile2Id: string,
-  scores: MatchCompatibilityScores
-): Promise<MatchExplanation> {
-  const [profile1, profile2] = await Promise.all([
-    db.profile.findUnique({ where: { userId: profile1Id } }),
-    db.profile.findUnique({ where: { userId: profile2Id } }),
-  ])
 
-  if (!profile1 || !profile2) {
-    throw new Error('One or both profiles not found')
-  }
+const COMM_COMPAT: Record<string, Record<string, number>> = {
+  'Direct': { 'Direct': 90, 'Reflective': 80, 'Expressive': 70, 'Analytical': 75 },
+  'Reflective': { 'Direct': 80, 'Reflective': 85, 'Expressive': 85, 'Analytical': 65 },
+  'Expressive': { 'Direct': 70, 'Reflective': 85, 'Expressive': 80, 'Analytical': 55 },
+  'Analytical': { 'Direct': 75, 'Reflective': 65, 'Expressive': 55, 'Analytical': 80 },
+};
 
-  return generateMatchExplanation(profile1, profile2, scores)
-}
+// ─── Conflict Resolution Compatibility ──────────────────────────────
 
 /**
- * Identify potential conflict warnings between two users
+ * Conflict styles and their compatibility:
+ * - Collaborative + Collaborative: 95% (ideal)
+ * - Collaborative + any: 80%+ (collaborative lifts others)
+ * - Compromising + Compromising: 80%
+ * - Accommodating + Competing: 25% (danger zone)
+ * - Avoiding + Avoiding: 20% (nothing gets resolved)
  */
-export async function identifyConflictWarningsAsync(
-  profile1Id: string,
-  profile2Id: string
-): Promise<ConflictWarning[]> {
-  const [profile1, profile2] = await Promise.all([
-    db.profile.findUnique({ where: { userId: profile1Id } }),
-    db.profile.findUnique({ where: { userId: profile2Id } }),
-  ])
 
-  if (!profile1 || !profile2) {
-    throw new Error('One or both profiles not found')
-  }
+const CONFLICT_COMPAT: Record<string, Record<string, number>> = {
+  'Collaborative': {
+    'Collaborative': 95,
+    'Compromising': 82,
+    'Accommodating': 78,
+    'Competing': 60,
+    'Avoiding': 50,
+  },
+  'Compromising': {
+    'Collaborative': 82,
+    'Compromising': 80,
+    'Accommodating': 72,
+    'Competing': 55,
+    'Avoiding': 45,
+  },
+  'Accommodating': {
+    'Collaborative': 78,
+    'Compromising': 72,
+    'Accommodating': 65,
+    'Competing': 25,
+    'Avoiding': 50,
+  },
+  'Competing': {
+    'Collaborative': 60,
+    'Compromising': 55,
+    'Accommodating': 25,
+    'Competing': 35,
+    'Avoiding': 40,
+  },
+  'Avoiding': {
+    'Collaborative': 50,
+    'Compromising': 45,
+    'Accommodating': 50,
+    'Competing': 40,
+    'Avoiding': 20,
+  },
+};
 
-  return identifyConflictWarnings(profile1, profile2)
-}
+// ─── Love Language Compatibility ─────────────────────────────────────
 
-// ============================================================================
-// Match Finding & Generation
-// ============================================================================
+const LOVE_LANGUAGES = [
+  'Words of Affirmation',
+  'Quality Time',
+  'Physical Touch',
+  'Acts of Service',
+  'Gifts',
+];
 
 /**
- * Find potential match candidates for a user
+ * Same love language: 85% (immediate understanding)
+ * Adjacent love languages: 70% (compatible expression)
+ * Different love languages: 55% (learning opportunity)
  */
-export async function findMatchCandidates(
-  userId: string,
-  options: {
-    excludeList?: string[]
-    limit?: number
-    minScore?: number
-  } = {}
-): Promise<MatchCandidate[]> {
-  const { excludeList = [], limit = 20, minScore = MATCH_CONFIG.minCompatibilityScore } = options
 
-  // Get user's profile and preferences
-  const userProfile = await db.profile.findUnique({
-    where: { userId },
-  })
+const LOVE_LANG_ADJACENT: Record<string, string[]> = {
+  'Words of Affirmation': ['Quality Time'],
+  'Quality Time': ['Words of Affirmation', 'Physical Touch'],
+  'Physical Touch': ['Quality Time', 'Acts of Service'],
+  'Acts of Service': ['Physical Touch', 'Gifts'],
+  'Gifts': ['Acts of Service'],
+};
 
-  if (!userProfile) {
-    throw new Error('User profile not found')
+// ─── Emotional Availability Scale ───────────────────────────────────
+
+const EMOTIONAL_AVAIL_SCALE: Record<string, number> = {
+  'Fully Available': 100,
+  'Building Trust': 65,
+  'Processing Past': 40,
+  'Needs Space': 25,
+};
+
+// ─── Core Scoring Functions ─────────────────────────────────────────
+
+function scoreAttachmentStyle(a: string | null | undefined, b: string | null | undefined): { score: number; warnings: string[] } {
+  const warnings: string[] = [];
+
+  if (!a || !b) return { score: 50, warnings }; // No data = neutral
+
+  const score = ATTACHMENT_COMPAT[a]?.[b] || ATTACHMENT_COMPAT[b]?.[a] || 50;
+
+  if (score < 40) {
+    warnings.push(`Potential attachment dynamic: ${a} + ${b} may create push-pull patterns. Awareness is key.`);
   }
 
-  // Get users they've already matched with
-  const existingMatches = await db.match.findMany({
-    where: {
-      OR: [{ senderId: userId }, { receiverId: userId }],
-    },
-    select: {
-      senderId: true,
-      receiverId: true,
-    },
-  })
-
-  const matchedUserIds = existingMatches.map((m: any) => 
-    m.senderId === userId ? m.receiverId : m.senderId
-  )
-
-  // Build exclusion list
-  const excludedIds = [...new Set([userId, ...matchedUserIds, ...excludeList])]
-
-  // Find potential candidates
-  const candidates = await db.profile.findMany({
-    where: {
-      userId: { notIn: excludedIds },
-      profileStatus: 'APPROVED',
-      // isVisible: true, // field not in schema
-      // Basic filters based on user's preferences
-      ...(userProfile.preferredGender?.length ? {
-        gender: { in: userProfile.preferredGender.split(',') as Gender[] },
-      } : {}),
-      ...(userProfile.preferredAgeMin || userProfile.preferredAgeMax ? {
-        age: {
-          ...(userProfile.preferredAgeMin ? { gte: userProfile.preferredAgeMin } : {}),
-          ...(userProfile.preferredAgeMax ? { lte: userProfile.preferredAgeMax } : {}),
-        },
-      } : {}),
-    },
-    take: limit * 3, // Get more than needed to filter by score
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          updatedAt: true,
-        },
-      },
-    },
-  })
-
-  // Score and rank candidates
-  const scoredCandidates: MatchCandidate[] = []
-
-  for (const candidate of candidates) {
-    const scores = calculateCompatibilityBreakdown(userProfile, candidate)
-    
-    if (scores.overall >= minScore) {
-      const explanation = generateMatchExplanation(userProfile, candidate, scores)
-      const warnings = identifyConflictWarnings(userProfile, candidate)
-
-      scoredCandidates.push({
-        userId: candidate.userId,
-        profile: candidate,
-        compatibilityScore: scores,
-        explanation,
-        warnings,
-      })
-    }
-  }
-
-  // Sort by overall score and return top matches
-  return scoredCandidates
-    .sort((a, b) => b.compatibilityScore.overall - a.compatibilityScore.overall)
-    .slice(0, limit)
+  return { score, warnings };
 }
 
-/**
- * Find weekly matches for a user
- */
-export async function findWeeklyMatches(
-  userId: string,
-  excludeList: string[] = []
-): Promise<WeeklyMatch[]> {
-  // Get user's subscription to determine match limit
-  const subscription = await db.subscription.findFirst({
-    where: { userId },
-  })
-
-  const weeklyLimit = MATCH_CONFIG.weeklyMatches[
-    subscription?.plan as keyof typeof MATCH_CONFIG.weeklyMatches
-  ] || MATCH_CONFIG.weeklyMatches.FREE
-
-  // Find candidates
-  const candidates = await findMatchCandidates(userId, {
-    excludeList,
-    limit: weeklyLimit,
-    minScore: MATCH_CONFIG.minCompatibilityScore,
-  })
-
-  // Create matches in database
-  const weeklyMatches: WeeklyMatch[] = []
-
-  for (const candidate of candidates) {
-    const match = await db.match.create({
-      data: {
-        senderId: userId,
-        receiverId: candidate.userId,
-        status: MatchStatus.PENDING,
-        matchScore: candidate.compatibilityScore.overall,
-        matchReason: JSON.stringify(candidate.explanation),
-        conflictWarnings: JSON.stringify(candidate.warnings),
-        expiresAt: getMatchExpiryDate(),
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: { select: { displayName: true, avatar: true, age: true, city: true } },
-          },
-        },
-        receiver: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: { select: { displayName: true, avatar: true, age: true, city: true } },
-          },
-        },
-      },
-    })
-
-    // @ts-ignore - MatchWithProfiles type is stricter than what we need
-    weeklyMatches.push({
-      match: match as any,
-      score: candidate.compatibilityScore,
-      explanation: candidate.explanation,
-      warnings: candidate.warnings,
-    })
-  }
-
-  return weeklyMatches
+function scoreCommunication(a: string | null | undefined, b: string | null | undefined): number {
+  if (!a || !b) return 50;
+  return COMM_COMPAT[a]?.[b] || COMM_COMPAT[b]?.[a] || 50;
 }
 
-/**
- * Generate weekly digest for a user
- */
-export async function generateWeeklyDigest(userId: string): Promise<WeeklyDigest> {
-  const weekStart = getWeekStartDate()
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekEnd.getDate() + 7)
+function scoreConflictResolution(a: string | null | undefined, b: string | null | undefined): { score: number; warnings: string[] } {
+  const warnings: string[] = [];
 
-  // Get matches from this week
-  const matches = await db.match.findMany({
-    where: {
-      OR: [{ senderId: userId }, { receiverId: userId }],
-      createdAt: {
-        gte: weekStart,
-        lt: weekEnd,
-      },
-    },
-    include: {
-      sender: {
-        include: {
-          profile: true,
-          subscriptions: { select: { plan: true, status: true } },
-        },
-      },
-      receiver: {
-        include: {
-          profile: true,
-          subscriptions: { select: { plan: true, status: true } },
-        },
-      },
-    },
-  })
+  if (!a || !b) return { score: 50, warnings };
 
-  const weeklyMatches: WeeklyMatch[] = matches.map((match: any) => ({
-    match: match as unknown as MatchWithProfiles,
-    score: {
-      overall: match.matchScore,
-      attachment: match.attachmentCompat ?? match.matchScore,
-      communication: match.communicationCompat ?? match.matchScore,
-      conflict: match.conflictCompat ?? match.matchScore,
-      values: match.valuesCompat ?? match.matchScore,
-      lifestyle: match.lifestyleCompat ?? match.matchScore,
-    },
-    explanation: {
-      summary: match.matchReason,
-      strengths: [],
-      considerations: [],
-      conversationStarters: [],
-    },
-    warnings: match.conflictWarnings ? JSON.parse(match.conflictWarnings as string) : [],
-  }))
+  const score = CONFLICT_COMPAT[a]?.[b] || CONFLICT_COMPAT[b]?.[a] || 50;
 
-  // Calculate stats
-  const scores = weeklyMatches.map((m: any) => m.score.overall)
-  const averageScore = scores.length > 0 
-    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-    : 0
-  const highestScore = scores.length > 0 ? Math.max(...scores) : 0
+  if (score < 35) {
+    warnings.push(`Conflict style mismatch: ${a} + ${b} may lead to unresolved tensions.`);
+  }
 
-  return {
-    userId,
-    weekOf: weekStart,
-    matches: weeklyMatches,
-    stats: {
-      totalMatches: matches.length,
-      averageScore,
-      highestScore,
-    },
+  return { score, warnings };
+}
+
+function scoreLoveLanguages(a: string | null | undefined, b: string | null | undefined): number {
+  if (!a || !b) return 50;
+  if (a === b) return 85;
+  if (LOVE_LANG_ADJACENT[a]?.includes(b) || LOVE_LANG_ADJACENT[b]?.includes(a)) return 70;
+  return 55;
+}
+
+function scoreLifePriorities(aStr: string | null | undefined, bStr: string | null | undefined): number {
+  if (!aStr || !bStr) return 50;
+
+  try {
+    const a: string[] = JSON.parse(aStr);
+    const b: string[] = JSON.parse(bStr);
+
+    if (a.length === 0 || b.length === 0) return 50;
+
+    // Count shared priorities
+    const shared = a.filter((p) => b.includes(p));
+    const overlap = shared.length / Math.max(a.length, b.length);
+
+    return Math.round(50 + overlap * 50); // 50-100 range
+  } catch {
+    return 50;
   }
 }
 
-// ============================================================================
-// Match Management
-// ============================================================================
+function scoreDealbreakers(userBreakers: string | null | undefined, otherProfile: UserProfile): { score: number; warnings: string[] } {
+  const warnings: string[] = [];
 
-/**
- * Accept a match
- */
-export async function acceptMatch(matchId: string, userId: string) {
-  const match = await db.match.findUnique({
-    where: { id: matchId },
-  })
+  if (!userBreakers) return { score: 100, warnings };
 
-  if (!match) {
-    throw new Error('Match not found')
-  }
+  try {
+    const breakers: string[] = JSON.parse(userBreakers);
 
-  if (match.senderId !== userId && match.receiverId !== userId) {
-    throw new Error('Unauthorized')
-  }
+    if (breakers.length === 0) return { score: 100, warnings };
 
-  // Update the match reaction based on which user accepted
-  // @ts-ignore - senderAction/receiverAction fields
-  const actionField = match.senderId === userId ? 'senderAction' : 'receiverAction'
+    // Simple dealbreaker checking based on known patterns
+    let violations = 0;
+    const otherTraits: string[] = [
+      otherProfile.attachmentStyle || '',
+      otherProfile.communicationStyle || '',
+      otherProfile.conflictResolution || '',
+      otherProfile.emotionalAvailability || '',
+      ...(otherProfile.lifePriorities ? JSON.parse(otherProfile.lifePriorities) : []),
+    ].filter(Boolean);
 
-  // @ts-ignore
-  const existingMatch = await db.match.findUnique({
-    where: { id: matchId },
-    select: { senderAction: true, receiverAction: true },
-  })
-
-  const bothAccepted = match.senderId === userId
-    // @ts-ignore
-    ? existingMatch?.receiverAction === 'ACCEPTED'
-    // @ts-ignore
-    : existingMatch?.senderAction === 'ACCEPTED'
-
-  const updateData: Record<string, unknown> = {
-    [actionField]: 'ACCEPTED',
-  }
-
-  if (bothAccepted) {
-    updateData.status = MatchStatus.ACCEPTED
-  }
-
-  return db.match.update({
-    where: { id: matchId },
-    data: updateData,
-    include: {
-      sender: {
-        include: { profile: true },
-      },
-      receiver: {
-        include: { profile: true },
-      },
-    },
-  })
-}
-
-/**
- * Decline a match
- */
-export async function declineMatch(matchId: string, userId: string, reason?: string) {
-  const match = await db.match.findUnique({
-    where: { id: matchId },
-  })
-
-  if (!match) {
-    throw new Error('Match not found')
-  }
-
-  if (match.senderId !== userId && match.receiverId !== userId) {
-    throw new Error('Unauthorized')
-  }
-
-  const actionField = match.senderId === userId ? 'senderAction' : 'receiverAction'
-  
-  return db.match.update({
-    where: { id: matchId },
-    data: {
-      status: MatchStatus.REJECTED,
-      [actionField]: 'DECLINED',
-      // @ts-ignore - reviewNotes field
-      reviewNotes: reason || 'User declined',
-    },
-  })
-}
-
-/**
- * Expire old pending matches
- */
-export async function expireOldMatches(): Promise<number> {
-  const expired = await db.match.updateMany({
-    where: {
-      status: MatchStatus.PENDING,
-      expiresAt: { lt: new Date() },
-    },
-    data: {
-      status: MatchStatus.EXPIRED,
-    },
-  })
-
-  return expired.count
-}
-
-/**
- * Get active matches for a user
- */
-export async function getActiveMatches(userId: string) {
-  return db.match.findMany({
-    where: {
-      OR: [{ senderId: userId }, { receiverId: userId }],
-      status: MatchStatus.ACCEPTED,
-    },
-    include: {
-      sender: {
-        include: { profile: true },
-      },
-      receiver: {
-        include: { profile: true },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
-  })
-}
-
-/**
- * Get pending matches for a user
- */
-export async function getPendingMatches(userId: string) {
-  return db.match.findMany({
-    where: {
-      OR: [
-        { senderId: userId, senderAction: null },
-        { receiverId: userId, receiverAction: null },
-      ],
-      status: MatchStatus.PENDING,
-      expiresAt: { gt: new Date() },
-    },
-    include: {
-      sender: {
-        include: { profile: true },
-      },
-      receiver: {
-        include: { profile: true },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
-  })
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-function getBirthDateForAge(age: number): Date {
-  const date = new Date()
-  date.setFullYear(date.getFullYear() - age)
-  return date
-}
-
-function getMatchExpiryDate(): Date {
-  const date = new Date()
-  date.setDate(date.getDate() + MATCH_CONFIG.matchExpiryDays)
-  return date
-}
-
-function getWeekStartDate(): Date {
-  const now = new Date()
-  const dayOfWeek = now.getDay()
-  const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1) // Adjust for Monday start
-  const monday = new Date(now.setDate(diff))
-  monday.setHours(0, 0, 0, 0)
-  return monday
-}
-
-// ============================================================================
-// Batch Operations
-// ============================================================================
-
-/**
- * Generate matches for all eligible users
- * This should be run weekly by a cron job
- */
-export async function generateMatchesForAllUsers(): Promise<{
-  totalUsers: number
-  matchesCreated: number
-  errors: string[]
-}> {
-  const errors: string[] = []
-  let matchesCreated = 0
-
-  // Get all users with completed onboarding
-  const users = await db.user.findMany({
-    where: {
-      profile: {
-        profileStatus: 'APPROVED',
-      },
-    },
-    select: { id: true },
-  })
-
-  for (const user of users) {
-    try {
-      // Check if user already has pending matches this week
-      const existingMatches = await db.match.count({
-        where: {
-          OR: [{ senderId: user.id }, { receiverId: user.id }],
-          createdAt: {
-            gte: getWeekStartDate(),
-          },
-        },
-      })
-
-      if (existingMatches > 0) {
-        continue // Skip users who already have matches this week
+    for (const breaker of breakers) {
+      const breakerLower = breaker.toLowerCase();
+      // Check if breaker is a negation pattern (e.g., "Not looking for casual")
+      if (breakerLower.startsWith('not ') || breakerLower.startsWith("don't") || breakerLower.startsWith("no ")) {
+        // Check if other user might violate this
+        if (otherProfile.relationshipGoal === 'NOT_SURE' || otherProfile.emotionalAvailability === 'Needs Space') {
+          violations++;
+        }
+      } else {
+        // Positive requirement
+        const matches = otherTraits.some((t) =>
+          t.toLowerCase().includes(breakerLower) || breakerLower.includes(t.toLowerCase())
+        );
+        if (!matches) violations++;
       }
-
-      const weeklyMatches = await findWeeklyMatches(user.id)
-      matchesCreated += weeklyMatches.length
-    } catch (error) {
-      errors.push(`Failed to generate matches for user ${user.id}: ${error}`)
     }
-  }
 
-  return {
-    totalUsers: users.length,
-    matchesCreated,
-    errors,
+    const score = Math.max(0, Math.round(100 - (violations / breakers.length) * 80));
+
+    if (violations > 0) {
+      warnings.push(`Potential dealbreaker(s) detected. Review the other person's profile carefully.`);
+    }
+
+    return { score, warnings };
+  } catch {
+    return { score: 100, warnings };
   }
 }
+
+function scoreLifestyle(userA: UserProfile, userB: UserProfile): number {
+  let score = 50;
+
+  // Age preference check
+  if (userA.preferredAgeMin && userB.age < userA.preferredAgeMin) score -= 20;
+  if (userA.preferredAgeMax && userB.age > userA.preferredAgeMax) score -= 20;
+  if (userB.preferredAgeMin && userA.age < userB.preferredAgeMin) score -= 20;
+  if (userB.preferredAgeMax && userA.age > userB.preferredAgeMax) score -= 20;
+
+  // Gender preference check
+  if (userA.preferredGender && userA.preferredGender !== userB.gender && userA.preferredGender !== 'Any') {
+    score -= 30;
+  }
+
+  // Same country bonus
+  if (userA.country && userB.country && userA.country === userB.country) {
+    score += 10;
+  }
+
+  // Same city bonus
+  if (userA.city && userB.city && userA.city === userB.city) {
+    score += 15;
+  }
+
+  // Relationship goal alignment
+  if (userA.relationshipGoal && userB.relationshipGoal) {
+    if (userA.relationshipGoal === userB.relationshipGoal) score += 15;
+    else if (userA.relationshipGoal === 'NOT_SURE' || userB.relationshipGoal === 'NOT_SURE') score -= 5;
+    else score += 5;
+  }
+
+  return Math.max(0, Math.min(100, score));
+}
+
+// ─── Main Matching Function ─────────────────────────────────────────
 
 /**
- * Calculate match success rate
+ * Calculate compatibility score between two user profiles.
+ * Returns detailed breakdown and match explanation.
  */
-export async function calculateMatchSuccessRate(): Promise<{
-  totalMatches: number
-  acceptedMatches: number
-  declinedMatches: number
-  expiredMatches: number
-  successRate: number
-}> {
-  const [
-    totalMatches,
-    acceptedMatches,
-    declinedMatches,
-    expiredMatches,
-  ] = await Promise.all([
-    db.match.count(),
-    db.match.count({ where: { status: MatchStatus.ACCEPTED } }),
-    db.match.count({ where: { status: MatchStatus.REJECTED } }),
-    db.match.count({ where: { status: MatchStatus.EXPIRED } }),
-  ])
+export function calculateMatchScore(userA: UserProfile, userB: UserProfile): MatchScore {
+  const allWarnings: string[] = [];
 
-  const resolvedMatches = acceptedMatches + declinedMatches + expiredMatches
-  const successRate = resolvedMatches > 0
-    ? Math.round((acceptedMatches / resolvedMatches) * 100)
-    : 0
+  // 1. Attachment Style (25%)
+  const attachment = scoreAttachmentStyle(userA.attachmentStyle, userB.attachmentStyle);
+  allWarnings.push(...attachment.warnings);
+
+  // 2. Communication Style (20%)
+  const communication = scoreCommunication(userA.communicationStyle, userB.communicationStyle);
+
+  // 3. Conflict Resolution (20%)
+  const conflict = scoreConflictResolution(userA.conflictResolution, userB.conflictResolution);
+  allWarnings.push(...conflict.warnings);
+
+  // 4. Values & Life Priorities (20%) — average of priorities + love languages
+  const lifePriorities = scoreLifePriorities(userA.lifePriorities, userB.lifePriorities);
+  const loveLanguages = scoreLoveLanguages(userA.loveLanguage, userB.loveLanguage);
+  const values = Math.round((lifePriorities + loveLanguages) / 2);
+
+  // 5. Lifestyle (15%) — logistics + goals
+  const lifestyle = scoreLifestyle(userA, userB);
+
+  // Dealbreaker check (can override)
+  const dealbreakerCheckA = scoreDealbreakers(userA.dealbreakers, userB);
+  const dealbreakerCheckB = scoreDealbreakers(userB.dealbreakers, userA);
+  allWarnings.push(...dealbreakerCheckA.warnings, ...dealbreakerCheckB.warnings);
+
+  // Weighted total
+  const total = Math.round(
+    attachment.score * 0.25 +
+    communication * 0.20 +
+    conflict.score * 0.20 +
+    values * 0.20 +
+    lifestyle * 0.15
+  );
+
+  // Apply dealbreaker penalty
+  const dealbreakerPenalty = Math.min(dealbreakerCheckA.score, dealbreakerCheckB.score) / 100;
+  const finalScore = Math.max(0, Math.min(100, Math.round(total * dealbreakerPenalty)));
+
+  // Generate human-readable explanation
+  const reason = generateMatchReason(userA, userB, attachment.score, communication, conflict.score, values, lifestyle);
 
   return {
-    totalMatches,
-    acceptedMatches,
-    declinedMatches,
-    expiredMatches,
-    successRate,
-  }
+    total: finalScore,
+    attachment: attachment.score,
+    communication,
+    conflict: conflict.score,
+    values,
+    lifestyle,
+    reason,
+    conflictWarnings: [...new Set(allWarnings)],
+  };
 }
+
+// ─── Match Reason Generation ────────────────────────────────────────
+
+function generateMatchReason(
+  a: UserProfile,
+  b: UserProfile,
+  attachScore: number,
+  commScore: number,
+  conflictScore: number,
+  valuesScore: number,
+  lifestyleScore: number,
+): string {
+  const reasons: string[] = [];
+
+  if (attachScore >= 80) {
+    reasons.push('Your attachment styles align well, creating a foundation of emotional safety');
+  } else if (attachScore >= 60) {
+    reasons.push('Complementary attachment patterns that can support mutual growth');
+  } else if (attachScore < 40) {
+    reasons.push('Different attachment styles — awareness and communication will be key');
+  }
+
+  if (commScore >= 80) {
+    reasons.push('You communicate in compatible ways, which supports honest dialogue');
+  } else if (commScore < 60) {
+    reasons.push('Different communication styles may require patience and adaptation');
+  }
+
+  if (conflictScore >= 80) {
+    reasons.push('Your conflict resolution approaches complement each other');
+  } else if (conflictScore < 40) {
+    reasons.push('Consider discussing conflict resolution early — different styles may cause friction');
+  }
+
+  if (valuesScore >= 80) {
+    reasons.push('Shared values and life priorities point to aligned long-term goals');
+  }
+
+  if (lifestyleScore >= 80) {
+    reasons.push('Similar lifestyle preferences and relationship goals');
+  }
+
+  if (a.relationshipGoal === b.relationshipGoal && a.relationshipGoal === 'LONG_TERM') {
+    reasons.push('Both seeking a long-term committed relationship');
+  }
+
+  if (reasons.length === 0) {
+    reasons.push('You have a baseline compatibility worth exploring');
+  }
+
+  return reasons.slice(0, 3).join('. ') + '.';
+}
+
+// ─── Batch Matching ─────────────────────────────────────────────────
+
+/**
+ * Find top N matches for a user from a pool of candidates.
+ * Filters by basic preferences, then ranks by compatibility score.
+ */
+export function findTopMatches(
+  user: UserProfile,
+  candidates: UserProfile[],
+  limit: number = 5,
+): Array<{ profile: UserProfile; score: MatchScore }> {
+  const scored = candidates
+    .filter((candidate) => {
+      // Skip self
+      if (candidate.id === user.id) return false;
+
+      // Basic preference filtering
+      if (user.preferredAgeMin && candidate.age < user.preferredAgeMin) return false;
+      if (user.preferredAgeMax && candidate.age > user.preferredAgeMax) return false;
+
+      return true;
+    })
+    .map((candidate) => ({
+      profile: candidate,
+      score: calculateMatchScore(user, candidate),
+    }))
+    .sort((a, b) => b.score.total - a.score.total);
+
+  return scored.slice(0, limit);
+}
+
+export type { UserProfile, MatchScore };

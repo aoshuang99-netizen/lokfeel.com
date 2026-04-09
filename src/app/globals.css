@@ -430,6 +430,23 @@ body {
   cursor: not-allowed;
 }
 
+/* Fix autofill background and text color */
+.input-feeld:-webkit-autofill,
+.input-feeld:-webkit-autofill:hover,
+.input-feeld:-webkit-autofill:focus,
+.input-feeld:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--background-tertiary) inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Firefox autofill fix */
+.input-feeld:autofill {
+  background: var(--background-tertiary) !important;
+  color: var(--foreground) !important;
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -801,3 +818,75 @@ body {
 .z-modal { z-index: 950; }
 .z-popover { z-index: 1000; }
 .z-toast { z-index: 1100; }
+
+/* ================================================
+   ANIMATIONS
+   ================================================ */
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+/* ================================================
+   LOKFEEL BRAND ANIMATIONS - Heartbeat & Pulse
+   ================================================ */
+
+/* Gentle heartbeat pulse */
+@keyframes gentle-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+.animate-gentle-pulse {
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+/* Heartbeat ring effect */
+@keyframes heartbeat-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 0.3; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+.animate-heartbeat-ring {
+  animation: heartbeat-ring 2s ease-out infinite;
+}
+
+.animate-heartbeat-ring-delayed {
+  animation: heartbeat-ring 2s ease-out infinite 0.5s;
+}
+
+/* Slow pulse for background elements */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+/* Sparkle animation */
+@keyframes sparkle {
+  0%, 100% { 
+    opacity: 0; 
+    transform: scale(0) rotate(0deg); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1) rotate(180deg); 
+  }
+}
+
+.animate-sparkle {
+  animation: sparkle 3s ease-in-out infinite;
+}
+
+.animate-sparkle-delayed {
+  animation: sparkle 3s ease-in-out infinite 1.5s;
+}

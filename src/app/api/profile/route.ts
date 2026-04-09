@@ -1,169 +1,94 @@
-export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/auth/auth"
-import { success, notFound, serverError, badRequest } from "@/lib/api-response";
-import type { ProfileUpdateInput } from "@/types";
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth'
+import { db } from '@/lib/db'
 
-export async function GET(request: NextRequest) {
+export const dynamic = 'force-dynamic'
+
+// GET /api/profile — Get current user's profile
+export async function GET() {
   try {
-    
-
-    const { user } = await requireAuth();
+    const { user } = await requireAuth()
 
     const profile = await db.profile.findUnique({
       where: { userId: user.id },
-    });
+    })
 
     if (!profile) {
-      return notFound("Profile not found");
+      // Return null profile — frontend should redirect to onboarding
+      return NextResponse.json({ profile: null, user })
     }
 
-    return success(profile);
-  } catch (error) {
-    console.error("Error fetching profile:", error);
-    return serverError("Failed to fetch profile");
+    return NextResponse.json({ profile, user })
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+    console.error('Get profile error:', error)
+    return NextResponse.json({ message: 'Failed to fetch profile' }, { status: 500 })
   }
 }
 
-const updateProfileSchema = z.object({
-  displayName: z.string().min(1).max(100).optional(),
-  bio: z.string().max(2000).optional(),
-  avatar: z.string().url().optional().nullable(),
-  city: z.string().max(100).optional(),
-  country: z.string().max(2).optional(),
-  gender: z.enum(["MALE", "FEMALE", "NON_BINARY", "OTHER"]).optional(),
-  genderIdentity: z.string().max(100).optional(),
-  sexuality: z.string().max(100).optional(),
-  relationshipGoal: z.enum(["LONG_TERM", "DATING", "FRIENDSHIP", "NOT_SURE"]).optional(),
-  attachmentStyle: z.string().max(100).optional(),
-  communicationStyle: z.string().max(100).optional(),
-  conflictResolution: z.string().max(100).optional(),
-  loveLanguage: z.string().max(100).optional(),
-  boundaries: z.array(z.string()).optional(),
-  dealbreakers: z.array(z.string()).optional(),
-  lifePriorities: z.array(z.string()).optional(),
-  emotionalAvailability: z.string().max(100).optional(),
-  preferredAgeMin: z.number().min(18).max(100).optional(),
-  preferredAgeMax: z.number().min(18).max(100).optional(),
-  preferredGender: z.string().max(200).optional(),
-  preferredDistance: z.number().min(1).max(500).optional(),
-  preferredLocation: z.string().max(200).optional(),
-});
-
+// PUT /api/profile — Update current user's profile
 export async function PUT(request: NextRequest) {
   try {
-    
+    const { user } = await requireAuth()
+    const body = await request.json()
 
-    const { user } = await requireAuth();
-    const body = await request.json();
+    // Separate profile fields from user name
+    const { name, ...profileData } = body
 
-    const parseResult = updateProfileSchema.safeParse(body);
-    if (!parseResult.success) {
-      return badRequest("Invalid request body", parseResult.error.issues);
+    // Update user name if provided
+    if (name) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { name },
+      })
     }
 
-    const data = parseResult.data;
-
-    // Check if profile exists
-    const existingProfile = await db.profile.findUnique({
+    // Upsert profile
+    const profile = await db.profile.upsert({
       where: { userId: user.id },
-    });
+      update: profileData,
+      create: {
+        userId: user.id,
+        displayName: profileData.displayName || user.name || '',
+        age: profileData.age || 18,
+        gender: profileData.gender || 'OTHER',
+        sexuality: profileData.sexuality || 'Questioning',
+        bio: profileData.bio || '',
+        ...profileData,
+      },
+    })
 
-    if (!existingProfile) {
-      return notFound("Profile not found. Please complete onboarding first.");
+    return NextResponse.json({ profile, message: 'Profile updated successfully' })
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
-
-    // Prepare update data
-    const updateData: Record<string, unknown> = {};
-
-    // Handle JSON arrays
-    if (data.boundaries !== undefined) {
-      updateData.boundaries = JSON.stringify(data.boundaries);
-    }
-    if (data.dealbreakers !== undefined) {
-      updateData.dealbreakers = JSON.stringify(data.dealbreakers);
-    }
-    if (data.lifePriorities !== undefined) {
-      updateData.lifePriorities = JSON.stringify(data.lifePriorities);
-    }
-
-    // Add other fields
-    for (const [key, value] of Object.entries(data)) {
-      if (!["boundaries", "dealbreakers", "lifePriorities"].includes(key)) {
-        updateData[key] = value;
-      }
-    }
-
-    // Update profile
-    const profile = await db.profile.update({
-      where: { userId: user.id },
-      data: updateData,
-    });
-
-    return success(profile);
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    return serverError("Failed to update profile");
+    console.error('Update profile error:', error)
+    return NextResponse.json({ message: 'Failed to update profile' }, { status: 500 })
   }
 }
 
+// POST /api/profile/submit — Submit profile for review
 export async function POST(request: NextRequest) {
   try {
-    
+    const { user } = await requireAuth()
 
-    const { user } = await requireAuth();
-
-    // Get profile
-    const profile = await db.profile.findUnique({
-      where: { userId: user.id },
-    });
-
-    if (!profile) {
-      return notFound("Profile not found");
-    }
-
-    // Check if profile is ready for submission
-    if (!profile.displayName || !profile.gender || !profile.sexuality) {
-      return badRequest("Profile must have displayName, gender, and sexuality before submission");
-    }
-
-    // Update profile status to pending review
-    const updatedProfile = await db.profile.update({
+    const profile = await db.profile.update({
       where: { userId: user.id },
       data: {
-        profileStatus: "PENDING_REVIEW",
+        profileStatus: 'PENDING_REVIEW',
         onboardingStep: 5,
       },
-    });
+    })
 
-    // Create notification for admins
-    const admins = await db.user.findMany({
-      where: {
-        role: { in: ["ADMIN", "SUPER_ADMIN"] },
-      },
-    });
-
-    if (admins.length > 0) {
-      await db.notification.createMany({
-        data: admins.map((admin: any) => ({
-          userId: admin.id,
-          type: "SYSTEM_ANNOUNCEMENT",
-          title: "新用户资料待审核",
-          body: `用户 ${profile.displayName} 提交了资料审核`,
-          data: JSON.stringify({ userId: user.id, profileId: profile.id }),
-          actionUrl: `/admin/users/${user.id}`,
-        })),
-      });
+    return NextResponse.json({ profile, message: 'Profile submitted for review' })
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
-
-    return success({
-      profile: updatedProfile,
-      message: "Profile submitted for review",
-    });
-  } catch (error) {
-    console.error("Error submitting profile:", error);
-    return serverError("Failed to submit profile");
+    console.error('Submit profile error:', error)
+    return NextResponse.json({ message: 'Failed to submit profile' }, { status: 500 })
   }
 }

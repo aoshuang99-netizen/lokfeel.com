@@ -180,26 +180,69 @@ export async function POST(request: NextRequest) {
       return badRequest("A match already exists between these users");
     }
 
-    // Generate compatibility
-    const { calculateCompatibility } = await import("@/lib/matching/engine");
-    const compatibility = await calculateCompatibility(
-      sender.profile!.id,
-      receiver.profile!.id
-    );
+    // Generate compatibility using the matching engine
+    const { calculateMatchScore } = await import("@/lib/matching/engine");
+    const senderProfile = sender.profile ? {
+      id: sender.id,
+      attachmentStyle: sender.profile.attachmentStyle,
+      communicationStyle: sender.profile.communicationStyle,
+      conflictResolution: sender.profile.conflictResolution,
+      loveLanguage: sender.profile.loveLanguage,
+      lifePriorities: sender.profile.lifePriorities,
+      relationshipGoal: sender.profile.relationshipGoal,
+      boundaries: sender.profile.boundaries,
+      dealbreakers: sender.profile.dealbreakers,
+      emotionalAvailability: sender.profile.emotionalAvailability,
+      preferredAgeMin: sender.profile.preferredAgeMin,
+      preferredAgeMax: sender.profile.preferredAgeMax,
+      preferredGender: sender.profile.preferredGender,
+      preferredDistance: sender.profile.preferredDistance,
+      age: sender.profile.age,
+      gender: sender.profile.gender,
+      city: sender.profile.city,
+      country: sender.profile.country,
+    } as any : undefined;
+
+    const receiverProfile = receiver.profile ? {
+      id: receiver.id,
+      attachmentStyle: receiver.profile.attachmentStyle,
+      communicationStyle: receiver.profile.communicationStyle,
+      conflictResolution: receiver.profile.conflictResolution,
+      loveLanguage: receiver.profile.loveLanguage,
+      lifePriorities: receiver.profile.lifePriorities,
+      relationshipGoal: receiver.profile.relationshipGoal,
+      boundaries: receiver.profile.boundaries,
+      dealbreakers: receiver.profile.dealbreakers,
+      emotionalAvailability: receiver.profile.emotionalAvailability,
+      preferredAgeMin: receiver.profile.preferredAgeMin,
+      preferredAgeMax: receiver.profile.preferredAgeMax,
+      preferredGender: receiver.profile.preferredGender,
+      preferredDistance: receiver.profile.preferredDistance,
+      age: receiver.profile.age,
+      gender: receiver.profile.gender,
+      city: receiver.profile.city,
+      country: receiver.profile.country,
+    } as any : undefined;
+
+    if (!senderProfile || !receiverProfile) {
+      return badRequest("Both users must have completed profiles");
+    }
+
+    const compatibility = calculateMatchScore(senderProfile, receiverProfile);
 
     // Create match
     const match = await db.match.create({
       data: {
         senderId,
         receiverId,
-        matchScore: compatibility.scores.overall,
-        matchReason: compatibility.explanation.summary,
-        conflictWarnings: JSON.stringify(compatibility.warnings),
-        attachmentCompat: compatibility.scores.attachment,
-        communicationCompat: compatibility.scores.communication,
-        conflictCompat: compatibility.scores.conflict,
-        valuesCompat: compatibility.scores.values,
-        lifestyleCompat: compatibility.scores.lifestyle,
+        matchScore: compatibility.total,
+        matchReason: compatibility.reason,
+        conflictWarnings: compatibility.conflictWarnings.length > 0 ? JSON.stringify(compatibility.conflictWarnings) : null,
+        attachmentCompat: compatibility.attachment,
+        communicationCompat: compatibility.communication,
+        conflictCompat: compatibility.conflict,
+        valuesCompat: compatibility.values,
+        lifestyleCompat: compatibility.lifestyle,
         matchType: matchType as "WEEKLY" | "BOOSTED" | "MANUAL" | "AI_SUGGESTED",
         status: "PENDING",
         reviewedBy: adminUser?.id,
@@ -238,7 +281,7 @@ export async function POST(request: NextRequest) {
           senderId,
           receiverId,
           matchType,
-          compatibilityScore: compatibility.scores.overall,
+          compatibilityScore: compatibility.total,
         }),
       },
     });

@@ -2,7 +2,7 @@
 
 import { useState, ReactNode } from "react";
 import Link from "next/link";
-import { Heart, Bell, Menu, X } from "lucide-react";
+import { Heart, Bell, Menu, X, LogOut } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 
 interface DashboardLayoutProps {
@@ -11,15 +11,16 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [notifications] = useState(3); // Mock notification count
+  const [notifications] = useState(0); // Will be replaced with real data
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
       {/* Main Content Area */}
-      <div className="lg:pl-64">
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
         {/* Top Header */}
         <header className="sticky top-0 z-sticky glass-strong">
           <div className="h-16 flex items-center justify-between px-4 lg:px-6">
@@ -54,13 +55,26 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 )}
               </Link>
 
+              {/* Logout */}
+              <button
+                className="p-2 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white"
+                aria-label="Sign out"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.location.href = "/api/auth/signout";
+                  }
+                }}
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+
               {/* Profile */}
               <Link
                 href="/dashboard/profile"
                 className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-semibold">
-                  A
+                  N
                 </div>
               </Link>
             </div>
@@ -88,7 +102,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <X className="w-6 h-6" />
             </button>
-            {/* Mobile nav links will be rendered by the Sidebar component */}
+            {/* Mobile nav links rendered by the Sidebar component */}
           </div>
         </div>
       )}

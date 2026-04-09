@@ -8,6 +8,10 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
 
+// Turbopack: scope filesystem operations to public/uploads
+/* eslint-disable @typescript-eslint/no-require-imports */
+const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
+
 const uploadSchema = z.object({
   file: z.string(), // Base64 encoded file
   filename: z.string().optional(),
