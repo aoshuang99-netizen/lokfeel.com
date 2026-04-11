@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Nexus — Real Matches. Real Connection.",
-    template: "%s | Nexus",
+    default: "LokFeel — Real Matches. Real Connection.",
+    template: "%s | LokFeel",
   },
   description: "Relationship structure matching engine. 5 curated matches per week with explanations of why you connect. Built for depth, not swiping.",
-  keywords: ["dating", "matching", "relationships", "nexus", "deep connection"],
+  keywords: ["dating", "matching", "relationships", "lokfeel", "deep connection"],
 };
 
 export default function RootLayout({

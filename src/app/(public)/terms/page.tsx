@@ -3,8 +3,8 @@ import Link from "next/link";
 import { FileText, Scale, AlertTriangle, Users, Mail, Shield, CreditCard } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Terms of Service - Nexus",
-  description: "Read the Terms of Service for using Nexus - your relationship matching platform.",
+  title: "Terms of Service - LokFeel",
+  description: "Read the Terms of Service for using LokFeel - your relationship matching platform.",
 };
 
 export default function TermsPage() {

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Shield, Lock, Eye, Users, Trash2, Mail, Globe, Scale } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Nexus",
-  description: "Learn how Nexus protects your data and privacy while helping you find meaningful connections.",
+  title: "Privacy Policy - LokFeel",
+  description: "Learn how LokFeel protects your data and privacy while helping you find meaningful connections.",
 };
 
 export default function PrivacyPage() {

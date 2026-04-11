@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
+import { requireVerifiedUser, verificationErrorResponse } from '@/lib/auth/verification'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -91,7 +92,31 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user } = await requireAuth()
+    // Require verified user for sending messages
+    let user
+    try {
+      const result = await requireVerifiedUser()
+      user = result.user
+    } catch (err: any) {
+      if (err.message === 'EMAIL_NOT_VERIFIED') {
+        return NextResponse.json(verificationErrorResponse('Please verify your email to send messages'), { status: 403 })
+      }
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+
+    // ═══ AVATAR GATE ═══
+    // Male users MUST have a real photo before they can send messages
+    const userProfile = await db.profile.findUnique({ where: { userId: user.id } })
+    if (userProfile) {
+      const gender = userProfile.gender?.toUpperCase()
+      if ((gender === 'MALE') && (!userProfile.avatar || userProfile.avatarType === 'cartoon')) {
+        return NextResponse.json(
+          { message: 'Please upload a real profile photo before sending messages. This helps build trust.', code: 'AVATAR_REQUIRED' },
+          { status: 403 }
+        )
+      }
+    }
+
     const { id: roomId } = await params
     const { content, messageType = 'TEXT' } = await request.json()
 

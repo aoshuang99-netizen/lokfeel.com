@@ -92,7 +92,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10">
-              Tired of endless swiping? Nexus delivers 5 curated relationship matches per week with explanations of why you connect. Built for those who want quality over quantity.
+              Tired of endless swiping? LokFeel delivers 5 curated relationship matches per week with explanations of why you connect. Built for those who want quality over quantity.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

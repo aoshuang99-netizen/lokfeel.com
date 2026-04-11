@@ -9,13 +9,6 @@ export default function AuthLayout({
       <div className="glow-orb glow-orb-primary w-96 h-96 -top-48 -left-48 opacity-50" />
       <div className="glow-orb glow-orb-secondary w-96 h-96 -bottom-48 -right-48 opacity-50" />
 
-      {/* Logo */}
-      <div className="absolute top-8 left-1/2 -translate-x-1/2">
-        <a href="/" className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-gradient">Nexus</span>
-        </a>
-      </div>
-
       {/* Auth Card */}
       <div className="w-full max-w-md relative z-10">
         {children}

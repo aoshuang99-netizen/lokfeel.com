@@ -605,7 +605,7 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.6.0
+   * Prisma Client JS version: 7.7.0
    * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
    */
   export type PrismaVersion = {
@@ -7493,6 +7493,7 @@ export namespace Prisma {
     sexuality: string | null
     bio: string | null
     avatar: string | null
+    avatarType: string | null
     city: string | null
     country: string | null
     relationshipGoal: $Enums.RelationshipGoal | null
@@ -7529,6 +7530,7 @@ export namespace Prisma {
     sexuality: string | null
     bio: string | null
     avatar: string | null
+    avatarType: string | null
     city: string | null
     country: string | null
     relationshipGoal: $Enums.RelationshipGoal | null
@@ -7565,6 +7567,7 @@ export namespace Prisma {
     sexuality: number
     bio: number
     avatar: number
+    avatarType: number
     city: number
     country: number
     relationshipGoal: number
@@ -7621,6 +7624,7 @@ export namespace Prisma {
     sexuality?: true
     bio?: true
     avatar?: true
+    avatarType?: true
     city?: true
     country?: true
     relationshipGoal?: true
@@ -7657,6 +7661,7 @@ export namespace Prisma {
     sexuality?: true
     bio?: true
     avatar?: true
+    avatarType?: true
     city?: true
     country?: true
     relationshipGoal?: true
@@ -7693,6 +7698,7 @@ export namespace Prisma {
     sexuality?: true
     bio?: true
     avatar?: true
+    avatarType?: true
     city?: true
     country?: true
     relationshipGoal?: true
@@ -7816,6 +7822,7 @@ export namespace Prisma {
     sexuality: string
     bio: string | null
     avatar: string | null
+    avatarType: string | null
     city: string | null
     country: string | null
     relationshipGoal: $Enums.RelationshipGoal
@@ -7871,6 +7878,7 @@ export namespace Prisma {
     sexuality?: boolean
     bio?: boolean
     avatar?: boolean
+    avatarType?: boolean
     city?: boolean
     country?: boolean
     relationshipGoal?: boolean
@@ -7908,6 +7916,7 @@ export namespace Prisma {
     sexuality?: boolean
     bio?: boolean
     avatar?: boolean
+    avatarType?: boolean
     city?: boolean
     country?: boolean
     relationshipGoal?: boolean
@@ -7945,6 +7954,7 @@ export namespace Prisma {
     sexuality?: boolean
     bio?: boolean
     avatar?: boolean
+    avatarType?: boolean
     city?: boolean
     country?: boolean
     relationshipGoal?: boolean
@@ -7982,6 +7992,7 @@ export namespace Prisma {
     sexuality?: boolean
     bio?: boolean
     avatar?: boolean
+    avatarType?: boolean
     city?: boolean
     country?: boolean
     relationshipGoal?: boolean
@@ -8008,7 +8019,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "displayName" | "age" | "gender" | "genderIdentity" | "sexuality" | "bio" | "avatar" | "city" | "country" | "relationshipGoal" | "attachmentStyle" | "communicationStyle" | "conflictResolution" | "loveLanguage" | "boundaries" | "dealbreakers" | "lifePriorities" | "emotionalAvailability" | "preferredAgeMin" | "preferredAgeMax" | "preferredGender" | "preferredDistance" | "preferredLocation" | "compatibilityScore" | "profileStatus" | "onboardingStep" | "isApproved" | "isVerified" | "adminNotes" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
+  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "displayName" | "age" | "gender" | "genderIdentity" | "sexuality" | "bio" | "avatar" | "avatarType" | "city" | "country" | "relationshipGoal" | "attachmentStyle" | "communicationStyle" | "conflictResolution" | "loveLanguage" | "boundaries" | "dealbreakers" | "lifePriorities" | "emotionalAvailability" | "preferredAgeMin" | "preferredAgeMax" | "preferredGender" | "preferredDistance" | "preferredLocation" | "compatibilityScore" | "profileStatus" | "onboardingStep" | "isApproved" | "isVerified" | "adminNotes" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
   export type ProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -8034,6 +8045,7 @@ export namespace Prisma {
       sexuality: string
       bio: string | null
       avatar: string | null
+      avatarType: string | null
       city: string | null
       country: string | null
       relationshipGoal: $Enums.RelationshipGoal
@@ -8491,6 +8503,7 @@ export namespace Prisma {
     readonly sexuality: FieldRef<"Profile", 'String'>
     readonly bio: FieldRef<"Profile", 'String'>
     readonly avatar: FieldRef<"Profile", 'String'>
+    readonly avatarType: FieldRef<"Profile", 'String'>
     readonly city: FieldRef<"Profile", 'String'>
     readonly country: FieldRef<"Profile", 'String'>
     readonly relationshipGoal: FieldRef<"Profile", 'RelationshipGoal'>
@@ -21616,6 +21629,7 @@ export namespace Prisma {
     sexuality: 'sexuality',
     bio: 'bio',
     avatar: 'avatar',
+    avatarType: 'avatarType',
     city: 'city',
     country: 'country',
     relationshipGoal: 'relationshipGoal',
@@ -22415,6 +22429,7 @@ export namespace Prisma {
     sexuality?: StringFilter<"Profile"> | string
     bio?: StringNullableFilter<"Profile"> | string | null
     avatar?: StringNullableFilter<"Profile"> | string | null
+    avatarType?: StringNullableFilter<"Profile"> | string | null
     city?: StringNullableFilter<"Profile"> | string | null
     country?: StringNullableFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalFilter<"Profile"> | $Enums.RelationshipGoal
@@ -22452,6 +22467,7 @@ export namespace Prisma {
     sexuality?: SortOrder
     bio?: SortOrderInput | SortOrder
     avatar?: SortOrderInput | SortOrder
+    avatarType?: SortOrderInput | SortOrder
     city?: SortOrderInput | SortOrder
     country?: SortOrderInput | SortOrder
     relationshipGoal?: SortOrder
@@ -22492,6 +22508,7 @@ export namespace Prisma {
     sexuality?: StringFilter<"Profile"> | string
     bio?: StringNullableFilter<"Profile"> | string | null
     avatar?: StringNullableFilter<"Profile"> | string | null
+    avatarType?: StringNullableFilter<"Profile"> | string | null
     city?: StringNullableFilter<"Profile"> | string | null
     country?: StringNullableFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalFilter<"Profile"> | $Enums.RelationshipGoal
@@ -22529,6 +22546,7 @@ export namespace Prisma {
     sexuality?: SortOrder
     bio?: SortOrderInput | SortOrder
     avatar?: SortOrderInput | SortOrder
+    avatarType?: SortOrderInput | SortOrder
     city?: SortOrderInput | SortOrder
     country?: SortOrderInput | SortOrder
     relationshipGoal?: SortOrder
@@ -22573,6 +22591,7 @@ export namespace Prisma {
     sexuality?: StringWithAggregatesFilter<"Profile"> | string
     bio?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     avatar?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    avatarType?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     city?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     country?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalWithAggregatesFilter<"Profile"> | $Enums.RelationshipGoal
@@ -23854,6 +23873,7 @@ export namespace Prisma {
     sexuality: string
     bio?: string | null
     avatar?: string | null
+    avatarType?: string | null
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -23891,6 +23911,7 @@ export namespace Prisma {
     sexuality: string
     bio?: string | null
     avatar?: string | null
+    avatarType?: string | null
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -23926,6 +23947,7 @@ export namespace Prisma {
     sexuality?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -23963,6 +23985,7 @@ export namespace Prisma {
     sexuality?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -23999,6 +24022,7 @@ export namespace Prisma {
     sexuality: string
     bio?: string | null
     avatar?: string | null
+    avatarType?: string | null
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -24034,6 +24058,7 @@ export namespace Prisma {
     sexuality?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -24070,6 +24095,7 @@ export namespace Prisma {
     sexuality?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -25569,6 +25595,7 @@ export namespace Prisma {
     sexuality?: SortOrder
     bio?: SortOrder
     avatar?: SortOrder
+    avatarType?: SortOrder
     city?: SortOrder
     country?: SortOrder
     relationshipGoal?: SortOrder
@@ -25614,6 +25641,7 @@ export namespace Prisma {
     sexuality?: SortOrder
     bio?: SortOrder
     avatar?: SortOrder
+    avatarType?: SortOrder
     city?: SortOrder
     country?: SortOrder
     relationshipGoal?: SortOrder
@@ -25650,6 +25678,7 @@ export namespace Prisma {
     sexuality?: SortOrder
     bio?: SortOrder
     avatar?: SortOrder
+    avatarType?: SortOrder
     city?: SortOrder
     country?: SortOrder
     relationshipGoal?: SortOrder
@@ -28072,6 +28101,7 @@ export namespace Prisma {
     sexuality: string
     bio?: string | null
     avatar?: string | null
+    avatarType?: string | null
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -28107,6 +28137,7 @@ export namespace Prisma {
     sexuality: string
     bio?: string | null
     avatar?: string | null
+    avatarType?: string | null
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -28623,6 +28654,7 @@ export namespace Prisma {
     sexuality?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -28658,6 +28690,7 @@ export namespace Prisma {
     sexuality?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal

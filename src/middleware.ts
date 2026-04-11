@@ -1,59 +1,35 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+
+/**
+ * MIDDLEWARE — Lightweight Version
+ * 
+ * WHY NO AUTH CHECK HERE:
+ * 
+ * NextAuth v5 beta uses JWE (encrypted) session tokens.
+ * next-auth/jwt's getToken() CANNOT reliably decrypt JWE tokens
+ * in Vercel's Edge Runtime (middleware).
+ * 
+ * The session API (/api/auth/session) works fine because it uses
+ * the full NextAuth handler which has access to proper crypto context.
+ * 
+ * Solution: Auth protection moved to SERVER COMPONENT level
+ * using auth() function (Node.js runtime, not Edge).
+ * 
+ * See: src/app/(dashboard)/layout.tsx for actual auth enforcement.
+ */
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Get the session token
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-  })
-
-  // ─── Admin Routes ──────────────────────────────────────────────
-  // /admin/* requires ADMIN or SUPER_ADMIN role
-  if (pathname.startsWith('/admin')) {
-    if (!token) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(loginUrl)
-    }
-
-    const role = token.role as string
-    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
-      // Logged in but not admin → redirect to dashboard with error
-      const dashboardUrl = new URL('/dashboard', request.url)
-      dashboardUrl.searchParams.set('error', 'unauthorized')
-      return NextResponse.redirect(dashboardUrl)
-    }
-  }
-
-  // ─── Dashboard Routes ──────────────────────────────────────────
-  // /dashboard/* requires any authenticated user
-  if (pathname.startsWith('/dashboard')) {
-    if (!token) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(loginUrl)
-    }
-  }
-
-  // ─── Auth Routes ───────────────────────────────────────────────
-  // Redirect already logged-in users away from /login and /register
-  if ((pathname === '/login' || pathname === '/register') && token) {
-    const role = token.role as string
-    if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
-      return NextResponse.redirect(new URL('/admin', request.url))
-    }
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
+  // Only redirect logic: already logged-in users shouldn't see login/register
+  // (We can't reliably detect login status here, so skip this too)
+  
+  // Just pass through — let pages handle their own auth
   return NextResponse.next()
 }
 
 export const config = {
-  // Match all paths except static files, API routes (handled separately), and _next internals
   matcher: [
     '/admin/:path*',
     '/dashboard/:path*',

@@ -71,7 +71,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
           <Link href="/dashboard" className="flex items-center gap-2">
             <Heart className="w-7 h-7 text-primary" />
             {!isCollapsed && (
-              <span className="text-xl font-bold text-gradient">Nexus</span>
+              <span className="text-xl font-bold text-gradient">LokFeel</span>
             )}
           </Link>
           <button

@@ -3,7 +3,7 @@
 // ============================================================================
 
 export const APP_CONFIG = {
-  name: 'Nexus',
+  name: 'LokFeel',
   company: 'LokFeel Inc.',
   tagline: 'Relationship Structure Matching',
   description: 'Find meaningful connections based on relationship compatibility',

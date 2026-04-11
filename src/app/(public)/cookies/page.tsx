@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Cookie, Shield, Eye, Lock, Settings, AlertCircle, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy - Nexus",
-  description: "Learn how Nexus uses cookies and similar technologies to enhance your experience.",
+  title: "Cookie Policy - LokFeel",
+  description: "Learn how LokFeel uses cookies and similar technologies to enhance your experience.",
 };
 
 export default function CookiePolicyPage() {

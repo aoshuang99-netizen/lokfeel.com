@@ -8,11 +8,20 @@ declare global {
 function createPrismaClient(): PrismaClient {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { PrismaPg } = require("@prisma/adapter-pg");
+  // Trim DATABASE_URL in case Vercel injected trailing newline
+  const connectionString = (process.env.DATABASE_URL || "").trim();
+
+  // Neon optimized: pooled connections + prepared statements for lower latency
   const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
+    schema: process.env.DATABASE_SCHEMA || "public",
   });
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new (PrismaClient as any)({ adapter }) as PrismaClient;
+  return new (PrismaClient as any)({
+    adapter,
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  }) as PrismaClient;
 }
 
 // Lazy singleton — only instantiated when first accessed at runtime

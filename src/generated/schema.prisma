@@ -122,6 +122,7 @@ model Profile {
   sexuality      String // "Straight", "Bisexual", "Pansexual", "Queer", "Lesbian", "Gay", "Fluid", etc.
   bio            String? @db.Text
   avatar         String? // Upload URL
+  avatarType     String? // "photo" | "cartoon"
   city           String?
   country        String? @default("US")
 

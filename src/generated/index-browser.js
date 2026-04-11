@@ -24,11 +24,11 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.6.0
+ * Prisma Client JS version: 7.7.0
  * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
  */
 Prisma.prismaVersion = {
-  client: "7.6.0",
+  client: "7.7.0",
   engine: "75cbdc1eb7150937890ad5465d861175c6624711"
 }
 
@@ -174,6 +174,7 @@ exports.Prisma.ProfileScalarFieldEnum = {
   sexuality: 'sexuality',
   bio: 'bio',
   avatar: 'avatar',
+  avatarType: 'avatarType',
   city: 'city',
   country: 'country',
   relationshipGoal: 'relationshipGoal',

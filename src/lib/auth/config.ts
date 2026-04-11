@@ -1,16 +1,23 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import LinkedIn from "next-auth/providers/linkedin";
-import Facebook from "next-auth/providers/facebook";
+// Only Google + Discord OAuth providers (LinkedIn & Facebook removed)
 import Discord from "next-auth/providers/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/auth";
 import { syncOAuthProfileToUser, OAuthProfileData } from "@/lib/auth/oauth-profile";
 
+// Trim env vars in case Vercel injected trailing newlines
+if (process.env.AUTH_SECRET) process.env.AUTH_SECRET = process.env.AUTH_SECRET.trim()
+if (process.env.AUTH_URL) process.env.AUTH_URL = process.env.AUTH_URL.trim()
+if (process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL.trim()
+if (process.env.DATABASE_URL) process.env.DATABASE_URL = process.env.DATABASE_URL.trim()
+
 export const authConfig = {
   adapter: PrismaAdapter(db),
+  trustHost: true,
+  basePath: "/api/auth",
   providers: [
     Credentials({
       name: "credentials",
@@ -73,42 +80,6 @@ export const authConfig = {
         };
       },
     }),
-    LinkedIn({
-      clientId: process.env.LINKEDIN_CLIENT_ID,
-      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: 'openid profile email',
-        },
-      },
-      profile(profile) {
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-          emailVerified: profile.email_verified ? new Date() : null,
-        };
-      },
-    }),
-    Facebook({
-      clientId: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: 'email public_profile',
-        },
-      },
-      profile(profile) {
-        return {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture?.data?.url,
-          emailVerified: null,
-        };
-      },
-    }),
     Discord({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
@@ -151,28 +122,19 @@ export const authConfig = {
     async signIn({ user, account, profile, isNewUser }: any) {
       if (account?.provider !== "credentials" && user?.id && profile) {
         try {
-          const oauthProfile: OAuthProfileData = {
-            provider: account.provider,
-            providerAccountId: account.providerAccountId,
-            email: user.email || profile.email,
-            name: user.name || profile.name,
-            image: user.image || profile.picture || profile.image?.url,
-            // LinkedIn specific
-            headline: profile.headline,
-            industry: profile.industry,
-            location: profile.location?.name,
-            summary: profile.summary,
-            // Google specific
-            locale: profile.locale,
-            verified: profile.email_verified,
-            // Facebook specific
-            birthday: profile.birthday,
-            hometown: profile.hometown?.name,
-            gender: profile.gender,
-            // Discord specific
-            username: profile.username,
-            discriminator: profile.discriminator,
-          };
+        const oauthProfile: OAuthProfileData = {
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+          email: user.email || profile.email,
+          name: user.name || profile.name,
+          image: user.image || profile.picture || (profile as any).image_url,
+          // Google specific
+          locale: (profile as any).locale,
+          verified: (profile as any).email_verified,
+          // Discord specific
+          username: (profile as any).username,
+          discriminator: (profile as any).discriminator,
+        };
 
           await syncOAuthProfileToUser(user.id, oauthProfile);
         } catch (error) {
@@ -198,6 +160,7 @@ export const authConfig = {
         token.role = user.role || "USER";
         token.name = user.name;
         token.picture = user.image;
+        token.emailVerified = user.emailVerified || null;
       }
 
       // Update token on session update
@@ -215,6 +178,8 @@ export const authConfig = {
         session.user.role = token.role;
         session.user.name = token.name;
         session.user.image = token.picture;
+        // Expose verification status to client
+        ;(session.user as any).emailVerified = token.emailVerified;
       }
       return session;
     },

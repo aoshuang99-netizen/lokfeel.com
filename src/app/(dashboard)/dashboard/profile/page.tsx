@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2 } from "lucide-react";
 import { LoadingButton } from "@/components/shared/loading";
+import { toast } from "sonner";
 
 const steps = [
   { id: 1, title: "Basic Info", icon: User },
@@ -18,52 +19,226 @@ export default function ProfilePage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     // Step 1: Basic Info
-    displayName: "Alex Chen",
-    age: 28,
+    displayName: "",
+    age: 25,
     gender: "woman",
     sexuality: "bisexual",
-    bio: "Adventure seeker, book lover, coffee enthusiast. Looking for someone to explore life with.",
-    location: "San Francisco, CA",
+    bio: "",
+    location: "",
+    avatar: null as string | null,
     
     // Step 2: Relationship Blueprint
-    relationshipGoal: "long-term",
+    relationshipGoal: "LONG_TERM",
     attachmentStyle: "secure",
     communicationStyle: "direct",
     conflictResolution: "talk-it-out",
     
     // Step 3: Love & Boundaries
     loveLanguage: "words-of-affirmation",
-    dealbreakers: ["Dishonesty", "Lack of ambition", "Poor communication"],
-    boundaries: ["Need personal space", "Value transparency", "Prioritize mental health"],
+    dealbreakers: ["", "", ""],
+    boundaries: ["", "", ""],
     
     // Step 4: Life Priorities
-    priorities: ["Career growth", "Family", "Personal development", "Health"],
-    emotionalAvailability: "4",
-    locationPreferences: ["San Francisco", "Los Angeles", "Seattle"],
+    priorities: [] as string[],
+    emotionalAvailability: "3",
+    locationPreferences: [] as string[],
   });
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleChange = (field: string, value: string | string[]) => {
+  // Load existing profile on mount
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const res = await fetch("/api/profile");
+        const data = await res.json();
+        
+        if (data.profile) {
+          setFormData({
+            displayName: data.profile.displayName || "",
+            age: data.profile.age || 25,
+            gender: data.profile.gender?.toLowerCase() || "woman",
+            sexuality: data.profile.sexuality?.toLowerCase() || "bisexual",
+            bio: data.profile.bio || "",
+            location: data.profile.city || "",
+            avatar: data.profile.avatar || null,
+            relationshipGoal: data.profile.relationshipGoal || "LONG_TERM",
+            attachmentStyle: data.profile.attachmentStyle?.toLowerCase() || "secure",
+            communicationStyle: data.profile.communicationStyle?.toLowerCase() || "direct",
+            conflictResolution: data.profile.conflictResolution?.toLowerCase().replace(/_/g, "-") || "talk-it-out",
+            loveLanguage: data.profile.loveLanguage?.toLowerCase().replace(/ /g, "-") || "words-of-affirmation",
+            dealbreakers: data.profile.dealbreakers ? JSON.parse(data.profile.dealbreakers) : ["", "", ""],
+            boundaries: data.profile.boundaries ? JSON.parse(data.profile.boundaries) : ["", "", ""],
+            priorities: data.profile.lifePriorities ? JSON.parse(data.profile.lifePriorities) : [],
+            emotionalAvailability: data.profile.emotionalAvailability || "3",
+            locationPreferences: data.profile.preferredLocation ? data.profile.preferredLocation.split(", ") : [],
+          });
+          
+          // Resume from last completed step
+          if (data.profile.onboardingStep && data.profile.onboardingStep > 0) {
+            setCurrentStep(Math.min(data.profile.onboardingStep + 1, 5));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+        toast.error("Failed to load profile data");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadProfile();
+  }, []);
+
+  const handleChange = (field: string, value: string | string[] | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "avatar");
+
+      const res = await fetch("/api/upload", {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      handleChange("avatar", data.url);
+      toast.success("Avatar uploaded successfully");
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload avatar");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSaveDraft = async () => {
     setIsSaving(true);
-    // Simulate save
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+    try {
+      const profileData = {
+        displayName: formData.displayName,
+        age: parseInt(formData.age.toString()),
+        gender: formData.gender.toUpperCase(),
+        sexuality: formData.sexuality.charAt(0).toUpperCase() + formData.sexuality.slice(1),
+        bio: formData.bio,
+        city: formData.location,
+        avatar: formData.avatar,
+        relationshipGoal: formData.relationshipGoal,
+        attachmentStyle: formData.attachmentStyle.charAt(0).toUpperCase() + formData.attachmentStyle.slice(1),
+        communicationStyle: formData.communicationStyle.charAt(0).toUpperCase() + formData.communicationStyle.slice(1),
+        conflictResolution: formData.conflictResolution.replace(/-/g, "_").toUpperCase(),
+        loveLanguage: formData.loveLanguage.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+        dealbreakers: JSON.stringify(formData.dealbreakers.filter(d => d.trim())),
+        boundaries: JSON.stringify(formData.boundaries.filter(b => b.trim())),
+        lifePriorities: JSON.stringify(formData.priorities),
+        emotionalAvailability: formData.emotionalAvailability,
+        preferredLocation: formData.locationPreferences.join(", "),
+        onboardingStep: currentStep,
+      };
+
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profileData),
+      });
+
+      if (!res.ok) throw new Error("Failed to save");
+      
+      toast.success("Draft saved successfully");
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Failed to save draft");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Simulate submission
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    router.push("/dashboard");
+    try {
+      // First save the profile data
+      const profileData = {
+        displayName: formData.displayName,
+        age: parseInt(formData.age.toString()),
+        gender: formData.gender.toUpperCase(),
+        sexuality: formData.sexuality.charAt(0).toUpperCase() + formData.sexuality.slice(1),
+        bio: formData.bio,
+        city: formData.location,
+        avatar: formData.avatar,
+        relationshipGoal: formData.relationshipGoal,
+        attachmentStyle: formData.attachmentStyle.charAt(0).toUpperCase() + formData.attachmentStyle.slice(1),
+        communicationStyle: formData.communicationStyle.charAt(0).toUpperCase() + formData.communicationStyle.slice(1),
+        conflictResolution: formData.conflictResolution.replace(/-/g, "_").toUpperCase(),
+        loveLanguage: formData.loveLanguage.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+        dealbreakers: JSON.stringify(formData.dealbreakers.filter(d => d.trim())),
+        boundaries: JSON.stringify(formData.boundaries.filter(b => b.trim())),
+        lifePriorities: JSON.stringify(formData.priorities),
+        emotionalAvailability: formData.emotionalAvailability,
+        preferredLocation: formData.locationPreferences.join(", "),
+        onboardingStep: 5,
+      };
+
+      const saveRes = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profileData),
+      });
+
+      if (!saveRes.ok) throw new Error("Failed to save profile");
+
+      // Then submit for review
+      const submitRes = await fetch("/api/profile/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!submitRes.ok) throw new Error("Failed to submit");
+
+      toast.success("Profile submitted successfully!");
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      console.error("Submit error:", error);
+      toast.error("Failed to submit profile");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
+
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -117,6 +292,45 @@ export default function ProfilePage() {
         {/* Step 1: Basic Info */}
         {currentStep === 1 && (
           <div className="space-y-6">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center">
+              <label className="block text-sm font-medium text-white/80 mb-3">Profile Photo</label>
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-white/10 border-2 border-white/20">
+                  {formData.avatar ? (
+                    <img
+                      src={formData.avatar}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="w-10 h-10 text-white/40" />
+                    </div>
+                  )}
+                </div>
+                <label
+                  htmlFor="avatar-upload"
+                  className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/80 transition-colors shadow-lg"
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-4 h-4 text-white animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-white" />
+                  )}
+                </label>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  disabled={isUploading}
+                  className="hidden"
+                />
+              </div>
+              <p className="text-xs text-white/40 mt-2">Click camera to upload photo</p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-white/80 mb-2">Display Name</label>
               <input
@@ -124,6 +338,7 @@ export default function ProfilePage() {
                 value={formData.displayName}
                 onChange={(e) => handleChange("displayName", e.target.value)}
                 className="input-feeld"
+                placeholder="Your name"
               />
             </div>
 
@@ -373,9 +588,15 @@ export default function ProfilePage() {
         {currentStep === 5 && (
           <div className="space-y-6">
             <div className="text-center py-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4">
-                <Check className="w-10 h-10 text-white" />
-              </div>
+              {formData.avatar ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 border-2 border-primary">
+                  <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-10 h-10 text-white" />
+                </div>
+              )}
               <h3 className="text-xl font-semibold text-white mb-2">Ready to Submit!</h3>
               <p className="text-white/60">Review your profile and submit for matching</p>
             </div>

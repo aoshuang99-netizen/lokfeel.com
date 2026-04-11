@@ -80,7 +80,7 @@ export default function AboutPage() {
               Our mission is simple: help people find meaningful, lasting relationships through better matching. We believe everyone deserves to understand why they connect with someone — not just that they do.
             </p>
             <p className="text-white/60 leading-relaxed">
-              Built on relationship science and powered by AI, Nexus delivers curated matches with transparency. No games. No misrepresentation. Just real connection.
+              Built on relationship science and powered by AI, LokFeel delivers curated matches with transparency. No games. No misrepresentation. Just real connection.
             </p>
           </div>
         </div>

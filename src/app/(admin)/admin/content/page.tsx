@@ -19,7 +19,7 @@ const templates = [
 ];
 
 const mockContent: Record<string, string> = {
-  about: `# About Nexus
+  about: `# About LokFeel
 
 ## Our Mission
 We're building the future of relationship matching — one where technology helps people find genuine connection, not just endless options.
@@ -33,7 +33,7 @@ We're building the future of relationship matching — one where technology help
   privacy: `# Privacy Policy
 
 ## 1. Introduction
-At Nexus, we believe your personal information belongs to you...
+At LokFeel, we believe your personal information belongs to you...
 
 ## 2. Information We Collect
 We collect information you provide directly, including:
@@ -47,7 +47,7 @@ We collect information you provide directly, including:
 By accessing or using our service, you agree to be bound by these Terms...
 
 ## 2. User Eligibility
-You must be at least 18 years of age to use Nexus.
+You must be at least 18 years of age to use LokFeel.
 `,
 };
 

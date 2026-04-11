@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Heart, MessageCircle, User, Sparkles, TrendingUp, ChevronRight, Star, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Heart, MessageCircle, User, Sparkles, TrendingUp, ChevronRight, Star, Loader2, Shield, AlertTriangle } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
 
 interface DashboardData {
@@ -34,6 +36,7 @@ interface NotificationsData {
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const { data: profileData, isLoading: profileLoading } = useApiGet<DashboardData>("/api/profile");
   const { data: matchesData, isLoading: matchesLoading } = useApiGet<MatchesData>("/api/matches?status=PENDING&limit=3");
@@ -50,7 +53,22 @@ export default function DashboardPage() {
   const profileCompletion = profile ? calculateProfileCompletion(profile) : 0;
   const hasSubscription = profileData?.user?.role === "ADMIN" ? true : false;
 
+  // ═══ VERIFICATION & ONBOARDING STATUS ═══
+  const isEmailVerified = user?.emailVerified;
+  const isOnboardingComplete = profile?.onboardingStep >= 8;
+  const needsVerification = !isEmailVerified;
+  const needsOnboarding = !isOnboardingComplete;
+
   const weeklyMatches = pendingMatches.slice(0, 3);
+
+  // Show loading
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   if (profileLoading || matchesLoading) {
     return (
@@ -63,6 +81,57 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* ═══ VERIFICATION BANNER ═══ — Show if email not verified */}
+      {needsVerification && (
+        <div className="glass-card border-amber-500/30 p-5 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-white text-sm mb-1">Verify Your Email to Unlock All Features</h3>
+              <p className="text-xs text-white/60 mb-3">
+                Please verify your email address before you can send messages or react to matches.
+              </p>
+              <Link
+                href="/dashboard/onboarding"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-colors"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                Verify Now
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ ONBOARDING CTA BANNER ═══ — Show if profile not complete */}
+      {needsOnboarding && !needsVerification && (
+        <div className="glass-card border-primary/30 p-5 bg-gradient-to-r from-primary/10 to-secondary/10">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white text-sm mb-1">Complete Your Relationship Blueprint</h3>
+                <p className="text-xs text-white/60">
+                  Finish your profile setup to unlock matches and messaging
+                  {profile?.onboardingStep ? ` (step ${profile.onboardingStep} of 8)` : ''}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/onboarding"
+              className="btn-primary whitespace-nowrap text-sm flex-shrink-0"
+            >
+              Continue Setup
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Header */}
       <div className="relative">
         <div className="glow-orb glow-orb-primary w-64 h-64 -top-20 -right-20 opacity-20" />
