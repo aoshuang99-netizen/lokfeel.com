@@ -12,7 +12,6 @@ import {
   MessageCircle,
   Shield,
   BadgeCheck,
-  Linkedin,
   Calendar,
   Clock,
   Star,
@@ -22,6 +21,15 @@ import {
   Crown,
   Zap
 } from "lucide-react";
+
+// LinkedIn icon component
+function LinkedinIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    </svg>
+  );
+}
 
 // 用户详情类型
 interface UserProfile {
@@ -72,7 +80,7 @@ interface CurrentUserStatus {
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const profileId = params.id as string;
+  const userId = params.id as string;
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [currentUser, setCurrentUser] = useState<CurrentUserStatus | null>(null);
@@ -86,7 +94,7 @@ export default function UserProfilePage() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await fetch(`/api/profile/${profileId}`);
+        const res = await fetch(`/api/profile/${userId}`);
         const data = await res.json();
         
         if (!res.ok) throw new Error(data.message);
@@ -100,10 +108,10 @@ export default function UserProfilePage() {
       }
     };
 
-    if (profileId) {
+    if (userId) {
       loadProfile();
     }
-  }, [profileId]);
+  }, [userId]);
 
   // 发送连接申请
   const handleConnect = async () => {
@@ -297,7 +305,7 @@ export default function UserProfilePage() {
             )}
             {profile.linkedInVerified && (
               <span className="px-3 py-1 bg-blue-500/90 text-white text-sm font-medium rounded-full flex items-center gap-1">
-                <Linkedin className="w-4 h-4" />
+                <LinkedinIcon className="w-4 h-4" />
                 LinkedIn Verified
               </span>
             )}
@@ -509,7 +517,7 @@ export default function UserProfilePage() {
               <div className="flex items-center justify-between">
                 <span className="text-white/60">LinkedIn Verified</span>
                 <div className="flex items-center gap-2">
-                  <Linkedin className="w-5 h-5 text-blue-400" />
+                  <LinkedinIcon className="w-5 h-5 text-blue-400" />
                   <span className="text-green-400 text-sm">Verified</span>
                 </div>
               </div>

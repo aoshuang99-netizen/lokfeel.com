@@ -215,17 +215,25 @@ export async function POST(request: NextRequest) {
     const matchScore = calculateMatchScore(currentUserData, targetUserData);
 
     // 创建匹配
+    const senderId = session.user.id;
+    if (!senderId) {
+      return NextResponse.json(
+        { message: 'User ID not found' },
+        { status: 401 }
+      );
+    }
+    
     const match = await db.match.create({
       data: {
-        senderId: session.user.id,
+        senderId,
         receiverId: targetUserId,
         matchScore: matchScore.total,
         matchReason: matchScore.reason,
-        attachmentCompat: matchScore.breakdown.attachment,
-        communicationCompat: matchScore.breakdown.communication,
-        conflictCompat: matchScore.breakdown.conflict,
-        valuesCompat: matchScore.breakdown.values,
-        lifestyleCompat: matchScore.breakdown.lifestyle,
+        attachmentCompat: matchScore.attachment,
+        communicationCompat: matchScore.communication,
+        conflictCompat: matchScore.conflict,
+        valuesCompat: matchScore.values,
+        lifestyleCompat: matchScore.lifestyle,
         status: 'PENDING',
         matchType: 'WEEKLY',
         pitchMessage: pitchMessage || null,

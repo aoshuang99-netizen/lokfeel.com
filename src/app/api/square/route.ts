@@ -371,6 +371,7 @@ export async function GET(request: NextRequest) {
     // 格式化响应
     const formatUser = (profile: any, isBot: boolean) => ({
       id: profile.user.id,
+      userId: profile.user.id,
       profileId: profile.id,
       displayName: profile.displayName,
       age: profile.age,
