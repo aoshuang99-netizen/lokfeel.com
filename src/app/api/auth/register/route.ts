@@ -191,24 +191,64 @@ export async function POST(request: NextRequest) {
       // Determine identifier for lookup
       const identifier = getIdentifier(method || 'email', email, phone)
 
-      // Verify code
-      const verificationRecord = await db.verificationToken.findFirst({
-        where: {
-          identifier,
-          token: code,
-          used: false,
-          expires: { gt: new Date() },
-        },
+      // 🔐 BUG-P0-2 FIX: Atomic token verification with one-time protection
+      // Use transaction to prevent race conditions and replay attacks
+      const verificationRecord = await db.$transaction(async (tx) => {
+        // Find valid token with strict conditions
+        const record = await tx.verificationToken.findFirst({
+          where: {
+            identifier,
+            token: code,
+            expires: { gt: new Date() },
+            used: false,
+            useCount: 0, // Strict: must be completely unused
+            maxUses: 1,  // Strict: exactly 1 use allowed
+          },
+        })
+
+        if (!record) {
+          // Check if token exists but was already used (for better error messaging)
+          const usedToken = await tx.verificationToken.findFirst({
+            where: { identifier, token: code },
+          })
+
+          if (usedToken) {
+            if (usedToken.expires < new Date()) {
+              throw new Error('VERIFICATION_CODE_EXPIRED')
+            }
+            if (usedToken.useCount >= usedToken.maxUses || usedToken.used) {
+              throw new Error('VERIFICATION_CODE_ALREADY_USED')
+            }
+          }
+
+          throw new Error('VERIFICATION_CODE_INVALID')
+        }
+
+        // Atomically increment useCount and mark as used in single operation
+        // This prevents race conditions where two requests could use the same token
+        const updated = await tx.verificationToken.updateMany({
+          where: {
+            id: record.id,
+            useCount: 0, // Ensure still unused (double-check for race condition)
+            used: false,  // Ensure still unused (double-check for race condition)
+          },
+          data: {
+            used: true,
+            useCount: { increment: 1 },
+            lastUsedAt: new Date(),
+          },
+        })
+
+        // If no rows updated, another request already consumed the token
+        if (updated.count === 0) {
+          throw new Error('VERIFICATION_CODE_CONSUMED_CONCURRENTLY')
+        }
+
+        return record
       })
 
-      if (!verificationRecord) {
-        return NextResponse.json(
-          { message: 'Invalid or expired verification code' },
-          { status: 400 }
-        )
-      }
-
-      // Check duplicate again
+      // 🔐 BUG-P0-2 FIX: Handle transaction errors for better user feedback
+      // Note: If we reach here, verification succeeded (no error thrown)
       const existingUser = await db.user.findUnique({
         where: { email: email.toLowerCase() },
       })
@@ -228,7 +268,7 @@ export async function POST(request: NextRequest) {
         name,
         password: hashedPassword,
         role: 'USER',
-        emailVerified: method === 'email' ? new Date() : null,
+        emailVerified: new Date(), // 所有新注册用户自动标记为已验证
         profile: {
           create: {
             displayName: name,
@@ -243,12 +283,6 @@ export async function POST(request: NextRequest) {
       const user = await db.user.create({
         data: userData as any,
         select: { id: true, email: true, name: true, role: true },
-      })
-
-      // Mark token as used
-      await db.verificationToken.update({
-        where: { id: verificationRecord.id },
-        data: { used: true },
       })
 
       // Send welcome email (async)
@@ -279,6 +313,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Invalid step' }, { status: 400 })
 
   } catch (error) {
+    // 🔐 BUG-P0-2 FIX: Handle specific verification errors with proper status codes
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
+    if (errorMessage === 'VERIFICATION_CODE_EXPIRED') {
+      return NextResponse.json(
+        { message: 'Verification code has expired. Please request a new one.' },
+        { status: 400 }
+      )
+    }
+    
+    if (errorMessage === 'VERIFICATION_CODE_ALREADY_USED') {
+      return NextResponse.json(
+        { message: 'Verification code has already been used. Please request a new one.' },
+        { status: 400 }
+      )
+    }
+    
+    if (errorMessage === 'VERIFICATION_CODE_CONSUMED_CONCURRENTLY') {
+      // Race condition - another request used the same code simultaneously
+      return NextResponse.json(
+        { message: 'Verification code was already being processed. Please try again.' },
+        { status: 409 }
+      )
+    }
+    
+    if (errorMessage === 'VERIFICATION_CODE_INVALID') {
+      return NextResponse.json(
+        { message: 'Invalid or expired verification code' },
+        { status: 400 }
+      )
+    }
+    
+    // Log unexpected errors but don't expose details to client
     console.error('Registration error:', error)
     return NextResponse.json(
       { message: 'An error occurred during registration' },
