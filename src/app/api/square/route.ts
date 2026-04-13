@@ -5,6 +5,8 @@
  * - 浏览数字用户(Bot)列表
  * - 浏览新注册用户
  * - 基于关系匹配度的智能推荐
+ * - 异性推荐（男用户看女用户，女用户看男用户）
+ * - 标签分类推荐 (Kink/BDSM/Gay/Lesbian等)
  * - 资料完整度过滤
  * - 筛选和排序
  * - 分页加载
@@ -26,6 +28,14 @@ const SQUARE_CONFIG = {
   MIN_MATCH_SCORE: 60, // 最低匹配度阈值
   PROFILE_COMPLETION_THRESHOLD: 70, // 资料完整度阈值(%)
 };
+
+// 标签分类配置
+const TAG_CATEGORIES = {
+  KINK: ['kink', 'bdsm', 'fetish', 'dominant', 'submissive', 'switch'],
+  LGBTQ: ['gay', 'lesbian', 'bisexual', 'pansexual', 'queer', 'transgender', 'non_binary'],
+  LIFESTYLE: ['polyamory', 'open_relationship', 'swinger', 'monogamy'],
+  INTERESTS: ['travel', 'fitness', 'art', 'music', 'food', 'tech'],
+} as const;
 
 /**
  * 计算资料完整度百分比
@@ -80,6 +90,34 @@ function toUserProfile(profile: any): UserProfile {
 }
 
 /**
+ * 获取用户的标签分类
+ */
+function getUserTags(profile: any): string[] {
+  const tags: string[] = [];
+  
+  // 基于性取向的标签
+  const sexuality = profile.sexuality?.toLowerCase() || '';
+  if (sexuality.includes('gay')) tags.push('Gay');
+  if (sexuality.includes('lesbian')) tags.push('Lesbian');
+  if (sexuality.includes('bisexual')) tags.push('Bisexual');
+  if (sexuality.includes('pansexual')) tags.push('Pansexual');
+  if (sexuality.includes('queer')) tags.push('Queer');
+  
+  // 基于关系目标的标签
+  const relationshipGoal = profile.relationshipGoal?.toLowerCase() || '';
+  if (relationshipGoal.includes('open') || relationshipGoal.includes('poly')) tags.push('Open Relationship');
+  if (relationshipGoal.includes('kink') || relationshipGoal.includes('bdsm')) tags.push('Kink');
+  
+  // 基于兴趣的标签
+  const interests = profile.interests || [];
+  if (interests.some((i: string) => i.toLowerCase().includes('travel'))) tags.push('Travel');
+  if (interests.some((i: string) => i.toLowerCase().includes('fitness') || i.toLowerCase().includes('gym'))) tags.push('Fitness');
+  if (interests.some((i: string) => i.toLowerCase().includes('art') || i.toLowerCase().includes('design'))) tags.push('Art');
+  
+  return tags;
+}
+
+/**
  * GET /api/square - 获取广场用户列表
  * 
  * Query params:
@@ -91,6 +129,8 @@ function toUserProfile(profile: any): UserProfile {
  * - limit: number (default: 20)
  * - minMatchScore: number (default: 60) - 最低匹配度过滤
  * - sortBy: 'match' | 'newest' | 'popular' (default: match) - 排序方式
+ * - tag: string - 标签筛选 (kink, bdsm, gay, lesbian, etc.)
+ * - oppositeGender: boolean (default: true) - 是否只显示异性
  */
 export async function GET(request: NextRequest) {
   try {
@@ -112,23 +152,36 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
     const minMatchScore = parseInt(searchParams.get('minMatchScore') || '60');
     const sortBy = searchParams.get('sortBy') || 'match';
+    const tag = searchParams.get('tag') || '';
+    const oppositeGender = searchParams.get('oppositeGender') !== 'false'; // 默认true
     
     const skip = (page - 1) * limit;
     
     // 获取当前用户的完整Profile用于匹配计算
     const currentUserProfile = await db.profile.findUnique({
       where: { userId: session.user.id },
+      include: { user: true },
     });
     
     const currentUserProfileData = currentUserProfile ? toUserProfile(currentUserProfile) : null;
     const currentUserCompletion = calculateProfileCompletion(currentUserProfile);
+    const currentUserGender = currentUserProfile?.gender;
     
     // 构建基础筛选条件
     const baseWhere: any = {
       age: { gte: ageMin, lte: ageMax },
     };
     
-    if (gender !== 'ALL') {
+    // 性别筛选 - 如果oppositeGender为true，只显示异性
+    if (oppositeGender && currentUserGender) {
+      // 男用户看女用户，女用户看男用户
+      if (currentUserGender === 'MALE') {
+        baseWhere.gender = 'FEMALE';
+      } else if (currentUserGender === 'FEMALE') {
+        baseWhere.gender = 'MALE';
+      }
+      // Non-binary用户可以看到所有性别
+    } else if (gender !== 'ALL') {
       baseWhere.gender = gender;
     }
     
@@ -172,6 +225,7 @@ export async function GET(request: NextRequest) {
       const botsWithScores = allBots.map(bot => {
         const botProfileData = toUserProfile(bot);
         const completion = calculateProfileCompletion(bot);
+        const tags = getUserTags(bot);
         
         // 如果当前用户资料完整，计算匹配度
         let matchScore = null;
@@ -187,10 +241,11 @@ export async function GET(request: NextRequest) {
           completion,
           matchScore,
           matchReason,
+          tags,
         };
       });
       
-      // 过滤：资料完整度达标，且匹配度达标（如果可计算）
+      // 过滤：资料完整度达标，且匹配度达标（如果可计算），且标签匹配
       const filteredBots = botsWithScores.filter(bot => {
         // 基础要求：资料完整度
         if (bot.completion < SQUARE_CONFIG.PROFILE_COMPLETION_THRESHOLD) {
@@ -198,7 +253,13 @@ export async function GET(request: NextRequest) {
         }
         // 如果当前用户资料完整，则要求匹配度达标
         if (currentUserProfileData && currentUserCompletion >= SQUARE_CONFIG.PROFILE_COMPLETION_THRESHOLD) {
-          return bot.matchScore !== null && bot.matchScore >= minMatchScore;
+          if (bot.matchScore === null || bot.matchScore < minMatchScore) {
+            return false;
+          }
+        }
+        // 标签筛选
+        if (tag && !bot.tags.some((t: string) => t.toLowerCase().includes(tag.toLowerCase()))) {
+          return false;
         }
         return true;
       });
@@ -255,6 +316,7 @@ export async function GET(request: NextRequest) {
       const newUsersWithScores = allNewUsers.map(user => {
         const userProfileData = toUserProfile(user);
         const completion = calculateProfileCompletion(user);
+        const tags = getUserTags(user);
         
         // 如果当前用户资料完整，计算匹配度
         let matchScore = null;
@@ -270,10 +332,11 @@ export async function GET(request: NextRequest) {
           completion,
           matchScore,
           matchReason,
+          tags,
         };
       });
       
-      // 过滤：资料完整度达标，且匹配度达标（如果可计算）
+      // 过滤：资料完整度达标，且匹配度达标（如果可计算），且标签匹配
       const filteredNewUsers = newUsersWithScores.filter(user => {
         // 基础要求：资料完整度
         if (user.completion < SQUARE_CONFIG.PROFILE_COMPLETION_THRESHOLD) {
@@ -281,7 +344,13 @@ export async function GET(request: NextRequest) {
         }
         // 如果当前用户资料完整，则要求匹配度达标
         if (currentUserProfileData && currentUserCompletion >= SQUARE_CONFIG.PROFILE_COMPLETION_THRESHOLD) {
-          return user.matchScore !== null && user.matchScore >= minMatchScore;
+          if (user.matchScore === null || user.matchScore < minMatchScore) {
+            return false;
+          }
+        }
+        // 标签筛选
+        if (tag && !user.tags.some((t: string) => t.toLowerCase().includes(tag.toLowerCase()))) {
+          return false;
         }
         return true;
       });
@@ -292,7 +361,7 @@ export async function GET(request: NextRequest) {
       const sortedNewUsers = sortBy === 'match' && currentUserProfileData
         ? filteredNewUsers.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
         : sortBy === 'popular'
-        ? filteredNewUsers.sort((a, b) => (b.user._count?.receivedMatches || 0) - (a.user._count?.receivedMatches || 0))
+        ? filteredNewUsers.sort((a, b) => (a.user._count?.receivedMatches || 0) - (b.user._count?.receivedMatches || 0))
         : filteredNewUsers;
       
       // 分页
@@ -320,6 +389,10 @@ export async function GET(request: NextRequest) {
       matchScore: profile.matchScore,
       matchReason: profile.matchReason,
       profileCompletion: profile.completion,
+      tags: profile.tags || [],
+      // 认证信息
+      linkedInVerified: profile.linkedInVerified,
+      verificationBadge: profile.verificationBadge,
       // Bot特有字段
       ...(isBot && profile.botProfile ? {
         botType: profile.botProfile.botType,
@@ -368,7 +441,11 @@ export async function GET(request: NextRequest) {
           profileCompletionThreshold: SQUARE_CONFIG.PROFILE_COMPLETION_THRESHOLD,
           currentUserCompletion,
           sortBy,
+          oppositeGender,
+          currentUserGender,
+          tag,
         },
+        availableTags: ['Gay', 'Lesbian', 'Bisexual', 'Kink', 'Open Relationship', 'Travel', 'Fitness', 'Art'],
       },
     });
     

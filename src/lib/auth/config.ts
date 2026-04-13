@@ -1,8 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-// Only Google + Discord OAuth providers (LinkedIn & Facebook removed)
-import Discord from "next-auth/providers/discord";
+import LinkedIn from "next-auth/providers/linkedin";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/auth";
@@ -80,28 +79,21 @@ export const authConfig = {
         };
       },
     }),
-    Discord({
-      clientId: process.env.DISCORD_CLIENT_ID,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET,
+    LinkedIn({
+      clientId: process.env.LINKEDIN_CLIENT_ID,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
       authorization: {
         params: {
-          scope: 'identify email',
+          scope: 'openid profile email r_basicprofile r_emailaddress',
         },
       },
       profile(profile) {
-        if (profile.avatar === null) {
-          const defaultAvatarNumber = parseInt(profile.discriminator) % 5;
-          profile.image_url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-        } else {
-          const format = profile.avatar.startsWith("a_") ? "gif" : "png";
-          profile.image_url = `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${format}`;
-        }
         return {
-          id: profile.id,
-          name: profile.global_name || profile.username,
+          id: profile.sub,
+          name: profile.name,
           email: profile.email,
-          image: profile.image_url,
-          emailVerified: profile.verified ? new Date() : null,
+          image: profile.picture,
+          emailVerified: profile.email_verified ? new Date() : null,
         };
       },
     }),
@@ -131,9 +123,10 @@ export const authConfig = {
           // Google specific
           locale: (profile as any).locale,
           verified: (profile as any).email_verified,
-          // Discord specific
-          username: (profile as any).username,
-          discriminator: (profile as any).discriminator,
+          // LinkedIn specific
+          occupation: (profile as any).occupation,
+          company: (profile as any).organization?.name,
+          industry: (profile as any).industry,
         };
 
           await syncOAuthProfileToUser(user.id, oauthProfile);

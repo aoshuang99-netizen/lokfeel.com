@@ -13,7 +13,11 @@ import {
   ChevronDown,
   Filter,
   Loader2,
-  UserPlus
+  UserPlus,
+  BadgeCheck,
+  Linkedin,
+  Tag,
+  ArrowRightLeft
 } from "lucide-react";
 
 // 用户类型
@@ -36,11 +40,29 @@ interface SquareUser {
   botType?: string;
   activityLevel?: string;
   interests?: string[];
+  matchScore?: number;
+  matchReason?: string;
+  profileCompletion?: number;
+  tags?: string[];
+  linkedInVerified?: boolean;
+  verificationBadge?: string;
 }
 
 // 筛选类型
 type FilterType = 'all' | 'bots' | 'new';
 type GenderFilter = 'ALL' | 'MALE' | 'FEMALE' | 'NON_BINARY';
+
+// 可用标签
+const AVAILABLE_TAGS = [
+  { value: '', label: 'All Tags', icon: Tag },
+  { value: 'kink', label: 'Kink', icon: Heart },
+  { value: 'gay', label: 'Gay', icon: Heart },
+  { value: 'lesbian', label: 'Lesbian', icon: Heart },
+  { value: 'bisexual', label: 'Bisexual', icon: Heart },
+  { value: 'open', label: 'Open Relationship', icon: ArrowRightLeft },
+  { value: 'travel', label: 'Travel', icon: MapPin },
+  { value: 'fitness', label: 'Fitness', icon: Heart },
+];
 
 export default function SquarePage() {
   const router = useRouter();
@@ -53,11 +75,14 @@ export default function SquarePage() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [gender, setGender] = useState<GenderFilter>('ALL');
   const [ageRange, setAgeRange] = useState({ min: 18, max: 65 });
+  const [selectedTag, setSelectedTag] = useState('');
+  const [oppositeGender, setOppositeGender] = useState(true);
   
   // 分页
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [totalStats, setTotalStats] = useState({ totalBots: 0, totalNewUsers: 0 });
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   // 加载用户数据
   const loadUsers = useCallback(async (reset = false) => {
@@ -73,6 +98,8 @@ export default function SquarePage() {
         ageMax: ageRange.max.toString(),
         page: currentPage.toString(),
         limit: '20',
+        oppositeGender: oppositeGender.toString(),
+        ...(selectedTag && { tag: selectedTag }),
       });
       
       const res = await fetch(`/api/square?${params}`);
@@ -90,18 +117,21 @@ export default function SquarePage() {
       
       setHasMore(data.data.pagination.hasMore);
       setTotalStats(data.data.stats);
+      if (data.data.availableTags) {
+        setAvailableTags(data.data.availableTags);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [filter, gender, ageRange, page]);
+  }, [filter, gender, ageRange, page, selectedTag, oppositeGender]);
 
   // 初始加载
   useEffect(() => {
     loadUsers(true);
-  }, [filter, gender, ageRange.min, ageRange.max]);
+  }, [filter, gender, ageRange.min, ageRange.max, selectedTag, oppositeGender]);
 
   // 性别标签
   const getGenderLabel = (gender: string) => {
@@ -124,6 +154,19 @@ export default function SquarePage() {
       FULL: { text: 'Always Online', color: 'bg-primary' },
     };
     return labels[level || 'MEDIUM'] || { text: 'Active', color: 'bg-green-500' };
+  };
+
+  // 获取头像URL - 女用户使用真实头像
+  const getAvatarUrl = (user: SquareUser) => {
+    if (user.avatar) return user.avatar;
+    
+    // 女用户使用真实风格头像
+    if (user.gender === 'FEMALE') {
+      return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}&gender=female&style=realistic`;
+    }
+    
+    // 男用户和其他使用默认头像
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}`;
   };
 
   return (
@@ -186,20 +229,33 @@ export default function SquarePage() {
               ))}
             </div>
             
-            {/* Gender Filter */}
+            {/* Tag Filter */}
             <div className="relative">
               <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value as GenderFilter)}
+                value={selectedTag}
+                onChange={(e) => setSelectedTag(e.target.value)}
                 className="appearance-none bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 pr-8 text-sm text-white focus:outline-none focus:border-primary"
               >
-                <option value="ALL">All Genders</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="NON_BINARY">Non-Binary</option>
+                {AVAILABLE_TAGS.map((tag) => (
+                  <option key={tag.value} value={tag.value}>{tag.label}</option>
+                ))}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
+              <Tag className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
             </div>
+            
+            {/* Gender Toggle */}
+            <button
+              onClick={() => setOppositeGender(!oppositeGender)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                oppositeGender
+                  ? 'bg-primary/20 text-primary border border-primary/30'
+                  : 'bg-white/5 text-white/60 border border-white/10'
+              }`}
+              title={oppositeGender ? "Showing opposite gender only" : "Showing all genders"}
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              {oppositeGender ? 'Opposite Gender' : 'All Genders'}
+            </button>
             
             {/* Age Range */}
             <div className="flex items-center gap-2 text-sm text-white/60">
@@ -255,24 +311,16 @@ export default function SquarePage() {
               {users.map((user) => (
                 <Link
                   key={user.id}
-                  href={`/profile/${user.profileId}`}
+                  href={`/dashboard/profile/${user.profileId}`}
                   className="group relative bg-surface border border-white/5 rounded-2xl overflow-hidden hover:border-primary/30 transition-all hover:shadow-lg hover:shadow-primary/5"
                 >
                   {/* Avatar */}
                   <div className="relative aspect-[4/5] overflow-hidden">
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.displayName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                        <span className="text-4xl font-bold text-white/30">
-                          {user.displayName.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    <img
+                      src={getAvatarUrl(user)}
+                      alt={user.displayName}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                     
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
@@ -288,12 +336,37 @@ export default function SquarePage() {
                           New
                         </span>
                       )}
+                      {user.linkedInVerified && (
+                        <span className="px-2 py-0.5 bg-blue-500/90 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                          <Linkedin className="w-3 h-3" />
+                          Verified
+                        </span>
+                      )}
+                      {user.verificationBadge && (
+                        <span className="px-2 py-0.5 bg-amber-500/90 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                          <BadgeCheck className="w-3 h-3" />
+                          {user.verificationBadge}
+                        </span>
+                      )}
                     </div>
                     
                     {/* Activity Indicator (Bot only) */}
                     {user.isBot && user.activityLevel && (
                       <div className="absolute top-3 right-3">
                         <span className={`w-2.5 h-2.5 rounded-full ${getActivityLabel(user.activityLevel).color} animate-pulse`} />
+                      </div>
+                    )}
+                    
+                    {/* Match Score Badge */}
+                    {user.matchScore && user.matchScore > 0 && (
+                      <div className="absolute top-3 right-3">
+                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                          user.matchScore >= 80 ? 'bg-green-500/90 text-white' :
+                          user.matchScore >= 60 ? 'bg-yellow-500/90 text-white' :
+                          'bg-white/20 text-white'
+                        }`}>
+                          {user.matchScore}% Match
+                        </span>
                       </div>
                     )}
                     
@@ -325,6 +398,25 @@ export default function SquarePage() {
                           </p>
                         )}
                       </div>
+                      
+                      {/* Tags */}
+                      {user.tags && user.tags.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {user.tags.slice(0, 3).map((tag, i) => (
+                            <span
+                              key={i}
+                              className="px-1.5 py-0.5 bg-primary/30 text-white/90 text-xs rounded"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {user.tags.length > 3 && (
+                            <span className="text-xs text-white/50">
+                              +{user.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       
                       {/* Bio */}
                       {user.bio && (

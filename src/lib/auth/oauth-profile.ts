@@ -14,6 +14,8 @@ export interface OAuthProfileData {
   industry?: string;
   location?: string;
   summary?: string;
+  occupation?: string;
+  company?: string;
   positions?: Array<{
     title: string;
     company: string;
@@ -26,11 +28,6 @@ export interface OAuthProfileData {
   birthday?: string;
   hometown?: string;
   gender?: string;
-  // Discord specific
-  username?: string;
-  discriminator?: string;
-  accentColor?: number;
-  banner?: string;
 }
 
 /**
@@ -45,6 +42,7 @@ export function extractRelationshipInsights(profile: OAuthProfileData) {
     location?: string;
     industry?: string;
     occupation?: string;
+    company?: string;
   } = {};
 
   // Extract location
@@ -56,8 +54,18 @@ export function extractRelationshipInsights(profile: OAuthProfileData) {
   if (profile.industry) {
     insights.industry = profile.industry;
   }
+  if (profile.occupation) {
+    insights.occupation = profile.occupation;
+  }
+  if (profile.company) {
+    insights.company = profile.company;
+  }
   if (profile.positions && profile.positions.length > 0) {
     insights.occupation = profile.positions[0].title;
+    insights.company = profile.positions[0].company;
+    if (profile.positions[0].industry) {
+      insights.industry = profile.positions[0].industry;
+    }
   }
 
   // Infer communication style from industry
@@ -151,6 +159,32 @@ export async function syncOAuthProfileToUser(
       profileData.lifePriorities = JSON.stringify(insights.lifePriorities);
     }
 
+    // Add LinkedIn verified occupation and company
+    if (profile.provider === 'linkedin') {
+      // Mark as LinkedIn verified
+      profileData.linkedInVerified = true;
+      
+      // Add occupation from LinkedIn
+      if (insights.occupation && !existingProfile?.occupation) {
+        profileData.occupation = insights.occupation;
+      }
+      
+      // Add company from LinkedIn
+      if (insights.company && !existingProfile?.company) {
+        profileData.company = insights.company;
+      }
+      
+      // Add industry from LinkedIn
+      if (insights.industry && !existingProfile?.industry) {
+        profileData.industry = insights.industry;
+      }
+      
+      // Add verification badge
+      if (!existingProfile?.verificationBadge) {
+        profileData.verificationBadge = 'VERIFIED';
+      }
+    }
+
     // Add bio from headline if no bio exists
     if (profile.headline && !existingProfile?.bio) {
       let bio = profile.headline;
@@ -206,6 +240,7 @@ export async function syncOAuthProfileToUser(
         properties: JSON.stringify({
           provider: profile.provider,
           insightsExtracted: Object.keys(insights),
+          linkedInVerified: profile.provider === 'linkedin',
         }),
       },
     });
@@ -240,4 +275,43 @@ export async function getEnrichedUserProfile(userId: string) {
     connectedProviders: user.accounts.map(a => a.provider),
     hasOAuthData: user.accounts.length > 0,
   };
+}
+
+/**
+ * Verify LinkedIn profile and update user verification status
+ */
+export async function verifyLinkedInProfile(userId: string, linkedInData: {
+  occupation?: string;
+  company?: string;
+  industry?: string;
+  headline?: string;
+}): Promise<void> {
+  try {
+    await db.profile.update({
+      where: { userId },
+      data: {
+        linkedInVerified: true,
+        verificationBadge: 'VERIFIED',
+        ...(linkedInData.occupation && { occupation: linkedInData.occupation }),
+        ...(linkedInData.company && { company: linkedInData.company }),
+        ...(linkedInData.industry && { industry: linkedInData.industry }),
+      },
+    });
+
+    // Log verification event
+    await db.analyticsEvent.create({
+      data: {
+        userId,
+        event: 'linkedin.verified',
+        properties: JSON.stringify({
+          hasOccupation: !!linkedInData.occupation,
+          hasCompany: !!linkedInData.company,
+          hasIndustry: !!linkedInData.industry,
+        }),
+      },
+    });
+  } catch (error) {
+    console.error('Failed to verify LinkedIn profile:', error);
+    throw error;
+  }
 }
