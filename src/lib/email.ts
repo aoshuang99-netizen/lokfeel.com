@@ -1,9 +1,9 @@
 import nodemailer from 'nodemailer';
 
 // Email configuration
-const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
-const FROM_EMAIL = process.env.SMTP_FROM || 'hello@lokfeel.com';
-const RESEND_API_KEY = process.env.SMTP_PASSWORD; // Resend uses API key as password
+const SMTP_PASSWORD = process.env.SMTP_PASSWORD?.trim();
+const FROM_EMAIL = process.env.SMTP_FROM?.trim() || 'noreply@lokfeel.com';
+const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || process.env.SMTP_PASSWORD?.trim(); // Resend uses API key as password
 
 // Create SMTP transporter (fallback)
 const transporter = SMTP_PASSWORD ? nodemailer.createTransport({
@@ -112,180 +112,106 @@ export async function sendVerificationEmail(
   code: string,
   name?: string,
   magicToken?: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; devCode?: string }> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.lokfeel.com';
   const magicLink = magicToken ? `${appUrl}/api/auth/magic-link?token=${magicToken}&email=${encodeURIComponent(email)}` : null;
   
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Verify Your Email - LokFeel</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0d0c11;
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 40px 20px;
-          }
-          .logo {
-            text-align: center;
-            margin-bottom: 30px;
-          }
-          .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #f43f5e 0%, #9333ea 50%, #f59e0b 100%);
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-          }
-          .logo-icon svg {
-            width: 24px;
-            height: 24px;
-          }
-          .logo-text {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #c94d7a, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-          }
-          .content {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 40px;
-          }
-          h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #ffffff;
-          }
-          p {
-            font-size: 16px;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 20px;
-          }
-          .magic-link-container {
-            text-align: center;
-            margin: 30px 0;
-          }
-          .magic-link-btn {
-            display: inline-block;
-            background: #ffffff;
-            color: #000000;
-            text-decoration: none;
-            padding: 16px 32px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 16px;
-            transition: all 0.2s;
-          }
-          .magic-link-btn:hover {
-            background: #f0f0f0;
-            transform: translateY(-1px);
-          }
-          .divider {
-            text-align: center;
-            margin: 30px 0;
-            position: relative;
-          }
-          .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.1);
-          }
-          .divider span {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0 16px;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 14px;
-            position: relative;
-          }
-          .code-container {
-            background: rgba(201, 77, 122, 0.1);
-            border: 2px dashed rgba(201, 77, 122, 0.5);
-            border-radius: 12px;
-            padding: 24px;
-            text-align: center;
-            margin: 20px 0;
-          }
-          .code {
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: 8px;
-            color: #c94d7a;
-            font-family: 'Courier New', monospace;
-          }
-          .expiry {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-top: 20px;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.4);
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="logo">
-            <div class="logo-icon">
-              <svg viewBox="0 0 24 24" fill="white">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-            </div>
-            <div class="logo-text">LokFeel</div>
-          </div>
-          <div class="content">
-            <h1>Welcome to LokFeel${name ? `, ${name}` : ''}!</h1>
-            <p>Thank you for signing up. To complete your registration and start your journey to meaningful connections, verify your email:</p>
+  const htmlContent = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Verify Your Email - LokFeel</title>
+</head>
+<body style="margin:0; padding:0; background-color:#0d0c11;">
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#0d0c11;">
+  <tr>
+    <td align="center" style="padding:40px 20px;">
+      
+      <!-- Logo Section -->
+      <table border="0" cellpadding="0" cellspacing="0" width="480" style="max-width:480px; width:100%;">
+        <tr>
+          <td align="center" style="padding-bottom:30px;">
+            <!-- Heart Icon PNG -->
+            <img src="https://app.lokfeel.com/logo-icon.png" width="48" height="48" alt="LokFeel" style="display:block; margin:0 auto 12px; border:0;" />
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:28px; font-weight:700; color:#c94d7a; text-align:center;">LokFeel</div>
+          </td>
+        </tr>
+      </table>
+      
+      <!-- Main Card -->
+      <table border="0" cellpadding="0" cellspacing="0" width="480" style="max-width:480px; width:100%; background-color:#1a1920; border:1px solid #2a2933; border-radius:16px;">
+        <tr>
+          <td align="center" style="padding:40px 32px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+            
+            <!-- Title -->
+            <h1 style="margin:0 0 20px; font-size:24px; font-weight:600; color:#ffffff; line-height:1.3; text-align:center;">
+              Welcome to LokFeel${name ? ', ' + name : ''}!
+            </h1>
+            
+            <!-- Description -->
+            <p style="margin:0 0 28px; font-size:16px; color:#cccccc; line-height:1.6; text-align:center;">
+              Thank you for signing up. To complete your registration and start your journey to meaningful connections, verify your email:
+            </p>
             
             ${magicLink ? `
-            <div class="magic-link-container">
-              <a href="${magicLink}" class="magic-link-btn">Verify Email & Continue</a>
-            </div>
+            <!-- Magic Link Button -->
+            <table border="0" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr>
+                <td align="center" style="background-color:#ffffff; border-radius:50px;">
+                  <a href="${magicLink}" style="display:inline-block; padding:16px 32px; color:#000000; font-size:16px; font-weight:600; text-decoration:none; border-radius:50px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Verify Email & Continue</a>
+                </td>
+              </tr>
+            </table>
             
-            <div class="divider">
-              <span>or use verification code</span>
-            </div>
+            <!-- Divider -->
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:24px 0;">
+              <tr>
+                <td style="border-top:1px solid #333333; padding-top:24px; text-align:center;">
+                  <span style="font-size:14px; color:#888888; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">or use verification code</span>
+                </td>
+              </tr>
+            </table>
             ` : ''}
             
-            <div class="code-container">
-              <div class="code">${code}</div>
-            </div>
+            <!-- Verification Code Box -->
+            <table border="0" cellpadding="0" cellspacing="0" style="margin:20px auto; background-color:#2d1f2d; border:2px dashed #c94d7a; border-radius:12px;">
+              <tr>
+                <td align="center" style="padding:24px 40px;">
+                  <span style="font-size:36px; font-weight:700; letter-spacing:8px; color:#c94d7a; font-family:'Courier New',monospace;">${code}</span>
+                </td>
+              </tr>
+            </table>
             
-            <p class="expiry">This verification will expire in 10 minutes.</p>
+            <!-- Expiry Note -->
+            <p style="margin:20px 0 0; font-size:14px; color:#888888; text-align:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+              This verification will expire in 10 minutes.
+            </p>
             
-            <p style="font-size: 14px; color: rgba(255,255,255,0.5);">If you didn't create an account with LokFeel, you can safely ignore this email.</p>
-          </div>
-          <div class="footer">
-            <p>LokFeel Inc. • hello@lokfeel.com</p>
-            <p>Building deeper connections through relationship structure matching.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+            <!-- Ignore Note -->
+            <p style="margin:16px 0 0; font-size:13px; color:#666666; text-align:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+              If you didn't create an account with LokFeel, you can safely ignore this email.
+            </p>
+            
+          </td>
+        </tr>
+      </table>
+      
+      <!-- Footer -->
+      <table border="0" cellpadding="0" cellspacing="0" width="480" style="max-width:480px; width:100%; margin-top:30px;">
+        <tr>
+          <td align="center" style="font-size:12px; color:#666666; line-height:1.6; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 4px;">LokFeel Inc. • hello@lokfeel.com</p>
+            <p style="margin:0;">Building deeper connections through relationship structure matching.</p>
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+</body>
+</html>`;
 
   const result = await sendEmailWithResend(
     email,
@@ -303,7 +229,7 @@ export async function sendVerificationEmail(
     if (magicLink) console.log('Magic Link:', magicLink);
     console.log('========================================');
     // Still return success so user can continue in development
-    return { success: true };
+    return { success: true, devCode: code };
   }
 
   return result;
@@ -374,90 +300,66 @@ export async function sendWelcomeEmail(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.lokfeel.com';
   
   const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to LokFeel</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0d0c11;
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 40px 20px;
-          }
-          .logo {
-            text-align: center;
-            margin-bottom: 30px;
-          }
-          .logo-text {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #c94d7a, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-          }
-          .content {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 40px;
-          }
-          h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #ffffff;
-          }
-          p {
-            font-size: 16px;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 20px;
-          }
-          .button {
-            display: inline-block;
-            background: linear-gradient(135deg, #c94d7a, #818cf8);
-            color: white;
-            text-decoration: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-weight: 600;
-            margin: 20px 0;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.4);
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="logo">
-            <span class="logo-text">LokFeel</span>
-          </div>
-          <div class="content">
-            <h1>Welcome to LokFeel${name ? `, ${name}` : ''}!</h1>
-            <p>Your email has been verified successfully. You're now ready to start your journey to meaningful connections.</p>
-            <p>Complete your relationship blueprint profile to receive your first curated matches this week.</p>
-            <center>
-              <a href="${appUrl}/onboarding" class="button">Complete Your Profile</a>
-            </center>
-          </div>
-          <div class="footer">
-            <p>LokFeel Inc. • hello@lokfeel.com</p>
-          </div>
-        </div>
-      </body>
-    </html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Welcome to LokFeel</title>
+</head>
+<body style="margin:0; padding:40px 20px; background:#0d0c11; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; text-align:center;">
+  
+  <!-- Logo -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-bottom:30px;">
+    <tr>
+      <td style="text-align:center;">
+        <div style="font-size:28px; font-weight:700; color:#c94d7a;">LokFeel</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Main Content -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:480px; width:100%; background:#1a1920; border:1px solid rgba(255,255,255,0.1); border-radius:16px;">
+    <tr>
+      <td style="padding:40px 32px; text-align:center;">
+        
+        <h1 style="margin:0 0 20px; font-size:24px; font-weight:600; color:#ffffff; line-height:1.3;">
+          Welcome to LokFeel${name ? `, ${name}` : ''}!
+        </h1>
+        
+        <p style="margin:0 0 16px; font-size:16px; color:rgba(255,255,255,0.8); line-height:1.6;">
+          Your email has been verified successfully. You're now ready to start your journey to meaningful connections.
+        </p>
+        
+        <p style="margin:0 0 28px; font-size:16px; color:rgba(255,255,255,0.8); line-height:1.6;">
+          Complete your relationship blueprint profile to receive your first curated matches this week.
+        </p>
+        
+        <!-- CTA Button -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#c94d7a,#818cf8); border-radius:12px; text-align:center;">
+              <a href="${appUrl}/onboarding" style="display:inline-block; padding:16px 32px; color:#ffffff; font-size:16px; font-weight:600; text-decoration:none; border-radius:12px;">Complete Your Profile</a>
+            </td>
+          </tr>
+        </table>
+        
+      </td>
+    </tr>
+  </table>
+
+  <!-- Footer -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-top:30px;">
+    <tr>
+      <td style="text-align:center; font-size:12px; color:rgba(255,255,255,0.4);">
+        <p style="margin:0;">LokFeel Inc. • hello@lokfeel.com</p>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
   `;
 
   return sendEmailWithResend(

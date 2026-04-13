@@ -11,6 +11,232 @@ datasource db {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// BOT SYSTEM — Digital User Models
+// ═══════════════════════════════════════════════════════════════
+
+enum BotType {
+  SEED // 种子用户，冷启动用
+  SIMULATION // 行为模拟用户
+  TRAINING // 训练数据生成
+  ACTIVE // 活跃参与匹配
+}
+
+enum BotActivityLevel {
+  GHOST // 隐身，仅匹配不可见
+  LOW // 低活跃度 (10% 在线时间)
+  MEDIUM // 中活跃度 (30% 在线时间)
+  HIGH // 高活跃度 (60% 在线时间)
+  FULL // 全天候在线
+}
+
+enum Ethnicity {
+  CAUCASIAN
+  AFRICAN_AMERICAN
+  HISPANIC_LATINO
+  ASIAN
+  SOUTH_ASIAN
+  MIDDLE_EASTERN
+  MIXED
+  OTHER
+}
+
+enum OnlinePattern {
+  MORNING // 6AM-12PM
+  AFTERNOON // 12PM-6PM
+  EVENING // 6PM-12AM
+  NIGHT // 12AM-6AM
+  RANDOM
+  WORK_HOURS // 9AM-5PM
+  AFTER_WORK // 5PM-10PM
+}
+
+// Bot扩展资料 - 数字用户详细信息
+model BotProfile {
+  id        String  @id @default(cuid())
+  profileId String  @unique
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  // 基础配置
+  botType       BotType          @default(SEED)
+  activityLevel BotActivityLevel @default(LOW)
+
+  // 人口统计扩展
+  ethnicity      Ethnicity?
+  occupation     String? // "Software Engineer", "Teacher", etc.
+  industry       String? // "Tech", "Healthcare", "Finance", etc.
+  educationLevel String? // "High School", "Bachelor's", "Master's", "PhD"
+  incomeRange    String? // "$30k-50k", "$50k-100k", etc.
+
+  // 兴趣与偏好
+  interests   String[] // ["hiking", "cooking", "photography"]
+  hobbies     String[] // ["gaming", "yoga", "reading"]
+  musicGenres String[] // ["rock", "jazz", "electronic"]
+  movieGenres String[] // ["thriller", "romance", "sci-fi"]
+
+  // 行为模拟配置
+  onlinePattern   OnlinePattern @default(EVENING)
+  avgResponseTime Int           @default(30) // 平均响应时间（分钟）
+  maxDailyMatches Int           @default(3) // 每日最大匹配数
+
+  // 行为概率配置（JSON）
+  behaviorConfig String? @db.Text
+
+  // 匹配偏好（扩展 Profile 的 preferred* 字段）
+  preferredEthnicities Ethnicity[]
+  preferredOccupations String[]
+  preferredEducation   String[]
+
+  // 学习状态
+  totalInteractions  Int   @default(0)
+  successfulMatches  Int   @default(0)
+  avgEngagementScore Float @default(0) // 0-100
+
+  // 学习数据（JSON）
+  learningData String? @db.Text
+
+  // 头像配置
+  avatarStyle  String? // "professional", "casual", "artistic"
+  avatarSource String? // "generated", "stock", "ai_avatar"
+
+  // 状态
+  isActive     Boolean   @default(true)
+  lastActiveAt DateTime?
+  sleepUntil   DateTime? // 暂停到指定时间
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([botType])
+  @@index([activityLevel])
+  @@index([isActive])
+}
+
+// Bot行为交互日志
+model BotInteractionLog {
+  id           String  @id @default(cuid())
+  botUserId    String
+  targetUserId String?
+  matchId      String?
+
+  // 交互类型
+  interactionType String // "match_received", "match_reacted", "message_sent", "message_received", "profile_viewed"
+
+  // 行为详情
+  action        String // "accept", "pass", "respond", "initiate"
+  responseDelay Int? // 响应延迟（秒）
+
+  // 结果
+  outcome         String? // "success", "rejected", "no_response", "blocked"
+  engagementScore Int? // 0-100 参与度评分
+
+  // 上下文
+  context String? @db.Text // JSON: {matchScore, matchReason, etc.}
+
+  createdAt DateTime @default(now())
+
+  @@index([botUserId, createdAt])
+  @@index([interactionType])
+  @@index([outcome])
+}
+
+// Bot学习批次
+model BotLearningBatch {
+  id String @id @default(cuid())
+
+  // 批次信息
+  batchNumber Int
+  status      String @default("pending") // pending, running, completed, failed
+
+  // 数据范围
+  startDate DateTime
+  endDate   DateTime
+
+  // 统计数据
+  totalInteractions Int   @default(0)
+  avgEngagement     Float @default(0)
+  successRate       Float @default(0)
+
+  // 更新的偏好配置
+  preferenceUpdates String? @db.Text // JSON array of changes
+
+  // 执行日志
+  executionLog String? @db.Text
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([status])
+  @@index([batchNumber])
+}
+
+// Bot学习记录 - 实时交互数据
+model BotLearningRecord {
+  id     String @id @default(cuid())
+  botId  String
+  userId String // 交互对象用户ID
+
+  // 交互类型
+  interactionType String // MATCH_REQUEST, MATCH_ACCEPT, CHAT_MESSAGE, etc.
+  outcome         String // POSITIVE, NEUTRAL, NEGATIVE
+
+  // 上下文数据
+  context Json? // 存储额外上下文
+
+  // 处理状态
+  processed Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([botId])
+  @@index([processed])
+  @@index([createdAt])
+  @@index([interactionType])
+}
+
+// Bot偏好向量 - 学习结果
+model BotPreference {
+  id    String @id @default(cuid())
+  botId String @unique
+
+  // 五维偏好 (0-1)
+  relationshipStructure Float @default(0.5)
+  communicationStyle    Float @default(0.5)
+  interests             Float @default(0.5)
+  values                Float @default(0.5)
+  lifestyle             Float @default(0.5)
+
+  // 元数据
+  confidence Float @default(0.1) // 置信度 (0-1)
+  sampleSize Int   @default(0) // 样本数量
+
+  createdAt   DateTime @default(now())
+  lastUpdated DateTime @updatedAt
+
+  @@index([botId])
+}
+
+// Bot头像管理
+model BotAvatar {
+  id           String  @id @default(cuid())
+  botId        String  @unique
+  originalUrl  String?
+  processedUrl String? // 处理后（压缩、优化）的URL
+
+  style     String // 原始风格
+  ethnicity String // 原始种族标签
+
+  status   String @default("pending") // pending, active, failed, retired
+  useCount Int    @default(0) // 使用次数
+
+  generatedAt DateTime  @default(now())
+  lastUsedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ═══════════════════════════════════════════════════════════════
 // AUTH — NextAuth v5 compatible models
 // ═══════════════════════════════════════════════════════════════
 
@@ -26,6 +252,11 @@ model User {
   role     UserRole  @default(USER)
   accounts Account[]
   sessions Session[]
+
+  // Bot/Digital User Flags
+  isBot     Boolean @default(false) // 标记是否为数字用户
+  botType   String? // "simulation" | "training" | "seed"
+  botConfig String? @db.Text // 数字用户行为配置（JSON字符串存储）
 
   // Email Verification
   verificationTokens VerificationToken[] @relation("UserVerificationTokens")
@@ -60,6 +291,7 @@ model User {
 
   @@index([email])
   @@index([role])
+  @@index([createdAt])
 }
 
 model Account {
@@ -91,18 +323,22 @@ model Session {
 }
 
 model VerificationToken {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   identifier String // email address
-  token      String   @unique // the 6-digit code
+  token      String    @unique // the 6-digit code
   expires    DateTime
   userId     String? // optional link to user
-  user       User?    @relation("UserVerificationTokens", fields: [userId], references: [id], onDelete: Cascade)
-  used       Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  user       User?     @relation("UserVerificationTokens", fields: [userId], references: [id], onDelete: Cascade)
+  used       Boolean   @default(false)
+  useCount   Int       @default(0) // Track usage count for replay attack prevention
+  maxUses    Int       @default(1) // Maximum allowed uses (1 for one-time tokens)
+  lastUsedAt DateTime? // Track when token was last used
+  createdAt  DateTime  @default(now())
 
   @@unique([identifier, token])
   @@index([identifier])
   @@index([userId])
+  @@index([expires])
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -153,8 +389,28 @@ model Profile {
   isApproved     Boolean       @default(false)
   isVerified     Boolean       @default(false)
 
+  // Personality & Matching Data (for bot users)
+  personalityData String? @db.Text // 完整人格数据存储（JSON字符串）
+
   // Admin notes
   adminNotes String? @db.Text
+
+  // Bot System Relation
+  botProfile BotProfile?
+
+  // ═══════════════════════════════════════════════════════════════
+  // PRODUCT OPTIMIZATION: Elite Power Features
+  // ═══════════════════════════════════════════════════════════════
+
+  // Professional Info
+  occupation        String? // Job title
+  company           String? // Company name
+  industry          String? // Industry sector
+  linkedInVerified  Boolean @default(false)
+  verificationBadge String? // "VERIFIED", "ELITE", etc.
+
+  // Sincerity System
+  sincerityWallet SincerityWallet?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -163,6 +419,7 @@ model Profile {
   @@index([relationshipGoal])
   @@index([profileStatus])
   @@index([compatibilityScore])
+  @@index([linkedInVerified])
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -206,6 +463,22 @@ model Match {
   reviewedBy  String?
   reviewNotes String? @db.Text
 
+  // ═══════════════════════════════════════════════════════════════
+  // PRODUCT OPTIMIZATION: Elite Power Features
+  // ═══════════════════════════════════════════════════════════════
+
+  // Pitch Message (申请信)
+  pitchMessage String? @db.Text // 50-200字申请信
+  pitchTone    String? // "casual", "sincere", "playful", "direct"
+  aiAssisted   Boolean @default(false) // 是否使用AI辅助
+
+  // Sincerity Gift (诚意值附赠)
+  giftAmount Int @default(0) // 附赠诚意值数量
+
+  // Inbox Management (收件箱管理)
+  isUnread      Boolean @default(true) // 是否未读
+  inboxPriority Float? // 收件箱排序权重 (计算值)
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   expiresAt DateTime? // Auto-expire after 7 days if not acted on
@@ -215,6 +488,12 @@ model Match {
   @@index([matchScore])
   @@index([matchType])
   @@index([createdAt])
+  @@index([expiresAt])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([senderId, receiverId])
+  @@index([isUnread])
+  @@index([inboxPriority])
 }
 
 model MatchReaction {
@@ -230,6 +509,7 @@ model MatchReaction {
   createdAt DateTime @default(now())
 
   @@unique([matchId, userId])
+  @@index([userId])
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -248,8 +528,33 @@ model ChatRoom {
   lastMessageAt DateTime?
   isArchived    Boolean   @default(false)
 
+  // ═══════════════════════════════════════════════════════════════
+  // PRODUCT OPTIMIZATION: The 24h Vault
+  // ═══════════════════════════════════════════════════════════════
+
+  // Vault Status
+  vaultStatus VaultStatus @default(ACTIVE) // ACTIVE, EXTENDED, REVOKED, EXPIRED
+
+  // Vault Timer
+  vaultExpiry    DateTime? // 24h倒计时过期时间
+  extendedAt     DateTime? // 延长时间点
+  extendedBy     String? // 谁延长了
+  extensionCount Int       @default(0) // 延长次数
+
+  // Female Controls (女性特权)
+  revokedAt    DateTime? // 被终止时间
+  revokedBy    String? // 谁终止了
+  revokeReason String? // 终止原因
+
+  // Privacy Protection
+  screenshotCount  Int       @default(0) // 检测到的截图次数
+  lastScreenshotAt DateTime? // 最后一次截图时间
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([vaultStatus])
+  @@index([vaultExpiry])
 }
 
 model ChatRoomMember {
@@ -265,6 +570,7 @@ model ChatRoomMember {
   joinedAt DateTime @default(now())
 
   @@unique([roomId, userId])
+  @@index([userId])
 }
 
 model Message {
@@ -507,4 +813,90 @@ enum PaymentStatus {
   SUCCEEDED
   FAILED
   REFUNDED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRODUCT OPTIMIZATION: Sincerity System & Vault
+// ═══════════════════════════════════════════════════════════════
+
+enum VaultStatus {
+  ACTIVE // 正常进行中
+  EXTENDED // 已延长
+  REVOKED // 被女性终止
+  EXPIRED // 时间到自动关闭
+}
+
+enum SincerityTransactionType {
+  EARN // 赚取
+  SPEND // 消费
+  RECEIVE_GIFT // 收到礼物
+  SEND_GIFT // 送出礼物
+  REFUND // 退款
+}
+
+model SincerityWallet {
+  id     String  @id @default(cuid())
+  userId String  @unique
+  user   Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Balance
+  balance       Int @default(0) // 当前余额
+  totalEarned   Int @default(0) // 累计获得
+  totalSpent    Int @default(0) // 累计消费
+  totalGifted   Int @default(0) // 累计送出礼物
+  totalReceived Int @default(0) // 累计收到礼物
+
+  // Tier System
+  tier         SincerityTier @default(BRONZE)
+  tierProgress Float         @default(0) // 到下一级的进度 0-100
+
+  // Stats
+  lastEarnedAt DateTime?
+  lastSpentAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  transactions SincerityTransaction[]
+
+  @@index([tier])
+  @@index([balance])
+}
+
+model SincerityTransaction {
+  id       String          @id @default(cuid())
+  walletId String
+  wallet   SincerityWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  // Transaction Details
+  type   SincerityTransactionType
+  amount Int
+
+  // Source/Reason
+  source      String // "PROFILE_COMPLETE", "DAILY_LOGIN", "MATCH_ACCEPTED", "PITCH_SEND", etc.
+  description String? // 用户可见的描述
+
+  // Related Entities
+  matchId    String? // 关联的匹配
+  fromUserId String? // 送礼人
+  toUserId   String? // 收礼人
+  message    String? // 附言
+
+  // Metadata
+  metadata String? @db.Text // JSON for additional data
+
+  createdAt DateTime @default(now())
+
+  @@index([walletId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([source])
+}
+
+enum SincerityTier {
+  BRONZE // 0-499
+  SILVER // 500-1999
+  GOLD // 2000-4999
+  PLATINUM // 5000+
 }

@@ -1,0 +1,711 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOT SYSTEM — Digital User Models
+// ═══════════════════════════════════════════════════════════════
+
+enum BotType {
+  SEED          // 种子用户，冷启动用
+  SIMULATION    // 行为模拟用户
+  TRAINING      // 训练数据生成
+  ACTIVE        // 活跃参与匹配
+}
+
+enum BotActivityLevel {
+  GHOST         // 隐身，仅匹配不可见
+  LOW           // 低活跃度 (10% 在线时间)
+  MEDIUM        // 中活跃度 (30% 在线时间)
+  HIGH          // 高活跃度 (60% 在线时间)
+  FULL          // 全天候在线
+}
+
+enum Ethnicity {
+  CAUCASIAN
+  AFRICAN_AMERICAN
+  HISPANIC_LATINO
+  ASIAN
+  SOUTH_ASIAN
+  MIDDLE_EASTERN
+  MIXED
+  OTHER
+}
+
+enum OnlinePattern {
+  MORNING        // 6AM-12PM
+  AFTERNOON      // 12PM-6PM
+  EVENING        // 6PM-12AM
+  NIGHT          // 12AM-6AM
+  RANDOM
+  WORK_HOURS     // 9AM-5PM
+  AFTER_WORK     // 5PM-10PM
+}
+
+// Bot扩展资料 - 数字用户详细信息
+model BotProfile {
+  id              String   @id @default(cuid())
+  profileId       String   @unique
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // 基础配置
+  botType         BotType        @default(SEED)
+  activityLevel   BotActivityLevel @default(LOW)
+  
+  // 人口统计扩展
+  ethnicity       Ethnicity?
+  occupation      String?        // "Software Engineer", "Teacher", etc.
+  industry        String?        // "Tech", "Healthcare", "Finance", etc.
+  educationLevel  String?        // "High School", "Bachelor's", "Master's", "PhD"
+  incomeRange     String?        // "$30k-50k", "$50k-100k", etc.
+  
+  // 兴趣与偏好
+  interests       String[]       // ["hiking", "cooking", "photography"]
+  hobbies         String[]       // ["gaming", "yoga", "reading"]
+  musicGenres     String[]       // ["rock", "jazz", "electronic"]
+  movieGenres     String[]       // ["thriller", "romance", "sci-fi"]
+  
+  // 行为模拟配置
+  onlinePattern   OnlinePattern  @default(EVENING)
+  avgResponseTime Int           @default(30)  // 平均响应时间（分钟）
+  maxDailyMatches Int           @default(3)   // 每日最大匹配数
+  
+  // 行为概率配置（JSON）
+  behaviorConfig String?        @db.Text
+  
+  // 匹配偏好（扩展 Profile 的 preferred* 字段）
+  preferredEthnicities  Ethnicity[]
+  preferredOccupations  String[]
+  preferredEducation   String[]
+  
+  // 学习状态
+  totalInteractions   Int       @default(0)
+  successfulMatches   Int       @default(0)
+  avgEngagementScore  Float     @default(0)   // 0-100
+  
+  // 学习数据（JSON）
+  learningData String?          @db.Text
+  
+  // 头像配置
+  avatarStyle    String?         // "professional", "casual", "artistic"
+  avatarSource  String?          // "generated", "stock", "ai_avatar"
+  
+  // 状态
+  isActive      Boolean         @default(true)
+  lastActiveAt  DateTime?
+  sleepUntil    DateTime?       // 暂停到指定时间
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([botType])
+  @@index([activityLevel])
+  @@index([isActive])
+}
+
+// Bot行为交互日志
+model BotInteractionLog {
+  id              String   @id @default(cuid())
+  botUserId       String
+  targetUserId    String?
+  matchId         String?
+  
+  // 交互类型
+  interactionType String   // "match_received", "match_reacted", "message_sent", "message_received", "profile_viewed"
+  
+  // 行为详情
+  action          String   // "accept", "pass", "respond", "initiate"
+  responseDelay   Int?     // 响应延迟（秒）
+  
+  // 结果
+  outcome         String?  // "success", "rejected", "no_response", "blocked"
+  engagementScore Int?     // 0-100 参与度评分
+  
+  // 上下文
+  context         String?  @db.Text  // JSON: {matchScore, matchReason, etc.}
+
+  createdAt DateTime @default(now())
+  
+  @@index([botUserId, createdAt])
+  @@index([interactionType])
+  @@index([outcome])
+}
+
+// Bot学习批次
+model BotLearningBatch {
+  id              String   @id @default(cuid())
+  
+  // 批次信息
+  batchNumber     Int
+  status          String   @default("pending")  // pending, running, completed, failed
+  
+  // 数据范围
+  startDate       DateTime
+  endDate         DateTime
+  
+  // 统计数据
+  totalInteractions Int   @default(0)
+  avgEngagement   Float     @default(0)
+  successRate     Float     @default(0)
+  
+  // 更新的偏好配置
+  preferenceUpdates String? @db.Text  // JSON array of changes
+  
+  // 执行日志
+  executionLog    String?   @db.Text
+
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  
+  @@index([status])
+  @@index([batchNumber])
+}
+
+// Bot头像管理
+model BotAvatar {
+  id          String   @id @default(cuid())
+  botId       String   @unique
+  originalUrl String?
+  processedUrl String? // 处理后（压缩、优化）的URL
+  
+  style       String   // 原始风格
+  ethnicity   String   // 原始种族标签
+  
+  status      String   @default("pending") // pending, active, failed, retired
+  useCount    Int      @default(0)    // 使用次数
+  
+  generatedAt DateTime @default(now())
+  lastUsedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH — NextAuth v5 compatible models
+// ═══════════════════════════════════════════════════════════════
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  
+  // Auth
+  password      String?
+  role          UserRole  @default(USER)
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Bot/Digital User Flags
+  isBot         Boolean   @default(false)  // 标记是否为数字用户
+  botType       String?                    // "simulation" | "training" | "seed"
+  botConfig     String?    @db.Text        // 数字用户行为配置（JSON字符串存储）
+  
+  // Email Verification
+  verificationTokens VerificationToken[] @relation("UserVerificationTokens")
+  
+  // Profile
+  profile       Profile?
+  
+  // Matching
+  sentMatches     Match[]       @relation("SentMatches")
+  receivedMatches Match[]       @relation("ReceivedMatches")
+  matchReactions  MatchReaction[]
+  
+  // Chat
+  chatRooms       ChatRoomMember[]
+  messages        Message[]
+  
+  // Payments
+  subscriptions   Subscription[]
+  payments        Payment[]
+  
+  // Notifications
+  notifications   Notification[]
+  
+  // Admin
+  adminLogs       AdminLog[]    @relation("AdminLogAuthor")
+  
+  // Analytics
+  analyticsEvents AnalyticsEvent[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String   // email address
+  token      String   @unique // the 6-digit code
+  expires    DateTime
+  userId     String?  // optional link to user
+  user       User?    @relation("UserVerificationTokens", fields: [userId], references: [id], onDelete: Cascade)
+  used       Boolean  @default(false)
+  useCount   Int      @default(0)  // Track usage count for replay attack prevention
+  maxUses    Int      @default(1)  // Maximum allowed uses (1 for one-time tokens)
+  lastUsedAt DateTime?             // Track when token was last used
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+  @@index([identifier])
+  @@index([userId])
+  @@index([expires])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// USER PROFILE — Relationship structure blueprint
+// ═══════════════════════════════════════════════════════════════
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Basic Info
+  displayName     String
+  age             Int
+  gender          Gender
+  genderIdentity  String?  // Free text for non-binary identification
+  sexuality       String   // "Straight", "Bisexual", "Pansexual", "Queer", "Lesbian", "Gay", "Fluid", etc.
+  bio             String?  @db.Text
+  avatar          String?  // Upload URL
+  avatarType      String?  // "photo" | "cartoon"
+  city            String?
+  country         String?  @default("US")
+  
+  // Relationship Blueprint (核心差异化数据)
+  relationshipGoal  RelationshipGoal @default(LONG_TERM)
+  attachmentStyle   String?           // "Secure", "Anxious-Preoccupied", "Dismissive-Avoidant", "Fearful-Avoidant"
+  communicationStyle String?          // "Direct", "Reflective", "Expressive", "Analytical"
+  conflictResolution String?          // "Collaborative", "Compromising", "Accommodating", "Competing", "Avoiding"
+  loveLanguage      String?          // "Words of Affirmation", "Quality Time", "Physical Touch", "Acts of Service", "Gifts"
+  boundaries        String?          @db.Text  // JSON array of boundary descriptions
+  dealbreakers      String?          @db.Text  // JSON array
+  lifePriorities    String?          @db.Text  // JSON array: "Career", "Family", "Adventure", "Stability", etc.
+  emotionalAvailability String?      // "Fully Available", "Building Trust", "Processing Past", "Needs Space"
+  
+  // Preferences for matching
+  preferredAgeMin    Int?
+  preferredAgeMax    Int?
+  preferredGender    String?
+  preferredDistance   Int?            // Max distance in miles
+  preferredLocation  String?
+  
+  // Matching score cache (denormalized for performance)
+  compatibilityScore Int?            // 0-100 overall score
+  
+  // Status
+  profileStatus     ProfileStatus @default(DRAFT)
+  onboardingStep    Int           @default(0) // 0-5, tracks onboarding progress
+  isApproved        Boolean       @default(false)
+  isVerified        Boolean       @default(false)
+  
+  // Personality & Matching Data (for bot users)
+  personalityData   String?       @db.Text // 完整人格数据存储（JSON字符串）
+  
+  // Admin notes
+  adminNotes        String?       @db.Text
+  
+  // Bot System Relation
+  botProfile        BotProfile?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([gender])
+  @@index([relationshipGoal])
+  @@index([profileStatus])
+  @@index([compatibilityScore])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MATCHING ENGINE — Core differentiation
+// ═══════════════════════════════════════════════════════════════
+
+model Match {
+  id              String         @id @default(cuid())
+  
+  // Participants
+  senderId        String
+  sender          User           @relation("SentMatches", fields: [senderId], references: [id])
+  receiverId      String
+  receiver        User           @relation("ReceivedMatches", fields: [receiverId], references: [id])
+  
+  // Matching Data
+  matchScore      Float          // 0-100 compatibility score
+  matchReason     String         @db.Text  // AI-generated explanation of why they match
+  conflictWarnings String?       @db.Text  // JSON array of potential conflicts
+  
+  // Compatibility breakdown (denormalized)
+  attachmentCompat   Float?      // 0-100
+  communicationCompat Float?     // 0-100
+  conflictCompat     Float?      // 0-100
+  valuesCompat       Float?      // 0-100
+  lifestyleCompat    Float?      // 0-100
+  
+  // Status
+  status          MatchStatus    @default(PENDING)
+  matchType       MatchType      @default(WEEKLY)
+  
+  // Reaction tracking
+  matchReactions  MatchReaction[]
+  senderAction      MatchAction?
+  receiverAction    MatchAction?
+  
+  // Connection
+  chatRoom         ChatRoom?
+  
+  // Admin
+  reviewedBy       String?
+  reviewNotes      String?       @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt  DateTime?            // Auto-expire after 7 days if not acted on
+  
+  @@unique([senderId, receiverId], map: "unique_match_pair")
+  @@index([status])
+  @@index([matchScore])
+  @@index([matchType])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([senderId, receiverId])
+}
+
+model MatchReaction {
+  id          String   @id @default(cuid())
+  matchId     String
+  match       Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  reaction    MatchAction
+  feedback    String?  @db.Text  // Optional feedback on why
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([matchId, userId])
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REAL-TIME CHAT
+// ═══════════════════════════════════════════════════════════════
+
+model ChatRoom {
+  id          String   @id @default(cuid())
+  
+  match       Match?   @relation(fields: [matchId], references: [id])
+  matchId     String?  @unique
+  
+  members     ChatRoomMember[]
+  messages    Message[]
+  
+  lastMessageAt DateTime?
+  isArchived  Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatRoomMember {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  lastReadAt DateTime?
+  isMuted   Boolean  @default(false)
+  
+  joinedAt  DateTime @default(now())
+  
+  @@unique([roomId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id          String        @id @default(cuid())
+  roomId      String
+  room        ChatRoom      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User          @relation(fields: [senderId], references: [id])
+  
+  content     String        @db.Text
+  messageType MessageType    @default(TEXT)
+  metadata    String?       @db.Text  // JSON for rich content (images, links, etc.)
+  
+  isRead      Boolean       @default(false)
+  readAt      DateTime?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([roomId, createdAt])
+  @@index([senderId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+
+model Notification {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        NotificationType
+  title       String
+  body        String             @db.Text
+  data        String?            @db.Text  // JSON payload for deep links
+  actionUrl   String?
+  
+  isRead      Boolean            @default(false)
+  readAt      DateTime?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, isRead, createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAYMENTS & SUBSCRIPTIONS
+// ═══════════════════════════════════════════════════════════════
+
+model Subscription {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  plan              SubscriptionPlan
+  status            SubscriptionStatus @default(ACTIVE)
+  
+  // Stripe
+  stripeCustomerId  String?           @unique
+  stripePriceId     String?
+  stripeSubscriptionId String?        @unique
+  stripeCurrentPeriodEnd DateTime?
+  
+  // Matching perks
+  weeklyMatchLimit  Int               @default(5)
+  canInitiateChat   Boolean           @default(true)
+  canViewFullProfile Boolean          @default(true)
+  
+  startsAt          DateTime          @default(now())
+  endsAt            DateTime?
+  cancelledAt       DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+}
+
+model Payment {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  stripePaymentIntentId String?     @unique
+  amount          Float            // In USD
+  currency        String           @default("usd")
+  status          PaymentStatus    @default(PENDING)
+  
+  description     String?
+  metadata        String?          @db.Text  // JSON
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN & ANALYTICS
+// ═══════════════════════════════════════════════════════════════
+
+model AdminLog {
+  id          String   @id @default(cuid())
+  authorId    String?
+  author      User?    @relation("AdminLogAuthor", fields: [authorId], references: [id])
+  
+  action      String   // "user.approve", "match.review", "system.config", etc.
+  targetId    String?  // ID of the target resource
+  targetType  String?  // "User", "Match", "Profile", etc.
+  details     String?  @db.Text  // JSON with full context
+  
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  
+  createdAt DateTime @default(now())
+  
+  @@index([authorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  event       String   // "page.view", "match.viewed", "message.sent", "profile.completed", etc.
+  properties  String?  @db.Text  // JSON with event data
+  
+  sessionId   String?
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, event, createdAt])
+  @@index([event, createdAt])
+}
+
+model SystemConfig {
+  key         String   @id
+  value       String   @db.Text
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  OTHER
+}
+
+enum RelationshipGoal {
+  LONG_TERM        // Seeking serious relationship
+  DATING           // Open to exploring
+  FRIENDSHIP       // Want connections first
+  NOT_SURE         // Still figuring out
+}
+
+enum ProfileStatus {
+  DRAFT            // Onboarding in progress
+  PENDING_REVIEW   // Submitted, waiting for admin review
+  APPROVED         // Ready for matching
+  REJECTED         // Needs revision
+  DEACTIVATED      // User deactivated
+  BANNED           // Admin banned
+}
+
+enum MatchStatus {
+  PENDING          // Created, waiting for reactions
+  ACCEPTED         // Both accepted
+  REJECTED         // One or both rejected
+  EXPIRED          // Not acted upon within timeframe
+  CANCELLED        // Admin cancelled
+}
+
+enum MatchType {
+  WEEKLY           // Regular weekly match
+  BOOSTED          // Premium priority match
+  MANUAL           // Admin-curated match
+  AI_SUGGESTED     // AI recommendation (requires approval)
+}
+
+enum MatchAction {
+  INTERESTED       // "I'd like to connect"
+  PASS             // "Not for me right now"
+  MAYBE            // "Tell me more"
+  BLOCK            // "Don't match me with this person"
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM           // Auto-generated messages
+  VOICE            // Future: voice notes
+}
+
+enum NotificationType {
+  NEW_MATCH
+  MATCH_ACCEPTED
+  MATCH_REJECTED
+  NEW_MESSAGE
+  WEEKLY_DIGEST
+  PROFILE_APPROVED
+  PROFILE_REJECTED
+  SUBSCRIPTION_EXPIRED
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM_MONTHLY
+  PREMIUM_YEARLY
+  LIFETIME
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PAST_DUE
+  TRIALING
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}

@@ -14,6 +14,36 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
 
 
 /**
+ * Model BotProfile
+ * 
+ */
+export type BotProfile = $Result.DefaultSelection<Prisma.$BotProfilePayload>
+/**
+ * Model BotInteractionLog
+ * 
+ */
+export type BotInteractionLog = $Result.DefaultSelection<Prisma.$BotInteractionLogPayload>
+/**
+ * Model BotLearningBatch
+ * 
+ */
+export type BotLearningBatch = $Result.DefaultSelection<Prisma.$BotLearningBatchPayload>
+/**
+ * Model BotLearningRecord
+ * 
+ */
+export type BotLearningRecord = $Result.DefaultSelection<Prisma.$BotLearningRecordPayload>
+/**
+ * Model BotPreference
+ * 
+ */
+export type BotPreference = $Result.DefaultSelection<Prisma.$BotPreferencePayload>
+/**
+ * Model BotAvatar
+ * 
+ */
+export type BotAvatar = $Result.DefaultSelection<Prisma.$BotAvatarPayload>
+/**
  * Model User
  * 
  */
@@ -93,12 +123,70 @@ export type AnalyticsEvent = $Result.DefaultSelection<Prisma.$AnalyticsEventPayl
  * 
  */
 export type SystemConfig = $Result.DefaultSelection<Prisma.$SystemConfigPayload>
+/**
+ * Model SincerityWallet
+ * 
+ */
+export type SincerityWallet = $Result.DefaultSelection<Prisma.$SincerityWalletPayload>
+/**
+ * Model SincerityTransaction
+ * 
+ */
+export type SincerityTransaction = $Result.DefaultSelection<Prisma.$SincerityTransactionPayload>
 
 /**
  * Enums
  */
 export namespace $Enums {
-  export const UserRole: {
+  export const BotType: {
+  SEED: 'SEED',
+  SIMULATION: 'SIMULATION',
+  TRAINING: 'TRAINING',
+  ACTIVE: 'ACTIVE'
+};
+
+export type BotType = (typeof BotType)[keyof typeof BotType]
+
+
+export const BotActivityLevel: {
+  GHOST: 'GHOST',
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  FULL: 'FULL'
+};
+
+export type BotActivityLevel = (typeof BotActivityLevel)[keyof typeof BotActivityLevel]
+
+
+export const Ethnicity: {
+  CAUCASIAN: 'CAUCASIAN',
+  AFRICAN_AMERICAN: 'AFRICAN_AMERICAN',
+  HISPANIC_LATINO: 'HISPANIC_LATINO',
+  ASIAN: 'ASIAN',
+  SOUTH_ASIAN: 'SOUTH_ASIAN',
+  MIDDLE_EASTERN: 'MIDDLE_EASTERN',
+  MIXED: 'MIXED',
+  OTHER: 'OTHER'
+};
+
+export type Ethnicity = (typeof Ethnicity)[keyof typeof Ethnicity]
+
+
+export const OnlinePattern: {
+  MORNING: 'MORNING',
+  AFTERNOON: 'AFTERNOON',
+  EVENING: 'EVENING',
+  NIGHT: 'NIGHT',
+  RANDOM: 'RANDOM',
+  WORK_HOURS: 'WORK_HOURS',
+  AFTER_WORK: 'AFTER_WORK'
+};
+
+export type OnlinePattern = (typeof OnlinePattern)[keyof typeof OnlinePattern]
+
+
+export const UserRole: {
   USER: 'USER',
   ADMIN: 'ADMIN',
   SUPER_ADMIN: 'SUPER_ADMIN'
@@ -225,7 +313,54 @@ export const PaymentStatus: {
 
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
+
+export const VaultStatus: {
+  ACTIVE: 'ACTIVE',
+  EXTENDED: 'EXTENDED',
+  REVOKED: 'REVOKED',
+  EXPIRED: 'EXPIRED'
+};
+
+export type VaultStatus = (typeof VaultStatus)[keyof typeof VaultStatus]
+
+
+export const SincerityTransactionType: {
+  EARN: 'EARN',
+  SPEND: 'SPEND',
+  RECEIVE_GIFT: 'RECEIVE_GIFT',
+  SEND_GIFT: 'SEND_GIFT',
+  REFUND: 'REFUND'
+};
+
+export type SincerityTransactionType = (typeof SincerityTransactionType)[keyof typeof SincerityTransactionType]
+
+
+export const SincerityTier: {
+  BRONZE: 'BRONZE',
+  SILVER: 'SILVER',
+  GOLD: 'GOLD',
+  PLATINUM: 'PLATINUM'
+};
+
+export type SincerityTier = (typeof SincerityTier)[keyof typeof SincerityTier]
+
 }
+
+export type BotType = $Enums.BotType
+
+export const BotType: typeof $Enums.BotType
+
+export type BotActivityLevel = $Enums.BotActivityLevel
+
+export const BotActivityLevel: typeof $Enums.BotActivityLevel
+
+export type Ethnicity = $Enums.Ethnicity
+
+export const Ethnicity: typeof $Enums.Ethnicity
+
+export type OnlinePattern = $Enums.OnlinePattern
+
+export const OnlinePattern: typeof $Enums.OnlinePattern
 
 export type UserRole = $Enums.UserRole
 
@@ -275,6 +410,18 @@ export type PaymentStatus = $Enums.PaymentStatus
 
 export const PaymentStatus: typeof $Enums.PaymentStatus
 
+export type VaultStatus = $Enums.VaultStatus
+
+export const VaultStatus: typeof $Enums.VaultStatus
+
+export type SincerityTransactionType = $Enums.SincerityTransactionType
+
+export const SincerityTransactionType: typeof $Enums.SincerityTransactionType
+
+export type SincerityTier = $Enums.SincerityTier
+
+export const SincerityTier: typeof $Enums.SincerityTier
+
 /**
  * ##  Prisma Client ʲˢ
  *
@@ -284,8 +431,8 @@ export const PaymentStatus: typeof $Enums.PaymentStatus
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more Users
- * const users = await prisma.user.findMany()
+ * // Fetch zero or more BotProfiles
+ * const botProfiles = await prisma.botProfile.findMany()
  * ```
  *
  *
@@ -307,8 +454,8 @@ export class PrismaClient<
    * const prisma = new PrismaClient({
    *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
    * })
-   * // Fetch zero or more Users
-   * const users = await prisma.user.findMany()
+   * // Fetch zero or more BotProfiles
+   * const botProfiles = await prisma.botProfile.findMany()
    * ```
    *
    *
@@ -397,6 +544,66 @@ export class PrismaClient<
   }>>
 
       /**
+   * `prisma.botProfile`: Exposes CRUD operations for the **BotProfile** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BotProfiles
+    * const botProfiles = await prisma.botProfile.findMany()
+    * ```
+    */
+  get botProfile(): Prisma.BotProfileDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.botInteractionLog`: Exposes CRUD operations for the **BotInteractionLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BotInteractionLogs
+    * const botInteractionLogs = await prisma.botInteractionLog.findMany()
+    * ```
+    */
+  get botInteractionLog(): Prisma.BotInteractionLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.botLearningBatch`: Exposes CRUD operations for the **BotLearningBatch** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BotLearningBatches
+    * const botLearningBatches = await prisma.botLearningBatch.findMany()
+    * ```
+    */
+  get botLearningBatch(): Prisma.BotLearningBatchDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.botLearningRecord`: Exposes CRUD operations for the **BotLearningRecord** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BotLearningRecords
+    * const botLearningRecords = await prisma.botLearningRecord.findMany()
+    * ```
+    */
+  get botLearningRecord(): Prisma.BotLearningRecordDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.botPreference`: Exposes CRUD operations for the **BotPreference** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BotPreferences
+    * const botPreferences = await prisma.botPreference.findMany()
+    * ```
+    */
+  get botPreference(): Prisma.BotPreferenceDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.botAvatar`: Exposes CRUD operations for the **BotAvatar** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BotAvatars
+    * const botAvatars = await prisma.botAvatar.findMany()
+    * ```
+    */
+  get botAvatar(): Prisma.BotAvatarDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.user`: Exposes CRUD operations for the **User** model.
     * Example usage:
     * ```ts
@@ -555,6 +762,26 @@ export class PrismaClient<
     * ```
     */
   get systemConfig(): Prisma.SystemConfigDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.sincerityWallet`: Exposes CRUD operations for the **SincerityWallet** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SincerityWallets
+    * const sincerityWallets = await prisma.sincerityWallet.findMany()
+    * ```
+    */
+  get sincerityWallet(): Prisma.SincerityWalletDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.sincerityTransaction`: Exposes CRUD operations for the **SincerityTransaction** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SincerityTransactions
+    * const sincerityTransactions = await prisma.sincerityTransaction.findMany()
+    * ```
+    */
+  get sincerityTransaction(): Prisma.SincerityTransactionDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -989,6 +1216,12 @@ export namespace Prisma {
 
 
   export const ModelName: {
+    BotProfile: 'BotProfile',
+    BotInteractionLog: 'BotInteractionLog',
+    BotLearningBatch: 'BotLearningBatch',
+    BotLearningRecord: 'BotLearningRecord',
+    BotPreference: 'BotPreference',
+    BotAvatar: 'BotAvatar',
     User: 'User',
     Account: 'Account',
     Session: 'Session',
@@ -1004,7 +1237,9 @@ export namespace Prisma {
     Payment: 'Payment',
     AdminLog: 'AdminLog',
     AnalyticsEvent: 'AnalyticsEvent',
-    SystemConfig: 'SystemConfig'
+    SystemConfig: 'SystemConfig',
+    SincerityWallet: 'SincerityWallet',
+    SincerityTransaction: 'SincerityTransaction'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1020,10 +1255,454 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "chatRoom" | "chatRoomMember" | "message" | "notification" | "subscription" | "payment" | "adminLog" | "analyticsEvent" | "systemConfig"
+      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "chatRoom" | "chatRoomMember" | "message" | "notification" | "subscription" | "payment" | "adminLog" | "analyticsEvent" | "systemConfig" | "sincerityWallet" | "sincerityTransaction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
+      BotProfile: {
+        payload: Prisma.$BotProfilePayload<ExtArgs>
+        fields: Prisma.BotProfileFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BotProfileFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BotProfileFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>
+          }
+          findFirst: {
+            args: Prisma.BotProfileFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BotProfileFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>
+          }
+          findMany: {
+            args: Prisma.BotProfileFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>[]
+          }
+          create: {
+            args: Prisma.BotProfileCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>
+          }
+          createMany: {
+            args: Prisma.BotProfileCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BotProfileCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>[]
+          }
+          delete: {
+            args: Prisma.BotProfileDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>
+          }
+          update: {
+            args: Prisma.BotProfileUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>
+          }
+          deleteMany: {
+            args: Prisma.BotProfileDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BotProfileUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BotProfileUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>[]
+          }
+          upsert: {
+            args: Prisma.BotProfileUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotProfilePayload>
+          }
+          aggregate: {
+            args: Prisma.BotProfileAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBotProfile>
+          }
+          groupBy: {
+            args: Prisma.BotProfileGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BotProfileGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BotProfileCountArgs<ExtArgs>
+            result: $Utils.Optional<BotProfileCountAggregateOutputType> | number
+          }
+        }
+      }
+      BotInteractionLog: {
+        payload: Prisma.$BotInteractionLogPayload<ExtArgs>
+        fields: Prisma.BotInteractionLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BotInteractionLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BotInteractionLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>
+          }
+          findFirst: {
+            args: Prisma.BotInteractionLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BotInteractionLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>
+          }
+          findMany: {
+            args: Prisma.BotInteractionLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>[]
+          }
+          create: {
+            args: Prisma.BotInteractionLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>
+          }
+          createMany: {
+            args: Prisma.BotInteractionLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BotInteractionLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>[]
+          }
+          delete: {
+            args: Prisma.BotInteractionLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>
+          }
+          update: {
+            args: Prisma.BotInteractionLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.BotInteractionLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BotInteractionLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BotInteractionLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.BotInteractionLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotInteractionLogPayload>
+          }
+          aggregate: {
+            args: Prisma.BotInteractionLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBotInteractionLog>
+          }
+          groupBy: {
+            args: Prisma.BotInteractionLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BotInteractionLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BotInteractionLogCountArgs<ExtArgs>
+            result: $Utils.Optional<BotInteractionLogCountAggregateOutputType> | number
+          }
+        }
+      }
+      BotLearningBatch: {
+        payload: Prisma.$BotLearningBatchPayload<ExtArgs>
+        fields: Prisma.BotLearningBatchFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BotLearningBatchFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BotLearningBatchFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>
+          }
+          findFirst: {
+            args: Prisma.BotLearningBatchFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BotLearningBatchFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>
+          }
+          findMany: {
+            args: Prisma.BotLearningBatchFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>[]
+          }
+          create: {
+            args: Prisma.BotLearningBatchCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>
+          }
+          createMany: {
+            args: Prisma.BotLearningBatchCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BotLearningBatchCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>[]
+          }
+          delete: {
+            args: Prisma.BotLearningBatchDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>
+          }
+          update: {
+            args: Prisma.BotLearningBatchUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>
+          }
+          deleteMany: {
+            args: Prisma.BotLearningBatchDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BotLearningBatchUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BotLearningBatchUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>[]
+          }
+          upsert: {
+            args: Prisma.BotLearningBatchUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningBatchPayload>
+          }
+          aggregate: {
+            args: Prisma.BotLearningBatchAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBotLearningBatch>
+          }
+          groupBy: {
+            args: Prisma.BotLearningBatchGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BotLearningBatchGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BotLearningBatchCountArgs<ExtArgs>
+            result: $Utils.Optional<BotLearningBatchCountAggregateOutputType> | number
+          }
+        }
+      }
+      BotLearningRecord: {
+        payload: Prisma.$BotLearningRecordPayload<ExtArgs>
+        fields: Prisma.BotLearningRecordFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BotLearningRecordFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BotLearningRecordFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>
+          }
+          findFirst: {
+            args: Prisma.BotLearningRecordFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BotLearningRecordFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>
+          }
+          findMany: {
+            args: Prisma.BotLearningRecordFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>[]
+          }
+          create: {
+            args: Prisma.BotLearningRecordCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>
+          }
+          createMany: {
+            args: Prisma.BotLearningRecordCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BotLearningRecordCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>[]
+          }
+          delete: {
+            args: Prisma.BotLearningRecordDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>
+          }
+          update: {
+            args: Prisma.BotLearningRecordUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>
+          }
+          deleteMany: {
+            args: Prisma.BotLearningRecordDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BotLearningRecordUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BotLearningRecordUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>[]
+          }
+          upsert: {
+            args: Prisma.BotLearningRecordUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotLearningRecordPayload>
+          }
+          aggregate: {
+            args: Prisma.BotLearningRecordAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBotLearningRecord>
+          }
+          groupBy: {
+            args: Prisma.BotLearningRecordGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BotLearningRecordGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BotLearningRecordCountArgs<ExtArgs>
+            result: $Utils.Optional<BotLearningRecordCountAggregateOutputType> | number
+          }
+        }
+      }
+      BotPreference: {
+        payload: Prisma.$BotPreferencePayload<ExtArgs>
+        fields: Prisma.BotPreferenceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BotPreferenceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BotPreferenceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>
+          }
+          findFirst: {
+            args: Prisma.BotPreferenceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BotPreferenceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>
+          }
+          findMany: {
+            args: Prisma.BotPreferenceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>[]
+          }
+          create: {
+            args: Prisma.BotPreferenceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>
+          }
+          createMany: {
+            args: Prisma.BotPreferenceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BotPreferenceCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>[]
+          }
+          delete: {
+            args: Prisma.BotPreferenceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>
+          }
+          update: {
+            args: Prisma.BotPreferenceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>
+          }
+          deleteMany: {
+            args: Prisma.BotPreferenceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BotPreferenceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BotPreferenceUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>[]
+          }
+          upsert: {
+            args: Prisma.BotPreferenceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotPreferencePayload>
+          }
+          aggregate: {
+            args: Prisma.BotPreferenceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBotPreference>
+          }
+          groupBy: {
+            args: Prisma.BotPreferenceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BotPreferenceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BotPreferenceCountArgs<ExtArgs>
+            result: $Utils.Optional<BotPreferenceCountAggregateOutputType> | number
+          }
+        }
+      }
+      BotAvatar: {
+        payload: Prisma.$BotAvatarPayload<ExtArgs>
+        fields: Prisma.BotAvatarFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BotAvatarFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BotAvatarFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>
+          }
+          findFirst: {
+            args: Prisma.BotAvatarFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BotAvatarFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>
+          }
+          findMany: {
+            args: Prisma.BotAvatarFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>[]
+          }
+          create: {
+            args: Prisma.BotAvatarCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>
+          }
+          createMany: {
+            args: Prisma.BotAvatarCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BotAvatarCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>[]
+          }
+          delete: {
+            args: Prisma.BotAvatarDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>
+          }
+          update: {
+            args: Prisma.BotAvatarUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>
+          }
+          deleteMany: {
+            args: Prisma.BotAvatarDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BotAvatarUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BotAvatarUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>[]
+          }
+          upsert: {
+            args: Prisma.BotAvatarUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BotAvatarPayload>
+          }
+          aggregate: {
+            args: Prisma.BotAvatarAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBotAvatar>
+          }
+          groupBy: {
+            args: Prisma.BotAvatarGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BotAvatarGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BotAvatarCountArgs<ExtArgs>
+            result: $Utils.Optional<BotAvatarCountAggregateOutputType> | number
+          }
+        }
+      }
       User: {
         payload: Prisma.$UserPayload<ExtArgs>
         fields: Prisma.UserFieldRefs
@@ -2208,6 +2887,154 @@ export namespace Prisma {
           }
         }
       }
+      SincerityWallet: {
+        payload: Prisma.$SincerityWalletPayload<ExtArgs>
+        fields: Prisma.SincerityWalletFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SincerityWalletFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SincerityWalletFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>
+          }
+          findFirst: {
+            args: Prisma.SincerityWalletFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SincerityWalletFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>
+          }
+          findMany: {
+            args: Prisma.SincerityWalletFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>[]
+          }
+          create: {
+            args: Prisma.SincerityWalletCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>
+          }
+          createMany: {
+            args: Prisma.SincerityWalletCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SincerityWalletCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>[]
+          }
+          delete: {
+            args: Prisma.SincerityWalletDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>
+          }
+          update: {
+            args: Prisma.SincerityWalletUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>
+          }
+          deleteMany: {
+            args: Prisma.SincerityWalletDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SincerityWalletUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SincerityWalletUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>[]
+          }
+          upsert: {
+            args: Prisma.SincerityWalletUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityWalletPayload>
+          }
+          aggregate: {
+            args: Prisma.SincerityWalletAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSincerityWallet>
+          }
+          groupBy: {
+            args: Prisma.SincerityWalletGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SincerityWalletGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SincerityWalletCountArgs<ExtArgs>
+            result: $Utils.Optional<SincerityWalletCountAggregateOutputType> | number
+          }
+        }
+      }
+      SincerityTransaction: {
+        payload: Prisma.$SincerityTransactionPayload<ExtArgs>
+        fields: Prisma.SincerityTransactionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SincerityTransactionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SincerityTransactionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>
+          }
+          findFirst: {
+            args: Prisma.SincerityTransactionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SincerityTransactionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>
+          }
+          findMany: {
+            args: Prisma.SincerityTransactionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>[]
+          }
+          create: {
+            args: Prisma.SincerityTransactionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>
+          }
+          createMany: {
+            args: Prisma.SincerityTransactionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SincerityTransactionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>[]
+          }
+          delete: {
+            args: Prisma.SincerityTransactionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>
+          }
+          update: {
+            args: Prisma.SincerityTransactionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>
+          }
+          deleteMany: {
+            args: Prisma.SincerityTransactionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SincerityTransactionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SincerityTransactionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>[]
+          }
+          upsert: {
+            args: Prisma.SincerityTransactionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SincerityTransactionPayload>
+          }
+          aggregate: {
+            args: Prisma.SincerityTransactionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSincerityTransaction>
+          }
+          groupBy: {
+            args: Prisma.SincerityTransactionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SincerityTransactionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SincerityTransactionCountArgs<ExtArgs>
+            result: $Utils.Optional<SincerityTransactionCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2316,6 +3143,12 @@ export namespace Prisma {
     comments?: runtime.SqlCommenterPlugin[]
   }
   export type GlobalOmitConfig = {
+    botProfile?: BotProfileOmit
+    botInteractionLog?: BotInteractionLogOmit
+    botLearningBatch?: BotLearningBatchOmit
+    botLearningRecord?: BotLearningRecordOmit
+    botPreference?: BotPreferenceOmit
+    botAvatar?: BotAvatarOmit
     user?: UserOmit
     account?: AccountOmit
     session?: SessionOmit
@@ -2332,6 +3165,8 @@ export namespace Prisma {
     adminLog?: AdminLogOmit
     analyticsEvent?: AnalyticsEventOmit
     systemConfig?: SystemConfigOmit
+    sincerityWallet?: SincerityWalletOmit
+    sincerityTransaction?: SincerityTransactionOmit
   }
 
   /* Types for Logging */
@@ -2618,8 +3453,7024 @@ export namespace Prisma {
 
 
   /**
+   * Count Type SincerityWalletCountOutputType
+   */
+
+  export type SincerityWalletCountOutputType = {
+    transactions: number
+  }
+
+  export type SincerityWalletCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    transactions?: boolean | SincerityWalletCountOutputTypeCountTransactionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * SincerityWalletCountOutputType without action
+   */
+  export type SincerityWalletCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWalletCountOutputType
+     */
+    select?: SincerityWalletCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * SincerityWalletCountOutputType without action
+   */
+  export type SincerityWalletCountOutputTypeCountTransactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SincerityTransactionWhereInput
+  }
+
+
+  /**
    * Models
    */
+
+  /**
+   * Model BotProfile
+   */
+
+  export type AggregateBotProfile = {
+    _count: BotProfileCountAggregateOutputType | null
+    _avg: BotProfileAvgAggregateOutputType | null
+    _sum: BotProfileSumAggregateOutputType | null
+    _min: BotProfileMinAggregateOutputType | null
+    _max: BotProfileMaxAggregateOutputType | null
+  }
+
+  export type BotProfileAvgAggregateOutputType = {
+    avgResponseTime: number | null
+    maxDailyMatches: number | null
+    totalInteractions: number | null
+    successfulMatches: number | null
+    avgEngagementScore: number | null
+  }
+
+  export type BotProfileSumAggregateOutputType = {
+    avgResponseTime: number | null
+    maxDailyMatches: number | null
+    totalInteractions: number | null
+    successfulMatches: number | null
+    avgEngagementScore: number | null
+  }
+
+  export type BotProfileMinAggregateOutputType = {
+    id: string | null
+    profileId: string | null
+    botType: $Enums.BotType | null
+    activityLevel: $Enums.BotActivityLevel | null
+    ethnicity: $Enums.Ethnicity | null
+    occupation: string | null
+    industry: string | null
+    educationLevel: string | null
+    incomeRange: string | null
+    onlinePattern: $Enums.OnlinePattern | null
+    avgResponseTime: number | null
+    maxDailyMatches: number | null
+    behaviorConfig: string | null
+    totalInteractions: number | null
+    successfulMatches: number | null
+    avgEngagementScore: number | null
+    learningData: string | null
+    avatarStyle: string | null
+    avatarSource: string | null
+    isActive: boolean | null
+    lastActiveAt: Date | null
+    sleepUntil: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BotProfileMaxAggregateOutputType = {
+    id: string | null
+    profileId: string | null
+    botType: $Enums.BotType | null
+    activityLevel: $Enums.BotActivityLevel | null
+    ethnicity: $Enums.Ethnicity | null
+    occupation: string | null
+    industry: string | null
+    educationLevel: string | null
+    incomeRange: string | null
+    onlinePattern: $Enums.OnlinePattern | null
+    avgResponseTime: number | null
+    maxDailyMatches: number | null
+    behaviorConfig: string | null
+    totalInteractions: number | null
+    successfulMatches: number | null
+    avgEngagementScore: number | null
+    learningData: string | null
+    avatarStyle: string | null
+    avatarSource: string | null
+    isActive: boolean | null
+    lastActiveAt: Date | null
+    sleepUntil: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BotProfileCountAggregateOutputType = {
+    id: number
+    profileId: number
+    botType: number
+    activityLevel: number
+    ethnicity: number
+    occupation: number
+    industry: number
+    educationLevel: number
+    incomeRange: number
+    interests: number
+    hobbies: number
+    musicGenres: number
+    movieGenres: number
+    onlinePattern: number
+    avgResponseTime: number
+    maxDailyMatches: number
+    behaviorConfig: number
+    preferredEthnicities: number
+    preferredOccupations: number
+    preferredEducation: number
+    totalInteractions: number
+    successfulMatches: number
+    avgEngagementScore: number
+    learningData: number
+    avatarStyle: number
+    avatarSource: number
+    isActive: number
+    lastActiveAt: number
+    sleepUntil: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type BotProfileAvgAggregateInputType = {
+    avgResponseTime?: true
+    maxDailyMatches?: true
+    totalInteractions?: true
+    successfulMatches?: true
+    avgEngagementScore?: true
+  }
+
+  export type BotProfileSumAggregateInputType = {
+    avgResponseTime?: true
+    maxDailyMatches?: true
+    totalInteractions?: true
+    successfulMatches?: true
+    avgEngagementScore?: true
+  }
+
+  export type BotProfileMinAggregateInputType = {
+    id?: true
+    profileId?: true
+    botType?: true
+    activityLevel?: true
+    ethnicity?: true
+    occupation?: true
+    industry?: true
+    educationLevel?: true
+    incomeRange?: true
+    onlinePattern?: true
+    avgResponseTime?: true
+    maxDailyMatches?: true
+    behaviorConfig?: true
+    totalInteractions?: true
+    successfulMatches?: true
+    avgEngagementScore?: true
+    learningData?: true
+    avatarStyle?: true
+    avatarSource?: true
+    isActive?: true
+    lastActiveAt?: true
+    sleepUntil?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BotProfileMaxAggregateInputType = {
+    id?: true
+    profileId?: true
+    botType?: true
+    activityLevel?: true
+    ethnicity?: true
+    occupation?: true
+    industry?: true
+    educationLevel?: true
+    incomeRange?: true
+    onlinePattern?: true
+    avgResponseTime?: true
+    maxDailyMatches?: true
+    behaviorConfig?: true
+    totalInteractions?: true
+    successfulMatches?: true
+    avgEngagementScore?: true
+    learningData?: true
+    avatarStyle?: true
+    avatarSource?: true
+    isActive?: true
+    lastActiveAt?: true
+    sleepUntil?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BotProfileCountAggregateInputType = {
+    id?: true
+    profileId?: true
+    botType?: true
+    activityLevel?: true
+    ethnicity?: true
+    occupation?: true
+    industry?: true
+    educationLevel?: true
+    incomeRange?: true
+    interests?: true
+    hobbies?: true
+    musicGenres?: true
+    movieGenres?: true
+    onlinePattern?: true
+    avgResponseTime?: true
+    maxDailyMatches?: true
+    behaviorConfig?: true
+    preferredEthnicities?: true
+    preferredOccupations?: true
+    preferredEducation?: true
+    totalInteractions?: true
+    successfulMatches?: true
+    avgEngagementScore?: true
+    learningData?: true
+    avatarStyle?: true
+    avatarSource?: true
+    isActive?: true
+    lastActiveAt?: true
+    sleepUntil?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type BotProfileAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotProfile to aggregate.
+     */
+    where?: BotProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotProfiles to fetch.
+     */
+    orderBy?: BotProfileOrderByWithRelationInput | BotProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BotProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BotProfiles
+    **/
+    _count?: true | BotProfileCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: BotProfileAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: BotProfileSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BotProfileMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BotProfileMaxAggregateInputType
+  }
+
+  export type GetBotProfileAggregateType<T extends BotProfileAggregateArgs> = {
+        [P in keyof T & keyof AggregateBotProfile]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBotProfile[P]>
+      : GetScalarType<T[P], AggregateBotProfile[P]>
+  }
+
+
+
+
+  export type BotProfileGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotProfileWhereInput
+    orderBy?: BotProfileOrderByWithAggregationInput | BotProfileOrderByWithAggregationInput[]
+    by: BotProfileScalarFieldEnum[] | BotProfileScalarFieldEnum
+    having?: BotProfileScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BotProfileCountAggregateInputType | true
+    _avg?: BotProfileAvgAggregateInputType
+    _sum?: BotProfileSumAggregateInputType
+    _min?: BotProfileMinAggregateInputType
+    _max?: BotProfileMaxAggregateInputType
+  }
+
+  export type BotProfileGroupByOutputType = {
+    id: string
+    profileId: string
+    botType: $Enums.BotType
+    activityLevel: $Enums.BotActivityLevel
+    ethnicity: $Enums.Ethnicity | null
+    occupation: string | null
+    industry: string | null
+    educationLevel: string | null
+    incomeRange: string | null
+    interests: string[]
+    hobbies: string[]
+    musicGenres: string[]
+    movieGenres: string[]
+    onlinePattern: $Enums.OnlinePattern
+    avgResponseTime: number
+    maxDailyMatches: number
+    behaviorConfig: string | null
+    preferredEthnicities: $Enums.Ethnicity[]
+    preferredOccupations: string[]
+    preferredEducation: string[]
+    totalInteractions: number
+    successfulMatches: number
+    avgEngagementScore: number
+    learningData: string | null
+    avatarStyle: string | null
+    avatarSource: string | null
+    isActive: boolean
+    lastActiveAt: Date | null
+    sleepUntil: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: BotProfileCountAggregateOutputType | null
+    _avg: BotProfileAvgAggregateOutputType | null
+    _sum: BotProfileSumAggregateOutputType | null
+    _min: BotProfileMinAggregateOutputType | null
+    _max: BotProfileMaxAggregateOutputType | null
+  }
+
+  type GetBotProfileGroupByPayload<T extends BotProfileGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BotProfileGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BotProfileGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BotProfileGroupByOutputType[P]>
+            : GetScalarType<T[P], BotProfileGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BotProfileSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    profileId?: boolean
+    botType?: boolean
+    activityLevel?: boolean
+    ethnicity?: boolean
+    occupation?: boolean
+    industry?: boolean
+    educationLevel?: boolean
+    incomeRange?: boolean
+    interests?: boolean
+    hobbies?: boolean
+    musicGenres?: boolean
+    movieGenres?: boolean
+    onlinePattern?: boolean
+    avgResponseTime?: boolean
+    maxDailyMatches?: boolean
+    behaviorConfig?: boolean
+    preferredEthnicities?: boolean
+    preferredOccupations?: boolean
+    preferredEducation?: boolean
+    totalInteractions?: boolean
+    successfulMatches?: boolean
+    avgEngagementScore?: boolean
+    learningData?: boolean
+    avatarStyle?: boolean
+    avatarSource?: boolean
+    isActive?: boolean
+    lastActiveAt?: boolean
+    sleepUntil?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    profile?: boolean | ProfileDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botProfile"]>
+
+  export type BotProfileSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    profileId?: boolean
+    botType?: boolean
+    activityLevel?: boolean
+    ethnicity?: boolean
+    occupation?: boolean
+    industry?: boolean
+    educationLevel?: boolean
+    incomeRange?: boolean
+    interests?: boolean
+    hobbies?: boolean
+    musicGenres?: boolean
+    movieGenres?: boolean
+    onlinePattern?: boolean
+    avgResponseTime?: boolean
+    maxDailyMatches?: boolean
+    behaviorConfig?: boolean
+    preferredEthnicities?: boolean
+    preferredOccupations?: boolean
+    preferredEducation?: boolean
+    totalInteractions?: boolean
+    successfulMatches?: boolean
+    avgEngagementScore?: boolean
+    learningData?: boolean
+    avatarStyle?: boolean
+    avatarSource?: boolean
+    isActive?: boolean
+    lastActiveAt?: boolean
+    sleepUntil?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    profile?: boolean | ProfileDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botProfile"]>
+
+  export type BotProfileSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    profileId?: boolean
+    botType?: boolean
+    activityLevel?: boolean
+    ethnicity?: boolean
+    occupation?: boolean
+    industry?: boolean
+    educationLevel?: boolean
+    incomeRange?: boolean
+    interests?: boolean
+    hobbies?: boolean
+    musicGenres?: boolean
+    movieGenres?: boolean
+    onlinePattern?: boolean
+    avgResponseTime?: boolean
+    maxDailyMatches?: boolean
+    behaviorConfig?: boolean
+    preferredEthnicities?: boolean
+    preferredOccupations?: boolean
+    preferredEducation?: boolean
+    totalInteractions?: boolean
+    successfulMatches?: boolean
+    avgEngagementScore?: boolean
+    learningData?: boolean
+    avatarStyle?: boolean
+    avatarSource?: boolean
+    isActive?: boolean
+    lastActiveAt?: boolean
+    sleepUntil?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    profile?: boolean | ProfileDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["botProfile"]>
+
+  export type BotProfileSelectScalar = {
+    id?: boolean
+    profileId?: boolean
+    botType?: boolean
+    activityLevel?: boolean
+    ethnicity?: boolean
+    occupation?: boolean
+    industry?: boolean
+    educationLevel?: boolean
+    incomeRange?: boolean
+    interests?: boolean
+    hobbies?: boolean
+    musicGenres?: boolean
+    movieGenres?: boolean
+    onlinePattern?: boolean
+    avgResponseTime?: boolean
+    maxDailyMatches?: boolean
+    behaviorConfig?: boolean
+    preferredEthnicities?: boolean
+    preferredOccupations?: boolean
+    preferredEducation?: boolean
+    totalInteractions?: boolean
+    successfulMatches?: boolean
+    avgEngagementScore?: boolean
+    learningData?: boolean
+    avatarStyle?: boolean
+    avatarSource?: boolean
+    isActive?: boolean
+    lastActiveAt?: boolean
+    sleepUntil?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type BotProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "profileId" | "botType" | "activityLevel" | "ethnicity" | "occupation" | "industry" | "educationLevel" | "incomeRange" | "interests" | "hobbies" | "musicGenres" | "movieGenres" | "onlinePattern" | "avgResponseTime" | "maxDailyMatches" | "behaviorConfig" | "preferredEthnicities" | "preferredOccupations" | "preferredEducation" | "totalInteractions" | "successfulMatches" | "avgEngagementScore" | "learningData" | "avatarStyle" | "avatarSource" | "isActive" | "lastActiveAt" | "sleepUntil" | "createdAt" | "updatedAt", ExtArgs["result"]["botProfile"]>
+  export type BotProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    profile?: boolean | ProfileDefaultArgs<ExtArgs>
+  }
+  export type BotProfileIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    profile?: boolean | ProfileDefaultArgs<ExtArgs>
+  }
+  export type BotProfileIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    profile?: boolean | ProfileDefaultArgs<ExtArgs>
+  }
+
+  export type $BotProfilePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BotProfile"
+    objects: {
+      profile: Prisma.$ProfilePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      profileId: string
+      botType: $Enums.BotType
+      activityLevel: $Enums.BotActivityLevel
+      ethnicity: $Enums.Ethnicity | null
+      occupation: string | null
+      industry: string | null
+      educationLevel: string | null
+      incomeRange: string | null
+      interests: string[]
+      hobbies: string[]
+      musicGenres: string[]
+      movieGenres: string[]
+      onlinePattern: $Enums.OnlinePattern
+      avgResponseTime: number
+      maxDailyMatches: number
+      behaviorConfig: string | null
+      preferredEthnicities: $Enums.Ethnicity[]
+      preferredOccupations: string[]
+      preferredEducation: string[]
+      totalInteractions: number
+      successfulMatches: number
+      avgEngagementScore: number
+      learningData: string | null
+      avatarStyle: string | null
+      avatarSource: string | null
+      isActive: boolean
+      lastActiveAt: Date | null
+      sleepUntil: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["botProfile"]>
+    composites: {}
+  }
+
+  type BotProfileGetPayload<S extends boolean | null | undefined | BotProfileDefaultArgs> = $Result.GetResult<Prisma.$BotProfilePayload, S>
+
+  type BotProfileCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BotProfileFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BotProfileCountAggregateInputType | true
+    }
+
+  export interface BotProfileDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BotProfile'], meta: { name: 'BotProfile' } }
+    /**
+     * Find zero or one BotProfile that matches the filter.
+     * @param {BotProfileFindUniqueArgs} args - Arguments to find a BotProfile
+     * @example
+     * // Get one BotProfile
+     * const botProfile = await prisma.botProfile.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BotProfileFindUniqueArgs>(args: SelectSubset<T, BotProfileFindUniqueArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BotProfile that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BotProfileFindUniqueOrThrowArgs} args - Arguments to find a BotProfile
+     * @example
+     * // Get one BotProfile
+     * const botProfile = await prisma.botProfile.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BotProfileFindUniqueOrThrowArgs>(args: SelectSubset<T, BotProfileFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotProfile that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotProfileFindFirstArgs} args - Arguments to find a BotProfile
+     * @example
+     * // Get one BotProfile
+     * const botProfile = await prisma.botProfile.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BotProfileFindFirstArgs>(args?: SelectSubset<T, BotProfileFindFirstArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotProfile that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotProfileFindFirstOrThrowArgs} args - Arguments to find a BotProfile
+     * @example
+     * // Get one BotProfile
+     * const botProfile = await prisma.botProfile.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BotProfileFindFirstOrThrowArgs>(args?: SelectSubset<T, BotProfileFindFirstOrThrowArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BotProfiles that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotProfileFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BotProfiles
+     * const botProfiles = await prisma.botProfile.findMany()
+     * 
+     * // Get first 10 BotProfiles
+     * const botProfiles = await prisma.botProfile.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const botProfileWithIdOnly = await prisma.botProfile.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BotProfileFindManyArgs>(args?: SelectSubset<T, BotProfileFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BotProfile.
+     * @param {BotProfileCreateArgs} args - Arguments to create a BotProfile.
+     * @example
+     * // Create one BotProfile
+     * const BotProfile = await prisma.botProfile.create({
+     *   data: {
+     *     // ... data to create a BotProfile
+     *   }
+     * })
+     * 
+     */
+    create<T extends BotProfileCreateArgs>(args: SelectSubset<T, BotProfileCreateArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BotProfiles.
+     * @param {BotProfileCreateManyArgs} args - Arguments to create many BotProfiles.
+     * @example
+     * // Create many BotProfiles
+     * const botProfile = await prisma.botProfile.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BotProfileCreateManyArgs>(args?: SelectSubset<T, BotProfileCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BotProfiles and returns the data saved in the database.
+     * @param {BotProfileCreateManyAndReturnArgs} args - Arguments to create many BotProfiles.
+     * @example
+     * // Create many BotProfiles
+     * const botProfile = await prisma.botProfile.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BotProfiles and only return the `id`
+     * const botProfileWithIdOnly = await prisma.botProfile.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BotProfileCreateManyAndReturnArgs>(args?: SelectSubset<T, BotProfileCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BotProfile.
+     * @param {BotProfileDeleteArgs} args - Arguments to delete one BotProfile.
+     * @example
+     * // Delete one BotProfile
+     * const BotProfile = await prisma.botProfile.delete({
+     *   where: {
+     *     // ... filter to delete one BotProfile
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BotProfileDeleteArgs>(args: SelectSubset<T, BotProfileDeleteArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BotProfile.
+     * @param {BotProfileUpdateArgs} args - Arguments to update one BotProfile.
+     * @example
+     * // Update one BotProfile
+     * const botProfile = await prisma.botProfile.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BotProfileUpdateArgs>(args: SelectSubset<T, BotProfileUpdateArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BotProfiles.
+     * @param {BotProfileDeleteManyArgs} args - Arguments to filter BotProfiles to delete.
+     * @example
+     * // Delete a few BotProfiles
+     * const { count } = await prisma.botProfile.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BotProfileDeleteManyArgs>(args?: SelectSubset<T, BotProfileDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotProfiles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotProfileUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BotProfiles
+     * const botProfile = await prisma.botProfile.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BotProfileUpdateManyArgs>(args: SelectSubset<T, BotProfileUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotProfiles and returns the data updated in the database.
+     * @param {BotProfileUpdateManyAndReturnArgs} args - Arguments to update many BotProfiles.
+     * @example
+     * // Update many BotProfiles
+     * const botProfile = await prisma.botProfile.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BotProfiles and only return the `id`
+     * const botProfileWithIdOnly = await prisma.botProfile.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BotProfileUpdateManyAndReturnArgs>(args: SelectSubset<T, BotProfileUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BotProfile.
+     * @param {BotProfileUpsertArgs} args - Arguments to update or create a BotProfile.
+     * @example
+     * // Update or create a BotProfile
+     * const botProfile = await prisma.botProfile.upsert({
+     *   create: {
+     *     // ... data to create a BotProfile
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BotProfile we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BotProfileUpsertArgs>(args: SelectSubset<T, BotProfileUpsertArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BotProfiles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotProfileCountArgs} args - Arguments to filter BotProfiles to count.
+     * @example
+     * // Count the number of BotProfiles
+     * const count = await prisma.botProfile.count({
+     *   where: {
+     *     // ... the filter for the BotProfiles we want to count
+     *   }
+     * })
+    **/
+    count<T extends BotProfileCountArgs>(
+      args?: Subset<T, BotProfileCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BotProfileCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BotProfile.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotProfileAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BotProfileAggregateArgs>(args: Subset<T, BotProfileAggregateArgs>): Prisma.PrismaPromise<GetBotProfileAggregateType<T>>
+
+    /**
+     * Group by BotProfile.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotProfileGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BotProfileGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BotProfileGroupByArgs['orderBy'] }
+        : { orderBy?: BotProfileGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BotProfileGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBotProfileGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BotProfile model
+   */
+  readonly fields: BotProfileFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BotProfile.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BotProfileClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    profile<T extends ProfileDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProfileDefaultArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BotProfile model
+   */
+  interface BotProfileFieldRefs {
+    readonly id: FieldRef<"BotProfile", 'String'>
+    readonly profileId: FieldRef<"BotProfile", 'String'>
+    readonly botType: FieldRef<"BotProfile", 'BotType'>
+    readonly activityLevel: FieldRef<"BotProfile", 'BotActivityLevel'>
+    readonly ethnicity: FieldRef<"BotProfile", 'Ethnicity'>
+    readonly occupation: FieldRef<"BotProfile", 'String'>
+    readonly industry: FieldRef<"BotProfile", 'String'>
+    readonly educationLevel: FieldRef<"BotProfile", 'String'>
+    readonly incomeRange: FieldRef<"BotProfile", 'String'>
+    readonly interests: FieldRef<"BotProfile", 'String[]'>
+    readonly hobbies: FieldRef<"BotProfile", 'String[]'>
+    readonly musicGenres: FieldRef<"BotProfile", 'String[]'>
+    readonly movieGenres: FieldRef<"BotProfile", 'String[]'>
+    readonly onlinePattern: FieldRef<"BotProfile", 'OnlinePattern'>
+    readonly avgResponseTime: FieldRef<"BotProfile", 'Int'>
+    readonly maxDailyMatches: FieldRef<"BotProfile", 'Int'>
+    readonly behaviorConfig: FieldRef<"BotProfile", 'String'>
+    readonly preferredEthnicities: FieldRef<"BotProfile", 'Ethnicity[]'>
+    readonly preferredOccupations: FieldRef<"BotProfile", 'String[]'>
+    readonly preferredEducation: FieldRef<"BotProfile", 'String[]'>
+    readonly totalInteractions: FieldRef<"BotProfile", 'Int'>
+    readonly successfulMatches: FieldRef<"BotProfile", 'Int'>
+    readonly avgEngagementScore: FieldRef<"BotProfile", 'Float'>
+    readonly learningData: FieldRef<"BotProfile", 'String'>
+    readonly avatarStyle: FieldRef<"BotProfile", 'String'>
+    readonly avatarSource: FieldRef<"BotProfile", 'String'>
+    readonly isActive: FieldRef<"BotProfile", 'Boolean'>
+    readonly lastActiveAt: FieldRef<"BotProfile", 'DateTime'>
+    readonly sleepUntil: FieldRef<"BotProfile", 'DateTime'>
+    readonly createdAt: FieldRef<"BotProfile", 'DateTime'>
+    readonly updatedAt: FieldRef<"BotProfile", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BotProfile findUnique
+   */
+  export type BotProfileFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which BotProfile to fetch.
+     */
+    where: BotProfileWhereUniqueInput
+  }
+
+  /**
+   * BotProfile findUniqueOrThrow
+   */
+  export type BotProfileFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which BotProfile to fetch.
+     */
+    where: BotProfileWhereUniqueInput
+  }
+
+  /**
+   * BotProfile findFirst
+   */
+  export type BotProfileFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which BotProfile to fetch.
+     */
+    where?: BotProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotProfiles to fetch.
+     */
+    orderBy?: BotProfileOrderByWithRelationInput | BotProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotProfiles.
+     */
+    cursor?: BotProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotProfiles.
+     */
+    distinct?: BotProfileScalarFieldEnum | BotProfileScalarFieldEnum[]
+  }
+
+  /**
+   * BotProfile findFirstOrThrow
+   */
+  export type BotProfileFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which BotProfile to fetch.
+     */
+    where?: BotProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotProfiles to fetch.
+     */
+    orderBy?: BotProfileOrderByWithRelationInput | BotProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotProfiles.
+     */
+    cursor?: BotProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotProfiles.
+     */
+    distinct?: BotProfileScalarFieldEnum | BotProfileScalarFieldEnum[]
+  }
+
+  /**
+   * BotProfile findMany
+   */
+  export type BotProfileFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which BotProfiles to fetch.
+     */
+    where?: BotProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotProfiles to fetch.
+     */
+    orderBy?: BotProfileOrderByWithRelationInput | BotProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BotProfiles.
+     */
+    cursor?: BotProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotProfiles.
+     */
+    distinct?: BotProfileScalarFieldEnum | BotProfileScalarFieldEnum[]
+  }
+
+  /**
+   * BotProfile create
+   */
+  export type BotProfileCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * The data needed to create a BotProfile.
+     */
+    data: XOR<BotProfileCreateInput, BotProfileUncheckedCreateInput>
+  }
+
+  /**
+   * BotProfile createMany
+   */
+  export type BotProfileCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BotProfiles.
+     */
+    data: BotProfileCreateManyInput | BotProfileCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotProfile createManyAndReturn
+   */
+  export type BotProfileCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * The data used to create many BotProfiles.
+     */
+    data: BotProfileCreateManyInput | BotProfileCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BotProfile update
+   */
+  export type BotProfileUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * The data needed to update a BotProfile.
+     */
+    data: XOR<BotProfileUpdateInput, BotProfileUncheckedUpdateInput>
+    /**
+     * Choose, which BotProfile to update.
+     */
+    where: BotProfileWhereUniqueInput
+  }
+
+  /**
+   * BotProfile updateMany
+   */
+  export type BotProfileUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BotProfiles.
+     */
+    data: XOR<BotProfileUpdateManyMutationInput, BotProfileUncheckedUpdateManyInput>
+    /**
+     * Filter which BotProfiles to update
+     */
+    where?: BotProfileWhereInput
+    /**
+     * Limit how many BotProfiles to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotProfile updateManyAndReturn
+   */
+  export type BotProfileUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * The data used to update BotProfiles.
+     */
+    data: XOR<BotProfileUpdateManyMutationInput, BotProfileUncheckedUpdateManyInput>
+    /**
+     * Filter which BotProfiles to update
+     */
+    where?: BotProfileWhereInput
+    /**
+     * Limit how many BotProfiles to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BotProfile upsert
+   */
+  export type BotProfileUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * The filter to search for the BotProfile to update in case it exists.
+     */
+    where: BotProfileWhereUniqueInput
+    /**
+     * In case the BotProfile found by the `where` argument doesn't exist, create a new BotProfile with this data.
+     */
+    create: XOR<BotProfileCreateInput, BotProfileUncheckedCreateInput>
+    /**
+     * In case the BotProfile was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BotProfileUpdateInput, BotProfileUncheckedUpdateInput>
+  }
+
+  /**
+   * BotProfile delete
+   */
+  export type BotProfileDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    /**
+     * Filter which BotProfile to delete.
+     */
+    where: BotProfileWhereUniqueInput
+  }
+
+  /**
+   * BotProfile deleteMany
+   */
+  export type BotProfileDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotProfiles to delete
+     */
+    where?: BotProfileWhereInput
+    /**
+     * Limit how many BotProfiles to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotProfile without action
+   */
+  export type BotProfileDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BotInteractionLog
+   */
+
+  export type AggregateBotInteractionLog = {
+    _count: BotInteractionLogCountAggregateOutputType | null
+    _avg: BotInteractionLogAvgAggregateOutputType | null
+    _sum: BotInteractionLogSumAggregateOutputType | null
+    _min: BotInteractionLogMinAggregateOutputType | null
+    _max: BotInteractionLogMaxAggregateOutputType | null
+  }
+
+  export type BotInteractionLogAvgAggregateOutputType = {
+    responseDelay: number | null
+    engagementScore: number | null
+  }
+
+  export type BotInteractionLogSumAggregateOutputType = {
+    responseDelay: number | null
+    engagementScore: number | null
+  }
+
+  export type BotInteractionLogMinAggregateOutputType = {
+    id: string | null
+    botUserId: string | null
+    targetUserId: string | null
+    matchId: string | null
+    interactionType: string | null
+    action: string | null
+    responseDelay: number | null
+    outcome: string | null
+    engagementScore: number | null
+    context: string | null
+    createdAt: Date | null
+  }
+
+  export type BotInteractionLogMaxAggregateOutputType = {
+    id: string | null
+    botUserId: string | null
+    targetUserId: string | null
+    matchId: string | null
+    interactionType: string | null
+    action: string | null
+    responseDelay: number | null
+    outcome: string | null
+    engagementScore: number | null
+    context: string | null
+    createdAt: Date | null
+  }
+
+  export type BotInteractionLogCountAggregateOutputType = {
+    id: number
+    botUserId: number
+    targetUserId: number
+    matchId: number
+    interactionType: number
+    action: number
+    responseDelay: number
+    outcome: number
+    engagementScore: number
+    context: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type BotInteractionLogAvgAggregateInputType = {
+    responseDelay?: true
+    engagementScore?: true
+  }
+
+  export type BotInteractionLogSumAggregateInputType = {
+    responseDelay?: true
+    engagementScore?: true
+  }
+
+  export type BotInteractionLogMinAggregateInputType = {
+    id?: true
+    botUserId?: true
+    targetUserId?: true
+    matchId?: true
+    interactionType?: true
+    action?: true
+    responseDelay?: true
+    outcome?: true
+    engagementScore?: true
+    context?: true
+    createdAt?: true
+  }
+
+  export type BotInteractionLogMaxAggregateInputType = {
+    id?: true
+    botUserId?: true
+    targetUserId?: true
+    matchId?: true
+    interactionType?: true
+    action?: true
+    responseDelay?: true
+    outcome?: true
+    engagementScore?: true
+    context?: true
+    createdAt?: true
+  }
+
+  export type BotInteractionLogCountAggregateInputType = {
+    id?: true
+    botUserId?: true
+    targetUserId?: true
+    matchId?: true
+    interactionType?: true
+    action?: true
+    responseDelay?: true
+    outcome?: true
+    engagementScore?: true
+    context?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type BotInteractionLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotInteractionLog to aggregate.
+     */
+    where?: BotInteractionLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotInteractionLogs to fetch.
+     */
+    orderBy?: BotInteractionLogOrderByWithRelationInput | BotInteractionLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BotInteractionLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotInteractionLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotInteractionLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BotInteractionLogs
+    **/
+    _count?: true | BotInteractionLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: BotInteractionLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: BotInteractionLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BotInteractionLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BotInteractionLogMaxAggregateInputType
+  }
+
+  export type GetBotInteractionLogAggregateType<T extends BotInteractionLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateBotInteractionLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBotInteractionLog[P]>
+      : GetScalarType<T[P], AggregateBotInteractionLog[P]>
+  }
+
+
+
+
+  export type BotInteractionLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotInteractionLogWhereInput
+    orderBy?: BotInteractionLogOrderByWithAggregationInput | BotInteractionLogOrderByWithAggregationInput[]
+    by: BotInteractionLogScalarFieldEnum[] | BotInteractionLogScalarFieldEnum
+    having?: BotInteractionLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BotInteractionLogCountAggregateInputType | true
+    _avg?: BotInteractionLogAvgAggregateInputType
+    _sum?: BotInteractionLogSumAggregateInputType
+    _min?: BotInteractionLogMinAggregateInputType
+    _max?: BotInteractionLogMaxAggregateInputType
+  }
+
+  export type BotInteractionLogGroupByOutputType = {
+    id: string
+    botUserId: string
+    targetUserId: string | null
+    matchId: string | null
+    interactionType: string
+    action: string
+    responseDelay: number | null
+    outcome: string | null
+    engagementScore: number | null
+    context: string | null
+    createdAt: Date
+    _count: BotInteractionLogCountAggregateOutputType | null
+    _avg: BotInteractionLogAvgAggregateOutputType | null
+    _sum: BotInteractionLogSumAggregateOutputType | null
+    _min: BotInteractionLogMinAggregateOutputType | null
+    _max: BotInteractionLogMaxAggregateOutputType | null
+  }
+
+  type GetBotInteractionLogGroupByPayload<T extends BotInteractionLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BotInteractionLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BotInteractionLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BotInteractionLogGroupByOutputType[P]>
+            : GetScalarType<T[P], BotInteractionLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BotInteractionLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botUserId?: boolean
+    targetUserId?: boolean
+    matchId?: boolean
+    interactionType?: boolean
+    action?: boolean
+    responseDelay?: boolean
+    outcome?: boolean
+    engagementScore?: boolean
+    context?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["botInteractionLog"]>
+
+  export type BotInteractionLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botUserId?: boolean
+    targetUserId?: boolean
+    matchId?: boolean
+    interactionType?: boolean
+    action?: boolean
+    responseDelay?: boolean
+    outcome?: boolean
+    engagementScore?: boolean
+    context?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["botInteractionLog"]>
+
+  export type BotInteractionLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botUserId?: boolean
+    targetUserId?: boolean
+    matchId?: boolean
+    interactionType?: boolean
+    action?: boolean
+    responseDelay?: boolean
+    outcome?: boolean
+    engagementScore?: boolean
+    context?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["botInteractionLog"]>
+
+  export type BotInteractionLogSelectScalar = {
+    id?: boolean
+    botUserId?: boolean
+    targetUserId?: boolean
+    matchId?: boolean
+    interactionType?: boolean
+    action?: boolean
+    responseDelay?: boolean
+    outcome?: boolean
+    engagementScore?: boolean
+    context?: boolean
+    createdAt?: boolean
+  }
+
+  export type BotInteractionLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botUserId" | "targetUserId" | "matchId" | "interactionType" | "action" | "responseDelay" | "outcome" | "engagementScore" | "context" | "createdAt", ExtArgs["result"]["botInteractionLog"]>
+
+  export type $BotInteractionLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BotInteractionLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      botUserId: string
+      targetUserId: string | null
+      matchId: string | null
+      interactionType: string
+      action: string
+      responseDelay: number | null
+      outcome: string | null
+      engagementScore: number | null
+      context: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["botInteractionLog"]>
+    composites: {}
+  }
+
+  type BotInteractionLogGetPayload<S extends boolean | null | undefined | BotInteractionLogDefaultArgs> = $Result.GetResult<Prisma.$BotInteractionLogPayload, S>
+
+  type BotInteractionLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BotInteractionLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BotInteractionLogCountAggregateInputType | true
+    }
+
+  export interface BotInteractionLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BotInteractionLog'], meta: { name: 'BotInteractionLog' } }
+    /**
+     * Find zero or one BotInteractionLog that matches the filter.
+     * @param {BotInteractionLogFindUniqueArgs} args - Arguments to find a BotInteractionLog
+     * @example
+     * // Get one BotInteractionLog
+     * const botInteractionLog = await prisma.botInteractionLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BotInteractionLogFindUniqueArgs>(args: SelectSubset<T, BotInteractionLogFindUniqueArgs<ExtArgs>>): Prisma__BotInteractionLogClient<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BotInteractionLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BotInteractionLogFindUniqueOrThrowArgs} args - Arguments to find a BotInteractionLog
+     * @example
+     * // Get one BotInteractionLog
+     * const botInteractionLog = await prisma.botInteractionLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BotInteractionLogFindUniqueOrThrowArgs>(args: SelectSubset<T, BotInteractionLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BotInteractionLogClient<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotInteractionLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotInteractionLogFindFirstArgs} args - Arguments to find a BotInteractionLog
+     * @example
+     * // Get one BotInteractionLog
+     * const botInteractionLog = await prisma.botInteractionLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BotInteractionLogFindFirstArgs>(args?: SelectSubset<T, BotInteractionLogFindFirstArgs<ExtArgs>>): Prisma__BotInteractionLogClient<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotInteractionLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotInteractionLogFindFirstOrThrowArgs} args - Arguments to find a BotInteractionLog
+     * @example
+     * // Get one BotInteractionLog
+     * const botInteractionLog = await prisma.botInteractionLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BotInteractionLogFindFirstOrThrowArgs>(args?: SelectSubset<T, BotInteractionLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__BotInteractionLogClient<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BotInteractionLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotInteractionLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BotInteractionLogs
+     * const botInteractionLogs = await prisma.botInteractionLog.findMany()
+     * 
+     * // Get first 10 BotInteractionLogs
+     * const botInteractionLogs = await prisma.botInteractionLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const botInteractionLogWithIdOnly = await prisma.botInteractionLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BotInteractionLogFindManyArgs>(args?: SelectSubset<T, BotInteractionLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BotInteractionLog.
+     * @param {BotInteractionLogCreateArgs} args - Arguments to create a BotInteractionLog.
+     * @example
+     * // Create one BotInteractionLog
+     * const BotInteractionLog = await prisma.botInteractionLog.create({
+     *   data: {
+     *     // ... data to create a BotInteractionLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends BotInteractionLogCreateArgs>(args: SelectSubset<T, BotInteractionLogCreateArgs<ExtArgs>>): Prisma__BotInteractionLogClient<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BotInteractionLogs.
+     * @param {BotInteractionLogCreateManyArgs} args - Arguments to create many BotInteractionLogs.
+     * @example
+     * // Create many BotInteractionLogs
+     * const botInteractionLog = await prisma.botInteractionLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BotInteractionLogCreateManyArgs>(args?: SelectSubset<T, BotInteractionLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BotInteractionLogs and returns the data saved in the database.
+     * @param {BotInteractionLogCreateManyAndReturnArgs} args - Arguments to create many BotInteractionLogs.
+     * @example
+     * // Create many BotInteractionLogs
+     * const botInteractionLog = await prisma.botInteractionLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BotInteractionLogs and only return the `id`
+     * const botInteractionLogWithIdOnly = await prisma.botInteractionLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BotInteractionLogCreateManyAndReturnArgs>(args?: SelectSubset<T, BotInteractionLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BotInteractionLog.
+     * @param {BotInteractionLogDeleteArgs} args - Arguments to delete one BotInteractionLog.
+     * @example
+     * // Delete one BotInteractionLog
+     * const BotInteractionLog = await prisma.botInteractionLog.delete({
+     *   where: {
+     *     // ... filter to delete one BotInteractionLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BotInteractionLogDeleteArgs>(args: SelectSubset<T, BotInteractionLogDeleteArgs<ExtArgs>>): Prisma__BotInteractionLogClient<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BotInteractionLog.
+     * @param {BotInteractionLogUpdateArgs} args - Arguments to update one BotInteractionLog.
+     * @example
+     * // Update one BotInteractionLog
+     * const botInteractionLog = await prisma.botInteractionLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BotInteractionLogUpdateArgs>(args: SelectSubset<T, BotInteractionLogUpdateArgs<ExtArgs>>): Prisma__BotInteractionLogClient<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BotInteractionLogs.
+     * @param {BotInteractionLogDeleteManyArgs} args - Arguments to filter BotInteractionLogs to delete.
+     * @example
+     * // Delete a few BotInteractionLogs
+     * const { count } = await prisma.botInteractionLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BotInteractionLogDeleteManyArgs>(args?: SelectSubset<T, BotInteractionLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotInteractionLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotInteractionLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BotInteractionLogs
+     * const botInteractionLog = await prisma.botInteractionLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BotInteractionLogUpdateManyArgs>(args: SelectSubset<T, BotInteractionLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotInteractionLogs and returns the data updated in the database.
+     * @param {BotInteractionLogUpdateManyAndReturnArgs} args - Arguments to update many BotInteractionLogs.
+     * @example
+     * // Update many BotInteractionLogs
+     * const botInteractionLog = await prisma.botInteractionLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BotInteractionLogs and only return the `id`
+     * const botInteractionLogWithIdOnly = await prisma.botInteractionLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BotInteractionLogUpdateManyAndReturnArgs>(args: SelectSubset<T, BotInteractionLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BotInteractionLog.
+     * @param {BotInteractionLogUpsertArgs} args - Arguments to update or create a BotInteractionLog.
+     * @example
+     * // Update or create a BotInteractionLog
+     * const botInteractionLog = await prisma.botInteractionLog.upsert({
+     *   create: {
+     *     // ... data to create a BotInteractionLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BotInteractionLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BotInteractionLogUpsertArgs>(args: SelectSubset<T, BotInteractionLogUpsertArgs<ExtArgs>>): Prisma__BotInteractionLogClient<$Result.GetResult<Prisma.$BotInteractionLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BotInteractionLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotInteractionLogCountArgs} args - Arguments to filter BotInteractionLogs to count.
+     * @example
+     * // Count the number of BotInteractionLogs
+     * const count = await prisma.botInteractionLog.count({
+     *   where: {
+     *     // ... the filter for the BotInteractionLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends BotInteractionLogCountArgs>(
+      args?: Subset<T, BotInteractionLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BotInteractionLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BotInteractionLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotInteractionLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BotInteractionLogAggregateArgs>(args: Subset<T, BotInteractionLogAggregateArgs>): Prisma.PrismaPromise<GetBotInteractionLogAggregateType<T>>
+
+    /**
+     * Group by BotInteractionLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotInteractionLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BotInteractionLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BotInteractionLogGroupByArgs['orderBy'] }
+        : { orderBy?: BotInteractionLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BotInteractionLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBotInteractionLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BotInteractionLog model
+   */
+  readonly fields: BotInteractionLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BotInteractionLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BotInteractionLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BotInteractionLog model
+   */
+  interface BotInteractionLogFieldRefs {
+    readonly id: FieldRef<"BotInteractionLog", 'String'>
+    readonly botUserId: FieldRef<"BotInteractionLog", 'String'>
+    readonly targetUserId: FieldRef<"BotInteractionLog", 'String'>
+    readonly matchId: FieldRef<"BotInteractionLog", 'String'>
+    readonly interactionType: FieldRef<"BotInteractionLog", 'String'>
+    readonly action: FieldRef<"BotInteractionLog", 'String'>
+    readonly responseDelay: FieldRef<"BotInteractionLog", 'Int'>
+    readonly outcome: FieldRef<"BotInteractionLog", 'String'>
+    readonly engagementScore: FieldRef<"BotInteractionLog", 'Int'>
+    readonly context: FieldRef<"BotInteractionLog", 'String'>
+    readonly createdAt: FieldRef<"BotInteractionLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BotInteractionLog findUnique
+   */
+  export type BotInteractionLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * Filter, which BotInteractionLog to fetch.
+     */
+    where: BotInteractionLogWhereUniqueInput
+  }
+
+  /**
+   * BotInteractionLog findUniqueOrThrow
+   */
+  export type BotInteractionLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * Filter, which BotInteractionLog to fetch.
+     */
+    where: BotInteractionLogWhereUniqueInput
+  }
+
+  /**
+   * BotInteractionLog findFirst
+   */
+  export type BotInteractionLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * Filter, which BotInteractionLog to fetch.
+     */
+    where?: BotInteractionLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotInteractionLogs to fetch.
+     */
+    orderBy?: BotInteractionLogOrderByWithRelationInput | BotInteractionLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotInteractionLogs.
+     */
+    cursor?: BotInteractionLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotInteractionLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotInteractionLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotInteractionLogs.
+     */
+    distinct?: BotInteractionLogScalarFieldEnum | BotInteractionLogScalarFieldEnum[]
+  }
+
+  /**
+   * BotInteractionLog findFirstOrThrow
+   */
+  export type BotInteractionLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * Filter, which BotInteractionLog to fetch.
+     */
+    where?: BotInteractionLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotInteractionLogs to fetch.
+     */
+    orderBy?: BotInteractionLogOrderByWithRelationInput | BotInteractionLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotInteractionLogs.
+     */
+    cursor?: BotInteractionLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotInteractionLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotInteractionLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotInteractionLogs.
+     */
+    distinct?: BotInteractionLogScalarFieldEnum | BotInteractionLogScalarFieldEnum[]
+  }
+
+  /**
+   * BotInteractionLog findMany
+   */
+  export type BotInteractionLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * Filter, which BotInteractionLogs to fetch.
+     */
+    where?: BotInteractionLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotInteractionLogs to fetch.
+     */
+    orderBy?: BotInteractionLogOrderByWithRelationInput | BotInteractionLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BotInteractionLogs.
+     */
+    cursor?: BotInteractionLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotInteractionLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotInteractionLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotInteractionLogs.
+     */
+    distinct?: BotInteractionLogScalarFieldEnum | BotInteractionLogScalarFieldEnum[]
+  }
+
+  /**
+   * BotInteractionLog create
+   */
+  export type BotInteractionLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * The data needed to create a BotInteractionLog.
+     */
+    data: XOR<BotInteractionLogCreateInput, BotInteractionLogUncheckedCreateInput>
+  }
+
+  /**
+   * BotInteractionLog createMany
+   */
+  export type BotInteractionLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BotInteractionLogs.
+     */
+    data: BotInteractionLogCreateManyInput | BotInteractionLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotInteractionLog createManyAndReturn
+   */
+  export type BotInteractionLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many BotInteractionLogs.
+     */
+    data: BotInteractionLogCreateManyInput | BotInteractionLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotInteractionLog update
+   */
+  export type BotInteractionLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * The data needed to update a BotInteractionLog.
+     */
+    data: XOR<BotInteractionLogUpdateInput, BotInteractionLogUncheckedUpdateInput>
+    /**
+     * Choose, which BotInteractionLog to update.
+     */
+    where: BotInteractionLogWhereUniqueInput
+  }
+
+  /**
+   * BotInteractionLog updateMany
+   */
+  export type BotInteractionLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BotInteractionLogs.
+     */
+    data: XOR<BotInteractionLogUpdateManyMutationInput, BotInteractionLogUncheckedUpdateManyInput>
+    /**
+     * Filter which BotInteractionLogs to update
+     */
+    where?: BotInteractionLogWhereInput
+    /**
+     * Limit how many BotInteractionLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotInteractionLog updateManyAndReturn
+   */
+  export type BotInteractionLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * The data used to update BotInteractionLogs.
+     */
+    data: XOR<BotInteractionLogUpdateManyMutationInput, BotInteractionLogUncheckedUpdateManyInput>
+    /**
+     * Filter which BotInteractionLogs to update
+     */
+    where?: BotInteractionLogWhereInput
+    /**
+     * Limit how many BotInteractionLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotInteractionLog upsert
+   */
+  export type BotInteractionLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * The filter to search for the BotInteractionLog to update in case it exists.
+     */
+    where: BotInteractionLogWhereUniqueInput
+    /**
+     * In case the BotInteractionLog found by the `where` argument doesn't exist, create a new BotInteractionLog with this data.
+     */
+    create: XOR<BotInteractionLogCreateInput, BotInteractionLogUncheckedCreateInput>
+    /**
+     * In case the BotInteractionLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BotInteractionLogUpdateInput, BotInteractionLogUncheckedUpdateInput>
+  }
+
+  /**
+   * BotInteractionLog delete
+   */
+  export type BotInteractionLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+    /**
+     * Filter which BotInteractionLog to delete.
+     */
+    where: BotInteractionLogWhereUniqueInput
+  }
+
+  /**
+   * BotInteractionLog deleteMany
+   */
+  export type BotInteractionLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotInteractionLogs to delete
+     */
+    where?: BotInteractionLogWhereInput
+    /**
+     * Limit how many BotInteractionLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotInteractionLog without action
+   */
+  export type BotInteractionLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotInteractionLog
+     */
+    select?: BotInteractionLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotInteractionLog
+     */
+    omit?: BotInteractionLogOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BotLearningBatch
+   */
+
+  export type AggregateBotLearningBatch = {
+    _count: BotLearningBatchCountAggregateOutputType | null
+    _avg: BotLearningBatchAvgAggregateOutputType | null
+    _sum: BotLearningBatchSumAggregateOutputType | null
+    _min: BotLearningBatchMinAggregateOutputType | null
+    _max: BotLearningBatchMaxAggregateOutputType | null
+  }
+
+  export type BotLearningBatchAvgAggregateOutputType = {
+    batchNumber: number | null
+    totalInteractions: number | null
+    avgEngagement: number | null
+    successRate: number | null
+  }
+
+  export type BotLearningBatchSumAggregateOutputType = {
+    batchNumber: number | null
+    totalInteractions: number | null
+    avgEngagement: number | null
+    successRate: number | null
+  }
+
+  export type BotLearningBatchMinAggregateOutputType = {
+    id: string | null
+    batchNumber: number | null
+    status: string | null
+    startDate: Date | null
+    endDate: Date | null
+    totalInteractions: number | null
+    avgEngagement: number | null
+    successRate: number | null
+    preferenceUpdates: string | null
+    executionLog: string | null
+    createdAt: Date | null
+    completedAt: Date | null
+  }
+
+  export type BotLearningBatchMaxAggregateOutputType = {
+    id: string | null
+    batchNumber: number | null
+    status: string | null
+    startDate: Date | null
+    endDate: Date | null
+    totalInteractions: number | null
+    avgEngagement: number | null
+    successRate: number | null
+    preferenceUpdates: string | null
+    executionLog: string | null
+    createdAt: Date | null
+    completedAt: Date | null
+  }
+
+  export type BotLearningBatchCountAggregateOutputType = {
+    id: number
+    batchNumber: number
+    status: number
+    startDate: number
+    endDate: number
+    totalInteractions: number
+    avgEngagement: number
+    successRate: number
+    preferenceUpdates: number
+    executionLog: number
+    createdAt: number
+    completedAt: number
+    _all: number
+  }
+
+
+  export type BotLearningBatchAvgAggregateInputType = {
+    batchNumber?: true
+    totalInteractions?: true
+    avgEngagement?: true
+    successRate?: true
+  }
+
+  export type BotLearningBatchSumAggregateInputType = {
+    batchNumber?: true
+    totalInteractions?: true
+    avgEngagement?: true
+    successRate?: true
+  }
+
+  export type BotLearningBatchMinAggregateInputType = {
+    id?: true
+    batchNumber?: true
+    status?: true
+    startDate?: true
+    endDate?: true
+    totalInteractions?: true
+    avgEngagement?: true
+    successRate?: true
+    preferenceUpdates?: true
+    executionLog?: true
+    createdAt?: true
+    completedAt?: true
+  }
+
+  export type BotLearningBatchMaxAggregateInputType = {
+    id?: true
+    batchNumber?: true
+    status?: true
+    startDate?: true
+    endDate?: true
+    totalInteractions?: true
+    avgEngagement?: true
+    successRate?: true
+    preferenceUpdates?: true
+    executionLog?: true
+    createdAt?: true
+    completedAt?: true
+  }
+
+  export type BotLearningBatchCountAggregateInputType = {
+    id?: true
+    batchNumber?: true
+    status?: true
+    startDate?: true
+    endDate?: true
+    totalInteractions?: true
+    avgEngagement?: true
+    successRate?: true
+    preferenceUpdates?: true
+    executionLog?: true
+    createdAt?: true
+    completedAt?: true
+    _all?: true
+  }
+
+  export type BotLearningBatchAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotLearningBatch to aggregate.
+     */
+    where?: BotLearningBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotLearningBatches to fetch.
+     */
+    orderBy?: BotLearningBatchOrderByWithRelationInput | BotLearningBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BotLearningBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotLearningBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotLearningBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BotLearningBatches
+    **/
+    _count?: true | BotLearningBatchCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: BotLearningBatchAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: BotLearningBatchSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BotLearningBatchMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BotLearningBatchMaxAggregateInputType
+  }
+
+  export type GetBotLearningBatchAggregateType<T extends BotLearningBatchAggregateArgs> = {
+        [P in keyof T & keyof AggregateBotLearningBatch]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBotLearningBatch[P]>
+      : GetScalarType<T[P], AggregateBotLearningBatch[P]>
+  }
+
+
+
+
+  export type BotLearningBatchGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotLearningBatchWhereInput
+    orderBy?: BotLearningBatchOrderByWithAggregationInput | BotLearningBatchOrderByWithAggregationInput[]
+    by: BotLearningBatchScalarFieldEnum[] | BotLearningBatchScalarFieldEnum
+    having?: BotLearningBatchScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BotLearningBatchCountAggregateInputType | true
+    _avg?: BotLearningBatchAvgAggregateInputType
+    _sum?: BotLearningBatchSumAggregateInputType
+    _min?: BotLearningBatchMinAggregateInputType
+    _max?: BotLearningBatchMaxAggregateInputType
+  }
+
+  export type BotLearningBatchGroupByOutputType = {
+    id: string
+    batchNumber: number
+    status: string
+    startDate: Date
+    endDate: Date
+    totalInteractions: number
+    avgEngagement: number
+    successRate: number
+    preferenceUpdates: string | null
+    executionLog: string | null
+    createdAt: Date
+    completedAt: Date | null
+    _count: BotLearningBatchCountAggregateOutputType | null
+    _avg: BotLearningBatchAvgAggregateOutputType | null
+    _sum: BotLearningBatchSumAggregateOutputType | null
+    _min: BotLearningBatchMinAggregateOutputType | null
+    _max: BotLearningBatchMaxAggregateOutputType | null
+  }
+
+  type GetBotLearningBatchGroupByPayload<T extends BotLearningBatchGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BotLearningBatchGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BotLearningBatchGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BotLearningBatchGroupByOutputType[P]>
+            : GetScalarType<T[P], BotLearningBatchGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BotLearningBatchSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    batchNumber?: boolean
+    status?: boolean
+    startDate?: boolean
+    endDate?: boolean
+    totalInteractions?: boolean
+    avgEngagement?: boolean
+    successRate?: boolean
+    preferenceUpdates?: boolean
+    executionLog?: boolean
+    createdAt?: boolean
+    completedAt?: boolean
+  }, ExtArgs["result"]["botLearningBatch"]>
+
+  export type BotLearningBatchSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    batchNumber?: boolean
+    status?: boolean
+    startDate?: boolean
+    endDate?: boolean
+    totalInteractions?: boolean
+    avgEngagement?: boolean
+    successRate?: boolean
+    preferenceUpdates?: boolean
+    executionLog?: boolean
+    createdAt?: boolean
+    completedAt?: boolean
+  }, ExtArgs["result"]["botLearningBatch"]>
+
+  export type BotLearningBatchSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    batchNumber?: boolean
+    status?: boolean
+    startDate?: boolean
+    endDate?: boolean
+    totalInteractions?: boolean
+    avgEngagement?: boolean
+    successRate?: boolean
+    preferenceUpdates?: boolean
+    executionLog?: boolean
+    createdAt?: boolean
+    completedAt?: boolean
+  }, ExtArgs["result"]["botLearningBatch"]>
+
+  export type BotLearningBatchSelectScalar = {
+    id?: boolean
+    batchNumber?: boolean
+    status?: boolean
+    startDate?: boolean
+    endDate?: boolean
+    totalInteractions?: boolean
+    avgEngagement?: boolean
+    successRate?: boolean
+    preferenceUpdates?: boolean
+    executionLog?: boolean
+    createdAt?: boolean
+    completedAt?: boolean
+  }
+
+  export type BotLearningBatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "batchNumber" | "status" | "startDate" | "endDate" | "totalInteractions" | "avgEngagement" | "successRate" | "preferenceUpdates" | "executionLog" | "createdAt" | "completedAt", ExtArgs["result"]["botLearningBatch"]>
+
+  export type $BotLearningBatchPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BotLearningBatch"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      batchNumber: number
+      status: string
+      startDate: Date
+      endDate: Date
+      totalInteractions: number
+      avgEngagement: number
+      successRate: number
+      preferenceUpdates: string | null
+      executionLog: string | null
+      createdAt: Date
+      completedAt: Date | null
+    }, ExtArgs["result"]["botLearningBatch"]>
+    composites: {}
+  }
+
+  type BotLearningBatchGetPayload<S extends boolean | null | undefined | BotLearningBatchDefaultArgs> = $Result.GetResult<Prisma.$BotLearningBatchPayload, S>
+
+  type BotLearningBatchCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BotLearningBatchFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BotLearningBatchCountAggregateInputType | true
+    }
+
+  export interface BotLearningBatchDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BotLearningBatch'], meta: { name: 'BotLearningBatch' } }
+    /**
+     * Find zero or one BotLearningBatch that matches the filter.
+     * @param {BotLearningBatchFindUniqueArgs} args - Arguments to find a BotLearningBatch
+     * @example
+     * // Get one BotLearningBatch
+     * const botLearningBatch = await prisma.botLearningBatch.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BotLearningBatchFindUniqueArgs>(args: SelectSubset<T, BotLearningBatchFindUniqueArgs<ExtArgs>>): Prisma__BotLearningBatchClient<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BotLearningBatch that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BotLearningBatchFindUniqueOrThrowArgs} args - Arguments to find a BotLearningBatch
+     * @example
+     * // Get one BotLearningBatch
+     * const botLearningBatch = await prisma.botLearningBatch.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BotLearningBatchFindUniqueOrThrowArgs>(args: SelectSubset<T, BotLearningBatchFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BotLearningBatchClient<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotLearningBatch that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningBatchFindFirstArgs} args - Arguments to find a BotLearningBatch
+     * @example
+     * // Get one BotLearningBatch
+     * const botLearningBatch = await prisma.botLearningBatch.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BotLearningBatchFindFirstArgs>(args?: SelectSubset<T, BotLearningBatchFindFirstArgs<ExtArgs>>): Prisma__BotLearningBatchClient<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotLearningBatch that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningBatchFindFirstOrThrowArgs} args - Arguments to find a BotLearningBatch
+     * @example
+     * // Get one BotLearningBatch
+     * const botLearningBatch = await prisma.botLearningBatch.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BotLearningBatchFindFirstOrThrowArgs>(args?: SelectSubset<T, BotLearningBatchFindFirstOrThrowArgs<ExtArgs>>): Prisma__BotLearningBatchClient<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BotLearningBatches that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningBatchFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BotLearningBatches
+     * const botLearningBatches = await prisma.botLearningBatch.findMany()
+     * 
+     * // Get first 10 BotLearningBatches
+     * const botLearningBatches = await prisma.botLearningBatch.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const botLearningBatchWithIdOnly = await prisma.botLearningBatch.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BotLearningBatchFindManyArgs>(args?: SelectSubset<T, BotLearningBatchFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BotLearningBatch.
+     * @param {BotLearningBatchCreateArgs} args - Arguments to create a BotLearningBatch.
+     * @example
+     * // Create one BotLearningBatch
+     * const BotLearningBatch = await prisma.botLearningBatch.create({
+     *   data: {
+     *     // ... data to create a BotLearningBatch
+     *   }
+     * })
+     * 
+     */
+    create<T extends BotLearningBatchCreateArgs>(args: SelectSubset<T, BotLearningBatchCreateArgs<ExtArgs>>): Prisma__BotLearningBatchClient<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BotLearningBatches.
+     * @param {BotLearningBatchCreateManyArgs} args - Arguments to create many BotLearningBatches.
+     * @example
+     * // Create many BotLearningBatches
+     * const botLearningBatch = await prisma.botLearningBatch.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BotLearningBatchCreateManyArgs>(args?: SelectSubset<T, BotLearningBatchCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BotLearningBatches and returns the data saved in the database.
+     * @param {BotLearningBatchCreateManyAndReturnArgs} args - Arguments to create many BotLearningBatches.
+     * @example
+     * // Create many BotLearningBatches
+     * const botLearningBatch = await prisma.botLearningBatch.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BotLearningBatches and only return the `id`
+     * const botLearningBatchWithIdOnly = await prisma.botLearningBatch.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BotLearningBatchCreateManyAndReturnArgs>(args?: SelectSubset<T, BotLearningBatchCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BotLearningBatch.
+     * @param {BotLearningBatchDeleteArgs} args - Arguments to delete one BotLearningBatch.
+     * @example
+     * // Delete one BotLearningBatch
+     * const BotLearningBatch = await prisma.botLearningBatch.delete({
+     *   where: {
+     *     // ... filter to delete one BotLearningBatch
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BotLearningBatchDeleteArgs>(args: SelectSubset<T, BotLearningBatchDeleteArgs<ExtArgs>>): Prisma__BotLearningBatchClient<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BotLearningBatch.
+     * @param {BotLearningBatchUpdateArgs} args - Arguments to update one BotLearningBatch.
+     * @example
+     * // Update one BotLearningBatch
+     * const botLearningBatch = await prisma.botLearningBatch.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BotLearningBatchUpdateArgs>(args: SelectSubset<T, BotLearningBatchUpdateArgs<ExtArgs>>): Prisma__BotLearningBatchClient<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BotLearningBatches.
+     * @param {BotLearningBatchDeleteManyArgs} args - Arguments to filter BotLearningBatches to delete.
+     * @example
+     * // Delete a few BotLearningBatches
+     * const { count } = await prisma.botLearningBatch.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BotLearningBatchDeleteManyArgs>(args?: SelectSubset<T, BotLearningBatchDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotLearningBatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningBatchUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BotLearningBatches
+     * const botLearningBatch = await prisma.botLearningBatch.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BotLearningBatchUpdateManyArgs>(args: SelectSubset<T, BotLearningBatchUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotLearningBatches and returns the data updated in the database.
+     * @param {BotLearningBatchUpdateManyAndReturnArgs} args - Arguments to update many BotLearningBatches.
+     * @example
+     * // Update many BotLearningBatches
+     * const botLearningBatch = await prisma.botLearningBatch.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BotLearningBatches and only return the `id`
+     * const botLearningBatchWithIdOnly = await prisma.botLearningBatch.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BotLearningBatchUpdateManyAndReturnArgs>(args: SelectSubset<T, BotLearningBatchUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BotLearningBatch.
+     * @param {BotLearningBatchUpsertArgs} args - Arguments to update or create a BotLearningBatch.
+     * @example
+     * // Update or create a BotLearningBatch
+     * const botLearningBatch = await prisma.botLearningBatch.upsert({
+     *   create: {
+     *     // ... data to create a BotLearningBatch
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BotLearningBatch we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BotLearningBatchUpsertArgs>(args: SelectSubset<T, BotLearningBatchUpsertArgs<ExtArgs>>): Prisma__BotLearningBatchClient<$Result.GetResult<Prisma.$BotLearningBatchPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BotLearningBatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningBatchCountArgs} args - Arguments to filter BotLearningBatches to count.
+     * @example
+     * // Count the number of BotLearningBatches
+     * const count = await prisma.botLearningBatch.count({
+     *   where: {
+     *     // ... the filter for the BotLearningBatches we want to count
+     *   }
+     * })
+    **/
+    count<T extends BotLearningBatchCountArgs>(
+      args?: Subset<T, BotLearningBatchCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BotLearningBatchCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BotLearningBatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningBatchAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BotLearningBatchAggregateArgs>(args: Subset<T, BotLearningBatchAggregateArgs>): Prisma.PrismaPromise<GetBotLearningBatchAggregateType<T>>
+
+    /**
+     * Group by BotLearningBatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningBatchGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BotLearningBatchGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BotLearningBatchGroupByArgs['orderBy'] }
+        : { orderBy?: BotLearningBatchGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BotLearningBatchGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBotLearningBatchGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BotLearningBatch model
+   */
+  readonly fields: BotLearningBatchFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BotLearningBatch.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BotLearningBatchClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BotLearningBatch model
+   */
+  interface BotLearningBatchFieldRefs {
+    readonly id: FieldRef<"BotLearningBatch", 'String'>
+    readonly batchNumber: FieldRef<"BotLearningBatch", 'Int'>
+    readonly status: FieldRef<"BotLearningBatch", 'String'>
+    readonly startDate: FieldRef<"BotLearningBatch", 'DateTime'>
+    readonly endDate: FieldRef<"BotLearningBatch", 'DateTime'>
+    readonly totalInteractions: FieldRef<"BotLearningBatch", 'Int'>
+    readonly avgEngagement: FieldRef<"BotLearningBatch", 'Float'>
+    readonly successRate: FieldRef<"BotLearningBatch", 'Float'>
+    readonly preferenceUpdates: FieldRef<"BotLearningBatch", 'String'>
+    readonly executionLog: FieldRef<"BotLearningBatch", 'String'>
+    readonly createdAt: FieldRef<"BotLearningBatch", 'DateTime'>
+    readonly completedAt: FieldRef<"BotLearningBatch", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BotLearningBatch findUnique
+   */
+  export type BotLearningBatchFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningBatch to fetch.
+     */
+    where: BotLearningBatchWhereUniqueInput
+  }
+
+  /**
+   * BotLearningBatch findUniqueOrThrow
+   */
+  export type BotLearningBatchFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningBatch to fetch.
+     */
+    where: BotLearningBatchWhereUniqueInput
+  }
+
+  /**
+   * BotLearningBatch findFirst
+   */
+  export type BotLearningBatchFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningBatch to fetch.
+     */
+    where?: BotLearningBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotLearningBatches to fetch.
+     */
+    orderBy?: BotLearningBatchOrderByWithRelationInput | BotLearningBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotLearningBatches.
+     */
+    cursor?: BotLearningBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotLearningBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotLearningBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotLearningBatches.
+     */
+    distinct?: BotLearningBatchScalarFieldEnum | BotLearningBatchScalarFieldEnum[]
+  }
+
+  /**
+   * BotLearningBatch findFirstOrThrow
+   */
+  export type BotLearningBatchFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningBatch to fetch.
+     */
+    where?: BotLearningBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotLearningBatches to fetch.
+     */
+    orderBy?: BotLearningBatchOrderByWithRelationInput | BotLearningBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotLearningBatches.
+     */
+    cursor?: BotLearningBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotLearningBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotLearningBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotLearningBatches.
+     */
+    distinct?: BotLearningBatchScalarFieldEnum | BotLearningBatchScalarFieldEnum[]
+  }
+
+  /**
+   * BotLearningBatch findMany
+   */
+  export type BotLearningBatchFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningBatches to fetch.
+     */
+    where?: BotLearningBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotLearningBatches to fetch.
+     */
+    orderBy?: BotLearningBatchOrderByWithRelationInput | BotLearningBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BotLearningBatches.
+     */
+    cursor?: BotLearningBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotLearningBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotLearningBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotLearningBatches.
+     */
+    distinct?: BotLearningBatchScalarFieldEnum | BotLearningBatchScalarFieldEnum[]
+  }
+
+  /**
+   * BotLearningBatch create
+   */
+  export type BotLearningBatchCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * The data needed to create a BotLearningBatch.
+     */
+    data: XOR<BotLearningBatchCreateInput, BotLearningBatchUncheckedCreateInput>
+  }
+
+  /**
+   * BotLearningBatch createMany
+   */
+  export type BotLearningBatchCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BotLearningBatches.
+     */
+    data: BotLearningBatchCreateManyInput | BotLearningBatchCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotLearningBatch createManyAndReturn
+   */
+  export type BotLearningBatchCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * The data used to create many BotLearningBatches.
+     */
+    data: BotLearningBatchCreateManyInput | BotLearningBatchCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotLearningBatch update
+   */
+  export type BotLearningBatchUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * The data needed to update a BotLearningBatch.
+     */
+    data: XOR<BotLearningBatchUpdateInput, BotLearningBatchUncheckedUpdateInput>
+    /**
+     * Choose, which BotLearningBatch to update.
+     */
+    where: BotLearningBatchWhereUniqueInput
+  }
+
+  /**
+   * BotLearningBatch updateMany
+   */
+  export type BotLearningBatchUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BotLearningBatches.
+     */
+    data: XOR<BotLearningBatchUpdateManyMutationInput, BotLearningBatchUncheckedUpdateManyInput>
+    /**
+     * Filter which BotLearningBatches to update
+     */
+    where?: BotLearningBatchWhereInput
+    /**
+     * Limit how many BotLearningBatches to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotLearningBatch updateManyAndReturn
+   */
+  export type BotLearningBatchUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * The data used to update BotLearningBatches.
+     */
+    data: XOR<BotLearningBatchUpdateManyMutationInput, BotLearningBatchUncheckedUpdateManyInput>
+    /**
+     * Filter which BotLearningBatches to update
+     */
+    where?: BotLearningBatchWhereInput
+    /**
+     * Limit how many BotLearningBatches to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotLearningBatch upsert
+   */
+  export type BotLearningBatchUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * The filter to search for the BotLearningBatch to update in case it exists.
+     */
+    where: BotLearningBatchWhereUniqueInput
+    /**
+     * In case the BotLearningBatch found by the `where` argument doesn't exist, create a new BotLearningBatch with this data.
+     */
+    create: XOR<BotLearningBatchCreateInput, BotLearningBatchUncheckedCreateInput>
+    /**
+     * In case the BotLearningBatch was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BotLearningBatchUpdateInput, BotLearningBatchUncheckedUpdateInput>
+  }
+
+  /**
+   * BotLearningBatch delete
+   */
+  export type BotLearningBatchDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+    /**
+     * Filter which BotLearningBatch to delete.
+     */
+    where: BotLearningBatchWhereUniqueInput
+  }
+
+  /**
+   * BotLearningBatch deleteMany
+   */
+  export type BotLearningBatchDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotLearningBatches to delete
+     */
+    where?: BotLearningBatchWhereInput
+    /**
+     * Limit how many BotLearningBatches to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotLearningBatch without action
+   */
+  export type BotLearningBatchDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningBatch
+     */
+    select?: BotLearningBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningBatch
+     */
+    omit?: BotLearningBatchOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BotLearningRecord
+   */
+
+  export type AggregateBotLearningRecord = {
+    _count: BotLearningRecordCountAggregateOutputType | null
+    _min: BotLearningRecordMinAggregateOutputType | null
+    _max: BotLearningRecordMaxAggregateOutputType | null
+  }
+
+  export type BotLearningRecordMinAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    userId: string | null
+    interactionType: string | null
+    outcome: string | null
+    processed: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BotLearningRecordMaxAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    userId: string | null
+    interactionType: string | null
+    outcome: string | null
+    processed: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BotLearningRecordCountAggregateOutputType = {
+    id: number
+    botId: number
+    userId: number
+    interactionType: number
+    outcome: number
+    context: number
+    processed: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type BotLearningRecordMinAggregateInputType = {
+    id?: true
+    botId?: true
+    userId?: true
+    interactionType?: true
+    outcome?: true
+    processed?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BotLearningRecordMaxAggregateInputType = {
+    id?: true
+    botId?: true
+    userId?: true
+    interactionType?: true
+    outcome?: true
+    processed?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BotLearningRecordCountAggregateInputType = {
+    id?: true
+    botId?: true
+    userId?: true
+    interactionType?: true
+    outcome?: true
+    context?: true
+    processed?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type BotLearningRecordAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotLearningRecord to aggregate.
+     */
+    where?: BotLearningRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotLearningRecords to fetch.
+     */
+    orderBy?: BotLearningRecordOrderByWithRelationInput | BotLearningRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BotLearningRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotLearningRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotLearningRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BotLearningRecords
+    **/
+    _count?: true | BotLearningRecordCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BotLearningRecordMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BotLearningRecordMaxAggregateInputType
+  }
+
+  export type GetBotLearningRecordAggregateType<T extends BotLearningRecordAggregateArgs> = {
+        [P in keyof T & keyof AggregateBotLearningRecord]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBotLearningRecord[P]>
+      : GetScalarType<T[P], AggregateBotLearningRecord[P]>
+  }
+
+
+
+
+  export type BotLearningRecordGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotLearningRecordWhereInput
+    orderBy?: BotLearningRecordOrderByWithAggregationInput | BotLearningRecordOrderByWithAggregationInput[]
+    by: BotLearningRecordScalarFieldEnum[] | BotLearningRecordScalarFieldEnum
+    having?: BotLearningRecordScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BotLearningRecordCountAggregateInputType | true
+    _min?: BotLearningRecordMinAggregateInputType
+    _max?: BotLearningRecordMaxAggregateInputType
+  }
+
+  export type BotLearningRecordGroupByOutputType = {
+    id: string
+    botId: string
+    userId: string
+    interactionType: string
+    outcome: string
+    context: JsonValue | null
+    processed: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: BotLearningRecordCountAggregateOutputType | null
+    _min: BotLearningRecordMinAggregateOutputType | null
+    _max: BotLearningRecordMaxAggregateOutputType | null
+  }
+
+  type GetBotLearningRecordGroupByPayload<T extends BotLearningRecordGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BotLearningRecordGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BotLearningRecordGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BotLearningRecordGroupByOutputType[P]>
+            : GetScalarType<T[P], BotLearningRecordGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BotLearningRecordSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    userId?: boolean
+    interactionType?: boolean
+    outcome?: boolean
+    context?: boolean
+    processed?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["botLearningRecord"]>
+
+  export type BotLearningRecordSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    userId?: boolean
+    interactionType?: boolean
+    outcome?: boolean
+    context?: boolean
+    processed?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["botLearningRecord"]>
+
+  export type BotLearningRecordSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    userId?: boolean
+    interactionType?: boolean
+    outcome?: boolean
+    context?: boolean
+    processed?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["botLearningRecord"]>
+
+  export type BotLearningRecordSelectScalar = {
+    id?: boolean
+    botId?: boolean
+    userId?: boolean
+    interactionType?: boolean
+    outcome?: boolean
+    context?: boolean
+    processed?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type BotLearningRecordOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "userId" | "interactionType" | "outcome" | "context" | "processed" | "createdAt" | "updatedAt", ExtArgs["result"]["botLearningRecord"]>
+
+  export type $BotLearningRecordPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BotLearningRecord"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      botId: string
+      userId: string
+      interactionType: string
+      outcome: string
+      context: Prisma.JsonValue | null
+      processed: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["botLearningRecord"]>
+    composites: {}
+  }
+
+  type BotLearningRecordGetPayload<S extends boolean | null | undefined | BotLearningRecordDefaultArgs> = $Result.GetResult<Prisma.$BotLearningRecordPayload, S>
+
+  type BotLearningRecordCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BotLearningRecordFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BotLearningRecordCountAggregateInputType | true
+    }
+
+  export interface BotLearningRecordDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BotLearningRecord'], meta: { name: 'BotLearningRecord' } }
+    /**
+     * Find zero or one BotLearningRecord that matches the filter.
+     * @param {BotLearningRecordFindUniqueArgs} args - Arguments to find a BotLearningRecord
+     * @example
+     * // Get one BotLearningRecord
+     * const botLearningRecord = await prisma.botLearningRecord.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BotLearningRecordFindUniqueArgs>(args: SelectSubset<T, BotLearningRecordFindUniqueArgs<ExtArgs>>): Prisma__BotLearningRecordClient<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BotLearningRecord that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BotLearningRecordFindUniqueOrThrowArgs} args - Arguments to find a BotLearningRecord
+     * @example
+     * // Get one BotLearningRecord
+     * const botLearningRecord = await prisma.botLearningRecord.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BotLearningRecordFindUniqueOrThrowArgs>(args: SelectSubset<T, BotLearningRecordFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BotLearningRecordClient<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotLearningRecord that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningRecordFindFirstArgs} args - Arguments to find a BotLearningRecord
+     * @example
+     * // Get one BotLearningRecord
+     * const botLearningRecord = await prisma.botLearningRecord.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BotLearningRecordFindFirstArgs>(args?: SelectSubset<T, BotLearningRecordFindFirstArgs<ExtArgs>>): Prisma__BotLearningRecordClient<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotLearningRecord that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningRecordFindFirstOrThrowArgs} args - Arguments to find a BotLearningRecord
+     * @example
+     * // Get one BotLearningRecord
+     * const botLearningRecord = await prisma.botLearningRecord.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BotLearningRecordFindFirstOrThrowArgs>(args?: SelectSubset<T, BotLearningRecordFindFirstOrThrowArgs<ExtArgs>>): Prisma__BotLearningRecordClient<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BotLearningRecords that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningRecordFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BotLearningRecords
+     * const botLearningRecords = await prisma.botLearningRecord.findMany()
+     * 
+     * // Get first 10 BotLearningRecords
+     * const botLearningRecords = await prisma.botLearningRecord.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const botLearningRecordWithIdOnly = await prisma.botLearningRecord.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BotLearningRecordFindManyArgs>(args?: SelectSubset<T, BotLearningRecordFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BotLearningRecord.
+     * @param {BotLearningRecordCreateArgs} args - Arguments to create a BotLearningRecord.
+     * @example
+     * // Create one BotLearningRecord
+     * const BotLearningRecord = await prisma.botLearningRecord.create({
+     *   data: {
+     *     // ... data to create a BotLearningRecord
+     *   }
+     * })
+     * 
+     */
+    create<T extends BotLearningRecordCreateArgs>(args: SelectSubset<T, BotLearningRecordCreateArgs<ExtArgs>>): Prisma__BotLearningRecordClient<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BotLearningRecords.
+     * @param {BotLearningRecordCreateManyArgs} args - Arguments to create many BotLearningRecords.
+     * @example
+     * // Create many BotLearningRecords
+     * const botLearningRecord = await prisma.botLearningRecord.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BotLearningRecordCreateManyArgs>(args?: SelectSubset<T, BotLearningRecordCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BotLearningRecords and returns the data saved in the database.
+     * @param {BotLearningRecordCreateManyAndReturnArgs} args - Arguments to create many BotLearningRecords.
+     * @example
+     * // Create many BotLearningRecords
+     * const botLearningRecord = await prisma.botLearningRecord.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BotLearningRecords and only return the `id`
+     * const botLearningRecordWithIdOnly = await prisma.botLearningRecord.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BotLearningRecordCreateManyAndReturnArgs>(args?: SelectSubset<T, BotLearningRecordCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BotLearningRecord.
+     * @param {BotLearningRecordDeleteArgs} args - Arguments to delete one BotLearningRecord.
+     * @example
+     * // Delete one BotLearningRecord
+     * const BotLearningRecord = await prisma.botLearningRecord.delete({
+     *   where: {
+     *     // ... filter to delete one BotLearningRecord
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BotLearningRecordDeleteArgs>(args: SelectSubset<T, BotLearningRecordDeleteArgs<ExtArgs>>): Prisma__BotLearningRecordClient<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BotLearningRecord.
+     * @param {BotLearningRecordUpdateArgs} args - Arguments to update one BotLearningRecord.
+     * @example
+     * // Update one BotLearningRecord
+     * const botLearningRecord = await prisma.botLearningRecord.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BotLearningRecordUpdateArgs>(args: SelectSubset<T, BotLearningRecordUpdateArgs<ExtArgs>>): Prisma__BotLearningRecordClient<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BotLearningRecords.
+     * @param {BotLearningRecordDeleteManyArgs} args - Arguments to filter BotLearningRecords to delete.
+     * @example
+     * // Delete a few BotLearningRecords
+     * const { count } = await prisma.botLearningRecord.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BotLearningRecordDeleteManyArgs>(args?: SelectSubset<T, BotLearningRecordDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotLearningRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningRecordUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BotLearningRecords
+     * const botLearningRecord = await prisma.botLearningRecord.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BotLearningRecordUpdateManyArgs>(args: SelectSubset<T, BotLearningRecordUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotLearningRecords and returns the data updated in the database.
+     * @param {BotLearningRecordUpdateManyAndReturnArgs} args - Arguments to update many BotLearningRecords.
+     * @example
+     * // Update many BotLearningRecords
+     * const botLearningRecord = await prisma.botLearningRecord.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BotLearningRecords and only return the `id`
+     * const botLearningRecordWithIdOnly = await prisma.botLearningRecord.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BotLearningRecordUpdateManyAndReturnArgs>(args: SelectSubset<T, BotLearningRecordUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BotLearningRecord.
+     * @param {BotLearningRecordUpsertArgs} args - Arguments to update or create a BotLearningRecord.
+     * @example
+     * // Update or create a BotLearningRecord
+     * const botLearningRecord = await prisma.botLearningRecord.upsert({
+     *   create: {
+     *     // ... data to create a BotLearningRecord
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BotLearningRecord we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BotLearningRecordUpsertArgs>(args: SelectSubset<T, BotLearningRecordUpsertArgs<ExtArgs>>): Prisma__BotLearningRecordClient<$Result.GetResult<Prisma.$BotLearningRecordPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BotLearningRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningRecordCountArgs} args - Arguments to filter BotLearningRecords to count.
+     * @example
+     * // Count the number of BotLearningRecords
+     * const count = await prisma.botLearningRecord.count({
+     *   where: {
+     *     // ... the filter for the BotLearningRecords we want to count
+     *   }
+     * })
+    **/
+    count<T extends BotLearningRecordCountArgs>(
+      args?: Subset<T, BotLearningRecordCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BotLearningRecordCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BotLearningRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningRecordAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BotLearningRecordAggregateArgs>(args: Subset<T, BotLearningRecordAggregateArgs>): Prisma.PrismaPromise<GetBotLearningRecordAggregateType<T>>
+
+    /**
+     * Group by BotLearningRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotLearningRecordGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BotLearningRecordGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BotLearningRecordGroupByArgs['orderBy'] }
+        : { orderBy?: BotLearningRecordGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BotLearningRecordGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBotLearningRecordGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BotLearningRecord model
+   */
+  readonly fields: BotLearningRecordFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BotLearningRecord.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BotLearningRecordClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BotLearningRecord model
+   */
+  interface BotLearningRecordFieldRefs {
+    readonly id: FieldRef<"BotLearningRecord", 'String'>
+    readonly botId: FieldRef<"BotLearningRecord", 'String'>
+    readonly userId: FieldRef<"BotLearningRecord", 'String'>
+    readonly interactionType: FieldRef<"BotLearningRecord", 'String'>
+    readonly outcome: FieldRef<"BotLearningRecord", 'String'>
+    readonly context: FieldRef<"BotLearningRecord", 'Json'>
+    readonly processed: FieldRef<"BotLearningRecord", 'Boolean'>
+    readonly createdAt: FieldRef<"BotLearningRecord", 'DateTime'>
+    readonly updatedAt: FieldRef<"BotLearningRecord", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BotLearningRecord findUnique
+   */
+  export type BotLearningRecordFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningRecord to fetch.
+     */
+    where: BotLearningRecordWhereUniqueInput
+  }
+
+  /**
+   * BotLearningRecord findUniqueOrThrow
+   */
+  export type BotLearningRecordFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningRecord to fetch.
+     */
+    where: BotLearningRecordWhereUniqueInput
+  }
+
+  /**
+   * BotLearningRecord findFirst
+   */
+  export type BotLearningRecordFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningRecord to fetch.
+     */
+    where?: BotLearningRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotLearningRecords to fetch.
+     */
+    orderBy?: BotLearningRecordOrderByWithRelationInput | BotLearningRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotLearningRecords.
+     */
+    cursor?: BotLearningRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotLearningRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotLearningRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotLearningRecords.
+     */
+    distinct?: BotLearningRecordScalarFieldEnum | BotLearningRecordScalarFieldEnum[]
+  }
+
+  /**
+   * BotLearningRecord findFirstOrThrow
+   */
+  export type BotLearningRecordFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningRecord to fetch.
+     */
+    where?: BotLearningRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotLearningRecords to fetch.
+     */
+    orderBy?: BotLearningRecordOrderByWithRelationInput | BotLearningRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotLearningRecords.
+     */
+    cursor?: BotLearningRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotLearningRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotLearningRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotLearningRecords.
+     */
+    distinct?: BotLearningRecordScalarFieldEnum | BotLearningRecordScalarFieldEnum[]
+  }
+
+  /**
+   * BotLearningRecord findMany
+   */
+  export type BotLearningRecordFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * Filter, which BotLearningRecords to fetch.
+     */
+    where?: BotLearningRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotLearningRecords to fetch.
+     */
+    orderBy?: BotLearningRecordOrderByWithRelationInput | BotLearningRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BotLearningRecords.
+     */
+    cursor?: BotLearningRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotLearningRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotLearningRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotLearningRecords.
+     */
+    distinct?: BotLearningRecordScalarFieldEnum | BotLearningRecordScalarFieldEnum[]
+  }
+
+  /**
+   * BotLearningRecord create
+   */
+  export type BotLearningRecordCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * The data needed to create a BotLearningRecord.
+     */
+    data: XOR<BotLearningRecordCreateInput, BotLearningRecordUncheckedCreateInput>
+  }
+
+  /**
+   * BotLearningRecord createMany
+   */
+  export type BotLearningRecordCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BotLearningRecords.
+     */
+    data: BotLearningRecordCreateManyInput | BotLearningRecordCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotLearningRecord createManyAndReturn
+   */
+  export type BotLearningRecordCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * The data used to create many BotLearningRecords.
+     */
+    data: BotLearningRecordCreateManyInput | BotLearningRecordCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotLearningRecord update
+   */
+  export type BotLearningRecordUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * The data needed to update a BotLearningRecord.
+     */
+    data: XOR<BotLearningRecordUpdateInput, BotLearningRecordUncheckedUpdateInput>
+    /**
+     * Choose, which BotLearningRecord to update.
+     */
+    where: BotLearningRecordWhereUniqueInput
+  }
+
+  /**
+   * BotLearningRecord updateMany
+   */
+  export type BotLearningRecordUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BotLearningRecords.
+     */
+    data: XOR<BotLearningRecordUpdateManyMutationInput, BotLearningRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which BotLearningRecords to update
+     */
+    where?: BotLearningRecordWhereInput
+    /**
+     * Limit how many BotLearningRecords to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotLearningRecord updateManyAndReturn
+   */
+  export type BotLearningRecordUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * The data used to update BotLearningRecords.
+     */
+    data: XOR<BotLearningRecordUpdateManyMutationInput, BotLearningRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which BotLearningRecords to update
+     */
+    where?: BotLearningRecordWhereInput
+    /**
+     * Limit how many BotLearningRecords to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotLearningRecord upsert
+   */
+  export type BotLearningRecordUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * The filter to search for the BotLearningRecord to update in case it exists.
+     */
+    where: BotLearningRecordWhereUniqueInput
+    /**
+     * In case the BotLearningRecord found by the `where` argument doesn't exist, create a new BotLearningRecord with this data.
+     */
+    create: XOR<BotLearningRecordCreateInput, BotLearningRecordUncheckedCreateInput>
+    /**
+     * In case the BotLearningRecord was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BotLearningRecordUpdateInput, BotLearningRecordUncheckedUpdateInput>
+  }
+
+  /**
+   * BotLearningRecord delete
+   */
+  export type BotLearningRecordDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+    /**
+     * Filter which BotLearningRecord to delete.
+     */
+    where: BotLearningRecordWhereUniqueInput
+  }
+
+  /**
+   * BotLearningRecord deleteMany
+   */
+  export type BotLearningRecordDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotLearningRecords to delete
+     */
+    where?: BotLearningRecordWhereInput
+    /**
+     * Limit how many BotLearningRecords to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotLearningRecord without action
+   */
+  export type BotLearningRecordDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotLearningRecord
+     */
+    select?: BotLearningRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotLearningRecord
+     */
+    omit?: BotLearningRecordOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BotPreference
+   */
+
+  export type AggregateBotPreference = {
+    _count: BotPreferenceCountAggregateOutputType | null
+    _avg: BotPreferenceAvgAggregateOutputType | null
+    _sum: BotPreferenceSumAggregateOutputType | null
+    _min: BotPreferenceMinAggregateOutputType | null
+    _max: BotPreferenceMaxAggregateOutputType | null
+  }
+
+  export type BotPreferenceAvgAggregateOutputType = {
+    relationshipStructure: number | null
+    communicationStyle: number | null
+    interests: number | null
+    values: number | null
+    lifestyle: number | null
+    confidence: number | null
+    sampleSize: number | null
+  }
+
+  export type BotPreferenceSumAggregateOutputType = {
+    relationshipStructure: number | null
+    communicationStyle: number | null
+    interests: number | null
+    values: number | null
+    lifestyle: number | null
+    confidence: number | null
+    sampleSize: number | null
+  }
+
+  export type BotPreferenceMinAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    relationshipStructure: number | null
+    communicationStyle: number | null
+    interests: number | null
+    values: number | null
+    lifestyle: number | null
+    confidence: number | null
+    sampleSize: number | null
+    createdAt: Date | null
+    lastUpdated: Date | null
+  }
+
+  export type BotPreferenceMaxAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    relationshipStructure: number | null
+    communicationStyle: number | null
+    interests: number | null
+    values: number | null
+    lifestyle: number | null
+    confidence: number | null
+    sampleSize: number | null
+    createdAt: Date | null
+    lastUpdated: Date | null
+  }
+
+  export type BotPreferenceCountAggregateOutputType = {
+    id: number
+    botId: number
+    relationshipStructure: number
+    communicationStyle: number
+    interests: number
+    values: number
+    lifestyle: number
+    confidence: number
+    sampleSize: number
+    createdAt: number
+    lastUpdated: number
+    _all: number
+  }
+
+
+  export type BotPreferenceAvgAggregateInputType = {
+    relationshipStructure?: true
+    communicationStyle?: true
+    interests?: true
+    values?: true
+    lifestyle?: true
+    confidence?: true
+    sampleSize?: true
+  }
+
+  export type BotPreferenceSumAggregateInputType = {
+    relationshipStructure?: true
+    communicationStyle?: true
+    interests?: true
+    values?: true
+    lifestyle?: true
+    confidence?: true
+    sampleSize?: true
+  }
+
+  export type BotPreferenceMinAggregateInputType = {
+    id?: true
+    botId?: true
+    relationshipStructure?: true
+    communicationStyle?: true
+    interests?: true
+    values?: true
+    lifestyle?: true
+    confidence?: true
+    sampleSize?: true
+    createdAt?: true
+    lastUpdated?: true
+  }
+
+  export type BotPreferenceMaxAggregateInputType = {
+    id?: true
+    botId?: true
+    relationshipStructure?: true
+    communicationStyle?: true
+    interests?: true
+    values?: true
+    lifestyle?: true
+    confidence?: true
+    sampleSize?: true
+    createdAt?: true
+    lastUpdated?: true
+  }
+
+  export type BotPreferenceCountAggregateInputType = {
+    id?: true
+    botId?: true
+    relationshipStructure?: true
+    communicationStyle?: true
+    interests?: true
+    values?: true
+    lifestyle?: true
+    confidence?: true
+    sampleSize?: true
+    createdAt?: true
+    lastUpdated?: true
+    _all?: true
+  }
+
+  export type BotPreferenceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotPreference to aggregate.
+     */
+    where?: BotPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotPreferences to fetch.
+     */
+    orderBy?: BotPreferenceOrderByWithRelationInput | BotPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BotPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BotPreferences
+    **/
+    _count?: true | BotPreferenceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: BotPreferenceAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: BotPreferenceSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BotPreferenceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BotPreferenceMaxAggregateInputType
+  }
+
+  export type GetBotPreferenceAggregateType<T extends BotPreferenceAggregateArgs> = {
+        [P in keyof T & keyof AggregateBotPreference]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBotPreference[P]>
+      : GetScalarType<T[P], AggregateBotPreference[P]>
+  }
+
+
+
+
+  export type BotPreferenceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotPreferenceWhereInput
+    orderBy?: BotPreferenceOrderByWithAggregationInput | BotPreferenceOrderByWithAggregationInput[]
+    by: BotPreferenceScalarFieldEnum[] | BotPreferenceScalarFieldEnum
+    having?: BotPreferenceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BotPreferenceCountAggregateInputType | true
+    _avg?: BotPreferenceAvgAggregateInputType
+    _sum?: BotPreferenceSumAggregateInputType
+    _min?: BotPreferenceMinAggregateInputType
+    _max?: BotPreferenceMaxAggregateInputType
+  }
+
+  export type BotPreferenceGroupByOutputType = {
+    id: string
+    botId: string
+    relationshipStructure: number
+    communicationStyle: number
+    interests: number
+    values: number
+    lifestyle: number
+    confidence: number
+    sampleSize: number
+    createdAt: Date
+    lastUpdated: Date
+    _count: BotPreferenceCountAggregateOutputType | null
+    _avg: BotPreferenceAvgAggregateOutputType | null
+    _sum: BotPreferenceSumAggregateOutputType | null
+    _min: BotPreferenceMinAggregateOutputType | null
+    _max: BotPreferenceMaxAggregateOutputType | null
+  }
+
+  type GetBotPreferenceGroupByPayload<T extends BotPreferenceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BotPreferenceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BotPreferenceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BotPreferenceGroupByOutputType[P]>
+            : GetScalarType<T[P], BotPreferenceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BotPreferenceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    relationshipStructure?: boolean
+    communicationStyle?: boolean
+    interests?: boolean
+    values?: boolean
+    lifestyle?: boolean
+    confidence?: boolean
+    sampleSize?: boolean
+    createdAt?: boolean
+    lastUpdated?: boolean
+  }, ExtArgs["result"]["botPreference"]>
+
+  export type BotPreferenceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    relationshipStructure?: boolean
+    communicationStyle?: boolean
+    interests?: boolean
+    values?: boolean
+    lifestyle?: boolean
+    confidence?: boolean
+    sampleSize?: boolean
+    createdAt?: boolean
+    lastUpdated?: boolean
+  }, ExtArgs["result"]["botPreference"]>
+
+  export type BotPreferenceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    relationshipStructure?: boolean
+    communicationStyle?: boolean
+    interests?: boolean
+    values?: boolean
+    lifestyle?: boolean
+    confidence?: boolean
+    sampleSize?: boolean
+    createdAt?: boolean
+    lastUpdated?: boolean
+  }, ExtArgs["result"]["botPreference"]>
+
+  export type BotPreferenceSelectScalar = {
+    id?: boolean
+    botId?: boolean
+    relationshipStructure?: boolean
+    communicationStyle?: boolean
+    interests?: boolean
+    values?: boolean
+    lifestyle?: boolean
+    confidence?: boolean
+    sampleSize?: boolean
+    createdAt?: boolean
+    lastUpdated?: boolean
+  }
+
+  export type BotPreferenceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "relationshipStructure" | "communicationStyle" | "interests" | "values" | "lifestyle" | "confidence" | "sampleSize" | "createdAt" | "lastUpdated", ExtArgs["result"]["botPreference"]>
+
+  export type $BotPreferencePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BotPreference"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      botId: string
+      relationshipStructure: number
+      communicationStyle: number
+      interests: number
+      values: number
+      lifestyle: number
+      confidence: number
+      sampleSize: number
+      createdAt: Date
+      lastUpdated: Date
+    }, ExtArgs["result"]["botPreference"]>
+    composites: {}
+  }
+
+  type BotPreferenceGetPayload<S extends boolean | null | undefined | BotPreferenceDefaultArgs> = $Result.GetResult<Prisma.$BotPreferencePayload, S>
+
+  type BotPreferenceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BotPreferenceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BotPreferenceCountAggregateInputType | true
+    }
+
+  export interface BotPreferenceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BotPreference'], meta: { name: 'BotPreference' } }
+    /**
+     * Find zero or one BotPreference that matches the filter.
+     * @param {BotPreferenceFindUniqueArgs} args - Arguments to find a BotPreference
+     * @example
+     * // Get one BotPreference
+     * const botPreference = await prisma.botPreference.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BotPreferenceFindUniqueArgs>(args: SelectSubset<T, BotPreferenceFindUniqueArgs<ExtArgs>>): Prisma__BotPreferenceClient<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BotPreference that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BotPreferenceFindUniqueOrThrowArgs} args - Arguments to find a BotPreference
+     * @example
+     * // Get one BotPreference
+     * const botPreference = await prisma.botPreference.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BotPreferenceFindUniqueOrThrowArgs>(args: SelectSubset<T, BotPreferenceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BotPreferenceClient<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotPreference that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotPreferenceFindFirstArgs} args - Arguments to find a BotPreference
+     * @example
+     * // Get one BotPreference
+     * const botPreference = await prisma.botPreference.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BotPreferenceFindFirstArgs>(args?: SelectSubset<T, BotPreferenceFindFirstArgs<ExtArgs>>): Prisma__BotPreferenceClient<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotPreference that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotPreferenceFindFirstOrThrowArgs} args - Arguments to find a BotPreference
+     * @example
+     * // Get one BotPreference
+     * const botPreference = await prisma.botPreference.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BotPreferenceFindFirstOrThrowArgs>(args?: SelectSubset<T, BotPreferenceFindFirstOrThrowArgs<ExtArgs>>): Prisma__BotPreferenceClient<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BotPreferences that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotPreferenceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BotPreferences
+     * const botPreferences = await prisma.botPreference.findMany()
+     * 
+     * // Get first 10 BotPreferences
+     * const botPreferences = await prisma.botPreference.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const botPreferenceWithIdOnly = await prisma.botPreference.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BotPreferenceFindManyArgs>(args?: SelectSubset<T, BotPreferenceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BotPreference.
+     * @param {BotPreferenceCreateArgs} args - Arguments to create a BotPreference.
+     * @example
+     * // Create one BotPreference
+     * const BotPreference = await prisma.botPreference.create({
+     *   data: {
+     *     // ... data to create a BotPreference
+     *   }
+     * })
+     * 
+     */
+    create<T extends BotPreferenceCreateArgs>(args: SelectSubset<T, BotPreferenceCreateArgs<ExtArgs>>): Prisma__BotPreferenceClient<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BotPreferences.
+     * @param {BotPreferenceCreateManyArgs} args - Arguments to create many BotPreferences.
+     * @example
+     * // Create many BotPreferences
+     * const botPreference = await prisma.botPreference.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BotPreferenceCreateManyArgs>(args?: SelectSubset<T, BotPreferenceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BotPreferences and returns the data saved in the database.
+     * @param {BotPreferenceCreateManyAndReturnArgs} args - Arguments to create many BotPreferences.
+     * @example
+     * // Create many BotPreferences
+     * const botPreference = await prisma.botPreference.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BotPreferences and only return the `id`
+     * const botPreferenceWithIdOnly = await prisma.botPreference.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BotPreferenceCreateManyAndReturnArgs>(args?: SelectSubset<T, BotPreferenceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BotPreference.
+     * @param {BotPreferenceDeleteArgs} args - Arguments to delete one BotPreference.
+     * @example
+     * // Delete one BotPreference
+     * const BotPreference = await prisma.botPreference.delete({
+     *   where: {
+     *     // ... filter to delete one BotPreference
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BotPreferenceDeleteArgs>(args: SelectSubset<T, BotPreferenceDeleteArgs<ExtArgs>>): Prisma__BotPreferenceClient<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BotPreference.
+     * @param {BotPreferenceUpdateArgs} args - Arguments to update one BotPreference.
+     * @example
+     * // Update one BotPreference
+     * const botPreference = await prisma.botPreference.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BotPreferenceUpdateArgs>(args: SelectSubset<T, BotPreferenceUpdateArgs<ExtArgs>>): Prisma__BotPreferenceClient<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BotPreferences.
+     * @param {BotPreferenceDeleteManyArgs} args - Arguments to filter BotPreferences to delete.
+     * @example
+     * // Delete a few BotPreferences
+     * const { count } = await prisma.botPreference.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BotPreferenceDeleteManyArgs>(args?: SelectSubset<T, BotPreferenceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotPreferences.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotPreferenceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BotPreferences
+     * const botPreference = await prisma.botPreference.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BotPreferenceUpdateManyArgs>(args: SelectSubset<T, BotPreferenceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotPreferences and returns the data updated in the database.
+     * @param {BotPreferenceUpdateManyAndReturnArgs} args - Arguments to update many BotPreferences.
+     * @example
+     * // Update many BotPreferences
+     * const botPreference = await prisma.botPreference.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BotPreferences and only return the `id`
+     * const botPreferenceWithIdOnly = await prisma.botPreference.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BotPreferenceUpdateManyAndReturnArgs>(args: SelectSubset<T, BotPreferenceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BotPreference.
+     * @param {BotPreferenceUpsertArgs} args - Arguments to update or create a BotPreference.
+     * @example
+     * // Update or create a BotPreference
+     * const botPreference = await prisma.botPreference.upsert({
+     *   create: {
+     *     // ... data to create a BotPreference
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BotPreference we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BotPreferenceUpsertArgs>(args: SelectSubset<T, BotPreferenceUpsertArgs<ExtArgs>>): Prisma__BotPreferenceClient<$Result.GetResult<Prisma.$BotPreferencePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BotPreferences.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotPreferenceCountArgs} args - Arguments to filter BotPreferences to count.
+     * @example
+     * // Count the number of BotPreferences
+     * const count = await prisma.botPreference.count({
+     *   where: {
+     *     // ... the filter for the BotPreferences we want to count
+     *   }
+     * })
+    **/
+    count<T extends BotPreferenceCountArgs>(
+      args?: Subset<T, BotPreferenceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BotPreferenceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BotPreference.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotPreferenceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BotPreferenceAggregateArgs>(args: Subset<T, BotPreferenceAggregateArgs>): Prisma.PrismaPromise<GetBotPreferenceAggregateType<T>>
+
+    /**
+     * Group by BotPreference.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotPreferenceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BotPreferenceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BotPreferenceGroupByArgs['orderBy'] }
+        : { orderBy?: BotPreferenceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BotPreferenceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBotPreferenceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BotPreference model
+   */
+  readonly fields: BotPreferenceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BotPreference.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BotPreferenceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BotPreference model
+   */
+  interface BotPreferenceFieldRefs {
+    readonly id: FieldRef<"BotPreference", 'String'>
+    readonly botId: FieldRef<"BotPreference", 'String'>
+    readonly relationshipStructure: FieldRef<"BotPreference", 'Float'>
+    readonly communicationStyle: FieldRef<"BotPreference", 'Float'>
+    readonly interests: FieldRef<"BotPreference", 'Float'>
+    readonly values: FieldRef<"BotPreference", 'Float'>
+    readonly lifestyle: FieldRef<"BotPreference", 'Float'>
+    readonly confidence: FieldRef<"BotPreference", 'Float'>
+    readonly sampleSize: FieldRef<"BotPreference", 'Int'>
+    readonly createdAt: FieldRef<"BotPreference", 'DateTime'>
+    readonly lastUpdated: FieldRef<"BotPreference", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BotPreference findUnique
+   */
+  export type BotPreferenceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * Filter, which BotPreference to fetch.
+     */
+    where: BotPreferenceWhereUniqueInput
+  }
+
+  /**
+   * BotPreference findUniqueOrThrow
+   */
+  export type BotPreferenceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * Filter, which BotPreference to fetch.
+     */
+    where: BotPreferenceWhereUniqueInput
+  }
+
+  /**
+   * BotPreference findFirst
+   */
+  export type BotPreferenceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * Filter, which BotPreference to fetch.
+     */
+    where?: BotPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotPreferences to fetch.
+     */
+    orderBy?: BotPreferenceOrderByWithRelationInput | BotPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotPreferences.
+     */
+    cursor?: BotPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotPreferences.
+     */
+    distinct?: BotPreferenceScalarFieldEnum | BotPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * BotPreference findFirstOrThrow
+   */
+  export type BotPreferenceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * Filter, which BotPreference to fetch.
+     */
+    where?: BotPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotPreferences to fetch.
+     */
+    orderBy?: BotPreferenceOrderByWithRelationInput | BotPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotPreferences.
+     */
+    cursor?: BotPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotPreferences.
+     */
+    distinct?: BotPreferenceScalarFieldEnum | BotPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * BotPreference findMany
+   */
+  export type BotPreferenceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * Filter, which BotPreferences to fetch.
+     */
+    where?: BotPreferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotPreferences to fetch.
+     */
+    orderBy?: BotPreferenceOrderByWithRelationInput | BotPreferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BotPreferences.
+     */
+    cursor?: BotPreferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotPreferences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotPreferences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotPreferences.
+     */
+    distinct?: BotPreferenceScalarFieldEnum | BotPreferenceScalarFieldEnum[]
+  }
+
+  /**
+   * BotPreference create
+   */
+  export type BotPreferenceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * The data needed to create a BotPreference.
+     */
+    data: XOR<BotPreferenceCreateInput, BotPreferenceUncheckedCreateInput>
+  }
+
+  /**
+   * BotPreference createMany
+   */
+  export type BotPreferenceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BotPreferences.
+     */
+    data: BotPreferenceCreateManyInput | BotPreferenceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotPreference createManyAndReturn
+   */
+  export type BotPreferenceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * The data used to create many BotPreferences.
+     */
+    data: BotPreferenceCreateManyInput | BotPreferenceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotPreference update
+   */
+  export type BotPreferenceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * The data needed to update a BotPreference.
+     */
+    data: XOR<BotPreferenceUpdateInput, BotPreferenceUncheckedUpdateInput>
+    /**
+     * Choose, which BotPreference to update.
+     */
+    where: BotPreferenceWhereUniqueInput
+  }
+
+  /**
+   * BotPreference updateMany
+   */
+  export type BotPreferenceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BotPreferences.
+     */
+    data: XOR<BotPreferenceUpdateManyMutationInput, BotPreferenceUncheckedUpdateManyInput>
+    /**
+     * Filter which BotPreferences to update
+     */
+    where?: BotPreferenceWhereInput
+    /**
+     * Limit how many BotPreferences to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotPreference updateManyAndReturn
+   */
+  export type BotPreferenceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * The data used to update BotPreferences.
+     */
+    data: XOR<BotPreferenceUpdateManyMutationInput, BotPreferenceUncheckedUpdateManyInput>
+    /**
+     * Filter which BotPreferences to update
+     */
+    where?: BotPreferenceWhereInput
+    /**
+     * Limit how many BotPreferences to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotPreference upsert
+   */
+  export type BotPreferenceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * The filter to search for the BotPreference to update in case it exists.
+     */
+    where: BotPreferenceWhereUniqueInput
+    /**
+     * In case the BotPreference found by the `where` argument doesn't exist, create a new BotPreference with this data.
+     */
+    create: XOR<BotPreferenceCreateInput, BotPreferenceUncheckedCreateInput>
+    /**
+     * In case the BotPreference was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BotPreferenceUpdateInput, BotPreferenceUncheckedUpdateInput>
+  }
+
+  /**
+   * BotPreference delete
+   */
+  export type BotPreferenceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+    /**
+     * Filter which BotPreference to delete.
+     */
+    where: BotPreferenceWhereUniqueInput
+  }
+
+  /**
+   * BotPreference deleteMany
+   */
+  export type BotPreferenceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotPreferences to delete
+     */
+    where?: BotPreferenceWhereInput
+    /**
+     * Limit how many BotPreferences to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotPreference without action
+   */
+  export type BotPreferenceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotPreference
+     */
+    select?: BotPreferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotPreference
+     */
+    omit?: BotPreferenceOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BotAvatar
+   */
+
+  export type AggregateBotAvatar = {
+    _count: BotAvatarCountAggregateOutputType | null
+    _avg: BotAvatarAvgAggregateOutputType | null
+    _sum: BotAvatarSumAggregateOutputType | null
+    _min: BotAvatarMinAggregateOutputType | null
+    _max: BotAvatarMaxAggregateOutputType | null
+  }
+
+  export type BotAvatarAvgAggregateOutputType = {
+    useCount: number | null
+  }
+
+  export type BotAvatarSumAggregateOutputType = {
+    useCount: number | null
+  }
+
+  export type BotAvatarMinAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    originalUrl: string | null
+    processedUrl: string | null
+    style: string | null
+    ethnicity: string | null
+    status: string | null
+    useCount: number | null
+    generatedAt: Date | null
+    lastUsedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BotAvatarMaxAggregateOutputType = {
+    id: string | null
+    botId: string | null
+    originalUrl: string | null
+    processedUrl: string | null
+    style: string | null
+    ethnicity: string | null
+    status: string | null
+    useCount: number | null
+    generatedAt: Date | null
+    lastUsedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BotAvatarCountAggregateOutputType = {
+    id: number
+    botId: number
+    originalUrl: number
+    processedUrl: number
+    style: number
+    ethnicity: number
+    status: number
+    useCount: number
+    generatedAt: number
+    lastUsedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type BotAvatarAvgAggregateInputType = {
+    useCount?: true
+  }
+
+  export type BotAvatarSumAggregateInputType = {
+    useCount?: true
+  }
+
+  export type BotAvatarMinAggregateInputType = {
+    id?: true
+    botId?: true
+    originalUrl?: true
+    processedUrl?: true
+    style?: true
+    ethnicity?: true
+    status?: true
+    useCount?: true
+    generatedAt?: true
+    lastUsedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BotAvatarMaxAggregateInputType = {
+    id?: true
+    botId?: true
+    originalUrl?: true
+    processedUrl?: true
+    style?: true
+    ethnicity?: true
+    status?: true
+    useCount?: true
+    generatedAt?: true
+    lastUsedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BotAvatarCountAggregateInputType = {
+    id?: true
+    botId?: true
+    originalUrl?: true
+    processedUrl?: true
+    style?: true
+    ethnicity?: true
+    status?: true
+    useCount?: true
+    generatedAt?: true
+    lastUsedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type BotAvatarAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotAvatar to aggregate.
+     */
+    where?: BotAvatarWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotAvatars to fetch.
+     */
+    orderBy?: BotAvatarOrderByWithRelationInput | BotAvatarOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BotAvatarWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotAvatars from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotAvatars.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BotAvatars
+    **/
+    _count?: true | BotAvatarCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: BotAvatarAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: BotAvatarSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BotAvatarMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BotAvatarMaxAggregateInputType
+  }
+
+  export type GetBotAvatarAggregateType<T extends BotAvatarAggregateArgs> = {
+        [P in keyof T & keyof AggregateBotAvatar]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBotAvatar[P]>
+      : GetScalarType<T[P], AggregateBotAvatar[P]>
+  }
+
+
+
+
+  export type BotAvatarGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BotAvatarWhereInput
+    orderBy?: BotAvatarOrderByWithAggregationInput | BotAvatarOrderByWithAggregationInput[]
+    by: BotAvatarScalarFieldEnum[] | BotAvatarScalarFieldEnum
+    having?: BotAvatarScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BotAvatarCountAggregateInputType | true
+    _avg?: BotAvatarAvgAggregateInputType
+    _sum?: BotAvatarSumAggregateInputType
+    _min?: BotAvatarMinAggregateInputType
+    _max?: BotAvatarMaxAggregateInputType
+  }
+
+  export type BotAvatarGroupByOutputType = {
+    id: string
+    botId: string
+    originalUrl: string | null
+    processedUrl: string | null
+    style: string
+    ethnicity: string
+    status: string
+    useCount: number
+    generatedAt: Date
+    lastUsedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: BotAvatarCountAggregateOutputType | null
+    _avg: BotAvatarAvgAggregateOutputType | null
+    _sum: BotAvatarSumAggregateOutputType | null
+    _min: BotAvatarMinAggregateOutputType | null
+    _max: BotAvatarMaxAggregateOutputType | null
+  }
+
+  type GetBotAvatarGroupByPayload<T extends BotAvatarGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BotAvatarGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BotAvatarGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BotAvatarGroupByOutputType[P]>
+            : GetScalarType<T[P], BotAvatarGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BotAvatarSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    originalUrl?: boolean
+    processedUrl?: boolean
+    style?: boolean
+    ethnicity?: boolean
+    status?: boolean
+    useCount?: boolean
+    generatedAt?: boolean
+    lastUsedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["botAvatar"]>
+
+  export type BotAvatarSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    originalUrl?: boolean
+    processedUrl?: boolean
+    style?: boolean
+    ethnicity?: boolean
+    status?: boolean
+    useCount?: boolean
+    generatedAt?: boolean
+    lastUsedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["botAvatar"]>
+
+  export type BotAvatarSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    botId?: boolean
+    originalUrl?: boolean
+    processedUrl?: boolean
+    style?: boolean
+    ethnicity?: boolean
+    status?: boolean
+    useCount?: boolean
+    generatedAt?: boolean
+    lastUsedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["botAvatar"]>
+
+  export type BotAvatarSelectScalar = {
+    id?: boolean
+    botId?: boolean
+    originalUrl?: boolean
+    processedUrl?: boolean
+    style?: boolean
+    ethnicity?: boolean
+    status?: boolean
+    useCount?: boolean
+    generatedAt?: boolean
+    lastUsedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type BotAvatarOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "botId" | "originalUrl" | "processedUrl" | "style" | "ethnicity" | "status" | "useCount" | "generatedAt" | "lastUsedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["botAvatar"]>
+
+  export type $BotAvatarPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BotAvatar"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      botId: string
+      originalUrl: string | null
+      processedUrl: string | null
+      style: string
+      ethnicity: string
+      status: string
+      useCount: number
+      generatedAt: Date
+      lastUsedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["botAvatar"]>
+    composites: {}
+  }
+
+  type BotAvatarGetPayload<S extends boolean | null | undefined | BotAvatarDefaultArgs> = $Result.GetResult<Prisma.$BotAvatarPayload, S>
+
+  type BotAvatarCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BotAvatarFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BotAvatarCountAggregateInputType | true
+    }
+
+  export interface BotAvatarDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BotAvatar'], meta: { name: 'BotAvatar' } }
+    /**
+     * Find zero or one BotAvatar that matches the filter.
+     * @param {BotAvatarFindUniqueArgs} args - Arguments to find a BotAvatar
+     * @example
+     * // Get one BotAvatar
+     * const botAvatar = await prisma.botAvatar.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BotAvatarFindUniqueArgs>(args: SelectSubset<T, BotAvatarFindUniqueArgs<ExtArgs>>): Prisma__BotAvatarClient<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BotAvatar that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BotAvatarFindUniqueOrThrowArgs} args - Arguments to find a BotAvatar
+     * @example
+     * // Get one BotAvatar
+     * const botAvatar = await prisma.botAvatar.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BotAvatarFindUniqueOrThrowArgs>(args: SelectSubset<T, BotAvatarFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BotAvatarClient<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotAvatar that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotAvatarFindFirstArgs} args - Arguments to find a BotAvatar
+     * @example
+     * // Get one BotAvatar
+     * const botAvatar = await prisma.botAvatar.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BotAvatarFindFirstArgs>(args?: SelectSubset<T, BotAvatarFindFirstArgs<ExtArgs>>): Prisma__BotAvatarClient<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BotAvatar that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotAvatarFindFirstOrThrowArgs} args - Arguments to find a BotAvatar
+     * @example
+     * // Get one BotAvatar
+     * const botAvatar = await prisma.botAvatar.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BotAvatarFindFirstOrThrowArgs>(args?: SelectSubset<T, BotAvatarFindFirstOrThrowArgs<ExtArgs>>): Prisma__BotAvatarClient<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BotAvatars that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotAvatarFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BotAvatars
+     * const botAvatars = await prisma.botAvatar.findMany()
+     * 
+     * // Get first 10 BotAvatars
+     * const botAvatars = await prisma.botAvatar.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const botAvatarWithIdOnly = await prisma.botAvatar.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BotAvatarFindManyArgs>(args?: SelectSubset<T, BotAvatarFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BotAvatar.
+     * @param {BotAvatarCreateArgs} args - Arguments to create a BotAvatar.
+     * @example
+     * // Create one BotAvatar
+     * const BotAvatar = await prisma.botAvatar.create({
+     *   data: {
+     *     // ... data to create a BotAvatar
+     *   }
+     * })
+     * 
+     */
+    create<T extends BotAvatarCreateArgs>(args: SelectSubset<T, BotAvatarCreateArgs<ExtArgs>>): Prisma__BotAvatarClient<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BotAvatars.
+     * @param {BotAvatarCreateManyArgs} args - Arguments to create many BotAvatars.
+     * @example
+     * // Create many BotAvatars
+     * const botAvatar = await prisma.botAvatar.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BotAvatarCreateManyArgs>(args?: SelectSubset<T, BotAvatarCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BotAvatars and returns the data saved in the database.
+     * @param {BotAvatarCreateManyAndReturnArgs} args - Arguments to create many BotAvatars.
+     * @example
+     * // Create many BotAvatars
+     * const botAvatar = await prisma.botAvatar.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BotAvatars and only return the `id`
+     * const botAvatarWithIdOnly = await prisma.botAvatar.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BotAvatarCreateManyAndReturnArgs>(args?: SelectSubset<T, BotAvatarCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BotAvatar.
+     * @param {BotAvatarDeleteArgs} args - Arguments to delete one BotAvatar.
+     * @example
+     * // Delete one BotAvatar
+     * const BotAvatar = await prisma.botAvatar.delete({
+     *   where: {
+     *     // ... filter to delete one BotAvatar
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BotAvatarDeleteArgs>(args: SelectSubset<T, BotAvatarDeleteArgs<ExtArgs>>): Prisma__BotAvatarClient<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BotAvatar.
+     * @param {BotAvatarUpdateArgs} args - Arguments to update one BotAvatar.
+     * @example
+     * // Update one BotAvatar
+     * const botAvatar = await prisma.botAvatar.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BotAvatarUpdateArgs>(args: SelectSubset<T, BotAvatarUpdateArgs<ExtArgs>>): Prisma__BotAvatarClient<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BotAvatars.
+     * @param {BotAvatarDeleteManyArgs} args - Arguments to filter BotAvatars to delete.
+     * @example
+     * // Delete a few BotAvatars
+     * const { count } = await prisma.botAvatar.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BotAvatarDeleteManyArgs>(args?: SelectSubset<T, BotAvatarDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotAvatars.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotAvatarUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BotAvatars
+     * const botAvatar = await prisma.botAvatar.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BotAvatarUpdateManyArgs>(args: SelectSubset<T, BotAvatarUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BotAvatars and returns the data updated in the database.
+     * @param {BotAvatarUpdateManyAndReturnArgs} args - Arguments to update many BotAvatars.
+     * @example
+     * // Update many BotAvatars
+     * const botAvatar = await prisma.botAvatar.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BotAvatars and only return the `id`
+     * const botAvatarWithIdOnly = await prisma.botAvatar.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BotAvatarUpdateManyAndReturnArgs>(args: SelectSubset<T, BotAvatarUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BotAvatar.
+     * @param {BotAvatarUpsertArgs} args - Arguments to update or create a BotAvatar.
+     * @example
+     * // Update or create a BotAvatar
+     * const botAvatar = await prisma.botAvatar.upsert({
+     *   create: {
+     *     // ... data to create a BotAvatar
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BotAvatar we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BotAvatarUpsertArgs>(args: SelectSubset<T, BotAvatarUpsertArgs<ExtArgs>>): Prisma__BotAvatarClient<$Result.GetResult<Prisma.$BotAvatarPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BotAvatars.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotAvatarCountArgs} args - Arguments to filter BotAvatars to count.
+     * @example
+     * // Count the number of BotAvatars
+     * const count = await prisma.botAvatar.count({
+     *   where: {
+     *     // ... the filter for the BotAvatars we want to count
+     *   }
+     * })
+    **/
+    count<T extends BotAvatarCountArgs>(
+      args?: Subset<T, BotAvatarCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BotAvatarCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BotAvatar.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotAvatarAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BotAvatarAggregateArgs>(args: Subset<T, BotAvatarAggregateArgs>): Prisma.PrismaPromise<GetBotAvatarAggregateType<T>>
+
+    /**
+     * Group by BotAvatar.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BotAvatarGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BotAvatarGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BotAvatarGroupByArgs['orderBy'] }
+        : { orderBy?: BotAvatarGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BotAvatarGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBotAvatarGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BotAvatar model
+   */
+  readonly fields: BotAvatarFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BotAvatar.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BotAvatarClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BotAvatar model
+   */
+  interface BotAvatarFieldRefs {
+    readonly id: FieldRef<"BotAvatar", 'String'>
+    readonly botId: FieldRef<"BotAvatar", 'String'>
+    readonly originalUrl: FieldRef<"BotAvatar", 'String'>
+    readonly processedUrl: FieldRef<"BotAvatar", 'String'>
+    readonly style: FieldRef<"BotAvatar", 'String'>
+    readonly ethnicity: FieldRef<"BotAvatar", 'String'>
+    readonly status: FieldRef<"BotAvatar", 'String'>
+    readonly useCount: FieldRef<"BotAvatar", 'Int'>
+    readonly generatedAt: FieldRef<"BotAvatar", 'DateTime'>
+    readonly lastUsedAt: FieldRef<"BotAvatar", 'DateTime'>
+    readonly createdAt: FieldRef<"BotAvatar", 'DateTime'>
+    readonly updatedAt: FieldRef<"BotAvatar", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BotAvatar findUnique
+   */
+  export type BotAvatarFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * Filter, which BotAvatar to fetch.
+     */
+    where: BotAvatarWhereUniqueInput
+  }
+
+  /**
+   * BotAvatar findUniqueOrThrow
+   */
+  export type BotAvatarFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * Filter, which BotAvatar to fetch.
+     */
+    where: BotAvatarWhereUniqueInput
+  }
+
+  /**
+   * BotAvatar findFirst
+   */
+  export type BotAvatarFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * Filter, which BotAvatar to fetch.
+     */
+    where?: BotAvatarWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotAvatars to fetch.
+     */
+    orderBy?: BotAvatarOrderByWithRelationInput | BotAvatarOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotAvatars.
+     */
+    cursor?: BotAvatarWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotAvatars from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotAvatars.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotAvatars.
+     */
+    distinct?: BotAvatarScalarFieldEnum | BotAvatarScalarFieldEnum[]
+  }
+
+  /**
+   * BotAvatar findFirstOrThrow
+   */
+  export type BotAvatarFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * Filter, which BotAvatar to fetch.
+     */
+    where?: BotAvatarWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotAvatars to fetch.
+     */
+    orderBy?: BotAvatarOrderByWithRelationInput | BotAvatarOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BotAvatars.
+     */
+    cursor?: BotAvatarWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotAvatars from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotAvatars.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotAvatars.
+     */
+    distinct?: BotAvatarScalarFieldEnum | BotAvatarScalarFieldEnum[]
+  }
+
+  /**
+   * BotAvatar findMany
+   */
+  export type BotAvatarFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * Filter, which BotAvatars to fetch.
+     */
+    where?: BotAvatarWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BotAvatars to fetch.
+     */
+    orderBy?: BotAvatarOrderByWithRelationInput | BotAvatarOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BotAvatars.
+     */
+    cursor?: BotAvatarWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BotAvatars from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BotAvatars.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BotAvatars.
+     */
+    distinct?: BotAvatarScalarFieldEnum | BotAvatarScalarFieldEnum[]
+  }
+
+  /**
+   * BotAvatar create
+   */
+  export type BotAvatarCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * The data needed to create a BotAvatar.
+     */
+    data: XOR<BotAvatarCreateInput, BotAvatarUncheckedCreateInput>
+  }
+
+  /**
+   * BotAvatar createMany
+   */
+  export type BotAvatarCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BotAvatars.
+     */
+    data: BotAvatarCreateManyInput | BotAvatarCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotAvatar createManyAndReturn
+   */
+  export type BotAvatarCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * The data used to create many BotAvatars.
+     */
+    data: BotAvatarCreateManyInput | BotAvatarCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BotAvatar update
+   */
+  export type BotAvatarUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * The data needed to update a BotAvatar.
+     */
+    data: XOR<BotAvatarUpdateInput, BotAvatarUncheckedUpdateInput>
+    /**
+     * Choose, which BotAvatar to update.
+     */
+    where: BotAvatarWhereUniqueInput
+  }
+
+  /**
+   * BotAvatar updateMany
+   */
+  export type BotAvatarUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BotAvatars.
+     */
+    data: XOR<BotAvatarUpdateManyMutationInput, BotAvatarUncheckedUpdateManyInput>
+    /**
+     * Filter which BotAvatars to update
+     */
+    where?: BotAvatarWhereInput
+    /**
+     * Limit how many BotAvatars to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotAvatar updateManyAndReturn
+   */
+  export type BotAvatarUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * The data used to update BotAvatars.
+     */
+    data: XOR<BotAvatarUpdateManyMutationInput, BotAvatarUncheckedUpdateManyInput>
+    /**
+     * Filter which BotAvatars to update
+     */
+    where?: BotAvatarWhereInput
+    /**
+     * Limit how many BotAvatars to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotAvatar upsert
+   */
+  export type BotAvatarUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * The filter to search for the BotAvatar to update in case it exists.
+     */
+    where: BotAvatarWhereUniqueInput
+    /**
+     * In case the BotAvatar found by the `where` argument doesn't exist, create a new BotAvatar with this data.
+     */
+    create: XOR<BotAvatarCreateInput, BotAvatarUncheckedCreateInput>
+    /**
+     * In case the BotAvatar was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BotAvatarUpdateInput, BotAvatarUncheckedUpdateInput>
+  }
+
+  /**
+   * BotAvatar delete
+   */
+  export type BotAvatarDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+    /**
+     * Filter which BotAvatar to delete.
+     */
+    where: BotAvatarWhereUniqueInput
+  }
+
+  /**
+   * BotAvatar deleteMany
+   */
+  export type BotAvatarDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BotAvatars to delete
+     */
+    where?: BotAvatarWhereInput
+    /**
+     * Limit how many BotAvatars to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BotAvatar without action
+   */
+  export type BotAvatarDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotAvatar
+     */
+    select?: BotAvatarSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotAvatar
+     */
+    omit?: BotAvatarOmit<ExtArgs> | null
+  }
+
 
   /**
    * Model User
@@ -2639,6 +10490,9 @@ export namespace Prisma {
     image: string | null
     password: string | null
     role: $Enums.UserRole | null
+    isBot: boolean | null
+    botType: string | null
+    botConfig: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2651,6 +10505,9 @@ export namespace Prisma {
     image: string | null
     password: string | null
     role: $Enums.UserRole | null
+    isBot: boolean | null
+    botType: string | null
+    botConfig: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2663,6 +10520,9 @@ export namespace Prisma {
     image: number
     password: number
     role: number
+    isBot: number
+    botType: number
+    botConfig: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -2677,6 +10537,9 @@ export namespace Prisma {
     image?: true
     password?: true
     role?: true
+    isBot?: true
+    botType?: true
+    botConfig?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2689,6 +10552,9 @@ export namespace Prisma {
     image?: true
     password?: true
     role?: true
+    isBot?: true
+    botType?: true
+    botConfig?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2701,6 +10567,9 @@ export namespace Prisma {
     image?: true
     password?: true
     role?: true
+    isBot?: true
+    botType?: true
+    botConfig?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -2786,6 +10655,9 @@ export namespace Prisma {
     image: string | null
     password: string | null
     role: $Enums.UserRole
+    isBot: boolean
+    botType: string | null
+    botConfig: string | null
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -2815,6 +10687,9 @@ export namespace Prisma {
     image?: boolean
     password?: boolean
     role?: boolean
+    isBot?: boolean
+    botType?: boolean
+    botConfig?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     accounts?: boolean | User$accountsArgs<ExtArgs>
@@ -2842,6 +10717,9 @@ export namespace Prisma {
     image?: boolean
     password?: boolean
     role?: boolean
+    isBot?: boolean
+    botType?: boolean
+    botConfig?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -2854,6 +10732,9 @@ export namespace Prisma {
     image?: boolean
     password?: boolean
     role?: boolean
+    isBot?: boolean
+    botType?: boolean
+    botConfig?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -2866,11 +10747,14 @@ export namespace Prisma {
     image?: boolean
     password?: boolean
     role?: boolean
+    isBot?: boolean
+    botType?: boolean
+    botConfig?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "password" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "password" | "role" | "isBot" | "botType" | "botConfig" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
@@ -2917,6 +10801,9 @@ export namespace Prisma {
       image: string | null
       password: string | null
       role: $Enums.UserRole
+      isBot: boolean
+      botType: string | null
+      botConfig: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -3363,6 +11250,9 @@ export namespace Prisma {
     readonly image: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'UserRole'>
+    readonly isBot: FieldRef<"User", 'Boolean'>
+    readonly botType: FieldRef<"User", 'String'>
+    readonly botConfig: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -6351,8 +14241,20 @@ export namespace Prisma {
 
   export type AggregateVerificationToken = {
     _count: VerificationTokenCountAggregateOutputType | null
+    _avg: VerificationTokenAvgAggregateOutputType | null
+    _sum: VerificationTokenSumAggregateOutputType | null
     _min: VerificationTokenMinAggregateOutputType | null
     _max: VerificationTokenMaxAggregateOutputType | null
+  }
+
+  export type VerificationTokenAvgAggregateOutputType = {
+    useCount: number | null
+    maxUses: number | null
+  }
+
+  export type VerificationTokenSumAggregateOutputType = {
+    useCount: number | null
+    maxUses: number | null
   }
 
   export type VerificationTokenMinAggregateOutputType = {
@@ -6362,6 +14264,9 @@ export namespace Prisma {
     expires: Date | null
     userId: string | null
     used: boolean | null
+    useCount: number | null
+    maxUses: number | null
+    lastUsedAt: Date | null
     createdAt: Date | null
   }
 
@@ -6372,6 +14277,9 @@ export namespace Prisma {
     expires: Date | null
     userId: string | null
     used: boolean | null
+    useCount: number | null
+    maxUses: number | null
+    lastUsedAt: Date | null
     createdAt: Date | null
   }
 
@@ -6382,10 +14290,23 @@ export namespace Prisma {
     expires: number
     userId: number
     used: number
+    useCount: number
+    maxUses: number
+    lastUsedAt: number
     createdAt: number
     _all: number
   }
 
+
+  export type VerificationTokenAvgAggregateInputType = {
+    useCount?: true
+    maxUses?: true
+  }
+
+  export type VerificationTokenSumAggregateInputType = {
+    useCount?: true
+    maxUses?: true
+  }
 
   export type VerificationTokenMinAggregateInputType = {
     id?: true
@@ -6394,6 +14315,9 @@ export namespace Prisma {
     expires?: true
     userId?: true
     used?: true
+    useCount?: true
+    maxUses?: true
+    lastUsedAt?: true
     createdAt?: true
   }
 
@@ -6404,6 +14328,9 @@ export namespace Prisma {
     expires?: true
     userId?: true
     used?: true
+    useCount?: true
+    maxUses?: true
+    lastUsedAt?: true
     createdAt?: true
   }
 
@@ -6414,6 +14341,9 @@ export namespace Prisma {
     expires?: true
     userId?: true
     used?: true
+    useCount?: true
+    maxUses?: true
+    lastUsedAt?: true
     createdAt?: true
     _all?: true
   }
@@ -6456,6 +14386,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: VerificationTokenAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: VerificationTokenSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: VerificationTokenMinAggregateInputType
@@ -6486,6 +14428,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: VerificationTokenCountAggregateInputType | true
+    _avg?: VerificationTokenAvgAggregateInputType
+    _sum?: VerificationTokenSumAggregateInputType
     _min?: VerificationTokenMinAggregateInputType
     _max?: VerificationTokenMaxAggregateInputType
   }
@@ -6497,8 +14441,13 @@ export namespace Prisma {
     expires: Date
     userId: string | null
     used: boolean
+    useCount: number
+    maxUses: number
+    lastUsedAt: Date | null
     createdAt: Date
     _count: VerificationTokenCountAggregateOutputType | null
+    _avg: VerificationTokenAvgAggregateOutputType | null
+    _sum: VerificationTokenSumAggregateOutputType | null
     _min: VerificationTokenMinAggregateOutputType | null
     _max: VerificationTokenMaxAggregateOutputType | null
   }
@@ -6524,6 +14473,9 @@ export namespace Prisma {
     expires?: boolean
     userId?: boolean
     used?: boolean
+    useCount?: boolean
+    maxUses?: boolean
+    lastUsedAt?: boolean
     createdAt?: boolean
     user?: boolean | VerificationToken$userArgs<ExtArgs>
   }, ExtArgs["result"]["verificationToken"]>
@@ -6535,6 +14487,9 @@ export namespace Prisma {
     expires?: boolean
     userId?: boolean
     used?: boolean
+    useCount?: boolean
+    maxUses?: boolean
+    lastUsedAt?: boolean
     createdAt?: boolean
     user?: boolean | VerificationToken$userArgs<ExtArgs>
   }, ExtArgs["result"]["verificationToken"]>
@@ -6546,6 +14501,9 @@ export namespace Prisma {
     expires?: boolean
     userId?: boolean
     used?: boolean
+    useCount?: boolean
+    maxUses?: boolean
+    lastUsedAt?: boolean
     createdAt?: boolean
     user?: boolean | VerificationToken$userArgs<ExtArgs>
   }, ExtArgs["result"]["verificationToken"]>
@@ -6557,10 +14515,13 @@ export namespace Prisma {
     expires?: boolean
     userId?: boolean
     used?: boolean
+    useCount?: boolean
+    maxUses?: boolean
+    lastUsedAt?: boolean
     createdAt?: boolean
   }
 
-  export type VerificationTokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "identifier" | "token" | "expires" | "userId" | "used" | "createdAt", ExtArgs["result"]["verificationToken"]>
+  export type VerificationTokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "identifier" | "token" | "expires" | "userId" | "used" | "useCount" | "maxUses" | "lastUsedAt" | "createdAt", ExtArgs["result"]["verificationToken"]>
   export type VerificationTokenInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | VerificationToken$userArgs<ExtArgs>
   }
@@ -6583,6 +14544,9 @@ export namespace Prisma {
       expires: Date
       userId: string | null
       used: boolean
+      useCount: number
+      maxUses: number
+      lastUsedAt: Date | null
       createdAt: Date
     }, ExtArgs["result"]["verificationToken"]>
     composites: {}
@@ -7014,6 +14978,9 @@ export namespace Prisma {
     readonly expires: FieldRef<"VerificationToken", 'DateTime'>
     readonly userId: FieldRef<"VerificationToken", 'String'>
     readonly used: FieldRef<"VerificationToken", 'Boolean'>
+    readonly useCount: FieldRef<"VerificationToken", 'Int'>
+    readonly maxUses: FieldRef<"VerificationToken", 'Int'>
+    readonly lastUsedAt: FieldRef<"VerificationToken", 'DateTime'>
     readonly createdAt: FieldRef<"VerificationToken", 'DateTime'>
   }
     
@@ -7515,7 +15482,13 @@ export namespace Prisma {
     onboardingStep: number | null
     isApproved: boolean | null
     isVerified: boolean | null
+    personalityData: string | null
     adminNotes: string | null
+    occupation: string | null
+    company: string | null
+    industry: string | null
+    linkedInVerified: boolean | null
+    verificationBadge: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7552,7 +15525,13 @@ export namespace Prisma {
     onboardingStep: number | null
     isApproved: boolean | null
     isVerified: boolean | null
+    personalityData: string | null
     adminNotes: string | null
+    occupation: string | null
+    company: string | null
+    industry: string | null
+    linkedInVerified: boolean | null
+    verificationBadge: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7589,7 +15568,13 @@ export namespace Prisma {
     onboardingStep: number
     isApproved: number
     isVerified: number
+    personalityData: number
     adminNotes: number
+    occupation: number
+    company: number
+    industry: number
+    linkedInVerified: number
+    verificationBadge: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -7646,7 +15631,13 @@ export namespace Prisma {
     onboardingStep?: true
     isApproved?: true
     isVerified?: true
+    personalityData?: true
     adminNotes?: true
+    occupation?: true
+    company?: true
+    industry?: true
+    linkedInVerified?: true
+    verificationBadge?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7683,7 +15674,13 @@ export namespace Prisma {
     onboardingStep?: true
     isApproved?: true
     isVerified?: true
+    personalityData?: true
     adminNotes?: true
+    occupation?: true
+    company?: true
+    industry?: true
+    linkedInVerified?: true
+    verificationBadge?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7720,7 +15717,13 @@ export namespace Prisma {
     onboardingStep?: true
     isApproved?: true
     isVerified?: true
+    personalityData?: true
     adminNotes?: true
+    occupation?: true
+    company?: true
+    industry?: true
+    linkedInVerified?: true
+    verificationBadge?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -7844,7 +15847,13 @@ export namespace Prisma {
     onboardingStep: number
     isApproved: boolean
     isVerified: boolean
+    personalityData: string | null
     adminNotes: string | null
+    occupation: string | null
+    company: string | null
+    industry: string | null
+    linkedInVerified: boolean
+    verificationBadge: string | null
     createdAt: Date
     updatedAt: Date
     _count: ProfileCountAggregateOutputType | null
@@ -7900,10 +15909,18 @@ export namespace Prisma {
     onboardingStep?: boolean
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: boolean
     adminNotes?: boolean
+    occupation?: boolean
+    company?: boolean
+    industry?: boolean
+    linkedInVerified?: boolean
+    verificationBadge?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
+    botProfile?: boolean | Profile$botProfileArgs<ExtArgs>
+    sincerityWallet?: boolean | Profile$sincerityWalletArgs<ExtArgs>
   }, ExtArgs["result"]["profile"]>
 
   export type ProfileSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -7938,7 +15955,13 @@ export namespace Prisma {
     onboardingStep?: boolean
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: boolean
     adminNotes?: boolean
+    occupation?: boolean
+    company?: boolean
+    industry?: boolean
+    linkedInVerified?: boolean
+    verificationBadge?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -7976,7 +15999,13 @@ export namespace Prisma {
     onboardingStep?: boolean
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: boolean
     adminNotes?: boolean
+    occupation?: boolean
+    company?: boolean
+    industry?: boolean
+    linkedInVerified?: boolean
+    verificationBadge?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -8014,14 +16043,22 @@ export namespace Prisma {
     onboardingStep?: boolean
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: boolean
     adminNotes?: boolean
+    occupation?: boolean
+    company?: boolean
+    industry?: boolean
+    linkedInVerified?: boolean
+    verificationBadge?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "displayName" | "age" | "gender" | "genderIdentity" | "sexuality" | "bio" | "avatar" | "avatarType" | "city" | "country" | "relationshipGoal" | "attachmentStyle" | "communicationStyle" | "conflictResolution" | "loveLanguage" | "boundaries" | "dealbreakers" | "lifePriorities" | "emotionalAvailability" | "preferredAgeMin" | "preferredAgeMax" | "preferredGender" | "preferredDistance" | "preferredLocation" | "compatibilityScore" | "profileStatus" | "onboardingStep" | "isApproved" | "isVerified" | "adminNotes" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
+  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "displayName" | "age" | "gender" | "genderIdentity" | "sexuality" | "bio" | "avatar" | "avatarType" | "city" | "country" | "relationshipGoal" | "attachmentStyle" | "communicationStyle" | "conflictResolution" | "loveLanguage" | "boundaries" | "dealbreakers" | "lifePriorities" | "emotionalAvailability" | "preferredAgeMin" | "preferredAgeMax" | "preferredGender" | "preferredDistance" | "preferredLocation" | "compatibilityScore" | "profileStatus" | "onboardingStep" | "isApproved" | "isVerified" | "personalityData" | "adminNotes" | "occupation" | "company" | "industry" | "linkedInVerified" | "verificationBadge" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
   export type ProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
+    botProfile?: boolean | Profile$botProfileArgs<ExtArgs>
+    sincerityWallet?: boolean | Profile$sincerityWalletArgs<ExtArgs>
   }
   export type ProfileIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -8034,6 +16071,8 @@ export namespace Prisma {
     name: "Profile"
     objects: {
       user: Prisma.$UserPayload<ExtArgs>
+      botProfile: Prisma.$BotProfilePayload<ExtArgs> | null
+      sincerityWallet: Prisma.$SincerityWalletPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -8067,7 +16106,13 @@ export namespace Prisma {
       onboardingStep: number
       isApproved: boolean
       isVerified: boolean
+      personalityData: string | null
       adminNotes: string | null
+      occupation: string | null
+      company: string | null
+      industry: string | null
+      linkedInVerified: boolean
+      verificationBadge: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["profile"]>
@@ -8465,6 +16510,8 @@ export namespace Prisma {
   export interface Prisma__ProfileClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    botProfile<T extends Profile$botProfileArgs<ExtArgs> = {}>(args?: Subset<T, Profile$botProfileArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    sincerityWallet<T extends Profile$sincerityWalletArgs<ExtArgs> = {}>(args?: Subset<T, Profile$sincerityWalletArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8525,7 +16572,13 @@ export namespace Prisma {
     readonly onboardingStep: FieldRef<"Profile", 'Int'>
     readonly isApproved: FieldRef<"Profile", 'Boolean'>
     readonly isVerified: FieldRef<"Profile", 'Boolean'>
+    readonly personalityData: FieldRef<"Profile", 'String'>
     readonly adminNotes: FieldRef<"Profile", 'String'>
+    readonly occupation: FieldRef<"Profile", 'String'>
+    readonly company: FieldRef<"Profile", 'String'>
+    readonly industry: FieldRef<"Profile", 'String'>
+    readonly linkedInVerified: FieldRef<"Profile", 'Boolean'>
+    readonly verificationBadge: FieldRef<"Profile", 'String'>
     readonly createdAt: FieldRef<"Profile", 'DateTime'>
     readonly updatedAt: FieldRef<"Profile", 'DateTime'>
   }
@@ -8929,6 +16982,44 @@ export namespace Prisma {
   }
 
   /**
+   * Profile.botProfile
+   */
+  export type Profile$botProfileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BotProfile
+     */
+    select?: BotProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BotProfile
+     */
+    omit?: BotProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BotProfileInclude<ExtArgs> | null
+    where?: BotProfileWhereInput
+  }
+
+  /**
+   * Profile.sincerityWallet
+   */
+  export type Profile$sincerityWalletArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    where?: SincerityWalletWhereInput
+  }
+
+  /**
    * Profile without action
    */
   export type ProfileDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8966,6 +17057,8 @@ export namespace Prisma {
     conflictCompat: number | null
     valuesCompat: number | null
     lifestyleCompat: number | null
+    giftAmount: number | null
+    inboxPriority: number | null
   }
 
   export type MatchSumAggregateOutputType = {
@@ -8975,6 +17068,8 @@ export namespace Prisma {
     conflictCompat: number | null
     valuesCompat: number | null
     lifestyleCompat: number | null
+    giftAmount: number | null
+    inboxPriority: number | null
   }
 
   export type MatchMinAggregateOutputType = {
@@ -8995,6 +17090,12 @@ export namespace Prisma {
     receiverAction: $Enums.MatchAction | null
     reviewedBy: string | null
     reviewNotes: string | null
+    pitchMessage: string | null
+    pitchTone: string | null
+    aiAssisted: boolean | null
+    giftAmount: number | null
+    isUnread: boolean | null
+    inboxPriority: number | null
     createdAt: Date | null
     updatedAt: Date | null
     expiresAt: Date | null
@@ -9018,6 +17119,12 @@ export namespace Prisma {
     receiverAction: $Enums.MatchAction | null
     reviewedBy: string | null
     reviewNotes: string | null
+    pitchMessage: string | null
+    pitchTone: string | null
+    aiAssisted: boolean | null
+    giftAmount: number | null
+    isUnread: boolean | null
+    inboxPriority: number | null
     createdAt: Date | null
     updatedAt: Date | null
     expiresAt: Date | null
@@ -9041,6 +17148,12 @@ export namespace Prisma {
     receiverAction: number
     reviewedBy: number
     reviewNotes: number
+    pitchMessage: number
+    pitchTone: number
+    aiAssisted: number
+    giftAmount: number
+    isUnread: number
+    inboxPriority: number
     createdAt: number
     updatedAt: number
     expiresAt: number
@@ -9055,6 +17168,8 @@ export namespace Prisma {
     conflictCompat?: true
     valuesCompat?: true
     lifestyleCompat?: true
+    giftAmount?: true
+    inboxPriority?: true
   }
 
   export type MatchSumAggregateInputType = {
@@ -9064,6 +17179,8 @@ export namespace Prisma {
     conflictCompat?: true
     valuesCompat?: true
     lifestyleCompat?: true
+    giftAmount?: true
+    inboxPriority?: true
   }
 
   export type MatchMinAggregateInputType = {
@@ -9084,6 +17201,12 @@ export namespace Prisma {
     receiverAction?: true
     reviewedBy?: true
     reviewNotes?: true
+    pitchMessage?: true
+    pitchTone?: true
+    aiAssisted?: true
+    giftAmount?: true
+    isUnread?: true
+    inboxPriority?: true
     createdAt?: true
     updatedAt?: true
     expiresAt?: true
@@ -9107,6 +17230,12 @@ export namespace Prisma {
     receiverAction?: true
     reviewedBy?: true
     reviewNotes?: true
+    pitchMessage?: true
+    pitchTone?: true
+    aiAssisted?: true
+    giftAmount?: true
+    isUnread?: true
+    inboxPriority?: true
     createdAt?: true
     updatedAt?: true
     expiresAt?: true
@@ -9130,6 +17259,12 @@ export namespace Prisma {
     receiverAction?: true
     reviewedBy?: true
     reviewNotes?: true
+    pitchMessage?: true
+    pitchTone?: true
+    aiAssisted?: true
+    giftAmount?: true
+    isUnread?: true
+    inboxPriority?: true
     createdAt?: true
     updatedAt?: true
     expiresAt?: true
@@ -9240,6 +17375,12 @@ export namespace Prisma {
     receiverAction: $Enums.MatchAction | null
     reviewedBy: string | null
     reviewNotes: string | null
+    pitchMessage: string | null
+    pitchTone: string | null
+    aiAssisted: boolean
+    giftAmount: number
+    isUnread: boolean
+    inboxPriority: number | null
     createdAt: Date
     updatedAt: Date
     expiresAt: Date | null
@@ -9282,6 +17423,12 @@ export namespace Prisma {
     receiverAction?: boolean
     reviewedBy?: boolean
     reviewNotes?: boolean
+    pitchMessage?: boolean
+    pitchTone?: boolean
+    aiAssisted?: boolean
+    giftAmount?: boolean
+    isUnread?: boolean
+    inboxPriority?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     expiresAt?: boolean
@@ -9310,6 +17457,12 @@ export namespace Prisma {
     receiverAction?: boolean
     reviewedBy?: boolean
     reviewNotes?: boolean
+    pitchMessage?: boolean
+    pitchTone?: boolean
+    aiAssisted?: boolean
+    giftAmount?: boolean
+    isUnread?: boolean
+    inboxPriority?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     expiresAt?: boolean
@@ -9335,6 +17488,12 @@ export namespace Prisma {
     receiverAction?: boolean
     reviewedBy?: boolean
     reviewNotes?: boolean
+    pitchMessage?: boolean
+    pitchTone?: boolean
+    aiAssisted?: boolean
+    giftAmount?: boolean
+    isUnread?: boolean
+    inboxPriority?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     expiresAt?: boolean
@@ -9360,12 +17519,18 @@ export namespace Prisma {
     receiverAction?: boolean
     reviewedBy?: boolean
     reviewNotes?: boolean
+    pitchMessage?: boolean
+    pitchTone?: boolean
+    aiAssisted?: boolean
+    giftAmount?: boolean
+    isUnread?: boolean
+    inboxPriority?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     expiresAt?: boolean
   }
 
-  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "senderId" | "receiverId" | "matchScore" | "matchReason" | "conflictWarnings" | "attachmentCompat" | "communicationCompat" | "conflictCompat" | "valuesCompat" | "lifestyleCompat" | "status" | "matchType" | "senderAction" | "receiverAction" | "reviewedBy" | "reviewNotes" | "createdAt" | "updatedAt" | "expiresAt", ExtArgs["result"]["match"]>
+  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "senderId" | "receiverId" | "matchScore" | "matchReason" | "conflictWarnings" | "attachmentCompat" | "communicationCompat" | "conflictCompat" | "valuesCompat" | "lifestyleCompat" | "status" | "matchType" | "senderAction" | "receiverAction" | "reviewedBy" | "reviewNotes" | "pitchMessage" | "pitchTone" | "aiAssisted" | "giftAmount" | "isUnread" | "inboxPriority" | "createdAt" | "updatedAt" | "expiresAt", ExtArgs["result"]["match"]>
   export type MatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
     receiver?: boolean | UserDefaultArgs<ExtArgs>
@@ -9408,6 +17573,12 @@ export namespace Prisma {
       receiverAction: $Enums.MatchAction | null
       reviewedBy: string | null
       reviewNotes: string | null
+      pitchMessage: string | null
+      pitchTone: string | null
+      aiAssisted: boolean
+      giftAmount: number
+      isUnread: boolean
+      inboxPriority: number | null
       createdAt: Date
       updatedAt: Date
       expiresAt: Date | null
@@ -9855,6 +18026,12 @@ export namespace Prisma {
     readonly receiverAction: FieldRef<"Match", 'MatchAction'>
     readonly reviewedBy: FieldRef<"Match", 'String'>
     readonly reviewNotes: FieldRef<"Match", 'String'>
+    readonly pitchMessage: FieldRef<"Match", 'String'>
+    readonly pitchTone: FieldRef<"Match", 'String'>
+    readonly aiAssisted: FieldRef<"Match", 'Boolean'>
+    readonly giftAmount: FieldRef<"Match", 'Int'>
+    readonly isUnread: FieldRef<"Match", 'Boolean'>
+    readonly inboxPriority: FieldRef<"Match", 'Float'>
     readonly createdAt: FieldRef<"Match", 'DateTime'>
     readonly updatedAt: FieldRef<"Match", 'DateTime'>
     readonly expiresAt: FieldRef<"Match", 'DateTime'>
@@ -11410,8 +19587,20 @@ export namespace Prisma {
 
   export type AggregateChatRoom = {
     _count: ChatRoomCountAggregateOutputType | null
+    _avg: ChatRoomAvgAggregateOutputType | null
+    _sum: ChatRoomSumAggregateOutputType | null
     _min: ChatRoomMinAggregateOutputType | null
     _max: ChatRoomMaxAggregateOutputType | null
+  }
+
+  export type ChatRoomAvgAggregateOutputType = {
+    extensionCount: number | null
+    screenshotCount: number | null
+  }
+
+  export type ChatRoomSumAggregateOutputType = {
+    extensionCount: number | null
+    screenshotCount: number | null
   }
 
   export type ChatRoomMinAggregateOutputType = {
@@ -11419,6 +19608,16 @@ export namespace Prisma {
     matchId: string | null
     lastMessageAt: Date | null
     isArchived: boolean | null
+    vaultStatus: $Enums.VaultStatus | null
+    vaultExpiry: Date | null
+    extendedAt: Date | null
+    extendedBy: string | null
+    extensionCount: number | null
+    revokedAt: Date | null
+    revokedBy: string | null
+    revokeReason: string | null
+    screenshotCount: number | null
+    lastScreenshotAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -11428,6 +19627,16 @@ export namespace Prisma {
     matchId: string | null
     lastMessageAt: Date | null
     isArchived: boolean | null
+    vaultStatus: $Enums.VaultStatus | null
+    vaultExpiry: Date | null
+    extendedAt: Date | null
+    extendedBy: string | null
+    extensionCount: number | null
+    revokedAt: Date | null
+    revokedBy: string | null
+    revokeReason: string | null
+    screenshotCount: number | null
+    lastScreenshotAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -11437,17 +19646,47 @@ export namespace Prisma {
     matchId: number
     lastMessageAt: number
     isArchived: number
+    vaultStatus: number
+    vaultExpiry: number
+    extendedAt: number
+    extendedBy: number
+    extensionCount: number
+    revokedAt: number
+    revokedBy: number
+    revokeReason: number
+    screenshotCount: number
+    lastScreenshotAt: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
 
+  export type ChatRoomAvgAggregateInputType = {
+    extensionCount?: true
+    screenshotCount?: true
+  }
+
+  export type ChatRoomSumAggregateInputType = {
+    extensionCount?: true
+    screenshotCount?: true
+  }
+
   export type ChatRoomMinAggregateInputType = {
     id?: true
     matchId?: true
     lastMessageAt?: true
     isArchived?: true
+    vaultStatus?: true
+    vaultExpiry?: true
+    extendedAt?: true
+    extendedBy?: true
+    extensionCount?: true
+    revokedAt?: true
+    revokedBy?: true
+    revokeReason?: true
+    screenshotCount?: true
+    lastScreenshotAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -11457,6 +19696,16 @@ export namespace Prisma {
     matchId?: true
     lastMessageAt?: true
     isArchived?: true
+    vaultStatus?: true
+    vaultExpiry?: true
+    extendedAt?: true
+    extendedBy?: true
+    extensionCount?: true
+    revokedAt?: true
+    revokedBy?: true
+    revokeReason?: true
+    screenshotCount?: true
+    lastScreenshotAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -11466,6 +19715,16 @@ export namespace Prisma {
     matchId?: true
     lastMessageAt?: true
     isArchived?: true
+    vaultStatus?: true
+    vaultExpiry?: true
+    extendedAt?: true
+    extendedBy?: true
+    extensionCount?: true
+    revokedAt?: true
+    revokedBy?: true
+    revokeReason?: true
+    screenshotCount?: true
+    lastScreenshotAt?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -11509,6 +19768,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: ChatRoomAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ChatRoomSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: ChatRoomMinAggregateInputType
@@ -11539,6 +19810,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: ChatRoomCountAggregateInputType | true
+    _avg?: ChatRoomAvgAggregateInputType
+    _sum?: ChatRoomSumAggregateInputType
     _min?: ChatRoomMinAggregateInputType
     _max?: ChatRoomMaxAggregateInputType
   }
@@ -11548,9 +19821,21 @@ export namespace Prisma {
     matchId: string | null
     lastMessageAt: Date | null
     isArchived: boolean
+    vaultStatus: $Enums.VaultStatus
+    vaultExpiry: Date | null
+    extendedAt: Date | null
+    extendedBy: string | null
+    extensionCount: number
+    revokedAt: Date | null
+    revokedBy: string | null
+    revokeReason: string | null
+    screenshotCount: number
+    lastScreenshotAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: ChatRoomCountAggregateOutputType | null
+    _avg: ChatRoomAvgAggregateOutputType | null
+    _sum: ChatRoomSumAggregateOutputType | null
     _min: ChatRoomMinAggregateOutputType | null
     _max: ChatRoomMaxAggregateOutputType | null
   }
@@ -11574,6 +19859,16 @@ export namespace Prisma {
     matchId?: boolean
     lastMessageAt?: boolean
     isArchived?: boolean
+    vaultStatus?: boolean
+    vaultExpiry?: boolean
+    extendedAt?: boolean
+    extendedBy?: boolean
+    extensionCount?: boolean
+    revokedAt?: boolean
+    revokedBy?: boolean
+    revokeReason?: boolean
+    screenshotCount?: boolean
+    lastScreenshotAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     match?: boolean | ChatRoom$matchArgs<ExtArgs>
@@ -11587,6 +19882,16 @@ export namespace Prisma {
     matchId?: boolean
     lastMessageAt?: boolean
     isArchived?: boolean
+    vaultStatus?: boolean
+    vaultExpiry?: boolean
+    extendedAt?: boolean
+    extendedBy?: boolean
+    extensionCount?: boolean
+    revokedAt?: boolean
+    revokedBy?: boolean
+    revokeReason?: boolean
+    screenshotCount?: boolean
+    lastScreenshotAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     match?: boolean | ChatRoom$matchArgs<ExtArgs>
@@ -11597,6 +19902,16 @@ export namespace Prisma {
     matchId?: boolean
     lastMessageAt?: boolean
     isArchived?: boolean
+    vaultStatus?: boolean
+    vaultExpiry?: boolean
+    extendedAt?: boolean
+    extendedBy?: boolean
+    extensionCount?: boolean
+    revokedAt?: boolean
+    revokedBy?: boolean
+    revokeReason?: boolean
+    screenshotCount?: boolean
+    lastScreenshotAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     match?: boolean | ChatRoom$matchArgs<ExtArgs>
@@ -11607,11 +19922,21 @@ export namespace Prisma {
     matchId?: boolean
     lastMessageAt?: boolean
     isArchived?: boolean
+    vaultStatus?: boolean
+    vaultExpiry?: boolean
+    extendedAt?: boolean
+    extendedBy?: boolean
+    extensionCount?: boolean
+    revokedAt?: boolean
+    revokedBy?: boolean
+    revokeReason?: boolean
+    screenshotCount?: boolean
+    lastScreenshotAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ChatRoomOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "matchId" | "lastMessageAt" | "isArchived" | "createdAt" | "updatedAt", ExtArgs["result"]["chatRoom"]>
+  export type ChatRoomOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "matchId" | "lastMessageAt" | "isArchived" | "vaultStatus" | "vaultExpiry" | "extendedAt" | "extendedBy" | "extensionCount" | "revokedAt" | "revokedBy" | "revokeReason" | "screenshotCount" | "lastScreenshotAt" | "createdAt" | "updatedAt", ExtArgs["result"]["chatRoom"]>
   export type ChatRoomInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     match?: boolean | ChatRoom$matchArgs<ExtArgs>
     members?: boolean | ChatRoom$membersArgs<ExtArgs>
@@ -11637,6 +19962,16 @@ export namespace Prisma {
       matchId: string | null
       lastMessageAt: Date | null
       isArchived: boolean
+      vaultStatus: $Enums.VaultStatus
+      vaultExpiry: Date | null
+      extendedAt: Date | null
+      extendedBy: string | null
+      extensionCount: number
+      revokedAt: Date | null
+      revokedBy: string | null
+      revokeReason: string | null
+      screenshotCount: number
+      lastScreenshotAt: Date | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["chatRoom"]>
@@ -12069,6 +20404,16 @@ export namespace Prisma {
     readonly matchId: FieldRef<"ChatRoom", 'String'>
     readonly lastMessageAt: FieldRef<"ChatRoom", 'DateTime'>
     readonly isArchived: FieldRef<"ChatRoom", 'Boolean'>
+    readonly vaultStatus: FieldRef<"ChatRoom", 'VaultStatus'>
+    readonly vaultExpiry: FieldRef<"ChatRoom", 'DateTime'>
+    readonly extendedAt: FieldRef<"ChatRoom", 'DateTime'>
+    readonly extendedBy: FieldRef<"ChatRoom", 'String'>
+    readonly extensionCount: FieldRef<"ChatRoom", 'Int'>
+    readonly revokedAt: FieldRef<"ChatRoom", 'DateTime'>
+    readonly revokedBy: FieldRef<"ChatRoom", 'String'>
+    readonly revokeReason: FieldRef<"ChatRoom", 'String'>
+    readonly screenshotCount: FieldRef<"ChatRoom", 'Int'>
+    readonly lastScreenshotAt: FieldRef<"ChatRoom", 'DateTime'>
     readonly createdAt: FieldRef<"ChatRoom", 'DateTime'>
     readonly updatedAt: FieldRef<"ChatRoom", 'DateTime'>
   }
@@ -21550,6 +29895,2445 @@ export namespace Prisma {
 
 
   /**
+   * Model SincerityWallet
+   */
+
+  export type AggregateSincerityWallet = {
+    _count: SincerityWalletCountAggregateOutputType | null
+    _avg: SincerityWalletAvgAggregateOutputType | null
+    _sum: SincerityWalletSumAggregateOutputType | null
+    _min: SincerityWalletMinAggregateOutputType | null
+    _max: SincerityWalletMaxAggregateOutputType | null
+  }
+
+  export type SincerityWalletAvgAggregateOutputType = {
+    balance: number | null
+    totalEarned: number | null
+    totalSpent: number | null
+    totalGifted: number | null
+    totalReceived: number | null
+    tierProgress: number | null
+  }
+
+  export type SincerityWalletSumAggregateOutputType = {
+    balance: number | null
+    totalEarned: number | null
+    totalSpent: number | null
+    totalGifted: number | null
+    totalReceived: number | null
+    tierProgress: number | null
+  }
+
+  export type SincerityWalletMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    balance: number | null
+    totalEarned: number | null
+    totalSpent: number | null
+    totalGifted: number | null
+    totalReceived: number | null
+    tier: $Enums.SincerityTier | null
+    tierProgress: number | null
+    lastEarnedAt: Date | null
+    lastSpentAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SincerityWalletMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    balance: number | null
+    totalEarned: number | null
+    totalSpent: number | null
+    totalGifted: number | null
+    totalReceived: number | null
+    tier: $Enums.SincerityTier | null
+    tierProgress: number | null
+    lastEarnedAt: Date | null
+    lastSpentAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SincerityWalletCountAggregateOutputType = {
+    id: number
+    userId: number
+    balance: number
+    totalEarned: number
+    totalSpent: number
+    totalGifted: number
+    totalReceived: number
+    tier: number
+    tierProgress: number
+    lastEarnedAt: number
+    lastSpentAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type SincerityWalletAvgAggregateInputType = {
+    balance?: true
+    totalEarned?: true
+    totalSpent?: true
+    totalGifted?: true
+    totalReceived?: true
+    tierProgress?: true
+  }
+
+  export type SincerityWalletSumAggregateInputType = {
+    balance?: true
+    totalEarned?: true
+    totalSpent?: true
+    totalGifted?: true
+    totalReceived?: true
+    tierProgress?: true
+  }
+
+  export type SincerityWalletMinAggregateInputType = {
+    id?: true
+    userId?: true
+    balance?: true
+    totalEarned?: true
+    totalSpent?: true
+    totalGifted?: true
+    totalReceived?: true
+    tier?: true
+    tierProgress?: true
+    lastEarnedAt?: true
+    lastSpentAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SincerityWalletMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    balance?: true
+    totalEarned?: true
+    totalSpent?: true
+    totalGifted?: true
+    totalReceived?: true
+    tier?: true
+    tierProgress?: true
+    lastEarnedAt?: true
+    lastSpentAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SincerityWalletCountAggregateInputType = {
+    id?: true
+    userId?: true
+    balance?: true
+    totalEarned?: true
+    totalSpent?: true
+    totalGifted?: true
+    totalReceived?: true
+    tier?: true
+    tierProgress?: true
+    lastEarnedAt?: true
+    lastSpentAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type SincerityWalletAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SincerityWallet to aggregate.
+     */
+    where?: SincerityWalletWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SincerityWallets to fetch.
+     */
+    orderBy?: SincerityWalletOrderByWithRelationInput | SincerityWalletOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SincerityWalletWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SincerityWallets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SincerityWallets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SincerityWallets
+    **/
+    _count?: true | SincerityWalletCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SincerityWalletAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SincerityWalletSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SincerityWalletMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SincerityWalletMaxAggregateInputType
+  }
+
+  export type GetSincerityWalletAggregateType<T extends SincerityWalletAggregateArgs> = {
+        [P in keyof T & keyof AggregateSincerityWallet]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSincerityWallet[P]>
+      : GetScalarType<T[P], AggregateSincerityWallet[P]>
+  }
+
+
+
+
+  export type SincerityWalletGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SincerityWalletWhereInput
+    orderBy?: SincerityWalletOrderByWithAggregationInput | SincerityWalletOrderByWithAggregationInput[]
+    by: SincerityWalletScalarFieldEnum[] | SincerityWalletScalarFieldEnum
+    having?: SincerityWalletScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SincerityWalletCountAggregateInputType | true
+    _avg?: SincerityWalletAvgAggregateInputType
+    _sum?: SincerityWalletSumAggregateInputType
+    _min?: SincerityWalletMinAggregateInputType
+    _max?: SincerityWalletMaxAggregateInputType
+  }
+
+  export type SincerityWalletGroupByOutputType = {
+    id: string
+    userId: string
+    balance: number
+    totalEarned: number
+    totalSpent: number
+    totalGifted: number
+    totalReceived: number
+    tier: $Enums.SincerityTier
+    tierProgress: number
+    lastEarnedAt: Date | null
+    lastSpentAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: SincerityWalletCountAggregateOutputType | null
+    _avg: SincerityWalletAvgAggregateOutputType | null
+    _sum: SincerityWalletSumAggregateOutputType | null
+    _min: SincerityWalletMinAggregateOutputType | null
+    _max: SincerityWalletMaxAggregateOutputType | null
+  }
+
+  type GetSincerityWalletGroupByPayload<T extends SincerityWalletGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SincerityWalletGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SincerityWalletGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SincerityWalletGroupByOutputType[P]>
+            : GetScalarType<T[P], SincerityWalletGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SincerityWalletSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    balance?: boolean
+    totalEarned?: boolean
+    totalSpent?: boolean
+    totalGifted?: boolean
+    totalReceived?: boolean
+    tier?: boolean
+    tierProgress?: boolean
+    lastEarnedAt?: boolean
+    lastSpentAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | ProfileDefaultArgs<ExtArgs>
+    transactions?: boolean | SincerityWallet$transactionsArgs<ExtArgs>
+    _count?: boolean | SincerityWalletCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sincerityWallet"]>
+
+  export type SincerityWalletSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    balance?: boolean
+    totalEarned?: boolean
+    totalSpent?: boolean
+    totalGifted?: boolean
+    totalReceived?: boolean
+    tier?: boolean
+    tierProgress?: boolean
+    lastEarnedAt?: boolean
+    lastSpentAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | ProfileDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sincerityWallet"]>
+
+  export type SincerityWalletSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    balance?: boolean
+    totalEarned?: boolean
+    totalSpent?: boolean
+    totalGifted?: boolean
+    totalReceived?: boolean
+    tier?: boolean
+    tierProgress?: boolean
+    lastEarnedAt?: boolean
+    lastSpentAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | ProfileDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sincerityWallet"]>
+
+  export type SincerityWalletSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    balance?: boolean
+    totalEarned?: boolean
+    totalSpent?: boolean
+    totalGifted?: boolean
+    totalReceived?: boolean
+    tier?: boolean
+    tierProgress?: boolean
+    lastEarnedAt?: boolean
+    lastSpentAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type SincerityWalletOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "balance" | "totalEarned" | "totalSpent" | "totalGifted" | "totalReceived" | "tier" | "tierProgress" | "lastEarnedAt" | "lastSpentAt" | "createdAt" | "updatedAt", ExtArgs["result"]["sincerityWallet"]>
+  export type SincerityWalletInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | ProfileDefaultArgs<ExtArgs>
+    transactions?: boolean | SincerityWallet$transactionsArgs<ExtArgs>
+    _count?: boolean | SincerityWalletCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type SincerityWalletIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | ProfileDefaultArgs<ExtArgs>
+  }
+  export type SincerityWalletIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | ProfileDefaultArgs<ExtArgs>
+  }
+
+  export type $SincerityWalletPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SincerityWallet"
+    objects: {
+      user: Prisma.$ProfilePayload<ExtArgs>
+      transactions: Prisma.$SincerityTransactionPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      balance: number
+      totalEarned: number
+      totalSpent: number
+      totalGifted: number
+      totalReceived: number
+      tier: $Enums.SincerityTier
+      tierProgress: number
+      lastEarnedAt: Date | null
+      lastSpentAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["sincerityWallet"]>
+    composites: {}
+  }
+
+  type SincerityWalletGetPayload<S extends boolean | null | undefined | SincerityWalletDefaultArgs> = $Result.GetResult<Prisma.$SincerityWalletPayload, S>
+
+  type SincerityWalletCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SincerityWalletFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SincerityWalletCountAggregateInputType | true
+    }
+
+  export interface SincerityWalletDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SincerityWallet'], meta: { name: 'SincerityWallet' } }
+    /**
+     * Find zero or one SincerityWallet that matches the filter.
+     * @param {SincerityWalletFindUniqueArgs} args - Arguments to find a SincerityWallet
+     * @example
+     * // Get one SincerityWallet
+     * const sincerityWallet = await prisma.sincerityWallet.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SincerityWalletFindUniqueArgs>(args: SelectSubset<T, SincerityWalletFindUniqueArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SincerityWallet that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SincerityWalletFindUniqueOrThrowArgs} args - Arguments to find a SincerityWallet
+     * @example
+     * // Get one SincerityWallet
+     * const sincerityWallet = await prisma.sincerityWallet.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SincerityWalletFindUniqueOrThrowArgs>(args: SelectSubset<T, SincerityWalletFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SincerityWallet that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityWalletFindFirstArgs} args - Arguments to find a SincerityWallet
+     * @example
+     * // Get one SincerityWallet
+     * const sincerityWallet = await prisma.sincerityWallet.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SincerityWalletFindFirstArgs>(args?: SelectSubset<T, SincerityWalletFindFirstArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SincerityWallet that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityWalletFindFirstOrThrowArgs} args - Arguments to find a SincerityWallet
+     * @example
+     * // Get one SincerityWallet
+     * const sincerityWallet = await prisma.sincerityWallet.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SincerityWalletFindFirstOrThrowArgs>(args?: SelectSubset<T, SincerityWalletFindFirstOrThrowArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SincerityWallets that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityWalletFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SincerityWallets
+     * const sincerityWallets = await prisma.sincerityWallet.findMany()
+     * 
+     * // Get first 10 SincerityWallets
+     * const sincerityWallets = await prisma.sincerityWallet.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const sincerityWalletWithIdOnly = await prisma.sincerityWallet.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SincerityWalletFindManyArgs>(args?: SelectSubset<T, SincerityWalletFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SincerityWallet.
+     * @param {SincerityWalletCreateArgs} args - Arguments to create a SincerityWallet.
+     * @example
+     * // Create one SincerityWallet
+     * const SincerityWallet = await prisma.sincerityWallet.create({
+     *   data: {
+     *     // ... data to create a SincerityWallet
+     *   }
+     * })
+     * 
+     */
+    create<T extends SincerityWalletCreateArgs>(args: SelectSubset<T, SincerityWalletCreateArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SincerityWallets.
+     * @param {SincerityWalletCreateManyArgs} args - Arguments to create many SincerityWallets.
+     * @example
+     * // Create many SincerityWallets
+     * const sincerityWallet = await prisma.sincerityWallet.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SincerityWalletCreateManyArgs>(args?: SelectSubset<T, SincerityWalletCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SincerityWallets and returns the data saved in the database.
+     * @param {SincerityWalletCreateManyAndReturnArgs} args - Arguments to create many SincerityWallets.
+     * @example
+     * // Create many SincerityWallets
+     * const sincerityWallet = await prisma.sincerityWallet.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SincerityWallets and only return the `id`
+     * const sincerityWalletWithIdOnly = await prisma.sincerityWallet.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SincerityWalletCreateManyAndReturnArgs>(args?: SelectSubset<T, SincerityWalletCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SincerityWallet.
+     * @param {SincerityWalletDeleteArgs} args - Arguments to delete one SincerityWallet.
+     * @example
+     * // Delete one SincerityWallet
+     * const SincerityWallet = await prisma.sincerityWallet.delete({
+     *   where: {
+     *     // ... filter to delete one SincerityWallet
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SincerityWalletDeleteArgs>(args: SelectSubset<T, SincerityWalletDeleteArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SincerityWallet.
+     * @param {SincerityWalletUpdateArgs} args - Arguments to update one SincerityWallet.
+     * @example
+     * // Update one SincerityWallet
+     * const sincerityWallet = await prisma.sincerityWallet.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SincerityWalletUpdateArgs>(args: SelectSubset<T, SincerityWalletUpdateArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SincerityWallets.
+     * @param {SincerityWalletDeleteManyArgs} args - Arguments to filter SincerityWallets to delete.
+     * @example
+     * // Delete a few SincerityWallets
+     * const { count } = await prisma.sincerityWallet.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SincerityWalletDeleteManyArgs>(args?: SelectSubset<T, SincerityWalletDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SincerityWallets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityWalletUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SincerityWallets
+     * const sincerityWallet = await prisma.sincerityWallet.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SincerityWalletUpdateManyArgs>(args: SelectSubset<T, SincerityWalletUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SincerityWallets and returns the data updated in the database.
+     * @param {SincerityWalletUpdateManyAndReturnArgs} args - Arguments to update many SincerityWallets.
+     * @example
+     * // Update many SincerityWallets
+     * const sincerityWallet = await prisma.sincerityWallet.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SincerityWallets and only return the `id`
+     * const sincerityWalletWithIdOnly = await prisma.sincerityWallet.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SincerityWalletUpdateManyAndReturnArgs>(args: SelectSubset<T, SincerityWalletUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SincerityWallet.
+     * @param {SincerityWalletUpsertArgs} args - Arguments to update or create a SincerityWallet.
+     * @example
+     * // Update or create a SincerityWallet
+     * const sincerityWallet = await prisma.sincerityWallet.upsert({
+     *   create: {
+     *     // ... data to create a SincerityWallet
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SincerityWallet we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SincerityWalletUpsertArgs>(args: SelectSubset<T, SincerityWalletUpsertArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SincerityWallets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityWalletCountArgs} args - Arguments to filter SincerityWallets to count.
+     * @example
+     * // Count the number of SincerityWallets
+     * const count = await prisma.sincerityWallet.count({
+     *   where: {
+     *     // ... the filter for the SincerityWallets we want to count
+     *   }
+     * })
+    **/
+    count<T extends SincerityWalletCountArgs>(
+      args?: Subset<T, SincerityWalletCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SincerityWalletCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SincerityWallet.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityWalletAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SincerityWalletAggregateArgs>(args: Subset<T, SincerityWalletAggregateArgs>): Prisma.PrismaPromise<GetSincerityWalletAggregateType<T>>
+
+    /**
+     * Group by SincerityWallet.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityWalletGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SincerityWalletGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SincerityWalletGroupByArgs['orderBy'] }
+        : { orderBy?: SincerityWalletGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SincerityWalletGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSincerityWalletGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SincerityWallet model
+   */
+  readonly fields: SincerityWalletFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SincerityWallet.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SincerityWalletClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends ProfileDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProfileDefaultArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    transactions<T extends SincerityWallet$transactionsArgs<ExtArgs> = {}>(args?: Subset<T, SincerityWallet$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SincerityWallet model
+   */
+  interface SincerityWalletFieldRefs {
+    readonly id: FieldRef<"SincerityWallet", 'String'>
+    readonly userId: FieldRef<"SincerityWallet", 'String'>
+    readonly balance: FieldRef<"SincerityWallet", 'Int'>
+    readonly totalEarned: FieldRef<"SincerityWallet", 'Int'>
+    readonly totalSpent: FieldRef<"SincerityWallet", 'Int'>
+    readonly totalGifted: FieldRef<"SincerityWallet", 'Int'>
+    readonly totalReceived: FieldRef<"SincerityWallet", 'Int'>
+    readonly tier: FieldRef<"SincerityWallet", 'SincerityTier'>
+    readonly tierProgress: FieldRef<"SincerityWallet", 'Float'>
+    readonly lastEarnedAt: FieldRef<"SincerityWallet", 'DateTime'>
+    readonly lastSpentAt: FieldRef<"SincerityWallet", 'DateTime'>
+    readonly createdAt: FieldRef<"SincerityWallet", 'DateTime'>
+    readonly updatedAt: FieldRef<"SincerityWallet", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SincerityWallet findUnique
+   */
+  export type SincerityWalletFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityWallet to fetch.
+     */
+    where: SincerityWalletWhereUniqueInput
+  }
+
+  /**
+   * SincerityWallet findUniqueOrThrow
+   */
+  export type SincerityWalletFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityWallet to fetch.
+     */
+    where: SincerityWalletWhereUniqueInput
+  }
+
+  /**
+   * SincerityWallet findFirst
+   */
+  export type SincerityWalletFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityWallet to fetch.
+     */
+    where?: SincerityWalletWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SincerityWallets to fetch.
+     */
+    orderBy?: SincerityWalletOrderByWithRelationInput | SincerityWalletOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SincerityWallets.
+     */
+    cursor?: SincerityWalletWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SincerityWallets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SincerityWallets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SincerityWallets.
+     */
+    distinct?: SincerityWalletScalarFieldEnum | SincerityWalletScalarFieldEnum[]
+  }
+
+  /**
+   * SincerityWallet findFirstOrThrow
+   */
+  export type SincerityWalletFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityWallet to fetch.
+     */
+    where?: SincerityWalletWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SincerityWallets to fetch.
+     */
+    orderBy?: SincerityWalletOrderByWithRelationInput | SincerityWalletOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SincerityWallets.
+     */
+    cursor?: SincerityWalletWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SincerityWallets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SincerityWallets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SincerityWallets.
+     */
+    distinct?: SincerityWalletScalarFieldEnum | SincerityWalletScalarFieldEnum[]
+  }
+
+  /**
+   * SincerityWallet findMany
+   */
+  export type SincerityWalletFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityWallets to fetch.
+     */
+    where?: SincerityWalletWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SincerityWallets to fetch.
+     */
+    orderBy?: SincerityWalletOrderByWithRelationInput | SincerityWalletOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SincerityWallets.
+     */
+    cursor?: SincerityWalletWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SincerityWallets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SincerityWallets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SincerityWallets.
+     */
+    distinct?: SincerityWalletScalarFieldEnum | SincerityWalletScalarFieldEnum[]
+  }
+
+  /**
+   * SincerityWallet create
+   */
+  export type SincerityWalletCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SincerityWallet.
+     */
+    data: XOR<SincerityWalletCreateInput, SincerityWalletUncheckedCreateInput>
+  }
+
+  /**
+   * SincerityWallet createMany
+   */
+  export type SincerityWalletCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SincerityWallets.
+     */
+    data: SincerityWalletCreateManyInput | SincerityWalletCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SincerityWallet createManyAndReturn
+   */
+  export type SincerityWalletCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * The data used to create many SincerityWallets.
+     */
+    data: SincerityWalletCreateManyInput | SincerityWalletCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SincerityWallet update
+   */
+  export type SincerityWalletUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SincerityWallet.
+     */
+    data: XOR<SincerityWalletUpdateInput, SincerityWalletUncheckedUpdateInput>
+    /**
+     * Choose, which SincerityWallet to update.
+     */
+    where: SincerityWalletWhereUniqueInput
+  }
+
+  /**
+   * SincerityWallet updateMany
+   */
+  export type SincerityWalletUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SincerityWallets.
+     */
+    data: XOR<SincerityWalletUpdateManyMutationInput, SincerityWalletUncheckedUpdateManyInput>
+    /**
+     * Filter which SincerityWallets to update
+     */
+    where?: SincerityWalletWhereInput
+    /**
+     * Limit how many SincerityWallets to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SincerityWallet updateManyAndReturn
+   */
+  export type SincerityWalletUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * The data used to update SincerityWallets.
+     */
+    data: XOR<SincerityWalletUpdateManyMutationInput, SincerityWalletUncheckedUpdateManyInput>
+    /**
+     * Filter which SincerityWallets to update
+     */
+    where?: SincerityWalletWhereInput
+    /**
+     * Limit how many SincerityWallets to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SincerityWallet upsert
+   */
+  export type SincerityWalletUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SincerityWallet to update in case it exists.
+     */
+    where: SincerityWalletWhereUniqueInput
+    /**
+     * In case the SincerityWallet found by the `where` argument doesn't exist, create a new SincerityWallet with this data.
+     */
+    create: XOR<SincerityWalletCreateInput, SincerityWalletUncheckedCreateInput>
+    /**
+     * In case the SincerityWallet was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SincerityWalletUpdateInput, SincerityWalletUncheckedUpdateInput>
+  }
+
+  /**
+   * SincerityWallet delete
+   */
+  export type SincerityWalletDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    /**
+     * Filter which SincerityWallet to delete.
+     */
+    where: SincerityWalletWhereUniqueInput
+  }
+
+  /**
+   * SincerityWallet deleteMany
+   */
+  export type SincerityWalletDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SincerityWallets to delete
+     */
+    where?: SincerityWalletWhereInput
+    /**
+     * Limit how many SincerityWallets to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SincerityWallet.transactions
+   */
+  export type SincerityWallet$transactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    where?: SincerityTransactionWhereInput
+    orderBy?: SincerityTransactionOrderByWithRelationInput | SincerityTransactionOrderByWithRelationInput[]
+    cursor?: SincerityTransactionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SincerityTransactionScalarFieldEnum | SincerityTransactionScalarFieldEnum[]
+  }
+
+  /**
+   * SincerityWallet without action
+   */
+  export type SincerityWalletDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SincerityTransaction
+   */
+
+  export type AggregateSincerityTransaction = {
+    _count: SincerityTransactionCountAggregateOutputType | null
+    _avg: SincerityTransactionAvgAggregateOutputType | null
+    _sum: SincerityTransactionSumAggregateOutputType | null
+    _min: SincerityTransactionMinAggregateOutputType | null
+    _max: SincerityTransactionMaxAggregateOutputType | null
+  }
+
+  export type SincerityTransactionAvgAggregateOutputType = {
+    amount: number | null
+  }
+
+  export type SincerityTransactionSumAggregateOutputType = {
+    amount: number | null
+  }
+
+  export type SincerityTransactionMinAggregateOutputType = {
+    id: string | null
+    walletId: string | null
+    type: $Enums.SincerityTransactionType | null
+    amount: number | null
+    source: string | null
+    description: string | null
+    matchId: string | null
+    fromUserId: string | null
+    toUserId: string | null
+    message: string | null
+    metadata: string | null
+    createdAt: Date | null
+  }
+
+  export type SincerityTransactionMaxAggregateOutputType = {
+    id: string | null
+    walletId: string | null
+    type: $Enums.SincerityTransactionType | null
+    amount: number | null
+    source: string | null
+    description: string | null
+    matchId: string | null
+    fromUserId: string | null
+    toUserId: string | null
+    message: string | null
+    metadata: string | null
+    createdAt: Date | null
+  }
+
+  export type SincerityTransactionCountAggregateOutputType = {
+    id: number
+    walletId: number
+    type: number
+    amount: number
+    source: number
+    description: number
+    matchId: number
+    fromUserId: number
+    toUserId: number
+    message: number
+    metadata: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type SincerityTransactionAvgAggregateInputType = {
+    amount?: true
+  }
+
+  export type SincerityTransactionSumAggregateInputType = {
+    amount?: true
+  }
+
+  export type SincerityTransactionMinAggregateInputType = {
+    id?: true
+    walletId?: true
+    type?: true
+    amount?: true
+    source?: true
+    description?: true
+    matchId?: true
+    fromUserId?: true
+    toUserId?: true
+    message?: true
+    metadata?: true
+    createdAt?: true
+  }
+
+  export type SincerityTransactionMaxAggregateInputType = {
+    id?: true
+    walletId?: true
+    type?: true
+    amount?: true
+    source?: true
+    description?: true
+    matchId?: true
+    fromUserId?: true
+    toUserId?: true
+    message?: true
+    metadata?: true
+    createdAt?: true
+  }
+
+  export type SincerityTransactionCountAggregateInputType = {
+    id?: true
+    walletId?: true
+    type?: true
+    amount?: true
+    source?: true
+    description?: true
+    matchId?: true
+    fromUserId?: true
+    toUserId?: true
+    message?: true
+    metadata?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type SincerityTransactionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SincerityTransaction to aggregate.
+     */
+    where?: SincerityTransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SincerityTransactions to fetch.
+     */
+    orderBy?: SincerityTransactionOrderByWithRelationInput | SincerityTransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SincerityTransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SincerityTransactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SincerityTransactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SincerityTransactions
+    **/
+    _count?: true | SincerityTransactionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SincerityTransactionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SincerityTransactionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SincerityTransactionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SincerityTransactionMaxAggregateInputType
+  }
+
+  export type GetSincerityTransactionAggregateType<T extends SincerityTransactionAggregateArgs> = {
+        [P in keyof T & keyof AggregateSincerityTransaction]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSincerityTransaction[P]>
+      : GetScalarType<T[P], AggregateSincerityTransaction[P]>
+  }
+
+
+
+
+  export type SincerityTransactionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SincerityTransactionWhereInput
+    orderBy?: SincerityTransactionOrderByWithAggregationInput | SincerityTransactionOrderByWithAggregationInput[]
+    by: SincerityTransactionScalarFieldEnum[] | SincerityTransactionScalarFieldEnum
+    having?: SincerityTransactionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SincerityTransactionCountAggregateInputType | true
+    _avg?: SincerityTransactionAvgAggregateInputType
+    _sum?: SincerityTransactionSumAggregateInputType
+    _min?: SincerityTransactionMinAggregateInputType
+    _max?: SincerityTransactionMaxAggregateInputType
+  }
+
+  export type SincerityTransactionGroupByOutputType = {
+    id: string
+    walletId: string
+    type: $Enums.SincerityTransactionType
+    amount: number
+    source: string
+    description: string | null
+    matchId: string | null
+    fromUserId: string | null
+    toUserId: string | null
+    message: string | null
+    metadata: string | null
+    createdAt: Date
+    _count: SincerityTransactionCountAggregateOutputType | null
+    _avg: SincerityTransactionAvgAggregateOutputType | null
+    _sum: SincerityTransactionSumAggregateOutputType | null
+    _min: SincerityTransactionMinAggregateOutputType | null
+    _max: SincerityTransactionMaxAggregateOutputType | null
+  }
+
+  type GetSincerityTransactionGroupByPayload<T extends SincerityTransactionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SincerityTransactionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SincerityTransactionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SincerityTransactionGroupByOutputType[P]>
+            : GetScalarType<T[P], SincerityTransactionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SincerityTransactionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    walletId?: boolean
+    type?: boolean
+    amount?: boolean
+    source?: boolean
+    description?: boolean
+    matchId?: boolean
+    fromUserId?: boolean
+    toUserId?: boolean
+    message?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    wallet?: boolean | SincerityWalletDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sincerityTransaction"]>
+
+  export type SincerityTransactionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    walletId?: boolean
+    type?: boolean
+    amount?: boolean
+    source?: boolean
+    description?: boolean
+    matchId?: boolean
+    fromUserId?: boolean
+    toUserId?: boolean
+    message?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    wallet?: boolean | SincerityWalletDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sincerityTransaction"]>
+
+  export type SincerityTransactionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    walletId?: boolean
+    type?: boolean
+    amount?: boolean
+    source?: boolean
+    description?: boolean
+    matchId?: boolean
+    fromUserId?: boolean
+    toUserId?: boolean
+    message?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    wallet?: boolean | SincerityWalletDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sincerityTransaction"]>
+
+  export type SincerityTransactionSelectScalar = {
+    id?: boolean
+    walletId?: boolean
+    type?: boolean
+    amount?: boolean
+    source?: boolean
+    description?: boolean
+    matchId?: boolean
+    fromUserId?: boolean
+    toUserId?: boolean
+    message?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+  }
+
+  export type SincerityTransactionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "walletId" | "type" | "amount" | "source" | "description" | "matchId" | "fromUserId" | "toUserId" | "message" | "metadata" | "createdAt", ExtArgs["result"]["sincerityTransaction"]>
+  export type SincerityTransactionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    wallet?: boolean | SincerityWalletDefaultArgs<ExtArgs>
+  }
+  export type SincerityTransactionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    wallet?: boolean | SincerityWalletDefaultArgs<ExtArgs>
+  }
+  export type SincerityTransactionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    wallet?: boolean | SincerityWalletDefaultArgs<ExtArgs>
+  }
+
+  export type $SincerityTransactionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SincerityTransaction"
+    objects: {
+      wallet: Prisma.$SincerityWalletPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      walletId: string
+      type: $Enums.SincerityTransactionType
+      amount: number
+      source: string
+      description: string | null
+      matchId: string | null
+      fromUserId: string | null
+      toUserId: string | null
+      message: string | null
+      metadata: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["sincerityTransaction"]>
+    composites: {}
+  }
+
+  type SincerityTransactionGetPayload<S extends boolean | null | undefined | SincerityTransactionDefaultArgs> = $Result.GetResult<Prisma.$SincerityTransactionPayload, S>
+
+  type SincerityTransactionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SincerityTransactionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SincerityTransactionCountAggregateInputType | true
+    }
+
+  export interface SincerityTransactionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SincerityTransaction'], meta: { name: 'SincerityTransaction' } }
+    /**
+     * Find zero or one SincerityTransaction that matches the filter.
+     * @param {SincerityTransactionFindUniqueArgs} args - Arguments to find a SincerityTransaction
+     * @example
+     * // Get one SincerityTransaction
+     * const sincerityTransaction = await prisma.sincerityTransaction.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SincerityTransactionFindUniqueArgs>(args: SelectSubset<T, SincerityTransactionFindUniqueArgs<ExtArgs>>): Prisma__SincerityTransactionClient<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SincerityTransaction that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SincerityTransactionFindUniqueOrThrowArgs} args - Arguments to find a SincerityTransaction
+     * @example
+     * // Get one SincerityTransaction
+     * const sincerityTransaction = await prisma.sincerityTransaction.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SincerityTransactionFindUniqueOrThrowArgs>(args: SelectSubset<T, SincerityTransactionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SincerityTransactionClient<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SincerityTransaction that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityTransactionFindFirstArgs} args - Arguments to find a SincerityTransaction
+     * @example
+     * // Get one SincerityTransaction
+     * const sincerityTransaction = await prisma.sincerityTransaction.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SincerityTransactionFindFirstArgs>(args?: SelectSubset<T, SincerityTransactionFindFirstArgs<ExtArgs>>): Prisma__SincerityTransactionClient<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SincerityTransaction that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityTransactionFindFirstOrThrowArgs} args - Arguments to find a SincerityTransaction
+     * @example
+     * // Get one SincerityTransaction
+     * const sincerityTransaction = await prisma.sincerityTransaction.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SincerityTransactionFindFirstOrThrowArgs>(args?: SelectSubset<T, SincerityTransactionFindFirstOrThrowArgs<ExtArgs>>): Prisma__SincerityTransactionClient<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SincerityTransactions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityTransactionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SincerityTransactions
+     * const sincerityTransactions = await prisma.sincerityTransaction.findMany()
+     * 
+     * // Get first 10 SincerityTransactions
+     * const sincerityTransactions = await prisma.sincerityTransaction.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const sincerityTransactionWithIdOnly = await prisma.sincerityTransaction.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SincerityTransactionFindManyArgs>(args?: SelectSubset<T, SincerityTransactionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SincerityTransaction.
+     * @param {SincerityTransactionCreateArgs} args - Arguments to create a SincerityTransaction.
+     * @example
+     * // Create one SincerityTransaction
+     * const SincerityTransaction = await prisma.sincerityTransaction.create({
+     *   data: {
+     *     // ... data to create a SincerityTransaction
+     *   }
+     * })
+     * 
+     */
+    create<T extends SincerityTransactionCreateArgs>(args: SelectSubset<T, SincerityTransactionCreateArgs<ExtArgs>>): Prisma__SincerityTransactionClient<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SincerityTransactions.
+     * @param {SincerityTransactionCreateManyArgs} args - Arguments to create many SincerityTransactions.
+     * @example
+     * // Create many SincerityTransactions
+     * const sincerityTransaction = await prisma.sincerityTransaction.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SincerityTransactionCreateManyArgs>(args?: SelectSubset<T, SincerityTransactionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SincerityTransactions and returns the data saved in the database.
+     * @param {SincerityTransactionCreateManyAndReturnArgs} args - Arguments to create many SincerityTransactions.
+     * @example
+     * // Create many SincerityTransactions
+     * const sincerityTransaction = await prisma.sincerityTransaction.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SincerityTransactions and only return the `id`
+     * const sincerityTransactionWithIdOnly = await prisma.sincerityTransaction.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SincerityTransactionCreateManyAndReturnArgs>(args?: SelectSubset<T, SincerityTransactionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SincerityTransaction.
+     * @param {SincerityTransactionDeleteArgs} args - Arguments to delete one SincerityTransaction.
+     * @example
+     * // Delete one SincerityTransaction
+     * const SincerityTransaction = await prisma.sincerityTransaction.delete({
+     *   where: {
+     *     // ... filter to delete one SincerityTransaction
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SincerityTransactionDeleteArgs>(args: SelectSubset<T, SincerityTransactionDeleteArgs<ExtArgs>>): Prisma__SincerityTransactionClient<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SincerityTransaction.
+     * @param {SincerityTransactionUpdateArgs} args - Arguments to update one SincerityTransaction.
+     * @example
+     * // Update one SincerityTransaction
+     * const sincerityTransaction = await prisma.sincerityTransaction.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SincerityTransactionUpdateArgs>(args: SelectSubset<T, SincerityTransactionUpdateArgs<ExtArgs>>): Prisma__SincerityTransactionClient<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SincerityTransactions.
+     * @param {SincerityTransactionDeleteManyArgs} args - Arguments to filter SincerityTransactions to delete.
+     * @example
+     * // Delete a few SincerityTransactions
+     * const { count } = await prisma.sincerityTransaction.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SincerityTransactionDeleteManyArgs>(args?: SelectSubset<T, SincerityTransactionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SincerityTransactions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityTransactionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SincerityTransactions
+     * const sincerityTransaction = await prisma.sincerityTransaction.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SincerityTransactionUpdateManyArgs>(args: SelectSubset<T, SincerityTransactionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SincerityTransactions and returns the data updated in the database.
+     * @param {SincerityTransactionUpdateManyAndReturnArgs} args - Arguments to update many SincerityTransactions.
+     * @example
+     * // Update many SincerityTransactions
+     * const sincerityTransaction = await prisma.sincerityTransaction.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SincerityTransactions and only return the `id`
+     * const sincerityTransactionWithIdOnly = await prisma.sincerityTransaction.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SincerityTransactionUpdateManyAndReturnArgs>(args: SelectSubset<T, SincerityTransactionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SincerityTransaction.
+     * @param {SincerityTransactionUpsertArgs} args - Arguments to update or create a SincerityTransaction.
+     * @example
+     * // Update or create a SincerityTransaction
+     * const sincerityTransaction = await prisma.sincerityTransaction.upsert({
+     *   create: {
+     *     // ... data to create a SincerityTransaction
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SincerityTransaction we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SincerityTransactionUpsertArgs>(args: SelectSubset<T, SincerityTransactionUpsertArgs<ExtArgs>>): Prisma__SincerityTransactionClient<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SincerityTransactions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityTransactionCountArgs} args - Arguments to filter SincerityTransactions to count.
+     * @example
+     * // Count the number of SincerityTransactions
+     * const count = await prisma.sincerityTransaction.count({
+     *   where: {
+     *     // ... the filter for the SincerityTransactions we want to count
+     *   }
+     * })
+    **/
+    count<T extends SincerityTransactionCountArgs>(
+      args?: Subset<T, SincerityTransactionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SincerityTransactionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SincerityTransaction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityTransactionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SincerityTransactionAggregateArgs>(args: Subset<T, SincerityTransactionAggregateArgs>): Prisma.PrismaPromise<GetSincerityTransactionAggregateType<T>>
+
+    /**
+     * Group by SincerityTransaction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SincerityTransactionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SincerityTransactionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SincerityTransactionGroupByArgs['orderBy'] }
+        : { orderBy?: SincerityTransactionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SincerityTransactionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSincerityTransactionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SincerityTransaction model
+   */
+  readonly fields: SincerityTransactionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SincerityTransaction.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SincerityTransactionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    wallet<T extends SincerityWalletDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SincerityWalletDefaultArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SincerityTransaction model
+   */
+  interface SincerityTransactionFieldRefs {
+    readonly id: FieldRef<"SincerityTransaction", 'String'>
+    readonly walletId: FieldRef<"SincerityTransaction", 'String'>
+    readonly type: FieldRef<"SincerityTransaction", 'SincerityTransactionType'>
+    readonly amount: FieldRef<"SincerityTransaction", 'Int'>
+    readonly source: FieldRef<"SincerityTransaction", 'String'>
+    readonly description: FieldRef<"SincerityTransaction", 'String'>
+    readonly matchId: FieldRef<"SincerityTransaction", 'String'>
+    readonly fromUserId: FieldRef<"SincerityTransaction", 'String'>
+    readonly toUserId: FieldRef<"SincerityTransaction", 'String'>
+    readonly message: FieldRef<"SincerityTransaction", 'String'>
+    readonly metadata: FieldRef<"SincerityTransaction", 'String'>
+    readonly createdAt: FieldRef<"SincerityTransaction", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SincerityTransaction findUnique
+   */
+  export type SincerityTransactionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityTransaction to fetch.
+     */
+    where: SincerityTransactionWhereUniqueInput
+  }
+
+  /**
+   * SincerityTransaction findUniqueOrThrow
+   */
+  export type SincerityTransactionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityTransaction to fetch.
+     */
+    where: SincerityTransactionWhereUniqueInput
+  }
+
+  /**
+   * SincerityTransaction findFirst
+   */
+  export type SincerityTransactionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityTransaction to fetch.
+     */
+    where?: SincerityTransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SincerityTransactions to fetch.
+     */
+    orderBy?: SincerityTransactionOrderByWithRelationInput | SincerityTransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SincerityTransactions.
+     */
+    cursor?: SincerityTransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SincerityTransactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SincerityTransactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SincerityTransactions.
+     */
+    distinct?: SincerityTransactionScalarFieldEnum | SincerityTransactionScalarFieldEnum[]
+  }
+
+  /**
+   * SincerityTransaction findFirstOrThrow
+   */
+  export type SincerityTransactionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityTransaction to fetch.
+     */
+    where?: SincerityTransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SincerityTransactions to fetch.
+     */
+    orderBy?: SincerityTransactionOrderByWithRelationInput | SincerityTransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SincerityTransactions.
+     */
+    cursor?: SincerityTransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SincerityTransactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SincerityTransactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SincerityTransactions.
+     */
+    distinct?: SincerityTransactionScalarFieldEnum | SincerityTransactionScalarFieldEnum[]
+  }
+
+  /**
+   * SincerityTransaction findMany
+   */
+  export type SincerityTransactionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which SincerityTransactions to fetch.
+     */
+    where?: SincerityTransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SincerityTransactions to fetch.
+     */
+    orderBy?: SincerityTransactionOrderByWithRelationInput | SincerityTransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SincerityTransactions.
+     */
+    cursor?: SincerityTransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SincerityTransactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SincerityTransactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SincerityTransactions.
+     */
+    distinct?: SincerityTransactionScalarFieldEnum | SincerityTransactionScalarFieldEnum[]
+  }
+
+  /**
+   * SincerityTransaction create
+   */
+  export type SincerityTransactionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SincerityTransaction.
+     */
+    data: XOR<SincerityTransactionCreateInput, SincerityTransactionUncheckedCreateInput>
+  }
+
+  /**
+   * SincerityTransaction createMany
+   */
+  export type SincerityTransactionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SincerityTransactions.
+     */
+    data: SincerityTransactionCreateManyInput | SincerityTransactionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SincerityTransaction createManyAndReturn
+   */
+  export type SincerityTransactionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * The data used to create many SincerityTransactions.
+     */
+    data: SincerityTransactionCreateManyInput | SincerityTransactionCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SincerityTransaction update
+   */
+  export type SincerityTransactionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SincerityTransaction.
+     */
+    data: XOR<SincerityTransactionUpdateInput, SincerityTransactionUncheckedUpdateInput>
+    /**
+     * Choose, which SincerityTransaction to update.
+     */
+    where: SincerityTransactionWhereUniqueInput
+  }
+
+  /**
+   * SincerityTransaction updateMany
+   */
+  export type SincerityTransactionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SincerityTransactions.
+     */
+    data: XOR<SincerityTransactionUpdateManyMutationInput, SincerityTransactionUncheckedUpdateManyInput>
+    /**
+     * Filter which SincerityTransactions to update
+     */
+    where?: SincerityTransactionWhereInput
+    /**
+     * Limit how many SincerityTransactions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SincerityTransaction updateManyAndReturn
+   */
+  export type SincerityTransactionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * The data used to update SincerityTransactions.
+     */
+    data: XOR<SincerityTransactionUpdateManyMutationInput, SincerityTransactionUncheckedUpdateManyInput>
+    /**
+     * Filter which SincerityTransactions to update
+     */
+    where?: SincerityTransactionWhereInput
+    /**
+     * Limit how many SincerityTransactions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SincerityTransaction upsert
+   */
+  export type SincerityTransactionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SincerityTransaction to update in case it exists.
+     */
+    where: SincerityTransactionWhereUniqueInput
+    /**
+     * In case the SincerityTransaction found by the `where` argument doesn't exist, create a new SincerityTransaction with this data.
+     */
+    create: XOR<SincerityTransactionCreateInput, SincerityTransactionUncheckedCreateInput>
+    /**
+     * In case the SincerityTransaction was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SincerityTransactionUpdateInput, SincerityTransactionUncheckedUpdateInput>
+  }
+
+  /**
+   * SincerityTransaction delete
+   */
+  export type SincerityTransactionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+    /**
+     * Filter which SincerityTransaction to delete.
+     */
+    where: SincerityTransactionWhereUniqueInput
+  }
+
+  /**
+   * SincerityTransaction deleteMany
+   */
+  export type SincerityTransactionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SincerityTransactions to delete
+     */
+    where?: SincerityTransactionWhereInput
+    /**
+     * Limit how many SincerityTransactions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SincerityTransaction without action
+   */
+  export type SincerityTransactionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityTransaction
+     */
+    select?: SincerityTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityTransaction
+     */
+    omit?: SincerityTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityTransactionInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -21563,6 +32347,128 @@ export namespace Prisma {
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+  export const BotProfileScalarFieldEnum: {
+    id: 'id',
+    profileId: 'profileId',
+    botType: 'botType',
+    activityLevel: 'activityLevel',
+    ethnicity: 'ethnicity',
+    occupation: 'occupation',
+    industry: 'industry',
+    educationLevel: 'educationLevel',
+    incomeRange: 'incomeRange',
+    interests: 'interests',
+    hobbies: 'hobbies',
+    musicGenres: 'musicGenres',
+    movieGenres: 'movieGenres',
+    onlinePattern: 'onlinePattern',
+    avgResponseTime: 'avgResponseTime',
+    maxDailyMatches: 'maxDailyMatches',
+    behaviorConfig: 'behaviorConfig',
+    preferredEthnicities: 'preferredEthnicities',
+    preferredOccupations: 'preferredOccupations',
+    preferredEducation: 'preferredEducation',
+    totalInteractions: 'totalInteractions',
+    successfulMatches: 'successfulMatches',
+    avgEngagementScore: 'avgEngagementScore',
+    learningData: 'learningData',
+    avatarStyle: 'avatarStyle',
+    avatarSource: 'avatarSource',
+    isActive: 'isActive',
+    lastActiveAt: 'lastActiveAt',
+    sleepUntil: 'sleepUntil',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type BotProfileScalarFieldEnum = (typeof BotProfileScalarFieldEnum)[keyof typeof BotProfileScalarFieldEnum]
+
+
+  export const BotInteractionLogScalarFieldEnum: {
+    id: 'id',
+    botUserId: 'botUserId',
+    targetUserId: 'targetUserId',
+    matchId: 'matchId',
+    interactionType: 'interactionType',
+    action: 'action',
+    responseDelay: 'responseDelay',
+    outcome: 'outcome',
+    engagementScore: 'engagementScore',
+    context: 'context',
+    createdAt: 'createdAt'
+  };
+
+  export type BotInteractionLogScalarFieldEnum = (typeof BotInteractionLogScalarFieldEnum)[keyof typeof BotInteractionLogScalarFieldEnum]
+
+
+  export const BotLearningBatchScalarFieldEnum: {
+    id: 'id',
+    batchNumber: 'batchNumber',
+    status: 'status',
+    startDate: 'startDate',
+    endDate: 'endDate',
+    totalInteractions: 'totalInteractions',
+    avgEngagement: 'avgEngagement',
+    successRate: 'successRate',
+    preferenceUpdates: 'preferenceUpdates',
+    executionLog: 'executionLog',
+    createdAt: 'createdAt',
+    completedAt: 'completedAt'
+  };
+
+  export type BotLearningBatchScalarFieldEnum = (typeof BotLearningBatchScalarFieldEnum)[keyof typeof BotLearningBatchScalarFieldEnum]
+
+
+  export const BotLearningRecordScalarFieldEnum: {
+    id: 'id',
+    botId: 'botId',
+    userId: 'userId',
+    interactionType: 'interactionType',
+    outcome: 'outcome',
+    context: 'context',
+    processed: 'processed',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type BotLearningRecordScalarFieldEnum = (typeof BotLearningRecordScalarFieldEnum)[keyof typeof BotLearningRecordScalarFieldEnum]
+
+
+  export const BotPreferenceScalarFieldEnum: {
+    id: 'id',
+    botId: 'botId',
+    relationshipStructure: 'relationshipStructure',
+    communicationStyle: 'communicationStyle',
+    interests: 'interests',
+    values: 'values',
+    lifestyle: 'lifestyle',
+    confidence: 'confidence',
+    sampleSize: 'sampleSize',
+    createdAt: 'createdAt',
+    lastUpdated: 'lastUpdated'
+  };
+
+  export type BotPreferenceScalarFieldEnum = (typeof BotPreferenceScalarFieldEnum)[keyof typeof BotPreferenceScalarFieldEnum]
+
+
+  export const BotAvatarScalarFieldEnum: {
+    id: 'id',
+    botId: 'botId',
+    originalUrl: 'originalUrl',
+    processedUrl: 'processedUrl',
+    style: 'style',
+    ethnicity: 'ethnicity',
+    status: 'status',
+    useCount: 'useCount',
+    generatedAt: 'generatedAt',
+    lastUsedAt: 'lastUsedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type BotAvatarScalarFieldEnum = (typeof BotAvatarScalarFieldEnum)[keyof typeof BotAvatarScalarFieldEnum]
+
+
   export const UserScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -21571,6 +32477,9 @@ export namespace Prisma {
     image: 'image',
     password: 'password',
     role: 'role',
+    isBot: 'isBot',
+    botType: 'botType',
+    botConfig: 'botConfig',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -21613,6 +32522,9 @@ export namespace Prisma {
     expires: 'expires',
     userId: 'userId',
     used: 'used',
+    useCount: 'useCount',
+    maxUses: 'maxUses',
+    lastUsedAt: 'lastUsedAt',
     createdAt: 'createdAt'
   };
 
@@ -21651,7 +32563,13 @@ export namespace Prisma {
     onboardingStep: 'onboardingStep',
     isApproved: 'isApproved',
     isVerified: 'isVerified',
+    personalityData: 'personalityData',
     adminNotes: 'adminNotes',
+    occupation: 'occupation',
+    company: 'company',
+    industry: 'industry',
+    linkedInVerified: 'linkedInVerified',
+    verificationBadge: 'verificationBadge',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -21677,6 +32595,12 @@ export namespace Prisma {
     receiverAction: 'receiverAction',
     reviewedBy: 'reviewedBy',
     reviewNotes: 'reviewNotes',
+    pitchMessage: 'pitchMessage',
+    pitchTone: 'pitchTone',
+    aiAssisted: 'aiAssisted',
+    giftAmount: 'giftAmount',
+    isUnread: 'isUnread',
+    inboxPriority: 'inboxPriority',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     expiresAt: 'expiresAt'
@@ -21702,6 +32626,16 @@ export namespace Prisma {
     matchId: 'matchId',
     lastMessageAt: 'lastMessageAt',
     isArchived: 'isArchived',
+    vaultStatus: 'vaultStatus',
+    vaultExpiry: 'vaultExpiry',
+    extendedAt: 'extendedAt',
+    extendedBy: 'extendedBy',
+    extensionCount: 'extensionCount',
+    revokedAt: 'revokedAt',
+    revokedBy: 'revokedBy',
+    revokeReason: 'revokeReason',
+    screenshotCount: 'screenshotCount',
+    lastScreenshotAt: 'lastScreenshotAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -21830,12 +32764,57 @@ export namespace Prisma {
   export type SystemConfigScalarFieldEnum = (typeof SystemConfigScalarFieldEnum)[keyof typeof SystemConfigScalarFieldEnum]
 
 
+  export const SincerityWalletScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    balance: 'balance',
+    totalEarned: 'totalEarned',
+    totalSpent: 'totalSpent',
+    totalGifted: 'totalGifted',
+    totalReceived: 'totalReceived',
+    tier: 'tier',
+    tierProgress: 'tierProgress',
+    lastEarnedAt: 'lastEarnedAt',
+    lastSpentAt: 'lastSpentAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type SincerityWalletScalarFieldEnum = (typeof SincerityWalletScalarFieldEnum)[keyof typeof SincerityWalletScalarFieldEnum]
+
+
+  export const SincerityTransactionScalarFieldEnum: {
+    id: 'id',
+    walletId: 'walletId',
+    type: 'type',
+    amount: 'amount',
+    source: 'source',
+    description: 'description',
+    matchId: 'matchId',
+    fromUserId: 'fromUserId',
+    toUserId: 'toUserId',
+    message: 'message',
+    metadata: 'metadata',
+    createdAt: 'createdAt'
+  };
+
+  export type SincerityTransactionScalarFieldEnum = (typeof SincerityTransactionScalarFieldEnum)[keyof typeof SincerityTransactionScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const QueryMode: {
@@ -21852,6 +32831,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -21874,30 +32862,58 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'DateTime'
+   * Reference to a field of type 'BotType'
    */
-  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+  export type EnumBotTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotType'>
     
 
 
   /**
-   * Reference to a field of type 'DateTime[]'
+   * Reference to a field of type 'BotType[]'
    */
-  export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+  export type ListEnumBotTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotType[]'>
     
 
 
   /**
-   * Reference to a field of type 'UserRole'
+   * Reference to a field of type 'BotActivityLevel'
    */
-  export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
+  export type EnumBotActivityLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotActivityLevel'>
     
 
 
   /**
-   * Reference to a field of type 'UserRole[]'
+   * Reference to a field of type 'BotActivityLevel[]'
    */
-  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
+  export type ListEnumBotActivityLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotActivityLevel[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Ethnicity'
+   */
+  export type EnumEthnicityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Ethnicity'>
+    
+
+
+  /**
+   * Reference to a field of type 'Ethnicity[]'
+   */
+  export type ListEnumEthnicityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Ethnicity[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'OnlinePattern'
+   */
+  export type EnumOnlinePatternFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OnlinePattern'>
+    
+
+
+  /**
+   * Reference to a field of type 'OnlinePattern[]'
+   */
+  export type ListEnumOnlinePatternFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OnlinePattern[]'>
     
 
 
@@ -21916,9 +32932,65 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
+   * Reference to a field of type 'DateTime'
+   */
+  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+  /**
+   * Reference to a field of type 'DateTime[]'
+   */
+  export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserRole'
+   */
+  export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserRole[]'
+   */
+  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
     
 
 
@@ -21965,20 +33037,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Float'
-   */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-  /**
    * Reference to a field of type 'MatchStatus'
    */
   export type EnumMatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchStatus'>
@@ -22017,6 +33075,20 @@ export namespace Prisma {
    * Reference to a field of type 'MatchAction[]'
    */
   export type ListEnumMatchActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchAction[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'VaultStatus'
+   */
+  export type EnumVaultStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VaultStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'VaultStatus[]'
+   */
+  export type ListEnumVaultStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VaultStatus[]'>
     
 
 
@@ -22088,10 +33160,643 @@ export namespace Prisma {
    */
   export type ListEnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentStatus[]'>
     
+
+
+  /**
+   * Reference to a field of type 'SincerityTier'
+   */
+  export type EnumSincerityTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SincerityTier'>
+    
+
+
+  /**
+   * Reference to a field of type 'SincerityTier[]'
+   */
+  export type ListEnumSincerityTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SincerityTier[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'SincerityTransactionType'
+   */
+  export type EnumSincerityTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SincerityTransactionType'>
+    
+
+
+  /**
+   * Reference to a field of type 'SincerityTransactionType[]'
+   */
+  export type ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SincerityTransactionType[]'>
+    
   /**
    * Deep Input Types
    */
 
+
+  export type BotProfileWhereInput = {
+    AND?: BotProfileWhereInput | BotProfileWhereInput[]
+    OR?: BotProfileWhereInput[]
+    NOT?: BotProfileWhereInput | BotProfileWhereInput[]
+    id?: StringFilter<"BotProfile"> | string
+    profileId?: StringFilter<"BotProfile"> | string
+    botType?: EnumBotTypeFilter<"BotProfile"> | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelFilter<"BotProfile"> | $Enums.BotActivityLevel
+    ethnicity?: EnumEthnicityNullableFilter<"BotProfile"> | $Enums.Ethnicity | null
+    occupation?: StringNullableFilter<"BotProfile"> | string | null
+    industry?: StringNullableFilter<"BotProfile"> | string | null
+    educationLevel?: StringNullableFilter<"BotProfile"> | string | null
+    incomeRange?: StringNullableFilter<"BotProfile"> | string | null
+    interests?: StringNullableListFilter<"BotProfile">
+    hobbies?: StringNullableListFilter<"BotProfile">
+    musicGenres?: StringNullableListFilter<"BotProfile">
+    movieGenres?: StringNullableListFilter<"BotProfile">
+    onlinePattern?: EnumOnlinePatternFilter<"BotProfile"> | $Enums.OnlinePattern
+    avgResponseTime?: IntFilter<"BotProfile"> | number
+    maxDailyMatches?: IntFilter<"BotProfile"> | number
+    behaviorConfig?: StringNullableFilter<"BotProfile"> | string | null
+    preferredEthnicities?: EnumEthnicityNullableListFilter<"BotProfile">
+    preferredOccupations?: StringNullableListFilter<"BotProfile">
+    preferredEducation?: StringNullableListFilter<"BotProfile">
+    totalInteractions?: IntFilter<"BotProfile"> | number
+    successfulMatches?: IntFilter<"BotProfile"> | number
+    avgEngagementScore?: FloatFilter<"BotProfile"> | number
+    learningData?: StringNullableFilter<"BotProfile"> | string | null
+    avatarStyle?: StringNullableFilter<"BotProfile"> | string | null
+    avatarSource?: StringNullableFilter<"BotProfile"> | string | null
+    isActive?: BoolFilter<"BotProfile"> | boolean
+    lastActiveAt?: DateTimeNullableFilter<"BotProfile"> | Date | string | null
+    sleepUntil?: DateTimeNullableFilter<"BotProfile"> | Date | string | null
+    createdAt?: DateTimeFilter<"BotProfile"> | Date | string
+    updatedAt?: DateTimeFilter<"BotProfile"> | Date | string
+    profile?: XOR<ProfileScalarRelationFilter, ProfileWhereInput>
+  }
+
+  export type BotProfileOrderByWithRelationInput = {
+    id?: SortOrder
+    profileId?: SortOrder
+    botType?: SortOrder
+    activityLevel?: SortOrder
+    ethnicity?: SortOrderInput | SortOrder
+    occupation?: SortOrderInput | SortOrder
+    industry?: SortOrderInput | SortOrder
+    educationLevel?: SortOrderInput | SortOrder
+    incomeRange?: SortOrderInput | SortOrder
+    interests?: SortOrder
+    hobbies?: SortOrder
+    musicGenres?: SortOrder
+    movieGenres?: SortOrder
+    onlinePattern?: SortOrder
+    avgResponseTime?: SortOrder
+    maxDailyMatches?: SortOrder
+    behaviorConfig?: SortOrderInput | SortOrder
+    preferredEthnicities?: SortOrder
+    preferredOccupations?: SortOrder
+    preferredEducation?: SortOrder
+    totalInteractions?: SortOrder
+    successfulMatches?: SortOrder
+    avgEngagementScore?: SortOrder
+    learningData?: SortOrderInput | SortOrder
+    avatarStyle?: SortOrderInput | SortOrder
+    avatarSource?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    lastActiveAt?: SortOrderInput | SortOrder
+    sleepUntil?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    profile?: ProfileOrderByWithRelationInput
+  }
+
+  export type BotProfileWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    profileId?: string
+    AND?: BotProfileWhereInput | BotProfileWhereInput[]
+    OR?: BotProfileWhereInput[]
+    NOT?: BotProfileWhereInput | BotProfileWhereInput[]
+    botType?: EnumBotTypeFilter<"BotProfile"> | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelFilter<"BotProfile"> | $Enums.BotActivityLevel
+    ethnicity?: EnumEthnicityNullableFilter<"BotProfile"> | $Enums.Ethnicity | null
+    occupation?: StringNullableFilter<"BotProfile"> | string | null
+    industry?: StringNullableFilter<"BotProfile"> | string | null
+    educationLevel?: StringNullableFilter<"BotProfile"> | string | null
+    incomeRange?: StringNullableFilter<"BotProfile"> | string | null
+    interests?: StringNullableListFilter<"BotProfile">
+    hobbies?: StringNullableListFilter<"BotProfile">
+    musicGenres?: StringNullableListFilter<"BotProfile">
+    movieGenres?: StringNullableListFilter<"BotProfile">
+    onlinePattern?: EnumOnlinePatternFilter<"BotProfile"> | $Enums.OnlinePattern
+    avgResponseTime?: IntFilter<"BotProfile"> | number
+    maxDailyMatches?: IntFilter<"BotProfile"> | number
+    behaviorConfig?: StringNullableFilter<"BotProfile"> | string | null
+    preferredEthnicities?: EnumEthnicityNullableListFilter<"BotProfile">
+    preferredOccupations?: StringNullableListFilter<"BotProfile">
+    preferredEducation?: StringNullableListFilter<"BotProfile">
+    totalInteractions?: IntFilter<"BotProfile"> | number
+    successfulMatches?: IntFilter<"BotProfile"> | number
+    avgEngagementScore?: FloatFilter<"BotProfile"> | number
+    learningData?: StringNullableFilter<"BotProfile"> | string | null
+    avatarStyle?: StringNullableFilter<"BotProfile"> | string | null
+    avatarSource?: StringNullableFilter<"BotProfile"> | string | null
+    isActive?: BoolFilter<"BotProfile"> | boolean
+    lastActiveAt?: DateTimeNullableFilter<"BotProfile"> | Date | string | null
+    sleepUntil?: DateTimeNullableFilter<"BotProfile"> | Date | string | null
+    createdAt?: DateTimeFilter<"BotProfile"> | Date | string
+    updatedAt?: DateTimeFilter<"BotProfile"> | Date | string
+    profile?: XOR<ProfileScalarRelationFilter, ProfileWhereInput>
+  }, "id" | "profileId">
+
+  export type BotProfileOrderByWithAggregationInput = {
+    id?: SortOrder
+    profileId?: SortOrder
+    botType?: SortOrder
+    activityLevel?: SortOrder
+    ethnicity?: SortOrderInput | SortOrder
+    occupation?: SortOrderInput | SortOrder
+    industry?: SortOrderInput | SortOrder
+    educationLevel?: SortOrderInput | SortOrder
+    incomeRange?: SortOrderInput | SortOrder
+    interests?: SortOrder
+    hobbies?: SortOrder
+    musicGenres?: SortOrder
+    movieGenres?: SortOrder
+    onlinePattern?: SortOrder
+    avgResponseTime?: SortOrder
+    maxDailyMatches?: SortOrder
+    behaviorConfig?: SortOrderInput | SortOrder
+    preferredEthnicities?: SortOrder
+    preferredOccupations?: SortOrder
+    preferredEducation?: SortOrder
+    totalInteractions?: SortOrder
+    successfulMatches?: SortOrder
+    avgEngagementScore?: SortOrder
+    learningData?: SortOrderInput | SortOrder
+    avatarStyle?: SortOrderInput | SortOrder
+    avatarSource?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    lastActiveAt?: SortOrderInput | SortOrder
+    sleepUntil?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: BotProfileCountOrderByAggregateInput
+    _avg?: BotProfileAvgOrderByAggregateInput
+    _max?: BotProfileMaxOrderByAggregateInput
+    _min?: BotProfileMinOrderByAggregateInput
+    _sum?: BotProfileSumOrderByAggregateInput
+  }
+
+  export type BotProfileScalarWhereWithAggregatesInput = {
+    AND?: BotProfileScalarWhereWithAggregatesInput | BotProfileScalarWhereWithAggregatesInput[]
+    OR?: BotProfileScalarWhereWithAggregatesInput[]
+    NOT?: BotProfileScalarWhereWithAggregatesInput | BotProfileScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BotProfile"> | string
+    profileId?: StringWithAggregatesFilter<"BotProfile"> | string
+    botType?: EnumBotTypeWithAggregatesFilter<"BotProfile"> | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelWithAggregatesFilter<"BotProfile"> | $Enums.BotActivityLevel
+    ethnicity?: EnumEthnicityNullableWithAggregatesFilter<"BotProfile"> | $Enums.Ethnicity | null
+    occupation?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
+    industry?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
+    educationLevel?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
+    incomeRange?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
+    interests?: StringNullableListFilter<"BotProfile">
+    hobbies?: StringNullableListFilter<"BotProfile">
+    musicGenres?: StringNullableListFilter<"BotProfile">
+    movieGenres?: StringNullableListFilter<"BotProfile">
+    onlinePattern?: EnumOnlinePatternWithAggregatesFilter<"BotProfile"> | $Enums.OnlinePattern
+    avgResponseTime?: IntWithAggregatesFilter<"BotProfile"> | number
+    maxDailyMatches?: IntWithAggregatesFilter<"BotProfile"> | number
+    behaviorConfig?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
+    preferredEthnicities?: EnumEthnicityNullableListFilter<"BotProfile">
+    preferredOccupations?: StringNullableListFilter<"BotProfile">
+    preferredEducation?: StringNullableListFilter<"BotProfile">
+    totalInteractions?: IntWithAggregatesFilter<"BotProfile"> | number
+    successfulMatches?: IntWithAggregatesFilter<"BotProfile"> | number
+    avgEngagementScore?: FloatWithAggregatesFilter<"BotProfile"> | number
+    learningData?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
+    avatarStyle?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
+    avatarSource?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
+    isActive?: BoolWithAggregatesFilter<"BotProfile"> | boolean
+    lastActiveAt?: DateTimeNullableWithAggregatesFilter<"BotProfile"> | Date | string | null
+    sleepUntil?: DateTimeNullableWithAggregatesFilter<"BotProfile"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"BotProfile"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BotProfile"> | Date | string
+  }
+
+  export type BotInteractionLogWhereInput = {
+    AND?: BotInteractionLogWhereInput | BotInteractionLogWhereInput[]
+    OR?: BotInteractionLogWhereInput[]
+    NOT?: BotInteractionLogWhereInput | BotInteractionLogWhereInput[]
+    id?: StringFilter<"BotInteractionLog"> | string
+    botUserId?: StringFilter<"BotInteractionLog"> | string
+    targetUserId?: StringNullableFilter<"BotInteractionLog"> | string | null
+    matchId?: StringNullableFilter<"BotInteractionLog"> | string | null
+    interactionType?: StringFilter<"BotInteractionLog"> | string
+    action?: StringFilter<"BotInteractionLog"> | string
+    responseDelay?: IntNullableFilter<"BotInteractionLog"> | number | null
+    outcome?: StringNullableFilter<"BotInteractionLog"> | string | null
+    engagementScore?: IntNullableFilter<"BotInteractionLog"> | number | null
+    context?: StringNullableFilter<"BotInteractionLog"> | string | null
+    createdAt?: DateTimeFilter<"BotInteractionLog"> | Date | string
+  }
+
+  export type BotInteractionLogOrderByWithRelationInput = {
+    id?: SortOrder
+    botUserId?: SortOrder
+    targetUserId?: SortOrderInput | SortOrder
+    matchId?: SortOrderInput | SortOrder
+    interactionType?: SortOrder
+    action?: SortOrder
+    responseDelay?: SortOrderInput | SortOrder
+    outcome?: SortOrderInput | SortOrder
+    engagementScore?: SortOrderInput | SortOrder
+    context?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BotInteractionLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: BotInteractionLogWhereInput | BotInteractionLogWhereInput[]
+    OR?: BotInteractionLogWhereInput[]
+    NOT?: BotInteractionLogWhereInput | BotInteractionLogWhereInput[]
+    botUserId?: StringFilter<"BotInteractionLog"> | string
+    targetUserId?: StringNullableFilter<"BotInteractionLog"> | string | null
+    matchId?: StringNullableFilter<"BotInteractionLog"> | string | null
+    interactionType?: StringFilter<"BotInteractionLog"> | string
+    action?: StringFilter<"BotInteractionLog"> | string
+    responseDelay?: IntNullableFilter<"BotInteractionLog"> | number | null
+    outcome?: StringNullableFilter<"BotInteractionLog"> | string | null
+    engagementScore?: IntNullableFilter<"BotInteractionLog"> | number | null
+    context?: StringNullableFilter<"BotInteractionLog"> | string | null
+    createdAt?: DateTimeFilter<"BotInteractionLog"> | Date | string
+  }, "id">
+
+  export type BotInteractionLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    botUserId?: SortOrder
+    targetUserId?: SortOrderInput | SortOrder
+    matchId?: SortOrderInput | SortOrder
+    interactionType?: SortOrder
+    action?: SortOrder
+    responseDelay?: SortOrderInput | SortOrder
+    outcome?: SortOrderInput | SortOrder
+    engagementScore?: SortOrderInput | SortOrder
+    context?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: BotInteractionLogCountOrderByAggregateInput
+    _avg?: BotInteractionLogAvgOrderByAggregateInput
+    _max?: BotInteractionLogMaxOrderByAggregateInput
+    _min?: BotInteractionLogMinOrderByAggregateInput
+    _sum?: BotInteractionLogSumOrderByAggregateInput
+  }
+
+  export type BotInteractionLogScalarWhereWithAggregatesInput = {
+    AND?: BotInteractionLogScalarWhereWithAggregatesInput | BotInteractionLogScalarWhereWithAggregatesInput[]
+    OR?: BotInteractionLogScalarWhereWithAggregatesInput[]
+    NOT?: BotInteractionLogScalarWhereWithAggregatesInput | BotInteractionLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BotInteractionLog"> | string
+    botUserId?: StringWithAggregatesFilter<"BotInteractionLog"> | string
+    targetUserId?: StringNullableWithAggregatesFilter<"BotInteractionLog"> | string | null
+    matchId?: StringNullableWithAggregatesFilter<"BotInteractionLog"> | string | null
+    interactionType?: StringWithAggregatesFilter<"BotInteractionLog"> | string
+    action?: StringWithAggregatesFilter<"BotInteractionLog"> | string
+    responseDelay?: IntNullableWithAggregatesFilter<"BotInteractionLog"> | number | null
+    outcome?: StringNullableWithAggregatesFilter<"BotInteractionLog"> | string | null
+    engagementScore?: IntNullableWithAggregatesFilter<"BotInteractionLog"> | number | null
+    context?: StringNullableWithAggregatesFilter<"BotInteractionLog"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"BotInteractionLog"> | Date | string
+  }
+
+  export type BotLearningBatchWhereInput = {
+    AND?: BotLearningBatchWhereInput | BotLearningBatchWhereInput[]
+    OR?: BotLearningBatchWhereInput[]
+    NOT?: BotLearningBatchWhereInput | BotLearningBatchWhereInput[]
+    id?: StringFilter<"BotLearningBatch"> | string
+    batchNumber?: IntFilter<"BotLearningBatch"> | number
+    status?: StringFilter<"BotLearningBatch"> | string
+    startDate?: DateTimeFilter<"BotLearningBatch"> | Date | string
+    endDate?: DateTimeFilter<"BotLearningBatch"> | Date | string
+    totalInteractions?: IntFilter<"BotLearningBatch"> | number
+    avgEngagement?: FloatFilter<"BotLearningBatch"> | number
+    successRate?: FloatFilter<"BotLearningBatch"> | number
+    preferenceUpdates?: StringNullableFilter<"BotLearningBatch"> | string | null
+    executionLog?: StringNullableFilter<"BotLearningBatch"> | string | null
+    createdAt?: DateTimeFilter<"BotLearningBatch"> | Date | string
+    completedAt?: DateTimeNullableFilter<"BotLearningBatch"> | Date | string | null
+  }
+
+  export type BotLearningBatchOrderByWithRelationInput = {
+    id?: SortOrder
+    batchNumber?: SortOrder
+    status?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrder
+    totalInteractions?: SortOrder
+    avgEngagement?: SortOrder
+    successRate?: SortOrder
+    preferenceUpdates?: SortOrderInput | SortOrder
+    executionLog?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrderInput | SortOrder
+  }
+
+  export type BotLearningBatchWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: BotLearningBatchWhereInput | BotLearningBatchWhereInput[]
+    OR?: BotLearningBatchWhereInput[]
+    NOT?: BotLearningBatchWhereInput | BotLearningBatchWhereInput[]
+    batchNumber?: IntFilter<"BotLearningBatch"> | number
+    status?: StringFilter<"BotLearningBatch"> | string
+    startDate?: DateTimeFilter<"BotLearningBatch"> | Date | string
+    endDate?: DateTimeFilter<"BotLearningBatch"> | Date | string
+    totalInteractions?: IntFilter<"BotLearningBatch"> | number
+    avgEngagement?: FloatFilter<"BotLearningBatch"> | number
+    successRate?: FloatFilter<"BotLearningBatch"> | number
+    preferenceUpdates?: StringNullableFilter<"BotLearningBatch"> | string | null
+    executionLog?: StringNullableFilter<"BotLearningBatch"> | string | null
+    createdAt?: DateTimeFilter<"BotLearningBatch"> | Date | string
+    completedAt?: DateTimeNullableFilter<"BotLearningBatch"> | Date | string | null
+  }, "id">
+
+  export type BotLearningBatchOrderByWithAggregationInput = {
+    id?: SortOrder
+    batchNumber?: SortOrder
+    status?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrder
+    totalInteractions?: SortOrder
+    avgEngagement?: SortOrder
+    successRate?: SortOrder
+    preferenceUpdates?: SortOrderInput | SortOrder
+    executionLog?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    _count?: BotLearningBatchCountOrderByAggregateInput
+    _avg?: BotLearningBatchAvgOrderByAggregateInput
+    _max?: BotLearningBatchMaxOrderByAggregateInput
+    _min?: BotLearningBatchMinOrderByAggregateInput
+    _sum?: BotLearningBatchSumOrderByAggregateInput
+  }
+
+  export type BotLearningBatchScalarWhereWithAggregatesInput = {
+    AND?: BotLearningBatchScalarWhereWithAggregatesInput | BotLearningBatchScalarWhereWithAggregatesInput[]
+    OR?: BotLearningBatchScalarWhereWithAggregatesInput[]
+    NOT?: BotLearningBatchScalarWhereWithAggregatesInput | BotLearningBatchScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BotLearningBatch"> | string
+    batchNumber?: IntWithAggregatesFilter<"BotLearningBatch"> | number
+    status?: StringWithAggregatesFilter<"BotLearningBatch"> | string
+    startDate?: DateTimeWithAggregatesFilter<"BotLearningBatch"> | Date | string
+    endDate?: DateTimeWithAggregatesFilter<"BotLearningBatch"> | Date | string
+    totalInteractions?: IntWithAggregatesFilter<"BotLearningBatch"> | number
+    avgEngagement?: FloatWithAggregatesFilter<"BotLearningBatch"> | number
+    successRate?: FloatWithAggregatesFilter<"BotLearningBatch"> | number
+    preferenceUpdates?: StringNullableWithAggregatesFilter<"BotLearningBatch"> | string | null
+    executionLog?: StringNullableWithAggregatesFilter<"BotLearningBatch"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"BotLearningBatch"> | Date | string
+    completedAt?: DateTimeNullableWithAggregatesFilter<"BotLearningBatch"> | Date | string | null
+  }
+
+  export type BotLearningRecordWhereInput = {
+    AND?: BotLearningRecordWhereInput | BotLearningRecordWhereInput[]
+    OR?: BotLearningRecordWhereInput[]
+    NOT?: BotLearningRecordWhereInput | BotLearningRecordWhereInput[]
+    id?: StringFilter<"BotLearningRecord"> | string
+    botId?: StringFilter<"BotLearningRecord"> | string
+    userId?: StringFilter<"BotLearningRecord"> | string
+    interactionType?: StringFilter<"BotLearningRecord"> | string
+    outcome?: StringFilter<"BotLearningRecord"> | string
+    context?: JsonNullableFilter<"BotLearningRecord">
+    processed?: BoolFilter<"BotLearningRecord"> | boolean
+    createdAt?: DateTimeFilter<"BotLearningRecord"> | Date | string
+    updatedAt?: DateTimeFilter<"BotLearningRecord"> | Date | string
+  }
+
+  export type BotLearningRecordOrderByWithRelationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    userId?: SortOrder
+    interactionType?: SortOrder
+    outcome?: SortOrder
+    context?: SortOrderInput | SortOrder
+    processed?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotLearningRecordWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: BotLearningRecordWhereInput | BotLearningRecordWhereInput[]
+    OR?: BotLearningRecordWhereInput[]
+    NOT?: BotLearningRecordWhereInput | BotLearningRecordWhereInput[]
+    botId?: StringFilter<"BotLearningRecord"> | string
+    userId?: StringFilter<"BotLearningRecord"> | string
+    interactionType?: StringFilter<"BotLearningRecord"> | string
+    outcome?: StringFilter<"BotLearningRecord"> | string
+    context?: JsonNullableFilter<"BotLearningRecord">
+    processed?: BoolFilter<"BotLearningRecord"> | boolean
+    createdAt?: DateTimeFilter<"BotLearningRecord"> | Date | string
+    updatedAt?: DateTimeFilter<"BotLearningRecord"> | Date | string
+  }, "id">
+
+  export type BotLearningRecordOrderByWithAggregationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    userId?: SortOrder
+    interactionType?: SortOrder
+    outcome?: SortOrder
+    context?: SortOrderInput | SortOrder
+    processed?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: BotLearningRecordCountOrderByAggregateInput
+    _max?: BotLearningRecordMaxOrderByAggregateInput
+    _min?: BotLearningRecordMinOrderByAggregateInput
+  }
+
+  export type BotLearningRecordScalarWhereWithAggregatesInput = {
+    AND?: BotLearningRecordScalarWhereWithAggregatesInput | BotLearningRecordScalarWhereWithAggregatesInput[]
+    OR?: BotLearningRecordScalarWhereWithAggregatesInput[]
+    NOT?: BotLearningRecordScalarWhereWithAggregatesInput | BotLearningRecordScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BotLearningRecord"> | string
+    botId?: StringWithAggregatesFilter<"BotLearningRecord"> | string
+    userId?: StringWithAggregatesFilter<"BotLearningRecord"> | string
+    interactionType?: StringWithAggregatesFilter<"BotLearningRecord"> | string
+    outcome?: StringWithAggregatesFilter<"BotLearningRecord"> | string
+    context?: JsonNullableWithAggregatesFilter<"BotLearningRecord">
+    processed?: BoolWithAggregatesFilter<"BotLearningRecord"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"BotLearningRecord"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BotLearningRecord"> | Date | string
+  }
+
+  export type BotPreferenceWhereInput = {
+    AND?: BotPreferenceWhereInput | BotPreferenceWhereInput[]
+    OR?: BotPreferenceWhereInput[]
+    NOT?: BotPreferenceWhereInput | BotPreferenceWhereInput[]
+    id?: StringFilter<"BotPreference"> | string
+    botId?: StringFilter<"BotPreference"> | string
+    relationshipStructure?: FloatFilter<"BotPreference"> | number
+    communicationStyle?: FloatFilter<"BotPreference"> | number
+    interests?: FloatFilter<"BotPreference"> | number
+    values?: FloatFilter<"BotPreference"> | number
+    lifestyle?: FloatFilter<"BotPreference"> | number
+    confidence?: FloatFilter<"BotPreference"> | number
+    sampleSize?: IntFilter<"BotPreference"> | number
+    createdAt?: DateTimeFilter<"BotPreference"> | Date | string
+    lastUpdated?: DateTimeFilter<"BotPreference"> | Date | string
+  }
+
+  export type BotPreferenceOrderByWithRelationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    relationshipStructure?: SortOrder
+    communicationStyle?: SortOrder
+    interests?: SortOrder
+    values?: SortOrder
+    lifestyle?: SortOrder
+    confidence?: SortOrder
+    sampleSize?: SortOrder
+    createdAt?: SortOrder
+    lastUpdated?: SortOrder
+  }
+
+  export type BotPreferenceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    botId?: string
+    AND?: BotPreferenceWhereInput | BotPreferenceWhereInput[]
+    OR?: BotPreferenceWhereInput[]
+    NOT?: BotPreferenceWhereInput | BotPreferenceWhereInput[]
+    relationshipStructure?: FloatFilter<"BotPreference"> | number
+    communicationStyle?: FloatFilter<"BotPreference"> | number
+    interests?: FloatFilter<"BotPreference"> | number
+    values?: FloatFilter<"BotPreference"> | number
+    lifestyle?: FloatFilter<"BotPreference"> | number
+    confidence?: FloatFilter<"BotPreference"> | number
+    sampleSize?: IntFilter<"BotPreference"> | number
+    createdAt?: DateTimeFilter<"BotPreference"> | Date | string
+    lastUpdated?: DateTimeFilter<"BotPreference"> | Date | string
+  }, "id" | "botId">
+
+  export type BotPreferenceOrderByWithAggregationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    relationshipStructure?: SortOrder
+    communicationStyle?: SortOrder
+    interests?: SortOrder
+    values?: SortOrder
+    lifestyle?: SortOrder
+    confidence?: SortOrder
+    sampleSize?: SortOrder
+    createdAt?: SortOrder
+    lastUpdated?: SortOrder
+    _count?: BotPreferenceCountOrderByAggregateInput
+    _avg?: BotPreferenceAvgOrderByAggregateInput
+    _max?: BotPreferenceMaxOrderByAggregateInput
+    _min?: BotPreferenceMinOrderByAggregateInput
+    _sum?: BotPreferenceSumOrderByAggregateInput
+  }
+
+  export type BotPreferenceScalarWhereWithAggregatesInput = {
+    AND?: BotPreferenceScalarWhereWithAggregatesInput | BotPreferenceScalarWhereWithAggregatesInput[]
+    OR?: BotPreferenceScalarWhereWithAggregatesInput[]
+    NOT?: BotPreferenceScalarWhereWithAggregatesInput | BotPreferenceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BotPreference"> | string
+    botId?: StringWithAggregatesFilter<"BotPreference"> | string
+    relationshipStructure?: FloatWithAggregatesFilter<"BotPreference"> | number
+    communicationStyle?: FloatWithAggregatesFilter<"BotPreference"> | number
+    interests?: FloatWithAggregatesFilter<"BotPreference"> | number
+    values?: FloatWithAggregatesFilter<"BotPreference"> | number
+    lifestyle?: FloatWithAggregatesFilter<"BotPreference"> | number
+    confidence?: FloatWithAggregatesFilter<"BotPreference"> | number
+    sampleSize?: IntWithAggregatesFilter<"BotPreference"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"BotPreference"> | Date | string
+    lastUpdated?: DateTimeWithAggregatesFilter<"BotPreference"> | Date | string
+  }
+
+  export type BotAvatarWhereInput = {
+    AND?: BotAvatarWhereInput | BotAvatarWhereInput[]
+    OR?: BotAvatarWhereInput[]
+    NOT?: BotAvatarWhereInput | BotAvatarWhereInput[]
+    id?: StringFilter<"BotAvatar"> | string
+    botId?: StringFilter<"BotAvatar"> | string
+    originalUrl?: StringNullableFilter<"BotAvatar"> | string | null
+    processedUrl?: StringNullableFilter<"BotAvatar"> | string | null
+    style?: StringFilter<"BotAvatar"> | string
+    ethnicity?: StringFilter<"BotAvatar"> | string
+    status?: StringFilter<"BotAvatar"> | string
+    useCount?: IntFilter<"BotAvatar"> | number
+    generatedAt?: DateTimeFilter<"BotAvatar"> | Date | string
+    lastUsedAt?: DateTimeNullableFilter<"BotAvatar"> | Date | string | null
+    createdAt?: DateTimeFilter<"BotAvatar"> | Date | string
+    updatedAt?: DateTimeFilter<"BotAvatar"> | Date | string
+  }
+
+  export type BotAvatarOrderByWithRelationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    originalUrl?: SortOrderInput | SortOrder
+    processedUrl?: SortOrderInput | SortOrder
+    style?: SortOrder
+    ethnicity?: SortOrder
+    status?: SortOrder
+    useCount?: SortOrder
+    generatedAt?: SortOrder
+    lastUsedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotAvatarWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    botId?: string
+    AND?: BotAvatarWhereInput | BotAvatarWhereInput[]
+    OR?: BotAvatarWhereInput[]
+    NOT?: BotAvatarWhereInput | BotAvatarWhereInput[]
+    originalUrl?: StringNullableFilter<"BotAvatar"> | string | null
+    processedUrl?: StringNullableFilter<"BotAvatar"> | string | null
+    style?: StringFilter<"BotAvatar"> | string
+    ethnicity?: StringFilter<"BotAvatar"> | string
+    status?: StringFilter<"BotAvatar"> | string
+    useCount?: IntFilter<"BotAvatar"> | number
+    generatedAt?: DateTimeFilter<"BotAvatar"> | Date | string
+    lastUsedAt?: DateTimeNullableFilter<"BotAvatar"> | Date | string | null
+    createdAt?: DateTimeFilter<"BotAvatar"> | Date | string
+    updatedAt?: DateTimeFilter<"BotAvatar"> | Date | string
+  }, "id" | "botId">
+
+  export type BotAvatarOrderByWithAggregationInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    originalUrl?: SortOrderInput | SortOrder
+    processedUrl?: SortOrderInput | SortOrder
+    style?: SortOrder
+    ethnicity?: SortOrder
+    status?: SortOrder
+    useCount?: SortOrder
+    generatedAt?: SortOrder
+    lastUsedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: BotAvatarCountOrderByAggregateInput
+    _avg?: BotAvatarAvgOrderByAggregateInput
+    _max?: BotAvatarMaxOrderByAggregateInput
+    _min?: BotAvatarMinOrderByAggregateInput
+    _sum?: BotAvatarSumOrderByAggregateInput
+  }
+
+  export type BotAvatarScalarWhereWithAggregatesInput = {
+    AND?: BotAvatarScalarWhereWithAggregatesInput | BotAvatarScalarWhereWithAggregatesInput[]
+    OR?: BotAvatarScalarWhereWithAggregatesInput[]
+    NOT?: BotAvatarScalarWhereWithAggregatesInput | BotAvatarScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BotAvatar"> | string
+    botId?: StringWithAggregatesFilter<"BotAvatar"> | string
+    originalUrl?: StringNullableWithAggregatesFilter<"BotAvatar"> | string | null
+    processedUrl?: StringNullableWithAggregatesFilter<"BotAvatar"> | string | null
+    style?: StringWithAggregatesFilter<"BotAvatar"> | string
+    ethnicity?: StringWithAggregatesFilter<"BotAvatar"> | string
+    status?: StringWithAggregatesFilter<"BotAvatar"> | string
+    useCount?: IntWithAggregatesFilter<"BotAvatar"> | number
+    generatedAt?: DateTimeWithAggregatesFilter<"BotAvatar"> | Date | string
+    lastUsedAt?: DateTimeNullableWithAggregatesFilter<"BotAvatar"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"BotAvatar"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BotAvatar"> | Date | string
+  }
 
   export type UserWhereInput = {
     AND?: UserWhereInput | UserWhereInput[]
@@ -22104,6 +33809,9 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
+    isBot?: BoolFilter<"User"> | boolean
+    botType?: StringNullableFilter<"User"> | string | null
+    botConfig?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
@@ -22130,6 +33838,9 @@ export namespace Prisma {
     image?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
     role?: SortOrder
+    isBot?: SortOrder
+    botType?: SortOrderInput | SortOrder
+    botConfig?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     accounts?: AccountOrderByRelationAggregateInput
@@ -22159,6 +33870,9 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
+    isBot?: BoolFilter<"User"> | boolean
+    botType?: StringNullableFilter<"User"> | string | null
+    botConfig?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
@@ -22185,6 +33899,9 @@ export namespace Prisma {
     image?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
     role?: SortOrder
+    isBot?: SortOrder
+    botType?: SortOrderInput | SortOrder
+    botConfig?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -22203,6 +33920,9 @@ export namespace Prisma {
     image?: StringNullableWithAggregatesFilter<"User"> | string | null
     password?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
+    isBot?: BoolWithAggregatesFilter<"User"> | boolean
+    botType?: StringNullableWithAggregatesFilter<"User"> | string | null
+    botConfig?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -22360,6 +34080,9 @@ export namespace Prisma {
     expires?: DateTimeFilter<"VerificationToken"> | Date | string
     userId?: StringNullableFilter<"VerificationToken"> | string | null
     used?: BoolFilter<"VerificationToken"> | boolean
+    useCount?: IntFilter<"VerificationToken"> | number
+    maxUses?: IntFilter<"VerificationToken"> | number
+    lastUsedAt?: DateTimeNullableFilter<"VerificationToken"> | Date | string | null
     createdAt?: DateTimeFilter<"VerificationToken"> | Date | string
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }
@@ -22371,6 +34094,9 @@ export namespace Prisma {
     expires?: SortOrder
     userId?: SortOrderInput | SortOrder
     used?: SortOrder
+    useCount?: SortOrder
+    maxUses?: SortOrder
+    lastUsedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
   }
@@ -22386,6 +34112,9 @@ export namespace Prisma {
     expires?: DateTimeFilter<"VerificationToken"> | Date | string
     userId?: StringNullableFilter<"VerificationToken"> | string | null
     used?: BoolFilter<"VerificationToken"> | boolean
+    useCount?: IntFilter<"VerificationToken"> | number
+    maxUses?: IntFilter<"VerificationToken"> | number
+    lastUsedAt?: DateTimeNullableFilter<"VerificationToken"> | Date | string | null
     createdAt?: DateTimeFilter<"VerificationToken"> | Date | string
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }, "id" | "token" | "identifier_token">
@@ -22397,10 +34126,15 @@ export namespace Prisma {
     expires?: SortOrder
     userId?: SortOrderInput | SortOrder
     used?: SortOrder
+    useCount?: SortOrder
+    maxUses?: SortOrder
+    lastUsedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: VerificationTokenCountOrderByAggregateInput
+    _avg?: VerificationTokenAvgOrderByAggregateInput
     _max?: VerificationTokenMaxOrderByAggregateInput
     _min?: VerificationTokenMinOrderByAggregateInput
+    _sum?: VerificationTokenSumOrderByAggregateInput
   }
 
   export type VerificationTokenScalarWhereWithAggregatesInput = {
@@ -22413,6 +34147,9 @@ export namespace Prisma {
     expires?: DateTimeWithAggregatesFilter<"VerificationToken"> | Date | string
     userId?: StringNullableWithAggregatesFilter<"VerificationToken"> | string | null
     used?: BoolWithAggregatesFilter<"VerificationToken"> | boolean
+    useCount?: IntWithAggregatesFilter<"VerificationToken"> | number
+    maxUses?: IntWithAggregatesFilter<"VerificationToken"> | number
+    lastUsedAt?: DateTimeNullableWithAggregatesFilter<"VerificationToken"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"VerificationToken"> | Date | string
   }
 
@@ -22451,10 +34188,18 @@ export namespace Prisma {
     onboardingStep?: IntFilter<"Profile"> | number
     isApproved?: BoolFilter<"Profile"> | boolean
     isVerified?: BoolFilter<"Profile"> | boolean
+    personalityData?: StringNullableFilter<"Profile"> | string | null
     adminNotes?: StringNullableFilter<"Profile"> | string | null
+    occupation?: StringNullableFilter<"Profile"> | string | null
+    company?: StringNullableFilter<"Profile"> | string | null
+    industry?: StringNullableFilter<"Profile"> | string | null
+    linkedInVerified?: BoolFilter<"Profile"> | boolean
+    verificationBadge?: StringNullableFilter<"Profile"> | string | null
     createdAt?: DateTimeFilter<"Profile"> | Date | string
     updatedAt?: DateTimeFilter<"Profile"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    botProfile?: XOR<BotProfileNullableScalarRelationFilter, BotProfileWhereInput> | null
+    sincerityWallet?: XOR<SincerityWalletNullableScalarRelationFilter, SincerityWalletWhereInput> | null
   }
 
   export type ProfileOrderByWithRelationInput = {
@@ -22489,10 +34234,18 @@ export namespace Prisma {
     onboardingStep?: SortOrder
     isApproved?: SortOrder
     isVerified?: SortOrder
+    personalityData?: SortOrderInput | SortOrder
     adminNotes?: SortOrderInput | SortOrder
+    occupation?: SortOrderInput | SortOrder
+    company?: SortOrderInput | SortOrder
+    industry?: SortOrderInput | SortOrder
+    linkedInVerified?: SortOrder
+    verificationBadge?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
+    botProfile?: BotProfileOrderByWithRelationInput
+    sincerityWallet?: SincerityWalletOrderByWithRelationInput
   }
 
   export type ProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -22530,10 +34283,18 @@ export namespace Prisma {
     onboardingStep?: IntFilter<"Profile"> | number
     isApproved?: BoolFilter<"Profile"> | boolean
     isVerified?: BoolFilter<"Profile"> | boolean
+    personalityData?: StringNullableFilter<"Profile"> | string | null
     adminNotes?: StringNullableFilter<"Profile"> | string | null
+    occupation?: StringNullableFilter<"Profile"> | string | null
+    company?: StringNullableFilter<"Profile"> | string | null
+    industry?: StringNullableFilter<"Profile"> | string | null
+    linkedInVerified?: BoolFilter<"Profile"> | boolean
+    verificationBadge?: StringNullableFilter<"Profile"> | string | null
     createdAt?: DateTimeFilter<"Profile"> | Date | string
     updatedAt?: DateTimeFilter<"Profile"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    botProfile?: XOR<BotProfileNullableScalarRelationFilter, BotProfileWhereInput> | null
+    sincerityWallet?: XOR<SincerityWalletNullableScalarRelationFilter, SincerityWalletWhereInput> | null
   }, "id" | "userId">
 
   export type ProfileOrderByWithAggregationInput = {
@@ -22568,7 +34329,13 @@ export namespace Prisma {
     onboardingStep?: SortOrder
     isApproved?: SortOrder
     isVerified?: SortOrder
+    personalityData?: SortOrderInput | SortOrder
     adminNotes?: SortOrderInput | SortOrder
+    occupation?: SortOrderInput | SortOrder
+    company?: SortOrderInput | SortOrder
+    industry?: SortOrderInput | SortOrder
+    linkedInVerified?: SortOrder
+    verificationBadge?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ProfileCountOrderByAggregateInput
@@ -22613,7 +34380,13 @@ export namespace Prisma {
     onboardingStep?: IntWithAggregatesFilter<"Profile"> | number
     isApproved?: BoolWithAggregatesFilter<"Profile"> | boolean
     isVerified?: BoolWithAggregatesFilter<"Profile"> | boolean
+    personalityData?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     adminNotes?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    occupation?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    company?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    industry?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    linkedInVerified?: BoolWithAggregatesFilter<"Profile"> | boolean
+    verificationBadge?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Profile"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Profile"> | Date | string
   }
@@ -22639,6 +34412,12 @@ export namespace Prisma {
     receiverAction?: EnumMatchActionNullableFilter<"Match"> | $Enums.MatchAction | null
     reviewedBy?: StringNullableFilter<"Match"> | string | null
     reviewNotes?: StringNullableFilter<"Match"> | string | null
+    pitchMessage?: StringNullableFilter<"Match"> | string | null
+    pitchTone?: StringNullableFilter<"Match"> | string | null
+    aiAssisted?: BoolFilter<"Match"> | boolean
+    giftAmount?: IntFilter<"Match"> | number
+    isUnread?: BoolFilter<"Match"> | boolean
+    inboxPriority?: FloatNullableFilter<"Match"> | number | null
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
     expiresAt?: DateTimeNullableFilter<"Match"> | Date | string | null
@@ -22666,6 +34445,12 @@ export namespace Prisma {
     receiverAction?: SortOrderInput | SortOrder
     reviewedBy?: SortOrderInput | SortOrder
     reviewNotes?: SortOrderInput | SortOrder
+    pitchMessage?: SortOrderInput | SortOrder
+    pitchTone?: SortOrderInput | SortOrder
+    aiAssisted?: SortOrder
+    giftAmount?: SortOrder
+    isUnread?: SortOrder
+    inboxPriority?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     expiresAt?: SortOrderInput | SortOrder
@@ -22697,6 +34482,12 @@ export namespace Prisma {
     receiverAction?: EnumMatchActionNullableFilter<"Match"> | $Enums.MatchAction | null
     reviewedBy?: StringNullableFilter<"Match"> | string | null
     reviewNotes?: StringNullableFilter<"Match"> | string | null
+    pitchMessage?: StringNullableFilter<"Match"> | string | null
+    pitchTone?: StringNullableFilter<"Match"> | string | null
+    aiAssisted?: BoolFilter<"Match"> | boolean
+    giftAmount?: IntFilter<"Match"> | number
+    isUnread?: BoolFilter<"Match"> | boolean
+    inboxPriority?: FloatNullableFilter<"Match"> | number | null
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
     expiresAt?: DateTimeNullableFilter<"Match"> | Date | string | null
@@ -22724,6 +34515,12 @@ export namespace Prisma {
     receiverAction?: SortOrderInput | SortOrder
     reviewedBy?: SortOrderInput | SortOrder
     reviewNotes?: SortOrderInput | SortOrder
+    pitchMessage?: SortOrderInput | SortOrder
+    pitchTone?: SortOrderInput | SortOrder
+    aiAssisted?: SortOrder
+    giftAmount?: SortOrder
+    isUnread?: SortOrder
+    inboxPriority?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     expiresAt?: SortOrderInput | SortOrder
@@ -22755,6 +34552,12 @@ export namespace Prisma {
     receiverAction?: EnumMatchActionNullableWithAggregatesFilter<"Match"> | $Enums.MatchAction | null
     reviewedBy?: StringNullableWithAggregatesFilter<"Match"> | string | null
     reviewNotes?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    pitchMessage?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    pitchTone?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    aiAssisted?: BoolWithAggregatesFilter<"Match"> | boolean
+    giftAmount?: IntWithAggregatesFilter<"Match"> | number
+    isUnread?: BoolWithAggregatesFilter<"Match"> | boolean
+    inboxPriority?: FloatNullableWithAggregatesFilter<"Match"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Match"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Match"> | Date | string
     expiresAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
@@ -22832,6 +34635,16 @@ export namespace Prisma {
     matchId?: StringNullableFilter<"ChatRoom"> | string | null
     lastMessageAt?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
     isArchived?: BoolFilter<"ChatRoom"> | boolean
+    vaultStatus?: EnumVaultStatusFilter<"ChatRoom"> | $Enums.VaultStatus
+    vaultExpiry?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
+    extendedAt?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
+    extendedBy?: StringNullableFilter<"ChatRoom"> | string | null
+    extensionCount?: IntFilter<"ChatRoom"> | number
+    revokedAt?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
+    revokedBy?: StringNullableFilter<"ChatRoom"> | string | null
+    revokeReason?: StringNullableFilter<"ChatRoom"> | string | null
+    screenshotCount?: IntFilter<"ChatRoom"> | number
+    lastScreenshotAt?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
     createdAt?: DateTimeFilter<"ChatRoom"> | Date | string
     updatedAt?: DateTimeFilter<"ChatRoom"> | Date | string
     match?: XOR<MatchNullableScalarRelationFilter, MatchWhereInput> | null
@@ -22844,6 +34657,16 @@ export namespace Prisma {
     matchId?: SortOrderInput | SortOrder
     lastMessageAt?: SortOrderInput | SortOrder
     isArchived?: SortOrder
+    vaultStatus?: SortOrder
+    vaultExpiry?: SortOrderInput | SortOrder
+    extendedAt?: SortOrderInput | SortOrder
+    extendedBy?: SortOrderInput | SortOrder
+    extensionCount?: SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    revokedBy?: SortOrderInput | SortOrder
+    revokeReason?: SortOrderInput | SortOrder
+    screenshotCount?: SortOrder
+    lastScreenshotAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     match?: MatchOrderByWithRelationInput
@@ -22859,6 +34682,16 @@ export namespace Prisma {
     NOT?: ChatRoomWhereInput | ChatRoomWhereInput[]
     lastMessageAt?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
     isArchived?: BoolFilter<"ChatRoom"> | boolean
+    vaultStatus?: EnumVaultStatusFilter<"ChatRoom"> | $Enums.VaultStatus
+    vaultExpiry?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
+    extendedAt?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
+    extendedBy?: StringNullableFilter<"ChatRoom"> | string | null
+    extensionCount?: IntFilter<"ChatRoom"> | number
+    revokedAt?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
+    revokedBy?: StringNullableFilter<"ChatRoom"> | string | null
+    revokeReason?: StringNullableFilter<"ChatRoom"> | string | null
+    screenshotCount?: IntFilter<"ChatRoom"> | number
+    lastScreenshotAt?: DateTimeNullableFilter<"ChatRoom"> | Date | string | null
     createdAt?: DateTimeFilter<"ChatRoom"> | Date | string
     updatedAt?: DateTimeFilter<"ChatRoom"> | Date | string
     match?: XOR<MatchNullableScalarRelationFilter, MatchWhereInput> | null
@@ -22871,11 +34704,23 @@ export namespace Prisma {
     matchId?: SortOrderInput | SortOrder
     lastMessageAt?: SortOrderInput | SortOrder
     isArchived?: SortOrder
+    vaultStatus?: SortOrder
+    vaultExpiry?: SortOrderInput | SortOrder
+    extendedAt?: SortOrderInput | SortOrder
+    extendedBy?: SortOrderInput | SortOrder
+    extensionCount?: SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    revokedBy?: SortOrderInput | SortOrder
+    revokeReason?: SortOrderInput | SortOrder
+    screenshotCount?: SortOrder
+    lastScreenshotAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ChatRoomCountOrderByAggregateInput
+    _avg?: ChatRoomAvgOrderByAggregateInput
     _max?: ChatRoomMaxOrderByAggregateInput
     _min?: ChatRoomMinOrderByAggregateInput
+    _sum?: ChatRoomSumOrderByAggregateInput
   }
 
   export type ChatRoomScalarWhereWithAggregatesInput = {
@@ -22886,6 +34731,16 @@ export namespace Prisma {
     matchId?: StringNullableWithAggregatesFilter<"ChatRoom"> | string | null
     lastMessageAt?: DateTimeNullableWithAggregatesFilter<"ChatRoom"> | Date | string | null
     isArchived?: BoolWithAggregatesFilter<"ChatRoom"> | boolean
+    vaultStatus?: EnumVaultStatusWithAggregatesFilter<"ChatRoom"> | $Enums.VaultStatus
+    vaultExpiry?: DateTimeNullableWithAggregatesFilter<"ChatRoom"> | Date | string | null
+    extendedAt?: DateTimeNullableWithAggregatesFilter<"ChatRoom"> | Date | string | null
+    extendedBy?: StringNullableWithAggregatesFilter<"ChatRoom"> | string | null
+    extensionCount?: IntWithAggregatesFilter<"ChatRoom"> | number
+    revokedAt?: DateTimeNullableWithAggregatesFilter<"ChatRoom"> | Date | string | null
+    revokedBy?: StringNullableWithAggregatesFilter<"ChatRoom"> | string | null
+    revokeReason?: StringNullableWithAggregatesFilter<"ChatRoom"> | string | null
+    screenshotCount?: IntWithAggregatesFilter<"ChatRoom"> | number
+    lastScreenshotAt?: DateTimeNullableWithAggregatesFilter<"ChatRoom"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ChatRoom"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ChatRoom"> | Date | string
   }
@@ -23503,6 +35358,925 @@ export namespace Prisma {
     updatedBy?: StringNullableWithAggregatesFilter<"SystemConfig"> | string | null
   }
 
+  export type SincerityWalletWhereInput = {
+    AND?: SincerityWalletWhereInput | SincerityWalletWhereInput[]
+    OR?: SincerityWalletWhereInput[]
+    NOT?: SincerityWalletWhereInput | SincerityWalletWhereInput[]
+    id?: StringFilter<"SincerityWallet"> | string
+    userId?: StringFilter<"SincerityWallet"> | string
+    balance?: IntFilter<"SincerityWallet"> | number
+    totalEarned?: IntFilter<"SincerityWallet"> | number
+    totalSpent?: IntFilter<"SincerityWallet"> | number
+    totalGifted?: IntFilter<"SincerityWallet"> | number
+    totalReceived?: IntFilter<"SincerityWallet"> | number
+    tier?: EnumSincerityTierFilter<"SincerityWallet"> | $Enums.SincerityTier
+    tierProgress?: FloatFilter<"SincerityWallet"> | number
+    lastEarnedAt?: DateTimeNullableFilter<"SincerityWallet"> | Date | string | null
+    lastSpentAt?: DateTimeNullableFilter<"SincerityWallet"> | Date | string | null
+    createdAt?: DateTimeFilter<"SincerityWallet"> | Date | string
+    updatedAt?: DateTimeFilter<"SincerityWallet"> | Date | string
+    user?: XOR<ProfileScalarRelationFilter, ProfileWhereInput>
+    transactions?: SincerityTransactionListRelationFilter
+  }
+
+  export type SincerityWalletOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    balance?: SortOrder
+    totalEarned?: SortOrder
+    totalSpent?: SortOrder
+    totalGifted?: SortOrder
+    totalReceived?: SortOrder
+    tier?: SortOrder
+    tierProgress?: SortOrder
+    lastEarnedAt?: SortOrderInput | SortOrder
+    lastSpentAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: ProfileOrderByWithRelationInput
+    transactions?: SincerityTransactionOrderByRelationAggregateInput
+  }
+
+  export type SincerityWalletWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId?: string
+    AND?: SincerityWalletWhereInput | SincerityWalletWhereInput[]
+    OR?: SincerityWalletWhereInput[]
+    NOT?: SincerityWalletWhereInput | SincerityWalletWhereInput[]
+    balance?: IntFilter<"SincerityWallet"> | number
+    totalEarned?: IntFilter<"SincerityWallet"> | number
+    totalSpent?: IntFilter<"SincerityWallet"> | number
+    totalGifted?: IntFilter<"SincerityWallet"> | number
+    totalReceived?: IntFilter<"SincerityWallet"> | number
+    tier?: EnumSincerityTierFilter<"SincerityWallet"> | $Enums.SincerityTier
+    tierProgress?: FloatFilter<"SincerityWallet"> | number
+    lastEarnedAt?: DateTimeNullableFilter<"SincerityWallet"> | Date | string | null
+    lastSpentAt?: DateTimeNullableFilter<"SincerityWallet"> | Date | string | null
+    createdAt?: DateTimeFilter<"SincerityWallet"> | Date | string
+    updatedAt?: DateTimeFilter<"SincerityWallet"> | Date | string
+    user?: XOR<ProfileScalarRelationFilter, ProfileWhereInput>
+    transactions?: SincerityTransactionListRelationFilter
+  }, "id" | "userId">
+
+  export type SincerityWalletOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    balance?: SortOrder
+    totalEarned?: SortOrder
+    totalSpent?: SortOrder
+    totalGifted?: SortOrder
+    totalReceived?: SortOrder
+    tier?: SortOrder
+    tierProgress?: SortOrder
+    lastEarnedAt?: SortOrderInput | SortOrder
+    lastSpentAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: SincerityWalletCountOrderByAggregateInput
+    _avg?: SincerityWalletAvgOrderByAggregateInput
+    _max?: SincerityWalletMaxOrderByAggregateInput
+    _min?: SincerityWalletMinOrderByAggregateInput
+    _sum?: SincerityWalletSumOrderByAggregateInput
+  }
+
+  export type SincerityWalletScalarWhereWithAggregatesInput = {
+    AND?: SincerityWalletScalarWhereWithAggregatesInput | SincerityWalletScalarWhereWithAggregatesInput[]
+    OR?: SincerityWalletScalarWhereWithAggregatesInput[]
+    NOT?: SincerityWalletScalarWhereWithAggregatesInput | SincerityWalletScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SincerityWallet"> | string
+    userId?: StringWithAggregatesFilter<"SincerityWallet"> | string
+    balance?: IntWithAggregatesFilter<"SincerityWallet"> | number
+    totalEarned?: IntWithAggregatesFilter<"SincerityWallet"> | number
+    totalSpent?: IntWithAggregatesFilter<"SincerityWallet"> | number
+    totalGifted?: IntWithAggregatesFilter<"SincerityWallet"> | number
+    totalReceived?: IntWithAggregatesFilter<"SincerityWallet"> | number
+    tier?: EnumSincerityTierWithAggregatesFilter<"SincerityWallet"> | $Enums.SincerityTier
+    tierProgress?: FloatWithAggregatesFilter<"SincerityWallet"> | number
+    lastEarnedAt?: DateTimeNullableWithAggregatesFilter<"SincerityWallet"> | Date | string | null
+    lastSpentAt?: DateTimeNullableWithAggregatesFilter<"SincerityWallet"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"SincerityWallet"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SincerityWallet"> | Date | string
+  }
+
+  export type SincerityTransactionWhereInput = {
+    AND?: SincerityTransactionWhereInput | SincerityTransactionWhereInput[]
+    OR?: SincerityTransactionWhereInput[]
+    NOT?: SincerityTransactionWhereInput | SincerityTransactionWhereInput[]
+    id?: StringFilter<"SincerityTransaction"> | string
+    walletId?: StringFilter<"SincerityTransaction"> | string
+    type?: EnumSincerityTransactionTypeFilter<"SincerityTransaction"> | $Enums.SincerityTransactionType
+    amount?: IntFilter<"SincerityTransaction"> | number
+    source?: StringFilter<"SincerityTransaction"> | string
+    description?: StringNullableFilter<"SincerityTransaction"> | string | null
+    matchId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    fromUserId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    toUserId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    message?: StringNullableFilter<"SincerityTransaction"> | string | null
+    metadata?: StringNullableFilter<"SincerityTransaction"> | string | null
+    createdAt?: DateTimeFilter<"SincerityTransaction"> | Date | string
+    wallet?: XOR<SincerityWalletScalarRelationFilter, SincerityWalletWhereInput>
+  }
+
+  export type SincerityTransactionOrderByWithRelationInput = {
+    id?: SortOrder
+    walletId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    source?: SortOrder
+    description?: SortOrderInput | SortOrder
+    matchId?: SortOrderInput | SortOrder
+    fromUserId?: SortOrderInput | SortOrder
+    toUserId?: SortOrderInput | SortOrder
+    message?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    wallet?: SincerityWalletOrderByWithRelationInput
+  }
+
+  export type SincerityTransactionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: SincerityTransactionWhereInput | SincerityTransactionWhereInput[]
+    OR?: SincerityTransactionWhereInput[]
+    NOT?: SincerityTransactionWhereInput | SincerityTransactionWhereInput[]
+    walletId?: StringFilter<"SincerityTransaction"> | string
+    type?: EnumSincerityTransactionTypeFilter<"SincerityTransaction"> | $Enums.SincerityTransactionType
+    amount?: IntFilter<"SincerityTransaction"> | number
+    source?: StringFilter<"SincerityTransaction"> | string
+    description?: StringNullableFilter<"SincerityTransaction"> | string | null
+    matchId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    fromUserId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    toUserId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    message?: StringNullableFilter<"SincerityTransaction"> | string | null
+    metadata?: StringNullableFilter<"SincerityTransaction"> | string | null
+    createdAt?: DateTimeFilter<"SincerityTransaction"> | Date | string
+    wallet?: XOR<SincerityWalletScalarRelationFilter, SincerityWalletWhereInput>
+  }, "id">
+
+  export type SincerityTransactionOrderByWithAggregationInput = {
+    id?: SortOrder
+    walletId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    source?: SortOrder
+    description?: SortOrderInput | SortOrder
+    matchId?: SortOrderInput | SortOrder
+    fromUserId?: SortOrderInput | SortOrder
+    toUserId?: SortOrderInput | SortOrder
+    message?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: SincerityTransactionCountOrderByAggregateInput
+    _avg?: SincerityTransactionAvgOrderByAggregateInput
+    _max?: SincerityTransactionMaxOrderByAggregateInput
+    _min?: SincerityTransactionMinOrderByAggregateInput
+    _sum?: SincerityTransactionSumOrderByAggregateInput
+  }
+
+  export type SincerityTransactionScalarWhereWithAggregatesInput = {
+    AND?: SincerityTransactionScalarWhereWithAggregatesInput | SincerityTransactionScalarWhereWithAggregatesInput[]
+    OR?: SincerityTransactionScalarWhereWithAggregatesInput[]
+    NOT?: SincerityTransactionScalarWhereWithAggregatesInput | SincerityTransactionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SincerityTransaction"> | string
+    walletId?: StringWithAggregatesFilter<"SincerityTransaction"> | string
+    type?: EnumSincerityTransactionTypeWithAggregatesFilter<"SincerityTransaction"> | $Enums.SincerityTransactionType
+    amount?: IntWithAggregatesFilter<"SincerityTransaction"> | number
+    source?: StringWithAggregatesFilter<"SincerityTransaction"> | string
+    description?: StringNullableWithAggregatesFilter<"SincerityTransaction"> | string | null
+    matchId?: StringNullableWithAggregatesFilter<"SincerityTransaction"> | string | null
+    fromUserId?: StringNullableWithAggregatesFilter<"SincerityTransaction"> | string | null
+    toUserId?: StringNullableWithAggregatesFilter<"SincerityTransaction"> | string | null
+    message?: StringNullableWithAggregatesFilter<"SincerityTransaction"> | string | null
+    metadata?: StringNullableWithAggregatesFilter<"SincerityTransaction"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"SincerityTransaction"> | Date | string
+  }
+
+  export type BotProfileCreateInput = {
+    id?: string
+    botType?: $Enums.BotType
+    activityLevel?: $Enums.BotActivityLevel
+    ethnicity?: $Enums.Ethnicity | null
+    occupation?: string | null
+    industry?: string | null
+    educationLevel?: string | null
+    incomeRange?: string | null
+    interests?: BotProfileCreateinterestsInput | string[]
+    hobbies?: BotProfileCreatehobbiesInput | string[]
+    musicGenres?: BotProfileCreatemusicGenresInput | string[]
+    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    onlinePattern?: $Enums.OnlinePattern
+    avgResponseTime?: number
+    maxDailyMatches?: number
+    behaviorConfig?: string | null
+    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    totalInteractions?: number
+    successfulMatches?: number
+    avgEngagementScore?: number
+    learningData?: string | null
+    avatarStyle?: string | null
+    avatarSource?: string | null
+    isActive?: boolean
+    lastActiveAt?: Date | string | null
+    sleepUntil?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    profile: ProfileCreateNestedOneWithoutBotProfileInput
+  }
+
+  export type BotProfileUncheckedCreateInput = {
+    id?: string
+    profileId: string
+    botType?: $Enums.BotType
+    activityLevel?: $Enums.BotActivityLevel
+    ethnicity?: $Enums.Ethnicity | null
+    occupation?: string | null
+    industry?: string | null
+    educationLevel?: string | null
+    incomeRange?: string | null
+    interests?: BotProfileCreateinterestsInput | string[]
+    hobbies?: BotProfileCreatehobbiesInput | string[]
+    musicGenres?: BotProfileCreatemusicGenresInput | string[]
+    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    onlinePattern?: $Enums.OnlinePattern
+    avgResponseTime?: number
+    maxDailyMatches?: number
+    behaviorConfig?: string | null
+    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    totalInteractions?: number
+    successfulMatches?: number
+    avgEngagementScore?: number
+    learningData?: string | null
+    avatarStyle?: string | null
+    avatarSource?: string | null
+    isActive?: boolean
+    lastActiveAt?: Date | string | null
+    sleepUntil?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotProfileUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelFieldUpdateOperationsInput | $Enums.BotActivityLevel
+    ethnicity?: NullableEnumEthnicityFieldUpdateOperationsInput | $Enums.Ethnicity | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
+    interests?: BotProfileUpdateinterestsInput | string[]
+    hobbies?: BotProfileUpdatehobbiesInput | string[]
+    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
+    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
+    avgResponseTime?: IntFieldUpdateOperationsInput | number
+    maxDailyMatches?: IntFieldUpdateOperationsInput | number
+    behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    successfulMatches?: IntFieldUpdateOperationsInput | number
+    avgEngagementScore?: FloatFieldUpdateOperationsInput | number
+    learningData?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarSource?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sleepUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    profile?: ProfileUpdateOneRequiredWithoutBotProfileNestedInput
+  }
+
+  export type BotProfileUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    profileId?: StringFieldUpdateOperationsInput | string
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelFieldUpdateOperationsInput | $Enums.BotActivityLevel
+    ethnicity?: NullableEnumEthnicityFieldUpdateOperationsInput | $Enums.Ethnicity | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
+    interests?: BotProfileUpdateinterestsInput | string[]
+    hobbies?: BotProfileUpdatehobbiesInput | string[]
+    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
+    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
+    avgResponseTime?: IntFieldUpdateOperationsInput | number
+    maxDailyMatches?: IntFieldUpdateOperationsInput | number
+    behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    successfulMatches?: IntFieldUpdateOperationsInput | number
+    avgEngagementScore?: FloatFieldUpdateOperationsInput | number
+    learningData?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarSource?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sleepUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotProfileCreateManyInput = {
+    id?: string
+    profileId: string
+    botType?: $Enums.BotType
+    activityLevel?: $Enums.BotActivityLevel
+    ethnicity?: $Enums.Ethnicity | null
+    occupation?: string | null
+    industry?: string | null
+    educationLevel?: string | null
+    incomeRange?: string | null
+    interests?: BotProfileCreateinterestsInput | string[]
+    hobbies?: BotProfileCreatehobbiesInput | string[]
+    musicGenres?: BotProfileCreatemusicGenresInput | string[]
+    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    onlinePattern?: $Enums.OnlinePattern
+    avgResponseTime?: number
+    maxDailyMatches?: number
+    behaviorConfig?: string | null
+    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    totalInteractions?: number
+    successfulMatches?: number
+    avgEngagementScore?: number
+    learningData?: string | null
+    avatarStyle?: string | null
+    avatarSource?: string | null
+    isActive?: boolean
+    lastActiveAt?: Date | string | null
+    sleepUntil?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotProfileUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelFieldUpdateOperationsInput | $Enums.BotActivityLevel
+    ethnicity?: NullableEnumEthnicityFieldUpdateOperationsInput | $Enums.Ethnicity | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
+    interests?: BotProfileUpdateinterestsInput | string[]
+    hobbies?: BotProfileUpdatehobbiesInput | string[]
+    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
+    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
+    avgResponseTime?: IntFieldUpdateOperationsInput | number
+    maxDailyMatches?: IntFieldUpdateOperationsInput | number
+    behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    successfulMatches?: IntFieldUpdateOperationsInput | number
+    avgEngagementScore?: FloatFieldUpdateOperationsInput | number
+    learningData?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarSource?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sleepUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotProfileUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    profileId?: StringFieldUpdateOperationsInput | string
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelFieldUpdateOperationsInput | $Enums.BotActivityLevel
+    ethnicity?: NullableEnumEthnicityFieldUpdateOperationsInput | $Enums.Ethnicity | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
+    interests?: BotProfileUpdateinterestsInput | string[]
+    hobbies?: BotProfileUpdatehobbiesInput | string[]
+    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
+    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
+    avgResponseTime?: IntFieldUpdateOperationsInput | number
+    maxDailyMatches?: IntFieldUpdateOperationsInput | number
+    behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    successfulMatches?: IntFieldUpdateOperationsInput | number
+    avgEngagementScore?: FloatFieldUpdateOperationsInput | number
+    learningData?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarSource?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sleepUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotInteractionLogCreateInput = {
+    id?: string
+    botUserId: string
+    targetUserId?: string | null
+    matchId?: string | null
+    interactionType: string
+    action: string
+    responseDelay?: number | null
+    outcome?: string | null
+    engagementScore?: number | null
+    context?: string | null
+    createdAt?: Date | string
+  }
+
+  export type BotInteractionLogUncheckedCreateInput = {
+    id?: string
+    botUserId: string
+    targetUserId?: string | null
+    matchId?: string | null
+    interactionType: string
+    action: string
+    responseDelay?: number | null
+    outcome?: string | null
+    engagementScore?: number | null
+    context?: string | null
+    createdAt?: Date | string
+  }
+
+  export type BotInteractionLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botUserId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    interactionType?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    responseDelay?: NullableIntFieldUpdateOperationsInput | number | null
+    outcome?: NullableStringFieldUpdateOperationsInput | string | null
+    engagementScore?: NullableIntFieldUpdateOperationsInput | number | null
+    context?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotInteractionLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botUserId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    interactionType?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    responseDelay?: NullableIntFieldUpdateOperationsInput | number | null
+    outcome?: NullableStringFieldUpdateOperationsInput | string | null
+    engagementScore?: NullableIntFieldUpdateOperationsInput | number | null
+    context?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotInteractionLogCreateManyInput = {
+    id?: string
+    botUserId: string
+    targetUserId?: string | null
+    matchId?: string | null
+    interactionType: string
+    action: string
+    responseDelay?: number | null
+    outcome?: string | null
+    engagementScore?: number | null
+    context?: string | null
+    createdAt?: Date | string
+  }
+
+  export type BotInteractionLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botUserId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    interactionType?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    responseDelay?: NullableIntFieldUpdateOperationsInput | number | null
+    outcome?: NullableStringFieldUpdateOperationsInput | string | null
+    engagementScore?: NullableIntFieldUpdateOperationsInput | number | null
+    context?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotInteractionLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botUserId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    interactionType?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    responseDelay?: NullableIntFieldUpdateOperationsInput | number | null
+    outcome?: NullableStringFieldUpdateOperationsInput | string | null
+    engagementScore?: NullableIntFieldUpdateOperationsInput | number | null
+    context?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotLearningBatchCreateInput = {
+    id?: string
+    batchNumber: number
+    status?: string
+    startDate: Date | string
+    endDate: Date | string
+    totalInteractions?: number
+    avgEngagement?: number
+    successRate?: number
+    preferenceUpdates?: string | null
+    executionLog?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type BotLearningBatchUncheckedCreateInput = {
+    id?: string
+    batchNumber: number
+    status?: string
+    startDate: Date | string
+    endDate: Date | string
+    totalInteractions?: number
+    avgEngagement?: number
+    successRate?: number
+    preferenceUpdates?: string | null
+    executionLog?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type BotLearningBatchUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchNumber?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    avgEngagement?: FloatFieldUpdateOperationsInput | number
+    successRate?: FloatFieldUpdateOperationsInput | number
+    preferenceUpdates?: NullableStringFieldUpdateOperationsInput | string | null
+    executionLog?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotLearningBatchUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchNumber?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    avgEngagement?: FloatFieldUpdateOperationsInput | number
+    successRate?: FloatFieldUpdateOperationsInput | number
+    preferenceUpdates?: NullableStringFieldUpdateOperationsInput | string | null
+    executionLog?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotLearningBatchCreateManyInput = {
+    id?: string
+    batchNumber: number
+    status?: string
+    startDate: Date | string
+    endDate: Date | string
+    totalInteractions?: number
+    avgEngagement?: number
+    successRate?: number
+    preferenceUpdates?: string | null
+    executionLog?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type BotLearningBatchUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchNumber?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    avgEngagement?: FloatFieldUpdateOperationsInput | number
+    successRate?: FloatFieldUpdateOperationsInput | number
+    preferenceUpdates?: NullableStringFieldUpdateOperationsInput | string | null
+    executionLog?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotLearningBatchUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchNumber?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    avgEngagement?: FloatFieldUpdateOperationsInput | number
+    successRate?: FloatFieldUpdateOperationsInput | number
+    preferenceUpdates?: NullableStringFieldUpdateOperationsInput | string | null
+    executionLog?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type BotLearningRecordCreateInput = {
+    id?: string
+    botId: string
+    userId: string
+    interactionType: string
+    outcome: string
+    context?: NullableJsonNullValueInput | InputJsonValue
+    processed?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotLearningRecordUncheckedCreateInput = {
+    id?: string
+    botId: string
+    userId: string
+    interactionType: string
+    outcome: string
+    context?: NullableJsonNullValueInput | InputJsonValue
+    processed?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotLearningRecordUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    interactionType?: StringFieldUpdateOperationsInput | string
+    outcome?: StringFieldUpdateOperationsInput | string
+    context?: NullableJsonNullValueInput | InputJsonValue
+    processed?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotLearningRecordUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    interactionType?: StringFieldUpdateOperationsInput | string
+    outcome?: StringFieldUpdateOperationsInput | string
+    context?: NullableJsonNullValueInput | InputJsonValue
+    processed?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotLearningRecordCreateManyInput = {
+    id?: string
+    botId: string
+    userId: string
+    interactionType: string
+    outcome: string
+    context?: NullableJsonNullValueInput | InputJsonValue
+    processed?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotLearningRecordUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    interactionType?: StringFieldUpdateOperationsInput | string
+    outcome?: StringFieldUpdateOperationsInput | string
+    context?: NullableJsonNullValueInput | InputJsonValue
+    processed?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotLearningRecordUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    interactionType?: StringFieldUpdateOperationsInput | string
+    outcome?: StringFieldUpdateOperationsInput | string
+    context?: NullableJsonNullValueInput | InputJsonValue
+    processed?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotPreferenceCreateInput = {
+    id?: string
+    botId: string
+    relationshipStructure?: number
+    communicationStyle?: number
+    interests?: number
+    values?: number
+    lifestyle?: number
+    confidence?: number
+    sampleSize?: number
+    createdAt?: Date | string
+    lastUpdated?: Date | string
+  }
+
+  export type BotPreferenceUncheckedCreateInput = {
+    id?: string
+    botId: string
+    relationshipStructure?: number
+    communicationStyle?: number
+    interests?: number
+    values?: number
+    lifestyle?: number
+    confidence?: number
+    sampleSize?: number
+    createdAt?: Date | string
+    lastUpdated?: Date | string
+  }
+
+  export type BotPreferenceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    relationshipStructure?: FloatFieldUpdateOperationsInput | number
+    communicationStyle?: FloatFieldUpdateOperationsInput | number
+    interests?: FloatFieldUpdateOperationsInput | number
+    values?: FloatFieldUpdateOperationsInput | number
+    lifestyle?: FloatFieldUpdateOperationsInput | number
+    confidence?: FloatFieldUpdateOperationsInput | number
+    sampleSize?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotPreferenceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    relationshipStructure?: FloatFieldUpdateOperationsInput | number
+    communicationStyle?: FloatFieldUpdateOperationsInput | number
+    interests?: FloatFieldUpdateOperationsInput | number
+    values?: FloatFieldUpdateOperationsInput | number
+    lifestyle?: FloatFieldUpdateOperationsInput | number
+    confidence?: FloatFieldUpdateOperationsInput | number
+    sampleSize?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotPreferenceCreateManyInput = {
+    id?: string
+    botId: string
+    relationshipStructure?: number
+    communicationStyle?: number
+    interests?: number
+    values?: number
+    lifestyle?: number
+    confidence?: number
+    sampleSize?: number
+    createdAt?: Date | string
+    lastUpdated?: Date | string
+  }
+
+  export type BotPreferenceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    relationshipStructure?: FloatFieldUpdateOperationsInput | number
+    communicationStyle?: FloatFieldUpdateOperationsInput | number
+    interests?: FloatFieldUpdateOperationsInput | number
+    values?: FloatFieldUpdateOperationsInput | number
+    lifestyle?: FloatFieldUpdateOperationsInput | number
+    confidence?: FloatFieldUpdateOperationsInput | number
+    sampleSize?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotPreferenceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    relationshipStructure?: FloatFieldUpdateOperationsInput | number
+    communicationStyle?: FloatFieldUpdateOperationsInput | number
+    interests?: FloatFieldUpdateOperationsInput | number
+    values?: FloatFieldUpdateOperationsInput | number
+    lifestyle?: FloatFieldUpdateOperationsInput | number
+    confidence?: FloatFieldUpdateOperationsInput | number
+    sampleSize?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotAvatarCreateInput = {
+    id?: string
+    botId: string
+    originalUrl?: string | null
+    processedUrl?: string | null
+    style: string
+    ethnicity: string
+    status?: string
+    useCount?: number
+    generatedAt?: Date | string
+    lastUsedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotAvatarUncheckedCreateInput = {
+    id?: string
+    botId: string
+    originalUrl?: string | null
+    processedUrl?: string | null
+    style: string
+    ethnicity: string
+    status?: string
+    useCount?: number
+    generatedAt?: Date | string
+    lastUsedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotAvatarUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    originalUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    processedUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: StringFieldUpdateOperationsInput | string
+    ethnicity?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    useCount?: IntFieldUpdateOperationsInput | number
+    generatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotAvatarUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    originalUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    processedUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: StringFieldUpdateOperationsInput | string
+    ethnicity?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    useCount?: IntFieldUpdateOperationsInput | number
+    generatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotAvatarCreateManyInput = {
+    id?: string
+    botId: string
+    originalUrl?: string | null
+    processedUrl?: string | null
+    style: string
+    ethnicity: string
+    status?: string
+    useCount?: number
+    generatedAt?: Date | string
+    lastUsedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotAvatarUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    originalUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    processedUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: StringFieldUpdateOperationsInput | string
+    ethnicity?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    useCount?: IntFieldUpdateOperationsInput | number
+    generatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotAvatarUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botId?: StringFieldUpdateOperationsInput | string
+    originalUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    processedUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: StringFieldUpdateOperationsInput | string
+    ethnicity?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    useCount?: IntFieldUpdateOperationsInput | number
+    generatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     name?: string | null
@@ -23511,6 +36285,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -23537,6 +36314,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -23563,6 +36343,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -23589,6 +36372,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -23615,6 +36401,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -23627,6 +36416,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -23639,6 +36431,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -23801,6 +36596,9 @@ export namespace Prisma {
     token: string
     expires: Date | string
     used?: boolean
+    useCount?: number
+    maxUses?: number
+    lastUsedAt?: Date | string | null
     createdAt?: Date | string
     user?: UserCreateNestedOneWithoutVerificationTokensInput
   }
@@ -23812,6 +36610,9 @@ export namespace Prisma {
     expires: Date | string
     userId?: string | null
     used?: boolean
+    useCount?: number
+    maxUses?: number
+    lastUsedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -23821,6 +36622,9 @@ export namespace Prisma {
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
     used?: BoolFieldUpdateOperationsInput | boolean
+    useCount?: IntFieldUpdateOperationsInput | number
+    maxUses?: IntFieldUpdateOperationsInput | number
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneWithoutVerificationTokensNestedInput
   }
@@ -23832,6 +36636,9 @@ export namespace Prisma {
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     used?: BoolFieldUpdateOperationsInput | boolean
+    useCount?: IntFieldUpdateOperationsInput | number
+    maxUses?: IntFieldUpdateOperationsInput | number
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -23842,6 +36649,9 @@ export namespace Prisma {
     expires: Date | string
     userId?: string | null
     used?: boolean
+    useCount?: number
+    maxUses?: number
+    lastUsedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -23851,6 +36661,9 @@ export namespace Prisma {
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
     used?: BoolFieldUpdateOperationsInput | boolean
+    useCount?: IntFieldUpdateOperationsInput | number
+    maxUses?: IntFieldUpdateOperationsInput | number
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -23861,6 +36674,9 @@ export namespace Prisma {
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     used?: BoolFieldUpdateOperationsInput | boolean
+    useCount?: IntFieldUpdateOperationsInput | number
+    maxUses?: IntFieldUpdateOperationsInput | number
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -23895,10 +36711,18 @@ export namespace Prisma {
     onboardingStep?: number
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: string | null
     adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutProfileInput
+    botProfile?: BotProfileCreateNestedOneWithoutProfileInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type ProfileUncheckedCreateInput = {
@@ -23933,9 +36757,17 @@ export namespace Prisma {
     onboardingStep?: number
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: string | null
     adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    botProfile?: BotProfileUncheckedCreateNestedOneWithoutProfileInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type ProfileUpdateInput = {
@@ -23969,10 +36801,18 @@ export namespace Prisma {
     onboardingStep?: IntFieldUpdateOperationsInput | number
     isApproved?: BoolFieldUpdateOperationsInput | boolean
     isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
     adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutProfileNestedInput
+    botProfile?: BotProfileUpdateOneWithoutProfileNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type ProfileUncheckedUpdateInput = {
@@ -24007,9 +36847,17 @@ export namespace Prisma {
     onboardingStep?: IntFieldUpdateOperationsInput | number
     isApproved?: BoolFieldUpdateOperationsInput | boolean
     isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
     adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    botProfile?: BotProfileUncheckedUpdateOneWithoutProfileNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ProfileCreateManyInput = {
@@ -24044,7 +36892,13 @@ export namespace Prisma {
     onboardingStep?: number
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: string | null
     adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -24080,7 +36934,13 @@ export namespace Prisma {
     onboardingStep?: IntFieldUpdateOperationsInput | number
     isApproved?: BoolFieldUpdateOperationsInput | boolean
     isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
     adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -24117,7 +36977,13 @@ export namespace Prisma {
     onboardingStep?: IntFieldUpdateOperationsInput | number
     isApproved?: BoolFieldUpdateOperationsInput | boolean
     isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
     adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -24138,6 +37004,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -24165,6 +37037,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -24188,6 +37066,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -24215,6 +37099,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -24240,6 +37130,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -24261,6 +37157,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -24284,6 +37186,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -24354,6 +37262,16 @@ export namespace Prisma {
     id?: string
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     match?: MatchCreateNestedOneWithoutChatRoomInput
@@ -24366,6 +37284,16 @@ export namespace Prisma {
     matchId?: string | null
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     members?: ChatRoomMemberUncheckedCreateNestedManyWithoutRoomInput
@@ -24376,6 +37304,16 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     match?: MatchUpdateOneWithoutChatRoomNestedInput
@@ -24388,6 +37326,16 @@ export namespace Prisma {
     matchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     members?: ChatRoomMemberUncheckedUpdateManyWithoutRoomNestedInput
@@ -24399,6 +37347,16 @@ export namespace Prisma {
     matchId?: string | null
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -24407,6 +37365,16 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -24416,6 +37384,16 @@ export namespace Prisma {
     matchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25090,6 +38068,225 @@ export namespace Prisma {
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type SincerityWalletCreateInput = {
+    id?: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: ProfileCreateNestedOneWithoutSincerityWalletInput
+    transactions?: SincerityTransactionCreateNestedManyWithoutWalletInput
+  }
+
+  export type SincerityWalletUncheckedCreateInput = {
+    id?: string
+    userId: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    transactions?: SincerityTransactionUncheckedCreateNestedManyWithoutWalletInput
+  }
+
+  export type SincerityWalletUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: ProfileUpdateOneRequiredWithoutSincerityWalletNestedInput
+    transactions?: SincerityTransactionUpdateManyWithoutWalletNestedInput
+  }
+
+  export type SincerityWalletUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    transactions?: SincerityTransactionUncheckedUpdateManyWithoutWalletNestedInput
+  }
+
+  export type SincerityWalletCreateManyInput = {
+    id?: string
+    userId: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SincerityWalletUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SincerityWalletUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SincerityTransactionCreateInput = {
+    id?: string
+    type: $Enums.SincerityTransactionType
+    amount: number
+    source: string
+    description?: string | null
+    matchId?: string | null
+    fromUserId?: string | null
+    toUserId?: string | null
+    message?: string | null
+    metadata?: string | null
+    createdAt?: Date | string
+    wallet: SincerityWalletCreateNestedOneWithoutTransactionsInput
+  }
+
+  export type SincerityTransactionUncheckedCreateInput = {
+    id?: string
+    walletId: string
+    type: $Enums.SincerityTransactionType
+    amount: number
+    source: string
+    description?: string | null
+    matchId?: string | null
+    fromUserId?: string | null
+    toUserId?: string | null
+    message?: string | null
+    metadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type SincerityTransactionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumSincerityTransactionTypeFieldUpdateOperationsInput | $Enums.SincerityTransactionType
+    amount?: IntFieldUpdateOperationsInput | number
+    source?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    fromUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    toUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    wallet?: SincerityWalletUpdateOneRequiredWithoutTransactionsNestedInput
+  }
+
+  export type SincerityTransactionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    walletId?: StringFieldUpdateOperationsInput | string
+    type?: EnumSincerityTransactionTypeFieldUpdateOperationsInput | $Enums.SincerityTransactionType
+    amount?: IntFieldUpdateOperationsInput | number
+    source?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    fromUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    toUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SincerityTransactionCreateManyInput = {
+    id?: string
+    walletId: string
+    type: $Enums.SincerityTransactionType
+    amount: number
+    source: string
+    description?: string | null
+    matchId?: string | null
+    fromUserId?: string | null
+    toUserId?: string | null
+    message?: string | null
+    metadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type SincerityTransactionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumSincerityTransactionTypeFieldUpdateOperationsInput | $Enums.SincerityTransactionType
+    amount?: IntFieldUpdateOperationsInput | number
+    source?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    fromUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    toUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SincerityTransactionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    walletId?: StringFieldUpdateOperationsInput | string
+    type?: EnumSincerityTransactionTypeFieldUpdateOperationsInput | $Enums.SincerityTransactionType
+    amount?: IntFieldUpdateOperationsInput | number
+    source?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    fromUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    toUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -25103,6 +38300,27 @@ export namespace Prisma {
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedStringFilter<$PrismaModel> | string
+  }
+
+  export type EnumBotTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotTypeFilter<$PrismaModel> | $Enums.BotType
+  }
+
+  export type EnumBotActivityLevelFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotActivityLevel | EnumBotActivityLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotActivityLevelFilter<$PrismaModel> | $Enums.BotActivityLevel
+  }
+
+  export type EnumEthnicityNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumEthnicityNullableFilter<$PrismaModel> | $Enums.Ethnicity | null
   }
 
   export type StringNullableFilter<$PrismaModel = never> = {
@@ -25120,6 +38338,56 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type EnumOnlinePatternFilter<$PrismaModel = never> = {
+    equals?: $Enums.OnlinePattern | EnumOnlinePatternFieldRefInput<$PrismaModel>
+    in?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    not?: NestedEnumOnlinePatternFilter<$PrismaModel> | $Enums.OnlinePattern
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type EnumEthnicityNullableListFilter<$PrismaModel = never> = {
+    equals?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    has?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
+    hasEvery?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel>
+    hasSome?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -25131,13 +38399,6 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
-  export type EnumUserRoleFilter<$PrismaModel = never> = {
-    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
-  }
-
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -25147,6 +38408,607 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type ProfileScalarRelationFilter = {
+    is?: ProfileWhereInput
+    isNot?: ProfileWhereInput
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
+  }
+
+  export type BotProfileCountOrderByAggregateInput = {
+    id?: SortOrder
+    profileId?: SortOrder
+    botType?: SortOrder
+    activityLevel?: SortOrder
+    ethnicity?: SortOrder
+    occupation?: SortOrder
+    industry?: SortOrder
+    educationLevel?: SortOrder
+    incomeRange?: SortOrder
+    interests?: SortOrder
+    hobbies?: SortOrder
+    musicGenres?: SortOrder
+    movieGenres?: SortOrder
+    onlinePattern?: SortOrder
+    avgResponseTime?: SortOrder
+    maxDailyMatches?: SortOrder
+    behaviorConfig?: SortOrder
+    preferredEthnicities?: SortOrder
+    preferredOccupations?: SortOrder
+    preferredEducation?: SortOrder
+    totalInteractions?: SortOrder
+    successfulMatches?: SortOrder
+    avgEngagementScore?: SortOrder
+    learningData?: SortOrder
+    avatarStyle?: SortOrder
+    avatarSource?: SortOrder
+    isActive?: SortOrder
+    lastActiveAt?: SortOrder
+    sleepUntil?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotProfileAvgOrderByAggregateInput = {
+    avgResponseTime?: SortOrder
+    maxDailyMatches?: SortOrder
+    totalInteractions?: SortOrder
+    successfulMatches?: SortOrder
+    avgEngagementScore?: SortOrder
+  }
+
+  export type BotProfileMaxOrderByAggregateInput = {
+    id?: SortOrder
+    profileId?: SortOrder
+    botType?: SortOrder
+    activityLevel?: SortOrder
+    ethnicity?: SortOrder
+    occupation?: SortOrder
+    industry?: SortOrder
+    educationLevel?: SortOrder
+    incomeRange?: SortOrder
+    onlinePattern?: SortOrder
+    avgResponseTime?: SortOrder
+    maxDailyMatches?: SortOrder
+    behaviorConfig?: SortOrder
+    totalInteractions?: SortOrder
+    successfulMatches?: SortOrder
+    avgEngagementScore?: SortOrder
+    learningData?: SortOrder
+    avatarStyle?: SortOrder
+    avatarSource?: SortOrder
+    isActive?: SortOrder
+    lastActiveAt?: SortOrder
+    sleepUntil?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotProfileMinOrderByAggregateInput = {
+    id?: SortOrder
+    profileId?: SortOrder
+    botType?: SortOrder
+    activityLevel?: SortOrder
+    ethnicity?: SortOrder
+    occupation?: SortOrder
+    industry?: SortOrder
+    educationLevel?: SortOrder
+    incomeRange?: SortOrder
+    onlinePattern?: SortOrder
+    avgResponseTime?: SortOrder
+    maxDailyMatches?: SortOrder
+    behaviorConfig?: SortOrder
+    totalInteractions?: SortOrder
+    successfulMatches?: SortOrder
+    avgEngagementScore?: SortOrder
+    learningData?: SortOrder
+    avatarStyle?: SortOrder
+    avatarSource?: SortOrder
+    isActive?: SortOrder
+    lastActiveAt?: SortOrder
+    sleepUntil?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotProfileSumOrderByAggregateInput = {
+    avgResponseTime?: SortOrder
+    maxDailyMatches?: SortOrder
+    totalInteractions?: SortOrder
+    successfulMatches?: SortOrder
+    avgEngagementScore?: SortOrder
+  }
+
+  export type StringWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type EnumBotTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotTypeWithAggregatesFilter<$PrismaModel> | $Enums.BotType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBotTypeFilter<$PrismaModel>
+    _max?: NestedEnumBotTypeFilter<$PrismaModel>
+  }
+
+  export type EnumBotActivityLevelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotActivityLevel | EnumBotActivityLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotActivityLevelWithAggregatesFilter<$PrismaModel> | $Enums.BotActivityLevel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBotActivityLevelFilter<$PrismaModel>
+    _max?: NestedEnumBotActivityLevelFilter<$PrismaModel>
+  }
+
+  export type EnumEthnicityNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumEthnicityNullableWithAggregatesFilter<$PrismaModel> | $Enums.Ethnicity | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumEthnicityNullableFilter<$PrismaModel>
+    _max?: NestedEnumEthnicityNullableFilter<$PrismaModel>
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type EnumOnlinePatternWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OnlinePattern | EnumOnlinePatternFieldRefInput<$PrismaModel>
+    in?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    not?: NestedEnumOnlinePatternWithAggregatesFilter<$PrismaModel> | $Enums.OnlinePattern
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOnlinePatternFilter<$PrismaModel>
+    _max?: NestedEnumOnlinePatternFilter<$PrismaModel>
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type BotInteractionLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    botUserId?: SortOrder
+    targetUserId?: SortOrder
+    matchId?: SortOrder
+    interactionType?: SortOrder
+    action?: SortOrder
+    responseDelay?: SortOrder
+    outcome?: SortOrder
+    engagementScore?: SortOrder
+    context?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BotInteractionLogAvgOrderByAggregateInput = {
+    responseDelay?: SortOrder
+    engagementScore?: SortOrder
+  }
+
+  export type BotInteractionLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    botUserId?: SortOrder
+    targetUserId?: SortOrder
+    matchId?: SortOrder
+    interactionType?: SortOrder
+    action?: SortOrder
+    responseDelay?: SortOrder
+    outcome?: SortOrder
+    engagementScore?: SortOrder
+    context?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BotInteractionLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    botUserId?: SortOrder
+    targetUserId?: SortOrder
+    matchId?: SortOrder
+    interactionType?: SortOrder
+    action?: SortOrder
+    responseDelay?: SortOrder
+    outcome?: SortOrder
+    engagementScore?: SortOrder
+    context?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BotInteractionLogSumOrderByAggregateInput = {
+    responseDelay?: SortOrder
+    engagementScore?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type BotLearningBatchCountOrderByAggregateInput = {
+    id?: SortOrder
+    batchNumber?: SortOrder
+    status?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrder
+    totalInteractions?: SortOrder
+    avgEngagement?: SortOrder
+    successRate?: SortOrder
+    preferenceUpdates?: SortOrder
+    executionLog?: SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type BotLearningBatchAvgOrderByAggregateInput = {
+    batchNumber?: SortOrder
+    totalInteractions?: SortOrder
+    avgEngagement?: SortOrder
+    successRate?: SortOrder
+  }
+
+  export type BotLearningBatchMaxOrderByAggregateInput = {
+    id?: SortOrder
+    batchNumber?: SortOrder
+    status?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrder
+    totalInteractions?: SortOrder
+    avgEngagement?: SortOrder
+    successRate?: SortOrder
+    preferenceUpdates?: SortOrder
+    executionLog?: SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type BotLearningBatchMinOrderByAggregateInput = {
+    id?: SortOrder
+    batchNumber?: SortOrder
+    status?: SortOrder
+    startDate?: SortOrder
+    endDate?: SortOrder
+    totalInteractions?: SortOrder
+    avgEngagement?: SortOrder
+    successRate?: SortOrder
+    preferenceUpdates?: SortOrder
+    executionLog?: SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type BotLearningBatchSumOrderByAggregateInput = {
+    batchNumber?: SortOrder
+    totalInteractions?: SortOrder
+    avgEngagement?: SortOrder
+    successRate?: SortOrder
+  }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type BotLearningRecordCountOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    userId?: SortOrder
+    interactionType?: SortOrder
+    outcome?: SortOrder
+    context?: SortOrder
+    processed?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotLearningRecordMaxOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    userId?: SortOrder
+    interactionType?: SortOrder
+    outcome?: SortOrder
+    processed?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotLearningRecordMinOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    userId?: SortOrder
+    interactionType?: SortOrder
+    outcome?: SortOrder
+    processed?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type BotPreferenceCountOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    relationshipStructure?: SortOrder
+    communicationStyle?: SortOrder
+    interests?: SortOrder
+    values?: SortOrder
+    lifestyle?: SortOrder
+    confidence?: SortOrder
+    sampleSize?: SortOrder
+    createdAt?: SortOrder
+    lastUpdated?: SortOrder
+  }
+
+  export type BotPreferenceAvgOrderByAggregateInput = {
+    relationshipStructure?: SortOrder
+    communicationStyle?: SortOrder
+    interests?: SortOrder
+    values?: SortOrder
+    lifestyle?: SortOrder
+    confidence?: SortOrder
+    sampleSize?: SortOrder
+  }
+
+  export type BotPreferenceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    relationshipStructure?: SortOrder
+    communicationStyle?: SortOrder
+    interests?: SortOrder
+    values?: SortOrder
+    lifestyle?: SortOrder
+    confidence?: SortOrder
+    sampleSize?: SortOrder
+    createdAt?: SortOrder
+    lastUpdated?: SortOrder
+  }
+
+  export type BotPreferenceMinOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    relationshipStructure?: SortOrder
+    communicationStyle?: SortOrder
+    interests?: SortOrder
+    values?: SortOrder
+    lifestyle?: SortOrder
+    confidence?: SortOrder
+    sampleSize?: SortOrder
+    createdAt?: SortOrder
+    lastUpdated?: SortOrder
+  }
+
+  export type BotPreferenceSumOrderByAggregateInput = {
+    relationshipStructure?: SortOrder
+    communicationStyle?: SortOrder
+    interests?: SortOrder
+    values?: SortOrder
+    lifestyle?: SortOrder
+    confidence?: SortOrder
+    sampleSize?: SortOrder
+  }
+
+  export type BotAvatarCountOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    originalUrl?: SortOrder
+    processedUrl?: SortOrder
+    style?: SortOrder
+    ethnicity?: SortOrder
+    status?: SortOrder
+    useCount?: SortOrder
+    generatedAt?: SortOrder
+    lastUsedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotAvatarAvgOrderByAggregateInput = {
+    useCount?: SortOrder
+  }
+
+  export type BotAvatarMaxOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    originalUrl?: SortOrder
+    processedUrl?: SortOrder
+    style?: SortOrder
+    ethnicity?: SortOrder
+    status?: SortOrder
+    useCount?: SortOrder
+    generatedAt?: SortOrder
+    lastUsedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotAvatarMinOrderByAggregateInput = {
+    id?: SortOrder
+    botId?: SortOrder
+    originalUrl?: SortOrder
+    processedUrl?: SortOrder
+    style?: SortOrder
+    ethnicity?: SortOrder
+    status?: SortOrder
+    useCount?: SortOrder
+    generatedAt?: SortOrder
+    lastUsedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BotAvatarSumOrderByAggregateInput = {
+    useCount?: SortOrder
+  }
+
+  export type EnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
   export type AccountListRelationFilter = {
@@ -25226,11 +39088,6 @@ export namespace Prisma {
     none?: AnalyticsEventWhereInput
   }
 
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
-  }
-
   export type AccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -25287,6 +39144,9 @@ export namespace Prisma {
     image?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    isBot?: SortOrder
+    botType?: SortOrder
+    botConfig?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -25299,6 +39159,9 @@ export namespace Prisma {
     image?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    isBot?: SortOrder
+    botType?: SortOrder
+    botConfig?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -25311,58 +39174,11 @@ export namespace Prisma {
     image?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    isBot?: SortOrder
+    botType?: SortOrder
+    botConfig?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-
-  export type StringWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedStringFilter<$PrismaModel>
-    _max?: NestedStringFilter<$PrismaModel>
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -25373,31 +39189,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumUserRoleFilter<$PrismaModel>
     _max?: NestedEnumUserRoleFilter<$PrismaModel>
-  }
-
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type UserScalarRelationFilter = {
@@ -25463,22 +39254,6 @@ export namespace Prisma {
     expires_at?: SortOrder
   }
 
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
   export type SessionCountOrderByAggregateInput = {
     id?: SortOrder
     sessionToken?: SortOrder
@@ -25500,11 +39275,6 @@ export namespace Prisma {
     expires?: SortOrder
   }
 
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null
     isNot?: UserWhereInput | null
@@ -25522,7 +39292,15 @@ export namespace Prisma {
     expires?: SortOrder
     userId?: SortOrder
     used?: SortOrder
+    useCount?: SortOrder
+    maxUses?: SortOrder
+    lastUsedAt?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type VerificationTokenAvgOrderByAggregateInput = {
+    useCount?: SortOrder
+    maxUses?: SortOrder
   }
 
   export type VerificationTokenMaxOrderByAggregateInput = {
@@ -25532,6 +39310,9 @@ export namespace Prisma {
     expires?: SortOrder
     userId?: SortOrder
     used?: SortOrder
+    useCount?: SortOrder
+    maxUses?: SortOrder
+    lastUsedAt?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -25542,26 +39323,15 @@ export namespace Prisma {
     expires?: SortOrder
     userId?: SortOrder
     used?: SortOrder
+    useCount?: SortOrder
+    maxUses?: SortOrder
+    lastUsedAt?: SortOrder
     createdAt?: SortOrder
   }
 
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
-  }
-
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
+  export type VerificationTokenSumOrderByAggregateInput = {
+    useCount?: SortOrder
+    maxUses?: SortOrder
   }
 
   export type EnumGenderFilter<$PrismaModel = never> = {
@@ -25583,6 +39353,16 @@ export namespace Prisma {
     in?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumProfileStatusFilter<$PrismaModel> | $Enums.ProfileStatus
+  }
+
+  export type BotProfileNullableScalarRelationFilter = {
+    is?: BotProfileWhereInput | null
+    isNot?: BotProfileWhereInput | null
+  }
+
+  export type SincerityWalletNullableScalarRelationFilter = {
+    is?: SincerityWalletWhereInput | null
+    isNot?: SincerityWalletWhereInput | null
   }
 
   export type ProfileCountOrderByAggregateInput = {
@@ -25617,7 +39397,13 @@ export namespace Prisma {
     onboardingStep?: SortOrder
     isApproved?: SortOrder
     isVerified?: SortOrder
+    personalityData?: SortOrder
     adminNotes?: SortOrder
+    occupation?: SortOrder
+    company?: SortOrder
+    industry?: SortOrder
+    linkedInVerified?: SortOrder
+    verificationBadge?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -25663,7 +39449,13 @@ export namespace Prisma {
     onboardingStep?: SortOrder
     isApproved?: SortOrder
     isVerified?: SortOrder
+    personalityData?: SortOrder
     adminNotes?: SortOrder
+    occupation?: SortOrder
+    company?: SortOrder
+    industry?: SortOrder
+    linkedInVerified?: SortOrder
+    verificationBadge?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -25700,7 +39492,13 @@ export namespace Prisma {
     onboardingStep?: SortOrder
     isApproved?: SortOrder
     isVerified?: SortOrder
+    personalityData?: SortOrder
     adminNotes?: SortOrder
+    occupation?: SortOrder
+    company?: SortOrder
+    industry?: SortOrder
+    linkedInVerified?: SortOrder
+    verificationBadge?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -25712,22 +39510,6 @@ export namespace Prisma {
     preferredDistance?: SortOrder
     compatibilityScore?: SortOrder
     onboardingStep?: SortOrder
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type EnumGenderWithAggregatesFilter<$PrismaModel = never> = {
@@ -25758,17 +39540,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumProfileStatusFilter<$PrismaModel>
     _max?: NestedEnumProfileStatusFilter<$PrismaModel>
-  }
-
-  export type FloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
   export type FloatNullableFilter<$PrismaModel = never> = {
@@ -25831,6 +39602,12 @@ export namespace Prisma {
     receiverAction?: SortOrder
     reviewedBy?: SortOrder
     reviewNotes?: SortOrder
+    pitchMessage?: SortOrder
+    pitchTone?: SortOrder
+    aiAssisted?: SortOrder
+    giftAmount?: SortOrder
+    isUnread?: SortOrder
+    inboxPriority?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     expiresAt?: SortOrder
@@ -25843,6 +39620,8 @@ export namespace Prisma {
     conflictCompat?: SortOrder
     valuesCompat?: SortOrder
     lifestyleCompat?: SortOrder
+    giftAmount?: SortOrder
+    inboxPriority?: SortOrder
   }
 
   export type MatchMaxOrderByAggregateInput = {
@@ -25863,6 +39642,12 @@ export namespace Prisma {
     receiverAction?: SortOrder
     reviewedBy?: SortOrder
     reviewNotes?: SortOrder
+    pitchMessage?: SortOrder
+    pitchTone?: SortOrder
+    aiAssisted?: SortOrder
+    giftAmount?: SortOrder
+    isUnread?: SortOrder
+    inboxPriority?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     expiresAt?: SortOrder
@@ -25886,6 +39671,12 @@ export namespace Prisma {
     receiverAction?: SortOrder
     reviewedBy?: SortOrder
     reviewNotes?: SortOrder
+    pitchMessage?: SortOrder
+    pitchTone?: SortOrder
+    aiAssisted?: SortOrder
+    giftAmount?: SortOrder
+    isUnread?: SortOrder
+    inboxPriority?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     expiresAt?: SortOrder
@@ -25898,22 +39689,8 @@ export namespace Prisma {
     conflictCompat?: SortOrder
     valuesCompat?: SortOrder
     lifestyleCompat?: SortOrder
-  }
-
-  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedFloatFilter<$PrismaModel>
-    _min?: NestedFloatFilter<$PrismaModel>
-    _max?: NestedFloatFilter<$PrismaModel>
+    giftAmount?: SortOrder
+    inboxPriority?: SortOrder
   }
 
   export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -26016,6 +39793,13 @@ export namespace Prisma {
     _max?: NestedEnumMatchActionFilter<$PrismaModel>
   }
 
+  export type EnumVaultStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.VaultStatus | EnumVaultStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumVaultStatusFilter<$PrismaModel> | $Enums.VaultStatus
+  }
+
   export type MatchNullableScalarRelationFilter = {
     is?: MatchWhereInput | null
     isNot?: MatchWhereInput | null
@@ -26026,8 +39810,23 @@ export namespace Prisma {
     matchId?: SortOrder
     lastMessageAt?: SortOrder
     isArchived?: SortOrder
+    vaultStatus?: SortOrder
+    vaultExpiry?: SortOrder
+    extendedAt?: SortOrder
+    extendedBy?: SortOrder
+    extensionCount?: SortOrder
+    revokedAt?: SortOrder
+    revokedBy?: SortOrder
+    revokeReason?: SortOrder
+    screenshotCount?: SortOrder
+    lastScreenshotAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ChatRoomAvgOrderByAggregateInput = {
+    extensionCount?: SortOrder
+    screenshotCount?: SortOrder
   }
 
   export type ChatRoomMaxOrderByAggregateInput = {
@@ -26035,6 +39834,16 @@ export namespace Prisma {
     matchId?: SortOrder
     lastMessageAt?: SortOrder
     isArchived?: SortOrder
+    vaultStatus?: SortOrder
+    vaultExpiry?: SortOrder
+    extendedAt?: SortOrder
+    extendedBy?: SortOrder
+    extensionCount?: SortOrder
+    revokedAt?: SortOrder
+    revokedBy?: SortOrder
+    revokeReason?: SortOrder
+    screenshotCount?: SortOrder
+    lastScreenshotAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -26044,8 +39853,33 @@ export namespace Prisma {
     matchId?: SortOrder
     lastMessageAt?: SortOrder
     isArchived?: SortOrder
+    vaultStatus?: SortOrder
+    vaultExpiry?: SortOrder
+    extendedAt?: SortOrder
+    extendedBy?: SortOrder
+    extensionCount?: SortOrder
+    revokedAt?: SortOrder
+    revokedBy?: SortOrder
+    revokeReason?: SortOrder
+    screenshotCount?: SortOrder
+    lastScreenshotAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ChatRoomSumOrderByAggregateInput = {
+    extensionCount?: SortOrder
+    screenshotCount?: SortOrder
+  }
+
+  export type EnumVaultStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.VaultStatus | EnumVaultStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumVaultStatusWithAggregatesFilter<$PrismaModel> | $Enums.VaultStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumVaultStatusFilter<$PrismaModel>
+    _max?: NestedEnumVaultStatusFilter<$PrismaModel>
   }
 
   export type ChatRoomScalarRelationFilter = {
@@ -26450,6 +40284,311 @@ export namespace Prisma {
     updatedBy?: SortOrder
   }
 
+  export type EnumSincerityTierFilter<$PrismaModel = never> = {
+    equals?: $Enums.SincerityTier | EnumSincerityTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumSincerityTierFilter<$PrismaModel> | $Enums.SincerityTier
+  }
+
+  export type SincerityTransactionListRelationFilter = {
+    every?: SincerityTransactionWhereInput
+    some?: SincerityTransactionWhereInput
+    none?: SincerityTransactionWhereInput
+  }
+
+  export type SincerityTransactionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SincerityWalletCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    balance?: SortOrder
+    totalEarned?: SortOrder
+    totalSpent?: SortOrder
+    totalGifted?: SortOrder
+    totalReceived?: SortOrder
+    tier?: SortOrder
+    tierProgress?: SortOrder
+    lastEarnedAt?: SortOrder
+    lastSpentAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SincerityWalletAvgOrderByAggregateInput = {
+    balance?: SortOrder
+    totalEarned?: SortOrder
+    totalSpent?: SortOrder
+    totalGifted?: SortOrder
+    totalReceived?: SortOrder
+    tierProgress?: SortOrder
+  }
+
+  export type SincerityWalletMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    balance?: SortOrder
+    totalEarned?: SortOrder
+    totalSpent?: SortOrder
+    totalGifted?: SortOrder
+    totalReceived?: SortOrder
+    tier?: SortOrder
+    tierProgress?: SortOrder
+    lastEarnedAt?: SortOrder
+    lastSpentAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SincerityWalletMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    balance?: SortOrder
+    totalEarned?: SortOrder
+    totalSpent?: SortOrder
+    totalGifted?: SortOrder
+    totalReceived?: SortOrder
+    tier?: SortOrder
+    tierProgress?: SortOrder
+    lastEarnedAt?: SortOrder
+    lastSpentAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SincerityWalletSumOrderByAggregateInput = {
+    balance?: SortOrder
+    totalEarned?: SortOrder
+    totalSpent?: SortOrder
+    totalGifted?: SortOrder
+    totalReceived?: SortOrder
+    tierProgress?: SortOrder
+  }
+
+  export type EnumSincerityTierWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SincerityTier | EnumSincerityTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumSincerityTierWithAggregatesFilter<$PrismaModel> | $Enums.SincerityTier
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSincerityTierFilter<$PrismaModel>
+    _max?: NestedEnumSincerityTierFilter<$PrismaModel>
+  }
+
+  export type EnumSincerityTransactionTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.SincerityTransactionType | EnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel> | $Enums.SincerityTransactionType
+  }
+
+  export type SincerityWalletScalarRelationFilter = {
+    is?: SincerityWalletWhereInput
+    isNot?: SincerityWalletWhereInput
+  }
+
+  export type SincerityTransactionCountOrderByAggregateInput = {
+    id?: SortOrder
+    walletId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    source?: SortOrder
+    description?: SortOrder
+    matchId?: SortOrder
+    fromUserId?: SortOrder
+    toUserId?: SortOrder
+    message?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SincerityTransactionAvgOrderByAggregateInput = {
+    amount?: SortOrder
+  }
+
+  export type SincerityTransactionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    walletId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    source?: SortOrder
+    description?: SortOrder
+    matchId?: SortOrder
+    fromUserId?: SortOrder
+    toUserId?: SortOrder
+    message?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SincerityTransactionMinOrderByAggregateInput = {
+    id?: SortOrder
+    walletId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    source?: SortOrder
+    description?: SortOrder
+    matchId?: SortOrder
+    fromUserId?: SortOrder
+    toUserId?: SortOrder
+    message?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SincerityTransactionSumOrderByAggregateInput = {
+    amount?: SortOrder
+  }
+
+  export type EnumSincerityTransactionTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SincerityTransactionType | EnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumSincerityTransactionTypeWithAggregatesFilter<$PrismaModel> | $Enums.SincerityTransactionType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel>
+    _max?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel>
+  }
+
+  export type BotProfileCreateinterestsInput = {
+    set: string[]
+  }
+
+  export type BotProfileCreatehobbiesInput = {
+    set: string[]
+  }
+
+  export type BotProfileCreatemusicGenresInput = {
+    set: string[]
+  }
+
+  export type BotProfileCreatemovieGenresInput = {
+    set: string[]
+  }
+
+  export type BotProfileCreatepreferredEthnicitiesInput = {
+    set: $Enums.Ethnicity[]
+  }
+
+  export type BotProfileCreatepreferredOccupationsInput = {
+    set: string[]
+  }
+
+  export type BotProfileCreatepreferredEducationInput = {
+    set: string[]
+  }
+
+  export type ProfileCreateNestedOneWithoutBotProfileInput = {
+    create?: XOR<ProfileCreateWithoutBotProfileInput, ProfileUncheckedCreateWithoutBotProfileInput>
+    connectOrCreate?: ProfileCreateOrConnectWithoutBotProfileInput
+    connect?: ProfileWhereUniqueInput
+  }
+
+  export type StringFieldUpdateOperationsInput = {
+    set?: string
+  }
+
+  export type EnumBotTypeFieldUpdateOperationsInput = {
+    set?: $Enums.BotType
+  }
+
+  export type EnumBotActivityLevelFieldUpdateOperationsInput = {
+    set?: $Enums.BotActivityLevel
+  }
+
+  export type NullableEnumEthnicityFieldUpdateOperationsInput = {
+    set?: $Enums.Ethnicity | null
+  }
+
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+  }
+
+  export type BotProfileUpdateinterestsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type BotProfileUpdatehobbiesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type BotProfileUpdatemusicGenresInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type BotProfileUpdatemovieGenresInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type EnumOnlinePatternFieldUpdateOperationsInput = {
+    set?: $Enums.OnlinePattern
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type BotProfileUpdatepreferredEthnicitiesInput = {
+    set?: $Enums.Ethnicity[]
+    push?: $Enums.Ethnicity | $Enums.Ethnicity[]
+  }
+
+  export type BotProfileUpdatepreferredOccupationsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type BotProfileUpdatepreferredEducationInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type FloatFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
+  }
+
+  export type ProfileUpdateOneRequiredWithoutBotProfileNestedInput = {
+    create?: XOR<ProfileCreateWithoutBotProfileInput, ProfileUncheckedCreateWithoutBotProfileInput>
+    connectOrCreate?: ProfileCreateOrConnectWithoutBotProfileInput
+    upsert?: ProfileUpsertWithoutBotProfileInput
+    connect?: ProfileWhereUniqueInput
+    update?: XOR<XOR<ProfileUpdateToOneWithWhereWithoutBotProfileInput, ProfileUpdateWithoutBotProfileInput>, ProfileUncheckedUpdateWithoutBotProfileInput>
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type AccountCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -26644,24 +40783,8 @@ export namespace Prisma {
     connect?: AnalyticsEventWhereUniqueInput | AnalyticsEventWhereUniqueInput[]
   }
 
-  export type StringFieldUpdateOperationsInput = {
-    set?: string
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
-  }
-
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
-  }
-
   export type EnumUserRoleFieldUpdateOperationsInput = {
     set?: $Enums.UserRole
-  }
-
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string
   }
 
   export type AccountUpdateManyWithoutUserNestedInput = {
@@ -27054,14 +41177,6 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
   export type UserUpdateOneRequiredWithoutAccountsNestedInput = {
     create?: XOR<UserCreateWithoutAccountsInput, UserUncheckedCreateWithoutAccountsInput>
     connectOrCreate?: UserCreateOrConnectWithoutAccountsInput
@@ -27090,10 +41205,6 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
-  }
-
   export type UserUpdateOneWithoutVerificationTokensNestedInput = {
     create?: XOR<UserCreateWithoutVerificationTokensInput, UserUncheckedCreateWithoutVerificationTokensInput>
     connectOrCreate?: UserCreateOrConnectWithoutVerificationTokensInput
@@ -27110,12 +41221,28 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
+  export type BotProfileCreateNestedOneWithoutProfileInput = {
+    create?: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
+    connectOrCreate?: BotProfileCreateOrConnectWithoutProfileInput
+    connect?: BotProfileWhereUniqueInput
+  }
+
+  export type SincerityWalletCreateNestedOneWithoutUserInput = {
+    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
+    connect?: SincerityWalletWhereUniqueInput
+  }
+
+  export type BotProfileUncheckedCreateNestedOneWithoutProfileInput = {
+    create?: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
+    connectOrCreate?: BotProfileCreateOrConnectWithoutProfileInput
+    connect?: BotProfileWhereUniqueInput
+  }
+
+  export type SincerityWalletUncheckedCreateNestedOneWithoutUserInput = {
+    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
+    connect?: SincerityWalletWhereUniqueInput
   }
 
   export type EnumGenderFieldUpdateOperationsInput = {
@@ -27136,6 +41263,46 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutProfileInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProfileInput, UserUpdateWithoutProfileInput>, UserUncheckedUpdateWithoutProfileInput>
+  }
+
+  export type BotProfileUpdateOneWithoutProfileNestedInput = {
+    create?: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
+    connectOrCreate?: BotProfileCreateOrConnectWithoutProfileInput
+    upsert?: BotProfileUpsertWithoutProfileInput
+    disconnect?: BotProfileWhereInput | boolean
+    delete?: BotProfileWhereInput | boolean
+    connect?: BotProfileWhereUniqueInput
+    update?: XOR<XOR<BotProfileUpdateToOneWithWhereWithoutProfileInput, BotProfileUpdateWithoutProfileInput>, BotProfileUncheckedUpdateWithoutProfileInput>
+  }
+
+  export type SincerityWalletUpdateOneWithoutUserNestedInput = {
+    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
+    upsert?: SincerityWalletUpsertWithoutUserInput
+    disconnect?: SincerityWalletWhereInput | boolean
+    delete?: SincerityWalletWhereInput | boolean
+    connect?: SincerityWalletWhereUniqueInput
+    update?: XOR<XOR<SincerityWalletUpdateToOneWithWhereWithoutUserInput, SincerityWalletUpdateWithoutUserInput>, SincerityWalletUncheckedUpdateWithoutUserInput>
+  }
+
+  export type BotProfileUncheckedUpdateOneWithoutProfileNestedInput = {
+    create?: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
+    connectOrCreate?: BotProfileCreateOrConnectWithoutProfileInput
+    upsert?: BotProfileUpsertWithoutProfileInput
+    disconnect?: BotProfileWhereInput | boolean
+    delete?: BotProfileWhereInput | boolean
+    connect?: BotProfileWhereUniqueInput
+    update?: XOR<XOR<BotProfileUpdateToOneWithWhereWithoutProfileInput, BotProfileUpdateWithoutProfileInput>, BotProfileUncheckedUpdateWithoutProfileInput>
+  }
+
+  export type SincerityWalletUncheckedUpdateOneWithoutUserNestedInput = {
+    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
+    upsert?: SincerityWalletUpsertWithoutUserInput
+    disconnect?: SincerityWalletWhereInput | boolean
+    delete?: SincerityWalletWhereInput | boolean
+    connect?: SincerityWalletWhereUniqueInput
+    update?: XOR<XOR<SincerityWalletUpdateToOneWithWhereWithoutUserInput, SincerityWalletUpdateWithoutUserInput>, SincerityWalletUncheckedUpdateWithoutUserInput>
   }
 
   export type UserCreateNestedOneWithoutSentMatchesInput = {
@@ -27174,14 +41341,6 @@ export namespace Prisma {
     create?: XOR<ChatRoomCreateWithoutMatchInput, ChatRoomUncheckedCreateWithoutMatchInput>
     connectOrCreate?: ChatRoomCreateOrConnectWithoutMatchInput
     connect?: ChatRoomWhereUniqueInput
-  }
-
-  export type FloatFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type NullableFloatFieldUpdateOperationsInput = {
@@ -27332,6 +41491,10 @@ export namespace Prisma {
     connectOrCreate?: MessageCreateOrConnectWithoutRoomInput | MessageCreateOrConnectWithoutRoomInput[]
     createMany?: MessageCreateManyRoomInputEnvelope
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+  }
+
+  export type EnumVaultStatusFieldUpdateOperationsInput = {
+    set?: $Enums.VaultStatus
   }
 
   export type MatchUpdateOneWithoutChatRoomNestedInput = {
@@ -27550,6 +41713,84 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAnalyticsEventsInput, UserUpdateWithoutAnalyticsEventsInput>, UserUncheckedUpdateWithoutAnalyticsEventsInput>
   }
 
+  export type ProfileCreateNestedOneWithoutSincerityWalletInput = {
+    create?: XOR<ProfileCreateWithoutSincerityWalletInput, ProfileUncheckedCreateWithoutSincerityWalletInput>
+    connectOrCreate?: ProfileCreateOrConnectWithoutSincerityWalletInput
+    connect?: ProfileWhereUniqueInput
+  }
+
+  export type SincerityTransactionCreateNestedManyWithoutWalletInput = {
+    create?: XOR<SincerityTransactionCreateWithoutWalletInput, SincerityTransactionUncheckedCreateWithoutWalletInput> | SincerityTransactionCreateWithoutWalletInput[] | SincerityTransactionUncheckedCreateWithoutWalletInput[]
+    connectOrCreate?: SincerityTransactionCreateOrConnectWithoutWalletInput | SincerityTransactionCreateOrConnectWithoutWalletInput[]
+    createMany?: SincerityTransactionCreateManyWalletInputEnvelope
+    connect?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+  }
+
+  export type SincerityTransactionUncheckedCreateNestedManyWithoutWalletInput = {
+    create?: XOR<SincerityTransactionCreateWithoutWalletInput, SincerityTransactionUncheckedCreateWithoutWalletInput> | SincerityTransactionCreateWithoutWalletInput[] | SincerityTransactionUncheckedCreateWithoutWalletInput[]
+    connectOrCreate?: SincerityTransactionCreateOrConnectWithoutWalletInput | SincerityTransactionCreateOrConnectWithoutWalletInput[]
+    createMany?: SincerityTransactionCreateManyWalletInputEnvelope
+    connect?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+  }
+
+  export type EnumSincerityTierFieldUpdateOperationsInput = {
+    set?: $Enums.SincerityTier
+  }
+
+  export type ProfileUpdateOneRequiredWithoutSincerityWalletNestedInput = {
+    create?: XOR<ProfileCreateWithoutSincerityWalletInput, ProfileUncheckedCreateWithoutSincerityWalletInput>
+    connectOrCreate?: ProfileCreateOrConnectWithoutSincerityWalletInput
+    upsert?: ProfileUpsertWithoutSincerityWalletInput
+    connect?: ProfileWhereUniqueInput
+    update?: XOR<XOR<ProfileUpdateToOneWithWhereWithoutSincerityWalletInput, ProfileUpdateWithoutSincerityWalletInput>, ProfileUncheckedUpdateWithoutSincerityWalletInput>
+  }
+
+  export type SincerityTransactionUpdateManyWithoutWalletNestedInput = {
+    create?: XOR<SincerityTransactionCreateWithoutWalletInput, SincerityTransactionUncheckedCreateWithoutWalletInput> | SincerityTransactionCreateWithoutWalletInput[] | SincerityTransactionUncheckedCreateWithoutWalletInput[]
+    connectOrCreate?: SincerityTransactionCreateOrConnectWithoutWalletInput | SincerityTransactionCreateOrConnectWithoutWalletInput[]
+    upsert?: SincerityTransactionUpsertWithWhereUniqueWithoutWalletInput | SincerityTransactionUpsertWithWhereUniqueWithoutWalletInput[]
+    createMany?: SincerityTransactionCreateManyWalletInputEnvelope
+    set?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+    disconnect?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+    delete?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+    connect?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+    update?: SincerityTransactionUpdateWithWhereUniqueWithoutWalletInput | SincerityTransactionUpdateWithWhereUniqueWithoutWalletInput[]
+    updateMany?: SincerityTransactionUpdateManyWithWhereWithoutWalletInput | SincerityTransactionUpdateManyWithWhereWithoutWalletInput[]
+    deleteMany?: SincerityTransactionScalarWhereInput | SincerityTransactionScalarWhereInput[]
+  }
+
+  export type SincerityTransactionUncheckedUpdateManyWithoutWalletNestedInput = {
+    create?: XOR<SincerityTransactionCreateWithoutWalletInput, SincerityTransactionUncheckedCreateWithoutWalletInput> | SincerityTransactionCreateWithoutWalletInput[] | SincerityTransactionUncheckedCreateWithoutWalletInput[]
+    connectOrCreate?: SincerityTransactionCreateOrConnectWithoutWalletInput | SincerityTransactionCreateOrConnectWithoutWalletInput[]
+    upsert?: SincerityTransactionUpsertWithWhereUniqueWithoutWalletInput | SincerityTransactionUpsertWithWhereUniqueWithoutWalletInput[]
+    createMany?: SincerityTransactionCreateManyWalletInputEnvelope
+    set?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+    disconnect?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+    delete?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+    connect?: SincerityTransactionWhereUniqueInput | SincerityTransactionWhereUniqueInput[]
+    update?: SincerityTransactionUpdateWithWhereUniqueWithoutWalletInput | SincerityTransactionUpdateWithWhereUniqueWithoutWalletInput[]
+    updateMany?: SincerityTransactionUpdateManyWithWhereWithoutWalletInput | SincerityTransactionUpdateManyWithWhereWithoutWalletInput[]
+    deleteMany?: SincerityTransactionScalarWhereInput | SincerityTransactionScalarWhereInput[]
+  }
+
+  export type SincerityWalletCreateNestedOneWithoutTransactionsInput = {
+    create?: XOR<SincerityWalletCreateWithoutTransactionsInput, SincerityWalletUncheckedCreateWithoutTransactionsInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutTransactionsInput
+    connect?: SincerityWalletWhereUniqueInput
+  }
+
+  export type EnumSincerityTransactionTypeFieldUpdateOperationsInput = {
+    set?: $Enums.SincerityTransactionType
+  }
+
+  export type SincerityWalletUpdateOneRequiredWithoutTransactionsNestedInput = {
+    create?: XOR<SincerityWalletCreateWithoutTransactionsInput, SincerityWalletUncheckedCreateWithoutTransactionsInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutTransactionsInput
+    upsert?: SincerityWalletUpsertWithoutTransactionsInput
+    connect?: SincerityWalletWhereUniqueInput
+    update?: XOR<XOR<SincerityWalletUpdateToOneWithWhereWithoutTransactionsInput, SincerityWalletUpdateWithoutTransactionsInput>, SincerityWalletUncheckedUpdateWithoutTransactionsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -27562,6 +41803,27 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringFilter<$PrismaModel> | string
+  }
+
+  export type NestedEnumBotTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotTypeFilter<$PrismaModel> | $Enums.BotType
+  }
+
+  export type NestedEnumBotActivityLevelFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotActivityLevel | EnumBotActivityLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotActivityLevelFilter<$PrismaModel> | $Enums.BotActivityLevel
+  }
+
+  export type NestedEnumEthnicityNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumEthnicityNullableFilter<$PrismaModel> | $Enums.Ethnicity | null
   }
 
   export type NestedStringNullableFilter<$PrismaModel = never> = {
@@ -27578,6 +41840,40 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedEnumOnlinePatternFilter<$PrismaModel = never> = {
+    equals?: $Enums.OnlinePattern | EnumOnlinePatternFieldRefInput<$PrismaModel>
+    in?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    not?: NestedEnumOnlinePatternFilter<$PrismaModel> | $Enums.OnlinePattern
+  }
+
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -27587,13 +41883,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
-  export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
-    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -27624,15 +41913,45 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+  export type NestedEnumBotTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotTypeWithAggregatesFilter<$PrismaModel> | $Enums.BotType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBotTypeFilter<$PrismaModel>
+    _max?: NestedEnumBotTypeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumBotActivityLevelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BotActivityLevel | EnumBotActivityLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    not?: NestedEnumBotActivityLevelWithAggregatesFilter<$PrismaModel> | $Enums.BotActivityLevel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBotActivityLevelFilter<$PrismaModel>
+    _max?: NestedEnumBotActivityLevelFilter<$PrismaModel>
+  }
+
+  export type NestedEnumEthnicityNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumEthnicityNullableWithAggregatesFilter<$PrismaModel> | $Enums.Ethnicity | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumEthnicityNullableFilter<$PrismaModel>
+    _max?: NestedEnumEthnicityNullableFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -27652,15 +41971,54 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+  export type NestedEnumOnlinePatternWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OnlinePattern | EnumOnlinePatternFieldRefInput<$PrismaModel>
+    in?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    not?: NestedEnumOnlinePatternWithAggregatesFilter<$PrismaModel> | $Enums.OnlinePattern
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOnlinePatternFilter<$PrismaModel>
+    _max?: NestedEnumOnlinePatternFilter<$PrismaModel>
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -27675,16 +42033,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
-  }
-
-  export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumUserRoleFilter<$PrismaModel>
-    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -27727,18 +42075,45 @@ export namespace Prisma {
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
 
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+  export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
+  }
+
+  export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type NestedEnumGenderFilter<$PrismaModel = never> = {
@@ -27760,33 +42135,6 @@ export namespace Prisma {
     in?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumProfileStatusFilter<$PrismaModel> | $Enums.ProfileStatus
-  }
-
-  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
   export type NestedEnumGenderWithAggregatesFilter<$PrismaModel = never> = {
@@ -27838,22 +42186,6 @@ export namespace Prisma {
     in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
     notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
     not?: NestedEnumMatchActionNullableFilter<$PrismaModel> | $Enums.MatchAction | null
-  }
-
-  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedFloatFilter<$PrismaModel>
-    _min?: NestedFloatFilter<$PrismaModel>
-    _max?: NestedFloatFilter<$PrismaModel>
   }
 
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -27917,6 +42249,23 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMatchActionFilter<$PrismaModel>
     _max?: NestedEnumMatchActionFilter<$PrismaModel>
+  }
+
+  export type NestedEnumVaultStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.VaultStatus | EnumVaultStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumVaultStatusFilter<$PrismaModel> | $Enums.VaultStatus
+  }
+
+  export type NestedEnumVaultStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.VaultStatus | EnumVaultStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumVaultStatusWithAggregatesFilter<$PrismaModel> | $Enums.VaultStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumVaultStatusFilter<$PrismaModel>
+    _max?: NestedEnumVaultStatusFilter<$PrismaModel>
   }
 
   export type NestedEnumMessageTypeFilter<$PrismaModel = never> = {
@@ -28004,6 +42353,232 @@ export namespace Prisma {
     _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
   }
 
+  export type NestedEnumSincerityTierFilter<$PrismaModel = never> = {
+    equals?: $Enums.SincerityTier | EnumSincerityTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumSincerityTierFilter<$PrismaModel> | $Enums.SincerityTier
+  }
+
+  export type NestedEnumSincerityTierWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SincerityTier | EnumSincerityTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumSincerityTierWithAggregatesFilter<$PrismaModel> | $Enums.SincerityTier
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSincerityTierFilter<$PrismaModel>
+    _max?: NestedEnumSincerityTierFilter<$PrismaModel>
+  }
+
+  export type NestedEnumSincerityTransactionTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.SincerityTransactionType | EnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel> | $Enums.SincerityTransactionType
+  }
+
+  export type NestedEnumSincerityTransactionTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SincerityTransactionType | EnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumSincerityTransactionTypeWithAggregatesFilter<$PrismaModel> | $Enums.SincerityTransactionType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel>
+    _max?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel>
+  }
+
+  export type ProfileCreateWithoutBotProfileInput = {
+    id?: string
+    displayName: string
+    age: number
+    gender: $Enums.Gender
+    genderIdentity?: string | null
+    sexuality: string
+    bio?: string | null
+    avatar?: string | null
+    avatarType?: string | null
+    city?: string | null
+    country?: string | null
+    relationshipGoal?: $Enums.RelationshipGoal
+    attachmentStyle?: string | null
+    communicationStyle?: string | null
+    conflictResolution?: string | null
+    loveLanguage?: string | null
+    boundaries?: string | null
+    dealbreakers?: string | null
+    lifePriorities?: string | null
+    emotionalAvailability?: string | null
+    preferredAgeMin?: number | null
+    preferredAgeMax?: number | null
+    preferredGender?: string | null
+    preferredDistance?: number | null
+    preferredLocation?: string | null
+    compatibilityScore?: number | null
+    profileStatus?: $Enums.ProfileStatus
+    onboardingStep?: number
+    isApproved?: boolean
+    isVerified?: boolean
+    personalityData?: string | null
+    adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutProfileInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
+  }
+
+  export type ProfileUncheckedCreateWithoutBotProfileInput = {
+    id?: string
+    userId: string
+    displayName: string
+    age: number
+    gender: $Enums.Gender
+    genderIdentity?: string | null
+    sexuality: string
+    bio?: string | null
+    avatar?: string | null
+    avatarType?: string | null
+    city?: string | null
+    country?: string | null
+    relationshipGoal?: $Enums.RelationshipGoal
+    attachmentStyle?: string | null
+    communicationStyle?: string | null
+    conflictResolution?: string | null
+    loveLanguage?: string | null
+    boundaries?: string | null
+    dealbreakers?: string | null
+    lifePriorities?: string | null
+    emotionalAvailability?: string | null
+    preferredAgeMin?: number | null
+    preferredAgeMax?: number | null
+    preferredGender?: string | null
+    preferredDistance?: number | null
+    preferredLocation?: string | null
+    compatibilityScore?: number | null
+    profileStatus?: $Enums.ProfileStatus
+    onboardingStep?: number
+    isApproved?: boolean
+    isVerified?: boolean
+    personalityData?: string | null
+    adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type ProfileCreateOrConnectWithoutBotProfileInput = {
+    where: ProfileWhereUniqueInput
+    create: XOR<ProfileCreateWithoutBotProfileInput, ProfileUncheckedCreateWithoutBotProfileInput>
+  }
+
+  export type ProfileUpsertWithoutBotProfileInput = {
+    update: XOR<ProfileUpdateWithoutBotProfileInput, ProfileUncheckedUpdateWithoutBotProfileInput>
+    create: XOR<ProfileCreateWithoutBotProfileInput, ProfileUncheckedCreateWithoutBotProfileInput>
+    where?: ProfileWhereInput
+  }
+
+  export type ProfileUpdateToOneWithWhereWithoutBotProfileInput = {
+    where?: ProfileWhereInput
+    data: XOR<ProfileUpdateWithoutBotProfileInput, ProfileUncheckedUpdateWithoutBotProfileInput>
+  }
+
+  export type ProfileUpdateWithoutBotProfileInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    age?: IntFieldUpdateOperationsInput | number
+    gender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+    genderIdentity?: NullableStringFieldUpdateOperationsInput | string | null
+    sexuality?: StringFieldUpdateOperationsInput | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
+    attachmentStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    communicationStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    conflictResolution?: NullableStringFieldUpdateOperationsInput | string | null
+    loveLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    boundaries?: NullableStringFieldUpdateOperationsInput | string | null
+    dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
+    lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
+    emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredDistance?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredLocation?: NullableStringFieldUpdateOperationsInput | string | null
+    compatibilityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    profileStatus?: EnumProfileStatusFieldUpdateOperationsInput | $Enums.ProfileStatus
+    onboardingStep?: IntFieldUpdateOperationsInput | number
+    isApproved?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutProfileNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
+  }
+
+  export type ProfileUncheckedUpdateWithoutBotProfileInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    age?: IntFieldUpdateOperationsInput | number
+    gender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+    genderIdentity?: NullableStringFieldUpdateOperationsInput | string | null
+    sexuality?: StringFieldUpdateOperationsInput | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
+    attachmentStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    communicationStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    conflictResolution?: NullableStringFieldUpdateOperationsInput | string | null
+    loveLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    boundaries?: NullableStringFieldUpdateOperationsInput | string | null
+    dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
+    lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
+    emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredDistance?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredLocation?: NullableStringFieldUpdateOperationsInput | string | null
+    compatibilityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    profileStatus?: EnumProfileStatusFieldUpdateOperationsInput | $Enums.ProfileStatus
+    onboardingStep?: IntFieldUpdateOperationsInput | number
+    isApproved?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
   export type AccountCreateWithoutUserInput = {
     id?: string
     type: string
@@ -28070,6 +42645,9 @@ export namespace Prisma {
     token: string
     expires: Date | string
     used?: boolean
+    useCount?: number
+    maxUses?: number
+    lastUsedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -28079,6 +42657,9 @@ export namespace Prisma {
     token: string
     expires: Date | string
     used?: boolean
+    useCount?: number
+    maxUses?: number
+    lastUsedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -28123,9 +42704,17 @@ export namespace Prisma {
     onboardingStep?: number
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: string | null
     adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    botProfile?: BotProfileCreateNestedOneWithoutProfileInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type ProfileUncheckedCreateWithoutUserInput = {
@@ -28159,9 +42748,17 @@ export namespace Prisma {
     onboardingStep?: number
     isApproved?: boolean
     isVerified?: boolean
+    personalityData?: string | null
     adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    botProfile?: BotProfileUncheckedCreateNestedOneWithoutProfileInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type ProfileCreateOrConnectWithoutUserInput = {
@@ -28185,6 +42782,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -28210,6 +42813,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -28243,6 +42852,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -28268,6 +42883,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -28631,6 +43252,9 @@ export namespace Prisma {
     expires?: DateTimeFilter<"VerificationToken"> | Date | string
     userId?: StringNullableFilter<"VerificationToken"> | string | null
     used?: BoolFilter<"VerificationToken"> | boolean
+    useCount?: IntFilter<"VerificationToken"> | number
+    maxUses?: IntFilter<"VerificationToken"> | number
+    lastUsedAt?: DateTimeNullableFilter<"VerificationToken"> | Date | string | null
     createdAt?: DateTimeFilter<"VerificationToken"> | Date | string
   }
 
@@ -28676,9 +43300,17 @@ export namespace Prisma {
     onboardingStep?: IntFieldUpdateOperationsInput | number
     isApproved?: BoolFieldUpdateOperationsInput | boolean
     isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
     adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    botProfile?: BotProfileUpdateOneWithoutProfileNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type ProfileUncheckedUpdateWithoutUserInput = {
@@ -28712,9 +43344,17 @@ export namespace Prisma {
     onboardingStep?: IntFieldUpdateOperationsInput | number
     isApproved?: BoolFieldUpdateOperationsInput | boolean
     isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
     adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    botProfile?: BotProfileUncheckedUpdateOneWithoutProfileNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type MatchUpsertWithWhereUniqueWithoutSenderInput = {
@@ -28754,6 +43394,12 @@ export namespace Prisma {
     receiverAction?: EnumMatchActionNullableFilter<"Match"> | $Enums.MatchAction | null
     reviewedBy?: StringNullableFilter<"Match"> | string | null
     reviewNotes?: StringNullableFilter<"Match"> | string | null
+    pitchMessage?: StringNullableFilter<"Match"> | string | null
+    pitchTone?: StringNullableFilter<"Match"> | string | null
+    aiAssisted?: BoolFilter<"Match"> | boolean
+    giftAmount?: IntFilter<"Match"> | number
+    isUnread?: BoolFilter<"Match"> | boolean
+    inboxPriority?: FloatNullableFilter<"Match"> | number | null
     createdAt?: DateTimeFilter<"Match"> | Date | string
     updatedAt?: DateTimeFilter<"Match"> | Date | string
     expiresAt?: DateTimeNullableFilter<"Match"> | Date | string | null
@@ -29033,6 +43679,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     sessions?: SessionCreateNestedManyWithoutUserInput
@@ -29058,6 +43707,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
@@ -29099,6 +43751,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sessions?: SessionUpdateManyWithoutUserNestedInput
@@ -29124,6 +43779,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -29149,6 +43807,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -29174,6 +43835,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -29215,6 +43879,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -29240,6 +43907,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -29265,6 +43935,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -29290,6 +43963,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -29331,6 +44007,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -29356,6 +44035,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -29381,6 +44063,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -29406,6 +44091,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -29428,6 +44116,114 @@ export namespace Prisma {
     create: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
   }
 
+  export type BotProfileCreateWithoutProfileInput = {
+    id?: string
+    botType?: $Enums.BotType
+    activityLevel?: $Enums.BotActivityLevel
+    ethnicity?: $Enums.Ethnicity | null
+    occupation?: string | null
+    industry?: string | null
+    educationLevel?: string | null
+    incomeRange?: string | null
+    interests?: BotProfileCreateinterestsInput | string[]
+    hobbies?: BotProfileCreatehobbiesInput | string[]
+    musicGenres?: BotProfileCreatemusicGenresInput | string[]
+    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    onlinePattern?: $Enums.OnlinePattern
+    avgResponseTime?: number
+    maxDailyMatches?: number
+    behaviorConfig?: string | null
+    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    totalInteractions?: number
+    successfulMatches?: number
+    avgEngagementScore?: number
+    learningData?: string | null
+    avatarStyle?: string | null
+    avatarSource?: string | null
+    isActive?: boolean
+    lastActiveAt?: Date | string | null
+    sleepUntil?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotProfileUncheckedCreateWithoutProfileInput = {
+    id?: string
+    botType?: $Enums.BotType
+    activityLevel?: $Enums.BotActivityLevel
+    ethnicity?: $Enums.Ethnicity | null
+    occupation?: string | null
+    industry?: string | null
+    educationLevel?: string | null
+    incomeRange?: string | null
+    interests?: BotProfileCreateinterestsInput | string[]
+    hobbies?: BotProfileCreatehobbiesInput | string[]
+    musicGenres?: BotProfileCreatemusicGenresInput | string[]
+    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    onlinePattern?: $Enums.OnlinePattern
+    avgResponseTime?: number
+    maxDailyMatches?: number
+    behaviorConfig?: string | null
+    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    totalInteractions?: number
+    successfulMatches?: number
+    avgEngagementScore?: number
+    learningData?: string | null
+    avatarStyle?: string | null
+    avatarSource?: string | null
+    isActive?: boolean
+    lastActiveAt?: Date | string | null
+    sleepUntil?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BotProfileCreateOrConnectWithoutProfileInput = {
+    where: BotProfileWhereUniqueInput
+    create: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
+  }
+
+  export type SincerityWalletCreateWithoutUserInput = {
+    id?: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    transactions?: SincerityTransactionCreateNestedManyWithoutWalletInput
+  }
+
+  export type SincerityWalletUncheckedCreateWithoutUserInput = {
+    id?: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    transactions?: SincerityTransactionUncheckedCreateNestedManyWithoutWalletInput
+  }
+
+  export type SincerityWalletCreateOrConnectWithoutUserInput = {
+    where: SincerityWalletWhereUniqueInput
+    create: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+  }
+
   export type UserUpsertWithoutProfileInput = {
     update: XOR<UserUpdateWithoutProfileInput, UserUncheckedUpdateWithoutProfileInput>
     create: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
@@ -29447,6 +44243,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -29472,6 +44271,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -29489,6 +44291,126 @@ export namespace Prisma {
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
   }
 
+  export type BotProfileUpsertWithoutProfileInput = {
+    update: XOR<BotProfileUpdateWithoutProfileInput, BotProfileUncheckedUpdateWithoutProfileInput>
+    create: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
+    where?: BotProfileWhereInput
+  }
+
+  export type BotProfileUpdateToOneWithWhereWithoutProfileInput = {
+    where?: BotProfileWhereInput
+    data: XOR<BotProfileUpdateWithoutProfileInput, BotProfileUncheckedUpdateWithoutProfileInput>
+  }
+
+  export type BotProfileUpdateWithoutProfileInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelFieldUpdateOperationsInput | $Enums.BotActivityLevel
+    ethnicity?: NullableEnumEthnicityFieldUpdateOperationsInput | $Enums.Ethnicity | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
+    interests?: BotProfileUpdateinterestsInput | string[]
+    hobbies?: BotProfileUpdatehobbiesInput | string[]
+    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
+    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
+    avgResponseTime?: IntFieldUpdateOperationsInput | number
+    maxDailyMatches?: IntFieldUpdateOperationsInput | number
+    behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    successfulMatches?: IntFieldUpdateOperationsInput | number
+    avgEngagementScore?: FloatFieldUpdateOperationsInput | number
+    learningData?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarSource?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sleepUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BotProfileUncheckedUpdateWithoutProfileInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    botType?: EnumBotTypeFieldUpdateOperationsInput | $Enums.BotType
+    activityLevel?: EnumBotActivityLevelFieldUpdateOperationsInput | $Enums.BotActivityLevel
+    ethnicity?: NullableEnumEthnicityFieldUpdateOperationsInput | $Enums.Ethnicity | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
+    interests?: BotProfileUpdateinterestsInput | string[]
+    hobbies?: BotProfileUpdatehobbiesInput | string[]
+    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
+    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
+    avgResponseTime?: IntFieldUpdateOperationsInput | number
+    maxDailyMatches?: IntFieldUpdateOperationsInput | number
+    behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
+    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
+    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    totalInteractions?: IntFieldUpdateOperationsInput | number
+    successfulMatches?: IntFieldUpdateOperationsInput | number
+    avgEngagementScore?: FloatFieldUpdateOperationsInput | number
+    learningData?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarSource?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sleepUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SincerityWalletUpsertWithoutUserInput = {
+    update: XOR<SincerityWalletUpdateWithoutUserInput, SincerityWalletUncheckedUpdateWithoutUserInput>
+    create: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    where?: SincerityWalletWhereInput
+  }
+
+  export type SincerityWalletUpdateToOneWithWhereWithoutUserInput = {
+    where?: SincerityWalletWhereInput
+    data: XOR<SincerityWalletUpdateWithoutUserInput, SincerityWalletUncheckedUpdateWithoutUserInput>
+  }
+
+  export type SincerityWalletUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    transactions?: SincerityTransactionUpdateManyWithoutWalletNestedInput
+  }
+
+  export type SincerityWalletUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    transactions?: SincerityTransactionUncheckedUpdateManyWithoutWalletNestedInput
+  }
+
   export type UserCreateWithoutSentMatchesInput = {
     id?: string
     name?: string | null
@@ -29497,6 +44419,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -29522,6 +44447,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -29552,6 +44480,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -29577,6 +44508,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -29629,6 +44563,16 @@ export namespace Prisma {
     id?: string
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     members?: ChatRoomMemberCreateNestedManyWithoutRoomInput
@@ -29639,6 +44583,16 @@ export namespace Prisma {
     id?: string
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     members?: ChatRoomMemberUncheckedCreateNestedManyWithoutRoomInput
@@ -29669,6 +44623,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -29694,6 +44651,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -29730,6 +44690,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -29755,6 +44718,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -29803,6 +44769,16 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     members?: ChatRoomMemberUpdateManyWithoutRoomNestedInput
@@ -29813,6 +44789,16 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     members?: ChatRoomMemberUncheckedUpdateManyWithoutRoomNestedInput
@@ -29835,6 +44821,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -29861,6 +44853,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -29880,6 +44878,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -29905,6 +44906,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -29954,6 +44958,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -29980,6 +44990,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -30005,6 +45021,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -30030,6 +45049,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -30063,6 +45085,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -30089,6 +45117,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -30185,6 +45219,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -30211,6 +45251,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -30253,6 +45299,16 @@ export namespace Prisma {
     id?: string
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     match?: MatchCreateNestedOneWithoutChatRoomInput
@@ -30264,6 +45320,16 @@ export namespace Prisma {
     matchId?: string | null
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     messages?: MessageUncheckedCreateNestedManyWithoutRoomInput
@@ -30282,6 +45348,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -30307,6 +45376,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -30344,6 +45416,16 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     match?: MatchUpdateOneWithoutChatRoomNestedInput
@@ -30355,6 +45437,16 @@ export namespace Prisma {
     matchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     messages?: MessageUncheckedUpdateManyWithoutRoomNestedInput
@@ -30379,6 +45471,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -30404,6 +45499,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -30425,6 +45523,16 @@ export namespace Prisma {
     id?: string
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     match?: MatchCreateNestedOneWithoutChatRoomInput
@@ -30436,6 +45544,16 @@ export namespace Prisma {
     matchId?: string | null
     lastMessageAt?: Date | string | null
     isArchived?: boolean
+    vaultStatus?: $Enums.VaultStatus
+    vaultExpiry?: Date | string | null
+    extendedAt?: Date | string | null
+    extendedBy?: string | null
+    extensionCount?: number
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    revokeReason?: string | null
+    screenshotCount?: number
+    lastScreenshotAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     members?: ChatRoomMemberUncheckedCreateNestedManyWithoutRoomInput
@@ -30454,6 +45572,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -30479,6 +45600,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -30516,6 +45640,16 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     match?: MatchUpdateOneWithoutChatRoomNestedInput
@@ -30527,6 +45661,16 @@ export namespace Prisma {
     matchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isArchived?: BoolFieldUpdateOperationsInput | boolean
+    vaultStatus?: EnumVaultStatusFieldUpdateOperationsInput | $Enums.VaultStatus
+    vaultExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    extendedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    extensionCount?: IntFieldUpdateOperationsInput | number
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    screenshotCount?: IntFieldUpdateOperationsInput | number
+    lastScreenshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     members?: ChatRoomMemberUncheckedUpdateManyWithoutRoomNestedInput
@@ -30551,6 +45695,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -30576,6 +45723,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -30601,6 +45751,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -30626,6 +45779,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -30667,6 +45823,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -30692,6 +45851,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -30717,6 +45879,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -30742,6 +45907,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -30783,6 +45951,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -30808,6 +45979,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -30833,6 +46007,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -30858,6 +46035,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -30899,6 +46079,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -30924,6 +46107,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -30949,6 +46135,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -30974,6 +46163,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -31015,6 +46207,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -31040,6 +46235,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -31065,6 +46263,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -31090,6 +46291,9 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -31131,6 +46335,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -31156,6 +46363,9 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -31171,6 +46381,350 @@ export namespace Prisma {
     payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminLogs?: AdminLogUncheckedUpdateManyWithoutAuthorNestedInput
+  }
+
+  export type ProfileCreateWithoutSincerityWalletInput = {
+    id?: string
+    displayName: string
+    age: number
+    gender: $Enums.Gender
+    genderIdentity?: string | null
+    sexuality: string
+    bio?: string | null
+    avatar?: string | null
+    avatarType?: string | null
+    city?: string | null
+    country?: string | null
+    relationshipGoal?: $Enums.RelationshipGoal
+    attachmentStyle?: string | null
+    communicationStyle?: string | null
+    conflictResolution?: string | null
+    loveLanguage?: string | null
+    boundaries?: string | null
+    dealbreakers?: string | null
+    lifePriorities?: string | null
+    emotionalAvailability?: string | null
+    preferredAgeMin?: number | null
+    preferredAgeMax?: number | null
+    preferredGender?: string | null
+    preferredDistance?: number | null
+    preferredLocation?: string | null
+    compatibilityScore?: number | null
+    profileStatus?: $Enums.ProfileStatus
+    onboardingStep?: number
+    isApproved?: boolean
+    isVerified?: boolean
+    personalityData?: string | null
+    adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutProfileInput
+    botProfile?: BotProfileCreateNestedOneWithoutProfileInput
+  }
+
+  export type ProfileUncheckedCreateWithoutSincerityWalletInput = {
+    id?: string
+    userId: string
+    displayName: string
+    age: number
+    gender: $Enums.Gender
+    genderIdentity?: string | null
+    sexuality: string
+    bio?: string | null
+    avatar?: string | null
+    avatarType?: string | null
+    city?: string | null
+    country?: string | null
+    relationshipGoal?: $Enums.RelationshipGoal
+    attachmentStyle?: string | null
+    communicationStyle?: string | null
+    conflictResolution?: string | null
+    loveLanguage?: string | null
+    boundaries?: string | null
+    dealbreakers?: string | null
+    lifePriorities?: string | null
+    emotionalAvailability?: string | null
+    preferredAgeMin?: number | null
+    preferredAgeMax?: number | null
+    preferredGender?: string | null
+    preferredDistance?: number | null
+    preferredLocation?: string | null
+    compatibilityScore?: number | null
+    profileStatus?: $Enums.ProfileStatus
+    onboardingStep?: number
+    isApproved?: boolean
+    isVerified?: boolean
+    personalityData?: string | null
+    adminNotes?: string | null
+    occupation?: string | null
+    company?: string | null
+    industry?: string | null
+    linkedInVerified?: boolean
+    verificationBadge?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    botProfile?: BotProfileUncheckedCreateNestedOneWithoutProfileInput
+  }
+
+  export type ProfileCreateOrConnectWithoutSincerityWalletInput = {
+    where: ProfileWhereUniqueInput
+    create: XOR<ProfileCreateWithoutSincerityWalletInput, ProfileUncheckedCreateWithoutSincerityWalletInput>
+  }
+
+  export type SincerityTransactionCreateWithoutWalletInput = {
+    id?: string
+    type: $Enums.SincerityTransactionType
+    amount: number
+    source: string
+    description?: string | null
+    matchId?: string | null
+    fromUserId?: string | null
+    toUserId?: string | null
+    message?: string | null
+    metadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type SincerityTransactionUncheckedCreateWithoutWalletInput = {
+    id?: string
+    type: $Enums.SincerityTransactionType
+    amount: number
+    source: string
+    description?: string | null
+    matchId?: string | null
+    fromUserId?: string | null
+    toUserId?: string | null
+    message?: string | null
+    metadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type SincerityTransactionCreateOrConnectWithoutWalletInput = {
+    where: SincerityTransactionWhereUniqueInput
+    create: XOR<SincerityTransactionCreateWithoutWalletInput, SincerityTransactionUncheckedCreateWithoutWalletInput>
+  }
+
+  export type SincerityTransactionCreateManyWalletInputEnvelope = {
+    data: SincerityTransactionCreateManyWalletInput | SincerityTransactionCreateManyWalletInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ProfileUpsertWithoutSincerityWalletInput = {
+    update: XOR<ProfileUpdateWithoutSincerityWalletInput, ProfileUncheckedUpdateWithoutSincerityWalletInput>
+    create: XOR<ProfileCreateWithoutSincerityWalletInput, ProfileUncheckedCreateWithoutSincerityWalletInput>
+    where?: ProfileWhereInput
+  }
+
+  export type ProfileUpdateToOneWithWhereWithoutSincerityWalletInput = {
+    where?: ProfileWhereInput
+    data: XOR<ProfileUpdateWithoutSincerityWalletInput, ProfileUncheckedUpdateWithoutSincerityWalletInput>
+  }
+
+  export type ProfileUpdateWithoutSincerityWalletInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    age?: IntFieldUpdateOperationsInput | number
+    gender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+    genderIdentity?: NullableStringFieldUpdateOperationsInput | string | null
+    sexuality?: StringFieldUpdateOperationsInput | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
+    attachmentStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    communicationStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    conflictResolution?: NullableStringFieldUpdateOperationsInput | string | null
+    loveLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    boundaries?: NullableStringFieldUpdateOperationsInput | string | null
+    dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
+    lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
+    emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredDistance?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredLocation?: NullableStringFieldUpdateOperationsInput | string | null
+    compatibilityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    profileStatus?: EnumProfileStatusFieldUpdateOperationsInput | $Enums.ProfileStatus
+    onboardingStep?: IntFieldUpdateOperationsInput | number
+    isApproved?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutProfileNestedInput
+    botProfile?: BotProfileUpdateOneWithoutProfileNestedInput
+  }
+
+  export type ProfileUncheckedUpdateWithoutSincerityWalletInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    age?: IntFieldUpdateOperationsInput | number
+    gender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+    genderIdentity?: NullableStringFieldUpdateOperationsInput | string | null
+    sexuality?: StringFieldUpdateOperationsInput | string
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
+    attachmentStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    communicationStyle?: NullableStringFieldUpdateOperationsInput | string | null
+    conflictResolution?: NullableStringFieldUpdateOperationsInput | string | null
+    loveLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    boundaries?: NullableStringFieldUpdateOperationsInput | string | null
+    dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
+    lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
+    emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
+    preferredDistance?: NullableIntFieldUpdateOperationsInput | number | null
+    preferredLocation?: NullableStringFieldUpdateOperationsInput | string | null
+    compatibilityScore?: NullableIntFieldUpdateOperationsInput | number | null
+    profileStatus?: EnumProfileStatusFieldUpdateOperationsInput | $Enums.ProfileStatus
+    onboardingStep?: IntFieldUpdateOperationsInput | number
+    isApproved?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
+    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
+    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    botProfile?: BotProfileUncheckedUpdateOneWithoutProfileNestedInput
+  }
+
+  export type SincerityTransactionUpsertWithWhereUniqueWithoutWalletInput = {
+    where: SincerityTransactionWhereUniqueInput
+    update: XOR<SincerityTransactionUpdateWithoutWalletInput, SincerityTransactionUncheckedUpdateWithoutWalletInput>
+    create: XOR<SincerityTransactionCreateWithoutWalletInput, SincerityTransactionUncheckedCreateWithoutWalletInput>
+  }
+
+  export type SincerityTransactionUpdateWithWhereUniqueWithoutWalletInput = {
+    where: SincerityTransactionWhereUniqueInput
+    data: XOR<SincerityTransactionUpdateWithoutWalletInput, SincerityTransactionUncheckedUpdateWithoutWalletInput>
+  }
+
+  export type SincerityTransactionUpdateManyWithWhereWithoutWalletInput = {
+    where: SincerityTransactionScalarWhereInput
+    data: XOR<SincerityTransactionUpdateManyMutationInput, SincerityTransactionUncheckedUpdateManyWithoutWalletInput>
+  }
+
+  export type SincerityTransactionScalarWhereInput = {
+    AND?: SincerityTransactionScalarWhereInput | SincerityTransactionScalarWhereInput[]
+    OR?: SincerityTransactionScalarWhereInput[]
+    NOT?: SincerityTransactionScalarWhereInput | SincerityTransactionScalarWhereInput[]
+    id?: StringFilter<"SincerityTransaction"> | string
+    walletId?: StringFilter<"SincerityTransaction"> | string
+    type?: EnumSincerityTransactionTypeFilter<"SincerityTransaction"> | $Enums.SincerityTransactionType
+    amount?: IntFilter<"SincerityTransaction"> | number
+    source?: StringFilter<"SincerityTransaction"> | string
+    description?: StringNullableFilter<"SincerityTransaction"> | string | null
+    matchId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    fromUserId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    toUserId?: StringNullableFilter<"SincerityTransaction"> | string | null
+    message?: StringNullableFilter<"SincerityTransaction"> | string | null
+    metadata?: StringNullableFilter<"SincerityTransaction"> | string | null
+    createdAt?: DateTimeFilter<"SincerityTransaction"> | Date | string
+  }
+
+  export type SincerityWalletCreateWithoutTransactionsInput = {
+    id?: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: ProfileCreateNestedOneWithoutSincerityWalletInput
+  }
+
+  export type SincerityWalletUncheckedCreateWithoutTransactionsInput = {
+    id?: string
+    userId: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SincerityWalletCreateOrConnectWithoutTransactionsInput = {
+    where: SincerityWalletWhereUniqueInput
+    create: XOR<SincerityWalletCreateWithoutTransactionsInput, SincerityWalletUncheckedCreateWithoutTransactionsInput>
+  }
+
+  export type SincerityWalletUpsertWithoutTransactionsInput = {
+    update: XOR<SincerityWalletUpdateWithoutTransactionsInput, SincerityWalletUncheckedUpdateWithoutTransactionsInput>
+    create: XOR<SincerityWalletCreateWithoutTransactionsInput, SincerityWalletUncheckedCreateWithoutTransactionsInput>
+    where?: SincerityWalletWhereInput
+  }
+
+  export type SincerityWalletUpdateToOneWithWhereWithoutTransactionsInput = {
+    where?: SincerityWalletWhereInput
+    data: XOR<SincerityWalletUpdateWithoutTransactionsInput, SincerityWalletUncheckedUpdateWithoutTransactionsInput>
+  }
+
+  export type SincerityWalletUpdateWithoutTransactionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: ProfileUpdateOneRequiredWithoutSincerityWalletNestedInput
+  }
+
+  export type SincerityWalletUncheckedUpdateWithoutTransactionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AccountCreateManyUserInput = {
@@ -31199,6 +46753,9 @@ export namespace Prisma {
     token: string
     expires: Date | string
     used?: boolean
+    useCount?: number
+    maxUses?: number
+    lastUsedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -31219,6 +46776,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -31241,6 +46804,12 @@ export namespace Prisma {
     receiverAction?: $Enums.MatchAction | null
     reviewedBy?: string | null
     reviewNotes?: string | null
+    pitchMessage?: string | null
+    pitchTone?: string | null
+    aiAssisted?: boolean
+    giftAmount?: number
+    isUnread?: boolean
+    inboxPriority?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     expiresAt?: Date | string | null
@@ -31402,6 +46971,9 @@ export namespace Prisma {
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
     used?: BoolFieldUpdateOperationsInput | boolean
+    useCount?: IntFieldUpdateOperationsInput | number
+    maxUses?: IntFieldUpdateOperationsInput | number
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -31411,6 +46983,9 @@ export namespace Prisma {
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
     used?: BoolFieldUpdateOperationsInput | boolean
+    useCount?: IntFieldUpdateOperationsInput | number
+    maxUses?: IntFieldUpdateOperationsInput | number
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -31420,6 +46995,9 @@ export namespace Prisma {
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
     used?: BoolFieldUpdateOperationsInput | boolean
+    useCount?: IntFieldUpdateOperationsInput | number
+    maxUses?: IntFieldUpdateOperationsInput | number
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -31439,6 +47017,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -31464,6 +47048,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -31488,6 +47078,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -31509,6 +47105,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -31534,6 +47136,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -31558,6 +47166,12 @@ export namespace Prisma {
     receiverAction?: NullableEnumMatchActionFieldUpdateOperationsInput | $Enums.MatchAction | null
     reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
     reviewNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    pitchTone?: NullableStringFieldUpdateOperationsInput | string | null
+    aiAssisted?: BoolFieldUpdateOperationsInput | boolean
+    giftAmount?: IntFieldUpdateOperationsInput | number
+    isUnread?: BoolFieldUpdateOperationsInput | boolean
+    inboxPriority?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -31938,6 +47552,62 @@ export namespace Prisma {
     metadata?: NullableStringFieldUpdateOperationsInput | string | null
     isRead?: BoolFieldUpdateOperationsInput | boolean
     readAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SincerityTransactionCreateManyWalletInput = {
+    id?: string
+    type: $Enums.SincerityTransactionType
+    amount: number
+    source: string
+    description?: string | null
+    matchId?: string | null
+    fromUserId?: string | null
+    toUserId?: string | null
+    message?: string | null
+    metadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type SincerityTransactionUpdateWithoutWalletInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumSincerityTransactionTypeFieldUpdateOperationsInput | $Enums.SincerityTransactionType
+    amount?: IntFieldUpdateOperationsInput | number
+    source?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    fromUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    toUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SincerityTransactionUncheckedUpdateWithoutWalletInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumSincerityTransactionTypeFieldUpdateOperationsInput | $Enums.SincerityTransactionType
+    amount?: IntFieldUpdateOperationsInput | number
+    source?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    fromUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    toUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SincerityTransactionUncheckedUpdateManyWithoutWalletInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumSincerityTransactionTypeFieldUpdateOperationsInput | $Enums.SincerityTransactionType
+    amount?: IntFieldUpdateOperationsInput | number
+    source?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    fromUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    toUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

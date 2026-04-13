@@ -41,6 +41,25 @@ interface MatchData {
   chatRoomId: string | null;
 }
 
+// Validate that URL uses http or https protocol
+function isValidImageUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
+// Get safe avatar URL (validates protocol)
+function getSafeAvatarUrl(avatar: string | null | undefined, fallbackSeed: string): string {
+  if (isValidImageUrl(avatar)) {
+    return avatar as string;
+  }
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${fallbackSeed}`;
+}
+
 export default function MatchDetailPage({ params }: MatchDetailPageProps) {
   const { id } = use(params);
   const router = useRouter();
@@ -187,8 +206,16 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
   const overallScore = Math.round(match.matchScore);
   const otherUser = match.otherUser;
   
-  // Parse conflict warnings if exists
-  const warnings = match.conflictWarnings ? JSON.parse(match.conflictWarnings) : [];
+  // Parse conflict warnings with error handling
+  let warnings: string[] = [];
+  if (match.conflictWarnings) {
+    try {
+      warnings = JSON.parse(match.conflictWarnings);
+    } catch (error) {
+      console.error('Failed to parse conflict warnings:', error);
+      warnings = [];
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -207,7 +234,7 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
           <div className="glass-card overflow-hidden">
             <div className="relative h-80">
               <img
-                src={otherUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUser.id}`}
+                src={getSafeAvatarUrl(otherUser.avatar, otherUser.id)}
                 alt={otherUser.name}
                 className="w-full h-full object-cover"
               />

@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { Heart, Bell, Menu, X, LogOut, LayoutDashboard, MessageCircle, User, CreditCard, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Sidebar from "@/components/layout/sidebar";
-import VerificationBanner from "@/components/verification-banner";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -42,9 +41,6 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
 
       {/* Main Content Area */}
       <div className={`transition-all duration-300 ${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
-        {/* Verification Banner (shows if email not verified) */}
-        <VerificationBanner />
-
         {/* Top Header */}
         <header className="sticky top-0 z-sticky glass-strong">
           <div className="h-16 flex items-center justify-between px-4 lg:px-6">

@@ -98,3 +98,36 @@ export function useApiPost() {
 
   return { post, isLoading, error };
 }
+
+export function useApiDelete() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const deleteRequest = useCallback(async (url: string): Promise<any> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(url, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "Request failed" }));
+        setError(err.message || `Error ${res.status}`);
+        return null;
+      }
+
+      return await res.json();
+    } catch (err) {
+      console.warn(`API delete failed for ${url}:`, err);
+      setError("Service unavailable");
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { delete: deleteRequest, isLoading, error };
+}

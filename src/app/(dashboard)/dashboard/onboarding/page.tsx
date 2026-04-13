@@ -430,6 +430,10 @@ export default function OnboardingPage() {
           Step {currentStepIndex + 1} of {STEPS.length}
         </p>
         <h2 className="text-lg font-semibold text-white/80 text-center">{currentStep.title}</h2>
+        {/* Estimated time remaining */}
+        <p className="text-xs text-white/40 text-center mt-1">
+          About {Math.max(1, Math.ceil((STEPS.length - currentStepIndex) * 0.5))} min remaining
+        </p>
         {/* Dot indicator */}
         <div className="flex justify-center gap-1.5 mt-3">
           {STEPS.map((step, i) => (
@@ -511,11 +515,24 @@ export default function OnboardingPage() {
                 <h3 className="text-xl font-bold text-white mb-2">
                   {isMaleUser ? "Upload Your Photo" : "Choose Your Avatar"}
                 </h3>
-                <p className="text-sm text-white/60 mb-6">
+                <p className="text-sm text-white/60 mb-4">
                   {isMaleUser
                     ? "Real photos build trust and better matches. Show your genuine self."
                     : "You can upload your own photo or pick a cute cartoon avatar!"}
                 </p>
+
+                {/* Value proposition banner */}
+                <div className="mb-6 p-3 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold text-white">Pro Tip</span>
+                  </div>
+                  <p className="text-xs text-white/70">
+                    {isMaleUser 
+                      ? "Profiles with clear, genuine photos get 3x more matches. It's our quality promise to the community."
+                      : "Profiles with photos (real or avatar) get 3x more matches. Choose what feels right for you!"}
+                  </p>
+                </div>
 
                 {/* Avatar Preview */}
                 <div className="flex justify-center mb-6">
@@ -849,6 +866,23 @@ export default function OnboardingPage() {
                 </div>
 
                 <p className="text-sm text-white/40 mb-4">You&apos;ll receive up to 5 curated matches per week.</p>
+
+                {/* Match timing expectation */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl p-4 mb-6 max-w-sm mx-auto border border-primary/30"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold text-white">What happens next?</span>
+                  </div>
+                  <p className="text-xs text-white/70 leading-relaxed">
+                    Your first curated matches will arrive within <span className="text-primary font-medium">24-48 hours</span>. 
+                    We&apos;ll notify you by email when they&apos;re ready!
+                  </p>
+                </motion.div>
               </div>
             )}
           </motion.div>

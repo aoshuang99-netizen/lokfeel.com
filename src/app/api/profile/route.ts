@@ -9,16 +9,37 @@ export async function GET() {
   try {
     const { user } = await requireAuth()
 
+    // Get full user data including emailVerified
+    const fullUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        image: true,
+        role: true,
+        emailVerified: true,
+      },
+    })
+
     const profile = await db.profile.findUnique({
       where: { userId: user.id },
     })
 
     if (!profile) {
       // Return null profile — frontend should redirect to onboarding
-      return NextResponse.json({ profile: null, user })
+      return NextResponse.json({ 
+        profile: null, 
+        user: fullUser,
+        emailVerified: fullUser?.emailVerified !== null 
+      })
     }
 
-    return NextResponse.json({ profile, user })
+    return NextResponse.json({ 
+      profile, 
+      user: fullUser,
+      emailVerified: fullUser?.emailVerified !== null 
+    })
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })

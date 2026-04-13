@@ -7,10 +7,52 @@ import { success, badRequest, serverError } from "@/lib/api-response";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
+import { fileTypeFromBuffer } from "file-type";
+import sharp from "sharp";
 
 // Turbopack: scope filesystem operations to public/uploads
 /* eslint-disable @typescript-eslint/no-require-imports */
 const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
+
+// Allowed image MIME types for security
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png", 
+  "image/webp",
+] as const;
+
+// Image dimension constraints
+const MIN_WIDTH = 100;
+const MIN_HEIGHT = 100;
+const MAX_WIDTH = 4000;
+const MAX_HEIGHT = 4000;
+
+/**
+ * Validates image dimensions using Sharp
+ * @returns { width: number, height: number } or throws error
+ */
+async function validateImageDimensions(buffer: Buffer): Promise<{ width: number; height: number }> {
+  const image = sharp(buffer);
+  const metadata = await image.metadata();
+  
+  if (!metadata.width || !metadata.height) {
+    throw new Error("Unable to read image dimensions");
+  }
+  
+  // Check minimum dimensions
+  if (metadata.width < MIN_WIDTH || metadata.height < MIN_HEIGHT) {
+    throw new Error(`Image dimensions too small. Minimum: ${MIN_WIDTH}x${MIN_HEIGHT}px`);
+  }
+  
+  // Check maximum dimensions
+  if (metadata.width > MAX_WIDTH || metadata.height > MAX_HEIGHT) {
+    throw new Error(`Image dimensions too large. Maximum: ${MAX_WIDTH}x${MAX_HEIGHT}px`);
+  }
+  
+  return { width: metadata.width, height: metadata.height };
+}
+
+type AllowedMimeType = typeof ALLOWED_MIME_TYPES[number];
 
 const uploadSchema = z.object({
   file: z.string(), // Base64 encoded file
@@ -42,19 +84,42 @@ export async function POST(request: NextRequest) {
       return badRequest("File size exceeds 5MB limit");
     }
 
-    // Determine file extension
-    const mimeTypeMatch = file.match(/^data:([^;]+);base64,/);
-    const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "application/octet-stream";
+    // 🔐 BUG-P0-1 FIX: Verify actual file content using file-type library
+    // This prevents attacks where malicious files are disguised with fake MIME types
+    const detectedType = await fileTypeFromBuffer(buffer);
+    
+    if (!detectedType) {
+      return badRequest("Unable to verify file type. Please upload a valid image.");
+    }
 
+    // Strict MIME type validation - only allow explicitly safe image formats
+    if (!ALLOWED_MIME_TYPES.includes(detectedType.mime as AllowedMimeType)) {
+      return badRequest(
+        `Invalid file type detected: ${detectedType.mime}. Only JPEG, PNG, and WebP images are allowed.`
+      );
+    }
+
+    // 🔐 BUG-P0-1 FIX: Validate image dimensions (min 100x100, max 4000x4000)
+    let dimensions: { width: number; height: number };
+    try {
+      dimensions = await validateImageDimensions(buffer);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Image dimension validation failed";
+      return badRequest(message);
+    }
+
+    // Use the detected MIME type and extension from actual file content
+    const mimeType = detectedType.mime;
+    const detectedExtension = detectedType.ext;
+
+    // Map to our allowed extensions only
     const extensionMap: Record<string, string> = {
-      "image/jpeg": ".jpg",
-      "image/png": ".png",
-      "image/gif": ".gif",
-      "image/webp": ".webp",
-      "application/pdf": ".pdf",
+      "jpeg": ".jpg",
+      "png": ".png",
+      "webp": ".webp",
     };
 
-    const extension = extensionMap[mimeType] || ".bin";
+    const extension = extensionMap[detectedExtension] || ".bin";
     const originalName = filename || "upload";
     const uniqueFilename = `${randomUUID()}-${originalName.replace(/[^a-zA-Z0-9.-]/g, "_")}${extension}`;
 
@@ -99,6 +164,8 @@ export async function POST(request: NextRequest) {
       filename: uniqueFilename,
       size: buffer.length,
       mimeType,
+      width: dimensions.width,
+      height: dimensions.height,
     }, 201);
   } catch (error) {
     console.error("Error uploading file:", error);
@@ -131,15 +198,38 @@ export async function PUT(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Validate mime type
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"];
-    if (!allowedTypes.includes(file.type)) {
-      return badRequest("Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF");
+    // 🔐 BUG-P0-1 FIX: Verify actual file content using file-type library
+    // This prevents attacks where malicious files are disguised with fake MIME types
+    const detectedType = await fileTypeFromBuffer(buffer);
+    
+    if (!detectedType) {
+      return badRequest("Unable to verify file type. Please upload a valid image.");
     }
 
-    // Generate unique filename
-    const extension = file.name.split(".").pop() || "bin";
-    const uniqueFilename = `${randomUUID()}.${extension}`;
+    // Strict MIME type validation - only allow explicitly safe image formats
+    if (!ALLOWED_MIME_TYPES.includes(detectedType.mime as AllowedMimeType)) {
+      return badRequest(
+        `Invalid file type detected: ${detectedType.mime}. Only JPEG, PNG, and WebP images are allowed.`
+      );
+    }
+
+    // 🔐 BUG-P0-1 FIX: Validate image dimensions (min 100x100, max 4000x4000)
+    let dimensions: { width: number; height: number };
+    try {
+      dimensions = await validateImageDimensions(buffer);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Image dimension validation failed";
+      return badRequest(message);
+    }
+
+    // Generate unique filename using the detected extension
+    const extensionMap: Record<string, string> = {
+      "jpeg": ".jpg",
+      "png": ".png",
+      "webp": ".webp",
+    };
+    const extension = extensionMap[detectedType.ext] || ".bin";
+    const uniqueFilename = `${randomUUID()}${extension}`;
 
     // Create uploads directory
     const uploadsDir = join(process.cwd(), "public", "uploads", type);
@@ -173,6 +263,8 @@ export async function PUT(request: NextRequest) {
       filename: uniqueFilename,
       size: buffer.length,
       mimeType: file.type,
+      width: dimensions.width,
+      height: dimensions.height,
     }, 201);
   } catch (error) {
     console.error("Error uploading file:", error);

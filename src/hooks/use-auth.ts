@@ -82,16 +82,23 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseAuthRetu
   const user = (session?.user as User) || null
   const isAdmin = user?.role === 'ADMIN'
   
+  // Wrap onUnauthenticated in useCallback to prevent unnecessary re-renders
+  // Note: onUnauthenticated is intentionally NOT in deps to prevent recreation
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleUnauthenticated = useCallback(() => {
+    if (onUnauthenticated) {
+      onUnauthenticated()
+    } else {
+      const callbackUrl = encodeURIComponent(window.location.pathname)
+      router.push(`${redirectTo}?callbackUrl=${callbackUrl}`)
+    }
+  }, [redirectTo, router])
+  
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      if (onUnauthenticated) {
-        onUnauthenticated()
-      } else {
-        const callbackUrl = encodeURIComponent(window.location.pathname)
-        router.push(`${redirectTo}?callbackUrl=${callbackUrl}`)
-      }
+      handleUnauthenticated()
     }
-  }, [isLoading, isAuthenticated, redirectTo, onUnauthenticated, router])
+  }, [isLoading, isAuthenticated, handleUnauthenticated])
   
   const login = useCallback(async (provider: string, options?: { callbackUrl?: string }) => {
     await signIn(provider, {

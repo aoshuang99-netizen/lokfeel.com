@@ -91,7 +91,13 @@ export function usePusher(): UsePusherReturn {
     }
     
     return () => {
-      // Don't disconnect on unmount - singleton pattern
+      // Clean up event listeners to prevent memory leaks
+      if (pusher.current) {
+        pusher.current.connection.unbind('connected')
+        pusher.current.connection.unbind('disconnected')
+        pusher.current.connection.unbind('error')
+      }
+      // Don't disconnect - singleton pattern maintains connection globally
     }
   }, [])
   
@@ -173,8 +179,16 @@ export function useChatRoom(
         )
       })
       
+      // Cleanup function - unbind events, clear timeout, and unsubscribe
       return () => {
+        // Clear typing timeout to prevent state updates on unmounted component
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current)
+          typingTimeoutRef.current = null
+        }
+        // Unbind all event listeners
         channel.unbind_all()
+        // Unsubscribe from channel
         pusher.unsubscribe(`private-chat-${roomId}`)
         channelRef.current = null
       }

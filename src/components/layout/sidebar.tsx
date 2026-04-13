@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
@@ -23,6 +24,7 @@ interface SidebarProps {
 
 const mainNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Square", href: "/dashboard/square", icon: Users },
   { name: "Matches", href: "/dashboard/matches", icon: Heart },
   { name: "Chat", href: "/dashboard/chat", icon: MessageCircle },
   { name: "Notifications", href: "/dashboard/notifications", icon: Bell },

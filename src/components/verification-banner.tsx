@@ -25,11 +25,11 @@ export default function VerificationBanner() {
   const [showVerifyPanel, setShowVerifyPanel] = useState(false);
 
   useEffect(() => {
-    // Check verification status from session
-    fetch("/api/auth/session")
+    // Check verification status from user profile API
+    fetch("/api/profile/me")
       .then((r) => r.json())
       .then((data: any) => {
-        if (data.user?.emailVerified) {
+        if (data.emailVerified) {
           setState({ isVerified: true });
         } else {
           setState({ isVerified: false });
@@ -97,6 +97,7 @@ function VerifyInlinePanel({
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [sentInfo, setSentInfo] = useState("");
+  const [devCode, setDevCode] = useState<string | null>(null);
 
   const handleSendCode = async () => {
     setLoading(true);
@@ -113,6 +114,12 @@ function VerifyInlinePanel({
       if (!res.ok) throw new Error(data.message || "Failed to send");
 
       setSentInfo(data.maskedIdentifier || (method === 'email' ? "your email" : "your phone"));
+      
+      // In dev mode, show the code directly
+      if (data.devMode && data.code) {
+        setDevCode(data.code);
+      }
+      
       setStep("entering");
       startCountdown();
     } catch (err) {
@@ -259,6 +266,27 @@ function VerifyInlinePanel({
             <p className="text-sm text-white/70 text-center">
               Code sent to <span className="text-white font-medium">{sentInfo}</span>
             </p>
+            
+            {/* Dev Mode: Show code directly */}
+            {devCode && (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                <p className="text-xs text-amber-400 text-center mb-2">Development Mode - Copy this code:</p>
+                <div className="flex items-center justify-center gap-2">
+                  <code className="text-2xl font-bold text-amber-300 tracking-widest">{devCode}</code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(devCode);
+                      // Auto-fill the code inputs
+                      const digits = devCode.split('');
+                      setCode(digits);
+                    }}
+                    className="px-3 py-1 text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded transition-colors"
+                  >
+                    Copy & Fill
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-center gap-2">
               {code.map((digit, i) => (

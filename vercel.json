@@ -32,5 +32,23 @@
       "source": "/health",
       "destination": "/api/health"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/bot-tick",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/bot-online",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/bot-match",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/bot-chat",
+      "schedule": "0 18 * * *"
+    }
   ]
 }

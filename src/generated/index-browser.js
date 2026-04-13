@@ -120,6 +120,110 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.BotProfileScalarFieldEnum = {
+  id: 'id',
+  profileId: 'profileId',
+  botType: 'botType',
+  activityLevel: 'activityLevel',
+  ethnicity: 'ethnicity',
+  occupation: 'occupation',
+  industry: 'industry',
+  educationLevel: 'educationLevel',
+  incomeRange: 'incomeRange',
+  interests: 'interests',
+  hobbies: 'hobbies',
+  musicGenres: 'musicGenres',
+  movieGenres: 'movieGenres',
+  onlinePattern: 'onlinePattern',
+  avgResponseTime: 'avgResponseTime',
+  maxDailyMatches: 'maxDailyMatches',
+  behaviorConfig: 'behaviorConfig',
+  preferredEthnicities: 'preferredEthnicities',
+  preferredOccupations: 'preferredOccupations',
+  preferredEducation: 'preferredEducation',
+  totalInteractions: 'totalInteractions',
+  successfulMatches: 'successfulMatches',
+  avgEngagementScore: 'avgEngagementScore',
+  learningData: 'learningData',
+  avatarStyle: 'avatarStyle',
+  avatarSource: 'avatarSource',
+  isActive: 'isActive',
+  lastActiveAt: 'lastActiveAt',
+  sleepUntil: 'sleepUntil',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BotInteractionLogScalarFieldEnum = {
+  id: 'id',
+  botUserId: 'botUserId',
+  targetUserId: 'targetUserId',
+  matchId: 'matchId',
+  interactionType: 'interactionType',
+  action: 'action',
+  responseDelay: 'responseDelay',
+  outcome: 'outcome',
+  engagementScore: 'engagementScore',
+  context: 'context',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.BotLearningBatchScalarFieldEnum = {
+  id: 'id',
+  batchNumber: 'batchNumber',
+  status: 'status',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  totalInteractions: 'totalInteractions',
+  avgEngagement: 'avgEngagement',
+  successRate: 'successRate',
+  preferenceUpdates: 'preferenceUpdates',
+  executionLog: 'executionLog',
+  createdAt: 'createdAt',
+  completedAt: 'completedAt'
+};
+
+exports.Prisma.BotLearningRecordScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  userId: 'userId',
+  interactionType: 'interactionType',
+  outcome: 'outcome',
+  context: 'context',
+  processed: 'processed',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BotPreferenceScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  relationshipStructure: 'relationshipStructure',
+  communicationStyle: 'communicationStyle',
+  interests: 'interests',
+  values: 'values',
+  lifestyle: 'lifestyle',
+  confidence: 'confidence',
+  sampleSize: 'sampleSize',
+  createdAt: 'createdAt',
+  lastUpdated: 'lastUpdated'
+};
+
+exports.Prisma.BotAvatarScalarFieldEnum = {
+  id: 'id',
+  botId: 'botId',
+  originalUrl: 'originalUrl',
+  processedUrl: 'processedUrl',
+  style: 'style',
+  ethnicity: 'ethnicity',
+  status: 'status',
+  useCount: 'useCount',
+  generatedAt: 'generatedAt',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -128,6 +232,9 @@ exports.Prisma.UserScalarFieldEnum = {
   image: 'image',
   password: 'password',
   role: 'role',
+  isBot: 'isBot',
+  botType: 'botType',
+  botConfig: 'botConfig',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -161,6 +268,9 @@ exports.Prisma.VerificationTokenScalarFieldEnum = {
   expires: 'expires',
   userId: 'userId',
   used: 'used',
+  useCount: 'useCount',
+  maxUses: 'maxUses',
+  lastUsedAt: 'lastUsedAt',
   createdAt: 'createdAt'
 };
 
@@ -196,7 +306,13 @@ exports.Prisma.ProfileScalarFieldEnum = {
   onboardingStep: 'onboardingStep',
   isApproved: 'isApproved',
   isVerified: 'isVerified',
+  personalityData: 'personalityData',
   adminNotes: 'adminNotes',
+  occupation: 'occupation',
+  company: 'company',
+  industry: 'industry',
+  linkedInVerified: 'linkedInVerified',
+  verificationBadge: 'verificationBadge',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -219,6 +335,12 @@ exports.Prisma.MatchScalarFieldEnum = {
   receiverAction: 'receiverAction',
   reviewedBy: 'reviewedBy',
   reviewNotes: 'reviewNotes',
+  pitchMessage: 'pitchMessage',
+  pitchTone: 'pitchTone',
+  aiAssisted: 'aiAssisted',
+  giftAmount: 'giftAmount',
+  isUnread: 'isUnread',
+  inboxPriority: 'inboxPriority',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   expiresAt: 'expiresAt'
@@ -238,6 +360,16 @@ exports.Prisma.ChatRoomScalarFieldEnum = {
   matchId: 'matchId',
   lastMessageAt: 'lastMessageAt',
   isArchived: 'isArchived',
+  vaultStatus: 'vaultStatus',
+  vaultExpiry: 'vaultExpiry',
+  extendedAt: 'extendedAt',
+  extendedBy: 'extendedBy',
+  extensionCount: 'extensionCount',
+  revokedAt: 'revokedAt',
+  revokedBy: 'revokedBy',
+  revokeReason: 'revokeReason',
+  screenshotCount: 'screenshotCount',
+  lastScreenshotAt: 'lastScreenshotAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -339,9 +471,45 @@ exports.Prisma.SystemConfigScalarFieldEnum = {
   updatedBy: 'updatedBy'
 };
 
+exports.Prisma.SincerityWalletScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  balance: 'balance',
+  totalEarned: 'totalEarned',
+  totalSpent: 'totalSpent',
+  totalGifted: 'totalGifted',
+  totalReceived: 'totalReceived',
+  tier: 'tier',
+  tierProgress: 'tierProgress',
+  lastEarnedAt: 'lastEarnedAt',
+  lastSpentAt: 'lastSpentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SincerityTransactionScalarFieldEnum = {
+  id: 'id',
+  walletId: 'walletId',
+  type: 'type',
+  amount: 'amount',
+  source: 'source',
+  description: 'description',
+  matchId: 'matchId',
+  fromUserId: 'fromUserId',
+  toUserId: 'toUserId',
+  message: 'message',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -353,6 +521,48 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+exports.BotType = exports.$Enums.BotType = {
+  SEED: 'SEED',
+  SIMULATION: 'SIMULATION',
+  TRAINING: 'TRAINING',
+  ACTIVE: 'ACTIVE'
+};
+
+exports.BotActivityLevel = exports.$Enums.BotActivityLevel = {
+  GHOST: 'GHOST',
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  FULL: 'FULL'
+};
+
+exports.Ethnicity = exports.$Enums.Ethnicity = {
+  CAUCASIAN: 'CAUCASIAN',
+  AFRICAN_AMERICAN: 'AFRICAN_AMERICAN',
+  HISPANIC_LATINO: 'HISPANIC_LATINO',
+  ASIAN: 'ASIAN',
+  SOUTH_ASIAN: 'SOUTH_ASIAN',
+  MIDDLE_EASTERN: 'MIDDLE_EASTERN',
+  MIXED: 'MIXED',
+  OTHER: 'OTHER'
+};
+
+exports.OnlinePattern = exports.$Enums.OnlinePattern = {
+  MORNING: 'MORNING',
+  AFTERNOON: 'AFTERNOON',
+  EVENING: 'EVENING',
+  NIGHT: 'NIGHT',
+  RANDOM: 'RANDOM',
+  WORK_HOURS: 'WORK_HOURS',
+  AFTER_WORK: 'AFTER_WORK'
+};
+
 exports.UserRole = exports.$Enums.UserRole = {
   USER: 'USER',
   ADMIN: 'ADMIN',
@@ -404,6 +614,13 @@ exports.MatchAction = exports.$Enums.MatchAction = {
   BLOCK: 'BLOCK'
 };
 
+exports.VaultStatus = exports.$Enums.VaultStatus = {
+  ACTIVE: 'ACTIVE',
+  EXTENDED: 'EXTENDED',
+  REVOKED: 'REVOKED',
+  EXPIRED: 'EXPIRED'
+};
+
 exports.MessageType = exports.$Enums.MessageType = {
   TEXT: 'TEXT',
   IMAGE: 'IMAGE',
@@ -445,7 +662,28 @@ exports.PaymentStatus = exports.$Enums.PaymentStatus = {
   REFUNDED: 'REFUNDED'
 };
 
+exports.SincerityTier = exports.$Enums.SincerityTier = {
+  BRONZE: 'BRONZE',
+  SILVER: 'SILVER',
+  GOLD: 'GOLD',
+  PLATINUM: 'PLATINUM'
+};
+
+exports.SincerityTransactionType = exports.$Enums.SincerityTransactionType = {
+  EARN: 'EARN',
+  SPEND: 'SPEND',
+  RECEIVE_GIFT: 'RECEIVE_GIFT',
+  SEND_GIFT: 'SEND_GIFT',
+  REFUND: 'REFUND'
+};
+
 exports.Prisma.ModelName = {
+  BotProfile: 'BotProfile',
+  BotInteractionLog: 'BotInteractionLog',
+  BotLearningBatch: 'BotLearningBatch',
+  BotLearningRecord: 'BotLearningRecord',
+  BotPreference: 'BotPreference',
+  BotAvatar: 'BotAvatar',
   User: 'User',
   Account: 'Account',
   Session: 'Session',
@@ -461,7 +699,9 @@ exports.Prisma.ModelName = {
   Payment: 'Payment',
   AdminLog: 'AdminLog',
   AnalyticsEvent: 'AnalyticsEvent',
-  SystemConfig: 'SystemConfig'
+  SystemConfig: 'SystemConfig',
+  SincerityWallet: 'SincerityWallet',
+  SincerityTransaction: 'SincerityTransaction'
 };
 
 /**
