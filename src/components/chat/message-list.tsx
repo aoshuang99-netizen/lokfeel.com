@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback, useMemo, memo } from "react";
 import { Sparkles, Bot, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { MessageBubble, MessageBubbleProps } from "./message-bubble";
 import type { IMMessagePayload } from "@/lib/im/types";
 
@@ -82,20 +83,38 @@ function groupMessages(messages: IMMessagePayload[], currentUserId?: string): Me
 
 function EmptyState({ isBot }: { isBot?: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-4">
-      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-        {isBot ? (
-          <Bot className="w-8 h-8 text-purple-400" />
-        ) : (
-          <Sparkles className="w-8 h-8 text-white/30" />
-        )}
-      </div>
-      <p className="text-white/60 mb-2">
+    <div className="flex flex-col items-center justify-center h-full text-center px-6">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+        className="relative mb-6"
+      >
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 blur-2xl scale-150" />
+        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-white/[0.06] flex items-center justify-center">
+          {isBot ? (
+            <Sparkles className="w-7 h-7 text-violet-400/60" />
+          ) : (
+            <Sparkles className="w-7 h-7 text-white/20" />
+          )}
+        </div>
+      </motion.div>
+      <motion.p
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.3 }}
+        className="text-white/50 mb-1.5 text-[15px]"
+      >
         {isBot ? "Start chatting with AI" : "No messages yet"}
-      </p>
-      <p className="text-white/40 text-sm">
-        {isBot ? "AI-powered conversation partner" : "Say hello to start the conversation!"}
-      </p>
+      </motion.p>
+      <motion.p
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.3 }}
+        className="text-white/25 text-sm leading-relaxed"
+      >
+        {isBot ? "Your AI companion is ready to talk" : "Say hello to start the conversation!"}
+      </motion.p>
     </div>
   );
 }
@@ -106,16 +125,22 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
 
 function TypingIndicator({ name }: { name?: string }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2">
-      <div className="flex items-center gap-1">
-        <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-        <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-        <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      transition={{ duration: 0.2 }}
+      className="flex items-center gap-2.5 px-4 py-2"
+    >
+      <div className="flex items-center gap-[3px]">
+        <span className="w-[5px] h-[5px] bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1.4s" }} />
+        <span className="w-[5px] h-[5px] bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1.4s" }} />
+        <span className="w-[5px] h-[5px] bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1.4s" }} />
       </div>
-      <span className="text-xs text-white/50">
+      <span className="text-[11px] text-white/30">
         {name ? `${name} is typing...` : "Typing..."}
       </span>
-    </div>
+    </motion.div>
   );
 }
 
@@ -233,7 +258,7 @@ function MessageListComponent({
       onScroll={handleScrollCombined}
       className={`flex-1 overflow-y-auto ${className}`}
     >
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-1">
         {/* Load more indicator */}
         {hasMore && (
           <div className="flex justify-center py-2">

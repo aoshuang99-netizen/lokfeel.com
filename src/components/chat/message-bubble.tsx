@@ -2,7 +2,7 @@
 
 import { memo, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Check, CheckCheck, Clock, Copy, Trash2, Flag, Reply, ChevronRight } from "lucide-react";
+import { Bot, Check, CheckCheck, Clock, Copy, Trash2, Flag, Reply, ChevronRight, Sparkles } from "lucide-react";
 import type { IMMessagePayload, MessageDeliveryStatus } from "@/lib/im/types";
 import { ReactionPicker, ReactionSummary, type ReactionSummaryDisplay } from "./reaction-picker";
 import { toast } from "sonner";
@@ -68,10 +68,10 @@ interface AvatarDisplayProps {
 
 function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps) {
   const sizeClasses = size === "sm" ? "w-8 h-8" : "w-10 h-10";
-  const botBadgeSize = size === "sm" ? "-bottom-0.5 -right-0.5 w-3 h-3" : "-bottom-0.5 -right-0.5 w-4 h-4";
+  const botBadgeSize = size === "sm" ? "-bottom-0.5 -right-0.5 w-4 h-4" : "-bottom-0.5 -right-0.5 w-5 h-5";
 
   return (
-    <div className={`relative ${sizeClasses} rounded-full overflow-hidden bg-white/5 flex-shrink-0`}>
+    <div className={`relative ${sizeClasses} rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10`}>
       {avatar ? (
         <img
           src={avatar}
@@ -79,14 +79,18 @@ function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps)
           className="w-full h-full object-cover"
         />
       ) : (
-        <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold">
+        <div className={`w-full h-full flex items-center justify-center text-white text-xs font-bold ${
+          isBot 
+            ? 'bg-gradient-to-br from-violet-500/80 to-fuchsia-500/80'
+            : 'bg-gradient-to-br from-primary to-secondary'
+        }`}>
           {name?.[0] || "?"}
         </div>
       )}
-      {/* Bot indicator */}
+      {/* Bot indicator - elegant sparkle instead of robot icon */}
       {isBot && (
-        <div className={`absolute ${botBadgeSize} bg-purple-500 rounded-full flex items-center justify-center border-2 border-[#0d0c11]`}>
-          <Bot className={size === "sm" ? "w-2 h-2" : "w-3 h-3"} color="white" />
+        <div className={`absolute ${botBadgeSize} bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center ring-2 ring-[#0d0c11]`}>
+          <Sparkles className={size === "sm" ? "w-2 h-2" : "w-2.5 h-2.5"} color="white" />
         </div>
       )}
     </div>
@@ -180,11 +184,11 @@ interface QuotedMessageProps {
 
 function QuotedMessage({ content, senderName, isFromMe }: QuotedMessageProps) {
   return (
-    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-white/10' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-pink-400' : 'border-white/30'}`}>
-      <p className="text-xs text-white/50 mb-0.5">
+    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-white/[0.08]' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-indigo-400/50' : 'border-white/20'}`}>
+      <p className="text-[11px] text-white/40 mb-0.5">
         {senderName ? `${senderName}` : 'Original message'}
       </p>
-      <p className="text-sm text-white/70 truncate">
+      <p className="text-sm text-white/60 truncate">
         {content}
       </p>
     </div>
@@ -277,12 +281,15 @@ function MessageBubbleComponent({
   // Get bubble styles based on sender type
   const getBubbleStyles = () => {
     if (isFromMe) {
-      return "bg-gradient-to-br from-pink-500 to-purple-500 text-white rounded-br-md";
+      // Warm gradient for own messages - distinctive, not generic purple-blue
+      return "bg-gradient-to-br from-indigo-500/90 to-violet-500/90 text-white rounded-br-sm rounded-2xl";
     }
     if (isBot) {
-      return "bg-gradient-to-br from-purple-500/80 to-blue-500/80 text-white rounded-bl-md border border-purple-400/30";
+      // Soft, warm AI message style - feels approachable, not robotic
+      return "bg-white/[0.07] text-white/90 rounded-bl-sm rounded-2xl border border-white/[0.06] backdrop-blur-sm";
     }
-    return "bg-white/10 text-white rounded-bl-md";
+    // Other user messages - clean subtle style
+    return "bg-white/[0.08] text-white/90 rounded-bl-sm rounded-2xl";
   };
 
   // Handle long press / context menu
@@ -348,13 +355,14 @@ function MessageBubbleComponent({
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`flex ${isFromMe ? "justify-end" : "justify-start"} ${isGrouped ? "mt-1" : "mt-4"}`}
+        transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
+        className={`flex ${isFromMe ? "justify-end" : "justify-start"} ${isGrouped ? "mt-0.5" : "mt-4"}`}
         onContextMenu={handleContextMenu}
         onTouchStart={() => {}}
       >
-        <div className={`flex items-end gap-2 max-w-[75%] ${isFromMe ? "flex-row-reverse" : ""}`}>
+        <div className={`flex items-end gap-2 max-w-[78%] ${isFromMe ? "flex-row-reverse" : ""}`}>
           {/* Avatar - only show for first message in group or when showAvatar is true */}
           {!isFromMe && showAvatar && (
             <AvatarDisplay
@@ -369,7 +377,7 @@ function MessageBubbleComponent({
 
           {/* Message Content */}
           <div 
-            className={`px-4 py-2 rounded-2xl ${getBubbleStyles()} select-text`}
+            className={`px-3.5 py-2.5 ${getBubbleStyles()} select-text`}
             onContextMenu={handleContextMenu}
           >
             {/* Quoted Message (引用回复) */}
@@ -381,11 +389,11 @@ function MessageBubbleComponent({
               />
             )}
 
-            {/* Bot label */}
+            {/* Bot label - subtle and warm */}
             {isBot && !isGrouped && (
-              <div className="flex items-center gap-1 mb-1 opacity-70">
-                <Bot className="w-3 h-3" />
-                <span className="text-[10px] uppercase tracking-wide">AI Assistant</span>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Sparkles className="w-3 h-3 text-violet-400/70" />
+                <span className="text-[10px] text-violet-300/70 font-medium tracking-wide">AI</span>
               </div>
             )}
 
@@ -417,8 +425,8 @@ function MessageBubbleComponent({
             )}
 
             {/* Time and status */}
-            <div className={`flex items-center gap-1 mt-1 ${isFromMe ? "justify-end" : ""}`}>
-              <span className={`text-xs ${isFromMe ? "text-white/70" : "text-white/50"}`}>
+            <div className={`flex items-center gap-1 mt-1.5 ${isFromMe ? "justify-end" : ""}`}>
+              <span className={`text-[11px] ${isFromMe ? "text-white/50" : "text-white/30"}`}>
                 {formatTime(timestamp)}
               </span>
               {isFromMe && status && (

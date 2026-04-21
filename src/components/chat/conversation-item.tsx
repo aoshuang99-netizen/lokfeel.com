@@ -3,7 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { User, Bot, Lock } from "lucide-react";
+import { User, Bot, Lock, Sparkles } from "lucide-react";
 
 // ============================================================================
 // Types
@@ -72,7 +72,7 @@ interface AvatarProps {
 function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
   return (
     <div className="relative flex-shrink-0">
-      <div className="w-12 h-12 rounded-full overflow-hidden bg-white/5 flex items-center justify-center">
+      <div className="w-12 h-12 rounded-full overflow-hidden bg-white/[0.04] flex items-center justify-center ring-1 ring-white/[0.06]">
         {avatar ? (
           <img
             src={avatar}
@@ -80,21 +80,25 @@ function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
+          <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${
+            isBot 
+              ? 'bg-gradient-to-br from-violet-500/80 to-fuchsia-500/80'
+              : 'bg-gradient-to-br from-primary to-secondary'
+          }`}>
             {name?.[0] || "?"}
           </div>
         )}
       </div>
       {/* Online Status Indicator */}
       {isOnline ? (
-        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0d0c11]" />
-      ) : (
-        <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-[#0d0c11]" />
-      )}
+        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-[#0d0c11]" />
+      ) : !isBot ? (
+        <div className="absolute bottom-0 right-0 w-3 h-3 bg-white/20 rounded-full ring-2 ring-[#0d0c11]" />
+      ) : null}
       {/* Bot Badge */}
       {isBot && (
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center border-2 border-[#0d0c11]">
-          <Bot className="w-3 h-3 text-white" />
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center ring-2 ring-[#0d0c11]">
+          <Sparkles className="w-3 h-3 text-white" />
         </div>
       )}
     </div>
@@ -113,9 +117,9 @@ function VaultBadge({ expiresAt }: { expiresAt?: string }) {
   const hoursRemaining = Math.max(0, Math.floor((expiry.getTime() - now.getTime()) / 3600000));
 
   return (
-    <span className="ml-2 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded flex items-center gap-1">
-      <Lock className="w-3 h-3" />
-      Vault {hoursRemaining > 0 ? `${hoursRemaining}h` : "Soon"}
+    <span className="ml-2 text-[10px] bg-amber-500/10 text-amber-400/70 px-1.5 py-0.5 rounded-md flex items-center gap-1 font-medium">
+      <Lock className="w-2.5 h-2.5" />
+      {hoursRemaining > 0 ? `${hoursRemaining}h` : "Soon"}
     </span>
   );
 }
@@ -142,9 +146,9 @@ function ConversationItemComponent({
   const content = (
     <motion.div
       className={`
-        flex items-center gap-3 p-3 transition-colors cursor-pointer
-        ${isSelected ? "bg-white/10" : "hover:bg-white/5"}
-        ${hasUnread ? "bg-primary/5" : ""}
+        flex items-center gap-3 p-3 transition-all duration-200 cursor-pointer
+        ${isSelected ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"}
+        ${hasUnread ? "bg-indigo-500/[0.03]" : ""}
       `}
     >
       {/* Avatar */}
@@ -159,17 +163,17 @@ function ConversationItemComponent({
       <div className="flex-1 min-w-0">
         {/* Header row: name and time */}
         <div className="flex items-center justify-between mb-0.5">
-          <h3 className={`font-semibold text-white truncate text-sm ${hasUnread ? "font-bold" : ""}`}>
+          <h3 className={`text-white truncate text-[14px] ${hasUnread ? "font-semibold" : "font-medium"}`}>
             {otherUser.name}
             {otherUser.age !== undefined && (
-              <span className="text-white/60 font-normal ml-1">, {otherUser.age}</span>
+              <span className="text-white/40 font-normal ml-1">, {otherUser.age}</span>
             )}
             {isVault && <VaultBadge expiresAt={vaultExpiresAt} />}
           </h3>
           {lastMessage && (
             <span
-              className={`text-xs flex-shrink-0 ml-2 ${
-                hasUnread ? "text-primary" : "text-white/40"
+              className={`text-[11px] flex-shrink-0 ml-2 tabular-nums ${
+                hasUnread ? "text-indigo-400" : "text-white/25"
               }`}
             >
               {formatMessageTime(lastMessage.timestamp)}
@@ -180,22 +184,22 @@ function ConversationItemComponent({
         {/* Message preview row */}
         <div className="flex items-center justify-between">
           <p
-            className={`text-sm truncate ${
-              hasUnread ? "text-white font-medium" : "text-white/50"
+            className={`text-[13px] truncate ${
+              hasUnread ? "text-white/70" : "text-white/35"
             }`}
           >
             {lastMessage ? (
               <>
-                {lastMessage.isFromMe && <span className="text-white/60">You: </span>}
+                {lastMessage.isFromMe && <span className="text-white/25">You: </span>}
                 {lastMessage.content}
               </>
             ) : (
-              <span className="italic text-white/40">Start chatting...</span>
+              <span className="italic text-white/20">Start chatting...</span>
             )}
           </p>
           {hasUnread && (
-            <div className="flex-shrink-0 ml-2 min-w-[20px] h-5 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-xs font-bold text-white px-1">
+            <div className="flex-shrink-0 ml-2 min-w-[20px] h-5 rounded-full bg-indigo-500 flex items-center justify-center">
+              <span className="text-[10px] font-bold text-white px-1.5 tabular-nums">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             </div>
@@ -203,11 +207,16 @@ function ConversationItemComponent({
         </div>
 
         {/* Online status text */}
-        <p className="text-xs text-white/40 mt-0.5">
+        <p className="text-[11px] mt-0.5">
           {otherUser.isOnline ? (
-            <span className="text-green-500">Online</span>
+            <span className="text-emerald-400/60">Online</span>
+          ) : isBot ? (
+            <span className="text-violet-400/40 flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5" />
+              AI companion
+            </span>
           ) : (
-            formatLastSeen(otherUser.lastSeen)
+            <span className="text-white/20">{formatLastSeen(otherUser.lastSeen)}</span>
           )}
         </p>
       </div>

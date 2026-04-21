@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MoreVertical, Phone, Video } from "lucide-react";
+import { ArrowLeft, MoreVertical, Phone, Video, Sparkles, MessageCircle, Shield, X } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -62,21 +62,40 @@ interface QuotedMessageState {
 function EmptyChat({ isBot }: EmptyChatProps) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-      <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
-        {isBot ? (
-          <span className="text-4xl">🤖</span>
-        ) : (
-          <span className="text-4xl">💬</span>
-        )}
-      </div>
-      <h3 className="text-xl font-semibold text-white mb-2">
-        {isBot ? "AI Companion" : "Select a conversation"}
-      </h3>
-      <p className="text-white/50 text-sm max-w-xs">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+        className="relative mb-8"
+      >
+        {/* Ambient glow behind icon */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 blur-2xl scale-150" />
+        <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/15 to-secondary/15 border border-white/10 flex items-center justify-center backdrop-blur-sm">
+          {isBot ? (
+            <Sparkles className="w-10 h-10 text-primary/80" />
+          ) : (
+            <MessageCircle className="w-10 h-10 text-white/40" />
+          )}
+        </div>
+      </motion.div>
+      <motion.h3 
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="text-lg font-semibold text-white mb-2"
+      >
+        {isBot ? "Say hello to AI" : "Your messages"}
+      </motion.h3>
+      <motion.p 
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.4 }}
+        className="text-white/40 text-sm max-w-[260px] leading-relaxed"
+      >
         {isBot
-          ? "Start a conversation with your AI companion"
-          : "Choose a conversation from the list to start chatting"}
-      </p>
+          ? "Start a conversation — your AI companion is ready to chat"
+          : "Pick a conversation from the sidebar, or match with someone new"}
+      </motion.p>
     </div>
   );
 }
@@ -84,19 +103,45 @@ function EmptyChat({ isBot }: EmptyChatProps) {
 function EmptyConversation() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-      <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
-        <span className="text-4xl">💌</span>
-      </div>
-      <h3 className="text-xl font-semibold text-white mb-2">No conversations yet</h3>
-      <p className="text-white/50 text-sm max-w-xs">
-        Accept a match to start chatting with other users
-      </p>
-      <Link
-        href="/dashboard/matches"
-        className="mt-6 px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-medium transition-colors"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+        className="relative mb-8"
       >
-        Find Matches
-      </Link>
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/15 to-secondary/15 blur-2xl scale-150" />
+        <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-white/[0.06] flex items-center justify-center backdrop-blur-sm">
+          <MessageCircle className="w-10 h-10 text-white/20" />
+        </div>
+      </motion.div>
+      <motion.h3
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="text-lg font-semibold text-white mb-2"
+      >
+        No conversations yet
+      </motion.h3>
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.4 }}
+        className="text-white/30 text-sm max-w-[260px] leading-relaxed mb-6"
+      >
+        Accept a match to start chatting with someone
+      </motion.p>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.4 }}
+      >
+        <Link
+          href="/dashboard/matches"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-400 hover:to-violet-400 text-white text-sm font-medium transition-all duration-200 shadow-lg shadow-indigo-500/20"
+        >
+          Find Matches
+        </Link>
+      </motion.div>
     </div>
   );
 }
@@ -133,19 +178,20 @@ function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-[#13121a] border-b border-white/10">
+    <div className="flex items-center justify-between px-4 py-3 bg-[#13121a]/90 backdrop-blur-lg border-b border-white/[0.06]">
       <div className="flex items-center gap-3">
         {/* Back Button (Mobile) */}
         <button
           onClick={onBack}
-          className="md:hidden p-2 -ml-2 rounded-full hover:bg-white/10"
+          className="md:hidden p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors duration-200"
+          aria-label="Back"
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-5 h-5 text-white/70" />
         </button>
 
         {/* Avatar */}
         <div className="relative">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white/5 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-white/5 flex items-center justify-center ring-1 ring-white/10">
             {roomInfo?.otherUser?.avatar ? (
               <img
                 src={roomInfo.otherUser.avatar}
@@ -153,78 +199,98 @@ function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
+              <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${
+                isBot 
+                  ? 'bg-gradient-to-br from-violet-500/80 to-fuchsia-500/80' 
+                  : 'bg-gradient-to-br from-primary to-secondary'
+              }`}>
                 {roomInfo?.otherUser?.name?.[0] || "?"}
               </div>
             )}
           </div>
           {/* Online Status */}
           {isOnline ? (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#13121a]" />
-          ) : (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-[#13121a]" />
-          )}
-          {/* Bot Badge */}
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-[#13121a]" />
+          ) : !isBot ? (
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-white/20 rounded-full ring-2 ring-[#13121a]" />
+          ) : null}
+          {/* Bot Badge - subtle sparkle instead of robot emoji */}
           {isBot && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center border-2 border-[#13121a]">
-              <span className="text-[10px]">🤖</span>
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center ring-2 ring-[#13121a]">
+              <Sparkles className="w-2.5 h-2.5 text-white" />
             </div>
           )}
         </div>
 
         {/* User Info */}
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-white text-sm">
+            <h3 className="font-semibold text-white text-sm truncate">
               {roomInfo?.otherUser?.name || "Unknown"}
             </h3>
             {isBot && (
-              <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded-full">
+              <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 bg-violet-500/15 text-violet-300 text-[10px] font-medium rounded-full border border-violet-500/20">
+                <Sparkles className="w-2.5 h-2.5" />
                 AI
               </span>
             )}
           </div>
-          <p className="text-xs text-white/50">
-            {isOnline ? "Online" : formatLastSeen(roomInfo?.otherUser?.lastSeen)}
+          <p className="text-xs text-white/40 flex items-center gap-1.5">
+            {isOnline ? (
+              <>
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                <span>Online</span>
+              </>
+            ) : isBot ? (
+              <>
+                <Sparkles className="w-3 h-3 text-violet-400/60" />
+                <span>Always available</span>
+              </>
+            ) : (
+              formatLastSeen(roomInfo?.otherUser?.lastSeen)
+            )}
           </p>
         </div>
       </div>
 
       {/* Header Actions */}
-      <div className="flex items-center gap-1">
-        <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
-          <Phone className="w-5 h-5 text-white/60" />
+      <div className="flex items-center gap-0.5">
+        <button className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200" aria-label="Voice call">
+          <Phone className="w-[18px] h-[18px] text-white/30" />
         </button>
-        <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
-          <Video className="w-5 h-5 text-white/60" />
+        <button className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200" aria-label="Video call">
+          <Video className="w-[18px] h-[18px] text-white/30" />
         </button>
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200"
+            aria-label="More options"
           >
-            <MoreVertical className="w-5 h-5 text-white/60" />
+            <MoreVertical className="w-[18px] h-[18px] text-white/30" />
           </button>
 
           {/* Menu Dropdown */}
           <AnimatePresence>
             {showMenu && (
               <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 top-full mt-2 w-48 bg-[#1a1926] rounded-xl border border-white/10 shadow-xl z-50"
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+                className="absolute right-0 top-full mt-1 w-52 bg-[#1c1b28] rounded-xl border border-white/[0.08] shadow-2xl z-50 overflow-hidden"
               >
-                <button className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5">
+                <button className="w-full px-4 py-3 text-left text-sm text-white/70 hover:bg-white/[0.04] hover:text-white/90 transition-colors flex items-center gap-3">
                   View Profile
                 </button>
-                <button className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5">
+                <button className="w-full px-4 py-3 text-left text-sm text-white/70 hover:bg-white/[0.04] hover:text-white/90 transition-colors flex items-center gap-3">
                   Mute Notifications
                 </button>
-                <button className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5">
+                <button className="w-full px-4 py-3 text-left text-sm text-white/70 hover:bg-white/[0.04] hover:text-white/90 transition-colors flex items-center gap-3">
                   Search in Chat
                 </button>
-                <button className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5">
+                <div className="h-px bg-white/[0.06]" />
+                <button className="w-full px-4 py-3 text-left text-sm text-red-400/80 hover:bg-red-500/[0.06] hover:text-red-400 transition-colors">
                   Block User
                 </button>
               </motion.div>
@@ -252,13 +318,12 @@ function VaultBanner({ expiresAt }: VaultBannerProps) {
   const hoursRemaining = Math.max(0, Math.floor((expiry.getTime() - now.getTime()) / 3600000));
 
   return (
-    <div className="bg-gradient-to-r from-primary/20 to-secondary/20 px-4 py-2 flex items-center justify-between">
+    <div className="bg-amber-500/[0.06] border-b border-amber-500/[0.08] px-4 py-2 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <span className="text-primary">🔒</span>
-        <span className="text-sm text-white/80">Vault Chat - Exchange contacts to unlock</span>
+        <Shield className="w-3.5 h-3.5 text-amber-400/60" />
+        <span className="text-[13px] text-amber-200/60">Vault Chat — Exchange contacts to unlock</span>
       </div>
-      <div className="flex items-center gap-1 text-sm text-primary">
-        <span>⏱️</span>
+      <div className="flex items-center gap-1.5 text-[13px] text-amber-400/60 tabular-nums">
         <span>{hoursRemaining}h remaining</span>
       </div>
     </div>
@@ -278,10 +343,10 @@ function MessageLimitWarning({ limits, onUpgrade }: MessageLimitWarningProps) {
   if (limits.isPremium || limits.messagesRemaining > 5) return null;
 
   return (
-    <div className="px-4 py-2 bg-primary/10 border-t border-primary/20">
-      <p className="text-xs text-center text-white/60">
+    <div className="px-4 py-2 bg-amber-500/[0.04] border-t border-amber-500/[0.08]">
+      <p className="text-[11px] text-center text-white/40">
         {limits.messagesRemaining} free messages remaining.{" "}
-        <button onClick={onUpgrade} className="text-primary hover:underline">
+        <button onClick={onUpgrade} className="text-indigo-400/70 hover:text-indigo-400 transition-colors">
           Upgrade
         </button>
       </p>
@@ -521,10 +586,10 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
   const showChat = isMobile && currentConvId;
 
   return (
-    <div className={`flex h-[calc(100vh-4rem)] -mx-4 -mt-6 bg-[#0d0c11] ${className}`}>
+    <div className={`flex h-[calc(100vh-4rem)] -mx-4 -mt-6 bg-[#0a0913] ${className}`}>
       {/* Left Sidebar - Conversation List */}
       <div
-        className={`w-full md:w-[380px] border-r border-white/10 flex flex-col ${
+        className={`w-full md:w-[340px] border-r border-white/[0.04] flex flex-col bg-[#0d0c11] ${
           showChat ? "hidden md:flex" : "flex"
         }`}
       >

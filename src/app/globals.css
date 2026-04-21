@@ -835,6 +835,97 @@ body {
 }
 
 /* ================================================
+   CHAT UI ENHANCEMENTS
+   ================================================ */
+
+/* Smoother message entry animation */
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-msg-in {
+  animation: msg-in 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Subtle typing dots animation */
+@keyframes typing-dot {
+  0%, 60%, 100% { 
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  30% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-typing-dot {
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
+
+.animate-typing-dot-1 { animation-delay: 0s; }
+.animate-typing-dot-2 { animation-delay: 0.15s; }
+.animate-typing-dot-3 { animation-delay: 0.3s; }
+
+/* Send button glow when active */
+@keyframes send-glow {
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+.animate-send-glow {
+  animation: send-glow 0.6s ease-out;
+}
+
+/* Chat input focus ring */
+.chat-input-focus {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-input-focus:focus-within {
+  border-color: rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.06);
+}
+
+/* Conversation item active indicator */
+.conversation-active {
+  position: relative;
+}
+
+.conversation-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: linear-gradient(180deg, #6366f1, #8b5cf6);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-msg-in,
+  .animate-typing-dot,
+  .animate-send-glow {
+    animation: none !important;
+  }
+  
+  .conversation-active::before {
+    transform: translateY(-50%);
+  }
+}
+
+/* ================================================
    LOKFEEL BRAND ANIMATIONS - Heartbeat & Pulse
    ================================================ */
 

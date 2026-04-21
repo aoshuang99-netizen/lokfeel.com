@@ -30,14 +30,14 @@ interface EmptyStateProps {
 function EmptyState({ hasSearch, searchQuery }: EmptyStateProps) {
   return (
     <div className="p-8 text-center">
-      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-        <MessageCircle className="w-8 h-8 text-white/30" />
+      <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+        <MessageCircle className="w-6 h-6 text-white/20" />
       </div>
-      <p className="text-white/60 text-sm">
+      <p className="text-white/40 text-sm">
         {hasSearch ? "No conversations match your search" : "No conversations yet"}
       </p>
       {!hasSearch && (
-        <p className="text-white/40 text-xs mt-2">
+        <p className="text-white/25 text-xs mt-2">
           Accept a match to start chatting
         </p>
       )}
@@ -55,17 +55,17 @@ interface HeaderProps {
 
 function Header({ onNewChat }: HeaderProps) {
   return (
-    <div className="p-4 border-b border-white/10 bg-[#13121a]">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-white">Messages</h2>
+    <div className="px-4 pt-5 pb-3 bg-[#13121a]/90 backdrop-blur-lg">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-white tracking-tight">Messages</h2>
         <div className="flex items-center gap-2">
           {onNewChat && (
             <button
               onClick={onNewChat}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200"
               aria-label="New chat"
             >
-              <MoreVertical className="w-5 h-5 text-white/60" />
+              <MoreVertical className="w-[18px] h-[18px] text-white/30" />
             </button>
           )}
         </div>
@@ -86,15 +86,15 @@ interface SearchProps {
 
 function SearchBar({ value, onChange, placeholder = "Search conversations..." }: SearchProps) {
   return (
-    <div className="px-4 pb-4">
+    <div className="px-4 pb-3">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
         <input
           type="text"
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-white/5 text-white placeholder:text-white/40 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="w-full bg-white/[0.04] text-white/90 placeholder:text-white/25 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-white/10 focus:bg-white/[0.06] transition-all duration-200 border border-transparent focus:border-white/[0.06]"
         />
       </div>
     </div>

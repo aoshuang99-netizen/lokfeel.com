@@ -23,7 +23,15 @@
     "bots:simulate": "npx tsx scripts/simulate-bot-activity.ts",
     "bots:train": "npx tsx scripts/matching-engine-training.ts",
     "dev:socket": "npx tsx server.ts",
-    "dev:all": "npx tsx server.ts"
+    "dev:all": "npx tsx server.ts",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:headed": "npx playwright test --headed",
+    "test:e2e:auth": "npx playwright test tests/e2e/auth",
+    "test:e2e:api": "npx playwright test tests/e2e/api-health",
+    "test:e2e:dashboard": "npx playwright test tests/e2e/dashboard-access",
+    "test:e2e:debug": "npx playwright test --debug",
+    "test:e2e:report": "npx playwright show-report test-results/html"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -64,6 +72,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@swc/core": "^1.15.24",
     "@swc/jest": "^0.2.39",
     "@tailwindcss/postcss": "^4",

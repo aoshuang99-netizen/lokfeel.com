@@ -28,16 +28,14 @@ const EMOJIS = [
   "🎈", "🌈", "☀️", "🌙", "⭐", "💫", "🌺", "🌸",
 ];
 
-// 快捷回复
+// 快捷回复 - 更自然对话化的建议
 const QUICK_REPLIES = [
-  "Hi there! 👋",
-  "How are you?",
-  "That's interesting!",
-  "Tell me more",
-  "I agree!",
-  "What do you like to do?",
-  "Sounds great!",
-  "Looking forward to it",
+  "Hey! 👋",
+  "How's your day?",
+  "That's interesting",
+  "Tell me more!",
+  "Sounds great 😊",
+  "What are you into?",
 ];
 
 export function ChatInput({ 
@@ -111,26 +109,27 @@ export function ChatInput({
   };
 
   return (
-    <div className="relative">
+    <div className="relative px-3 pb-3 pt-1">
       {/* 快捷回复面板 */}
       <AnimatePresence>
         {showQuickReplies && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-full left-0 right-0 mb-2 p-3 glass-card border border-white/10"
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
+            className="absolute bottom-full left-3 right-3 mb-2 p-3 bg-[#1c1b28]/95 backdrop-blur-lg rounded-xl border border-white/[0.06]"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-xs text-white/60">Quick Replies</span>
+            <div className="flex items-center gap-2 mb-2.5">
+              <Sparkles className="w-3.5 h-3.5 text-violet-400/70" />
+              <span className="text-[11px] text-white/40 font-medium">Quick replies</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {QUICK_REPLIES.map((reply, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleQuickReply(reply)}
-                  className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/80 text-sm transition-colors"
+                  className="px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-white/70 hover:text-white/90 text-[13px] transition-all duration-200 border border-white/[0.04] hover:border-white/[0.08]"
                 >
                   {reply}
                 </button>
@@ -144,17 +143,18 @@ export function ChatInput({
       <AnimatePresence>
         {showEmojiPicker && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-full left-0 right-0 mb-2 p-3 glass-card border border-white/10"
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
+            className="absolute bottom-full left-3 right-3 mb-2 p-3 bg-[#1c1b28]/95 backdrop-blur-lg rounded-xl border border-white/[0.06]"
           >
-            <div className="grid grid-cols-8 gap-2">
+            <div className="grid grid-cols-8 gap-1">
               {EMOJIS.map((emoji, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleEmojiSelect(emoji)}
-                  className="w-8 h-8 flex items-center justify-center text-xl hover:bg-white/10 rounded-lg transition-colors"
+                  className="w-8 h-8 flex items-center justify-center text-lg hover:bg-white/[0.06] rounded-lg transition-colors duration-150"
                 >
                   {emoji}
                 </button>
@@ -171,29 +171,29 @@ export function ChatInput({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 flex items-center gap-2"
+            className="mb-2 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center gap-2"
           >
-            <Reply className="w-4 h-4 text-primary flex-shrink-0" />
+            <Reply className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-white/50 mb-0.5">
+              <p className="text-[11px] text-white/40 mb-0.5">
                 Reply to {quotedMessage.senderName || 'message'}
               </p>
-              <p className="text-sm text-white/70 truncate">
+              <p className="text-[13px] text-white/60 truncate">
                 {quotedMessage.content}
               </p>
             </div>
             <button
               onClick={onCancelQuote}
-              className="p-1 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+              className="p-1 rounded-full hover:bg-white/[0.06] text-white/30 hover:text-white/60 transition-colors duration-200"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* 输入框 */}
-      <form onSubmit={handleSend} className="glass-card p-2 flex items-center gap-2">
+      <form onSubmit={handleSend} className="flex items-center gap-1.5 bg-white/[0.04] backdrop-blur-lg border border-white/[0.06] rounded-2xl px-2 py-1.5">
         {/* 快捷回复按钮 */}
         <button
           type="button"
@@ -201,11 +201,12 @@ export function ChatInput({
             setShowQuickReplies(!showQuickReplies);
             setShowEmojiPicker(false);
           }}
-          className={`p-2 rounded-lg transition-colors ${
-            showQuickReplies ? "bg-primary/20 text-primary" : "text-white/40 hover:text-white/60"
+          className={`p-2 rounded-xl transition-all duration-200 ${
+            showQuickReplies ? "bg-violet-500/15 text-violet-400" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
           }`}
+          aria-label="Quick replies"
         >
-          <Sparkles className="w-5 h-5" />
+          <Sparkles className="w-[18px] h-[18px]" />
         </button>
 
         {/* 表情按钮 */}
@@ -215,29 +216,12 @@ export function ChatInput({
             setShowEmojiPicker(!showEmojiPicker);
             setShowQuickReplies(false);
           }}
-          className={`p-2 rounded-lg transition-colors ${
-            showEmojiPicker ? "bg-primary/20 text-primary" : "text-white/40 hover:text-white/60"
+          className={`p-2 rounded-xl transition-all duration-200 ${
+            showEmojiPicker ? "bg-violet-500/15 text-violet-400" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
           }`}
+          aria-label="Emoji"
         >
-          <Smile className="w-5 h-5" />
-        </button>
-
-        {/* 图片按钮 */}
-        <button
-          type="button"
-          className="p-2 rounded-lg text-white/40 hover:text-white/60 transition-colors"
-          title="Send image (coming soon)"
-        >
-          <Image className="w-5 h-5" />
-        </button>
-
-        {/* 语音按钮 */}
-        <button
-          type="button"
-          className="p-2 rounded-lg text-white/40 hover:text-white/60 transition-colors"
-          title="Voice message (coming soon)"
-        >
-          <Mic className="w-5 h-5" />
+          <Smile className="w-[18px] h-[18px]" />
         </button>
 
         {/* 输入框 */}
@@ -246,8 +230,8 @@ export function ChatInput({
           type="text"
           value={message}
           onChange={(e) => handleTyping(e.target.value)}
-          placeholder={disabled ? "Chat unavailable" : "Type a message..."}
-          className="flex-1 bg-transparent text-white placeholder:text-white/40 outline-none px-2"
+          placeholder={disabled ? "Chat unavailable" : "Say something..."}
+          className="flex-1 bg-transparent text-white/90 placeholder:text-white/25 outline-none text-[15px] min-w-0"
           disabled={isSending || disabled}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -261,13 +245,17 @@ export function ChatInput({
         <motion.button
           type="submit"
           disabled={!message.trim() || isSending || disabled}
-          whileTap={{ scale: 0.95 }}
-          className="p-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+          whileTap={{ scale: 0.92 }}
+          className={`p-2.5 rounded-xl transition-all duration-200 ${
+            message.trim() && !isSending && !disabled
+              ? "bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/20"
+              : "bg-white/[0.04] text-white/20"
+          }`}
         >
           {isSending ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-[18px] h-[18px] border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <Send className="w-5 h-5" />
+            <Send className="w-[18px] h-[18px]" />
           )}
         </motion.button>
       </form>
