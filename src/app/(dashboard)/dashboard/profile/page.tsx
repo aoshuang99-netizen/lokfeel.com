@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2, Sparkles } from "lucide-react";
 import { LoadingButton } from "@/components/shared/loading";
 import { toast } from "sonner";
+import { ImageCropModal } from "@/components/ui/image-crop-modal";
 
 const steps = [
   { id: 1, title: "Basic Info", icon: User },
-  { id: 2, title: "Relationship Blueprint", icon: Heart },
-  { id: 3, title: "Love & Boundaries", icon: MessageCircle },
-  { id: 4, title: "Life Priorities", icon: Target },
-  { id: 5, title: "Review", icon: Check },
+  { id: 2, title: "Identity", icon: Sparkles },
+  { id: 3, title: "Relationship Blueprint", icon: Heart },
+  { id: 4, title: "Love & Boundaries", icon: MessageCircle },
+  { id: 5, title: "Life Priorities", icon: Target },
+  { id: 6, title: "Review", icon: Check },
 ];
 
 export default function ProfilePage() {
@@ -31,23 +33,28 @@ export default function ProfilePage() {
     location: "",
     avatar: null as string | null,
     
-    // Step 2: Relationship Blueprint
+    // Step 2: Identity (NEW)
+    relationshipType: "MONOGAMY",
+    sexualOrientation: "BISEXUAL",
+    
+    // Step 3: Relationship Blueprint
     relationshipGoal: "LONG_TERM",
     attachmentStyle: "secure",
     communicationStyle: "direct",
     conflictResolution: "talk-it-out",
     
-    // Step 3: Love & Boundaries
+    // Step 4: Love & Boundaries
     loveLanguage: "words-of-affirmation",
     dealbreakers: ["", "", ""],
     boundaries: ["", "", ""],
     
-    // Step 4: Life Priorities
+    // Step 5: Life Priorities
     priorities: [] as string[],
     emotionalAvailability: "3",
     locationPreferences: [] as string[],
   });
   const [isUploading, setIsUploading] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
 
   // Load existing profile on mount
   useEffect(() => {
@@ -65,6 +72,9 @@ export default function ProfilePage() {
             bio: data.profile.bio || "",
             location: data.profile.city || "",
             avatar: data.profile.avatar || null,
+            // Identity fields
+            relationshipType: data.profile.relationshipType || "MONOGAMY",
+            sexualOrientation: data.profile.sexualOrientation || "BISEXUAL",
             relationshipGoal: data.profile.relationshipGoal || "LONG_TERM",
             attachmentStyle: data.profile.attachmentStyle?.toLowerCase() || "secure",
             communicationStyle: data.profile.communicationStyle?.toLowerCase() || "direct",
@@ -101,32 +111,47 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
       return;
     }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size must be less than 5MB");
       return;
     }
 
+    // Read file and open crop modal instead of direct upload
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCropImage(reader.result as string);
+      setIsUploading(false);
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read image");
+      setIsUploading(false);
+    };
+    setIsUploading(true);
+    reader.readAsDataURL(file);
+  };
+
+  // Handle crop complete: upload cropped image
+  const handleCropComplete = async (croppedImage: string) => {
+    setCropImage(null);
     setIsUploading(true);
     try {
+      // Convert base64 to blob
+      const res = await fetch(croppedImage);
+      const blob = await res.blob();
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", blob, "avatar.jpg");
       formData.append("type", "avatar");
 
-      const res = await fetch("/api/upload", {
+      const uploadRes = await fetch("/api/upload", {
         method: "PUT",
         body: formData,
       });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const data = await res.json();
+      if (!uploadRes.ok) throw new Error("Upload failed");
+      const data = await uploadRes.json();
       handleChange("avatar", data.url);
       toast.success("Avatar uploaded successfully");
     } catch (error) {
@@ -148,6 +173,9 @@ export default function ProfilePage() {
         bio: formData.bio,
         city: formData.location,
         avatar: formData.avatar,
+        // Identity fields
+        relationshipType: formData.relationshipType,
+        sexualOrientation: formData.sexualOrientation,
         relationshipGoal: formData.relationshipGoal,
         attachmentStyle: formData.attachmentStyle.charAt(0).toUpperCase() + formData.attachmentStyle.slice(1),
         communicationStyle: formData.communicationStyle.charAt(0).toUpperCase() + formData.communicationStyle.slice(1),
@@ -190,6 +218,9 @@ export default function ProfilePage() {
         bio: formData.bio,
         city: formData.location,
         avatar: formData.avatar,
+        // Identity fields
+        relationshipType: formData.relationshipType,
+        sexualOrientation: formData.sexualOrientation,
         relationshipGoal: formData.relationshipGoal,
         attachmentStyle: formData.attachmentStyle.charAt(0).toUpperCase() + formData.attachmentStyle.slice(1),
         communicationStyle: formData.communicationStyle.charAt(0).toUpperCase() + formData.communicationStyle.slice(1),
@@ -200,7 +231,7 @@ export default function ProfilePage() {
         lifePriorities: JSON.stringify(formData.priorities),
         emotionalAvailability: formData.emotionalAvailability,
         preferredLocation: formData.locationPreferences.join(", "),
-        onboardingStep: 5,
+        onboardingStep: 6,
       };
 
       const saveRes = await fetch("/api/profile", {
@@ -231,6 +262,28 @@ export default function ProfilePage() {
   };
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
+
+  // Identity options
+  const relationshipTypes = [
+    { value: "MONOGAMY", label: "Monogamy", description: "Committed to one person exclusively" },
+    { value: "ETHICAL_NON_MONOGAMY", label: "Ethical Non-Monogamy", description: "Open relationships with clear boundaries" },
+    { value: "POLYAMORY", label: "Polyamory", description: "Multiple loving relationships with consent" },
+    { value: "KINK_BDSM", label: "Kink / BDSM", description: "Power dynamics and alternative practices" },
+    { value: "CASUAL_DATING", label: "Casual Dating", description: "No labels, see where it goes" },
+    { value: "FRIENDSHIP_FIRST", label: "Friendship First", description: "Build connection before romance" },
+  ];
+
+  const sexualOrientations = [
+    { value: "STRAIGHT", label: "Straight" },
+    { value: "GAY", label: "Gay" },
+    { value: "LESBIAN", label: "Lesbian" },
+    { value: "BISEXUAL", label: "Bisexual" },
+    { value: "PANSEXUAL", label: "Pansexual" },
+    { value: "QUEER", label: "Queer" },
+    { value: "ASEXUAL", label: "Asexual" },
+    { value: "DEMISEXUAL", label: "Demisexual" },
+    { value: "QUESTIONING", label: "Questioning" },
+  ];
 
   if (isLoading) {
     return (
@@ -327,6 +380,14 @@ export default function ProfilePage() {
                   disabled={isUploading}
                   className="hidden"
                 />
+
+                {/* Image Crop Modal */}
+                <ImageCropModal
+                  isOpen={!!cropImage}
+                  imageSrc={cropImage}
+                  onClose={() => setCropImage(null)}
+                  onCropComplete={handleCropComplete}
+                />
               </div>
               <p className="text-xs text-white/40 mt-2">Click camera to upload photo</p>
             </div>
@@ -405,8 +466,43 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Step 2: Relationship Blueprint */}
+        {/* Step 2: Identity */}
         {currentStep === 2 && (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-white/80 mb-2">Relationship Type</label>
+              <select
+                value={formData.relationshipType}
+                onChange={(e) => handleChange("relationshipType", e.target.value)}
+                className="input-feeld"
+              >
+                {relationshipTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label} — {type.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white/80 mb-2">Sexual Orientation</label>
+              <select
+                value={formData.sexualOrientation}
+                onChange={(e) => handleChange("sexualOrientation", e.target.value)}
+                className="input-feeld"
+              >
+                {sexualOrientations.map((orientation) => (
+                  <option key={orientation.value} value={orientation.value}>
+                    {orientation.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Relationship Blueprint */}
+        {currentStep === 3 && (
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-white/80 mb-2">Relationship Goal</label>
@@ -466,8 +562,8 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Step 3: Love & Boundaries */}
-        {currentStep === 3 && (
+        {/* Step 4: Love & Boundaries */}
+        {currentStep === 4 && (
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-white/80 mb-2">Love Language</label>
@@ -526,8 +622,8 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Step 4: Life Priorities */}
-        {currentStep === 4 && (
+        {/* Step 5: Life Priorities */}
+        {currentStep === 5 && (
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-white/80 mb-2">Life Priorities (select all that apply)</label>
@@ -584,8 +680,8 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Step 5: Review */}
-        {currentStep === 5 && (
+        {/* Step 6: Review */}
+        {currentStep === 6 && (
           <div className="space-y-6">
             <div className="text-center py-4">
               {formData.avatar ? (
@@ -635,7 +731,7 @@ export default function ProfilePage() {
             className="btn-secondary flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            返回
           </button>
         )}
 
@@ -645,7 +741,7 @@ export default function ProfilePage() {
           className="btn-ghost flex items-center gap-2"
         >
           <Save className="w-4 h-4" />
-          {isSaving ? "Saving..." : "Save Draft"}
+          {isSaving ? "保存中..." : "保存草稿"}
         </button>
 
         <div className="flex-1" />
@@ -655,7 +751,7 @@ export default function ProfilePage() {
             onClick={() => setCurrentStep((prev) => prev + 1)}
             className="btn-primary flex items-center gap-2"
           >
-            Next
+            下一步
             <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
@@ -664,7 +760,7 @@ export default function ProfilePage() {
             isLoading={isSubmitting}
             className="btn-primary"
           >
-            Submit Profile
+            保存资料
           </LoadingButton>
         )}
       </div>

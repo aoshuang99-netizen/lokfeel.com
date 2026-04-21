@@ -467,3 +467,41 @@ export interface JwtPayload {
   iat: number
   exp: number
 }
+
+// ============================================================================
+// Re-export chat types
+// ============================================================================
+
+export type {
+  MessageType,
+  MessageDeliveryStatus,
+  EncryptionMode,
+  MediaLevel,
+  ConsentState,
+  RuleResult,
+  IMMessage,
+  ChatMessage,
+  MessageReaction,
+  Conversation,
+  // ChatRoom, // Removed to avoid conflict with types/chat.ts
+  UserLimits,
+  TypingIndicator,
+  ReadReceiptPayload,
+  ConversationUpdatePayload,
+  PaceLimitNotification,
+  ConsentRequestPayload,
+  ConsentResponsePayload,
+  PowerBoardRulesPayload,
+  MessageStatusUpdate,
+  SystemNotification,
+  SendMessageRequest,
+  SendMessageResponse,
+  GetMessagesRequest,
+  GetMessagesResponse,
+  GetConversationsRequest,
+  GetConversationsResponse,
+  // ApiError, // Removed to avoid conflict with types/chat.ts
+  MessageBubbleUIProps,
+  ConversationItemUIProps,
+  ChatInputUIProps,
+} from './chat';

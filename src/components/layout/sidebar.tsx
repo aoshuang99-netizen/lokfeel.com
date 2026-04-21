@@ -14,6 +14,8 @@ import {
   ChevronRight,
   LogOut,
   Users,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
@@ -23,22 +25,24 @@ interface SidebarProps {
 }
 
 const mainNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Square", href: "/dashboard/square", icon: Users },
-  { name: "Matches", href: "/dashboard/matches", icon: Heart },
-  { name: "Chat", href: "/dashboard/chat", icon: MessageCircle },
-  { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
+  { name: "Home", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Discover", href: "/dashboard/square", icon: Users },
+  { name: "My Matches", href: "/dashboard/matches", icon: Heart },
+  { name: "Messages", href: "/dashboard/chat", icon: MessageCircle },
+  { name: "Alerts", href: "/dashboard/notifications", icon: Bell },
 ];
 
-const accountNavigation = [
-  { name: "Profile", href: "/dashboard/profile", icon: User },
-  { name: "Subscription", href: "/dashboard/subscription", icon: CreditCard },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
+// 🆕 折叠到"My"菜单下的子菜单
+const mySubmenuItems = [
+  { name: "My Profile", href: "/dashboard/profile", icon: User },
+  { name: "Membership", href: "/dashboard/subscription", icon: CreditCard },
+  { name: "Preferences", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function Sidebar({ onCollapseChange }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMyMenuOpen, setIsMyMenuOpen] = useState(false);
   const { data: session, status } = useSession();
 
   const user = session?.user;
@@ -125,36 +129,83 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
           {/* Divider */}
           <div className="my-4 border-t border-white/10" />
 
+          {/* 🆕 My Menu - 折叠菜单 */}
           {!isCollapsed && (
-            <p className="text-xs font-medium text-white/30 uppercase tracking-wider px-3 mb-3">
-              Account
-            </p>
-          )}
-          {accountNavigation.map((item) => {
-            const active = isActive(item.href);
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
-                  active
-                    ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                } ${isCollapsed ? "justify-center" : ""}`}
+            <div className="mb-2">
+              <button
+                onClick={() => setIsMyMenuOpen(!isMyMenuOpen)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group text-white/60 hover:text-white hover:bg-white/5`}
               >
-                <Icon
-                  className={`w-5 h-5 flex-shrink-0 ${
-                    active ? "text-primary" : "text-white/40 group-hover:text-white"
-                  }`}
-                />
-                {!isCollapsed && (
-                  <span className="font-medium">{item.name}</span>
+                <div className="flex items-center gap-3">
+                  <User className="w-5 h-5 flex-shrink-0 text-white/40 group-hover:text-white" />
+                  <span className="font-medium">My</span>
+                </div>
+                {isMyMenuOpen ? (
+                  <ChevronUp className="w-4 h-4 text-white/40" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-white/40" />
                 )}
-              </Link>
-            );
-          })}
+              </button>
+              
+              {/* Submenu */}
+              {isMyMenuOpen && (
+                <div className="ml-4 mt-1 space-y-1 border-l border-white/10 pl-3">
+                  {mySubmenuItems.map((item) => {
+                    const active = isActive(item.href);
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 text-sm ${
+                          active
+                            ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
+                            : "text-white/60 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 flex-shrink-0 ${
+                            active ? "text-primary" : "text-white/40"
+                          }`}
+                        />
+                        <span>{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Collapsed state - show icons only */}
+          {isCollapsed && (
+            <div className="space-y-1">
+              {mySubmenuItems.map((item) => {
+                const active = isActive(item.href);
+                const Icon = item.icon;
+
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`flex items-center justify-center px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+                      active
+                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
+                        : "text-white/60 hover:text-white hover:bg-white/5"
+                    }`}
+                    title={item.name}
+                  >
+                    <Icon
+                      className={`w-5 h-5 flex-shrink-0 ${
+                        active ? "text-primary" : "text-white/40 group-hover:text-white"
+                      }`}
+                    />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </nav>
 
         {/* User Profile */}
@@ -229,10 +280,11 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
 
             <div className="my-4 border-t border-white/10" />
 
+            {/* 🆕 Mobile My Menu */}
             <p className="text-xs font-medium text-white/30 uppercase tracking-wider px-3 mb-3">
-              Account
+              My
             </p>
-            {accountNavigation.map((item) => {
+            {mySubmenuItems.map((item) => {
               const active = isActive(item.href);
               const Icon = item.icon;
 

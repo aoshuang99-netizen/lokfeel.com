@@ -1,0 +1,644 @@
+syntax = "proto3";
+package lokfeel.im;
+
+option go_package = "github.com/lokfeel/im-protocol";
+option java_package = "com.lokfeel.im";
+option swift_prefix = "LIM";
+
+// ============================================
+// 枚举定义
+// ============================================
+
+enum ConsentState {
+  CONSENT_STATE_UNSPECIFIED = 0;
+  CONSENT_STATE_NONE = 1;
+  CONSENT_STATE_PENDING = 2;
+  CONSENT_STATE_GRANTED = 3;
+  CONSENT_STATE_DENIED = 4;
+  CONSENT_STATE_EXPIRED = 5;
+}
+
+enum MediaAccessLevel {
+  MEDIA_ACCESS_LEVEL_UNSPECIFIED = 0;
+  MEDIA_ACCESS_LEVEL_L0_TEXT = 1;       // 纯文本
+  MEDIA_ACCESS_LEVEL_L1_IMAGE = 2;      // 静态图片
+  MEDIA_ACCESS_LEVEL_L2_VOICE = 3;      // 语音消息
+  MEDIA_ACCESS_LEVEL_L3_VIDEO = 4;      // 视频/实时通话
+  MEDIA_ACCESS_LEVEL_L4_LOCATION = 5;   // 位置信息
+  MEDIA_ACCESS_LEVEL_L5_CONTACT = 6;    // 联系方式
+}
+
+enum RuleEngineResult {
+  RULE_ENGINE_RESULT_UNSPECIFIED = 0;
+  RULE_ENGINE_RESULT_PASS = 1;
+  RULE_ENGINE_RESULT_SOFT_BLOCK = 2;    // 建议调整，可覆盖
+  RULE_ENGINE_RESULT_HARD_BLOCK = 3;    // 强制拦截
+  RULE_ENGINE_RESULT_PACE_LIMIT = 4;    // 频率限制
+}
+
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  MESSAGE_TYPE_TEXT = 1;
+  MESSAGE_TYPE_IMAGE = 2;
+  MESSAGE_TYPE_VOICE = 3;
+  MESSAGE_TYPE_FILE = 4;
+  MESSAGE_TYPE_SYSTEM = 5;
+  MESSAGE_TYPE_CONSENT_REQUEST = 6;
+  MESSAGE_TYPE_CONSENT_RESPONSE = 7;
+  MESSAGE_TYPE_RULE_UPDATE = 8;
+  MESSAGE_TYPE_TYPING = 9;
+  MESSAGE_TYPE_READ_RECEIPT = 10;
+}
+
+enum ConversationState {
+  CONVERSATION_STATE_UNSPECIFIED = 0;
+  CONVERSATION_STATE_ACTIVE = 1;
+  CONVERSATION_STATE_PAUSED = 2;        // 一方暂停
+  CONVERSATION_STATE_BLOCKED = 3;
+  CONVERSATION_STATE_EXPIRED = 4;       // 自动过期（如 Vault 到期）
+  CONVERSATION_STATE_ARCHIVED = 5;
+}
+
+enum ConsentRequestType {
+  CONSENT_REQUEST_TYPE_UNSPECIFIED = 0;
+  CONSENT_REQUEST_TYPE_MEDIA = 1;
+  CONSENT_REQUEST_TYPE_LOCATION = 2;
+  CONSENT_REQUEST_TYPE_CONTACT = 3;
+  CONSENT_REQUEST_TYPE_INTIMATE = 4;    // 亲密内容
+}
+
+enum EncryptionMode {
+  ENCRYPTION_MODE_UNSPECIFIED = 0;
+  ENCRYPTION_MODE_E2EE = 1;             // 端到端加密
+  ENCRYPTION_MODE_SERVER = 2;           // 服务器可读（安全模式）
+  ENCRYPTION_MODE_HYBRID = 3;           // 混合模式
+}
+
+// ============================================
+// 核心消息结构
+// ============================================
+
+message IMMessage {
+  // 基础字段
+  string msg_id = 1;
+  string client_msg_id = 2;             // 客户端生成的消息ID（用于去重）
+  string sender_id = 3;
+  string receiver_id = 4;
+  string conv_id = 5;
+  int64 seq = 6;
+  MessageType msg_type = 7;
+  bytes payload = 8;                    // E2EE密文或明文
+  int64 timestamp = 9;
+  
+  // 加密相关
+  EncryptionMode encryption_mode = 10;
+  bytes ephemeral_public_key = 11;      // 临时公钥（用于E2EE密钥交换）
+  
+  // === 边界与合规元数据（明文，供规则引擎使用）===
+  string boundary_version = 12;         // 当前生效的 Power Board 版本号
+  repeated string compliance_tags = 13; // ["consent_granted", "media_level_2", "pace_ok"]
+  ConsentState consent_state = 14;      // 同意状态
+  MediaAccessLevel media_level = 15;    // 媒体访问级别
+  RuleEngineResult rule_result = 16;    // 规则引擎判定结果
+  
+  // 回复相关
+  string reply_to_msg_id = 17;
+  IMMessageSummary reply_to_summary = 18;
+  
+  // 编辑与删除
+  bool is_edited = 19;
+  int64 edited_at = 20;
+  bool is_deleted = 21;
+  int64 deleted_at = 22;
+  string deleted_by = 23;
+  
+  // 媒体专用
+  MediaMetadata media_metadata = 24;
+  
+  // 扩展字段（未来兼容）
+  map<string, string> metadata = 100;
+}
+
+// 消息摘要（用于回复引用）
+message IMMessageSummary {
+  string msg_id = 1;
+  string sender_id = 2;
+  string preview_text = 3;              // 截断的文本预览
+  MediaAccessLevel media_level = 4;
+}
+
+// 媒体元数据
+message MediaMetadata {
+  string media_id = 1;
+  MediaAccessLevel level = 2;
+  string mime_type = 3;
+  int64 size_bytes = 4;
+  int32 width = 5;
+  int32 height = 6;
+  int32 duration_ms = 7;                // 音视频时长
+  string thumbnail_url = 8;
+  string watermark_hash = 9;            // 数字水印哈希
+  bool is_expiring = 10;                // 是否阅后即焚
+  int64 expires_at = 11;                // 过期时间
+}
+
+// ============================================
+// 同意管理
+// ============================================
+
+message ConsentRequest {
+  string request_id = 1;
+  string requester_id = 2;
+  string target_id = 3;
+  ConsentRequestType consent_type = 4;
+  MediaAccessLevel requested_level = 5;
+  string context_msg_id = 6;            // 触发同意请求的消息ID
+  string reason = 7;                    // 请求原因（用户可见）
+  int64 created_at = 8;
+  int64 expires_at = 9;                 // 过期时间戳
+  
+  // 请求内容预览（加密）
+  bytes preview_payload = 10;
+}
+
+message ConsentResponse {
+  string request_id = 1;
+  string responder_id = 2;
+  ConsentState decision = 3;
+  int64 responded_at = 4;
+  string note = 5;                      // 可选备注
+  int64 valid_until = 6;                // 授权有效期（0=永久）
+  string grant_token = 7;               // 授权令牌（用于后续验证）
+}
+
+// 同意授权记录
+message ConsentGrant {
+  string grant_id = 1;
+  string granter_id = 2;
+  string grantee_id = 3;
+  ConsentRequestType consent_type = 4;
+  MediaAccessLevel granted_level = 5;
+  int64 granted_at = 6;
+  int64 expires_at = 7;
+  bool is_revoked = 8;
+  int64 revoked_at = 9;
+}
+
+// ============================================
+// Power Board 规则集
+// ============================================
+
+message PowerBoardRules {
+  string user_id = 1;
+  string version = 2;                   // 语义化版本，如 "1.2.3"
+  int64 updated_at = 3;
+  bool is_active = 4;
+  
+  // 消息频率控制
+  PaceControl pace = 5;
+  
+  // 媒体访问控制
+  MediaPolicy media = 6;
+  
+  // 内容拦截规则
+  ContentFilter filter = 7;
+  
+  // 自动回复设置
+  AutoResponse auto_response = 8;
+  
+  // 隐私设置
+  PrivacySettings privacy = 9;
+  
+  // 通知偏好
+  NotificationPreferences notifications = 10;
+}
+
+message PaceControl {
+  int32 max_messages_per_hour = 1;
+  int32 max_messages_per_day = 2;
+  int32 response_window_hours = 3;      // 期望回复时间窗口
+  bool enforce_cooldown = 4;            // 是否强制执行冷却
+  int32 cooldown_minutes = 5;           // 冷却时长
+  bool show_remaining_quota = 6;        // 是否显示剩余额度
+}
+
+message MediaPolicy {
+  MediaAccessLevel default_level = 1;
+  map<string, MediaAccessLevel> per_user_override = 2;  // 对特定用户的覆盖
+  bool require_consent_for_upgrade = 3;                 // 升级媒体级别是否需要同意
+  bool auto_blur_images = 4;            // 自动模糊图片
+  bool watermark_all_media = 5;         // 所有媒体添加水印
+}
+
+message ContentFilter {
+  repeated string blocked_keywords = 1;
+  repeated string blocked_patterns = 2; // 正则模式
+  bool block_explicit_images = 3;
+  bool auto_flag_profanity = 4;
+  bool block_unsolicited_contact = 5;   // 拦截未经同意的联系方式
+  int32 sensitivity_level = 6;          // 1-5，越高越严格
+}
+
+message AutoResponse {
+  bool enabled = 1;
+  string message_template = 2;
+  int32 trigger_after_hours = 3;
+  bool only_first_message = 4;          // 仅对首次消息触发
+}
+
+message PrivacySettings {
+  EncryptionMode preferred_encryption = 1;
+  bool allow_screenshot_notifications = 2;
+  bool auto_expire_messages = 3;
+  int32 expire_after_days = 4;
+  bool hide_online_status = 5;
+  bool hide_read_receipts = 6;
+}
+
+message NotificationPreferences {
+  bool push_enabled = 1;
+  bool sound_enabled = 2;
+  bool preview_enabled = 3;             // 通知是否显示内容预览
+  bool quiet_hours_enabled = 4;
+  int32 quiet_hours_start = 5;          // 小时 (0-23)
+  int32 quiet_hours_end = 6;
+}
+
+// ============================================
+// 会话管理
+// ============================================
+
+message Conversation {
+  string conv_id = 1;
+  string user_a_id = 2;
+  string user_b_id = 3;
+  string initiator_id = 4;
+  int64 created_at = 5;
+  
+  ConversationState state = 6;
+  string state_reason = 7;              // 状态变更原因
+  
+  // 女性控制点
+  string controlling_user_id = 8;       // 谁拥有此会话的控制权（通常是女性）
+  string active_boundary_version = 9;   // 当前生效的规则版本
+  
+  // 统计
+  int64 last_message_at = 10;
+  int32 message_count = 11;
+  int32 unread_count_user_a = 12;
+  int32 unread_count_user_b = 13;
+  
+  // 会话设置
+  bool is_muted_user_a = 14;
+  bool is_muted_user_b = 15;
+  bool is_pinned_user_a = 16;
+  bool is_pinned_user_b = 17;
+  
+  // Vault 相关
+  int64 vault_expires_at = 18;          // Vault 到期时间（0=无Vault）
+  
+  // 同意状态缓存
+  ConsentState cached_consent_state = 19;
+}
+
+// ============================================
+// 审计日志
+// ============================================
+
+message AuditLogEntry {
+  string log_id = 1;
+  string user_id = 2;
+  string conv_id = 3;
+  string action = 4;                    // "boundary_changed", "consent_granted", "message_blocked"
+  string actor_id = 5;                  // 执行动作的用户
+  string target_id = 6;                 // 受影响的用户（如适用）
+  
+  // 详情
+  AuditActionDetails details = 7;
+  
+  // 时间戳
+  int64 timestamp = 8;
+  
+  // 防篡改
+  string prev_hash = 9;                 // 前一个条目的哈希
+  string entry_hash = 10;               // 本条目哈希
+  string signature = 11;                // 数字签名
+}
+
+message AuditActionDetails {
+  oneof detail {
+    BoundaryChangeDetails boundary_change = 1;
+    ConsentActionDetails consent_action = 2;
+    MessageBlockDetails message_block = 3;
+    RuleViolationDetails rule_violation = 4;
+    SecurityEventDetails security_event = 5;
+  }
+}
+
+message BoundaryChangeDetails {
+  string old_version = 1;
+  string new_version = 2;
+  repeated string changed_fields = 3;
+  PowerBoardRules old_rules = 4;
+  PowerBoardRules new_rules = 5;
+}
+
+message ConsentActionDetails {
+  string request_id = 1;
+  ConsentRequestType consent_type = 2;
+  ConsentState from_state = 3;
+  ConsentState to_state = 4;
+  string context_msg_id = 5;
+}
+
+message MessageBlockDetails {
+  string blocked_msg_id = 1;
+  RuleEngineResult block_reason = 2;
+  string block_rule = 3;
+  string sender_id = 4;
+  bool was_appealed = 5;
+  string appeal_result = 6;
+}
+
+message RuleViolationDetails {
+  string violated_rule = 1;
+  string violation_context = 2;
+  int32 severity_score = 3;
+  bool auto_blocked = 4;
+}
+
+message SecurityEventDetails {
+  string event_type = 1;                // "screenshot_detected", "key_compromise", etc.
+  string device_id = 2;
+  string ip_address = 3;
+  map<string, string> metadata = 4;
+}
+
+// ============================================
+// WebSocket 事件
+// ============================================
+
+// 服务端 → 客户端 事件包装
+message ServerEvent {
+  string event_id = 1;
+  string event_type = 2;
+  int64 timestamp = 3;
+  
+  oneof payload {
+    IMMessage message = 10;
+    MessageStatusUpdate message_status = 11;
+    PowerBoardRules rule_update = 12;
+    ConsentRequest consent_request = 13;
+    ConsentResponse consent_response = 14;
+    PaceLimitNotification pace_limit = 15;
+    TypingIndicator typing = 16;
+    ReadReceipt read_receipt = 17;
+    ConversationUpdate conv_update = 18;
+    SystemNotification system = 19;
+  }
+}
+
+message MessageStatusUpdate {
+  string msg_id = 1;
+  string conv_id = 2;
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_SENT = 1;
+    STATUS_DELIVERED = 2;
+    STATUS_READ = 3;
+    STATUS_FAILED = 4;
+  }
+  Status status = 3;
+  int64 updated_at = 4;
+  string error_message = 5;
+}
+
+message PaceLimitNotification {
+  string conv_id = 1;
+  int64 cooldown_until = 2;
+  string reason = 3;
+  int32 messages_remaining = 4;
+  int32 max_messages = 5;
+  int32 reset_after_minutes = 6;
+}
+
+message TypingIndicator {
+  string user_id = 1;
+  string conv_id = 2;
+  bool is_typing = 3;
+  int64 timestamp = 4;
+}
+
+message ReadReceipt {
+  string user_id = 1;
+  string conv_id = 2;
+  string up_to_msg_id = 3;
+  int64 read_at = 4;
+}
+
+message ConversationUpdate {
+  string conv_id = 1;
+  ConversationState new_state = 2;
+  string reason = 3;
+  int64 updated_at = 4;
+}
+
+message SystemNotification {
+  enum Level {
+    LEVEL_UNSPECIFIED = 0;
+    LEVEL_INFO = 1;
+    LEVEL_WARNING = 2;
+    LEVEL_ERROR = 3;
+    LEVEL_CRITICAL = 4;
+  }
+  Level level = 1;
+  string title = 2;
+  string message = 3;
+  string action_url = 4;
+  int64 expires_at = 5;
+}
+
+// 客户端 → 服务端 事件包装
+message ClientEvent {
+  string event_id = 1;
+  string event_type = 2;
+  int64 timestamp = 3;
+  
+  oneof payload {
+    SubscribeRequest subscribe = 10;
+    UnsubscribeRequest unsubscribe = 11;
+    SendMessageRequest send_message = 12;
+    AckMessageRequest ack_message = 13;
+    TypingEvent typing = 14;
+    ReadEvent read = 15;
+    PresenceUpdate presence = 16;
+  }
+}
+
+message SubscribeRequest {
+  string conv_id = 1;
+  string last_seen_msg_id = 2;
+}
+
+message UnsubscribeRequest {
+  string conv_id = 1;
+}
+
+message SendMessageRequest {
+  IMMessage message = 1;
+  bool skip_rule_check = 2;             // 仅内部使用
+}
+
+message AckMessageRequest {
+  string msg_id = 1;
+  string conv_id = 2;
+}
+
+message TypingEvent {
+  string conv_id = 1;
+  bool is_typing = 2;
+}
+
+message ReadEvent {
+  string conv_id = 1;
+  string up_to_msg_id = 2;
+}
+
+message PresenceUpdate {
+  enum Presence {
+    PRESENCE_UNSPECIFIED = 0;
+    PRESENCE_ONLINE = 1;
+    PRESENCE_AWAY = 2;
+    PRESENCE_BUSY = 3;
+    PRESENCE_OFFLINE = 4;
+  }
+  Presence presence = 1;
+  string status_message = 2;
+}
+
+// ============================================
+// API 请求/响应
+// ============================================
+
+// 获取历史消息
+message GetMessagesRequest {
+  string conv_id = 1;
+  string before_msg_id = 2;             // 分页游标
+  int32 limit = 3;
+  bool include_deleted = 4;
+}
+
+message GetMessagesResponse {
+  repeated IMMessage messages = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+// 更新规则
+message UpdateRulesRequest {
+  string user_id = 1;
+  PowerBoardRules rules = 2;
+  bool validate_only = 3;               // 仅验证，不保存
+}
+
+message UpdateRulesResponse {
+  bool success = 1;
+  repeated string validation_errors = 2;
+  string new_version = 3;
+}
+
+// 预检消息
+message ValidateMessageRequest {
+  string sender_id = 1;
+  string receiver_id = 2;
+  MessageType msg_type = 3;
+  MediaAccessLevel media_level = 4;
+  string preview_text = 5;
+}
+
+message ValidateMessageResponse {
+  RuleEngineResult result = 1;
+  string reason = 2;
+  repeated string suggestions = 3;
+  int32 cooldown_seconds = 4;
+}
+
+// 导出数据（CCPA）
+message ExportDataRequest {
+  string user_id = 1;
+  int64 from_timestamp = 2;
+  int64 to_timestamp = 3;
+  repeated string data_types = 4;       // ["messages", "consent", "audit"]
+}
+
+message ExportDataResponse {
+  string export_id = 1;
+  string download_url = 2;
+  int64 expires_at = 3;
+  int64 record_count = 4;
+}
+
+// 删除账户（Crypto-Shred）
+message DeleteAccountRequest {
+  string user_id = 1;
+  string confirmation_code = 2;         // 二次确认码
+  bool immediate = 3;                   // 立即执行（否则72h延迟）
+}
+
+message DeleteAccountResponse {
+  string deletion_id = 1;
+  int64 scheduled_at = 2;
+  repeated string affected_conversations = 3;
+}
+
+// ============================================
+// 健康检查与指标
+// ============================================
+
+message HealthCheckRequest {
+  string client_version = 1;
+  string platform = 2;                  // ios, android, web
+  map<string, string> capabilities = 3;
+}
+
+message HealthCheckResponse {
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_HEALTHY = 1;
+    STATUS_DEGRADED = 2;
+    STATUS_MAINTENANCE = 3;
+  }
+  Status status = 1;
+  string message = 2;
+  int64 server_timestamp = 3;
+  repeated string active_features = 4;
+  repeated string deprecated_features = 5;
+}
+
+// 客户端指标上报
+message ClientMetrics {
+  string user_id = 1;
+  string session_id = 2;
+  
+  message TimingMetric {
+    string name = 1;
+    int64 duration_ms = 2;
+    map<string, string> tags = 3;
+  }
+  repeated TimingMetric timings = 3;
+  
+  message CounterMetric {
+    string name = 1;
+    int64 value = 2;
+    map<string, string> tags = 3;
+  }
+  repeated CounterMetric counters = 4;
+  
+  message ErrorReport {
+    string error_type = 1;
+    string message = 2;
+    string stack_trace = 3;
+    map<string, string> context = 4;
+  }
+  repeated ErrorReport errors = 5;
+}

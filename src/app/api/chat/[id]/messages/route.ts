@@ -133,6 +133,44 @@ export async function POST(
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
     }
 
+    // ═══ FREE USER LIMIT CHECK ═══
+    // Check if user is premium
+    const userWithSub = await db.user.findUnique({
+      where: { id: user.id },
+      include: {
+        subscriptions: {
+          where: {
+            status: 'ACTIVE',
+          },
+          take: 1,
+        },
+      },
+    })
+
+    const isPremium = userWithSub?.subscriptions && userWithSub.subscriptions.length > 0
+
+    if (!isPremium) {
+      // Count messages sent by this user in this room
+      const messageCount = await db.message.count({
+        where: {
+          roomId,
+          senderId: user.id,
+        },
+      })
+
+      // Free users can only send 2 messages per conversation
+      if (messageCount >= 2) {
+        return NextResponse.json(
+          { 
+            message: 'Free users can send up to 2 messages per conversation. Upgrade to Premium for unlimited messaging.',
+            code: 'UPGRADE_REQUIRED',
+            upgradeUrl: '/dashboard/subscription'
+          },
+          { status: 403 }
+        )
+      }
+    }
+
     const message = await db.message.create({
       data: {
         roomId,

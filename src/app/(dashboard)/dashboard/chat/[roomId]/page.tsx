@@ -1,354 +1,894 @@
 "use client";
 
-import { use, useState, useRef, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { ArrowLeft, Send, MoreVertical, Phone, Video, Loader2, Shield } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import {
+  ArrowLeft,
+  MoreVertical,
+  Phone,
+  Video,
+  Image as ImageIcon,
+  Mic,
+  Send,
+  Smile,
+  Sparkles,
+  Clock,
+  Lock,
+  Zap,
+  X,
+  ShieldAlert,
+  Ban,
+  ChevronRight,
+  Circle,
+  Bot,
+  User,
+  RefreshCw,
+} from "lucide-react";
+import Link from "next/link";
 
-interface ChatRoomPageProps {
-  params: Promise<{ roomId: string }>;
-}
+// ══════════════════════════════════════
+// EMOJI LIST
+// ══════════════════════════════════════
+
+const EMOJIS = [
+  "😀", "😂", "🥰", "😍", "😘", "😊", "😉", "🤔",
+  "😎", "🥳", "😏", "😌", "😢", "😭", "😤", "😡",
+  "❤️", "💕", "💖", "💗", "💝", "💘", "🔥", "✨",
+  "🌹", "🌸", "🌺", "🌻", "🌙", "⭐", "☀️", "🌈",
+];
+
+// ══════════════════════════════════════
+// QUICK REPLIES
+// ══════════════════════════════════════
+
+const QUICK_REPLIES = [
+  "Hey! How are you? 😊",
+  "That's interesting! Tell me more",
+  "I'd love to meet up sometime",
+  "What's your ideal date?",
+  "You have a great smile!",
+  "What are you looking for?",
+  "Want to grab coffee? ☕",
+  "Tell me about yourself",
+];
+
+// ══════════════════════════════════════
+// AI SUGGESTIONS
+// ══════════════════════════════════════
+
+const AI_SUGGESTIONS = [
+  "Ask about their weekend plans",
+  "Compliment something specific in their profile",
+  "Share a fun fact about yourself",
+  "Ask what they're passionate about",
+];
+
+// ══════════════════════════════════════
+// MESSAGE INTERFACE
+// ══════════════════════════════════════
 
 interface Message {
   id: string;
   content: string;
-  messageType: string;
-  sender: {
+  senderId: string;
+  sender?: {
     id: string;
     name: string;
     avatar: string | null;
-    isSelf: boolean;
+    isBot?: boolean;
+    isSelf?: boolean;
   };
-  isRead: boolean;
   createdAt: string;
+  type?: "text" | "image" | "voice";
+  metadata?: any;
 }
 
-interface ChatRoomInfo {
+interface RoomInfo {
   id: string;
   otherUser: {
     id: string;
     name: string;
-    age: number | null;
     avatar: string | null;
     isOnline?: boolean;
+    lastSeen?: string;
+    isBot?: boolean;
   };
-  matchScore: number;
+  isVault?: boolean;
+  vaultExpiresAt?: string;
 }
 
-export default function ChatRoomPage({ params }: ChatRoomPageProps) {
-  const { roomId } = use(params);
+interface UserLimits {
+  isPremium: boolean;
+  maxChats: number;
+  currentChats: number;
+  messagesSent: number;
+  messagesRemaining: number;
+}
+
+export default function ChatRoomPage() {
+  const params = useParams();
+  const roomId = params.roomId as string;
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const [roomInfo, setRoomInfo] = useState<ChatRoomInfo | null>(null);
+  const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
+  const [showAiSuggestions, setShowAiSuggestions] = useState(true);
+  const [userLimits, setUserLimits] = useState<UserLimits | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Load messages
-  const loadMessages = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/chat/${roomId}/messages`);
-      if (!res.ok) throw new Error("Failed to load messages");
-      const data = await res.json();
-      setMessages(data.messages);
-    } catch (error) {
-      console.error("Load messages error:", error);
+  // Load room info and messages
+  useEffect(() => {
+    if (roomId) {
+      console.log('[Chat] Loading room:', roomId);
+      setLoading(true);
+      Promise.all([
+        loadRoomInfo(),
+        loadMessages(),
+        loadUserLimits(),
+      ]).finally(() => {
+        setLoading(false);
+      });
     }
   }, [roomId]);
 
-  // Load room info
+  // Poll for new messages every 3 seconds
   useEffect(() => {
-    async function loadRoomInfo() {
-      try {
-        // Get chat rooms list to find this room's info
-        const res = await fetch("/api/chat");
-        if (!res.ok) throw new Error("Failed to load chat info");
-        const data = await res.json();
-        const room = data.rooms.find((r: ChatRoomInfo) => r.id === roomId);
-        if (room) {
-          setRoomInfo(room);
-        }
-      } catch (error) {
-        console.error("Load room info error:", error);
-      }
-    }
-    loadRoomInfo();
+    if (!roomId) return;
+    
+    const interval = setInterval(() => {
+      loadMessages();
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, [roomId]);
-
-  // Initial load and polling
-  useEffect(() => {
-    async function init() {
-      setIsLoading(true);
-      await loadMessages();
-      setIsLoading(false);
-      scrollToBottom();
-    }
-    init();
-
-    // Poll for new messages every 3 seconds
-    pollIntervalRef.current = setInterval(loadMessages, 3000);
-
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
-  }, [loadMessages]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || isSending) return;
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    setIsSending(true);
-    const tempMessage = newMessage.trim();
+  const loadRoomInfo = async () => {
+    try {
+      const res = await fetch(`/api/chat/${roomId}`);
+      if (!res.ok) {
+        const errText = await res.text().catch(() => 'Unknown error');
+        console.error('[Chat] Room API error:', res.status, errText);
+        throw new Error(`Failed to load room: ${res.status}`);
+      }
+      const data = await res.json();
+      console.log('[Chat] Room info loaded:', data);
+      setRoomInfo(data.room || data);
+    } catch (e) {
+      console.error("[Chat] Failed to load chat room:", e);
+      toast.error("Failed to load chat room");
+    }
+  };
+
+  const loadMessages = async () => {
+    try {
+      const res = await fetch(`/api/chat/${roomId}/messages`);
+      if (!res.ok) {
+        const errText = await res.text().catch(() => 'Unknown error');
+        console.error('[Chat] Messages API error:', res.status, errText);
+        throw new Error(`Failed to load messages: ${res.status}`);
+      }
+      const data = await res.json();
+      console.log('[Chat] Messages loaded:', data.messages?.length || 0, 'messages');
+      
+      // Handle both old and new API response formats
+      const msgs = data.messages || data;
+      if (Array.isArray(msgs)) {
+        setMessages(msgs);
+        // Extract current user ID from first message if available
+        if (msgs.length > 0 && msgs[0].sender) {
+          const selfMsg = msgs.find((m: Message) => m.sender?.isSelf);
+          if (selfMsg) {
+            setCurrentUserId(selfMsg.sender.id);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[Chat] Failed to load messages:", e);
+    }
+  };
+
+  const loadUserLimits = async () => {
+    try {
+      const res = await fetch("/api/user/limits");
+      if (res.ok) {
+        const data = await res.json();
+        setUserLimits(data);
+      }
+    } catch (e) {
+      console.error("Failed to load user limits", e);
+    }
+  };
+
+  const handleSend = async (content: string = newMessage) => {
+    if (!content.trim() || sending) return;
+
+    // Check free user limits
+    if (userLimits && !userLimits.isPremium && userLimits.messagesRemaining <= 0) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    setSending(true);
     setNewMessage("");
+    setShowQuickReplies(false);
+    setShowEmojiPicker(false);
 
-    // Optimistically add message
-    const optimisticMessage: Message = {
-      id: `temp-${Date.now()}`,
-      content: tempMessage,
-      messageType: "TEXT",
+    // Optimistic update
+    const tempId = `temp-${Date.now()}`;
+    const tempMessage: Message = {
+      id: tempId,
+      content,
+      senderId: "me",
       sender: {
-        id: "me",
+        id: currentUserId || "me",
         name: "You",
         avatar: null,
-        isSelf: true,
+        isBot: false,
       },
-      isRead: false,
       createdAt: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, optimisticMessage]);
+    setMessages((prev) => [...prev, tempMessage]);
 
     try {
+      console.log('[Chat] Sending message to room:', roomId);
       const res = await fetch(`/api/chat/${roomId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: tempMessage }),
+        body: JSON.stringify({ content }),
       });
 
-      if (!res.ok) throw new Error("Failed to send message");
+      console.log('[Chat] Send response status:', res.status);
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error('[Chat] Send error:', errData);
+        if (res.status === 403 && errData.code === "UPGRADE_REQUIRED") {
+          setShowUpgradeModal(true);
+          setMessages((prev) => prev.filter((m) => m.id !== tempId));
+          return;
+        }
+        throw new Error(errData.message || "Failed to send");
+      }
 
       const data = await res.json();
-      
-      // Replace optimistic message with real one
+      console.log('[Chat] Message sent successfully:', data);
+
+      // Replace temp message with real one
       setMessages((prev) =>
-        prev.map((msg) => (msg.id === optimisticMessage.id ? data.message : msg))
+        prev.map((m) => (m.id === tempId ? data.message : m))
       );
-    } catch (error) {
-      console.error("Send error:", error);
+
+      // Update limits
+      if (userLimits) {
+        setUserLimits({
+          ...userLimits,
+          messagesSent: userLimits.messagesSent + 1,
+          messagesRemaining: Math.max(0, userLimits.messagesRemaining - 1),
+        });
+      }
+
+      // Trigger AI response if this is a bot conversation
+      if (roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) {
+        console.log('[Chat] Triggering AI response for bot conversation');
+        setTimeout(() => triggerAiResponse(), 1500);
+      }
+    } catch (e) {
+      console.error('[Chat] Failed to send:', e);
       toast.error("Failed to send message");
-      // Remove optimistic message on error
-      setMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
-      setNewMessage(tempMessage); // Restore text
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
     } finally {
-      setIsSending(false);
+      setSending(false);
     }
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
-    } else {
-      return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  const triggerAiResponse = async () => {
+    try {
+      console.log('[Chat] Triggering AI response for room:', roomId);
+      const res = await fetch(`/api/bot/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId }),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        console.log('[Chat] AI response received:', data);
+        if (data.message) {
+          // Add AI message to chat
+          const aiMessage: Message = {
+            id: data.message.id,
+            content: data.message.content,
+            senderId: roomInfo?.otherUser?.id || "bot",
+            sender: {
+              id: roomInfo?.otherUser?.id || "bot",
+              name: roomInfo?.otherUser?.name || "AI",
+              avatar: roomInfo?.otherUser?.avatar || null,
+              isBot: true,
+            },
+            createdAt: data.message.createdAt,
+          };
+          setMessages((prev) => [...prev, aiMessage]);
+        }
+      } else {
+        console.error('[Chat] AI response failed:', res.status);
+      }
+    } catch (e) {
+      console.error('[Chat] Failed to trigger AI response:', e);
     }
   };
 
-  // Group messages by date
-  const groupedMessages = messages.reduce((groups: Record<string, Message[]>, message) => {
-    const date = formatDate(message.createdAt);
-    if (!groups[date]) groups[date] = [];
-    groups[date].push(message);
-    return groups;
-  }, {});
+  const handleBlockUser = async () => {
+    if (!roomInfo?.otherUser?.id) return;
+    const confirmed = window.confirm(
+      `Block ${roomInfo.otherUser.name}?\n\nThey won't be able to see or message you, and you won't see them.`
+    );
+    if (!confirmed) return;
+    setIsBlocking(true);
+    try {
+      const res = await fetch(`/api/users/${roomInfo.otherUser.id}/block`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        toast.success(`${roomInfo.otherUser.name} has been blocked`);
+        setShowMoreMenu(false);
+        window.location.href = "/dashboard/chat";
+      } else {
+        toast.error("Failed to block user");
+      }
+    } catch (e) {
+      toast.error("Failed to block user");
+    } finally {
+      setIsBlocking(false);
+    }
+  };
 
-  if (isLoading) {
+  const formatTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatLastSeen = (dateStr?: string) => {
+    if (!dateStr) return "Offline";
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Determine if a message is from the current user
+  const isMessageFromMe = (msg: Message): boolean => {
+    if (msg.sender?.isSelf) return true;
+    if (msg.senderId === currentUserId) return true;
+    if (msg.senderId === "me") return true;
+    return false;
+  };
+
+  // Determine if a message is from a bot
+  const isMessageFromBot = (msg: Message): boolean => {
+    if (msg.sender?.isBot) return true;
+    if (msg.senderId?.startsWith("bot-")) return true;
+    if (msg.senderId === roomInfo?.otherUser?.id && roomInfo?.otherUser?.isBot) return true;
+    return false;
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // LOADING STATE
+  // ═══════════════════════════════════════════════════════
+  if (loading) {
     return (
-      <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
+          <p className="text-white/60">Loading conversation...</p>
+        </div>
       </div>
     );
   }
 
+  // ═══════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
-      {/* Header */}
-      <div className="glass-card p-4 flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
+    <div className="flex-1 flex flex-col h-full bg-[#0d0c11]">
+      {/* ═══════════════════════════════════════════════════════
+          CHAT HEADER
+          ═══════════════════════════════════════════════════════ */}
+      <div className="flex items-center justify-between px-4 py-3 bg-[#13121a] border-b border-white/10">
+        <div className="flex items-center gap-3">
+          {/* Back Button (Mobile) */}
           <Link
             href="/dashboard/chat"
-            className="p-2 -ml-2 text-white/60 hover:text-white transition-colors"
+            className="md:hidden p-2 -ml-2 rounded-full hover:bg-white/10"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-white" />
           </Link>
-          {roomInfo && (
-            <Link href={`/dashboard/matches/${roomInfo.id}`} className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
-                  <img
-                    src={roomInfo.otherUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${roomInfo.otherUser.id}`}
-                    alt={roomInfo.otherUser.name}
-                    className="w-full h-full object-cover"
-                  />
+
+          {/* Avatar with Online Status */}
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/5 flex items-center justify-center">
+              {roomInfo?.otherUser?.avatar ? (
+                <img
+                  src={roomInfo.otherUser.avatar}
+                  alt={roomInfo.otherUser.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
+                  {roomInfo?.otherUser?.name?.[0] || "?"}
                 </div>
-                {roomInfo.otherUser.isOnline && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-success border-2 border-[#0d0c11] rounded-full" />
-                )}
+              )}
+            </div>
+            {/* Online Status */}
+            {roomInfo?.otherUser?.isOnline ? (
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#13121a]" />
+            ) : (
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-[#13121a]" />
+            )}
+            {/* Bot Badge */}
+            {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center border-2 border-[#13121a]">
+                <Bot className="w-3 h-3 text-white" />
               </div>
-              <div>
-                <h2 className="font-semibold text-white">
-                  {roomInfo.otherUser.name}
-                  {roomInfo.otherUser.age && `, ${roomInfo.otherUser.age}`}
-                </h2>
-                <p className="text-xs text-white/60">
-                  {roomInfo.otherUser.isOnline ? "Online" : "Offline"}
-                </p>
-              </div>
-            </Link>
-          )}
+            )}
+          </div>
+
+          {/* User Info */}
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-white text-sm">
+                {roomInfo?.otherUser?.name || "Unknown"}
+              </h3>
+              {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) && (
+                <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded-full">
+                  AI
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-white/50">
+              {roomInfo?.otherUser?.isOnline 
+                ? "Online" 
+                : formatLastSeen(roomInfo?.otherUser?.lastSeen)
+              }
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg hover:bg-white/5 transition-colors text-white/60 hover:text-white">
-            <Phone className="w-5 h-5" />
+        {/* Header Actions */}
+        <div className="flex items-center gap-1">
+          <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
+            <Phone className="w-5 h-5 text-white/60" />
           </button>
-          <button className="p-2 rounded-lg hover:bg-white/5 transition-colors text-white/60 hover:text-white">
-            <Video className="w-5 h-5" />
+          <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
+            <Video className="w-5 h-5 text-white/60" />
           </button>
-          <button className="p-2 rounded-lg hover:bg-white/5 transition-colors text-white/60 hover:text-white">
-            <MoreVertical className="w-5 h-5" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            >
+              <MoreVertical className="w-5 h-5 text-white/60" />
+            </button>
+
+            {/* More Menu Dropdown */}
+            <AnimatePresence>
+              {showMoreMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 top-full mt-2 w-48 bg-[#1a1926] rounded-xl border border-white/10 shadow-xl z-50"
+                >
+                  <button
+                    onClick={() => {
+                      setShowReportModal(true);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5 flex items-center gap-2"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    Report User
+                  </button>
+                  <button
+                    onClick={handleBlockUser}
+                    disabled={isBlocking}
+                    className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 flex items-center gap-2"
+                  >
+                    <Ban className="w-4 h-4" />
+                    {isBlocking ? "Blocking..." : "Block User"}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
-      {/* Match Info Banner */}
-      {roomInfo && (
-        <Link
-          href={`/dashboard/matches`}
-          className="glass-card p-3 flex items-center gap-3 mb-4 hover:bg-white/10 transition-colors"
-        >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-            <span className="text-white font-bold">{Math.round(roomInfo.matchScore)}%</span>
+      {/* ═══════════════════════════════════════════════════════
+          VAULT BANNER (if applicable)
+          ═══════════════════════════════════════════════════════ */}
+      {roomInfo?.isVault && (
+        <div className="bg-gradient-to-r from-primary/20 to-secondary/20 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-primary" />
+            <span className="text-sm text-white/80">
+              Vault Chat - Exchange contacts to unlock
+            </span>
           </div>
-          <div>
-            <p className="text-sm font-medium text-white">{Math.round(roomInfo.matchScore)}% Compatibility</p>
-            <p className="text-xs text-white/60">Based on your relationship blueprints</p>
+          <div className="flex items-center gap-1 text-sm text-primary">
+            <Clock className="w-4 h-4" />
+            <span>48h</span>
           </div>
-          <Shield className="w-5 h-5 text-success ml-auto" />
-        </Link>
+        </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+      {/* ═══════════════════════════════════════════════════════
+          MESSAGES AREA
+          ═══════════════════════════════════════════════════════ */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-              <Send className="w-8 h-8 text-white/40" />
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+              {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) ? (
+                <Bot className="w-8 h-8 text-purple-400" />
+              ) : (
+                <Sparkles className="w-8 h-8 text-white/30" />
+              )}
             </div>
-            <p className="text-white/60">No messages yet</p>
-            <p className="text-sm text-white/40 mt-1">Start the conversation!</p>
+            <p className="text-white/60 mb-2">
+              {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-"))
+                ? `Start chatting with ${roomInfo?.otherUser?.name || "AI"}`
+                : "No messages yet"
+              }
+            </p>
+            <p className="text-white/40 text-sm">
+              {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-"))
+                ? "AI-powered conversation partner"
+                : "Start the conversation!"
+              }
+            </p>
           </div>
         ) : (
-          Object.entries(groupedMessages).map(([date, dateMessages]) => (
-            <div key={date}>
-              {/* Date Separator */}
-              <div className="flex items-center justify-center my-4">
-                <span className="text-xs text-white/40 px-3 py-1 rounded-full bg-white/5">
-                  {date}
-                </span>
-              </div>
+          messages.map((msg, index) => {
+            const fromMe = isMessageFromMe(msg);
+            const fromBot = isMessageFromBot(msg);
+            const showAvatar = !fromMe && (index === 0 || isMessageFromMe(messages[index - 1]));
 
-              {dateMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender.isSelf ? "justify-end" : "justify-start"} mb-4`}
-                >
-                  {!message.sender.isSelf && (
-                    <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
-                      <img
-                        src={message.sender.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.sender.id}`}
-                        alt={message.sender.name}
-                        className="w-full h-full object-cover"
-                      />
+            return (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex ${fromMe ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`flex items-end gap-2 max-w-[75%] ${fromMe ? "flex-row-reverse" : ""}`}>
+                  {/* Avatar (only show for first message in group) */}
+                  {!fromMe && showAvatar && (
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-white/5 flex-shrink-0 relative">
+                      {roomInfo?.otherUser?.avatar ? (
+                        <img
+                          src={roomInfo.otherUser.avatar}
+                          alt={roomInfo.otherUser.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold">
+                          {roomInfo?.otherUser?.name?.[0] || "?"}
+                        </div>
+                      )}
+                      {/* Bot indicator on avatar */}
+                      {fromBot && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-purple-500 rounded-full flex items-center justify-center">
+                          <Bot className="w-2 h-2 text-white" />
+                        </div>
+                      )}
                     </div>
                   )}
+                  {!fromMe && !showAvatar && <div className="w-8" />}
+
+                  {/* Message Bubble */}
                   <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                      message.sender.isSelf
-                        ? "bg-gradient-to-r from-primary to-secondary text-white rounded-br-md"
-                        : "glass-card text-white/90 rounded-bl-md"
+                    className={`px-4 py-2 rounded-2xl max-w-[250px] sm:max-w-[300px] ${
+                      fromMe
+                        ? "bg-gradient-to-br from-pink-500 to-purple-500 text-white rounded-br-md"
+                        : fromBot
+                        ? "bg-gradient-to-br from-purple-500/80 to-blue-500/80 text-white rounded-bl-md border border-purple-400/30"
+                        : "bg-white/10 text-white rounded-bl-md"
                     }`}
                   >
-                    {message.messageType === "SYSTEM" ? (
-                      <p className="text-sm italic text-white/70">{message.content}</p>
-                    ) : (
-                      <>
-                        <p className="text-sm leading-relaxed">{message.content}</p>
-                        <p className={`text-[10px] mt-1 ${
-                          message.sender.isSelf ? "text-white/60" : "text-white/40"
-                        }`}>
-                          {formatTime(message.createdAt)}
-                          {message.sender.isSelf && message.isRead && (
-                            <span className="ml-1">✓✓</span>
-                          )}
-                        </p>
-                      </>
+                    {/* Bot label */}
+                    {fromBot && (
+                      <div className="flex items-center gap-1 mb-1 opacity-70">
+                        <Bot className="w-3 h-3" />
+                        <span className="text-[10px] uppercase tracking-wide">AI Assistant</span>
+                      </div>
                     )}
+                    <p className="text-sm">{msg.content}</p>
+                    <p className={`text-xs mt-1 ${fromMe ? "text-white/70" : "text-white/50"}`}>
+                      {formatTime(msg.createdAt)}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ))
+              </motion.div>
+            );
+          })
         )}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSend} className="mt-4">
-        <div className="glass-card p-3 flex items-center gap-3">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 bg-transparent text-white placeholder:text-white/40 outline-none"
-            disabled={isSending}
-          />
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || isSending}
-            className="p-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+      {/* ═══════════════════════════════════════════════════════
+          AI SUGGESTIONS
+          ═══════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showAiSuggestions && messages.length < 3 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="px-4 py-2 bg-[#13121a] border-t border-white/5"
           >
-            {isSending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-xs text-white/60">AI Suggestions</span>
+              <button
+                onClick={() => setShowAiSuggestions(false)}
+                className="ml-auto text-white/40 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {AI_SUGGESTIONS.map((suggestion, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSend(suggestion)}
+                  className="flex-shrink-0 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full text-xs text-white/80 transition-colors whitespace-nowrap"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══════════════════════════════════════════════════════
+          QUICK REPLIES
+          ═══════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showQuickReplies && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-2 bg-[#13121a] border-t border-white/5"
+          >
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {QUICK_REPLIES.map((reply, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSend(reply)}
+                  className="flex-shrink-0 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full text-xs text-white/80 transition-colors whitespace-nowrap"
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══════════════════════════════════════════════════════
+          EMOJI PICKER
+          ═══════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showEmojiPicker && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-3 bg-[#13121a] border-t border-white/5"
+          >
+            <div className="grid grid-cols-8 gap-2">
+              {EMOJIS.map((emoji, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setNewMessage((prev) => prev + emoji);
+                    inputRef.current?.focus();
+                  }}
+                  className="text-2xl hover:bg-white/10 rounded-lg p-1 transition-colors"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══════════════════════════════════════════════════════
+          INPUT AREA
+          ═══════════════════════════════════════════════════════ */}
+      <div className="p-3 bg-[#13121a] border-t border-white/10">
+        <div className="flex items-center gap-2">
+          {/* Emoji Button */}
+          <button
+            onClick={() => {
+              setShowEmojiPicker(!showEmojiPicker);
+              setShowQuickReplies(false);
+            }}
+            className={`p-2 rounded-full transition-colors ${
+              showEmojiPicker ? "bg-primary/20 text-primary" : "hover:bg-white/10 text-white/60"
+            }`}
+          >
+            <Smile className="w-5 h-5" />
           </button>
+
+          {/* Attachment Button */}
+          <button className="p-2 rounded-full hover:bg-white/10 text-white/60 transition-colors">
+            <ImageIcon className="w-5 h-5" />
+          </button>
+
+          {/* Quick Replies Button */}
+          <button
+            onClick={() => {
+              setShowQuickReplies(!showQuickReplies);
+              setShowEmojiPicker(false);
+            }}
+            className={`p-2 rounded-full transition-colors ${
+              showQuickReplies ? "bg-primary/20 text-primary" : "hover:bg-white/10 text-white/60"
+            }`}
+          >
+            <Zap className="w-5 h-5" />
+          </button>
+
+          {/* Text Input */}
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Type a message..."
+              className="w-full bg-[#0d0c11] text-white placeholder:text-white/40 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          </div>
+
+          {/* Voice / Send Button */}
+          {newMessage.trim() ? (
+            <button
+              onClick={() => handleSend()}
+              disabled={sending}
+              className="p-2 rounded-full bg-primary hover:bg-primary-hover text-white transition-colors disabled:opacity-50"
+            >
+              {sending ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </button>
+          ) : (
+            <button className="p-2 rounded-full hover:bg-white/10 text-white/60 transition-colors">
+              <Mic className="w-5 h-5" />
+            </button>
+          )}
         </div>
-      </form>
+
+        {/* Free User Limit Warning */}
+        {userLimits && !userLimits.isPremium && userLimits.messagesRemaining <= 5 && (
+          <div className="mt-2 text-center">
+            <p className="text-xs text-white/50">
+              {userLimits.messagesRemaining} free messages remaining.{" "}
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="text-primary hover:underline"
+              >
+                Upgrade
+              </button>
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════
+          UPGRADE MODAL
+          ═══════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showUpgradeModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#1a1926] rounded-2xl p-6 max-w-sm w-full border border-white/10"
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                  <Zap className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Upgrade to Premium
+                </h3>
+                <p className="text-white/60 text-sm mb-6">
+                  You&apos;ve used all your free messages. Upgrade to unlock unlimited messaging and more features.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowUpgradeModal(false)}
+                    className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors"
+                  >
+                    Maybe Later
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowUpgradeModal(false);
+                      window.location.href = "/dashboard/settings/billing";
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white transition-colors"
+                  >
+                    Upgrade
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Click outside to close menus */}
+      {(showMoreMenu || showEmojiPicker || showQuickReplies) && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => {
+            setShowMoreMenu(false);
+            setShowEmojiPicker(false);
+            setShowQuickReplies(false);
+          }}
+        />
+      )}
     </div>
   );
 }

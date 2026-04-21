@@ -273,6 +273,21 @@ model User {
   chatRooms ChatRoomMember[]
   messages  Message[]
 
+  // IM Module
+  conversationsA      Conversation[]            @relation("ConversationUserA")
+  conversationsB      Conversation[]            @relation("ConversationUserB")
+  imMessages          IMMessage[]               @relation("IMMessageSender")
+  messageReceipts     MessageReceipt[]
+  messageReactions    MessageReaction[]
+  imParticipants      ConversationParticipant[]
+  presence            UserPresence?
+  powerBoardRule      PowerBoardRule?
+  consentRequestsMade ConsentRequest[]          @relation("ConsentRequester")
+  consentRequestsRecv ConsentRequest[]          @relation("ConsentTarget")
+  consentGrantsMade   ConsentGrant[]            @relation("ConsentGranter")
+  consentGrantsRecv   ConsentGrant[]            @relation("ConsentGrantee")
+  auditLogs           AuditLog[]
+
   // Payments
   subscriptions Subscription[]
   payments      Payment[]
@@ -285,6 +300,10 @@ model User {
 
   // Analytics
   analyticsEvents AnalyticsEvent[]
+
+  // Safety & Moderation
+  reportsMade     UserReport[] @relation("ReportsMade")
+  reportsReceived UserReport[] @relation("ReportsReceived")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -372,6 +391,11 @@ model Profile {
   dealbreakers          String?          @db.Text // JSON array
   lifePriorities        String?          @db.Text // JSON array: "Career", "Family", "Adventure", "Stability", etc.
   emotionalAvailability String? // "Fully Available", "Building Trust", "Processing Past", "Needs Space"
+
+  // ═══════════════════════════════════════════════════════════════
+  // NEW: User Preference Tags for Matching (最多5个)
+  // ═══════════════════════════════════════════════════════════════
+  selectedTags String[] @default([]) // 用户选择的标签，如 ["MONOGAMY", "KINK", "BISEXUAL"]
 
   // Preferences for matching
   preferredAgeMin   Int?
@@ -513,7 +537,7 @@ model MatchReaction {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// REAL-TIME CHAT
+// REAL-TIME CHAT (Legacy - backwards compatible)
 // ═══════════════════════════════════════════════════════════════
 
 model ChatRoom {
@@ -549,6 +573,9 @@ model ChatRoom {
   // Privacy Protection
   screenshotCount  Int       @default(0) // 检测到的截图次数
   lastScreenshotAt DateTime? // 最后一次截图时间
+
+  // IM Module: link to Conversation (1:1)
+  conversation Conversation?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -591,6 +618,373 @@ model Message {
 
   @@index([roomId, createdAt])
   @@index([senderId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IM MODULE — Next-Gen Chat Infrastructure
+// Based on im_protocol_v2.proto & Power Board Rule Engine Spec
+// ═══════════════════════════════════════════════════════════════
+
+// Conversation — logical session layer (maps 1:1 with ChatRoom for migration)
+model Conversation {
+  id String @id @default(cuid())
+
+  // Participants
+  userAId     String
+  userA       User   @relation("ConversationUserA", fields: [userAId], references: [id])
+  userBId     String
+  userB       User   @relation("ConversationUserB", fields: [userBId], references: [id])
+  initiatorId String // who started the conversation
+
+  // Backlink to ChatRoom (migration bridge)
+  chatRoomId String?   @unique
+  chatRoom   ChatRoom? @relation(fields: [chatRoomId], references: [id])
+
+  // State
+  state       ConversationState @default(ACTIVE)
+  stateReason String? // reason for state change
+
+  // Female Control
+  controllingUserId     String? // who has control (usually female)
+  activeBoundaryVersion String? // current Power Board version
+
+  // Statistics (denormalized for performance)
+  lastMessageAt DateTime?
+  messageCount  Int       @default(0)
+  unreadCountA  Int       @default(0)
+  unreadCountB  Int       @default(0)
+
+  // Per-user settings (JSON for flexibility)
+  settings String? @db.Text // JSON: { userA: {muted, pinned}, userB: {muted, pinned} }
+
+  // Vault
+  vaultExpiresAt DateTime? // Vault expiry timestamp (null = no Vault)
+
+  // Consent cache
+  cachedConsentState ConsentState @default(CONSENT_NONE)
+
+  // Relations
+  participants    ConversationParticipant[]
+  imMessages      IMMessage[]
+  receipts        MessageReceipt[]
+  consentRequests ConsentRequest[]
+  consentGrants   ConsentGrant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userAId, userBId], map: "unique_conversation_pair")
+  @@index([state])
+  @@index([lastMessageAt])
+  @@index([userAId])
+  @@index([userBId])
+  @@index([controllingUserId])
+  @@index([vaultExpiresAt])
+}
+
+// ConversationParticipant — per-user conversation membership & state
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Per-user state
+  isMuted     Boolean   @default(false)
+  isPinned    Boolean   @default(false)
+  isArchived  Boolean   @default(false)
+  lastReadSeq Int       @default(0) // last read sequence number
+  lastReadAt  DateTime?
+
+  // Subscription
+  subscribedAt DateTime @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([userId, isMuted])
+  @@index([userId, isPinned])
+}
+
+// IMMessage — next-gen message model with seq, encryption, consent
+model IMMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // Core fields
+  clientMsgId String? @unique // client-generated ID for dedup
+  senderId    String
+  sender      User    @relation("IMMessageSender", fields: [senderId], references: [id])
+  receiverId  String
+  seq         Int // server-assigned sequence number (monotonic per conversation)
+
+  // Content
+  msgType  IMMessageType @default(TEXT)
+  payload  String        @db.Text // message content (plaintext or E2EE ciphertext)
+  metadata String?       @db.Text // JSON: media info, links, etc.
+
+  // Encryption
+  encryptionMode     EncryptionMode @default(SERVER)
+  ephemeralPublicKey String?        @db.Text // for E2EE key exchange
+
+  // Boundary & compliance (plaintext, for rule engine)
+  boundaryVersion String? // current Power Board version
+  complianceTags  String[]         @default([]) // ["consent_granted", "media_level_2", "pace_ok"]
+  consentState    ConsentState     @default(CONSENT_NONE)
+  mediaLevel      MediaAccessLevel @default(L0_TEXT)
+  ruleResult      RuleEngineResult @default(PASS)
+
+  // Reply
+  replyToMsgId   String?
+  replyToPreview String? @db.Text // JSON: {msgId, senderId, previewText, mediaLevel}
+
+  // Edit & Delete
+  isEdited  Boolean   @default(false)
+  editedAt  DateTime?
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String? // who deleted (sender or admin)
+
+  // Media metadata
+  mediaMetadata String? @db.Text // JSON: {mediaId, level, mimeType, sizeBytes, width, height, durationMs, thumbnailUrl, watermarkHash, isExpiring, expiresAt}
+
+  // Delivery status
+  status MessageDeliveryStatus @default(SENT)
+
+  // Receipts
+  receipts MessageReceipt[]
+
+  // Reactions
+  reactions MessageReaction[]
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, seq])
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([clientMsgId])
+  @@index([createdAt])
+  @@index([msgType])
+  @@index([isDeleted])
+}
+
+// MessageReceipt — per-recipient delivery & read receipts
+model MessageReceipt {
+  id             String       @id @default(cuid())
+  messageId      String
+  message        IMMessage    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String // who this receipt belongs to
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Receipt state
+  deliveredAt DateTime? // when message was delivered to this user
+  readAt      DateTime? // when message was read by this user
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([messageId, userId])
+  @@index([userId, readAt])
+  @@index([conversationId])
+}
+
+// MessageReaction — emoji reactions on messages
+model MessageReaction {
+  id        String    @id @default(cuid())
+  messageId String
+  message   IMMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Emoji character (👍 ❤️ 😂 😮 😢 🔥 etc.)
+  emoji String
+
+  createdAt DateTime @default(now())
+
+  // Each user can only add one reaction per emoji per message
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
+}
+
+// UserPresence — online/offline status tracking
+model UserPresence {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Presence state
+  status        PresenceStatus @default(OFFLINE)
+  statusMessage String? // custom status text
+  lastSeenAt    DateTime? // last heartbeat / activity timestamp
+
+  // Device info
+  deviceId   String? // current active device
+  platform   String? // "ios", "android", "web"
+  appVersion String? // client version
+
+  // Connection
+  connectionId String? // WebSocket connection ID
+  connectedAt  DateTime? // when current session started
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([lastSeenAt])
+  @@index([userId, status])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONSENT MANAGEMENT — Granular permission control
+// ═══════════════════════════════════════════════════════════════
+
+model ConsentRequest {
+  id             String       @id @default(cuid())
+  requesterId    String
+  requester      User         @relation("ConsentRequester", fields: [requesterId], references: [id])
+  targetId       String
+  target         User         @relation("ConsentTarget", fields: [targetId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // Request details
+  consentType    ConsentRequestType @default(MEDIA)
+  requestedLevel MediaAccessLevel   @default(L0_TEXT)
+  contextMsgId   String? // message that triggered this request
+  reason         String?            @db.Text // user-visible reason
+
+  // Preview (encrypted)
+  previewPayload String? @db.Text // encrypted preview content
+
+  // State
+  state        ConsentState @default(CONSENT_PENDING)
+  respondedAt  DateTime?
+  responseNote String?
+  grantToken   String?      @unique // authorization token for verification
+
+  // Validity
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([requesterId])
+  @@index([targetId])
+  @@index([conversationId])
+  @@index([state])
+  @@index([expiresAt])
+  @@index([consentType])
+}
+
+model ConsentGrant {
+  id             String       @id @default(cuid())
+  granterId      String
+  granter        User         @relation("ConsentGranter", fields: [granterId], references: [id])
+  granteeId      String
+  grantee        User         @relation("ConsentGrantee", fields: [granteeId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // Grant details
+  consentType  ConsentRequestType @default(MEDIA)
+  grantedLevel MediaAccessLevel   @default(L0_TEXT)
+
+  // Validity
+  grantedAt DateTime  @default(now())
+  expiresAt DateTime? // null = permanent
+
+  // Revocation
+  isRevoked Boolean   @default(false)
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([granterId])
+  @@index([granteeId])
+  @@index([conversationId])
+  @@index([consentType])
+  @@index([isRevoked])
+  @@index([expiresAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POWER BOARD — Rule engine for boundary control
+// ═══════════════════════════════════════════════════════════════
+
+model PowerBoardRule {
+  id     String @id @default(cuid())
+  userId String @unique // each user has one active rule set
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Version control
+  version  String  @default("1.0.0") // semantic versioning
+  isActive Boolean @default(true)
+
+  // Pace Control (JSON)
+  paceConfig String @db.Text // JSON: {maxMessagesPerHour, maxMessagesPerDay, responseWindowHours, enforceCooldown, cooldownMinutes, showRemainingQuota}
+
+  // Media Policy (JSON)
+  mediaConfig String @db.Text // JSON: {defaultLevel, perUserOverride, requireConsentForUpgrade, autoBlurImages, watermarkAllMedia}
+
+  // Content Filter (JSON)
+  filterConfig String @db.Text // JSON: {blockedKeywords, blockedPatterns, blockExplicitImages, autoFlagProfanity, blockUnsolicitedContact, sensitivityLevel}
+
+  // Auto Response (JSON)
+  autoResponse String? @db.Text // JSON: {enabled, messageTemplate, triggerAfterHours, onlyFirstMessage}
+
+  // Privacy Settings (JSON)
+  privacyConfig String @db.Text // JSON: {preferredEncryption, allowScreenshotNotifications, autoExpireMessages, expireAfterDays, hideOnlineStatus, hideReadReceipts}
+
+  // Notification Preferences (JSON)
+  notifConfig String? @db.Text // JSON: {pushEnabled, soundEnabled, previewEnabled, quietHoursEnabled, quietHoursStart, quietHoursEnd}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([version])
+  @@index([isActive])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIT LOG — Immutable audit trail with hash chain
+// ═══════════════════════════════════════════════════════════════
+
+model AuditLog {
+  id             String  @id @default(cuid())
+  userId         String // who this log belongs to
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId String? // related conversation
+
+  // Action details
+  action   String // "boundary_changed", "consent_granted", "message_blocked", "rule_violation", "security_event"
+  actorId  String? // who performed the action
+  targetId String? // who was affected
+
+  // Details (JSON - varies by action type)
+  details String? @db.Text // JSON with full context
+
+  // Hash chain (tamper detection)
+  prevHash  String? // hash of previous entry
+  entryHash String // hash of this entry
+
+  // Metadata
+  ipAddress String?
+  userAgent String? @db.Text
+  deviceId  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([conversationId])
+  @@index([action])
+  @@index([actorId])
+  @@index([createdAt])
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -781,6 +1175,80 @@ enum MessageType {
   VOICE // Future: voice notes
 }
 
+// IM Module Message Types (extended from proto)
+enum IMMessageType {
+  TEXT
+  IMAGE
+  VOICE
+  FILE
+  SYSTEM
+  CONSENT_REQUEST
+  CONSENT_RESPONSE
+  RULE_UPDATE
+  TYPING
+  READ_RECEIPT
+}
+
+enum ConversationState {
+  ACTIVE
+  PAUSED // one party paused
+  BLOCKED
+  EXPIRED // auto-expired (e.g. Vault expired)
+  ARCHIVED
+}
+
+enum ConsentState {
+  CONSENT_NONE
+  CONSENT_PENDING
+  CONSENT_GRANTED
+  CONSENT_DENIED
+  CONSENT_EXPIRED
+}
+
+enum MediaAccessLevel {
+  L0_TEXT // text only
+  L1_IMAGE // static images
+  L2_VOICE // voice messages
+  L3_VIDEO // video / live calls
+  L4_LOCATION // location sharing
+  L5_CONTACT // contact info
+}
+
+enum RuleEngineResult {
+  PASS
+  SOFT_BLOCK // suggest adjustment, can override
+  HARD_BLOCK // forced block
+  PACE_LIMIT // rate limit
+}
+
+enum EncryptionMode {
+  E2EE // end-to-end encrypted
+  SERVER // server-readable (safety mode)
+  HYBRID // hybrid mode
+}
+
+enum MessageDeliveryStatus {
+  SENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum PresenceStatus {
+  ONLINE
+  AWAY
+  BUSY
+  OFFLINE
+}
+
+enum ConsentRequestType {
+  MEDIA
+  LOCATION
+  CONTACT
+  INTIMATE // intimate content
+}
+
 enum NotificationType {
   NEW_MATCH
   MATCH_ACCEPTED
@@ -899,4 +1367,64 @@ enum SincerityTier {
   SILVER // 500-1999
   GOLD // 2000-4999
   PLATINUM // 5000+
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAFETY & MODERATION — User Reports
+// ═══════════════════════════════════════════════════════════════
+
+enum ReportReason {
+  INAPPROPRIATE_CONTENT
+  HARASSMENT
+  FAKE_PROFILE
+  SPAM
+  OFFENSIVE_BEHAVIOR
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED_NO_ACTION
+  RESOLVED_WARNING
+  RESOLVED_BANNED
+  DISMISSED
+}
+
+model UserReport {
+  id String @id @default(cuid())
+
+  // Reporter (who made the report)
+  reporterId String
+  reporter   User   @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  // Reported user (who was reported)
+  reportedUserId String
+  reportedUser   User   @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  // Report details
+  reason      ReportReason
+  description String?      @db.Text
+
+  // Context (optional)
+  chatRoomId String?
+  messageId  String?
+
+  // Status tracking
+  status     ReportStatus @default(PENDING)
+  reviewedBy String? // Admin user ID
+  reviewedAt DateTime?
+  adminNotes String?      @db.Text
+
+  // Resolution
+  actionTaken String? // "WARNING", "BAN", "NONE", etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([reporterId, reportedUserId, createdAt])
 }

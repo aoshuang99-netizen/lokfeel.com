@@ -296,6 +296,7 @@ exports.Prisma.ProfileScalarFieldEnum = {
   dealbreakers: 'dealbreakers',
   lifePriorities: 'lifePriorities',
   emotionalAvailability: 'emotionalAvailability',
+  selectedTags: 'selectedTags',
   preferredAgeMin: 'preferredAgeMin',
   preferredAgeMax: 'preferredAgeMax',
   preferredGender: 'preferredGender',
@@ -392,6 +393,166 @@ exports.Prisma.MessageScalarFieldEnum = {
   metadata: 'metadata',
   isRead: 'isRead',
   readAt: 'readAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  userAId: 'userAId',
+  userBId: 'userBId',
+  initiatorId: 'initiatorId',
+  chatRoomId: 'chatRoomId',
+  state: 'state',
+  stateReason: 'stateReason',
+  controllingUserId: 'controllingUserId',
+  activeBoundaryVersion: 'activeBoundaryVersion',
+  lastMessageAt: 'lastMessageAt',
+  messageCount: 'messageCount',
+  unreadCountA: 'unreadCountA',
+  unreadCountB: 'unreadCountB',
+  settings: 'settings',
+  vaultExpiresAt: 'vaultExpiresAt',
+  cachedConsentState: 'cachedConsentState',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ConversationParticipantScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  userId: 'userId',
+  isMuted: 'isMuted',
+  isPinned: 'isPinned',
+  isArchived: 'isArchived',
+  lastReadSeq: 'lastReadSeq',
+  lastReadAt: 'lastReadAt',
+  subscribedAt: 'subscribedAt'
+};
+
+exports.Prisma.IMMessageScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  clientMsgId: 'clientMsgId',
+  senderId: 'senderId',
+  receiverId: 'receiverId',
+  seq: 'seq',
+  msgType: 'msgType',
+  payload: 'payload',
+  metadata: 'metadata',
+  encryptionMode: 'encryptionMode',
+  ephemeralPublicKey: 'ephemeralPublicKey',
+  boundaryVersion: 'boundaryVersion',
+  complianceTags: 'complianceTags',
+  consentState: 'consentState',
+  mediaLevel: 'mediaLevel',
+  ruleResult: 'ruleResult',
+  replyToMsgId: 'replyToMsgId',
+  replyToPreview: 'replyToPreview',
+  isEdited: 'isEdited',
+  editedAt: 'editedAt',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  deletedBy: 'deletedBy',
+  mediaMetadata: 'mediaMetadata',
+  status: 'status',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.MessageReceiptScalarFieldEnum = {
+  id: 'id',
+  messageId: 'messageId',
+  conversationId: 'conversationId',
+  userId: 'userId',
+  deliveredAt: 'deliveredAt',
+  readAt: 'readAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MessageReactionScalarFieldEnum = {
+  id: 'id',
+  messageId: 'messageId',
+  userId: 'userId',
+  emoji: 'emoji',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.UserPresenceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  status: 'status',
+  statusMessage: 'statusMessage',
+  lastSeenAt: 'lastSeenAt',
+  deviceId: 'deviceId',
+  platform: 'platform',
+  appVersion: 'appVersion',
+  connectionId: 'connectionId',
+  connectedAt: 'connectedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ConsentRequestScalarFieldEnum = {
+  id: 'id',
+  requesterId: 'requesterId',
+  targetId: 'targetId',
+  conversationId: 'conversationId',
+  consentType: 'consentType',
+  requestedLevel: 'requestedLevel',
+  contextMsgId: 'contextMsgId',
+  reason: 'reason',
+  previewPayload: 'previewPayload',
+  state: 'state',
+  respondedAt: 'respondedAt',
+  responseNote: 'responseNote',
+  grantToken: 'grantToken',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ConsentGrantScalarFieldEnum = {
+  id: 'id',
+  granterId: 'granterId',
+  granteeId: 'granteeId',
+  conversationId: 'conversationId',
+  consentType: 'consentType',
+  grantedLevel: 'grantedLevel',
+  grantedAt: 'grantedAt',
+  expiresAt: 'expiresAt',
+  isRevoked: 'isRevoked',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PowerBoardRuleScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  version: 'version',
+  isActive: 'isActive',
+  paceConfig: 'paceConfig',
+  mediaConfig: 'mediaConfig',
+  filterConfig: 'filterConfig',
+  autoResponse: 'autoResponse',
+  privacyConfig: 'privacyConfig',
+  notifConfig: 'notifConfig',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  conversationId: 'conversationId',
+  action: 'action',
+  actorId: 'actorId',
+  targetId: 'targetId',
+  details: 'details',
+  prevHash: 'prevHash',
+  entryHash: 'entryHash',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  deviceId: 'deviceId',
   createdAt: 'createdAt'
 };
 
@@ -500,6 +661,23 @@ exports.Prisma.SincerityTransactionScalarFieldEnum = {
   message: 'message',
   metadata: 'metadata',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.UserReportScalarFieldEnum = {
+  id: 'id',
+  reporterId: 'reporterId',
+  reportedUserId: 'reportedUserId',
+  reason: 'reason',
+  description: 'description',
+  chatRoomId: 'chatRoomId',
+  messageId: 'messageId',
+  status: 'status',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
+  adminNotes: 'adminNotes',
+  actionTaken: 'actionTaken',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -628,6 +806,79 @@ exports.MessageType = exports.$Enums.MessageType = {
   VOICE: 'VOICE'
 };
 
+exports.ConversationState = exports.$Enums.ConversationState = {
+  ACTIVE: 'ACTIVE',
+  PAUSED: 'PAUSED',
+  BLOCKED: 'BLOCKED',
+  EXPIRED: 'EXPIRED',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.ConsentState = exports.$Enums.ConsentState = {
+  CONSENT_NONE: 'CONSENT_NONE',
+  CONSENT_PENDING: 'CONSENT_PENDING',
+  CONSENT_GRANTED: 'CONSENT_GRANTED',
+  CONSENT_DENIED: 'CONSENT_DENIED',
+  CONSENT_EXPIRED: 'CONSENT_EXPIRED'
+};
+
+exports.IMMessageType = exports.$Enums.IMMessageType = {
+  TEXT: 'TEXT',
+  IMAGE: 'IMAGE',
+  VOICE: 'VOICE',
+  FILE: 'FILE',
+  SYSTEM: 'SYSTEM',
+  CONSENT_REQUEST: 'CONSENT_REQUEST',
+  CONSENT_RESPONSE: 'CONSENT_RESPONSE',
+  RULE_UPDATE: 'RULE_UPDATE',
+  TYPING: 'TYPING',
+  READ_RECEIPT: 'READ_RECEIPT'
+};
+
+exports.EncryptionMode = exports.$Enums.EncryptionMode = {
+  E2EE: 'E2EE',
+  SERVER: 'SERVER',
+  HYBRID: 'HYBRID'
+};
+
+exports.MediaAccessLevel = exports.$Enums.MediaAccessLevel = {
+  L0_TEXT: 'L0_TEXT',
+  L1_IMAGE: 'L1_IMAGE',
+  L2_VOICE: 'L2_VOICE',
+  L3_VIDEO: 'L3_VIDEO',
+  L4_LOCATION: 'L4_LOCATION',
+  L5_CONTACT: 'L5_CONTACT'
+};
+
+exports.RuleEngineResult = exports.$Enums.RuleEngineResult = {
+  PASS: 'PASS',
+  SOFT_BLOCK: 'SOFT_BLOCK',
+  HARD_BLOCK: 'HARD_BLOCK',
+  PACE_LIMIT: 'PACE_LIMIT'
+};
+
+exports.MessageDeliveryStatus = exports.$Enums.MessageDeliveryStatus = {
+  SENDING: 'SENDING',
+  SENT: 'SENT',
+  DELIVERED: 'DELIVERED',
+  READ: 'READ',
+  FAILED: 'FAILED'
+};
+
+exports.PresenceStatus = exports.$Enums.PresenceStatus = {
+  ONLINE: 'ONLINE',
+  AWAY: 'AWAY',
+  BUSY: 'BUSY',
+  OFFLINE: 'OFFLINE'
+};
+
+exports.ConsentRequestType = exports.$Enums.ConsentRequestType = {
+  MEDIA: 'MEDIA',
+  LOCATION: 'LOCATION',
+  CONTACT: 'CONTACT',
+  INTIMATE: 'INTIMATE'
+};
+
 exports.NotificationType = exports.$Enums.NotificationType = {
   NEW_MATCH: 'NEW_MATCH',
   MATCH_ACCEPTED: 'MATCH_ACCEPTED',
@@ -677,6 +928,24 @@ exports.SincerityTransactionType = exports.$Enums.SincerityTransactionType = {
   REFUND: 'REFUND'
 };
 
+exports.ReportReason = exports.$Enums.ReportReason = {
+  INAPPROPRIATE_CONTENT: 'INAPPROPRIATE_CONTENT',
+  HARASSMENT: 'HARASSMENT',
+  FAKE_PROFILE: 'FAKE_PROFILE',
+  SPAM: 'SPAM',
+  OFFENSIVE_BEHAVIOR: 'OFFENSIVE_BEHAVIOR',
+  OTHER: 'OTHER'
+};
+
+exports.ReportStatus = exports.$Enums.ReportStatus = {
+  PENDING: 'PENDING',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  RESOLVED_NO_ACTION: 'RESOLVED_NO_ACTION',
+  RESOLVED_WARNING: 'RESOLVED_WARNING',
+  RESOLVED_BANNED: 'RESOLVED_BANNED',
+  DISMISSED: 'DISMISSED'
+};
+
 exports.Prisma.ModelName = {
   BotProfile: 'BotProfile',
   BotInteractionLog: 'BotInteractionLog',
@@ -694,6 +963,16 @@ exports.Prisma.ModelName = {
   ChatRoom: 'ChatRoom',
   ChatRoomMember: 'ChatRoomMember',
   Message: 'Message',
+  Conversation: 'Conversation',
+  ConversationParticipant: 'ConversationParticipant',
+  IMMessage: 'IMMessage',
+  MessageReceipt: 'MessageReceipt',
+  MessageReaction: 'MessageReaction',
+  UserPresence: 'UserPresence',
+  ConsentRequest: 'ConsentRequest',
+  ConsentGrant: 'ConsentGrant',
+  PowerBoardRule: 'PowerBoardRule',
+  AuditLog: 'AuditLog',
   Notification: 'Notification',
   Subscription: 'Subscription',
   Payment: 'Payment',
@@ -701,7 +980,8 @@ exports.Prisma.ModelName = {
   AnalyticsEvent: 'AnalyticsEvent',
   SystemConfig: 'SystemConfig',
   SincerityWallet: 'SincerityWallet',
-  SincerityTransaction: 'SincerityTransaction'
+  SincerityTransaction: 'SincerityTransaction',
+  UserReport: 'UserReport'
 };
 
 /**

@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 /* ================================================
-   NEXUS - FEELD-STYLE DARK THEME
+   LOKFEEL - FEELD-STYLE DESIGN SYSTEM
+   Based on: feeld-design-system.md
    ================================================ */
 
 /* CSS Custom Properties - Color System */
@@ -16,19 +17,20 @@
   --foreground-subtle: rgba(255, 255, 255, 0.4);
   --foreground-faint: rgba(255, 255, 255, 0.2);
   
-  /* Primary Accent - Mauve Pink */
-  --primary: #c94d7a;
-  --primary-hover: #d65d8a;
-  --primary-muted: rgba(201, 77, 122, 0.2);
-  
-  /* Secondary Accent - Purple */
-  --secondary: #818cf8;
-  --secondary-hover: #9ca3fb;
-  --secondary-muted: rgba(129, 140, 248, 0.2);
-  
-  /* Gradient Colors */
-  --gradient-start: #c94d7a;
-  --gradient-end: #818cf8;
+  /* Primary Accent - LokFeel Indigo */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-muted: rgba(99, 102, 241, 0.2);
+
+  /* Secondary Accent - LokFeel Gold */
+  --secondary: #f59e0b;
+  --secondary-hover: #d97706;
+  --secondary-muted: rgba(245, 158, 11, 0.2);
+
+  /* LokFeel Gradients */
+  --gradient-start: #6366f1;
+  --gradient-mid: #8b5cf6;
+  --gradient-end: #ec4899;
   
   /* Card Colors */
   --card: rgba(255, 255, 255, 0.05);

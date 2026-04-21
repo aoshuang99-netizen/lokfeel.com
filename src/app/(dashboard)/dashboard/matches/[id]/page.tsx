@@ -85,6 +85,12 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
   }, [id]);
 
   const handleReaction = async (reaction: "INTERESTED" | "PASS" | "MAYBE" | "BLOCK") => {
+    // Show confirmation dialog for INTERESTED
+    if (reaction === "INTERESTED") {
+      const confirmed = window.confirm(`Send interest to ${match?.otherUser.name}?\n\nThey will be notified and can choose to connect with you.`);
+      if (!confirmed) return;
+    }
+    
     setIsReacting(true);
     try {
       const res = await fetch(`/api/matches/${id}`, {
@@ -96,7 +102,23 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
       if (!res.ok) throw new Error("Failed to record reaction");
       
       const data = await res.json();
-      toast.success(data.message);
+      
+      // Enhanced success message with status info
+      if (reaction === "INTERESTED") {
+        toast.success(
+          <div>
+            <p className="font-medium">Interest sent! 💌</p>
+            <p className="text-sm text-gray-400">
+              Waiting for {match?.otherUser.name} to respond...
+              <br />
+              <span className="text-xs">Typically responds within 24 hours</span>
+            </p>
+          </div>,
+          { duration: 5000 }
+        );
+      } else {
+        toast.success(data.message);
+      }
       
       // Refresh match data
       const refreshRes = await fetch(`/api/matches/${id}`);
@@ -105,7 +127,8 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
       
       // If both interested and chat room created, redirect to chat
       if (reaction === "INTERESTED" && refreshData.hasChatRoom) {
-        router.push(`/dashboard/chat/${refreshData.chatRoomId}`);
+        toast.success("It's a match! Opening chat...", { duration: 2000 });
+        setTimeout(() => router.push(`/dashboard/chat/${refreshData.chatRoomId}`), 1000);
       }
     } catch (error) {
       console.error("Reaction error:", error);
@@ -128,20 +151,31 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
     
     if (match.myReaction === "INTERESTED") {
       return (
-        <div className="flex gap-2">
+        <div className="space-y-3">
           {match.hasChatRoom ? (
             <Link
               href={`/dashboard/chat/${match.chatRoomId}`}
-              className="btn-primary flex-1 flex items-center justify-center gap-2"
+              className="btn-primary flex-1 flex items-center justify-center gap-2 w-full"
             >
               <MessageCircle className="w-4 h-4" />
               Open Chat
             </Link>
           ) : (
-            <button disabled className="btn-primary flex-1 opacity-50 cursor-not-allowed">
-              <Heart className="w-4 h-4 inline mr-2" />
-              Interested
-            </button>
+            <>
+              <button disabled className="btn-primary flex-1 opacity-50 cursor-not-allowed w-full">
+                <Heart className="w-4 h-4 inline mr-2" />
+                Interest Sent
+              </button>
+              {/* Status notification */}
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
+                <p className="text-sm text-white/70">
+                  💌 Waiting for {match.otherUser.name} to respond
+                </p>
+                <p className="text-xs text-white/50 mt-1">
+                  Typically responds within 24 hours
+                </p>
+              </div>
+            </>
           )}
         </div>
       );
@@ -149,7 +183,7 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
     
     if (match.myReaction === "PASS") {
       return (
-        <button disabled className="btn-secondary flex-1 opacity-50 cursor-not-allowed">
+        <button disabled className="btn-secondary flex-1 opacity-50 cursor-not-allowed w-full">
           <X className="w-4 h-4 inline mr-2" />
           Passed
         </button>
@@ -294,107 +328,75 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
 
         {/* Match Details */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Overall Score */}
+          {/* Overall Score - Simplified inline version */}
           <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-white">Overall Compatibility</h3>
-              <span className="text-4xl font-bold text-gradient">{overallScore}%</span>
-            </div>
-
-            {/* Circular Progress */}
-            <div className="flex justify-center mb-6">
-              <div className="relative w-48 h-48">
-                <svg className="w-full h-full circular-progress" viewBox="0 0 100 100">
+            <div className="flex items-center gap-6">
+              {/* Compact Score */}
+              <div className="flex-shrink-0 relative w-20 h-20">
+                <svg className="w-full h-full" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="42" strokeWidth="8" fill="none" className="circular-progress-bg" />
+                  <circle
+                    cx="50" cy="50" r="42" strokeWidth="8" fill="none"
+                    strokeDasharray={`${overallScore * 2.64} 264`}
+                    stroke="url(#matchGradientSm)"
+                    strokeLinecap="round"
+                    transform="rotate(-90 50 50)"
+                  />
                   <defs>
-                    <linearGradient id="matchGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient id="matchGradientSm" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#c94d7a" />
                       <stop offset="100%" stopColor="#818cf8" />
                     </linearGradient>
                   </defs>
-                  <circle
-                    className="circular-progress-bg"
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    className="circular-progress-fill"
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    strokeWidth="8"
-                    strokeDasharray={`${overallScore * 2.64} 264`}
-                    stroke="url(#matchGradient)"
-                  />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Heart className="w-12 h-12 text-primary" />
+                  <span className="text-lg font-bold text-white">{overallScore}%</span>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Dimension Scores */}
-          <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Compatibility Breakdown</h3>
-            <div className="space-y-4">
-              {Object.entries(match.compatibilityBreakdown)
-                .filter(([_, value]) => value !== null)
-                .map(([key, value]) => (
-                <div key={key}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white/80">{dimensionLabels[key]}</span>
-                    <span className="text-sm font-semibold text-white">{Math.round(value as number)}%</span>
-                  </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all"
-                      style={{ width: `${value}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Explanation */}
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold text-white">Why You Match</h3>
-            </div>
-            <p className="text-white/80 leading-relaxed mb-6">{match.matchReason}</p>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-success/10 border border-success/20 rounded-xl p-4">
-                <h4 className="font-semibold text-success mb-2 flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  Compatibility Strengths
-                </h4>
-                <p className="text-sm text-white/80">
-                  Based on your relationship blueprints, you share strong alignment in 
-                  attachment styles and communication preferences.
-                </p>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-white mb-1">Compatibility Score</h3>
+                <p className="text-sm text-white/60 line-clamp-2">{match.matchReason}</p>
               </div>
-
-              {warnings.length > 0 && (
-                <div className="bg-warning/10 border border-warning/20 rounded-xl p-4">
-                  <h4 className="font-semibold text-warning mb-2 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4" />
-                    Considerations
-                  </h4>
-                  <ul className="space-y-2">
-                    {warnings.map((warning: string, idx: number) => (
-                      <li key={idx} className="text-sm text-white/80 flex items-start gap-2">
-                        <span className="text-warning mt-1">•</span>
-                        {warning}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </div>
+
+            {/* Compact Dimension Breakdown */}
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex items-center gap-3 flex-wrap">
+                {Object.entries(match.compatibilityBreakdown)
+                  .filter(([_, value]) => value !== null)
+                  .map(([key, value]) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <span className="text-xs text-white/50">{dimensionLabels[key]}</span>
+                    <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
+                        style={{ width: `${value}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-white">{Math.round(value as number)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Warnings */}
+            {warnings.length > 0 && (
+              <div className="mt-4 bg-warning/10 border border-warning/20 rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-warning mb-1">Considerations</p>
+                    <div className="flex flex-wrap gap-1">
+                      {warnings.map((warning: string, idx: number) => (
+                        <span key={idx} className="text-xs text-white/70 bg-white/5 px-2 py-0.5 rounded-full">
+                          {warning}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

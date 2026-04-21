@@ -1,0 +1,481 @@
+"use client";
+
+import { memo, useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bot, Check, CheckCheck, Clock, Copy, Trash2, Flag, Reply, ChevronRight } from "lucide-react";
+import type { IMMessagePayload, MessageDeliveryStatus } from "@/lib/im/types";
+import { ReactionPicker, ReactionSummary, type ReactionSummaryDisplay } from "./reaction-picker";
+import { toast } from "sonner";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface MessageBubbleProps {
+  /** IM API v2 消息载荷 */
+  message: IMMessagePayload;
+  /** 当前用户 ID (用于判断是否是自己发送) */
+  currentUserId?: string;
+  /** 发送者信息 */
+  sender?: {
+    id: string;
+    name: string;
+    avatar?: string | null;
+    isBot?: boolean;
+  };
+  isGrouped?: boolean;
+  showAvatar?: boolean;
+  onRetry?: (msgId: string) => void;
+  onCopy?: (content: string) => void;
+  onDelete?: (msgId: string) => void;
+  onReport?: (msgId: string, senderId: string) => void;
+  onReply?: (message: IMMessagePayload) => void;
+  /** 添加 reaction */
+  onReaction?: (msgId: string, emoji: string) => void;
+  /** 移除 reaction */
+  onRemoveReaction?: (msgId: string, emoji: string) => void;
+  /** 消息的 reactions 汇总（显示在气泡下方） */
+  reactions?: ReactionSummaryDisplay[];
+  /** 我对这个消息添加的 reactions（用于高亮显示） */
+  myReactions?: string[];
+  /** 引用的消息（用于显示引用回复） */
+  quotedMessage?: {
+    id: string;
+    content: string;
+    senderName?: string;
+  } | null;
+}
+
+// Legacy type alias for backward compatibility
+export type LegacyMessageBubbleProps = Omit<MessageBubbleProps, 'message'> & {
+  id: string;
+  content: string;
+  senderId: string;
+  createdAt: string;
+  status?: "sending" | "sent" | "delivered" | "read" | "failed";
+};
+
+interface AvatarDisplayProps {
+  name: string;
+  avatar?: string | null;
+  isBot?: boolean;
+  size?: "sm" | "md";
+}
+
+// ============================================================================
+// Avatar Display Component
+// ============================================================================
+
+function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps) {
+  const sizeClasses = size === "sm" ? "w-8 h-8" : "w-10 h-10";
+  const botBadgeSize = size === "sm" ? "-bottom-0.5 -right-0.5 w-3 h-3" : "-bottom-0.5 -right-0.5 w-4 h-4";
+
+  return (
+    <div className={`relative ${sizeClasses} rounded-full overflow-hidden bg-white/5 flex-shrink-0`}>
+      {avatar ? (
+        <img
+          src={avatar}
+          alt={name}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold">
+          {name?.[0] || "?"}
+        </div>
+      )}
+      {/* Bot indicator */}
+      {isBot && (
+        <div className={`absolute ${botBadgeSize} bg-purple-500 rounded-full flex items-center justify-center border-2 border-[#0d0c11]`}>
+          <Bot className={size === "sm" ? "w-2 h-2" : "w-3 h-3"} color="white" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Context Menu Component (长按菜单)
+// ============================================================================
+
+interface ContextMenuProps {
+  x: number;
+  y: number;
+  onClose: () => void;
+  onCopy: () => void;
+  onDelete: () => void;
+  onReport: () => void;
+  onReply: () => void;
+  canDelete: boolean;
+}
+
+function ContextMenu({ x, y, onClose, onCopy, onDelete, onReport, onReply, canDelete }: ContextMenuProps) {
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 z-50" 
+        onClick={onClose}
+        onContextMenu={(e) => { e.preventDefault(); onClose(); }}
+      />
+      
+      {/* Menu */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        style={{ 
+          position: 'fixed', 
+          left: x, 
+          top: y,
+          zIndex: 51,
+        }}
+        className="bg-[#1a1926] rounded-xl border border-white/10 shadow-xl overflow-hidden min-w-[160px]"
+      >
+        <button
+          onClick={() => { onReply(); onClose(); }}
+          className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5 flex items-center gap-3 transition-colors"
+        >
+          <Reply className="w-4 h-4 text-primary" />
+          Reply
+        </button>
+        <button
+          onClick={() => { onCopy(); onClose(); }}
+          className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5 flex items-center gap-3 transition-colors"
+        >
+          <Copy className="w-4 h-4 text-white/60" />
+          Copy
+        </button>
+        {canDelete && (
+          <button
+            onClick={() => { onDelete(); onClose(); }}
+            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 flex items-center gap-3 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
+          </button>
+        )}
+        {!canDelete && (
+          <button
+            onClick={() => { onReport(); onClose(); }}
+            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 flex items-center gap-3 transition-colors"
+          >
+            <Flag className="w-4 h-4" />
+            Report
+          </button>
+        )}
+      </motion.div>
+    </>
+  );
+}
+
+// ============================================================================
+// Quoted Message Component (引用消息)
+// ============================================================================
+
+interface QuotedMessageProps {
+  content: string;
+  senderName?: string;
+  isFromMe?: boolean;
+}
+
+function QuotedMessage({ content, senderName, isFromMe }: QuotedMessageProps) {
+  return (
+    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-white/10' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-pink-400' : 'border-white/30'}`}>
+      <p className="text-xs text-white/50 mb-0.5">
+        {senderName ? `${senderName}` : 'Original message'}
+      </p>
+      <p className="text-sm text-white/70 truncate">
+        {content}
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
+// Status Icon Component
+// ============================================================================
+
+/**
+ * 将 IM API v2 的 MessageDeliveryStatus 转换为旧版状态字符串
+ */
+function mapDeliveryStatus(status: MessageDeliveryStatus): LegacyMessageBubbleProps["status"] {
+  switch (status) {
+    case 'SENDING':
+      return 'sending';
+    case 'SENT':
+      return 'sent';
+    case 'DELIVERED':
+      return 'delivered';
+    case 'READ':
+      return 'read';
+    case 'FAILED':
+      return 'failed';
+    default:
+      return undefined;
+  }
+}
+
+function StatusIcon({ status }: { status?: LegacyMessageBubbleProps["status"] }) {
+  if (!status || status === "sending") {
+    return <Clock className="w-3 h-3 text-white/40" />;
+  }
+  
+  if (status === "sent") {
+    return <Check className="w-3 h-3 text-white/50" />;
+  }
+  
+  if (status === "delivered" || status === "read") {
+    return <CheckCheck className={`w-3 h-3 ${status === "read" ? "text-primary" : "text-white/50"}`} />;
+  }
+  
+  if (status === "failed") {
+    return <span className="text-xs text-red-400">Failed</span>;
+  }
+  
+  return null;
+}
+
+// ============================================================================
+// Message Bubble Component
+// ============================================================================
+
+function MessageBubbleComponent({
+  message,
+  currentUserId,
+  sender,
+  isGrouped = false,
+  showAvatar = true,
+  onRetry,
+  onCopy,
+  onDelete,
+  onReport,
+  onReply,
+  onReaction,
+  onRemoveReaction,
+  reactions = [],
+  myReactions = [],
+  quotedMessage,
+}: MessageBubbleProps) {
+  // 提取消息数据
+  const { msgId, payload, senderId, msgType, status, timestamp } = message;
+  
+  // State for context menu
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  
+  // Determine if message is from current user
+  const isFromMe = currentUserId ? senderId === currentUserId : sender?.id === currentUserId;
+  const isBot = sender?.isBot || senderId?.startsWith("bot-");
+
+  // Format time from timestamp (milliseconds)
+  const formatTime = (ts: number) => {
+    return new Date(ts).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Get bubble styles based on sender type
+  const getBubbleStyles = () => {
+    if (isFromMe) {
+      return "bg-gradient-to-br from-pink-500 to-purple-500 text-white rounded-br-md";
+    }
+    if (isBot) {
+      return "bg-gradient-to-br from-purple-500/80 to-blue-500/80 text-white rounded-bl-md border border-purple-400/30";
+    }
+    return "bg-white/10 text-white rounded-bl-md";
+  };
+
+  // Handle long press / context menu
+  const handleContextMenu = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    
+    let x: number, y: number;
+    
+    if ('touches' in e) {
+      const touch = e.touches[0];
+      x = touch.clientX;
+      y = touch.clientY;
+    } else {
+      x = e.clientX;
+      y = e.clientY;
+    }
+    
+    // Adjust position to keep menu in viewport
+    const menuWidth = 180;
+    const menuHeight = 180;
+    
+    if (x + menuWidth > window.innerWidth) {
+      x = window.innerWidth - menuWidth - 10;
+    }
+    if (y + menuHeight > window.innerHeight) {
+      y = window.innerHeight - menuHeight - 10;
+    }
+    
+    setContextMenu({ x, y });
+  }, []);
+
+  // Handle menu actions
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(payload).then(() => {
+      toast.success("Copied to clipboard");
+    }).catch(() => {
+      toast.error("Failed to copy");
+    });
+    onCopy?.(payload);
+  }, [payload, onCopy]);
+
+  const handleDelete = useCallback(() => {
+    onDelete?.(msgId);
+  }, [msgId, onDelete]);
+
+  const handleReport = useCallback(() => {
+    onReport?.(msgId, senderId);
+  }, [msgId, senderId, onReport]);
+
+  const handleReply = useCallback(() => {
+    onReply?.(message);
+  }, [message, onReply]);
+
+  // Handle reaction toggle
+  const handleReaction = useCallback((emoji: string) => {
+    if (myReactions.includes(emoji)) {
+      onRemoveReaction?.(msgId, emoji);
+    } else {
+      onReaction?.(msgId, emoji);
+    }
+  }, [msgId, myReactions, onReaction, onRemoveReaction]);
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`flex ${isFromMe ? "justify-end" : "justify-start"} ${isGrouped ? "mt-1" : "mt-4"}`}
+        onContextMenu={handleContextMenu}
+        onTouchStart={() => {}}
+      >
+        <div className={`flex items-end gap-2 max-w-[75%] ${isFromMe ? "flex-row-reverse" : ""}`}>
+          {/* Avatar - only show for first message in group or when showAvatar is true */}
+          {!isFromMe && showAvatar && (
+            <AvatarDisplay
+              name={sender?.name || senderId || "?"}
+              avatar={sender?.avatar}
+              isBot={isBot}
+              size="sm"
+            />
+          )}
+          {/* Spacer for grouped messages */}
+          {!isFromMe && !showAvatar && <div className="w-8" />}
+
+          {/* Message Content */}
+          <div 
+            className={`px-4 py-2 rounded-2xl ${getBubbleStyles()} select-text`}
+            onContextMenu={handleContextMenu}
+          >
+            {/* Quoted Message (引用回复) */}
+            {quotedMessage && (
+              <QuotedMessage 
+                content={quotedMessage.content}
+                senderName={quotedMessage.senderName}
+                isFromMe={isFromMe}
+              />
+            )}
+
+            {/* Bot label */}
+            {isBot && !isGrouped && (
+              <div className="flex items-center gap-1 mb-1 opacity-70">
+                <Bot className="w-3 h-3" />
+                <span className="text-[10px] uppercase tracking-wide">AI Assistant</span>
+              </div>
+            )}
+
+            {/* Message content based on msgType */}
+            {msgType === 'TEXT' && (
+              <p className="text-sm whitespace-pre-wrap break-words">{payload}</p>
+            )}
+
+            {msgType === 'IMAGE' && (
+              <div className="space-y-2">
+                <img
+                  src={payload}
+                  alt="Shared image"
+                  className="rounded-lg max-w-[250px] max-h-[300px] object-cover"
+                />
+              </div>
+            )}
+
+            {msgType === 'VOICE' && (
+              <div className="flex items-center gap-2 min-w-[150px]">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                  <span className="text-xs">🎤</span>
+                </div>
+                <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+                  <div className="w-1/2 h-full bg-white/50 rounded-full" />
+                </div>
+                <span className="text-xs opacity-70">{payload}</span>
+              </div>
+            )}
+
+            {/* Time and status */}
+            <div className={`flex items-center gap-1 mt-1 ${isFromMe ? "justify-end" : ""}`}>
+              <span className={`text-xs ${isFromMe ? "text-white/70" : "text-white/50"}`}>
+                {formatTime(timestamp)}
+              </span>
+              {isFromMe && status && (
+                <StatusIcon status={mapDeliveryStatus(status)} />
+              )}
+              {/* Reaction picker button - only show for text messages */}
+              {msgType === 'TEXT' && onReaction && (
+                <ReactionPicker
+                  onSelect={handleReaction}
+                  myReactions={myReactions}
+                  position="above"
+                />
+              )}
+            </div>
+
+            {/* Reactions Summary */}
+            {reactions.length > 0 && (
+              <ReactionSummary
+                reactions={reactions}
+                onToggle={handleReaction}
+              />
+            )}
+
+            {/* Retry button for failed messages */}
+            {status === 'FAILED' && onRetry && (
+              <button
+                onClick={() => onRetry(msgId)}
+                className="mt-2 text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-full transition-colors"
+              >
+                Tap to retry
+              </button>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Context Menu */}
+      <AnimatePresence>
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            onCopy={handleCopy}
+            onDelete={handleDelete}
+            onReport={handleReport}
+            onReply={handleReply}
+            canDelete={isFromMe}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// ============================================================================
+// Memoized Export
+// ============================================================================
+
+export const MessageBubble = memo(MessageBubbleComponent);

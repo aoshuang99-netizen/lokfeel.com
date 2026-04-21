@@ -11,6 +11,7 @@
  *   npx tsx scripts/bot/import-users.ts --dry-run     # 模拟运行
  */
 
+import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import { hash } from 'bcryptjs';

@@ -112,55 +112,35 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Attempt to send via chosen method
-      let sendSuccess = false
+      // Attempt to send via chosen method (best effort)
+      // 🔧 ALWAYS show code to user as backup - ensures registration works even if email fails
+      let emailSent = false
 
       if (method === 'email') {
         const result = await sendVerificationEmail(email!, verificationCode, name, magicToken)
-        sendSuccess = result.success
+        emailSent = result.success
       } else if (method === 'sms') {
         const fullPhone = `${countryCode || '+1'}${phone}`.replace(/\s/g, '')
         const result = await sendSMSVerification(fullPhone, verificationCode, name)
-        sendSuccess = result.success
+        emailSent = result.success
       }
 
-      // Determine if we're in dev/MVP mode (no email/SMS service configured)
-      const hasRealEmailService = !!(process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith('re_'))
-      const hasRealSmsService = !!process.env.TWILIO_ACCOUNT_SID
-      const requireRealSend = (method === 'email' && EMAIL_VERIFICATION_ENABLED && hasRealEmailService)
-                            || (method === 'sms' && SMS_VERIFICATION_ENABLED && hasRealSmsService)
-      const isDevMode = !requireRealSend
+      // Log for debugging
+      console.log(`\n🔐 VERIFICATION CODE (${method.toUpperCase()})`)
+      console.log(`   To: ${identifier}`)
+      console.log(`   Code: ${verificationCode}`)
+      console.log(`   Email Sent: ${emailSent}`)
+      console.log(`   Expires: ${expiresAt.toISOString()}\n`)
 
-      if (!sendSuccess && isDevMode) {
-        console.log(`\n🔐 VERIFICATION CODE (${method.toUpperCase()} MODE)`)
-        console.log(`   To: ${identifier}`)
-        console.log(`   Code: ${verificationCode}`)
-        console.log(`   Expires: ${expiresAt.toISOString()}\n`)
-        sendSuccess = true // Allow in dev/MVP mode
-      }
-
-      if (!sendSuccess) {
-        return NextResponse.json(
-          { message: `Failed to send ${method} verification. Please try again.` },
-          { status: 500 }
-        )
-      }
-
-      // Build response — include devMode + actual code for MVP/dev mode
+      // Build response — ALWAYS include code so user can complete registration
       const responseBody: Record<string, unknown> = {
-        message: isDevMode
-          ? `Verification code generated (dev mode - no email service configured)`
-          : method === 'email'
-            ? 'Verification code sent to your email'
-            : `Verification code sent to your phone`,
+        message: emailSent
+          ? 'Verification code sent to your email'
+          : 'Please use the verification code displayed below',
         method,
         maskedIdentifier: method === 'email' ? maskEmail(email!) : maskPhone(phone!),
-        devMode: isDevMode,
-      }
-
-      // In dev/MVP mode: include the actual code so user can see it on screen!
-      if (isDevMode) {
-        responseBody.code = verificationCode
+        devMode: true, // Always show code UI
+        code: verificationCode, // ALWAYS include code
       }
 
       return NextResponse.json(responseBody, { status: 200 })

@@ -7,25 +7,43 @@ import {
   ArrowRight,
   Loader2,
   Mail,
-  Phone,
   CheckCircle2,
 } from "lucide-react";
 import { signIn } from "next-auth/react";
+
+// ─── MINIMAL BLACK & WHITE STYLE CONSTANTS ───────────────────────────────
+const colors = {
+  bg: "rgba(255,255,255,0.03)",
+  border: "rgba(255,255,255,0.08)",
+  text: "#fff",
+  textMuted: "rgba(255,255,255,0.5)",
+  textSecondary: "rgba(255,255,255,0.7)",
+  input: "rgba(255,255,255,0.05)",
+  inputBorder: "rgba(255,255,255,0.1)",
+  inputFocus: "rgba(255,255,255,0.3)",
+  primary: "#fff", // Black & white: white primary
+  primaryBg: "#fff",
+  primaryText: "#000",
+  card: "rgba(255,255,255,0.03)",
+  cardBorder: "rgba(255,255,255,0.08)",
+  error: "#fca5a5",
+  errorBg: "rgba(239,68,68,0.1)",
+  errorBorder: "rgba(239,68,68,0.2)",
+};
 
 // ─── Registration State Persistence ───
 const REG_STATE_KEY = 'lokfeel_register_state';
 interface RegState {
   step: string;
   formData: Record<string, string | boolean>;
-  verifyMethod: string;
   sentInfo: { maskedIdentifier?: string; devMode?: boolean; code?: string };
   savedAt: number;
 }
 
-function saveRegState(step: string, formData: Record<string, string | boolean>, verifyMethod: string, sentInfo: any) {
+function saveRegState(step: string, formData: Record<string, string | boolean>, sentInfo: any) {
   if (typeof window === 'undefined') return;
   try {
-    const state: RegState = { step, formData, verifyMethod, sentInfo: sentInfo || {}, savedAt: Date.now() };
+    const state: RegState = { step, formData, sentInfo: sentInfo || {}, savedAt: Date.now() };
     localStorage.setItem(REG_STATE_KEY, JSON.stringify(state));
   } catch { /* ignore */ }
 }
@@ -36,7 +54,6 @@ function loadRegState(): RegState | null {
     const raw = localStorage.getItem(REG_STATE_KEY);
     if (!raw) return null;
     const state: RegState = JSON.parse(raw);
-    // Expire after 24 hours
     if (Date.now() - state.savedAt > 24 * 60 * 60 * 1000) {
       localStorage.removeItem(REG_STATE_KEY);
       return null;
@@ -50,11 +67,11 @@ function clearRegState() {
   try { localStorage.removeItem(REG_STATE_KEY); } catch { /* ignore */ }
 }
 
+// ─── Gender & Sexuality Options (Simplified) ───
 const genderOptions = [
   { value: "woman", label: "Woman" },
   { value: "man", label: "Man" },
   { value: "non-binary", label: "Non-binary" },
-  { value: "other", label: "Other" },
 ];
 
 const sexualityOptions = [
@@ -64,25 +81,8 @@ const sexualityOptions = [
   { value: "bisexual", label: "Bisexual" },
   { value: "pansexual", label: "Pansexual" },
   { value: "queer", label: "Queer" },
-  { value: "asexual", label: "Asexual" },
-  { value: "questioning", label: "Questioning" },
-];
-
-const countryCodes = [
-  { code: "+1", country: "US/CA", flag: "🇺🇸" },
-  { code: "+44", country: "UK", flag: "🇬🇧" },
-  { code: "+86", country: "China", flag: "🇨🇳" },
-  { code: "+81", country: "Japan", flag: "🇯🇵" },
-  { code: "+82", country: "Korea", flag: "🇰🇷" },
-  { code: "+61", country: "Australia", flag: "🇦🇺" },
-  { code: "+49", country: "Germany", flag: "🇩🇪" },
-  { code: "+33", country: "France", flag: "🇫🇷" },
-  { code: "+39", country: "Italy", flag: "🇮🇹" },
-  { code: "+55", country: "Brazil", flag: "🇧🇷" },
-  { code: "+91", country: "India", flag: "🇮🇳" },
-  { code: "+852", country: "HK", flag: "🇭🇰" },
-  { code: "+886", country: "Taiwan", flag: "🇹🇼" },
-  { code: "+65", country: "Singapore", flag: "🇸🇬" },
+  { value: "demisexual", label: "Demisexual" },
+  { value: "questioning", label: "Not sure" },
 ];
 
 // Only Google + Discord OAuth providers
@@ -94,6 +94,7 @@ const oauthProviders = [
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState<"info" | "verify">("info");
+  // ─── SIMPLIFIED FORM: Only name, email, password, gender, sexuality ───
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -101,42 +102,38 @@ export default function RegisterPage() {
     confirmPassword: "",
     gender: "",
     sexuality: "",
-    phone: "",
-    countryCode: "+1",
     agreeToTerms: false,
   });
-  // Verification method: 'email' or 'sms'
-  const [verifyMethod, setVerifyMethod] = useState<"email" | "sms">("email");
   const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [sentInfo, setSentInfo] = useState<{ maskedIdentifier?: string; devMode?: boolean; code?: string }>({});
-  const [restoredFromSession, setRestoredFromSession] = useState(false);
 
   // ─── Restore registration state on mount ───
   useEffect(() => {
+    // Check for reset parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('reset')) {
+      clearRegState();
+      return;
+    }
+    
     const saved = loadRegState();
     if (saved && saved.step === 'verify' && saved.formData.email) {
-      // Restore to verify step
       setStep('verify');
       setFormData(prev => ({ ...prev, ...saved.formData }));
-      setVerifyMethod(saved.verifyMethod as any);
       if (saved.sentInfo) setSentInfo(saved.sentInfo);
-      setRestoredFromSession(true);
     } else if (saved && saved.step === 'info' && saved.formData.email) {
-      // Restore to info step (user was filling form)
       setFormData(prev => ({ ...prev, ...saved.formData }));
-      setVerifyMethod(saved.verifyMethod as any);
-      setRestoredFromSession(true);
     }
   }, []);
 
   // Auto-save on state changes
   const saveState = useCallback(() => {
-    saveRegState(step, formData as any, verifyMethod, sentInfo);
-  }, [step, formData, verifyMethod, sentInfo]);
+    saveRegState(step, formData as any, sentInfo);
+  }, [step, formData, sentInfo]);
 
   useEffect(() => { saveState(); }, [saveState]);
 
@@ -164,13 +161,11 @@ export default function RegisterPage() {
   const handleSendCode = async () => {
     if (!formData.name) { setError("Please enter your name"); return; }
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError("Please enter a valid email address (always required)");
+      setError("Please enter a valid email address");
       return;
     }
-    if (verifyMethod === "sms" && (!formData.phone || formData.phone.length < 7)) {
-      setError("Please enter a valid phone number for SMS verification");
-      return;
-    }
+    if (!formData.gender) { setError("Please select your gender"); return; }
+    if (!formData.sexuality) { setError("Please select who you're interested in"); return; }
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -198,9 +193,7 @@ export default function RegisterPage() {
           password: formData.password,
           gender: formData.gender,
           sexuality: formData.sexuality,
-          verifyMethod,
-          phone: formData.phone,
-          countryCode: formData.countryCode,
+          verifyMethod: "email",
         }),
       });
 
@@ -213,10 +206,9 @@ export default function RegisterPage() {
       setSentInfo({
         maskedIdentifier: data.maskedIdentifier,
         devMode: data.devMode,
-        code: data.code, // In dev mode, the actual code is returned
+        code: data.code,
       });
 
-      // Proceed to verification step
       setStep("verify");
       startCountdown();
     } catch (err) {
@@ -238,8 +230,6 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
-          phone: formData.phone,
-          verifyMethod,
           name: formData.name,
         }),
       });
@@ -247,7 +237,6 @@ export default function RegisterPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to resend");
       
-      // Update sentInfo with new code (for dev mode display)
       if (data.devMode) {
         setSentInfo(prev => ({ ...prev, code: data.code }));
       }
@@ -279,7 +268,6 @@ export default function RegisterPage() {
       const prevInput = document.getElementById(`code-${index - 1}`);
       prevInput?.focus();
     }
-    // Auto-submit when all 6 digits are entered
     if (e.key === "Enter") {
       e.preventDefault();
       handleVerifyAndCreate();
@@ -308,9 +296,7 @@ export default function RegisterPage() {
           gender: formData.gender,
           sexuality: formData.sexuality,
           code,
-          verifyMethod,
-          phone: formData.phone,
-          countryCode: formData.countryCode,
+          verifyMethod: "email",
         }),
       });
 
@@ -320,10 +306,8 @@ export default function RegisterPage() {
         throw new Error(data.message || "Registration failed");
       }
 
-      // Auto login after successful registration using the auto-login token
       if (data.autoLoginToken) {
         try {
-          // Exchange auto-login token for session
           const autoLoginRes = await fetch("/api/auth/auto-login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -334,7 +318,6 @@ export default function RegisterPage() {
           });
 
           if (autoLoginRes.ok) {
-            // Now sign in with credentials
             const signInResult = await signIn("credentials", {
               email: formData.email,
               password: formData.password,
@@ -342,10 +325,9 @@ export default function RegisterPage() {
             });
 
             if ((signInResult as any)?.ok) {
-              // Clear persisted state — registration complete!
               clearRegState();
-              // Redirect to onboarding or dashboard
-              router.push(data.redirectTo || "/dashboard/onboarding");
+              // Use window.location for full page reload to ensure session is set
+              window.location.href = data.redirectTo || "/dashboard/onboarding";
               return;
             }
           }
@@ -354,7 +336,6 @@ export default function RegisterPage() {
         }
       }
 
-      // Fallback: redirect to login if auto-login failed
       router.push("/login?registered=true");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -374,54 +355,56 @@ export default function RegisterPage() {
   };
 
   // ══════════════════════════════════════
-  // VERIFICATION STEP
+  // VERIFICATION STEP - Black & White Style
   // ══════════════════════════════════════
   if (step === "verify") {
     return (
-      <div className="glass-card p-8 max-w-md w-full">
+      <div style={{
+        maxWidth: "420px",
+        margin: "0 auto",
+        padding: "40px 32px",
+        background: colors.bg,
+        backdropFilter: "blur(20px)",
+        borderRadius: "24px",
+        border: `1px solid ${colors.border}`,
+      }}>
         <div className="text-center mb-8">
-          {/* Logo */}
+          {/* Logo - Black & White */}
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #9333ea 50%, #f59e0b 100%)' }}>
-              <div className="w-full h-full flex items-center justify-center">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </div>
+            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-black flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
-              LokFeel
-            </span>
+            <span style={{ fontSize: "24px", fontWeight: "bold", color: colors.text }}>LokFeel</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-2">Verify Your Identity</h1>
-          <p className="text-white/60 text-sm">
+          <h1 style={{ fontSize: "24px", fontWeight: "bold", color: colors.text, marginBottom: "8px" }}>
+            Verify Your Email
+          </h1>
+          <p style={{ color: colors.textMuted, fontSize: "14px" }}>
             We sent a 6-digit code to{' '}
-            <span className="text-white font-medium">{sentInfo.maskedIdentifier || (verifyMethod === 'email' ? formData.email : `${formData.countryCode} ${formData.phone}`)}</span>
+            <span style={{ color: colors.text, fontWeight: "500" }}>{sentInfo.maskedIdentifier || formData.email}</span>
           </p>
 
           {sentInfo.devMode && (
-            <div className="mt-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-              <p className="text-amber-300 text-xs mb-2 font-medium">⚠️ Dev Mode — Email service not configured</p>
-              <p className="text-white/60 text-xs mb-2">Your verification code is:</p>
-              <div className="flex items-center justify-center gap-3">
+            <div className="mt-4 p-4 rounded-xl" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${colors.border}` }}>
+              <p style={{ color: colors.textMuted, fontSize: "12px", marginBottom: "8px" }}>Dev Mode — Your verification code:</p>
+              <div className="flex items-center justify-center gap-2">
                 {sentInfo.code && sentInfo.code.split('').map((digit, i) => (
-                  <span key={i} className="w-10 h-12 flex items-center justify-center bg-amber-500/20 border border-amber-500/40 rounded-lg text-2xl font-bold text-amber-300 font-mono">
+                  <span key={i} className="w-10 h-12 flex items-center justify-center rounded-lg text-2xl font-bold font-mono" 
+                    style={{ background: "rgba(255,255,255,0.1)", color: colors.text, border: `1px solid ${colors.border}` }}>
                     {digit}
                   </span>
                 ))}
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  if (sentInfo.code) {
-                    navigator.clipboard.writeText(sentInfo.code);
-                  }
-                }}
-                className="mt-3 w-full text-xs text-white/50 hover:text-amber-300 transition-colors"
+                onClick={() => sentInfo.code && navigator.clipboard.writeText(sentInfo.code)}
+                className="mt-3 text-xs transition-colors cursor-pointer"
+                style={{ color: colors.textMuted, background: "none", border: "none" }}
               >
-                📋 Click to copy code
+                Click to copy
               </button>
             </div>
           )}
@@ -429,7 +412,7 @@ export default function RegisterPage() {
 
         {/* Error */}
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-error/20 border border-error/30 text-error text-sm">
+          <div className="mb-6 p-4 rounded-xl" style={{ background: colors.errorBg, border: `1px solid ${colors.errorBorder}`, color: colors.error, fontSize: "14px" }}>
             {error}
           </div>
         )}
@@ -446,27 +429,48 @@ export default function RegisterPage() {
               value={digit}
               onChange={(e) => handleCodeChange(index, e.target.value)}
               onKeyDown={(e) => handleCodeKeyDown(index, e)}
-              className="w-12 h-14 text-center text-2xl font-bold bg-white/5 border border-white/10 rounded-xl text-white focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-transparent"
+              className="w-12 h-14 text-center text-2xl font-bold rounded-xl"
+              style={{ 
+                background: colors.input, 
+                border: `1px solid ${colors.inputBorder}`, 
+                color: colors.text,
+                outline: "none",
+              }}
               disabled={isLoading}
               autoFocus={index === 0}
             />
           ))}
         </div>
 
-        {/* Verify button */}
+        {/* Verify button - Black & White */}
         <button
           onClick={handleVerifyAndCreate}
           disabled={isLoading}
-          className="btn-primary w-full mb-4"
+          style={{
+            width: "100%",
+            padding: "14px",
+            background: isLoading ? "rgba(255,255,255,0.3)" : colors.primaryBg,
+            border: "none",
+            borderRadius: "12px",
+            color: colors.primaryText,
+            fontSize: "16px",
+            fontWeight: "600",
+            cursor: isLoading ? "not-allowed" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            marginBottom: "16px",
+          }}
         >
           {isLoading ? (
-            <span className="flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <>
+              <Loader2 size={18} className="animate-spin" />
               Creating account...
-            </span>
+            </>
           ) : (
             <>
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 size={18} />
               Verify & Create Account
             </>
           )}
@@ -477,7 +481,14 @@ export default function RegisterPage() {
           <button
             onClick={handleResendCode}
             disabled={countdown > 0 || isSendingCode}
-            className="text-sm text-white/60 hover:text-primary transition-colors disabled:opacity-50"
+            style={{
+              background: "none",
+              border: "none",
+              color: countdown > 0 ? colors.textMuted : colors.text,
+              fontSize: "14px",
+              cursor: countdown > 0 || isSendingCode ? "not-allowed" : "pointer",
+              opacity: countdown > 0 ? 0.5 : 1,
+            }}
           >
             {isSendingCode
               ? "Sending..."
@@ -490,7 +501,8 @@ export default function RegisterPage() {
         {/* Back */}
         <button
           onClick={() => setStep("info")}
-          className="w-full text-sm text-white/40 hover:text-white/60 transition-colors"
+          className="w-full text-sm transition-colors cursor-pointer"
+          style={{ background: "none", border: "none", color: colors.textMuted }}
         >
           ← Back to registration
         </button>
@@ -499,40 +511,50 @@ export default function RegisterPage() {
   }
 
   // ══════════════════════════════════════
-  // REGISTRATION INFO STEP
+  // REGISTRATION INFO STEP - Black & White Style, Simplified Form
   // ══════════════════════════════════════
   return (
-    <div className="glass-card p-8 max-h-[90vh] overflow-y-auto max-w-md w-full">
+    <div style={{
+      maxWidth: "420px",
+      margin: "0 auto",
+      padding: "40px 32px",
+      background: colors.bg,
+      backdropFilter: "blur(20px)",
+      borderRadius: "24px",
+      border: `1px solid ${colors.border}`,
+      maxHeight: "90vh",
+      overflowY: "auto",
+    }}>
       <div className="text-center mb-8">
-        {/* Logo */}
+        {/* Logo - Black & White */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #9333ea 50%, #f59e0b 100%)' }}>
-            <div className="w-full h-full flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-            </div>
+          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-black flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
           </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
-            LokFeel
-          </span>
+          <span style={{ fontSize: "24px", fontWeight: "bold", color: colors.text }}>LokFeel</span>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Create Your Account</h1>
-        <p className="text-white/60 text-sm">Start your journey to meaningful connection</p>
+        <h1 style={{ fontSize: "24px", fontWeight: "bold", color: colors.text, marginBottom: "8px" }}>
+          Create Your Account
+        </h1>
+        <p style={{ color: colors.textMuted, fontSize: "14px" }}>
+          Start your journey to meaningful connection
+        </p>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-error/20 border border-error/30 text-error text-sm">
+        <div className="mb-6 p-4 rounded-xl" style={{ background: colors.errorBg, border: `1px solid ${colors.errorBorder}`, color: colors.error, fontSize: "14px" }}>
           {error}
         </div>
       )}
 
-      <form onSubmit={(e) => { e.preventDefault(); handleSendCode(); }} className="space-y-4 mb-6">
-        {/* Name — fixed placeholder, no autocomplete interference */}
+      {/* ─── SIMPLIFIED FORM ─── */}
+      <form onSubmit={(e) => { e.preventDefault(); handleSendCode(); }} style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}>
+        {/* Name */}
         <div>
-          <label htmlFor="reg-name" className="block text-sm font-medium text-white/80 mb-2">
-            Full Name <span className="text-primary">*</span>
+          <label htmlFor="reg-name" style={{ display: "block", fontSize: "14px", fontWeight: "500", color: colors.textSecondary, marginBottom: "8px" }}>
+            Full Name <span style={{ color: colors.error }}>*</span>
           </label>
           <input
             id="reg-name"
@@ -540,153 +562,110 @@ export default function RegisterPage() {
             type="text"
             value={formData.name}
             onChange={handleChange}
-            placeholder=""
             autoComplete="name"
-            className="input-feeld"
             required
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              background: colors.input,
+              border: `1px solid ${colors.inputBorder}`,
+              borderRadius: "12px",
+              color: colors.text,
+              fontSize: "15px",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
           />
         </div>
 
-        {/* Email (always required) */}
+        {/* Email */}
         <div>
-          <label htmlFor="reg-email" className="block text-sm font-medium text-white/80 mb-2">
-            Email <span className="text-primary">*</span>
+          <label htmlFor="reg-email" style={{ display: "block", fontSize: "14px", fontWeight: "500", color: colors.textSecondary, marginBottom: "8px" }}>
+            Email <span style={{ color: colors.error }}>*</span>
           </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <div style={{ position: "relative" }}>
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />
             <input
               id="reg-email"
               name="email"
               type="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder=""
               autoComplete="email"
-              className="input-feeld pl-10"
               required
+              style={{
+                width: "100%",
+                padding: "12px 16px 12px 40px",
+                background: colors.input,
+                border: `1px solid ${colors.inputBorder}`,
+                borderRadius: "12px",
+                color: colors.text,
+                fontSize: "15px",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
             />
           </div>
         </div>
 
-        {/* ─── Verification Method Selector ─── */}
-        <div>
-          <label className="block text-sm font-medium text-white/80 mb-2">
-            Verify with <span className="text-primary">*</span> (choose one)
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setVerifyMethod('email')}
-              className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                verifyMethod === 'email'
-                  ? 'border-primary bg-primary/10 text-white'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:border-white/30'
-              }`}
-            >
-              <Mail className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm font-medium">Email</span>
-              {verifyMethod === 'email' && (
-                <CheckCircle2 className="w-4 h-4 ml-auto text-primary flex-shrink-0" />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setVerifyMethod('sms')}
-              className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                verifyMethod === 'sms'
-                  ? 'border-primary bg-primary/10 text-white'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:border-white/30'
-              }`}
-            >
-              <Phone className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm font-medium">SMS</span>
-              {verifyMethod === 'sms' && (
-                <CheckCircle2 className="w-4 h-4 ml-auto text-primary flex-shrink-0" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Phone (only shown when SMS selected) */}
-        {verifyMethod === "sms" && (
-          <div className="grid grid-cols-[120px_1fr] gap-3">
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
-                Code
-              </label>
-              <select
-                name="countryCode"
-                value={formData.countryCode}
-                onChange={handleChange}
-                className="input-feeld appearance-none text-sm"
-                style={{ colorScheme: 'dark' }}
-              >
-                {countryCodes.map((cc) => (
-                  <option key={cc.code} value={cc.code}>
-                    {cc.flag} {cc.code}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="reg-phone" className="block text-sm font-medium text-white/80 mb-2">
-                Phone Number
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                <input
-                  id="reg-phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder=""
-                  autoComplete="tel"
-                  className="input-feeld pl-10"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Gender & Sexuality */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Gender & Sexuality - Side by side */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           <div>
-            <label htmlFor="reg-gender" className="block text-sm font-medium text-white/80 mb-2">
-              I am a <span className="text-primary">*</span>
+            <label htmlFor="reg-gender" style={{ display: "block", fontSize: "14px", fontWeight: "500", color: colors.textSecondary, marginBottom: "8px" }}>
+              I am <span style={{ color: colors.error }}>*</span>
             </label>
             <select
               id="reg-gender"
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="input-feeld appearance-none"
-              style={{ colorScheme: 'dark' }}
               required
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                background: colors.input,
+                border: `1px solid ${colors.inputBorder}`,
+                borderRadius: "12px",
+                color: colors.text,
+                fontSize: "14px",
+                outline: "none",
+                boxSizing: "border-box",
+                colorScheme: "dark",
+              }}
             >
-              <option value="">Choose...</option>
+              <option value="" style={{ color: "rgba(255,255,255,0.3)" }}>Choose...</option>
               {genderOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value} style={{ color: colors.text }}>{opt.label}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label htmlFor="reg-sexuality" className="block text-sm font-medium text-white/80 mb-2">
-              Interested in <span className="text-primary">*</span>
+            <label htmlFor="reg-sexuality" style={{ display: "block", fontSize: "14px", fontWeight: "500", color: colors.textSecondary, marginBottom: "8px" }}>
+              Interested in <span style={{ color: colors.error }}>*</span>
             </label>
             <select
               id="reg-sexuality"
               name="sexuality"
               value={formData.sexuality}
               onChange={handleChange}
-              className="input-feeld appearance-none"
-              style={{ colorScheme: 'dark' }}
               required
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                background: colors.input,
+                border: `1px solid ${colors.inputBorder}`,
+                borderRadius: "12px",
+                color: colors.text,
+                fontSize: "14px",
+                outline: "none",
+                boxSizing: "border-box",
+                colorScheme: "dark",
+              }}
             >
-              <option value="">Choose...</option>
+              <option value="" style={{ color: "rgba(255,255,255,0.3)" }}>Choose...</option>
               {sexualityOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value} style={{ color: colors.text }}>{opt.label}</option>
               ))}
             </select>
           </div>
@@ -694,8 +673,8 @@ export default function RegisterPage() {
 
         {/* Password */}
         <div>
-          <label htmlFor="reg-password" className="block text-sm font-medium text-white/80 mb-2">
-            Password <span className="text-primary">*</span>
+          <label htmlFor="reg-password" style={{ display: "block", fontSize: "14px", fontWeight: "500", color: colors.textSecondary, marginBottom: "8px" }}>
+            Password <span style={{ color: colors.error }}>*</span>
           </label>
           <input
             id="reg-password"
@@ -703,18 +682,27 @@ export default function RegisterPage() {
             type="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder=""
             autoComplete="new-password"
-            className="input-feeld"
             minLength={8}
             required
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              background: colors.input,
+              border: `1px solid ${colors.inputBorder}`,
+              borderRadius: "12px",
+              color: colors.text,
+              fontSize: "15px",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
           />
         </div>
 
         {/* Confirm Password */}
         <div>
-          <label htmlFor="reg-confirm-pwd" className="block text-sm font-medium text-white/80 mb-2">
-            Confirm Password <span className="text-primary">*</span>
+          <label htmlFor="reg-confirm-pwd" style={{ display: "block", fontSize: "14px", fontWeight: "500", color: colors.textSecondary, marginBottom: "8px" }}>
+            Confirm Password <span style={{ color: colors.error }}>*</span>
           </label>
           <input
             id="reg-confirm-pwd"
@@ -722,14 +710,23 @@ export default function RegisterPage() {
             type="password"
             value={formData.confirmPassword}
             onChange={handleChange}
-            placeholder=""
             autoComplete="new-password"
-            className="input-feeld"
             required
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              background: colors.input,
+              border: `1px solid ${colors.inputBorder}`,
+              borderRadius: "12px",
+              color: colors.text,
+              fontSize: "15px",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
           />
         </div>
 
-        {/* Terms */}
+        {/* Terms - Compact */}
         <div className="flex items-start gap-3 pt-2">
           <input
             id="agreeToTerms"
@@ -737,50 +734,87 @@ export default function RegisterPage() {
             type="checkbox"
             checked={formData.agreeToTerms}
             onChange={handleChange}
-            className="mt-1 w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary"
+            required
+            style={{
+              marginTop: "2px",
+              width: "16px",
+              height: "16px",
+              borderRadius: "4px",
+              accentColor: colors.text,
+            }}
           />
-          <label htmlFor="agreeToTerms" className="text-sm text-white/60 leading-relaxed">
+          <label htmlFor="agreeToTerms" style={{ fontSize: "13px", color: colors.textMuted, lineHeight: "1.5" }}>
             I agree to the{" "}
-            <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>
+            <Link href="/terms" style={{ color: colors.text, textDecoration: "underline" }}>Terms</Link>
             {" "}and{" "}
-            <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
-            LokFeel will send a verification code to{" "}
-            <span className="text-white font-medium">
-              {verifyMethod === 'email' ? 'your email address' : 'your phone'}
-            </span>.
+            <Link href="/privacy" style={{ color: colors.text, textDecoration: "underline" }}>Privacy Policy</Link>.
+            A verification code will be sent to your email.
           </label>
         </div>
 
-        {/* Submit */}
+        {/* Submit Button - Black & White */}
         <button
           type="submit"
           disabled={isSendingCode}
-          className="btn-primary w-full mt-4"
+          style={{
+            width: "100%",
+            padding: "14px",
+            background: isSendingCode ? "rgba(255,255,255,0.3)" : colors.primaryBg,
+            border: "none",
+            borderRadius: "12px",
+            color: colors.primaryText,
+            fontSize: "16px",
+            fontWeight: "600",
+            cursor: isSendingCode ? "not-allowed" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            marginTop: "8px",
+          }}
         >
           {isSendingCode ? (
-            <span className="flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <>
+              <Loader2 size={18} className="animate-spin" />
               Sending code...
-            </span>
+            </>
           ) : (
             <>
               Send Verification Code
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <ArrowRight size={18} />
             </>
           )}
         </button>
       </form>
 
-      {/* Divider + OAuth (Google + Discord only) */}
-      <div className="divider my-6"><span>or sign up with</span></div>
+      {/* Divider */}
+      <div style={{ display: "flex", alignItems: "center", gap: "16px", margin: "24px 0", color: colors.textMuted, fontSize: "13px" }}>
+        <div style={{ flex: 1, height: "1px", background: colors.border }} />
+        or sign up with
+        <div style={{ flex: 1, height: "1px", background: colors.border }} />
+      </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* OAuth Buttons */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
         {oauthProviders.map(({ provider, label, svg }) => (
           <button
             key={provider}
             onClick={() => handleOAuthRegister(provider)}
             disabled={isLoading}
-            className="btn-secondary flex items-center justify-center gap-2"
+            style={{
+              padding: "12px 16px",
+              background: colors.input,
+              border: `1px solid ${colors.inputBorder}`,
+              borderRadius: "12px",
+              color: colors.text,
+              fontSize: "14px",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              opacity: isLoading ? 0.5 : 1,
+            }}
           >
             {svg}
             {label}
@@ -788,12 +822,23 @@ export default function RegisterPage() {
         ))}
       </div>
 
-      <p className="text-center text-white/60 mt-8 text-sm">
-        Already have an account?{" "}
-        <Link href="/login" className="text-primary hover:underline font-medium">
-          Sign in
-        </Link>
-      </p>
+      {/* ─── Already have account link (ENHANCED) ─── */}
+      <div className="mt-8 pt-6" style={{ borderTop: `1px solid ${colors.border}` }}>
+        <p style={{ textAlign: "center", color: colors.textMuted, fontSize: "14px" }}>
+          Already have an account?{" "}
+          <Link 
+            href="/login" 
+            style={{ 
+              color: colors.text, 
+              fontWeight: "600",
+              textDecoration: "underline",
+              textUnderlineOffset: "2px",
+            }}
+          >
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

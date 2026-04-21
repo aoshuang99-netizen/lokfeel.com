@@ -220,18 +220,8 @@ export async function sendVerificationEmail(
     `Welcome to LokFeel! ${magicLink ? `Click to verify: ${magicLink} ` : ''}Your verification code is: ${code}. This code will expire in 10 minutes.`
   );
 
-  // For development: if email fails, log the code
-  if (!result.success) {
-    console.log('========================================');
-    console.log('📧 VERIFICATION CODE (Development Mode)');
-    console.log('To:', email);
-    console.log('Code:', code);
-    if (magicLink) console.log('Magic Link:', magicLink);
-    console.log('========================================');
-    // Still return success so user can continue in development
-    return { success: true, devCode: code };
-  }
-
+  // Return actual result - let caller decide how to handle failure
+  // The register API will show code to user if email fails
   return result;
 }
 

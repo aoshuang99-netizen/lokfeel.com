@@ -2,26 +2,30 @@
 
 /**
  * LoginInnerClient — Client-side login UI
- *
- * KEY FIX: Uses next-auth/react's signIn() instead of manual CSRF handling.
- *
- * Why signIn() works when manual CSRF didn't:
- * - signIn("credentials") internally:
- *   1. Fetches /api/auth/csrf → gets BOTH token (JSON) AND cookie (Set-Cookie)
- *   2. Creates a hidden form with the token
- *   3. Calls form.submit() → browser automatically sends ALL cookies for that origin
- *   4. NextAuth validates: body.csrfToken === cookie.__Host-authjs.csrf-token ✅
- *
- * Previous approach failed because:
- * - Server Component fetched CSRF on server side → got JSON token value only
- * - The Set-Cookie header with __Host-authjs.csrf-token was lost in SSR
- * - Client used orphaned token value → no matching cookie → MissingCSRF error
+ * BLACK & WHITE MINIMAL STYLE
  */
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+
+// ─── MINIMAL BLACK & WHITE STYLE CONSTANTS ───────────────────────────────
+const colors = {
+  bg: "rgba(255,255,255,0.03)",
+  border: "rgba(255,255,255,0.08)",
+  text: "#fff",
+  textMuted: "rgba(255,255,255,0.5)",
+  textSecondary: "rgba(255,255,255,0.7)",
+  input: "rgba(255,255,255,0.05)",
+  inputBorder: "rgba(255,255,255,0.1)",
+  primary: "#fff",
+  primaryBg: "#fff",
+  primaryText: "#000",
+  error: "#fca5a5",
+  errorBg: "rgba(239,68,68,0.1)",
+  errorBorder: "rgba(239,68,68,0.2)",
+};
 
 interface Props {
   callbackUrl: string;
@@ -38,11 +42,6 @@ export default function LoginInnerClient({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check URL error param for errors after redirect
-  if (!initialError) {
-    // This runs once on mount conceptually, but we handle it server-side now
-  }
-
   // ─── Form Submit using signIn() ───
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,11 +49,6 @@ export default function LoginInnerClient({
     setIsLoading(true);
 
     try {
-      // signIn() from next-auth/react handles CSRF automatically:
-      // 1. GET /api/auth/csrf → receives token + Set-Cookie
-      // 2. Creates hidden form with csrfToken + credentials
-      // 3. form.submit() → browser sends cookies for this origin
-      // NextAuth validates body token === cookie token ✅
       const result = (await signIn("credentials", {
         email,
         password,
@@ -68,15 +62,12 @@ export default function LoginInnerClient({
             setError("Invalid email or password.");
             break;
           case "MissingCSRF":
-            setError(
-              "Security check failed. Please refresh and try again."
-            );
+            setError("Security check failed. Please refresh and try again.");
             break;
           default:
             setError(`Sign in failed. Please try again.`);
         }
       } else if (result?.url) {
-        // Success — redirect to callback URL
         window.location.href = result.url;
       }
     } catch (err) {
@@ -103,13 +94,13 @@ export default function LoginInnerClient({
         maxWidth: "420px",
         margin: "0 auto",
         padding: "40px 32px",
-        background: "rgba(255,255,255,0.03)",
+        background: colors.bg,
         backdropFilter: "blur(20px)",
         borderRadius: "24px",
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${colors.border}`,
       }}
     >
-      {/* Header */}
+      {/* Header - Black & White */}
       <div style={{ textAlign: "center", marginBottom: "32px" }}>
         <div
           style={{
@@ -120,14 +111,14 @@ export default function LoginInnerClient({
             marginBottom: "24px",
           }}
         >
+          {/* Logo - Black Box */}
           <div
             style={{
               width: "48px",
               height: "48px",
               borderRadius: "12px",
               overflow: "hidden",
-              background:
-                "linear-gradient(135deg, #f43f5e 0%, #9333ea 50%, #f59e0b 100%)",
+              background: "#000",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -141,10 +132,7 @@ export default function LoginInnerClient({
             style={{
               fontSize: "24px",
               fontWeight: "bold",
-              backgroundImage:
-                "linear-gradient(to right, #f472b6, #a78bfa, #fbbf24)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              color: colors.text,
             }}
           >
             LokFeel
@@ -154,7 +142,7 @@ export default function LoginInnerClient({
           style={{
             fontSize: "24px",
             fontWeight: "bold",
-            color: "#fff",
+            color: colors.text,
             margin: "0 0 8px",
           }}
         >
@@ -162,7 +150,7 @@ export default function LoginInnerClient({
         </h1>
         <p
           style={{
-            color: "rgba(255,255,255,0.5)",
+            color: colors.textMuted,
             fontSize: "14px",
             margin: 0,
           }}
@@ -178,9 +166,9 @@ export default function LoginInnerClient({
             marginBottom: "24px",
             padding: "12px 16px",
             borderRadius: "12px",
-            background: "rgba(239,68,68,0.1)",
-            border: "1px solid rgba(239,68,68,0.2)",
-            color: "#fca5a5",
+            background: colors.errorBg,
+            border: `1px solid ${colors.errorBorder}`,
+            color: colors.error,
             fontSize: "14px",
           }}
         >
@@ -188,7 +176,7 @@ export default function LoginInnerClient({
         </div>
       )}
 
-      {/* LOGIN FORM — uses signIn() which handles CSRF automatically */}
+      {/* LOGIN FORM */}
       <form
         onSubmit={handleSubmit}
         style={{ display: "flex", flexDirection: "column", gap: "16px" }}
@@ -202,7 +190,7 @@ export default function LoginInnerClient({
               display: "block",
               fontSize: "14px",
               fontWeight: "500",
-              color: "rgba(255,255,255,0.7)",
+              color: colors.textSecondary,
               marginBottom: "8px",
             }}
           >
@@ -222,22 +210,15 @@ export default function LoginInnerClient({
             style={{
               width: "100%",
               padding: "12px 16px",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: colors.input,
+              border: `1px solid ${colors.inputBorder}`,
               borderRadius: "12px",
-              color: "#fff",
+              color: colors.text,
               fontSize: "15px",
               outline: "none",
               boxSizing: "border-box",
               opacity: isLoading ? 0.6 : 1,
             }}
-            onFocus={(e) =>
-              (e.currentTarget.style.borderColor = "rgba(201,77,122,0.5)")
-            }
-            onBlur={(e) =>
-              (e.currentTarget.style.borderColor =
-                "rgba(255,255,255,0.1)")
-            }
           />
         </div>
 
@@ -249,7 +230,7 @@ export default function LoginInnerClient({
               display: "block",
               fontSize: "14px",
               fontWeight: "500",
-              color: "rgba(255,255,255,0.7)",
+              color: colors.textSecondary,
               marginBottom: "8px",
             }}
           >
@@ -270,10 +251,10 @@ export default function LoginInnerClient({
               style={{
                 width: "100%",
                 padding: "12px 44px 12px 16px",
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: colors.input,
+                border: `1px solid ${colors.inputBorder}`,
                 borderRadius: "12px",
-                color: "#fff",
+                color: colors.text,
                 fontSize: "15px",
                 outline: "none",
                 boxSizing: "border-box",
@@ -302,19 +283,17 @@ export default function LoginInnerClient({
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit Button - Black & White */}
         <button
           type="submit"
           disabled={isLoading}
           style={{
             width: "100%",
             padding: "14px",
-            background: isLoading
-              ? "rgba(201,77,122,0.3)"
-              : "linear-gradient(135deg, #f43f5e 0%, #c94d7a 100%)",
+            background: isLoading ? "rgba(255,255,255,0.3)" : colors.primaryBg,
             border: "none",
             borderRadius: "12px",
-            color: "#fff",
+            color: colors.primaryText,
             fontSize: "16px",
             fontWeight: "600",
             cursor: isLoading ? "not-allowed" : "pointer",
@@ -344,7 +323,7 @@ export default function LoginInnerClient({
           alignItems: "center",
           gap: "16px",
           margin: "28px 0",
-          color: "rgba(255,255,255,0.3)",
+          color: colors.textMuted,
           fontSize: "13px",
         }}
       >
@@ -352,7 +331,7 @@ export default function LoginInnerClient({
           style={{
             flex: 1,
             height: "1px",
-            background: "rgba(255,255,255,0.08)",
+            background: colors.border,
           }}
         />
         or continue with
@@ -360,7 +339,7 @@ export default function LoginInnerClient({
           style={{
             flex: 1,
             height: "1px",
-            background: "rgba(255,255,255,0.08)",
+            background: colors.border,
           }}
         />
       </div>
@@ -379,11 +358,11 @@ export default function LoginInnerClient({
           onClick={() => handleOAuth("google")}
           disabled={isLoading}
           style={{
-            padding: "10px 16px",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "10px",
-            color: "#fff",
+            padding: "12px 16px",
+            background: colors.input,
+            border: `1px solid ${colors.inputBorder}`,
+            borderRadius: "12px",
+            color: colors.text,
             fontSize: "14px",
             cursor: isLoading ? "not-allowed" : "pointer",
             display: "flex",
@@ -408,11 +387,11 @@ export default function LoginInnerClient({
           onClick={() => handleOAuth("discord")}
           disabled={isLoading}
           style={{
-            padding: "10px 16px",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "10px",
-            color: "#fff",
+            padding: "12px 16px",
+            background: colors.input,
+            border: `1px solid ${colors.inputBorder}`,
+            borderRadius: "12px",
+            color: colors.text,
             fontSize: "14px",
             cursor: isLoading ? "not-allowed" : "pointer",
             display: "flex",
@@ -429,27 +408,29 @@ export default function LoginInnerClient({
         </button>
       </div>
 
-      {/* Register Link */}
-      <p
-        style={{
-          textAlign: "center",
-          color: "rgba(255,255,255,0.4)",
-          fontSize: "14px",
-          marginTop: "24px",
-        }}
-      >
-        No account?{" "}
-        <Link
-          href="/register"
+      {/* Register Link - ENHANCED */}
+      <div className="mt-8 pt-6" style={{ borderTop: `1px solid ${colors.border}` }}>
+        <p
           style={{
-            color: "#f472b6",
-            textDecoration: "none",
-            fontWeight: "500",
+            textAlign: "center",
+            color: colors.textMuted,
+            fontSize: "14px",
           }}
         >
-          Create one
-        </Link>
-      </p>
+          No account?{" "}
+          <Link
+            href="/register"
+            style={{
+              color: colors.text,
+              textDecoration: "underline",
+              fontWeight: "600",
+              textUnderlineOffset: "2px",
+            }}
+          >
+            Create one
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

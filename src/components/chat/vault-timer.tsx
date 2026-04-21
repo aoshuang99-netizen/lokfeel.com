@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Clock, Plus, X, AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import { Clock, Plus, X, AlertTriangle, Trash2, Loader2, Info, Lock, Unlock } from "lucide-react";
 import { useApiGet, useApiPost, useApiDelete } from "@/hooks/use-api";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface VaultTimerProps {
   roomId: string;
@@ -114,11 +115,15 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
   // Expired or Revoked state
   if (!isActive) {
     return (
-      <div className="glass-card p-4 mb-4">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card p-4 mb-4"
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gray-500/20 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-gray-400" />
+              <Lock className="w-5 h-5 text-gray-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -135,19 +140,53 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
             </div>
           </div>
         </div>
-      </div>
+        
+        {/* Archive Notice */}
+        <div className="mt-3 pt-3 border-t border-white/5">
+          <p className="text-xs text-white/40">
+            💡 This chat is now archived. You can still view the history, but no new messages can be sent.
+          </p>
+        </div>
+      </motion.div>
     );
   }
 
   return (
     <>
-      <div className={`glass-card p-4 mb-4 ${isExpiringSoon ? "border-red-500/30" : ""}`}>
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`glass-card p-4 mb-4 ${isExpiringSoon ? "border-red-500/30" : ""}`}
+      >
+        {/* Info Banner - What is Vault? */}
+        <AnimatePresence>
+          {!isExpiringSoon && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-start gap-2 mb-3 p-2 rounded-lg bg-primary/5 border border-primary/10"
+            >
+              <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-white/50">
+                <span className="text-white/70 font-medium">The Vault</span> — 
+                Conversations auto-expire after 24 hours. 
+                {isFemale ? "As a woman, you can extend or end this chat anytime." : "She can extend or end this chat anytime."}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Expiring Warning */}
         {isExpiringSoon && (
-          <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20"
+          >
             <AlertTriangle className="w-4 h-4 text-red-400" />
             <span className="text-sm text-red-400">This conversation expires soon!</span>
-          </div>
+          </motion.div>
         )}
 
         <div className="flex items-center justify-between">
@@ -225,7 +264,7 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Revoke Confirmation Modal */}
       {showRevokeConfirm && (
