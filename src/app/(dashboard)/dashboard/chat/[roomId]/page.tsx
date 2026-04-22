@@ -290,9 +290,12 @@ export default function ChatRoomPage() {
       }
 
       // Trigger AI response if this is a bot conversation
-      if (roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) {
-        console.log('[Chat] Triggering AI response for bot conversation');
-        setTimeout(() => triggerAiResponse(), 1500);
+      // Bot replies are now handled server-side in the API, but we also
+      // trigger a client-side refresh to show the bot's reply
+      if (roomInfo?.otherUser?.isBot) {
+        console.log('[Chat] Bot conversation detected, will refresh for reply');
+        // Poll for bot reply after a short delay
+        setTimeout(() => loadMessages(), 2000);
       }
     } catch (e) {
       console.error('[Chat] Failed to send:', e);

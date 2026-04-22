@@ -34,9 +34,8 @@ const mainNavItems = [
   { name: "Activity", href: "/dashboard/activity", icon: Bell, label: "动态" },
 ];
 
-// 辅助导航 - 我的放在设置下面
+// 辅助导航 - Matches 已隐藏（合并到Activity页面）
 const secondaryNavItems = [
-  { name: "Matches", href: "/dashboard/matches", icon: Heart, label: "匹配" },
   { name: "Settings", href: "/dashboard/settings", icon: Settings, label: "设置" },
   { name: "Profile", href: "/dashboard/profile", icon: User, label: "我的" },
 ];

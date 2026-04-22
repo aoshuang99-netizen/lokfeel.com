@@ -279,10 +279,10 @@ export default function ChatLayout({
               </p>
               {activeTab === "all" && !searchQuery && (
                 <Link
-                  href="/dashboard/matches"
+                  href="/dashboard/discover"
                   className="inline-block mt-4 text-primary text-sm hover:underline"
                 >
-                  Find matches →
+                  Discover people →
                 </Link>
               )}
             </div>

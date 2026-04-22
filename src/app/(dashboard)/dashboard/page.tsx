@@ -375,7 +375,7 @@ function ActivityItem({
 // ══════════════════════════════════════
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { data: session, status: authStatus } = useSession();
   const router = useRouter();
   const [retryKey, setRetryKey] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -413,6 +413,26 @@ export default function DashboardPage() {
   const unreadNotifications = notificationsData?.unreadCount || 0;
   const unreadMessages = unreadMessagesData?.unreadCount || 0;
   const discoverUsers = discoverData?.users || [];
+
+  // ═══ AUTO-MATCH: Ensure user has matches & conversations with bot users ═══
+  const [autoMatchTriggered, setAutoMatchTriggered] = useState(false);
+  useEffect(() => {
+    if (autoMatchTriggered || authStatus === "loading") return;
+    // Only trigger once per session when user has profile
+    if (profileData?.profile && pendingMatches.length < 3) {
+      setAutoMatchTriggered(true);
+      fetch("/api/auto-match", { method: "POST" })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.createdCount > 0) {
+            console.log(`[Auto-Match] Created ${data.createdCount} new matches`);
+            // Refetch matches and discover to show new data
+            setRetryKey((prev) => prev + 1);
+          }
+        })
+        .catch((err) => console.warn("[Auto-Match] Failed:", err));
+    }
+  }, [profileData, pendingMatches.length, autoMatchTriggered, authStatus]);
 
   // Onboarding status
   const onboardingStep = profile?.onboardingStep || 0;
@@ -668,7 +688,7 @@ export default function DashboardPage() {
                 title="New Matches"
                 subtitle={`${unreadMatches} pending review`}
                 count={unreadMatches}
-                href="/dashboard/matches"
+                href="/dashboard/activity"
               />
               <ActivityItem
                 icon={MessageCircle}
