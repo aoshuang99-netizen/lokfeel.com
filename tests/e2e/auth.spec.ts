@@ -30,7 +30,7 @@ import {
 // ============================================================================
 test.describe('🔐 登录页面 — UI验证', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
   });
 
@@ -105,7 +105,7 @@ test.describe('🔑 已注册用户登录', () => {
   });
 
   test('使用错误密码登录失败', async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     await page.locator('#login-email').fill(TEST_USERS.existing.email);
@@ -125,7 +125,7 @@ test.describe('🔑 已注册用户登录', () => {
   });
 
   test('空表单提交不崩溃', async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     // 直接点击提交
@@ -138,7 +138,7 @@ test.describe('🔑 已注册用户登录', () => {
   });
 
   test('不存在的邮箱登录失败', async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     await page.locator('#login-email').fill('nonexistent@example.com');
@@ -156,7 +156,7 @@ test.describe('🔑 已注册用户登录', () => {
 // ============================================================================
 test.describe('📝 注册流程', () => {
   test('注册页面正确加载', async ({ page }) => {
-    await page.goto(`${BASE_URL}/register`);
+    await page.goto(`${BASE_URL}/register`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     // 验证关键元素
@@ -172,7 +172,7 @@ test.describe('📝 注册流程', () => {
   });
 
   test('表单验证 — 必填字段检查', async ({ page }) => {
-    await page.goto(`${BASE_URL}/register`);
+    await page.goto(`${BASE_URL}/register`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     // 直接提交空表单（通过点击提交按钮）
@@ -192,7 +192,7 @@ test.describe('📝 注册流程', () => {
   });
 
   test('密码不匹配验证', async ({ page }) => {
-    await page.goto(`${BASE_URL}/register`);
+    await page.goto(`${BASE_URL}/register`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     await page.locator('#reg-name').fill('Test User');
@@ -240,7 +240,7 @@ test.describe('📝 注册流程', () => {
 
   test('登录页和注册页互相跳转', async ({ page }) => {
     // 从登录页跳转到注册页
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     const registerLink = page.locator('a:has-text("Create one")');
@@ -279,7 +279,16 @@ test.describe('🚪 登出流程', () => {
   });
 
   test('登出后访问dashboard被重定向到登录页', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard`);
+    // 网络重试 — 生产环境偶发 ERR_CONNECTION_CLOSED
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await page.goto(`${BASE_URL}/dashboard`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
+        break;
+      } catch (e) {
+        if (attempt === 2) throw e;
+        await page.waitForTimeout(3000 * (attempt + 1));
+      }
+    }
     await waitForPageReady(page);
     
     // 未登录用户应该被重定向到登录页
@@ -368,7 +377,7 @@ test.describe('🛡️ 会话与安全', () => {
 test.describe('📱 移动端认证体验', () => {
   test('移动端登录页面布局正确', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     await expect(page.locator('#login-email')).toBeVisible();
@@ -379,7 +388,7 @@ test.describe('📱 移动端认证体验', () => {
 
   test('移动端注册页面布局正确', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(`${BASE_URL}/register`);
+    await page.goto(`${BASE_URL}/register`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     await expect(page.locator('#reg-name')).toBeVisible();

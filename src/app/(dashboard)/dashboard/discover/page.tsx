@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   Heart,
   X,
@@ -12,8 +13,20 @@ import {
   Star,
   ArrowLeft,
   Info,
+  ChevronDown,
+  ChevronUp,
+  User,
+  Flame,
+  Zap,
+  RefreshCw,
+  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+// ══════════════════════════════════════
+// DESIGN TOKENS
+// ══════════════════════════════════════
+const EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 // ══════════════════════════════════════
 // USER CARD INTERFACE
@@ -24,15 +37,17 @@ interface DiscoverUser {
   name: string;
   age: number;
   avatar: string | null;
+  avatarType?: string;
   city?: string;
   bio?: string;
   matchScore: number;
   matchReason: string;
   tags: string[];
+  verified?: boolean;
 }
 
 // ══════════════════════════════════════
-// DEMO USERS (for testing)
+// DEMO USERS (fallback)
 // ══════════════════════════════════════
 
 const DEMO_USERS: DiscoverUser[] = [
@@ -46,6 +61,7 @@ const DEMO_USERS: DiscoverUser[] = [
     matchScore: 95,
     matchReason: "Both value deep conversations and outdoor activities",
     tags: ["Coffee", "Hiking", "Deep Talks"],
+    verified: true,
   },
   {
     id: "demo-2",
@@ -68,6 +84,7 @@ const DEMO_USERS: DiscoverUser[] = [
     matchScore: 92,
     matchReason: "Similar values around mindfulness and growth",
     tags: ["Yoga", "Reading", "Mindfulness"],
+    verified: true,
   },
   {
     id: "demo-4",
@@ -94,7 +111,23 @@ const DEMO_USERS: DiscoverUser[] = [
 ];
 
 // ══════════════════════════════════════
-// SWIPE CARD COMPONENT
+// MATCH SCORE HELPERS
+// ══════════════════════════════════════
+
+function getMatchScoreGradient(score: number): string {
+  if (score >= 90) return "from-amber-400 to-amber-600"; // Gold
+  if (score >= 80) return "from-purple-400 to-pink-500"; // Purple-Pink
+  return "from-indigo-400 to-indigo-600"; // Indigo
+}
+
+function getMatchScoreBg(score: number): string {
+  if (score >= 90) return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+  if (score >= 80) return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+  return "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
+}
+
+// ══════════════════════════════════════
+// SWIPE CARD COMPONENT (Feeld-inspired)
 // ══════════════════════════════════════
 
 function SwipeCard({
@@ -108,19 +141,7 @@ function SwipeCard({
 }) {
   const [exitX, setExitX] = useState(0);
   const [showIndicator, setShowIndicator] = useState<string | null>(null);
-
-  const getAvatarUrl = () => {
-    if (user.avatar) return user.avatar;
-    const seed = user.name.charCodeAt(0) % 5;
-    const avatars = [
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=James",
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=Olivia",
-    ];
-    return avatars[seed] || avatars[0];
-  };
+  const [showWhyMatch, setShowWhyMatch] = useState(false);
 
   const handleDragEnd = (
     event: MouseEvent | TouchEvent | PointerEvent,
@@ -170,20 +191,40 @@ function SwipeCard({
       onDragEnd={handleDragEnd}
       style={{ zIndex: isTop ? 10 : 5 }}
     >
-      <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl bg-card border border-border">
-        {/* Background Image / Avatar */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-background to-background">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src={getAvatarUrl()}
-              alt={user.name}
-              className="w-48 h-48 rounded-full object-cover border-4 border-background shadow-xl"
-            />
-          </div>
+      <div className="relative w-full h-full rounded-3xl overflow-hidden bg-[#0d0c11] border border-white/10"
+        style={{ transitionTimingFunction: EASING }}
+      >
+        {/* Photo / Avatar Area (60%+ of card) */}
+        <div className="absolute inset-0">
+          {user.avatar ? (
+            user.avatar.startsWith("emoji:") ? (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(135deg, ${user.avatar.split(":")[2]}40, ${user.avatar.split(":")[2]}15)`,
+                }}
+              >
+                <span className="text-9xl">{user.avatar.split(":")[1]}</span>
+              </div>
+            ) : (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full object-cover"
+              />
+            )
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-[#13121a] to-[#0d0c11] flex items-center justify-center">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
+                <User className="w-16 h-16 text-white/20" />
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0c11] via-[#0d0c11]/60 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[#0d0c11]/40 to-transparent" />
 
         {/* Swipe Indicators */}
         <AnimatePresence>
@@ -192,7 +233,7 @@ function SwipeCard({
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
-              className="absolute top-8 left-8 border-4 border-green-500 text-green-500 rounded-xl px-4 py-2 font-bold text-2xl rotate-[-15deg]"
+              className="absolute top-10 left-8 border-4 border-green-500 text-green-500 rounded-xl px-5 py-2 font-bold text-2xl rotate-[-15deg] shadow-lg"
             >
               LIKE
             </motion.div>
@@ -202,62 +243,103 @@ function SwipeCard({
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
-              className="absolute top-8 right-8 border-4 border-red-500 text-red-500 rounded-xl px-4 py-2 font-bold text-2xl rotate-[15deg]"
+              className="absolute top-10 right-8 border-4 border-red-500 text-red-500 rounded-xl px-5 py-2 font-bold text-2xl rotate-[15deg] shadow-lg"
             >
               NOPE
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Match Score Badge */}
-        <div className="absolute top-4 right-4 bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-full flex items-center gap-1.5 text-sm font-medium">
-          <Sparkles className="w-4 h-4" />
-          {user.matchScore}% Match
+        {/* Match Score Badge (top right) */}
+        <div className="absolute top-4 right-4 z-20">
+          <span
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold text-white bg-gradient-to-r ${getMatchScoreGradient(user.matchScore)} shadow-lg`}
+          >
+            <Flame className="w-4 h-4" />
+            {user.matchScore}%
+          </span>
         </div>
 
-        {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 space-y-4">
-          {/* Name & Age */}
-          <div className="flex items-end justify-between">
-            <div>
-              <h2 className="text-3xl font-bold">
-                {user.name}, {user.age}
-              </h2>
-              {user.city && (
-                <div className="flex items-center gap-1.5 text-muted-foreground mt-1">
-                  <MapPin className="w-4 h-4" />
-                  {user.city}
-                </div>
-              )}
-            </div>
+        {/* Verified Badge */}
+        {user.verified && (
+          <div className="absolute top-4 left-4 z-20">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/80 text-white text-xs font-medium shadow-lg">
+              <Zap className="w-3 h-3" /> Verified
+            </span>
           </div>
+        )}
 
-          {/* Match Reason */}
-          <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
-            <p className="text-sm text-primary flex items-start gap-2">
-              <Star className="w-4 h-4 mt-0.5 shrink-0" />
-              {user.matchReason}
-            </p>
+        {/* Content (bottom) */}
+        <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+          {/* Name & Age */}
+          <div className="mb-3">
+            <h2 className="text-2xl font-bold text-white">
+              {user.name}, {user.age}
+            </h2>
+            {user.city && (
+              <div className="flex items-center gap-1.5 text-white/60 text-sm mt-1">
+                <MapPin className="w-3.5 h-3.5" />
+                {user.city}
+              </div>
+            )}
           </div>
 
           {/* Bio */}
           {user.bio && (
-            <p className="text-muted-foreground text-sm line-clamp-2">
-              {user.bio}
-            </p>
+            <p className="text-white/60 text-sm line-clamp-2 mb-3">{user.bio}</p>
           )}
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2">
-            {user.tags.map((tag) => (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {user.tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
-                className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-xs font-medium"
+                className="px-2.5 py-1 bg-white/10 text-white/70 rounded-full text-[11px] font-medium border border-white/5"
               >
                 {tag}
               </span>
             ))}
           </div>
+
+          {/* Why this match? (expandable) */}
+          <button
+            onClick={() => setShowWhyMatch(!showWhyMatch)}
+            className="w-full text-left"
+          >
+            <div className={`rounded-xl p-3 border transition-all duration-200 ${
+              showWhyMatch
+                ? "bg-primary/15 border-primary/30"
+                : "bg-white/5 border-white/5 hover:border-primary/20"
+            }`}
+              style={{ transitionTimingFunction: EASING }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Star className={`w-4 h-4 ${showWhyMatch ? "text-primary" : "text-white/40"}`} />
+                  <span className="text-xs font-medium text-white/70">
+                    Why this match?
+                  </span>
+                </div>
+                {showWhyMatch ? (
+                  <ChevronUp className="w-4 h-4 text-white/40" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-white/40" />
+                )}
+              </div>
+              <AnimatePresence>
+                {showWhyMatch && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-xs text-primary/80 mt-2 overflow-hidden"
+                  >
+                    {user.matchReason}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+          </button>
         </div>
       </div>
     </motion.div>
@@ -274,7 +356,6 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Load users
   useEffect(() => {
     loadUsers();
   }, []);
@@ -292,11 +373,13 @@ export default function DiscoverPage() {
           name: u.name || u.displayName || "Anonymous",
           age: u.age || 25,
           avatar: u.avatar,
+          avatarType: u.avatarType,
           city: u.city,
           bio: u.bio,
           matchScore: Math.round(u.matchScore || 85),
           matchReason: u.matchReason || "Great compatibility based on your profile",
           tags: u.tags || ["Match"],
+          verified: u.verified,
         }));
         setUsers(transformedUsers);
       } else {
@@ -349,31 +432,33 @@ export default function DiscoverPage() {
     handleSwipe(swipeDirection, user.id);
   };
 
+  // ──── LOADING ────
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-center">
-          <div className="w-16 h-16 bg-primary/20 rounded-full mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading profiles...</p>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-14 h-14 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
+          <p className="text-white/60 text-sm">Loading profiles...</p>
         </div>
       </div>
     );
   }
 
+  // ──── EMPTY ────
   if (users.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-muted rounded-full mx-auto mb-6 flex items-center justify-center">
-            <Heart className="w-10 h-10 text-muted-foreground" />
+      <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
+            <Heart className="w-10 h-10 text-white/20" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">No more profiles</h2>
-          <p className="text-muted-foreground mb-6">
+          <h2 className="text-xl font-bold text-white mb-2">No more profiles</h2>
+          <p className="text-white/50 text-sm mb-6">
             Check back later for more matches
           </p>
-          <Button onClick={() => router.push("/dashboard")}>
-            Go to Dashboard
-          </Button>
+          <Link href="/dashboard" className="btn-primary text-sm">
+            Go to Home
+          </Link>
         </div>
       </div>
     );
@@ -383,39 +468,48 @@ export default function DiscoverPage() {
   const progress = ((currentIndex / users.length) * 100).toFixed(0);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="px-6 py-4 border-b flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push("/dashboard")}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="text-center">
-          <h1 className="font-semibold">Discover</h1>
-          <p className="text-xs text-muted-foreground">
-            {currentIndex + 1} / {users.length}
-          </p>
+    <div className="flex flex-col -mx-4 -mt-6 lg:mx-0 lg:mt-0">
+      {/* ── Header ── */}
+      <header className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#0d0c11]">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard"
+            className="p-2 -ml-2 rounded-full hover:bg-white/5 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </Link>
+          <div>
+            <h1 className="font-semibold text-white text-sm">Discover</h1>
+            <p className="text-[11px] text-white/40">
+              {currentIndex + 1} of {users.length}
+            </p>
+          </div>
         </div>
-        <Button variant="ghost" size="icon">
-          <Info className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
+            <Filter className="w-4 h-4 text-white/50" />
+          </button>
+          <button
+            onClick={loadUsers}
+            className="p-2 rounded-full hover:bg-white/5 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4 text-white/50" />
+          </button>
+        </div>
       </header>
 
-      {/* Progress Bar */}
-      <div className="h-1 bg-muted">
+      {/* ── Progress Bar ── */}
+      <div className="h-0.5 bg-white/5">
         <motion.div
-          className="h-full bg-primary"
+          className="h-full bg-gradient-to-r from-primary to-secondary"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.3 }}
         />
       </div>
 
-      {/* Card Stack */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6">
+      {/* ── Card Stack ── */}
+      <div className="flex-1 flex flex-col items-center justify-center p-5 min-h-[50vh]">
         <div className="relative w-full max-w-sm aspect-[3/4]">
           <AnimatePresence mode="popLayout">
             {remainingUsers.length > 0 ? (
@@ -437,13 +531,20 @@ export default function DiscoverPage() {
                 className="absolute inset-0 flex items-center justify-center"
               >
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-primary/10 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <Heart className="w-10 h-10 text-primary" />
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-10 h-10 text-primary/50" />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">All caught up!</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="text-xl font-bold text-white mb-2">All caught up!</h3>
+                  <p className="text-white/50 text-sm mb-4">
                     Check back later for more profiles
                   </p>
+                  <button
+                    onClick={loadUsers}
+                    className="btn-primary text-sm"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Refresh
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -451,29 +552,39 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="px-6 pb-8 pt-4">
-        <div className="flex items-center justify-center gap-6">
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-16 h-16 rounded-full border-2 border-red-500/50 hover:bg-red-500/10 hover:border-red-500"
+      {/* ── Action Buttons ── */}
+      <div className="px-6 pb-8 pt-2">
+        <div className="flex items-center justify-center gap-8">
+          {/* Pass */}
+          <button
             onClick={() => handleButtonSwipe("left")}
             disabled={currentIndex >= users.length}
+            className="w-14 h-14 rounded-full border-2 border-red-500/40 hover:border-red-500 hover:bg-red-500/10 text-red-500 flex items-center justify-center transition-all disabled:opacity-30"
+            style={{ transitionTimingFunction: EASING }}
           >
-            <X className="w-8 h-8 text-red-500" />
-          </Button>
+            <X className="w-7 h-7" />
+          </button>
 
-          <Button
-            size="lg"
-            className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600"
+          {/* Super Like */}
+          <button
+            disabled={currentIndex >= users.length}
+            className="w-10 h-10 rounded-full border border-blue-500/40 hover:border-blue-500 hover:bg-blue-500/10 text-blue-500 flex items-center justify-center transition-all disabled:opacity-30"
+            style={{ transitionTimingFunction: EASING }}
+          >
+            <Star className="w-5 h-5" />
+          </button>
+
+          {/* Like */}
+          <button
             onClick={() => handleButtonSwipe("right")}
             disabled={currentIndex >= users.length}
+            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all disabled:opacity-30"
+            style={{ transitionTimingFunction: EASING }}
           >
-            <Heart className="w-8 h-8" />
-          </Button>
+            <Heart className="w-7 h-7" fill="white" />
+          </button>
         </div>
-        <p className="text-center text-sm text-muted-foreground mt-4">
+        <p className="text-center text-xs text-white/40 mt-3">
           Swipe right to like, left to pass
         </p>
       </div>

@@ -90,13 +90,31 @@ async function loadSeedData(): Promise<{ female: SeedUser[]; male: SeedUser[] }>
     const femaleData = JSON.parse(
       fs.readFileSync(path.join(dataDir, 'female-users.json'), 'utf-8')
     );
-    const maleData = JSON.parse(
+    
+    // 合并主文件 + batch 文件
+    const maleMainData = JSON.parse(
       fs.readFileSync(path.join(dataDir, 'male-users.json'), 'utf-8')
     );
+    let allMaleUsers = maleMainData.users || [];
+    
+    // 尝试加载 male-batch-1.json ~ male-batch-5.json
+    for (let i = 1; i <= 5; i++) {
+      const batchPath = path.join(dataDir, `male-batch-${i}.json`);
+      if (fs.existsSync(batchPath)) {
+        try {
+          const batchData = JSON.parse(fs.readFileSync(batchPath, 'utf-8'));
+          const batchUsers = batchData.users || [];
+          console.log(`   ✓ 男性batch-${i}: ${batchUsers.length} 用户`);
+          allMaleUsers = allMaleUsers.concat(batchUsers);
+        } catch (e) {
+          // batch文件为空或损坏则跳过
+        }
+      }
+    }
     
     return {
       female: femaleData.users || [],
-      male: maleData.users || []
+      male: allMaleUsers
     };
   } catch (error) {
     console.error('❌ Failed to load seed data:', error);

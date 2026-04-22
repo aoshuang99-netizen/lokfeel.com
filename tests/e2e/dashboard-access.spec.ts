@@ -33,8 +33,8 @@ test.describe('🚫 未认证用户访问控制', () => {
 
   for (const { path, name } of protectedRoutes) {
     test(`未认证访问 ${name} (${path}) 应被重定向`, async ({ page }) => {
-      await page.goto(`${BASE_URL}${path}`);
-      await page.waitForLoadState('networkidle');
+      await page.goto(`${BASE_URL}${path}`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
+      await page.waitForLoadState('networkidle').catch(() => {});
       await page.waitForTimeout(2000);
 
       const url = page.url();
@@ -62,7 +62,7 @@ test.describe('✅ 已认证用户Dashboard', () => {
   });
 
   test('Dashboard首页可访问', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard`);
+    await page.goto(`${BASE_URL}/dashboard`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     const url = page.url();
@@ -75,7 +75,7 @@ test.describe('✅ 已认证用户Dashboard', () => {
   });
 
   test('Discover广场可访问', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard/square`);
+    await page.goto(`${BASE_URL}/dashboard/square`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     const url = page.url();
@@ -85,7 +85,7 @@ test.describe('✅ 已认证用户Dashboard', () => {
   });
 
   test('匹配列表可访问', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard/matches`);
+    await page.goto(`${BASE_URL}/dashboard/matches`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     const url = page.url();
@@ -95,7 +95,7 @@ test.describe('✅ 已认证用户Dashboard', () => {
   });
 
   test('消息列表可访问', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard/messages`);
+    await page.goto(`${BASE_URL}/dashboard/messages`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     const url = page.url();
@@ -105,7 +105,7 @@ test.describe('✅ 已认证用户Dashboard', () => {
   });
 
   test('设置页面可访问', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard/settings`);
+    await page.goto(`${BASE_URL}/dashboard/settings`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     const url = page.url();
@@ -120,7 +120,7 @@ test.describe('✅ 已认证用户Dashboard', () => {
 // ============================================================================
 test.describe('📋 Onboarding流程守卫', () => {
   test('Onboarding页面可访问', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard/onboarding`);
+    await page.goto(`${BASE_URL}/dashboard/onboarding`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     // 无论是否登录，onboarding页面应该可加载
@@ -134,8 +134,8 @@ test.describe('📋 Onboarding流程守卫', () => {
     const steps = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     
     for (const step of steps) {
-      await page.goto(`${BASE_URL}/dashboard/onboarding?step=${step}`);
-      await page.waitForLoadState('networkidle');
+      await page.goto(`${BASE_URL}/dashboard/onboarding?step=${step}`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
+      await page.waitForLoadState('networkidle').catch(() => {});
       await page.waitForTimeout(1000);
       
       const url = page.url();
@@ -157,12 +157,15 @@ test.describe('🧭 导航元素验证', () => {
   });
 
   test('Dashboard导航栏可见', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard`);
+    await page.goto(`${BASE_URL}/dashboard`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
     await waitForPageReady(page);
 
-    // 检查导航元素
+    // 检查导航元素 — 使用更宽松的等待
     const nav = page.locator('nav, [role="navigation"], header');
-    const hasNav = await nav.isVisible().catch(() => false);
+    const hasNav = await nav.first().isVisible({ timeout: 15000 }).catch(() => false);
+    
+    console.log(`  ${hasNav ? '✅' : '⚠️'} 导航栏 ${hasNav ? '可见' : '不可见'}`);
     
     if (hasNav) {
       await takeScreenshot(page, 'dashboard/navigation-visible');
@@ -170,7 +173,7 @@ test.describe('🧭 导航元素验证', () => {
   });
 
   test('Footer存在', async ({ page }) => {
-    await page.goto(`${BASE_URL}/dashboard`);
+    await page.goto(`${BASE_URL}/dashboard`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     const footer = page.locator('footer, [role="contentinfo"]');
@@ -186,7 +189,7 @@ test.describe('🧭 导航元素验证', () => {
 test.describe('📱 移动端Dashboard', () => {
   test('移动端Dashboard布局', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(`${BASE_URL}/dashboard`);
+    await page.goto(`${BASE_URL}/dashboard`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     await takeScreenshot(page, 'dashboard/mobile-dashboard');
@@ -194,7 +197,7 @@ test.describe('📱 移动端Dashboard', () => {
 
   test('移动端Discover广场布局', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(`${BASE_URL}/dashboard/square`);
+    await page.goto(`${BASE_URL}/dashboard/square`, { timeout: 60_000, waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     
     await takeScreenshot(page, 'dashboard/mobile-square');

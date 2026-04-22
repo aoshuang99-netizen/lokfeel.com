@@ -16,13 +16,13 @@ export default defineConfig({
   // 测试目录
   testDir: './tests/e2e',
   
-  // 超时设置
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
+  // 超时设置 — 生产环境跨境访问需更长超时
+  timeout: 90_000,
+  expect: { timeout: 15_000 },
   
   // 并行与重试
   fullyParallel: false,  // 认证测试有状态依赖，串行更可靠
-  retries: process.env.CI ? 2 : 0,
+  retries: 1,  // 网络抖动自动重试1次
   workers: process.env.CI ? 1 : 1,  // 单worker避免session冲突
   
   // 报告
@@ -47,9 +47,9 @@ export default defineConfig({
     video: 'retain-on-failure',
     trace: 'retain-on-failure',
     
-    // 导航超时
-    navigationTimeout: 30_000,
-    actionTimeout: 15_000,
+    // 导航超时 — 跨境冷启动需要更长等待
+    navigationTimeout: 60_000,
+    actionTimeout: 20_000,
   },
 
   // 浏览器配置
