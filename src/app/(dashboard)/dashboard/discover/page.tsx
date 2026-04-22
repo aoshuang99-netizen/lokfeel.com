@@ -414,7 +414,7 @@ export default function DiscoverPage() {
               description: "You can now start chatting",
               action: {
                 label: "Chat",
-                onClick: () => router.push("/dashboard/matches"),
+                onClick: () => router.push("/dashboard/chat"),
               },
             });
           }
