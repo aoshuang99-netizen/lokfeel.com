@@ -78,20 +78,20 @@ export async function GET(request: NextRequest) {
 
     // Build where clause - RELAXED to show more users
     // Only require: has profile, not current user, not already matched/reacted
+    // Prisma 7 requires nested filter fields wrapped in `is:`
     let whereClause: any = {
       id: { notIn: excludeIds },
       profile: {
-        isNot: null,
-        // ✅ 放宽条件 - 允许onboardingStep >= 4的用户显示
-        onboardingStep: {
-          gte: 4,
+        is: {
+          onboardingStep: { gte: 4 },
         },
       },
     };
 
     // Add gender preference filter (optional) - RELAXED for homepage display
     // Map various gender preference formats to standard values
-    const preferredGender = profile.preferredGender?.toUpperCase();
+    // Note: preferredGender may be null for new users who haven't completed onboarding
+    const preferredGender = profile.preferredGender?.toUpperCase() || null;
     console.log('[Discover API] Raw preferredGender:', profile.preferredGender, 'Upper:', preferredGender);
     
     if (preferredGender && preferredGender !== "EVERYONE") {
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       };
       const targetGender = genderMap[preferredGender];
       if (targetGender) {
-        whereClause.profile.gender = targetGender;
+        whereClause.profile.is.gender = targetGender;
         console.log('[Discover API] Filtering by gender:', targetGender);
       } else {
         console.log('[Discover API] No gender filter applied, unknown preferredGender:', preferredGender);
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     // Add age range filter (optional) - RELAXED
     if (profile.preferredAgeMin || profile.preferredAgeMax) {
-      whereClause.profile.age = {
+      whereClause.profile.is.age = {
         gte: profile.preferredAgeMin || 18,
         lte: profile.preferredAgeMax || 99,
       };
@@ -166,8 +166,9 @@ export async function GET(request: NextRequest) {
       const fallbackWhereClause: any = {
         id: { notIn: fallbackExcludeIds },
         profile: {
-          isNot: null,
-          onboardingStep: { gte: 4 },
+          is: {
+            onboardingStep: { gte: 4 },
+          },
         },
       };
       

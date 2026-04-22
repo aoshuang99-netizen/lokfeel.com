@@ -87,8 +87,9 @@ export async function POST(req: NextRequest) {
         isBot: true,
         id: { notIn: Array.from(matchedUserIds) },
         profile: {
-          isNot: null,
-          onboardingStep: { gte: 4 } as any,
+          is: {
+            onboardingStep: { gte: 4 },
+          },
         },
       },
       include: {
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (botUsers.length === 0) {
-      // Fallback: try with even more relaxed conditions (onboardingStep >= 1)
+      // Fallback: try with even more relaxed conditions (any profile)
       const fallbackBots = await prisma.user.findMany({
         where: {
           isBot: true,

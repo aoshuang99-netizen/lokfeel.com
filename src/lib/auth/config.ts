@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import LinkedIn from "next-auth/providers/linkedin";
+import Discord from "next-auth/providers/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/auth";
@@ -79,21 +79,21 @@ export const authConfig = {
         };
       },
     }),
-    LinkedIn({
-      clientId: process.env.LINKEDIN_CLIENT_ID,
-      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+    Discord({
+      clientId: process.env.DISCORD_CLIENT_ID,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET,
       authorization: {
         params: {
-          scope: 'openid profile email r_basicprofile r_emailaddress',
+          scope: 'identify email',
         },
       },
       profile(profile) {
         return {
-          id: profile.sub,
-          name: profile.name,
+          id: profile.id,
+          name: profile.username || profile.global_name,
           email: profile.email,
-          image: profile.picture,
-          emailVerified: profile.email_verified ? new Date() : null,
+          image: profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null,
+          emailVerified: profile.verified ? new Date() : null,
         };
       },
     }),
@@ -118,15 +118,15 @@ export const authConfig = {
           provider: account.provider,
           providerAccountId: account.providerAccountId,
           email: user.email || profile.email,
-          name: user.name || profile.name,
-          image: user.image || profile.picture || (profile as any).image_url,
+          name: user.name || profile.name || profile.username,
+          image: user.image || profile.picture || (profile as any).avatar,
           // Google specific
           locale: (profile as any).locale,
-          verified: (profile as any).email_verified,
-          // LinkedIn specific
-          occupation: (profile as any).occupation,
-          company: (profile as any).organization?.name,
-          industry: (profile as any).industry,
+          verified: (profile as any).email_verified || (profile as any).verified,
+          // Discord specific
+          occupation: undefined,
+          company: undefined,
+          industry: undefined,
         };
 
           await syncOAuthProfileToUser(user.id, oauthProfile);
