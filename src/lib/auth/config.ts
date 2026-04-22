@@ -30,8 +30,11 @@ export const authConfig = {
         }
 
         try {
+          // Normalize email to lowercase for case-insensitive lookup
+          const email = (credentials.email as string).toLowerCase().trim();
+          
           const user = await db.user.findUnique({
-            where: { email: credentials.email as string },
+            where: { email },
             include: { profile: true },
           });
 
