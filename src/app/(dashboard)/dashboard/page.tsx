@@ -26,24 +26,25 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/components/ui";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
-// DESIGN TOKENS (Feeld-inspired)
+// DESIGN TOKENS — Nexus v2 (OKLCH)
 // ══════════════════════════════════════
 const COLORS = {
-  primary: "#6366f1",
-  primaryLight: "#818cf8",
-  primaryDark: "#4f46e5",
-  accent: "#f59e0b",
-  accentLight: "#fbbf24",
-  pink: "#ec4899",
-  purple: "#8b5cf6",
-  success: "#22c55e",
-  warning: "#f59e0b",
-  error: "#ef4444",
+  primary: "oklch(62% 0.22 280)",        // Electric Violet
+  primaryLight: "oklch(68% 0.20 280)",
+  primaryDark: "oklch(55% 0.24 280)",
+  accent: "oklch(78% 0.14 55)",           // Warm Rose Gold
+  accentLight: "oklch(82% 0.12 55)",
+  pink: "oklch(65% 0.22 350)",            // Fuchsia
+  purple: "oklch(58% 0.20 310)",          // Deep Purple
+  success: "oklch(72% 0.19 155)",
+  warning: "oklch(78% 0.16 75)",
+  error: "oklch(63% 0.22 25)",
 };
 
-const EASING = "cubic-bezier(0.22, 1, 0.36, 1)"; // Feeld ease
+const EASING = "cubic-bezier(0.22, 1, 0.36, 1)"; // Nexus ease
 
 // ══════════════════════════════════════
 // INTERFACES
@@ -136,7 +137,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             key={i}
             points={circlePoints}
             fill="none"
-            stroke="rgba(255,255,255,0.08)"
+            stroke="rgba(0,0,0,0.08)"
             strokeWidth={1}
           />
         );
@@ -154,7 +155,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             y1={center}
             x2={x2}
             y2={y2}
-            stroke="rgba(255,255,255,0.06)"
+            stroke="rgba(0,0,0,0.06)"
             strokeWidth={1}
           />
         );
@@ -163,7 +164,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
       {/* Data area glow */}
       <path
         d={pathData}
-        fill="rgba(99, 102, 241, 0.15)"
+        fill="rgba(99, 102, 241, 0.08)"
         stroke="none"
         filter="url(#glow)"
       />
@@ -205,7 +206,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             y={y}
             textAnchor="middle"
             dominantBaseline="middle"
-            fill="rgba(255,255,255,0.6)"
+            fill="rgba(0,0,0,0.5)"
             fontSize={10}
             fontWeight={500}
           >
@@ -251,34 +252,57 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
       className="flex-shrink-0 w-[260px] snap-start"
     >
       <Link href={`/dashboard/users/${user.id}`}>
-        <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-white/5 border border-white/10 hover:border-primary/30 transition-all duration-300"
-          style={{ transitionTimingFunction: EASING }}
+        <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-white border border-card-border hover:border-primary/30 transition-all duration-300 hover:shadow-lg"
+          style={{ transitionTimingFunction: EASING, boxShadow: "var(--shadow-sm)" }}
         >
           {/* Avatar Area */}
           <div className="relative h-56 overflow-hidden">
-            {user.avatar ? (
-              user.avatar.startsWith("emoji:") ? (
-                <div
-                  className="w-full h-full flex items-center justify-center"
-                  style={{
-                    background: `linear-gradient(135deg, ${user.avatar.split(":")[2]}40, ${user.avatar.split(":")[2]}20)`,
-                  }}
-                >
-                  <span className="text-7xl">{user.avatar.split(":")[1]}</span>
-                </div>
-              ) : (
+            {(() => {
+              const kind = getAvatarKind(user.avatar);
+              if (kind === 'none') {
+                return (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                    <User className="w-12 h-12 text-white/20" />
+                  </div>
+                );
+              }
+              if (kind === 'emoji') {
+                const parsed = parseEmojiAvatar(user.avatar);
+                return (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ background: getAvatarBackground(kind, user.avatar) }}
+                  >
+                    <span
+                      className="select-none leading-none"
+                      style={{
+                        display: 'inline-block',
+                        width: '100%',
+                        height: '100%',
+                        fontSize: 'clamp(4rem, 25vw, 7rem)',
+                        lineHeight: '1',
+                        textAlign: 'center',
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      {parsed?.emoji}
+                    </span>
+                  </div>
+                );
+              }
+              const hoverClass = kind === 'photo' ? 'group-hover:scale-105 transition-transform duration-500' : '';
+              return (
                 <img
-                  src={user.avatar}
+                  src={user.avatar!}
                   alt={user.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  style={{ transitionTimingFunction: EASING }}
+                  className={`${getAvatarImgClasses(kind)} ${hoverClass}`}
+                  style={{
+                    ...(kind === 'svg' ? { background: getAvatarBackground(kind, user.avatar) } : {}),
+                    transitionTimingFunction: EASING,
+                  }}
                 />
-              )
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                <User className="w-12 h-12 text-white/20" />
-              </div>
-            )}
+              );
+            })()}
 
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -304,7 +328,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
 
             {/* Name & Age */}
             <div className="absolute bottom-3 left-3 right-3">
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-foreground font-[family-name:var(--font-display)]">
                 {user.name}, {user.age}
               </h3>
               {user.city && (
@@ -315,7 +339,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
 
           {/* Match Reason */}
           <div className="p-3">
-            <p className="text-white/60 text-xs line-clamp-2 leading-relaxed">
+            <p className="text-foreground-muted text-xs line-clamp-2 leading-relaxed">
               {user.matchReason}
             </p>
           </div>
@@ -346,7 +370,7 @@ function ActivityItem({
 }) {
   return (
     <Link href={href} className="block group">
-      <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all duration-200"
+      <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-foreground-faint transition-all duration-200"
         style={{ transitionTimingFunction: EASING }}
       >
         <div
@@ -356,15 +380,15 @@ function ActivityItem({
           <Icon className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white">{title}</p>
-          <p className="text-xs text-white/50 truncate">{subtitle}</p>
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-xs text-foreground-muted truncate">{subtitle}</p>
         </div>
         {count !== undefined && count > 0 && (
           <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
             {count > 99 ? "99+" : count}
           </span>
         )}
-        <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
+        <ChevronRight className="w-4 h-4 text-foreground-faint group-hover:text-foreground-muted transition-colors" />
       </div>
     </Link>
   );
@@ -493,11 +517,11 @@ export default function DashboardPage() {
       <div className="space-y-6 max-w-5xl mx-auto">
         <InlineError error={profileError} onRetry={handleRetry} className="mb-6" />
         <div className="glass-card p-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <RefreshCw className="w-8 h-8 text-white/30" />
+          <div className="w-16 h-16 rounded-full bg-foreground-faint flex items-center justify-center mx-auto mb-4">
+            <RefreshCw className="w-8 h-8 text-foreground-subtle" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">Unable to load dashboard</h3>
-          <p className="text-white/60 mb-4">{profileError}</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Unable to load dashboard</h3>
+          <p className="text-foreground-muted mb-4">{profileError}</p>
           <button onClick={handleRetry} className="btn-primary">
             <RefreshCw className="w-4 h-4 mr-2" />
             Retry
@@ -511,7 +535,13 @@ export default function DashboardPage() {
   // MAIN RENDER
   // ═══════════════════════════════════════════════════════
   return (
-    <div className="max-w-5xl mx-auto space-y-0">
+    <div className="max-w-5xl mx-auto space-y-0 relative">
+      {/* ── Atmosphere: Subtle glow orbs for light theme ── */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
+        <div className="glow-orb glow-orb-primary w-[600px] h-[600px] -top-48 -right-48 opacity-40 animate-breathe" />
+        <div className="glow-orb glow-orb-secondary w-[500px] h-[500px] bottom-32 -left-40 opacity-30 animate-breathe" style={{ animationDelay: "2s" }} />
+      </div>
+
       {/* ═══ ONBOARDING CTA BANNER ═══ */}
       <AnimatePresence>
         {needsOnboarding && (
@@ -520,18 +550,19 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="glass-card border-primary/30 p-5 bg-gradient-to-r from-primary/10 to-secondary/10 mb-8"
+            className="glass-card border-primary/30 p-5 mb-8 relative overflow-hidden"
           >
-            <div className="flex items-center justify-between gap-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10" />
+            <div className="relative flex items-center justify-between gap-6">
               <div className="flex items-center gap-4 flex-1">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-lg" style={{ boxShadow: "var(--shadow-glow)" }}>
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white text-sm mb-1">
+                  <h3 className="font-semibold text-foreground-muted text-sm mb-1">
                     Complete Your Relationship Blueprint
                   </h3>
-                  <p className="text-xs text-white/60">
+                  <p className="text-xs text-foreground-muted">
                     Finish your profile setup to unlock matches and messaging
                     {onboardingStep > 0 && onboardingStep < 8
                       ? ` (step ${Math.min(onboardingStep, 4)} of 4)`
@@ -559,10 +590,10 @@ export default function DashboardPage() {
         transition={{ duration: 0.4 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-white mb-1">
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1 font-[family-name:var(--font-display)]">
           {getGreeting()}, <span className="text-gradient">{firstName}</span>
         </h1>
-        <p className="text-white/50 text-sm">
+        <p className="text-foreground-muted text-sm">
           {unreadMatches > 0
             ? `You have ${unreadMatches} new match${unreadMatches > 1 ? "es" : ""} waiting for you`
             : unreadMessages > 0
@@ -577,12 +608,14 @@ export default function DashboardPage() {
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-accent" />
-            <h2 className="text-lg font-semibold text-white">Today&apos;s Picks</h2>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center">
+              <Flame className="w-4 h-4 text-accent" />
+            </div>
+            <h2 className="text-lg font-semibold text-foreground font-[family-name:var(--font-display)]">Today&apos;s Picks</h2>
           </div>
           <Link
             href="/dashboard/discover"
-            className="text-xs text-white/50 hover:text-primary transition-colors flex items-center gap-1"
+            className="text-xs text-foreground-muted hover:text-primary transition-colors flex items-center gap-1"
           >
             View All <ChevronRight className="w-3 h-3" />
           </Link>
@@ -591,7 +624,7 @@ export default function DashboardPage() {
         {discoverLoading ? (
           <div className="flex gap-4 overflow-hidden">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="w-[260px] flex-shrink-0 h-80 rounded-2xl bg-white/5 animate-pulse" />
+              <div key={i} className="w-[260px] flex-shrink-0 h-80 rounded-2xl bg-foreground-faint animate-pulse" />
             ))}
           </div>
         ) : discoverUsers.length > 0 ? (
@@ -614,8 +647,8 @@ export default function DashboardPage() {
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mx-auto mb-4">
               <Compass className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="text-base font-semibold text-white mb-1">Finding your matches...</h3>
-            <p className="text-white/50 text-sm mb-4">
+            <h3 className="text-base font-semibold text-foreground-muted mb-1">Finding your matches...</h3>
+            <p className="text-foreground-muted text-sm mb-4">
               We&apos;re searching for people who match your blueprint.
             </p>
             <Link href="/dashboard/discover" className="btn-primary text-sm">
@@ -638,33 +671,39 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
         >
-          <div className="glass-card p-6 h-full">
-            <div className="flex items-center gap-2 mb-4">
-              <Radar className="w-5 h-5 text-primary" />
-              <h2 className="text-base font-semibold text-white">Your Relationship Engine</h2>
-            </div>
-            <RadarChart data={getRadarData()} size={220} />
-            <div className="mt-4 grid grid-cols-5 gap-1">
-              {getRadarData().map((d, i) => (
-                <div key={i} className="text-center">
-                  <p className="text-xs text-white/40 mb-0.5">{d.label}</p>
-                  <p className="text-sm font-semibold text-primary">{d.value}%</p>
+          <div className="glass-card p-6 h-full relative overflow-hidden">
+            {/* Subtle radial glow inside card */}
+            <div className="absolute inset-0 bg-gradient-radial opacity-40 pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Radar className="w-4 h-4 text-primary" />
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-white/5">
-              <p className="text-xs text-white/40 text-center">
-                Complete your profile to unlock full engine potential
-              </p>
-              <div className="mt-2 w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${profileCompletion}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                />
+                <h2 className="text-base font-semibold text-foreground font-[family-name:var(--font-display)]">Your Relationship Engine</h2>
               </div>
-              <p className="text-xs text-white/50 mt-1 text-right">{profileCompletion}% complete</p>
+              <RadarChart data={getRadarData()} size={220} />
+              <div className="mt-4 grid grid-cols-5 gap-1">
+                {getRadarData().map((d, i) => (
+                  <div key={i} className="text-center">
+                    <p className="text-xs text-foreground-subtle mb-0.5">{d.label}</p>
+                    <p className="text-sm font-semibold text-primary">{d.value}%</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/55">
+                <p className="text-xs text-foreground-subtle text-center">
+                  Complete your profile to unlock full engine potential
+                </p>
+                <div className="mt-2 w-full h-1.5 bg-foreground-faint rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-primary rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${profileCompletion}%` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                  />
+                </div>
+                <p className="text-xs text-foreground-muted mt-1 text-right">{profileCompletion}% complete</p>
+              </div>
             </div>
           </div>
         </motion.section>
@@ -677,8 +716,10 @@ export default function DashboardPage() {
         >
           <div className="glass-card p-6 h-full">
             <div className="flex items-center gap-2 mb-4">
-              <Bell className="w-5 h-5 text-primary" />
-              <h2 className="text-base font-semibold text-white">Activity Summary</h2>
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Bell className="w-4 h-4 text-primary" />
+              </div>
+              <h2 className="text-base font-semibold text-foreground font-[family-name:var(--font-display)]">Activity Summary</h2>
             </div>
 
             <div className="space-y-1">
@@ -716,29 +757,29 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="mt-4 pt-4 border-t border-white/5">
-              <p className="text-xs text-white/40 mb-3">Quick Actions</p>
+            <div className="mt-4 pt-4 border-t border-white/55">
+              <p className="text-xs text-foreground-subtle mb-3">Quick Actions</p>
               <div className="grid grid-cols-3 gap-2">
                 <Link
                   href="/dashboard/discover"
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-foreground-faint hover:bg-primary/15 transition-colors group"
                 >
-                  <Search className="w-4 h-4 text-white/50 group-hover:text-primary transition-colors" />
-                  <span className="text-[10px] text-white/50 group-hover:text-white/80">Browse</span>
+                  <Search className="w-4 h-4 text-foreground-muted group-hover:text-primary transition-colors" />
+                  <span className="text-[10px] text-foreground-muted group-hover:text-foreground">Browse</span>
                 </Link>
                 <Link
                   href="/dashboard/profile"
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-foreground-faint hover:bg-primary/15 transition-colors group"
                 >
-                  <User className="w-4 h-4 text-white/50 group-hover:text-primary transition-colors" />
-                  <span className="text-[10px] text-white/50 group-hover:text-white/80">Profile</span>
+                  <User className="w-4 h-4 text-foreground-muted group-hover:text-primary transition-colors" />
+                  <span className="text-[10px] text-foreground-muted group-hover:text-foreground">Profile</span>
                 </Link>
                 <Link
                   href="/dashboard/settings"
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-foreground-faint hover:bg-primary/15 transition-colors group"
                 >
-                  <Sparkles className="w-4 h-4 text-white/50 group-hover:text-primary transition-colors" />
-                  <span className="text-[10px] text-white/50 group-hover:text-white/80">Boost</span>
+                  <Sparkles className="w-4 h-4 text-foreground-muted group-hover:text-primary transition-colors" />
+                  <span className="text-[10px] text-foreground-subtle group-hover:text-foreground">Boost</span>
                 </Link>
               </div>
             </div>
@@ -756,16 +797,17 @@ export default function DashboardPage() {
           transition={{ duration: 0.4, delay: 0.4 }}
           className="mb-8"
         >
-          <div className="glass-card border-primary/30 p-5 bg-gradient-to-r from-primary/5 to-secondary/5">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
+          <div className="glass-card border-primary/30 p-5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5" />
+            <div className="relative flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center flex-shrink-0" style={{ boxShadow: "var(--shadow-glow)" }}>
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 text-center sm:text-left">
-                <h3 className="font-semibold text-white text-sm mb-0.5">
+                <h3 className="font-semibold text-foreground-muted text-sm mb-0.5">
                   Unlock Premium Features
                 </h3>
-                <p className="text-white/50 text-xs">
+                <p className="text-foreground-muted text-xs">
                   Unlimited likes, see who liked you, and advanced matching filters.
                 </p>
               </div>

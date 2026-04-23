@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
 import { motion, AnimatePresence } from "framer-motion";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -304,15 +305,22 @@ export default function ChatLayout({
                     {/* Avatar with Online Status */}
                     <div className="relative flex-shrink-0">
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-white/5 flex items-center justify-center">
-                        {chat.otherUser.avatar ? (
-                          <img
-                            src={chat.otherUser.avatar}
-                            alt={chat.otherUser.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-6 h-6 text-white/30" />
-                        )}
+                        {(() => {
+                          const kind = getAvatarKind(chat.otherUser.avatar);
+                          if (kind === 'none') return <User className="w-6 h-6 text-white/30" />;
+                          if (kind === 'emoji') {
+                            const parsed = parseEmojiAvatar(chat.otherUser.avatar);
+                            return <span className="text-xl">{parsed?.emoji}</span>;
+                          }
+                          return (
+                            <img
+                              src={chat.otherUser.avatar!}
+                              alt={chat.otherUser.name}
+                              className={getAvatarImgClasses(kind)}
+                              style={kind === 'svg' ? { background: getAvatarBackground(kind, chat.otherUser.avatar) } : undefined}
+                            />
+                          );
+                        })()}
                       </div>
                       {/* Online Status */}
                       {chat.otherUser.isOnline ? (

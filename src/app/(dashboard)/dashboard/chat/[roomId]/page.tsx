@@ -440,13 +440,29 @@ export default function ChatRoomPage() {
 
           {/* Avatar with Online Status */}
           <div className="relative">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/5 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
               {roomInfo?.otherUser?.avatar ? (
-                <img
-                  src={roomInfo.otherUser.avatar}
-                  alt={roomInfo.otherUser.name}
-                  className="w-full h-full object-cover"
-                />
+                roomInfo.otherUser.avatar.startsWith("emoji:") ? (
+                  <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                    <span
+                      className="select-none leading-none"
+                      style={{
+                        fontSize: 'clamp(1rem, 200%, 2rem)',
+                        lineHeight: '1',
+                        textAlign: 'center',
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      {roomInfo.otherUser.avatar.split(":")[1]}
+                    </span>
+                  </div>
+                ) : (
+                  <img
+                    src={roomInfo.otherUser.avatar}
+                    alt={roomInfo.otherUser.name}
+                    className="w-full h-full object-cover"
+                  />
+                )
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
                   {roomInfo?.otherUser?.name?.[0] || "?"}
@@ -595,16 +611,32 @@ export default function ChatRoomPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${fromMe ? "justify-end" : "justify-start"}`}
               >
-                <div className={`flex items-end gap-2 max-w-[75%] ${fromMe ? "flex-row-reverse" : ""}`}>
+                <div className={`flex items-end gap-2 max-w-[80%] ${fromMe ? "flex-row-reverse" : ""}`}>
                   {/* Avatar (only show for first message in group) */}
                   {!fromMe && showAvatar && (
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-white/5 flex-shrink-0 relative">
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 relative">
                       {roomInfo?.otherUser?.avatar ? (
-                        <img
-                          src={roomInfo.otherUser.avatar}
-                          alt={roomInfo.otherUser.name}
-                          className="w-full h-full object-cover"
-                        />
+                        roomInfo.otherUser.avatar.startsWith("emoji:") ? (
+                          <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                            <span
+                              className="select-none leading-none"
+                              style={{
+                                fontSize: 'clamp(0.9rem, 180%, 1.8rem)',
+                                lineHeight: '1',
+                                textAlign: 'center',
+                                verticalAlign: 'middle',
+                              }}
+                            >
+                              {roomInfo.otherUser.avatar.split(":")[1]}
+                            </span>
+                          </div>
+                        ) : (
+                          <img
+                            src={roomInfo.otherUser.avatar}
+                            alt={roomInfo.otherUser.name}
+                            className="w-full h-full object-cover"
+                          />
+                        )
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold">
                           {roomInfo?.otherUser?.name?.[0] || "?"}
@@ -622,22 +654,22 @@ export default function ChatRoomPage() {
 
                   {/* Message Bubble */}
                   <div
-                    className={`px-4 py-2 rounded-2xl max-w-[250px] sm:max-w-[300px] ${
+                    className={`px-4 py-2.5 rounded-2xl max-w-[75%] ${
                       fromMe
                         ? "bg-gradient-to-br from-pink-500 to-purple-500 text-white rounded-br-md"
                         : fromBot
-                        ? "bg-gradient-to-br from-purple-500/80 to-blue-500/80 text-white rounded-bl-md border border-purple-400/30"
-                        : "bg-white/10 text-white rounded-bl-md"
+                        ? "bg-white/[0.08] text-white/90 rounded-bl-md border border-white/[0.08]"
+                        : "bg-white/[0.08] text-white/90 rounded-bl-md"
                     }`}
                   >
                     {/* Bot label */}
                     {fromBot && (
-                      <div className="flex items-center gap-1 mb-1 opacity-70">
-                        <Bot className="w-3 h-3" />
-                        <span className="text-[10px] uppercase tracking-wide">AI Assistant</span>
+                      <div className="flex items-center gap-1 mb-1.5 opacity-70">
+                        <Bot className="w-3 h-3 text-violet-300" />
+                        <span className="text-[10px] text-violet-300 font-medium tracking-wide">AI</span>
                       </div>
                     )}
-                    <p className="text-sm">{msg.content}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">{msg.content}</p>
                     <p className={`text-xs mt-1 ${fromMe ? "text-white/70" : "text-white/50"}`}>
                       {formatTime(msg.createdAt)}
                     </p>

@@ -73,11 +73,37 @@ function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps)
   return (
     <div className={`relative ${sizeClasses} rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10`}>
       {avatar ? (
-        <img
-          src={avatar}
-          alt={name}
-          className="w-full h-full object-cover"
-        />
+        avatar.startsWith("emoji:") ? (
+          // High-quality emoji avatar — fills container responsively
+          <div
+            className={`w-full h-full flex items-center justify-center ${
+              isBot
+                ? 'bg-gradient-to-br from-violet-500/80 to-fuchsia-500/80'
+                : 'bg-gradient-to-br from-primary to-secondary'
+            }`}
+          >
+            <span
+              className="select-none leading-none"
+              style={{
+                display: 'inline-block',
+                width: '100%',
+                height: '100%',
+                fontSize: 'clamp(1.2rem, 200%, 2.5rem)',
+                lineHeight: '1',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+              }}
+            >
+              {avatar.split(":")[1]}
+            </span>
+          </div>
+        ) : (
+          <img
+            src={avatar}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        )
       ) : (
         <div className={`w-full h-full flex items-center justify-center text-white text-xs font-bold ${
           isBot 

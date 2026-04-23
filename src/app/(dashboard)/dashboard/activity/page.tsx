@@ -22,6 +22,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Skeleton, EmptyState } from "@/components/ui";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -333,15 +334,22 @@ export default function ActivityPage() {
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden">
-                      {activity.user.avatar ? (
-                        <img
-                          src={activity.user.avatar}
-                          alt={activity.user.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-6 h-6 text-white/30" />
-                      )}
+                      {(() => {
+                        const kind = getAvatarKind(activity.user.avatar);
+                        if (kind === 'none') return <User className="w-6 h-6 text-white/30" />;
+                        if (kind === 'emoji') {
+                          const parsed = parseEmojiAvatar(activity.user.avatar);
+                          return <span className="text-xl">{parsed?.emoji}</span>;
+                        }
+                        return (
+                          <img
+                            src={activity.user.avatar!}
+                            alt={activity.user.name}
+                            className={getAvatarImgClasses(kind)}
+                            style={kind === 'svg' ? { background: getAvatarBackground(kind, activity.user.avatar) } : undefined}
+                          />
+                        );
+                      })()}
                     </div>
                     {/* Activity type icon */}
                     <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#13121a] border border-white/10 flex items-center justify-center">

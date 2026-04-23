@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart, X, MessageCircle, Filter, User, Loader2 } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
 import { useApiPost } from "@/hooks/use-api";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground } from "@/lib/avatar-utils";
 
 type TabType = "new" | "accepted" | "passed" | "expired";
 
@@ -138,17 +139,24 @@ export default function MatchesPage() {
             <div key={match.id} className="glass-card overflow-hidden group">
               <Link href={`/dashboard/matches/${match.id}`}>
                 <div className="relative h-56">
-                  {match.otherUser.avatar ? (
-                    <img
-                      src={match.otherUser.avatar}
-                      alt={match.otherUser.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                      <User className="w-16 h-16 text-white/20" />
-                    </div>
-                  )}
+                  {(() => {
+                    const kind = getAvatarKind(match.otherUser.avatar);
+                    if (kind === 'none') {
+                      return (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                          <User className="w-16 h-16 text-white/20" />
+                        </div>
+                      );
+                    }
+                    return (
+                      <img
+                        src={match.otherUser.avatar!}
+                        alt={match.otherUser.name}
+                        className={getAvatarImgClasses(kind)}
+                        style={kind === 'svg' ? { background: getAvatarBackground(kind, match.otherUser.avatar) } : undefined}
+                      />
+                    );
+                  })()}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute bottom-3 left-3 right-3">
                     <div className="flex items-center justify-between">

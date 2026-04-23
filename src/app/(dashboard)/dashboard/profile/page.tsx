@@ -354,7 +354,14 @@ export default function ProfilePage() {
                     <img
                       src={formData.avatar}
                       alt="Avatar"
-                      className="w-full h-full object-cover"
+                      className={(() => {
+                        const kind = formData.avatar?.includes('dicebear') || formData.avatar?.endsWith('.svg') ? 'svg' : 'photo';
+                        return kind === 'svg' ? 'w-full h-full object-contain p-2' : 'w-full h-full object-cover';
+                      })()}
+                      style={(() => {
+                        const kind = formData.avatar?.includes('dicebear') || formData.avatar?.endsWith('.svg') ? 'svg' : 'photo';
+                        return kind === 'svg' ? { background: 'linear-gradient(135deg, #f0f0ff, #e8e8f8)' } : undefined;
+                      })()}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -731,7 +738,7 @@ export default function ProfilePage() {
             className="btn-secondary flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            返回
+            Back
           </button>
         )}
 
@@ -741,7 +748,7 @@ export default function ProfilePage() {
           className="btn-ghost flex items-center gap-2"
         >
           <Save className="w-4 h-4" />
-          {isSaving ? "保存中..." : "保存草稿"}
+          {isSaving ? "Saving..." : "Save Draft"}
         </button>
 
         <div className="flex-1" />
@@ -751,7 +758,7 @@ export default function ProfilePage() {
             onClick={() => setCurrentStep((prev) => prev + 1)}
             className="btn-primary flex items-center gap-2"
           >
-            下一步
+            Next
             <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
@@ -760,7 +767,7 @@ export default function ProfilePage() {
             isLoading={isSubmitting}
             className="btn-primary"
           >
-            保存资料
+            Save Profile
           </LoadingButton>
         )}
       </div>

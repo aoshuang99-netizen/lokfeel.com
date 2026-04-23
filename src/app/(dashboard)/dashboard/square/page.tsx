@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // SEXUAL ORIENTATION TAGS
@@ -220,36 +221,36 @@ export default function MatchingSquarePage() {
                 >
                   {/* Card */}
                   <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-white/5 border border-white/10">
-                    {/* Avatar - Support both URL and emoji formats */}
-                    {user.avatar ? (
-                      user.avatar.startsWith('emoji:') ? (
-                        // Emoji avatar format: emoji:emoji:color
-                        <div 
-                          className="w-full h-full flex items-center justify-center"
-                          style={{ 
-                            background: `linear-gradient(135deg, ${user.avatar.split(':')[2]}40, ${user.avatar.split(':')[2]}20)` 
-                          }}
-                        >
-                          <span className="text-6xl">{user.avatar.split(':')[1]}</span>
-                        </div>
-                      ) : user.avatar.startsWith('http') ? (
-                        // URL avatar
+                    {/* Avatar - Unified rendering */}
+                    {(() => {
+                      const kind = getAvatarKind(user.avatar);
+                      if (kind === 'none') {
+                        return (
+                          <div className="w-full h-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
+                            <User className="w-12 h-12 text-white/20" />
+                          </div>
+                        );
+                      }
+                      if (kind === 'emoji') {
+                        const parsed = parseEmojiAvatar(user.avatar);
+                        return (
+                          <div
+                            className="w-full h-full flex items-center justify-center"
+                            style={{ background: getAvatarBackground(kind, user.avatar) }}
+                          >
+                            <span className="text-6xl">{parsed?.emoji}</span>
+                          </div>
+                        );
+                      }
+                      return (
                         <img
-                          src={user.avatar}
+                          src={user.avatar!}
                           alt={user.name}
-                          className="w-full h-full object-cover"
+                          className={getAvatarImgClasses(kind)}
+                          style={kind === 'svg' ? { background: getAvatarBackground(kind, user.avatar) } : undefined}
                         />
-                      ) : (
-                        // Default gradient for other formats
-                        <div className="w-full h-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
-                          <span className="text-6xl">{user.avatar}</span>
-                        </div>
-                      )
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
-                        <User className="w-12 h-12 text-white/20" />
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />

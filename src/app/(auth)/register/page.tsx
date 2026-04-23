@@ -11,23 +11,22 @@ import {
 } from "lucide-react";
 import { signIn } from "next-auth/react";
 
-// ─── MINIMAL BLACK & WHITE STYLE CONSTANTS ───────────────────────────────
+// ─── LIGHT THEME STYLE CONSTANTS ───────────────────────────────
 const colors = {
-  bg: "rgba(255,255,255,0.03)",
-  border: "rgba(255,255,255,0.08)",
-  text: "#fff",
-  textMuted: "rgba(255,255,255,0.5)",
-  textSecondary: "rgba(255,255,255,0.7)",
-  input: "rgba(255,255,255,0.05)",
-  inputBorder: "rgba(255,255,255,0.1)",
-  inputFocus: "rgba(255,255,255,0.3)",
-  primary: "#fff", // Black & white: white primary
-  primaryBg: "#fff",
-  primaryText: "#000",
-  card: "rgba(255,255,255,0.03)",
-  cardBorder: "rgba(255,255,255,0.08)",
-  error: "#fca5a5",
-  errorBg: "rgba(239,68,68,0.1)",
+  bg: "rgba(255,255,255,0.95)",
+  border: "rgba(0,0,0,0.08)",
+  text: "#1a1a2e",
+  textMuted: "rgba(0,0,0,0.45)",
+  textSecondary: "rgba(0,0,0,0.65)",
+  input: "#f8f8fc",
+  inputBorder: "rgba(0,0,0,0.12)",
+  inputFocus: "rgba(99, 102, 241, 0.5)",
+  inputPlaceholder: "rgba(0,0,0,0.3)",
+  primary: "#6366f1",
+  primaryBg: "#6366f1",
+  primaryText: "#fff",
+  error: "#dc2626",
+  errorBg: "rgba(239,68,68,0.08)",
   errorBorder: "rgba(239,68,68,0.2)",
 };
 
@@ -67,7 +66,7 @@ function clearRegState() {
   try { localStorage.removeItem(REG_STATE_KEY); } catch { /* ignore */ }
 }
 
-// ─── Gender & Sexuality Options (Simplified) ───
+// ─── Gender & Sexuality Options ───
 const genderOptions = [
   { value: "woman", label: "Woman" },
   { value: "man", label: "Man" },
@@ -87,14 +86,13 @@ const sexualityOptions = [
 
 // Only Google + Discord OAuth providers
 const oauthProviders = [
-  { provider: "google" as const, label: "Google", svg: <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> },
-  { provider: "discord" as const, label: "Discord", svg: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg> },
+  { provider: "google" as const, label: "Google", svg: <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> },
+  { provider: "discord" as const, label: "Discord", svg: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg> },
 ];
 
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState<"info" | "verify">("info");
-  // ─── SIMPLIFIED FORM: Only name, email, password, gender, sexuality ───
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -113,7 +111,6 @@ export default function RegisterPage() {
 
   // ─── Restore registration state on mount ───
   useEffect(() => {
-    // Check for reset parameter in URL
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('reset')) {
       clearRegState();
@@ -326,7 +323,6 @@ export default function RegisterPage() {
 
             if ((signInResult as any)?.ok) {
               clearRegState();
-              // Use window.location for full page reload to ensure session is set
               window.location.href = data.redirectTo || "/dashboard/onboarding";
               return;
             }
@@ -354,8 +350,33 @@ export default function RegisterPage() {
     }
   };
 
+  const inputStyle = (extraPadding?: string): React.CSSProperties => ({
+    width: "100%",
+    padding: extraPadding || "12px 16px",
+    background: colors.input,
+    border: `1px solid ${colors.inputBorder}`,
+    borderRadius: "12px",
+    color: colors.text,
+    fontSize: "15px",
+    outline: "none",
+    boxSizing: "border-box",
+    transition: "border-color 0.2s",
+  });
+
+  const selectStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "12px 16px",
+    background: colors.input,
+    border: `1px solid ${colors.inputBorder}`,
+    borderRadius: "12px",
+    color: formData.gender || formData.sexuality ? colors.text : colors.inputPlaceholder,
+    fontSize: "14px",
+    outline: "none",
+    boxSizing: "border-box",
+  };
+
   // ══════════════════════════════════════
-  // VERIFICATION STEP - Black & White Style
+  // VERIFICATION STEP - Light Theme
   // ══════════════════════════════════════
   if (step === "verify") {
     return (
@@ -367,11 +388,12 @@ export default function RegisterPage() {
         backdropFilter: "blur(20px)",
         borderRadius: "24px",
         border: `1px solid ${colors.border}`,
+        boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
       }}>
         <div className="text-center mb-8">
-          {/* Logo - Black & White */}
+          {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-black flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)" }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
@@ -388,12 +410,12 @@ export default function RegisterPage() {
           </p>
 
           {sentInfo.devMode && (
-            <div className="mt-4 p-4 rounded-xl" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${colors.border}` }}>
+            <div className="mt-4 p-4 rounded-xl" style={{ background: "rgba(99,102,241,0.06)", border: `1px solid rgba(99,102,241,0.15)` }}>
               <p style={{ color: colors.textMuted, fontSize: "12px", marginBottom: "8px" }}>Dev Mode — Your verification code:</p>
               <div className="flex items-center justify-center gap-2">
                 {sentInfo.code && sentInfo.code.split('').map((digit, i) => (
                   <span key={i} className="w-10 h-12 flex items-center justify-center rounded-lg text-2xl font-bold font-mono" 
-                    style={{ background: "rgba(255,255,255,0.1)", color: colors.text, border: `1px solid ${colors.border}` }}>
+                    style={{ background: colors.input, color: colors.primary, border: `1px solid ${colors.inputBorder}` }}>
                     {digit}
                   </span>
                 ))}
@@ -402,7 +424,7 @@ export default function RegisterPage() {
                 type="button"
                 onClick={() => sentInfo.code && navigator.clipboard.writeText(sentInfo.code)}
                 className="mt-3 text-xs transition-colors cursor-pointer"
-                style={{ color: colors.textMuted, background: "none", border: "none" }}
+                style={{ color: colors.primary, background: "none", border: "none" }}
               >
                 Click to copy
               </button>
@@ -442,14 +464,14 @@ export default function RegisterPage() {
           ))}
         </div>
 
-        {/* Verify button - Black & White */}
+        {/* Verify button */}
         <button
           onClick={handleVerifyAndCreate}
           disabled={isLoading}
           style={{
             width: "100%",
             padding: "14px",
-            background: isLoading ? "rgba(255,255,255,0.3)" : colors.primaryBg,
+            background: isLoading ? "rgba(99,102,241,0.5)" : colors.primaryBg,
             border: "none",
             borderRadius: "12px",
             color: colors.primaryText,
@@ -484,10 +506,11 @@ export default function RegisterPage() {
             style={{
               background: "none",
               border: "none",
-              color: countdown > 0 ? colors.textMuted : colors.text,
+              color: countdown > 0 ? colors.textMuted : colors.primary,
               fontSize: "14px",
               cursor: countdown > 0 || isSendingCode ? "not-allowed" : "pointer",
               opacity: countdown > 0 ? 0.5 : 1,
+              fontWeight: "500",
             }}
           >
             {isSendingCode
@@ -511,7 +534,7 @@ export default function RegisterPage() {
   }
 
   // ══════════════════════════════════════
-  // REGISTRATION INFO STEP - Black & White Style, Simplified Form
+  // REGISTRATION INFO STEP - Light Theme
   // ══════════════════════════════════════
   return (
     <div style={{
@@ -522,13 +545,14 @@ export default function RegisterPage() {
       backdropFilter: "blur(20px)",
       borderRadius: "24px",
       border: `1px solid ${colors.border}`,
+      boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
       maxHeight: "90vh",
       overflowY: "auto",
     }}>
       <div className="text-center mb-8">
-        {/* Logo - Black & White */}
+        {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-black flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
@@ -549,7 +573,7 @@ export default function RegisterPage() {
         </div>
       )}
 
-      {/* ─── SIMPLIFIED FORM ─── */}
+      {/* ─── FORM ─── */}
       <form onSubmit={(e) => { e.preventDefault(); handleSendCode(); }} style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}>
         {/* Name */}
         <div>
@@ -564,17 +588,7 @@ export default function RegisterPage() {
             onChange={handleChange}
             autoComplete="name"
             required
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              background: colors.input,
-              border: `1px solid ${colors.inputBorder}`,
-              borderRadius: "12px",
-              color: colors.text,
-              fontSize: "15px",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
+            style={inputStyle()}
           />
         </div>
 
@@ -584,7 +598,7 @@ export default function RegisterPage() {
             Email <span style={{ color: colors.error }}>*</span>
           </label>
           <div style={{ position: "relative" }}>
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: colors.inputPlaceholder }} />
             <input
               id="reg-email"
               name="email"
@@ -593,17 +607,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               autoComplete="email"
               required
-              style={{
-                width: "100%",
-                padding: "12px 16px 12px 40px",
-                background: colors.input,
-                border: `1px solid ${colors.inputBorder}`,
-                borderRadius: "12px",
-                color: colors.text,
-                fontSize: "15px",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
+              style={inputStyle("12px 16px 12px 40px")}
             />
           </div>
         </div>
@@ -620,20 +624,9 @@ export default function RegisterPage() {
               value={formData.gender}
               onChange={handleChange}
               required
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                background: colors.input,
-                border: `1px solid ${colors.inputBorder}`,
-                borderRadius: "12px",
-                color: colors.text,
-                fontSize: "14px",
-                outline: "none",
-                boxSizing: "border-box",
-                colorScheme: "dark",
-              }}
+              style={selectStyle}
             >
-              <option value="" style={{ color: "rgba(255,255,255,0.3)" }}>Choose...</option>
+              <option value="" style={{ color: colors.inputPlaceholder }}>Choose...</option>
               {genderOptions.map((opt) => (
                 <option key={opt.value} value={opt.value} style={{ color: colors.text }}>{opt.label}</option>
               ))}
@@ -650,20 +643,9 @@ export default function RegisterPage() {
               value={formData.sexuality}
               onChange={handleChange}
               required
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                background: colors.input,
-                border: `1px solid ${colors.inputBorder}`,
-                borderRadius: "12px",
-                color: colors.text,
-                fontSize: "14px",
-                outline: "none",
-                boxSizing: "border-box",
-                colorScheme: "dark",
-              }}
+              style={selectStyle}
             >
-              <option value="" style={{ color: "rgba(255,255,255,0.3)" }}>Choose...</option>
+              <option value="" style={{ color: colors.inputPlaceholder }}>Choose...</option>
               {sexualityOptions.map((opt) => (
                 <option key={opt.value} value={opt.value} style={{ color: colors.text }}>{opt.label}</option>
               ))}
@@ -685,17 +667,7 @@ export default function RegisterPage() {
             autoComplete="new-password"
             minLength={8}
             required
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              background: colors.input,
-              border: `1px solid ${colors.inputBorder}`,
-              borderRadius: "12px",
-              color: colors.text,
-              fontSize: "15px",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
+            style={inputStyle()}
           />
         </div>
 
@@ -712,21 +684,11 @@ export default function RegisterPage() {
             onChange={handleChange}
             autoComplete="new-password"
             required
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              background: colors.input,
-              border: `1px solid ${colors.inputBorder}`,
-              borderRadius: "12px",
-              color: colors.text,
-              fontSize: "15px",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
+            style={inputStyle()}
           />
         </div>
 
-        {/* Terms - Compact */}
+        {/* Terms */}
         <div className="flex items-start gap-3 pt-2">
           <input
             id="agreeToTerms"
@@ -740,26 +702,26 @@ export default function RegisterPage() {
               width: "16px",
               height: "16px",
               borderRadius: "4px",
-              accentColor: colors.text,
+              accentColor: colors.primary,
             }}
           />
           <label htmlFor="agreeToTerms" style={{ fontSize: "13px", color: colors.textMuted, lineHeight: "1.5" }}>
             I agree to the{" "}
-            <Link href="/terms" style={{ color: colors.text, textDecoration: "underline" }}>Terms</Link>
+            <Link href="/terms" style={{ color: colors.primary, textDecoration: "none", fontWeight: "500" }}>Terms</Link>
             {" "}and{" "}
-            <Link href="/privacy" style={{ color: colors.text, textDecoration: "underline" }}>Privacy Policy</Link>.
+            <Link href="/privacy" style={{ color: colors.primary, textDecoration: "none", fontWeight: "500" }}>Privacy Policy</Link>.
             A verification code will be sent to your email.
           </label>
         </div>
 
-        {/* Submit Button - Black & White */}
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={isSendingCode}
           style={{
             width: "100%",
             padding: "14px",
-            background: isSendingCode ? "rgba(255,255,255,0.3)" : colors.primaryBg,
+            background: isSendingCode ? "rgba(99,102,241,0.5)" : colors.primaryBg,
             border: "none",
             borderRadius: "12px",
             color: colors.primaryText,
@@ -822,17 +784,16 @@ export default function RegisterPage() {
         ))}
       </div>
 
-      {/* ─── Already have account link (ENHANCED) ─── */}
+      {/* Already have account link */}
       <div className="mt-8 pt-6" style={{ borderTop: `1px solid ${colors.border}` }}>
         <p style={{ textAlign: "center", color: colors.textMuted, fontSize: "14px" }}>
           Already have an account?{" "}
           <Link 
             href="/login" 
             style={{ 
-              color: colors.text, 
+              color: colors.primary, 
               fontWeight: "600",
-              textDecoration: "underline",
-              textUnderlineOffset: "2px",
+              textDecoration: "none",
             }}
           >
             Sign in

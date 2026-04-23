@@ -13,6 +13,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Skeleton, EmptyState } from "@/components/ui";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 interface ChatPreview {
   id: string;
@@ -153,15 +154,22 @@ export default function MessagesPage() {
                       {/* 头像 */}
                       <div className="relative">
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden">
-                          {chat.otherUser.avatar ? (
-                            <img
-                              src={chat.otherUser.avatar}
-                              alt={chat.otherUser.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <User className="w-7 h-7 text-white/30" />
-                          )}
+                          {(() => {
+                            const kind = getAvatarKind(chat.otherUser.avatar);
+                            if (kind === 'none') return <User className="w-7 h-7 text-white/30" />;
+                            if (kind === 'emoji') {
+                              const parsed = parseEmojiAvatar(chat.otherUser.avatar);
+                              return <span className="text-2xl">{parsed?.emoji}</span>;
+                            }
+                            return (
+                              <img
+                                src={chat.otherUser.avatar!}
+                                alt={chat.otherUser.name}
+                                className={getAvatarImgClasses(kind)}
+                                style={kind === 'svg' ? { background: getAvatarBackground(kind, chat.otherUser.avatar) } : undefined}
+                              />
+                            );
+                          })()}
                         </div>
                         {/* 未读标记 */}
                         {chat.unreadCount > 0 && (

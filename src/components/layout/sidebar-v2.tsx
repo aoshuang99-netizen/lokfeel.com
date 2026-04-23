@@ -26,18 +26,18 @@ interface SidebarProps {
   onCollapseChange?: (collapsed: boolean) => void;
 }
 
-// 主导航 - 4入口设计
+// Primary navigation — 4 entry design
 const mainNavItems = [
-  { name: "Home", href: "/dashboard", icon: Home, label: "首页" },
-  { name: "Discover", href: "/dashboard/discover", icon: Search, label: "发现" },
-  { name: "Messages", href: "/dashboard/chat", icon: MessageCircle, label: "消息", badge: true },
-  { name: "Activity", href: "/dashboard/activity", icon: Bell, label: "动态" },
+  { name: "Home", href: "/dashboard", icon: Home, label: "Home" },
+  { name: "Discover", href: "/dashboard/discover", icon: Search, label: "Discover" },
+  { name: "Messages", href: "/dashboard/chat", icon: MessageCircle, label: "Messages", badge: true },
+  { name: "Activity", href: "/dashboard/activity", icon: Bell, label: "Activity" },
 ];
 
-// 辅助导航 - Matches 已隐藏（合并到Activity页面）
+// Secondary navigation — Matches hidden (merged into Activity)
 const secondaryNavItems = [
-  { name: "Settings", href: "/dashboard/settings", icon: Settings, label: "设置" },
-  { name: "Profile", href: "/dashboard/profile", icon: User, label: "我的" },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings, label: "Settings" },
+  { name: "Profile", href: "/dashboard/profile", icon: User, label: "Profile" },
 ];
 
 // Invite button (separate, not in nav list)
@@ -57,7 +57,7 @@ const InviteButton = ({ collapsed, onClick }: { collapsed: boolean; onClick: () 
           exit={{ opacity: 0, x: -10 }}
           className="text-sm whitespace-nowrap"
         >
-          邀请好友
+          Invite Friends
         </motion.span>
       )}
     </AnimatePresence>
@@ -247,7 +247,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
                 exit={{ opacity: 0, x: -10 }}
                 className="text-sm whitespace-nowrap"
               >
-                退出登录
+                Sign Out
               </motion.span>
             )}
           </AnimatePresence>

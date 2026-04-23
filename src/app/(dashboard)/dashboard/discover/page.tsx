@@ -22,6 +22,7 @@ import {
   Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -196,30 +197,37 @@ function SwipeCard({
       >
         {/* Photo / Avatar Area (60%+ of card) */}
         <div className="absolute inset-0">
-          {user.avatar ? (
-            user.avatar.startsWith("emoji:") ? (
-              <div
-                className="w-full h-full flex items-center justify-center"
-                style={{
-                  background: `linear-gradient(135deg, ${user.avatar.split(":")[2]}40, ${user.avatar.split(":")[2]}15)`,
-                }}
-              >
-                <span className="text-9xl">{user.avatar.split(":")[1]}</span>
-              </div>
-            ) : (
+          {(() => {
+            const kind = getAvatarKind(user.avatar);
+            if (kind === 'none') {
+              return (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-[#13121a] to-[#0d0c11] flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
+                    <User className="w-16 h-16 text-white/20" />
+                  </div>
+                </div>
+              );
+            }
+            if (kind === 'emoji') {
+              const parsed = parseEmojiAvatar(user.avatar);
+              return (
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ background: getAvatarBackground(kind, user.avatar) }}
+                >
+                  <span className="text-9xl">{parsed?.emoji}</span>
+                </div>
+              );
+            }
+            return (
               <img
-                src={user.avatar}
+                src={user.avatar!}
                 alt={user.name}
-                className="w-full h-full object-cover"
+                className={getAvatarImgClasses(kind)}
+                style={kind === 'svg' ? { background: getAvatarBackground(kind, user.avatar) } : undefined}
               />
-            )
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-[#13121a] to-[#0d0c11] flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
-                <User className="w-16 h-16 text-white/20" />
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Gradient Overlays */}

@@ -61,11 +61,11 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      {/* Gradient background mask */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0d0c11] via-[#0d0c11]/95 to-transparent pointer-events-none" />
+      {/* Gradient background mask — uses design system background */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none" />
 
-      {/* Nav container */}
-      <div className="relative bg-[#13121a]/90 backdrop-blur-xl border-t border-white/5">
+      {/* Nav container — glass morphism aligned with design system */}
+      <div className="relative bg-background-secondary/90 backdrop-blur-xl border-t border-white/5">
         <div className="flex items-center justify-around py-1.5" style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}>
           {navItems.map((item) => {
             const active = isActive(item.href);
