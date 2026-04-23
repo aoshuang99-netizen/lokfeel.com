@@ -118,7 +118,7 @@ async function main() {
     orderBy: { createdAt: 'desc' },
   });
   console.log('\n📋 Sample profiles with avatars:');
-  samples.forEach(p => {
+  samples.forEach((p: any) => {
     const url = p.avatar?.substring(0, 80) || 'null';
     console.log(`   ${p.displayName} (${p.gender}) | ${p.avatarType} | ${url}...`);
   });

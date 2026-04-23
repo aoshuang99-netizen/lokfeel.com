@@ -184,7 +184,7 @@ async function main() {
     select: { avatarType: true },
   });
   const typeCounts: Record<string, number> = {};
-  typeStats.forEach(p => {
+  typeStats.forEach((p: any) => {
     const t = p.avatarType || 'NULL';
     typeCounts[t] = (typeCounts[t] || 0) + 1;
   });
