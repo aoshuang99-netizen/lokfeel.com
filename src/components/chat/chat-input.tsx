@@ -121,7 +121,7 @@ export function ChatInput({
             className="absolute bottom-full left-3 right-3 mb-2 p-3 bg-[#1c1b28]/95 backdrop-blur-lg rounded-xl border border-white/[0.06]"
           >
             <div className="flex items-center gap-2 mb-2.5">
-              <Sparkles className="w-3.5 h-3.5 text-violet-400/70" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-400/70" />
               <span className="text-[11px] text-white/40 font-medium">Quick replies</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -202,7 +202,7 @@ export function ChatInput({
             setShowEmojiPicker(false);
           }}
           className={`p-2 rounded-xl transition-all duration-200 ${
-            showQuickReplies ? "bg-violet-500/15 text-violet-400" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
+            showQuickReplies ? "bg-amber-500/15 text-amber-400" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
           }`}
           aria-label="Quick replies"
         >
@@ -217,7 +217,7 @@ export function ChatInput({
             setShowQuickReplies(false);
           }}
           className={`p-2 rounded-xl transition-all duration-200 ${
-            showEmojiPicker ? "bg-violet-500/15 text-violet-400" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
+            showEmojiPicker ? "bg-amber-500/15 text-amber-400" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
           }`}
           aria-label="Emoji"
         >
@@ -248,7 +248,7 @@ export function ChatInput({
           whileTap={{ scale: 0.92 }}
           className={`p-2.5 rounded-xl transition-all duration-200 ${
             message.trim() && !isSending && !disabled
-              ? "bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/20"
+              ? "bg-gradient-to-br from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-600/20"
               : "bg-white/[0.04] text-white/20"
           }`}
         >

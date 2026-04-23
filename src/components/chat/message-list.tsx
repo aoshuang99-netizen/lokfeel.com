@@ -68,7 +68,7 @@ function groupMessages(messages: IMMessagePayload[], currentUserId?: string): Me
         messages: [message],
         isFromMe,
         isFromBot,
-        senderName: isFromMe ? "You" : isFromBot ? "AI" : "Unknown",
+        senderName: isFromMe ? "You" : isFromBot ? "Bot" : "Unknown",
         senderAvatar: undefined,
       });
     }
@@ -90,10 +90,10 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
         transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
         className="relative mb-6"
       >
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 blur-2xl scale-150" />
-        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-white/[0.06] flex items-center justify-center">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500/10 to-rose-500/10 blur-2xl scale-150" />
+        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/10 to-rose-500/10 border border-white/[0.06] flex items-center justify-center">
           {isBot ? (
-            <Sparkles className="w-7 h-7 text-violet-400/60" />
+            <Sparkles className="w-7 h-7 text-amber-400/60" />
           ) : (
             <Sparkles className="w-7 h-7 text-white/20" />
           )}
@@ -105,7 +105,7 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
         transition={{ delay: 0.1, duration: 0.3 }}
         className="text-white/50 mb-1.5 text-[15px]"
       >
-        {isBot ? "Start chatting with AI" : "No messages yet"}
+        {isBot ? "Start chatting" : "No messages yet"}
       </motion.p>
       <motion.p
         initial={{ opacity: 0, y: 6 }}
@@ -113,7 +113,7 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
         transition={{ delay: 0.2, duration: 0.3 }}
         className="text-white/25 text-sm leading-relaxed"
       >
-        {isBot ? "Your AI companion is ready to talk" : "Say hello to start the conversation!"}
+        {isBot ? "Say hello to start the conversation!" : "Say hello to start the conversation!"}
       </motion.p>
     </div>
   );

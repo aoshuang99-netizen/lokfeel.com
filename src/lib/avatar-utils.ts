@@ -28,7 +28,7 @@ export function parseEmojiAvatar(avatar: string | null | undefined): { emoji: st
   const parts = avatar.split(':');
   return {
     emoji: parts[1] || '👤',
-    color: parts[2] || '#6366f1',
+    color: parts[2] || '#e8a038',
   };
 }
 
@@ -69,6 +69,6 @@ export function getAvatarBackground(kind: AvatarKind, avatar: string | null | un
     case 'photo':
       return '';
     default:
-      return 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15))';
+      return 'linear-gradient(135deg, rgba(232,160,56,0.15), rgba(200,80,80,0.15))';
   }
 }

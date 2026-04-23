@@ -76,7 +76,7 @@ const AVAILABLE_TAGS = [
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   relationship: { label: 'Relationship Type', color: 'bg-rose-500/20 text-rose-400 border-rose-500/30' },
-  orientation: { label: 'Sexual Orientation', color: 'bg-violet-500/20 text-violet-400 border-violet-500/30' },
+  orientation: { label: 'Sexual Orientation', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
   interest: { label: 'Interests', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
 };
 

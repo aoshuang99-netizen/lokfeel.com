@@ -31,8 +31,8 @@ function TypingIndicatorComponent({ name, isBot = false, className = "" }: Typin
     >
       {/* Avatar placeholder */}
       {isBot ? (
-        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-          <Bot className="w-4 h-4 text-purple-400" />
+        <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+          <Bot className="w-4 h-4 text-orange-400" />
         </div>
       ) : (
         <div className="w-8 h-8 rounded-full bg-white/5 flex-shrink-0" />
@@ -61,8 +61,7 @@ function TypingIndicatorComponent({ name, isBot = false, className = "" }: Typin
       <span className="text-xs text-white/50">
         {isBot ? (
           <span className="flex items-center gap-1">
-            <Bot className="w-3 h-3 text-purple-400" />
-            {name ? `${name} is typing...` : "AI is thinking..."}
+            {name ? `${name} is typing...` : "Typing..."}
           </span>
         ) : (
           name ? `${name} is typing...` : "Typing..."

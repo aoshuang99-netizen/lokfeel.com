@@ -78,7 +78,7 @@ interface InboxData {
 function getMatchScoreColor(score: number): string {
   // 90%+ gold, 80-89% purple, <80% gray
   if (score >= 90) return "bg-gradient-to-r from-amber-400 to-yellow-300 text-black";
-  if (score >= 80) return "bg-gradient-to-r from-purple-500 to-pink-500 text-white";
+  if (score >= 80) return "bg-gradient-to-r from-orange-500 to-pink-500 text-white";
   return "bg-white/10 text-white/60";
 }
 

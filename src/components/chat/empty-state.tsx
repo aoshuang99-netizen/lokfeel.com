@@ -53,8 +53,8 @@ const contentMap = {
     href: null,
   },
   "bot-chat": {
-    title: "AI Companion",
-    description: "Start chatting with your AI companion for practice",
+    title: "Chat",
+    description: "Start chatting and get to know each other",
     cta: null,
     href: null,
   },
@@ -85,10 +85,10 @@ function ChatEmptyStateComponent({
     : content.description;
   
   // Determine icon color based on type
-  const iconColor = type === "bot-chat" ? "text-purple-400" : "text-white/30";
+  const iconColor = type === "bot-chat" ? "text-orange-400" : "text-white/30";
 
   // Determine icon background
-  const iconBg = type === "bot-chat" ? "bg-purple-500/20" : "bg-white/5";
+  const iconBg = type === "bot-chat" ? "bg-orange-500/20" : "bg-white/5";
 
   return (
     <motion.div

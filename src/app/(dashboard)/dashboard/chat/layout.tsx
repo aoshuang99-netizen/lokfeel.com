@@ -87,15 +87,15 @@ function formatMessageTime(dateStr: string): string {
 
 function getMatchScoreColor(score: number): string {
   if (score >= 90) return "text-amber-400 bg-amber-500/15";
-  if (score >= 80) return "text-purple-400 bg-purple-500/15";
+  if (score >= 80) return "text-orange-400 bg-orange-500/15";
   if (score >= 70) return "text-primary bg-primary/15";
   return "text-white/50 bg-white/10";
 }
 
 function getMatchScoreBadge(score: number): string {
   if (score >= 90) return "from-amber-400 to-amber-600";
-  if (score >= 80) return "from-purple-400 to-pink-500";
-  return "from-indigo-400 to-indigo-600";
+  if (score >= 80) return "from-orange-400 to-pink-500";
+  return "from-amber-400 to-amber-700";
 }
 
 function formatVaultTime(expiresAt?: string): string {
@@ -344,12 +344,7 @@ export default function ChatLayout({
                               Vault
                             </span>
                           )}
-                          {/* Bot Badge */}
-                          {(chat.otherUser.isBot || chat.otherUser.id?.startsWith("bot-")) && (
-                            <span className="flex-shrink-0 text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">
-                              AI
-                            </span>
-                          )}
+
                         </div>
                         {chat.lastMessage && (
                           <span

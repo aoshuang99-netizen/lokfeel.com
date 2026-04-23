@@ -117,14 +117,14 @@ const DEMO_USERS: DiscoverUser[] = [
 
 function getMatchScoreGradient(score: number): string {
   if (score >= 90) return "from-amber-400 to-amber-600"; // Gold
-  if (score >= 80) return "from-purple-400 to-pink-500"; // Purple-Pink
-  return "from-indigo-400 to-indigo-600"; // Indigo
+  if (score >= 80) return "from-orange-400 to-pink-500"; // Purple-Pink
+  return "from-amber-400 to-amber-700"; // Indigo
 }
 
 function getMatchScoreBg(score: number): string {
   if (score >= 90) return "bg-amber-500/20 text-amber-400 border-amber-500/30";
-  if (score >= 80) return "bg-purple-500/20 text-purple-400 border-purple-500/30";
-  return "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
+  if (score >= 80) return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+  return "bg-amber-600/20 text-amber-400 border-amber-600/30";
 }
 
 // ══════════════════════════════════════

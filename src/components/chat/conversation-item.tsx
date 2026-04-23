@@ -82,7 +82,7 @@ function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
         ) : (
           <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${
             isBot 
-              ? 'bg-gradient-to-br from-violet-500/80 to-fuchsia-500/80'
+              ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
               : 'bg-gradient-to-br from-primary to-secondary'
           }`}>
             {name?.[0] || "?"}
@@ -95,12 +95,7 @@ function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
       ) : !isBot ? (
         <div className="absolute bottom-0 right-0 w-3 h-3 bg-white/20 rounded-full ring-2 ring-[#0d0c11]" />
       ) : null}
-      {/* Bot Badge */}
-      {isBot && (
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center ring-2 ring-[#0d0c11]">
-          <Sparkles className="w-3 h-3 text-white" />
-        </div>
-      )}
+
     </div>
   );
 }
@@ -148,7 +143,7 @@ function ConversationItemComponent({
       className={`
         flex items-center gap-3 p-3 transition-all duration-200 cursor-pointer
         ${isSelected ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"}
-        ${hasUnread ? "bg-indigo-500/[0.03]" : ""}
+        ${hasUnread ? "bg-amber-600/[0.03]" : ""}
       `}
     >
       {/* Avatar */}
@@ -173,7 +168,7 @@ function ConversationItemComponent({
           {lastMessage && (
             <span
               className={`text-[11px] flex-shrink-0 ml-2 tabular-nums ${
-                hasUnread ? "text-indigo-400" : "text-white/25"
+                hasUnread ? "text-amber-400" : "text-white/25"
               }`}
             >
               {formatMessageTime(lastMessage.timestamp)}
@@ -198,7 +193,7 @@ function ConversationItemComponent({
             )}
           </p>
           {hasUnread && (
-            <div className="flex-shrink-0 ml-2 min-w-[20px] h-5 rounded-full bg-indigo-500 flex items-center justify-center">
+            <div className="flex-shrink-0 ml-2 min-w-[20px] h-5 rounded-full bg-amber-600 flex items-center justify-center">
               <span className="text-[10px] font-bold text-white px-1.5 tabular-nums">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
@@ -211,10 +206,7 @@ function ConversationItemComponent({
           {otherUser.isOnline ? (
             <span className="text-emerald-400/60">Online</span>
           ) : isBot ? (
-            <span className="text-violet-400/40 flex items-center gap-1">
-              <Sparkles className="w-2.5 h-2.5" />
-              AI companion
-            </span>
+            <span className="text-white/20">Online</span>
           ) : (
             <span className="text-white/20">{formatLastSeen(otherUser.lastSeen)}</span>
           )}

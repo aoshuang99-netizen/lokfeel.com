@@ -34,7 +34,7 @@ export function LokFeelLogo({
       >
         {/* Background glow */}
         <div 
-          className={`absolute inset-0 rounded-xl bg-gradient-to-br from-rose-500/20 via-purple-500/20 to-amber-500/20 ${animated ? 'animate-pulse-slow' : ''}`}
+          className={`absolute inset-0 rounded-xl bg-gradient-to-br from-rose-500/20 via-orange-500/20 to-amber-500/20 ${animated ? 'animate-pulse-slow' : ''}`}
         />
         
         {/* Heartbeat ring */}
@@ -44,9 +44,9 @@ export function LokFeelLogo({
         
         {/* Main icon background */}
         <div 
-          className="absolute inset-0 rounded-xl bg-gradient-to-br from-rose-500 via-purple-600 to-amber-500"
+          className="absolute inset-0 rounded-xl bg-gradient-to-br from-rose-500 via-orange-600 to-amber-500"
           style={{ 
-            background: 'linear-gradient(135deg, #f43f5e 0%, #9333ea 50%, #f59e0b 100%)' 
+            background: 'linear-gradient(135deg, #e8a038 0%, #c85050 50%, #e8a038 100%)' 
           }}
         />
         
@@ -85,7 +85,7 @@ export function LokFeelLogo({
       {/* Text */}
       {showText && (
         <span className={`font-bold tracking-tight ${text}`}>
-          <span className="bg-gradient-to-r from-rose-500 via-purple-600 to-amber-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-rose-500 via-orange-600 to-amber-500 bg-clip-text text-transparent">
             LokFeel
           </span>
         </span>
@@ -102,7 +102,7 @@ export function LokFeelWordmark({ className = '' }: { className?: string }) {
   return (
     <span className={`font-bold tracking-tight ${className}`}>
       <span className="text-rose-500">Lok</span>
-      <span className="text-purple-600">Feel</span>
+      <span className="text-orange-600">Feel</span>
     </span>
   )
 }
@@ -120,7 +120,7 @@ export function LokFeelAppIcon({ size = 64 }: { size?: number }) {
       <div 
         className="absolute inset-0"
         style={{ 
-          background: 'linear-gradient(135deg, #f43f5e 0%, #9333ea 50%, #f59e0b 100%)' 
+          background: 'linear-gradient(135deg, #e8a038 0%, #c85050 50%, #f59e0b 100%)' 
         }}
       />
       

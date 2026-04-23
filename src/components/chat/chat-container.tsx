@@ -84,7 +84,7 @@ function EmptyChat({ isBot }: EmptyChatProps) {
         transition={{ delay: 0.15, duration: 0.4 }}
         className="text-lg font-semibold text-white mb-2"
       >
-        {isBot ? "Say hello to AI" : "Your messages"}
+        {isBot ? "Say hello" : "Your messages"}
       </motion.h3>
       <motion.p 
         initial={{ opacity: 0, y: 8 }}
@@ -93,7 +93,7 @@ function EmptyChat({ isBot }: EmptyChatProps) {
         className="text-white/40 text-sm max-w-[260px] leading-relaxed"
       >
         {isBot
-          ? "Start a conversation — your AI companion is ready to chat"
+          ? "Start a conversation — they're ready to chat"
           : "Pick a conversation from the sidebar, or match with someone new"}
       </motion.p>
     </div>
@@ -137,7 +137,7 @@ function EmptyConversation() {
       >
         <Link
           href="/dashboard/matches"
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-400 hover:to-violet-400 text-white text-sm font-medium transition-all duration-200 shadow-lg shadow-indigo-500/20"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-br from-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white text-sm font-medium transition-all duration-200 shadow-lg shadow-amber-600/20"
         >
           Find Matches
         </Link>
@@ -201,7 +201,7 @@ function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
             ) : (
               <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${
                 isBot 
-                  ? 'bg-gradient-to-br from-violet-500/80 to-fuchsia-500/80' 
+                  ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80' 
                   : 'bg-gradient-to-br from-primary to-secondary'
               }`}>
                 {roomInfo?.otherUser?.name?.[0] || "?"}
@@ -214,12 +214,7 @@ function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
           ) : !isBot ? (
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-white/20 rounded-full ring-2 ring-[#13121a]" />
           ) : null}
-          {/* Bot Badge - subtle sparkle instead of robot emoji */}
-          {isBot && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center ring-2 ring-[#13121a]">
-              <Sparkles className="w-2.5 h-2.5 text-white" />
-            </div>
-          )}
+          {/* Bot Badge - removed, no AI indicator */}
         </div>
 
         {/* User Info */}
@@ -228,12 +223,7 @@ function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
             <h3 className="font-semibold text-white text-sm truncate">
               {roomInfo?.otherUser?.name || "Unknown"}
             </h3>
-            {isBot && (
-              <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 bg-violet-500/15 text-violet-300 text-[10px] font-medium rounded-full border border-violet-500/20">
-                <Sparkles className="w-2.5 h-2.5" />
-                AI
-              </span>
-            )}
+
           </div>
           <p className="text-xs text-white/40 flex items-center gap-1.5">
             {isOnline ? (
@@ -243,8 +233,8 @@ function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
               </>
             ) : isBot ? (
               <>
-                <Sparkles className="w-3 h-3 text-violet-400/60" />
-                <span>Always available</span>
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                <span>Online</span>
               </>
             ) : (
               formatLastSeen(roomInfo?.otherUser?.lastSeen)
@@ -346,7 +336,7 @@ function MessageLimitWarning({ limits, onUpgrade }: MessageLimitWarningProps) {
     <div className="px-4 py-2 bg-amber-500/[0.04] border-t border-amber-500/[0.08]">
       <p className="text-[11px] text-center text-white/40">
         {limits.messagesRemaining} free messages remaining.{" "}
-        <button onClick={onUpgrade} className="text-indigo-400/70 hover:text-indigo-400 transition-colors">
+        <button onClick={onUpgrade} className="text-amber-400/70 hover:text-amber-400 transition-colors">
           Upgrade
         </button>
       </p>

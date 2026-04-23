@@ -20,10 +20,10 @@ const colors = {
   textSecondary: "rgba(0,0,0,0.65)",
   input: "#f8f8fc",
   inputBorder: "rgba(0,0,0,0.12)",
-  inputFocus: "rgba(99, 102, 241, 0.5)",
+  inputFocus: "rgba(232, 160, 56, 0.5)",
   inputPlaceholder: "rgba(0,0,0,0.3)",
-  primary: "#6366f1",
-  primaryBg: "#6366f1",
+  primary: "#e8a038",
+  primaryBg: "#e8a038",
   primaryText: "#fff",
   error: "#dc2626",
   errorBg: "rgba(239,68,68,0.08)",
@@ -393,7 +393,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)" }}>
+            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e8a038, #c85050)" }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
@@ -410,7 +410,7 @@ export default function RegisterPage() {
           </p>
 
           {sentInfo.devMode && (
-            <div className="mt-4 p-4 rounded-xl" style={{ background: "rgba(99,102,241,0.06)", border: `1px solid rgba(99,102,241,0.15)` }}>
+            <div className="mt-4 p-4 rounded-xl" style={{ background: "rgba(232,160,56,0.06)", border: `1px solid rgba(232,160,56,0.15)` }}>
               <p style={{ color: colors.textMuted, fontSize: "12px", marginBottom: "8px" }}>Dev Mode — Your verification code:</p>
               <div className="flex items-center justify-center gap-2">
                 {sentInfo.code && sentInfo.code.split('').map((digit, i) => (
@@ -471,7 +471,7 @@ export default function RegisterPage() {
           style={{
             width: "100%",
             padding: "14px",
-            background: isLoading ? "rgba(99,102,241,0.5)" : colors.primaryBg,
+            background: isLoading ? "rgba(232,160,56,0.5)" : colors.primaryBg,
             border: "none",
             borderRadius: "12px",
             color: colors.primaryText,
@@ -552,7 +552,7 @@ export default function RegisterPage() {
       <div className="text-center mb-8">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)" }}>
+          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e8a038, #c85050)" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
@@ -721,7 +721,7 @@ export default function RegisterPage() {
           style={{
             width: "100%",
             padding: "14px",
-            background: isSendingCode ? "rgba(99,102,241,0.5)" : colors.primaryBg,
+            background: isSendingCode ? "rgba(232,160,56,0.5)" : colors.primaryBg,
             border: "none",
             borderRadius: "12px",
             color: colors.primaryText,

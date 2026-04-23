@@ -64,8 +64,8 @@ const TABS: { id: FilterTab; label: string; icon: any }[] = [
 
 function getMatchScoreColor(score: number): string {
   if (score >= 90) return "text-amber-400 bg-amber-500/15";
-  if (score >= 80) return "text-purple-400 bg-purple-500/15";
-  return "text-indigo-400 bg-indigo-500/15";
+  if (score >= 80) return "text-orange-400 bg-orange-500/15";
+  return "text-amber-400 bg-amber-600/15";
 }
 
 function formatTime(timestamp: string): string {

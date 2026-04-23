@@ -125,7 +125,7 @@ export default function MatchingSquarePage() {
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 90) return "from-green-400 to-emerald-500";
-    if (score >= 80) return "from-pink-400 to-purple-500";
+    if (score >= 80) return "from-pink-400 to-orange-500";
     if (score >= 70) return "from-yellow-400 to-orange-500";
     return "from-gray-400 to-gray-500";
   };
@@ -194,7 +194,7 @@ export default function MatchingSquarePage() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center mx-auto mb-4"
+              className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500/20 to-orange-500/20 flex items-center justify-center mx-auto mb-4"
             >
               <Sparkles className="w-10 h-10 text-pink-400" />
             </motion.div>
@@ -226,7 +226,7 @@ export default function MatchingSquarePage() {
                       const kind = getAvatarKind(user.avatar);
                       if (kind === 'none') {
                         return (
-                          <div className="w-full h-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
+                          <div className="w-full h-full bg-gradient-to-br from-pink-500/20 to-orange-500/20 flex items-center justify-center">
                             <User className="w-12 h-12 text-white/20" />
                           </div>
                         );
@@ -287,7 +287,7 @@ export default function MatchingSquarePage() {
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <button
                         onClick={() => handleLike(user.id)}
-                        className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center hover:scale-110 transition-transform"
+                        className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center hover:scale-110 transition-transform"
                       >
                         <Heart className="w-6 h-6 text-white" fill="white" />
                       </button>
@@ -306,7 +306,7 @@ export default function MatchingSquarePage() {
           <div className="max-w-md mx-auto">
             <button
               onClick={() => router.push("/dashboard/discover")}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-orange-500 text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
             >
               <Zap className="w-5 h-5" />
               Try Swipe Mode

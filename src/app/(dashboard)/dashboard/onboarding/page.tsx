@@ -613,14 +613,14 @@ export default function OnboardingV3Page() {
     <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
       {/* Gradient Background */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-pink-500/10 to-purple-500/10 blur-[120px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-pink-500/10 to-orange-500/10 blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-blue-500/10 to-cyan-500/10 blur-[100px]" />
       </div>
 
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-white/10 z-50">
         <motion.div
-          className="h-full bg-gradient-to-r from-pink-500 to-purple-500"
+          className="h-full bg-gradient-to-r from-pink-500 to-orange-500"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
@@ -655,7 +655,7 @@ export default function OnboardingV3Page() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center mx-auto mb-4"
+                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center mx-auto mb-4"
                   >
                     <Heart className="w-8 h-8 text-white" />
                   </motion.div>
@@ -708,12 +708,12 @@ export default function OnboardingV3Page() {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mx-auto mb-4"
+                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-blue-500 flex items-center justify-center mx-auto mb-4"
                   >
                     <Sparkles className="w-8 h-8 text-white" />
                   </motion.div>
                   <h1 className="text-2xl font-bold mb-2">
-                    How do you <span className="text-purple-400">identify</span>?
+                    How do you <span className="text-orange-400">identify</span>?
                   </h1>
                   <p className="text-sm text-white/60">
                     Select the tag that feels right for you.
@@ -779,7 +779,7 @@ export default function OnboardingV3Page() {
                 {/* Communication Style */}
                 <div>
                   <h3 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">2</span>
+                    <span className="w-6 h-6 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs">2</span>
                     How you communicate
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
@@ -789,7 +789,7 @@ export default function OnboardingV3Page() {
                         onClick={() => setData((prev) => ({ ...prev, communicationStyle: trait.value }))}
                         className={`p-3 rounded-xl border text-left transition-all ${
                           data.communicationStyle === trait.value
-                            ? "border-purple-500 bg-purple-500/10"
+                            ? "border-orange-500 bg-orange-500/10"
                             : "border-white/10 bg-white/5 hover:border-white/30"
                         }`}
                       >
@@ -938,7 +938,7 @@ export default function OnboardingV3Page() {
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
-                  className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center mx-auto mb-6"
+                  className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center mx-auto mb-6"
                 >
                   <Radar className="w-10 h-10 text-white" />
                 </motion.div>
@@ -958,7 +958,7 @@ export default function OnboardingV3Page() {
                   </div>
                   
                   {/* Right: Analysis */}
-                  <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-2xl p-5 border border-pink-500/20 flex flex-col justify-center">
+                  <div className="bg-gradient-to-br from-pink-500/10 to-orange-500/10 rounded-2xl p-5 border border-pink-500/20 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkles className="w-4 h-4 text-pink-400" />
                       <span className="text-sm font-medium text-pink-400">AI Analysis</span>
@@ -998,7 +998,7 @@ export default function OnboardingV3Page() {
                   transition={{ delay: 0.6 }}
                   onClick={handleComplete}
                   disabled={saving}
-                  className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90 transition-opacity"
+                  className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-orange-500 text-white hover:opacity-90 transition-opacity"
                 >
                   {saving ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

@@ -326,7 +326,7 @@ export default function ChatRoomPage() {
             senderId: roomInfo?.otherUser?.id || "bot",
             sender: {
               id: roomInfo?.otherUser?.id || "bot",
-              name: roomInfo?.otherUser?.name || "AI",
+              name: roomInfo?.otherUser?.name || "Bot",
               avatar: roomInfo?.otherUser?.avatar || null,
               isBot: true,
             },
@@ -475,12 +475,7 @@ export default function ChatRoomPage() {
             ) : (
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-[#13121a]" />
             )}
-            {/* Bot Badge */}
-            {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center border-2 border-[#13121a]">
-                <Bot className="w-3 h-3 text-white" />
-              </div>
-            )}
+
           </div>
 
           {/* User Info */}
@@ -489,11 +484,7 @@ export default function ChatRoomPage() {
               <h3 className="font-semibold text-white text-sm">
                 {roomInfo?.otherUser?.name || "Unknown"}
               </h3>
-              {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) && (
-                <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] rounded-full">
-                  AI
-                </span>
-              )}
+
             </div>
             <p className="text-xs text-white/50">
               {roomInfo?.otherUser?.isOnline 
@@ -580,20 +571,20 @@ export default function ChatRoomPage() {
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
               {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) ? (
-                <Bot className="w-8 h-8 text-purple-400" />
+                <Bot className="w-8 h-8 text-orange-400" />
               ) : (
                 <Sparkles className="w-8 h-8 text-white/30" />
               )}
             </div>
             <p className="text-white/60 mb-2">
               {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-"))
-                ? `Start chatting with ${roomInfo?.otherUser?.name || "AI"}`
+                ? `Start chatting with ${roomInfo?.otherUser?.name || "them"}`
                 : "No messages yet"
               }
             </p>
             <p className="text-white/40 text-sm">
               {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-"))
-                ? "AI-powered conversation partner"
+                ? "Say hello and start the conversation!"
                 : "Start the conversation!"
               }
             </p>
@@ -644,7 +635,7 @@ export default function ChatRoomPage() {
                       )}
                       {/* Bot indicator on avatar */}
                       {fromBot && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-purple-500 rounded-full flex items-center justify-center">
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
                           <Bot className="w-2 h-2 text-white" />
                         </div>
                       )}
@@ -656,19 +647,13 @@ export default function ChatRoomPage() {
                   <div
                     className={`px-4 py-2.5 rounded-2xl max-w-[75%] ${
                       fromMe
-                        ? "bg-gradient-to-br from-pink-500 to-purple-500 text-white rounded-br-md"
+                        ? "bg-gradient-to-br from-pink-500 to-orange-500 text-white rounded-br-md"
                         : fromBot
                         ? "bg-white/[0.08] text-white/90 rounded-bl-md border border-white/[0.08]"
                         : "bg-white/[0.08] text-white/90 rounded-bl-md"
                     }`}
                   >
-                    {/* Bot label */}
-                    {fromBot && (
-                      <div className="flex items-center gap-1 mb-1.5 opacity-70">
-                        <Bot className="w-3 h-3 text-violet-300" />
-                        <span className="text-[10px] text-violet-300 font-medium tracking-wide">AI</span>
-                      </div>
-                    )}
+
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">{msg.content}</p>
                     <p className={`text-xs mt-1 ${fromMe ? "text-white/70" : "text-white/50"}`}>
                       {formatTime(msg.createdAt)}

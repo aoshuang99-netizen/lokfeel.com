@@ -191,8 +191,8 @@ export function CompatibilityBreakdown({
           <ScoreBar
             label="Conflict Resolution"
             score={breakdown.conflict}
-            icon={<Shield className="w-4 h-4 text-purple-400" />}
-            color="bg-purple-400/20"
+            icon={<Shield className="w-4 h-4 text-orange-400" />}
+            color="bg-orange-400/20"
             description="How you handle disagreements and find solutions"
           />
           <ScoreBar
@@ -229,8 +229,8 @@ export function CompatibilityBreakdown({
             <ScoreBar
               label="Boundary Alignment"
               score={breakdown.powerBoard}
-              icon={<Shield className="w-4 h-4 text-indigo-400" />}
-              color="bg-indigo-400/20"
+              icon={<Shield className="w-4 h-4 text-amber-400" />}
+              color="bg-amber-400/20"
               description="Compatibility in communication boundaries and preferences"
             />
           </div>

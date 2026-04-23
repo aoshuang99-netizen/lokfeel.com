@@ -164,7 +164,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
       {/* Data area glow */}
       <path
         d={pathData}
-        fill="rgba(99, 102, 241, 0.08)"
+        fill="rgba(232, 160, 56, 0.08)"
         stroke="none"
         filter="url(#glow)"
       />
@@ -240,8 +240,8 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
 function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
   const getMatchScoreColor = (score: number) => {
     if (score >= 90) return "from-amber-400 to-amber-600"; // Gold
-    if (score >= 80) return "from-purple-400 to-pink-500"; // Purple-Pink
-    return "from-indigo-400 to-indigo-600"; // Indigo
+    if (score >= 80) return "from-orange-400 to-pink-500"; // Purple-Pink
+    return "from-amber-400 to-amber-700"; // Indigo
   };
 
   return (

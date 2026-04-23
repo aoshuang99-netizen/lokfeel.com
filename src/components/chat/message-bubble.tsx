@@ -78,7 +78,7 @@ function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps)
           <div
             className={`w-full h-full flex items-center justify-center ${
               isBot
-                ? 'bg-gradient-to-br from-violet-500/80 to-fuchsia-500/80'
+                ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
                 : 'bg-gradient-to-br from-primary to-secondary'
             }`}
           >
@@ -107,7 +107,7 @@ function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps)
       ) : (
         <div className={`w-full h-full flex items-center justify-center text-white text-xs font-bold ${
           isBot 
-            ? 'bg-gradient-to-br from-violet-500/80 to-fuchsia-500/80'
+            ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
             : 'bg-gradient-to-br from-primary to-secondary'
         }`}>
           {name?.[0] || "?"}
@@ -115,7 +115,7 @@ function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps)
       )}
       {/* Bot indicator - elegant sparkle instead of robot icon */}
       {isBot && (
-        <div className={`absolute ${botBadgeSize} bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center ring-2 ring-[#0d0c11]`}>
+        <div className={`absolute ${botBadgeSize} bg-gradient-to-br from-amber-500 to-rose-500 rounded-full flex items-center justify-center ring-2 ring-[#0d0c11]`}>
           <Sparkles className={size === "sm" ? "w-2 h-2" : "w-2.5 h-2.5"} color="white" />
         </div>
       )}
@@ -210,7 +210,7 @@ interface QuotedMessageProps {
 
 function QuotedMessage({ content, senderName, isFromMe }: QuotedMessageProps) {
   return (
-    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-white/[0.08]' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-indigo-400/50' : 'border-white/20'}`}>
+    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-white/[0.08]' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-amber-400/50' : 'border-white/20'}`}>
       <p className="text-[11px] text-white/40 mb-0.5">
         {senderName ? `${senderName}` : 'Original message'}
       </p>
@@ -308,7 +308,7 @@ function MessageBubbleComponent({
   const getBubbleStyles = () => {
     if (isFromMe) {
       // Warm gradient for own messages - distinctive, not generic purple-blue
-      return "bg-gradient-to-br from-indigo-500/90 to-violet-500/90 text-white rounded-br-sm rounded-2xl";
+      return "bg-gradient-to-br from-amber-600/90 to-amber-500/90 text-white rounded-br-sm rounded-2xl";
     }
     if (isBot) {
       // Soft, warm AI message style - feels approachable, not robotic
@@ -415,13 +415,7 @@ function MessageBubbleComponent({
               />
             )}
 
-            {/* Bot label - subtle and warm */}
-            {isBot && !isGrouped && (
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Sparkles className="w-3 h-3 text-violet-400/70" />
-                <span className="text-[10px] text-violet-300/70 font-medium tracking-wide">AI</span>
-              </div>
-            )}
+
 
             {/* Message content based on msgType */}
             {msgType === 'TEXT' && (
