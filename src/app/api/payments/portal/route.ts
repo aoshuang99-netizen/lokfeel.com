@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, badRequest, serverError } from "@/lib/api-response";
@@ -7,7 +7,12 @@ import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
   try {
-    const { user } = await requireAuth();
+    let user;
+    try {
+      ({ user } = await requireAuth());
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const subscription = await db.subscription.findFirst({
       where: { userId: user.id },
@@ -17,7 +22,16 @@ export async function POST(request: NextRequest) {
       return badRequest("No Stripe customer found. Please subscribe first.");
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+    // ═══ Check Stripe configuration ═══
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error("[Portal] STRIPE_SECRET_KEY not configured");
+      return NextResponse.json(
+        { error: "Payment system is not configured. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2026-03-25.dahlia",
     });
 

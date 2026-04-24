@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, serverError } from "@/lib/api-response";
 import { db } from "@/lib/db";
@@ -8,7 +8,12 @@ import { db } from "@/lib/db";
 // Returns user's current subscription and payment status
 export async function GET(request: NextRequest) {
   try {
-    const { user } = await requireAuth();
+    let user;
+    try {
+      ({ user } = await requireAuth());
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const [subscription, profile, recentPayments] = await Promise.all([
       db.subscription.findFirst({

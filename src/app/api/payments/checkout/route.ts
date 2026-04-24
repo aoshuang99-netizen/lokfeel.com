@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
@@ -31,12 +31,21 @@ const PLAN_CONFIG = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { user } = await requireAuth();
+    let user;
+    try {
+      ({ user } = await requireAuth());
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const parseResult = checkoutSchema.safeParse(body);
     if (!parseResult.success) {
-      return badRequest("Invalid request body", parseResult.error.issues);
+      return NextResponse.json(
+        { error: "Invalid request body", details: parseResult.error.issues },
+        { status: 400 }
+      );
     }
 
     const { plan } = parseResult.data;
@@ -49,7 +58,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (userProfile?.gender === "FEMALE") {
-      return forbidden("Women already have premium-level access for free via Lady Free plan");
+      return NextResponse.json(
+        { error: "Women already have premium-level access for free via Lady Free plan" },
+        { status: 403 }
+      );
     }
 
     // ═══ Guard: Check if already has active premium ═══
@@ -58,11 +70,23 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingSub && existingSub.plan === "PREMIUM_MONTHLY" || existingSub?.plan === "PREMIUM_YEARLY") {
-      return badRequest("You already have an active Premium subscription");
+      return NextResponse.json(
+        { error: "You already have an active Premium subscription" },
+        { status: 400 }
+      );
+    }
+
+    // ═══ Check Stripe configuration ═══
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error("[Checkout] STRIPE_SECRET_KEY not configured");
+      return NextResponse.json(
+        { error: "Payment system is not configured. Please try again later." },
+        { status: 503 }
+      );
     }
 
     // ═══ Initialize Stripe ═══
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2026-03-25.dahlia",
     });
 
