@@ -31,10 +31,10 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
         </div>
 
         {/* Error Message */}
-        <h2 className="text-xl font-semibold text-white mb-2">
+        <h2 className="text-xl font-semibold text-foreground mb-2">
           Something went wrong
         </h2>
-        <p className="text-white/60 mb-6">
+        <p className="text-foreground-muted mb-6">
           {error?.message || "An unexpected error occurred. Please try again."}
         </p>
 

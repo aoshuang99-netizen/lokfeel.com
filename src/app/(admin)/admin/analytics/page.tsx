@@ -41,8 +41,8 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Analytics</h1>
-          <p className="text-white/60">Track your platform's performance</p>
+          <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+          <p className="text-foreground-muted">Track your platform's performance</p>
         </div>
         <div className="flex gap-3">
           <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="input-feeld w-auto">
@@ -62,8 +62,8 @@ export default function AnalyticsPage() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {keyMetrics.map((metric, idx) => (
           <div key={idx} className="glass-card p-5">
-            <p className="text-sm text-white/60 mb-2">{metric.label}</p>
-            <p className="text-2xl font-bold text-white">{metric.value}</p>
+            <p className="text-sm text-foreground-muted mb-2">{metric.label}</p>
+            <p className="text-2xl font-bold text-foreground">{metric.value}</p>
             <p className={`text-sm mt-1 ${metric.trend === "up" ? "text-success" : "text-error"}`}>
               {metric.change} vs last period
             </p>
@@ -74,7 +74,7 @@ export default function AnalyticsPage() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* User Signups */}
         <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">User Signups</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">User Signups</h2>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={userSignupsData}>
               <defs>
@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
 
         {/* Match Success Rate */}
         <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Match Success Rate</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Match Success Rate</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={matchSuccessData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -110,7 +110,7 @@ export default function AnalyticsPage() {
 
         {/* Message Volume */}
         <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Message Volume</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Message Volume</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={messageVolumeData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -130,7 +130,7 @@ export default function AnalyticsPage() {
 
         {/* Subscription Conversion */}
         <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Subscription Distribution</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Subscription Distribution</h2>
           <div className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>

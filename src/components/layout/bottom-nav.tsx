@@ -65,7 +65,7 @@ export default function BottomNav() {
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none" />
 
       {/* Nav container — glass morphism aligned with design system */}
-      <div className="relative bg-background-secondary/90 backdrop-blur-xl border-t border-white/5">
+      <div className="relative bg-background-secondary/90 backdrop-blur-xl border-t border-card-border">
         <div className="flex items-center justify-around py-1.5" style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}>
           {navItems.map((item) => {
             const active = isActive(item.href);
@@ -92,7 +92,7 @@ export default function BottomNav() {
                   className={`relative p-1.5 rounded-xl transition-all duration-200 ${
                     active
                       ? "bg-primary/15 text-primary"
-                      : "text-white/40 hover:text-white/60"
+                      : "text-foreground-subtle hover:text-foreground-muted"
                   }`}
                   style={{ transitionTimingFunction: EASING }}
                 >
@@ -103,7 +103,7 @@ export default function BottomNav() {
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-primary rounded-full text-[9px] font-bold text-white flex items-center justify-center"
+                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-primary rounded-full text-[9px] font-bold text-foreground flex items-center justify-center"
                     >
                       {badgeCount > 99 ? "99+" : badgeCount}
                     </motion.span>
@@ -113,7 +113,7 @@ export default function BottomNav() {
                 {/* Label */}
                 <span
                   className={`text-[9px] font-medium transition-colors ${
-                    active ? "text-white" : "text-white/40"
+                    active ? "text-foreground" : "text-foreground-subtle"
                   }`}
                 >
                   {item.label}

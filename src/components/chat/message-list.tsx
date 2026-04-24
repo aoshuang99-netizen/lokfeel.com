@@ -91,11 +91,11 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
         className="relative mb-6"
       >
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500/10 to-rose-500/10 blur-2xl scale-150" />
-        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/10 to-rose-500/10 border border-white/[0.06] flex items-center justify-center">
+        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/10 to-rose-500/10 border border-card-border/[0.06] flex items-center justify-center">
           {isBot ? (
             <Sparkles className="w-7 h-7 text-amber-400/60" />
           ) : (
-            <Sparkles className="w-7 h-7 text-white/20" />
+            <Sparkles className="w-7 h-7 text-foreground-faint" />
           )}
         </div>
       </motion.div>
@@ -103,7 +103,7 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
-        className="text-white/50 mb-1.5 text-[15px]"
+        className="text-foreground-muted mb-1.5 text-[15px]"
       >
         {isBot ? "Start chatting" : "No messages yet"}
       </motion.p>
@@ -111,7 +111,7 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
-        className="text-white/25 text-sm leading-relaxed"
+        className="text-foreground-faint text-sm leading-relaxed"
       >
         {isBot ? "Say hello to start the conversation!" : "Say hello to start the conversation!"}
       </motion.p>
@@ -137,7 +137,7 @@ function TypingIndicator({ name }: { name?: string }) {
         <span className="w-[5px] h-[5px] bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1.4s" }} />
         <span className="w-[5px] h-[5px] bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1.4s" }} />
       </div>
-      <span className="text-[11px] text-white/30">
+      <span className="text-[11px] text-foreground-subtle">
         {name ? `${name} is typing...` : "Typing..."}
       </span>
     </motion.div>
@@ -236,7 +236,7 @@ function MessageListComponent({
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
-            <p className="text-white/60">Loading messages...</p>
+            <p className="text-foreground-muted">Loading messages...</p>
           </div>
         </div>
       </div>
@@ -263,11 +263,11 @@ function MessageListComponent({
         {hasMore && (
           <div className="flex justify-center py-2">
             {isLoading ? (
-              <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
+              <Loader2 className="w-5 h-5 text-foreground-subtle animate-spin" />
             ) : (
               <button
                 onClick={handleLoadMore}
-                className="text-xs text-white/40 hover:text-white/60 transition-colors"
+                className="text-xs text-foreground-subtle hover:text-foreground-muted transition-colors"
               >
                 Load earlier messages
               </button>

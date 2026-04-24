@@ -99,8 +99,8 @@ export function IcebreakerSuggestions({
                 <Lightbulb className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <h4 className="text-sm font-medium text-white">Icebreakers</h4>
-                <p className="text-xs text-white/50">Break the silence</p>
+                <h4 className="text-sm font-medium text-foreground">Icebreakers</h4>
+                <p className="text-xs text-foreground-muted">Break the silence</p>
               </div>
             </div>
             <button
@@ -116,14 +116,14 @@ export function IcebreakerSuggestions({
               <button
                 key={suggestion.id}
                 onClick={() => handleSelect(suggestion.message)}
-                className="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all text-left group"
+                className="w-full p-3 rounded-xl bg-background-tertiary hover:bg-background-tertiary border border-card-border hover:border-card-border transition-all text-left group"
               >
                 <div className="flex items-start gap-3">
                   <span className="text-lg">{suggestion.icon}</span>
-                  <p className="text-sm text-white/80 group-hover:text-white flex-1">
+                  <p className="text-sm text-foreground group-hover:text-foreground flex-1">
                     {suggestion.message}
                   </p>
-                  <Send className="w-4 h-4 text-white/30 group-hover:text-primary transition-colors" />
+                  <Send className="w-4 h-4 text-foreground-subtle group-hover:text-primary transition-colors" />
                 </div>
               </button>
             ))}
@@ -131,7 +131,7 @@ export function IcebreakerSuggestions({
 
           <button
             onClick={generateSuggestions}
-            className="w-full mt-3 py-2 flex items-center justify-center gap-2 text-xs text-white/40 hover:text-white/60 transition-colors"
+            className="w-full mt-3 py-2 flex items-center justify-center gap-2 text-xs text-foreground-subtle hover:text-foreground-muted transition-colors"
           >
             <RefreshCw className="w-3 h-3" />
             Refresh suggestions
@@ -152,11 +152,11 @@ export function IcebreakerSuggestions({
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                <h4 className="font-medium text-white">Conversation Starters</h4>
+                <h4 className="font-medium text-foreground">Conversation Starters</h4>
               </div>
               <button
                 onClick={() => setIsExpanded(false)}
-                className="text-xs text-white/50 hover:text-white"
+                className="text-xs text-foreground-muted hover:text-foreground"
               >
                 Close
               </button>
@@ -168,8 +168,8 @@ export function IcebreakerSuggestions({
                 onClick={() => setSelectedCategory(null)}
                 className={`px-3 py-1.5 rounded-full text-xs transition-all ${
                   selectedCategory === null
-                    ? "bg-primary text-white"
-                    : "bg-white/5 text-white/60 hover:bg-white/10"
+                    ? "bg-primary text-foreground"
+                    : "bg-background-tertiary text-foreground-muted hover:bg-background-tertiary"
                 }`}
               >
                 All
@@ -180,8 +180,8 @@ export function IcebreakerSuggestions({
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1.5 rounded-full text-xs transition-all ${
                     selectedCategory === cat
-                      ? "bg-primary text-white"
-                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                      ? "bg-primary text-foreground"
+                      : "bg-background-tertiary text-foreground-muted hover:bg-background-tertiary"
                   }`}
                 >
                   {cat}
@@ -195,7 +195,7 @@ export function IcebreakerSuggestions({
                 <button
                   key={`${suggestion.category}-${idx}`}
                   onClick={() => handleSelect(suggestion.message)}
-                  className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all text-left group"
+                  className="p-3 rounded-xl bg-background-tertiary hover:bg-background-tertiary border border-card-border hover:border-card-border transition-all text-left group"
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-lg">{suggestion.icon}</span>
@@ -203,24 +203,24 @@ export function IcebreakerSuggestions({
                       <span className="text-[10px] text-primary uppercase tracking-wider">
                         {suggestion.category}
                       </span>
-                      <p className="text-sm text-white/80 group-hover:text-white">
+                      <p className="text-sm text-foreground group-hover:text-foreground">
                         {suggestion.message}
                       </p>
                     </div>
-                    <Send className="w-4 h-4 text-white/30 group-hover:text-primary transition-colors" />
+                    <Send className="w-4 h-4 text-foreground-subtle group-hover:text-primary transition-colors" />
                   </div>
                 </button>
               ))}
             </div>
 
             {/* Custom Message Input */}
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <p className="text-xs text-white/40 mb-2">Or start with your own message</p>
+            <div className="mt-4 pt-4 border-t border-card-border">
+              <p className="text-xs text-foreground-subtle mb-2">Or start with your own message</p>
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder={`Say hi to ${otherUserName}...`}
-                  className="flex-1 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/30 focus:border-primary focus:outline-none"
+                  className="flex-1 px-4 py-2 rounded-xl bg-background-tertiary border border-card-border text-foreground text-sm placeholder:text-foreground-subtle focus:border-primary focus:outline-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && e.currentTarget.value.trim()) {
                       handleSelect(e.currentTarget.value.trim());
@@ -265,15 +265,15 @@ export function EmptyStateIcebreaker({
       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
         <MessageCircle className="w-8 h-8 text-primary" />
       </div>
-      <p className="text-white/60 mb-2">No messages yet</p>
-      <p className="text-sm text-white/40 mb-6">Start the conversation with {otherUserName}</p>
+      <p className="text-foreground-muted mb-2">No messages yet</p>
+      <p className="text-sm text-foreground-subtle mb-6">Start the conversation with {otherUserName}</p>
 
       <div className="space-y-2 max-w-sm mx-auto">
         {suggestions.map((msg, idx) => (
           <button
             key={idx}
             onClick={() => onSelect(msg)}
-            className="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-left text-sm text-white/70 hover:text-white transition-all"
+            className="w-full p-3 rounded-xl bg-background-tertiary hover:bg-background-tertiary border border-card-border text-left text-sm text-foreground-muted hover:text-foreground transition-all"
           >
             {msg}
           </button>

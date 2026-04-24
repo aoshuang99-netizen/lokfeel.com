@@ -68,12 +68,12 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-background-secondary border-r border-white/10 transition-all duration-300 z-fixed ${
+        className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-background-secondary border-r border-card-border transition-all duration-300 z-fixed ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-card-border">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Heart className="w-7 h-7 text-primary" />
             {!isCollapsed && (
@@ -82,7 +82,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
           </Link>
           <button
             onClick={handleToggle}
-            className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-white/40 hover:text-white"
+            className="p-1.5 rounded-lg hover:bg-background-tertiary transition-colors text-foreground-subtle hover:text-foreground"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
@@ -96,7 +96,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
         {/* Main Navigation */}
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
           {!isCollapsed && (
-            <p className="text-xs font-medium text-white/30 uppercase tracking-wider px-3 mb-3">
+            <p className="text-xs font-medium text-foreground-subtle uppercase tracking-wider px-3 mb-3">
               Main
             </p>
           )}
@@ -110,13 +110,13 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                   active
-                    ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
+                    ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+                    : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
                 } ${isCollapsed ? "justify-center" : ""}`}
               >
                 <Icon
                   className={`w-5 h-5 flex-shrink-0 ${
-                    active ? "text-primary" : "text-white/40 group-hover:text-white"
+                    active ? "text-primary" : "text-foreground-subtle group-hover:text-foreground"
                   }`}
                 />
                 {!isCollapsed && (
@@ -127,29 +127,29 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
           })}
 
           {/* Divider */}
-          <div className="my-4 border-t border-white/10" />
+          <div className="my-4 border-t border-card-border" />
 
           {/* 🆕 My Menu - 折叠菜单 */}
           {!isCollapsed && (
             <div className="mb-2">
               <button
                 onClick={() => setIsMyMenuOpen(!isMyMenuOpen)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group text-white/60 hover:text-white hover:bg-white/5`}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group text-foreground-muted hover:text-foreground hover:bg-background-tertiary`}
               >
                 <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 flex-shrink-0 text-white/40 group-hover:text-white" />
+                  <User className="w-5 h-5 flex-shrink-0 text-foreground-subtle group-hover:text-foreground" />
                   <span className="font-medium">My</span>
                 </div>
                 {isMyMenuOpen ? (
-                  <ChevronUp className="w-4 h-4 text-white/40" />
+                  <ChevronUp className="w-4 h-4 text-foreground-subtle" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-white/40" />
+                  <ChevronDown className="w-4 h-4 text-foreground-subtle" />
                 )}
               </button>
               
               {/* Submenu */}
               {isMyMenuOpen && (
-                <div className="ml-4 mt-1 space-y-1 border-l border-white/10 pl-3">
+                <div className="ml-4 mt-1 space-y-1 border-l border-card-border pl-3">
                   {mySubmenuItems.map((item) => {
                     const active = isActive(item.href);
                     const Icon = item.icon;
@@ -160,13 +160,13 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                         href={item.href}
                         className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 text-sm ${
                           active
-                            ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                            : "text-white/60 hover:text-white hover:bg-white/5"
+                            ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+                            : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
                         }`}
                       >
                         <Icon
                           className={`w-4 h-4 flex-shrink-0 ${
-                            active ? "text-primary" : "text-white/40"
+                            active ? "text-primary" : "text-foreground-subtle"
                           }`}
                         />
                         <span>{item.name}</span>
@@ -191,14 +191,14 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                     href={item.href}
                     className={`flex items-center justify-center px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                       active
-                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                        : "text-white/60 hover:text-white hover:bg-white/5"
+                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+                        : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
                     }`}
                     title={item.name}
                   >
                     <Icon
                       className={`w-5 h-5 flex-shrink-0 ${
-                        active ? "text-primary" : "text-white/40 group-hover:text-white"
+                        active ? "text-primary" : "text-foreground-subtle group-hover:text-foreground"
                       }`}
                     />
                   </Link>
@@ -209,15 +209,15 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
         </nav>
 
         {/* User Profile */}
-        <div className={`p-4 border-t border-white/10 ${isCollapsed ? "text-center" : ""}`}>
+        <div className={`p-4 border-t border-card-border ${isCollapsed ? "text-center" : ""}`}>
           <div className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""}`}>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold text-sm">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground font-semibold text-sm">
               {initials}
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{displayName}</p>
-                <p className="text-xs text-white/40 truncate">
+                <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                <p className="text-xs text-foreground-subtle truncate">
                   {userRole === "ADMIN" || userRole === "SUPER_ADMIN"
                     ? "Admin"
                     : "Free Plan"}
@@ -228,7 +228,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
           {!isCollapsed && (
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="mt-3 flex items-center gap-2 text-white/40 hover:text-white/60 text-sm transition-colors w-full px-1"
+              className="mt-3 flex items-center gap-2 text-foreground-subtle hover:text-foreground-muted text-sm transition-colors w-full px-1"
             >
               <LogOut className="w-4 h-4" />
               Sign out
@@ -244,7 +244,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
         }`}
       >
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <div className="absolute left-0 top-0 h-full w-72 bg-background-secondary border-r border-white/10 p-6 pt-20">
+        <div className="absolute left-0 top-0 h-full w-72 bg-background-secondary border-r border-card-border p-6 pt-20">
           {/* Logo */}
           <div className="flex items-center justify-between mb-8">
             <Link href="/dashboard" className="flex items-center gap-2">
@@ -255,7 +255,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
 
           {/* Navigation */}
           <nav className="space-y-1">
-            <p className="text-xs font-medium text-white/30 uppercase tracking-wider px-3 mb-3">
+            <p className="text-xs font-medium text-foreground-subtle uppercase tracking-wider px-3 mb-3">
               Main
             </p>
             {mainNavigation.map((item) => {
@@ -268,8 +268,8 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     active
-                      ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                      : "text-white/60 hover:text-white hover:bg-white/5"
+                      ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+                      : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${active ? "text-primary" : ""}`} />
@@ -278,10 +278,10 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
               );
             })}
 
-            <div className="my-4 border-t border-white/10" />
+            <div className="my-4 border-t border-card-border" />
 
             {/* 🆕 Mobile My Menu */}
-            <p className="text-xs font-medium text-white/30 uppercase tracking-wider px-3 mb-3">
+            <p className="text-xs font-medium text-foreground-subtle uppercase tracking-wider px-3 mb-3">
               My
             </p>
             {mySubmenuItems.map((item) => {
@@ -294,8 +294,8 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     active
-                      ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                      : "text-white/60 hover:text-white hover:bg-white/5"
+                      ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+                      : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${active ? "text-primary" : ""}`} />
@@ -308,17 +308,17 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
           {/* User Info */}
           <div className="absolute bottom-8 left-6 right-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold text-sm">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground font-semibold text-sm">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{displayName}</p>
-                <p className="text-xs text-white/40 truncate">Free Plan</p>
+                <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                <p className="text-xs text-foreground-subtle truncate">Free Plan</p>
               </div>
             </div>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex items-center gap-2 text-white/40 hover:text-white/60 text-sm transition-colors"
+              className="flex items-center gap-2 text-foreground-subtle hover:text-foreground-muted text-sm transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Sign out

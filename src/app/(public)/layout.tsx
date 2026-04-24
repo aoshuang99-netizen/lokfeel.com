@@ -30,7 +30,7 @@ export default function PublicLayout({
 
 function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-background-secondary/30">
+    <footer className="border-t border-card-border bg-background-secondary/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
           {/* Brand */}
@@ -43,10 +43,10 @@ function Footer() {
               </div>
               <span className="text-xl font-bold text-gradient">LokFeel</span>
             </div>
-            <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-xs">
+            <p className="text-foreground-muted text-sm leading-relaxed mb-6 max-w-xs">
               A relationship matching engine that delivers curated matches with explanations of why you connect. Built for depth, not volume.
             </p>
-            <p className="text-white/30 text-xs leading-relaxed">
+            <p className="text-foreground-subtle text-xs leading-relaxed">
               LokFeel Inc.<br />
               Wilmington, Delaware, USA
             </p>
@@ -54,20 +54,20 @@ function Footer() {
 
           {/* Product */}
           <div>
-            <h4 className="font-semibold text-sm uppercase tracking-wider text-white mb-5">Product</h4>
+            <h4 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-5">Product</h4>
             <ul className="space-y-3">
               <li>
-                <a href="/about" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="/about" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   About
                 </a>
               </li>
               <li>
-                <a href="/register" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="/register" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   Get Started
                 </a>
               </li>
               <li>
-                <a href="/login" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="/login" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   Sign In
                 </a>
               </li>
@@ -76,20 +76,20 @@ function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="font-semibold text-sm uppercase tracking-wider text-white mb-5">Legal</h4>
+            <h4 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-5">Legal</h4>
             <ul className="space-y-3">
               <li>
-                <a href="/privacy" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="/privacy" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="/terms" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="/terms" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   Terms of Service
                 </a>
               </li>
               <li>
-                <a href="/cookies" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="/cookies" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   Cookie Policy
                 </a>
               </li>
@@ -98,20 +98,20 @@ function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold text-sm uppercase tracking-wider text-white mb-5">Contact</h4>
+            <h4 className="font-semibold text-sm uppercase tracking-wider text-foreground mb-5">Contact</h4>
             <ul className="space-y-3">
               <li>
-                <a href="mailto:hello@lokfeel.com" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="mailto:hello@lokfeel.com" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   hello@lokfeel.com
                 </a>
               </li>
               <li>
-                <a href="mailto:support@lokfeel.com" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="mailto:support@lokfeel.com" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   support@lokfeel.com
                 </a>
               </li>
               <li>
-                <a href="mailto:privacy@lokfeel.com" className="text-white/50 hover:text-white text-sm transition-colors">
+                <a href="mailto:privacy@lokfeel.com" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                   privacy@lokfeel.com
                 </a>
               </li>
@@ -120,12 +120,12 @@ function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-white/10">
+        <div className="mt-12 pt-8 border-t border-card-border">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-white/30 text-xs text-center sm:text-left">
+            <p className="text-foreground-subtle text-xs text-center sm:text-left">
               &copy; {new Date().getFullYear()} LokFeel Inc. All rights reserved. Nexus is a registered trademark of LokFeel Inc.
             </p>
-            <p className="text-white/30 text-xs">
+            <p className="text-foreground-subtle text-xs">
               Made with care for people who value real connection.
             </p>
           </div>

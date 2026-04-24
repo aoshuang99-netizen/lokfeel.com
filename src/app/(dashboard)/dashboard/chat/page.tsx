@@ -43,15 +43,15 @@ const EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export default function ChatPage() {
   return (
-    <div className="flex-1 flex items-center justify-center bg-[#0d0c11]">
+    <div className="flex-1 flex items-center justify-center bg-background">
       <div className="text-center px-6">
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mx-auto mb-6">
           <MessageCircle className="w-10 h-10 text-primary/60" />
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2">
+        <h3 className="text-xl font-semibold text-foreground mb-2">
           LokFeel Messages
         </h3>
-        <p className="text-white/50 text-sm mb-6 max-w-xs mx-auto">
+        <p className="text-foreground-muted text-sm mb-6 max-w-xs mx-auto">
           Select a conversation from the list to start chatting, or browse your matches to find new connections.
         </p>
         <div className="flex gap-3 justify-center">

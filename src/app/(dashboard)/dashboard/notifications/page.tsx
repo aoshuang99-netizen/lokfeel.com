@@ -34,7 +34,7 @@ const iconMap: Record<string, any> = {
 const colorMap: Record<string, string> = {
   NEW_MATCH: "text-primary bg-primary/20",
   MATCH_ACCEPTED: "text-primary bg-primary/20",
-  MATCH_REJECTED: "text-white/40 bg-white/10",
+  MATCH_REJECTED: "text-foreground-subtle bg-background-tertiary",
   NEW_MESSAGE: "text-secondary bg-secondary/20",
   SUBSCRIPTION_EXPIRED: "text-warning bg-warning/20",
   PROFILE_APPROVED: "text-success bg-success/20",
@@ -89,7 +89,7 @@ export default function NotificationsPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        <span className="ml-3 text-white/60">Loading notifications...</span>
+        <span className="ml-3 text-foreground-muted">Loading notifications...</span>
       </div>
     );
   }
@@ -98,13 +98,13 @@ export default function NotificationsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Notifications</h1>
-          <p className="text-white/60">Stay updated on your matches</p>
+          <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+          <p className="text-foreground-muted">Stay updated on your matches</p>
         </div>
         <div className="glass-card p-12 text-center">
-          <Bell className="w-8 h-8 text-white/30 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">Service Unavailable</h3>
-          <p className="text-white/60">{error}</p>
+          <Bell className="w-8 h-8 text-foreground-subtle mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">Service Unavailable</h3>
+          <p className="text-foreground-muted">{error}</p>
         </div>
       </div>
     );
@@ -115,8 +115,8 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Notifications</h1>
-          <p className="text-white/60">
+          <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+          <p className="text-foreground-muted">
             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up!"}
           </p>
         </div>
@@ -138,8 +138,8 @@ export default function NotificationsPage() {
           onClick={() => setFilter("all")}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
             filter === "all"
-              ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-              : "text-white/60 hover:text-white hover:bg-white/5"
+              ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+              : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
           }`}
         >
           All
@@ -148,13 +148,13 @@ export default function NotificationsPage() {
           onClick={() => setFilter("unread")}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
             filter === "unread"
-              ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-              : "text-white/60 hover:text-white hover:bg-white/5"
+              ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+              : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
           }`}
         >
           Unread
           {unreadCount > 0 && (
-            <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-primary text-white">
+            <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-primary text-foreground">
               {unreadCount}
             </span>
           )}
@@ -166,11 +166,11 @@ export default function NotificationsPage() {
         <div className="space-y-2">
           {notifications.map((notification) => {
             const Icon = iconMap[notification.type] || Bell;
-            const colorClass = colorMap[notification.type] || "text-white bg-white/10";
+            const colorClass = colorMap[notification.type] || "text-foreground bg-background-tertiary";
 
             const content = (
               <div
-                className={`glass-card p-4 flex items-start gap-4 hover:bg-white/10 transition-all ${
+                className={`glass-card p-4 flex items-start gap-4 hover:bg-background-tertiary transition-all ${
                   !notification.isRead ? "border-primary/30" : ""
                 }`}
               >
@@ -183,10 +183,10 @@ export default function NotificationsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className={`font-medium ${!notification.isRead ? "text-white" : "text-white/80"}`}>
+                      <h3 className={`font-medium ${!notification.isRead ? "text-foreground" : "text-foreground"}`}>
                         {notification.title}
                       </h3>
-                      <p className="text-sm text-white/60 mt-0.5">{notification.body}</p>
+                      <p className="text-sm text-foreground-muted mt-0.5">{notification.body}</p>
                     </div>
                     {!notification.isRead && (
                       <button
@@ -195,14 +195,14 @@ export default function NotificationsPage() {
                           e.stopPropagation();
                           handleMarkAsRead([notification.id]);
                         }}
-                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/40 hover:text-white flex-shrink-0"
+                        className="p-1.5 rounded-lg hover:bg-background-tertiary transition-colors text-foreground-subtle hover:text-foreground flex-shrink-0"
                         title="Mark as read"
                       >
                         <Check className="w-4 h-4" />
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-white/40 mt-2">{formatTimestamp(notification.createdAt)}</p>
+                  <p className="text-xs text-foreground-subtle mt-2">{formatTimestamp(notification.createdAt)}</p>
                 </div>
 
                 {/* Unread Dot */}

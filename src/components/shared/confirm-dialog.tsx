@@ -109,13 +109,13 @@ export function ConfirmDialog({
           </div>
 
           {/* Title */}
-          <h2 id="dialog-title" className="text-xl font-semibold text-white text-center mb-2">
+          <h2 id="dialog-title" className="text-xl font-semibold text-foreground text-center mb-2">
             {title}
           </h2>
 
           {/* Description */}
           {description && (
-            <p className="text-white/60 text-center mb-6">
+            <p className="text-foreground-muted text-center mb-6">
               {description}
             </p>
           )}
@@ -135,11 +135,11 @@ export function ConfirmDialog({
             <button
               onClick={onConfirm}
               disabled={isLoading}
-              className={`flex-1 btn-primary text-white ${config.buttonClass}`}
+              className={`flex-1 btn-primary text-foreground ${config.buttonClass}`}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-card-border border-t-white rounded-full animate-spin" />
                   Processing...
                 </span>
               ) : (

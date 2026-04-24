@@ -16,12 +16,12 @@ export default function InlineError({ error, onRetry, className = "" }: InlineEr
           <span className="text-error text-lg">!</span>
         </div>
         <div className="flex-1">
-          <p className="text-sm text-white/80">{error}</p>
+          <p className="text-sm text-foreground">{error}</p>
         </div>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
           </button>

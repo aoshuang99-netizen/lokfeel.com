@@ -604,13 +604,13 @@ export default function OnboardingV3Page() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
+        <Loader2 className="w-8 h-8 animate-spin text-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-black text-foreground flex flex-col relative overflow-hidden">
       {/* Gradient Background */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-pink-500/10 to-orange-500/10 blur-[120px]" />
@@ -618,7 +618,7 @@ export default function OnboardingV3Page() {
       </div>
 
       {/* Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-white/10 z-50">
+      <div className="fixed top-0 left-0 right-0 h-1 bg-background-tertiary z-50">
         <motion.div
           className="h-full bg-gradient-to-r from-pink-500 to-orange-500"
           initial={{ width: 0 }}
@@ -629,11 +629,11 @@ export default function OnboardingV3Page() {
 
       {/* Header */}
       <div className="pt-8 pb-4 px-6">
-        <p className="text-xs uppercase tracking-widest text-center text-white/50 mb-1">
+        <p className="text-xs uppercase tracking-widest text-center text-foreground-muted mb-1">
           Step {currentStepIndex + 1} of {STEPS.length - 1}
         </p>
         <h2 className="text-xl font-bold text-center">{currentStep.title}</h2>
-        <p className="text-xs text-center mt-1 text-white/50">{currentStep.subtitle}</p>
+        <p className="text-xs text-center mt-1 text-foreground-muted">{currentStep.subtitle}</p>
       </div>
 
       {/* Content */}
@@ -657,12 +657,12 @@ export default function OnboardingV3Page() {
                     transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
                     className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center mx-auto mb-4"
                   >
-                    <Heart className="w-8 h-8 text-white" />
+                    <Heart className="w-8 h-8 text-foreground" />
                   </motion.div>
                   <h1 className="text-2xl font-bold mb-2">
                     What are you <span className="text-pink-400">looking for</span>?
                   </h1>
-                  <p className="text-sm text-white/60">
+                  <p className="text-sm text-foreground-muted">
                     Be honest. This helps us find people who want the same thing.
                   </p>
                 </div>
@@ -681,20 +681,20 @@ export default function OnboardingV3Page() {
                       className={`relative p-4 rounded-2xl border-2 text-left transition-all group overflow-hidden ${
                         data.relationshipDesire === desire.value
                           ? "border-pink-500 bg-pink-500/10"
-                          : "border-white/10 bg-white/5 hover:border-white/30"
+                          : "border-card-border bg-background-tertiary hover:border-card-border"
                       }`}
                     >
                       <div className="flex items-center gap-4">
                         <span className="text-3xl">{desire.emoji}</span>
                         <div className="flex-1">
-                          <span className="font-bold text-white block">{desire.title}</span>
-                          <span className="text-xs text-white/50 block">{desire.subtitle}</span>
+                          <span className="font-bold text-foreground block">{desire.title}</span>
+                          <span className="text-xs text-foreground-muted block">{desire.subtitle}</span>
                         </div>
                         {data.relationshipDesire === desire.value && (
                           <Check className="w-5 h-5 text-pink-500" />
                         )}
                       </div>
-                      <p className="text-xs text-white/40 mt-2 ml-14">{desire.description}</p>
+                      <p className="text-xs text-foreground-subtle mt-2 ml-14">{desire.description}</p>
                     </motion.button>
                   ))}
                 </div>
@@ -710,12 +710,12 @@ export default function OnboardingV3Page() {
                     animate={{ scale: 1 }}
                     className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-blue-500 flex items-center justify-center mx-auto mb-4"
                   >
-                    <Sparkles className="w-8 h-8 text-white" />
+                    <Sparkles className="w-8 h-8 text-foreground" />
                   </motion.div>
                   <h1 className="text-2xl font-bold mb-2">
                     How do you <span className="text-orange-400">identify</span>?
                   </h1>
-                  <p className="text-sm text-white/60">
+                  <p className="text-sm text-foreground-muted">
                     Select the tag that feels right for you.
                   </p>
                 </div>
@@ -734,7 +734,7 @@ export default function OnboardingV3Page() {
                       className={`px-4 py-3 rounded-full border-2 transition-all flex items-center gap-2 ${
                         data.sexualOrientation === tag.value
                           ? "border-white bg-white text-black"
-                          : "border-white/20 bg-white/5 text-white hover:border-white/40"
+                          : "border-card-border bg-background-tertiary text-foreground hover:border-card-border/40"
                       }`}
                     >
                       <span>{tag.emoji}</span>
@@ -743,7 +743,7 @@ export default function OnboardingV3Page() {
                   ))}
                 </div>
 
-                <p className="text-center text-xs text-white/40 mt-6">
+                <p className="text-center text-xs text-foreground-subtle mt-6">
                   This helps us show you people who match your orientation
                 </p>
               </div>
@@ -754,7 +754,7 @@ export default function OnboardingV3Page() {
               <div className="py-4 space-y-6">
                 {/* Attachment Style */}
                 <div>
-                  <h3 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-pink-500/20 text-pink-400 flex items-center justify-center text-xs">1</span>
                     Your attachment style
                   </h3>
@@ -766,11 +766,11 @@ export default function OnboardingV3Page() {
                         className={`p-3 rounded-xl border text-left transition-all ${
                           data.attachmentStyle === trait.value
                             ? "border-pink-500 bg-pink-500/10"
-                            : "border-white/10 bg-white/5 hover:border-white/30"
+                            : "border-card-border bg-background-tertiary hover:border-card-border"
                         }`}
                       >
-                        <span className="font-medium text-white text-sm block">{trait.label}</span>
-                        <span className="text-xs text-white/50">{trait.desc}</span>
+                        <span className="font-medium text-foreground text-sm block">{trait.label}</span>
+                        <span className="text-xs text-foreground-muted">{trait.desc}</span>
                       </button>
                     ))}
                   </div>
@@ -778,7 +778,7 @@ export default function OnboardingV3Page() {
 
                 {/* Communication Style */}
                 <div>
-                  <h3 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs">2</span>
                     How you communicate
                   </h3>
@@ -790,11 +790,11 @@ export default function OnboardingV3Page() {
                         className={`p-3 rounded-xl border text-left transition-all ${
                           data.communicationStyle === trait.value
                             ? "border-orange-500 bg-orange-500/10"
-                            : "border-white/10 bg-white/5 hover:border-white/30"
+                            : "border-card-border bg-background-tertiary hover:border-card-border"
                         }`}
                       >
-                        <span className="font-medium text-white text-sm block">{trait.label}</span>
-                        <span className="text-xs text-white/50">{trait.desc}</span>
+                        <span className="font-medium text-foreground text-sm block">{trait.label}</span>
+                        <span className="text-xs text-foreground-muted">{trait.desc}</span>
                       </button>
                     ))}
                   </div>
@@ -802,7 +802,7 @@ export default function OnboardingV3Page() {
 
                 {/* Love Language */}
                 <div>
-                  <h3 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">3</span>
                     Your love language
                   </h3>
@@ -814,7 +814,7 @@ export default function OnboardingV3Page() {
                         className={`px-4 py-2 rounded-full border transition-all flex items-center gap-2 ${
                           data.loveLanguage === trait.value
                             ? "border-blue-500 bg-blue-500/10"
-                            : "border-white/10 bg-white/5 hover:border-white/30"
+                            : "border-card-border bg-background-tertiary hover:border-card-border"
                         }`}
                       >
                         <span>{trait.icon}</span>
@@ -835,12 +835,12 @@ export default function OnboardingV3Page() {
                     animate={{ scale: 1 }}
                     className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center mx-auto mb-4"
                   >
-                    <Camera className="w-8 h-8 text-white" />
+                    <Camera className="w-8 h-8 text-foreground" />
                   </motion.div>
                   <h1 className="text-2xl font-bold mb-2">
                     Show your <span className="text-green-400">authentic self</span>
                   </h1>
-                  <p className="text-sm text-white/60">
+                  <p className="text-sm text-foreground-muted">
                     {isMaleUser ? "Real photos build trust." : "Photo or cute avatar — your choice!"}
                   </p>
                 </div>
@@ -869,7 +869,7 @@ export default function OnboardingV3Page() {
                         );
                       })()
                     ) : (
-                      <Camera className="w-10 h-10 text-white/30" />
+                      <Camera className="w-10 h-10 text-foreground-subtle" />
                     )}
                   </div>
                 </div>
@@ -878,14 +878,14 @@ export default function OnboardingV3Page() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed border-white/20 bg-white/5 hover:border-white/40 transition-all mb-6"
+                  className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed border-card-border bg-background-tertiary hover:border-card-border/40 transition-all mb-6"
                 >
                   {isUploading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <>
-                      <Upload className="w-5 h-5 text-white/50" />
-                      <span className="text-sm text-white/70">
+                      <Upload className="w-5 h-5 text-foreground-muted" />
+                      <span className="text-sm text-foreground-muted">
                         {data.avatarUrl ? "Change Photo" : "Upload Photo"}
                       </span>
                     </>
@@ -902,7 +902,7 @@ export default function OnboardingV3Page() {
                 {/* Cartoon Avatars (for non-male users) */}
                 {!isMaleUser && (
                   <div>
-                    <p className="text-sm text-center mb-3 text-white/50">Or choose an avatar</p>
+                    <p className="text-sm text-center mb-3 text-foreground-muted">Or choose an avatar</p>
                     <div className="grid grid-cols-4 gap-3">
                       {CARTOON_AVATARS.map((avatar) => (
                         <button
@@ -910,8 +910,8 @@ export default function OnboardingV3Page() {
                           onClick={() => handleSelectCartoon(avatar.id)}
                           className={`aspect-square rounded-xl flex items-center justify-center text-3xl transition-all ${
                             data.selectedCartoonId === avatar.id
-                              ? "bg-white/10 border-2 border-white scale-105"
-                              : "bg-white/5 border border-white/10 hover:border-white/30"
+                              ? "bg-background-tertiary border-2 border-white scale-105"
+                              : "bg-background-tertiary border border-card-border hover:border-card-border"
                           }`}
                           style={{ backgroundColor: data.selectedCartoonId === avatar.id ? avatar.color + "30" : undefined }}
                         >
@@ -940,20 +940,20 @@ export default function OnboardingV3Page() {
                   transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
                   className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center mx-auto mb-6"
                 >
-                  <Radar className="w-10 h-10 text-white" />
+                  <Radar className="w-10 h-10 text-foreground" />
                 </motion.div>
 
                 <h2 className="text-2xl font-bold mb-2 text-center">
                   Your <span className="text-pink-400">Relationship Radar</span>
                 </h2>
-                <p className="text-sm text-white/60 mb-6 text-center">
+                <p className="text-sm text-foreground-muted mb-6 text-center">
                   Based on your answers, here&apos;s your unique relationship profile
                 </p>
 
                 {/* Radar Chart + Analysis Side by Side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   {/* Left: Radar Chart */}
-                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                  <div className="bg-background-tertiary rounded-2xl p-6 border border-card-border">
                     <RadarChart data={getRadarData()} />
                   </div>
                   
@@ -963,11 +963,11 @@ export default function OnboardingV3Page() {
                       <Sparkles className="w-4 h-4 text-pink-400" />
                       <span className="text-sm font-medium text-pink-400">AI Analysis</span>
                     </div>
-                    <p className="text-sm text-white/80 leading-relaxed">
+                    <p className="text-sm text-foreground leading-relaxed">
                       {getRelationshipAnalysis(data)}
                     </p>
-                    <div className="mt-4 pt-4 border-t border-white/10">
-                      <div className="flex items-center gap-2 text-xs text-white/50">
+                    <div className="mt-4 pt-4 border-t border-card-border">
+                      <div className="flex items-center gap-2 text-xs text-foreground-muted">
                         <span className="w-2 h-2 rounded-full bg-green-400" />
                         <span>Based on 50,000+ user matching data analysis</span>
                       </div>
@@ -977,15 +977,15 @@ export default function OnboardingV3Page() {
 
                 {/* Profile Summary */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <p className="text-xs text-white/50 mb-1">Relationship Style</p>
-                    <p className="font-semibold text-white">
+                  <div className="bg-background-tertiary rounded-xl p-4 border border-card-border">
+                    <p className="text-xs text-foreground-muted mb-1">Relationship Style</p>
+                    <p className="font-semibold text-foreground">
                       {RELATIONSHIP_DESIRES.find(d => d.value === data.relationshipDesire)?.title || "-"}
                     </p>
                   </div>
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <p className="text-xs text-white/50 mb-1">Identity</p>
-                    <p className="font-semibold text-white">
+                  <div className="bg-background-tertiary rounded-xl p-4 border border-card-border">
+                    <p className="text-xs text-foreground-muted mb-1">Identity</p>
+                    <p className="font-semibold text-foreground">
                       {SEXUAL_ORIENTATION_TAGS.find(t => t.value === data.sexualOrientation)?.label || "-"}
                     </p>
                   </div>
@@ -998,7 +998,7 @@ export default function OnboardingV3Page() {
                   transition={{ delay: 0.6 }}
                   onClick={handleComplete}
                   disabled={saving}
-                  className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-orange-500 text-white hover:opacity-90 transition-opacity"
+                  className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-orange-500 text-foreground hover:opacity-90 transition-opacity"
                 >
                   {saving ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -1018,12 +1018,12 @@ export default function OnboardingV3Page() {
 
       {/* Bottom Navigation */}
       {currentStep.id !== "result" && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 bg-black/80 backdrop-blur-xl border-t border-white/10">
+        <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 bg-black/80 backdrop-blur-xl border-t border-card-border">
           <div className="max-w-md mx-auto flex items-center justify-between">
             <button
               onClick={goBack}
               disabled={currentStepIndex === 0}
-              className="px-4 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-white transition-colors disabled:opacity-30"
+              className="px-4 py-2.5 rounded-xl text-sm font-medium text-foreground-muted hover:text-foreground transition-colors disabled:opacity-30"
             >
               Back
             </button>

@@ -105,7 +105,7 @@ function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps)
           />
         )
       ) : (
-        <div className={`w-full h-full flex items-center justify-center text-white text-xs font-bold ${
+        <div className={`w-full h-full flex items-center justify-center text-foreground text-xs font-bold ${
           isBot 
             ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
             : 'bg-gradient-to-br from-primary to-secondary'
@@ -115,7 +115,7 @@ function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps)
       )}
       {/* Bot indicator - elegant sparkle instead of robot icon */}
       {isBot && (
-        <div className={`absolute ${botBadgeSize} bg-gradient-to-br from-amber-500 to-rose-500 rounded-full flex items-center justify-center ring-2 ring-[#0d0c11]`}>
+        <div className={`absolute ${botBadgeSize} bg-gradient-to-br from-amber-500 to-rose-500 rounded-full flex items-center justify-center ring-2 ring-background`}>
           <Sparkles className={size === "sm" ? "w-2 h-2" : "w-2.5 h-2.5"} color="white" />
         </div>
       )}
@@ -159,26 +159,26 @@ function ContextMenu({ x, y, onClose, onCopy, onDelete, onReport, onReply, canDe
           top: y,
           zIndex: 51,
         }}
-        className="bg-[#1a1926] rounded-xl border border-white/10 shadow-xl overflow-hidden min-w-[160px]"
+        className="bg-background-tertiary rounded-xl border border-card-border shadow-xl overflow-hidden min-w-[160px]"
       >
         <button
           onClick={() => { onReply(); onClose(); }}
-          className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5 flex items-center gap-3 transition-colors"
+          className="w-full px-4 py-3 text-left text-sm text-foreground hover:bg-background-tertiary flex items-center gap-3 transition-colors"
         >
           <Reply className="w-4 h-4 text-primary" />
           Reply
         </button>
         <button
           onClick={() => { onCopy(); onClose(); }}
-          className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5 flex items-center gap-3 transition-colors"
+          className="w-full px-4 py-3 text-left text-sm text-foreground hover:bg-background-tertiary flex items-center gap-3 transition-colors"
         >
-          <Copy className="w-4 h-4 text-white/60" />
+          <Copy className="w-4 h-4 text-foreground-muted" />
           Copy
         </button>
         {canDelete && (
           <button
             onClick={() => { onDelete(); onClose(); }}
-            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 flex items-center gap-3 transition-colors"
+            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-background-tertiary flex items-center gap-3 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
             Delete
@@ -187,7 +187,7 @@ function ContextMenu({ x, y, onClose, onCopy, onDelete, onReport, onReply, canDe
         {!canDelete && (
           <button
             onClick={() => { onReport(); onClose(); }}
-            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 flex items-center gap-3 transition-colors"
+            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-background-tertiary flex items-center gap-3 transition-colors"
           >
             <Flag className="w-4 h-4" />
             Report
@@ -210,11 +210,11 @@ interface QuotedMessageProps {
 
 function QuotedMessage({ content, senderName, isFromMe }: QuotedMessageProps) {
   return (
-    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-white/[0.08]' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-amber-400/50' : 'border-white/20'}`}>
-      <p className="text-[11px] text-white/40 mb-0.5">
+    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-white/[0.08]' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-amber-400/50' : 'border-card-border'}`}>
+      <p className="text-[11px] text-foreground-subtle mb-0.5">
         {senderName ? `${senderName}` : 'Original message'}
       </p>
-      <p className="text-sm text-white/60 truncate">
+      <p className="text-sm text-foreground-muted truncate">
         {content}
       </p>
     </div>
@@ -247,15 +247,15 @@ function mapDeliveryStatus(status: MessageDeliveryStatus): LegacyMessageBubblePr
 
 function StatusIcon({ status }: { status?: LegacyMessageBubbleProps["status"] }) {
   if (!status || status === "sending") {
-    return <Clock className="w-3 h-3 text-white/40" />;
+    return <Clock className="w-3 h-3 text-foreground-subtle" />;
   }
   
   if (status === "sent") {
-    return <Check className="w-3 h-3 text-white/50" />;
+    return <Check className="w-3 h-3 text-foreground-muted" />;
   }
   
   if (status === "delivered" || status === "read") {
-    return <CheckCheck className={`w-3 h-3 ${status === "read" ? "text-primary" : "text-white/50"}`} />;
+    return <CheckCheck className={`w-3 h-3 ${status === "read" ? "text-primary" : "text-foreground-muted"}`} />;
   }
   
   if (status === "failed") {
@@ -308,14 +308,14 @@ function MessageBubbleComponent({
   const getBubbleStyles = () => {
     if (isFromMe) {
       // Warm gradient for own messages - distinctive, not generic purple-blue
-      return "bg-gradient-to-br from-amber-600/90 to-amber-500/90 text-white rounded-br-sm rounded-2xl";
+      return "bg-gradient-to-br from-amber-600/90 to-amber-500/90 text-foreground rounded-br-sm rounded-2xl";
     }
     if (isBot) {
       // Soft, warm AI message style - feels approachable, not robotic
-      return "bg-white/[0.07] text-white/90 rounded-bl-sm rounded-2xl border border-white/[0.06] backdrop-blur-sm";
+      return "bg-white/[0.07] text-foreground rounded-bl-sm rounded-2xl border border-card-border/[0.06] backdrop-blur-sm";
     }
     // Other user messages - clean subtle style
-    return "bg-white/[0.08] text-white/90 rounded-bl-sm rounded-2xl";
+    return "bg-white/[0.08] text-foreground rounded-bl-sm rounded-2xl";
   };
 
   // Handle long press / context menu
@@ -434,11 +434,11 @@ function MessageBubbleComponent({
 
             {msgType === 'VOICE' && (
               <div className="flex items-center gap-2 min-w-[150px]">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center">
                   <span className="text-xs">🎤</span>
                 </div>
-                <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-                  <div className="w-1/2 h-full bg-white/50 rounded-full" />
+                <div className="flex-1 h-1 bg-background-tertiary rounded-full overflow-hidden">
+                  <div className="w-1/2 h-full bg-background-tertiary0 rounded-full" />
                 </div>
                 <span className="text-xs opacity-70">{payload}</span>
               </div>
@@ -446,7 +446,7 @@ function MessageBubbleComponent({
 
             {/* Time and status */}
             <div className={`flex items-center gap-1 mt-1.5 ${isFromMe ? "justify-end" : ""}`}>
-              <span className={`text-[11px] ${isFromMe ? "text-white/50" : "text-white/30"}`}>
+              <span className={`text-[11px] ${isFromMe ? "text-foreground-muted" : "text-foreground-subtle"}`}>
                 {formatTime(timestamp)}
               </span>
               {isFromMe && status && (
@@ -474,7 +474,7 @@ function MessageBubbleComponent({
             {status === 'FAILED' && onRetry && (
               <button
                 onClick={() => onRetry(msgId)}
-                className="mt-2 text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-full transition-colors"
+                className="mt-2 text-xs bg-background-tertiary hover:bg-white/30 px-2 py-1 rounded-full transition-colors"
               >
                 Tap to retry
               </button>

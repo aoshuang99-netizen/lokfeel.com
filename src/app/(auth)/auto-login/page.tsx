@@ -83,7 +83,7 @@ function AutoLoginContent() {
   }, [email, callbackUrl, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0d0c11]">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="glass-card p-8 max-w-md w-full text-center">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
@@ -116,13 +116,13 @@ function AutoLoginContent() {
             <AlertCircle className="w-12 h-12 text-red-500" />
           )}
 
-          <h1 className="text-xl font-bold text-white">
+          <h1 className="text-xl font-bold text-foreground">
             {status === "loading" && "Verifying..."}
             {status === "success" && "Welcome Back!"}
             {status === "error" && "Oops!"}
           </h1>
 
-          <p className="text-white/60">{message}</p>
+          <p className="text-foreground-muted">{message}</p>
 
           {status === "error" && (
             <button
@@ -141,10 +141,10 @@ function AutoLoginContent() {
 export default function AutoLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#0d0c11]">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass-card p-8 max-w-md w-full text-center">
           <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Loading...</p>
+          <p className="text-foreground-muted">Loading...</p>
         </div>
       </div>
     }>

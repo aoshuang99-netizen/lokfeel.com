@@ -85,10 +85,10 @@ function ChatEmptyStateComponent({
     : content.description;
   
   // Determine icon color based on type
-  const iconColor = type === "bot-chat" ? "text-orange-400" : "text-white/30";
+  const iconColor = type === "bot-chat" ? "text-orange-400" : "text-foreground-subtle";
 
   // Determine icon background
-  const iconBg = type === "bot-chat" ? "bg-orange-500/20" : "bg-white/5";
+  const iconBg = type === "bot-chat" ? "bg-orange-500/20" : "bg-background-tertiary";
 
   return (
     <motion.div
@@ -106,12 +106,12 @@ function ChatEmptyStateComponent({
       </motion.div>
 
       {/* Title */}
-      <h3 className="text-xl font-semibold text-white mb-2">
+      <h3 className="text-xl font-semibold text-foreground mb-2">
         {title}
       </h3>
 
       {/* Description */}
-      <p className="text-white/50 text-sm max-w-xs">
+      <p className="text-foreground-muted text-sm max-w-xs">
         {description}
       </p>
 
@@ -126,14 +126,14 @@ function ChatEmptyStateComponent({
           {action?.href || content.href ? (
             <Link
               href={action?.href || content.href!}
-              className="px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-medium transition-colors"
+              className="px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-foreground font-medium transition-colors"
             >
               {action?.label || content.cta}
             </Link>
           ) : action?.onClick ? (
             <button
               onClick={action.onClick}
-              className="px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-medium transition-colors"
+              className="px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-foreground font-medium transition-colors"
             >
               {action.label}
             </button>

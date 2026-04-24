@@ -38,7 +38,7 @@ export function DynamicWatermark({ userId, username }: DynamicWatermarkProps) {
         {pattern.map((text, index) => (
           <span
             key={index}
-            className="text-white text-sm font-medium whitespace-nowrap select-none"
+            className="font-foreground-faint text-sm font-medium whitespace-nowrap select-none"
             style={{
               textShadow: "0 0 2px rgba(0,0,0,0.5)",
             }}

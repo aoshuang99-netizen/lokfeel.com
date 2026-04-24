@@ -35,7 +35,7 @@ function TypingIndicatorComponent({ name, isBot = false, className = "" }: Typin
           <Bot className="w-4 h-4 text-orange-400" />
         </div>
       ) : (
-        <div className="w-8 h-8 rounded-full bg-white/5 flex-shrink-0" />
+        <div className="w-8 h-8 rounded-full bg-background-tertiary flex-shrink-0" />
       )}
 
       {/* Typing dots */}
@@ -58,7 +58,7 @@ function TypingIndicatorComponent({ name, isBot = false, className = "" }: Typin
       </div>
 
       {/* Label */}
-      <span className="text-xs text-white/50">
+      <span className="text-xs text-foreground-muted">
         {isBot ? (
           <span className="flex items-center gap-1">
             {name ? `${name} is typing...` : "Typing..."}
@@ -91,17 +91,17 @@ export function SimpleTypingIndicator({ className = "" }: SimpleTypingIndicatorP
       <motion.span
         animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
         transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
-        className="w-1.5 h-1.5 bg-white/50 rounded-full"
+        className="w-1.5 h-1.5 bg-background-tertiary0 rounded-full"
       />
       <motion.span
         animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
         transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.13 }}
-        className="w-1.5 h-1.5 bg-white/50 rounded-full"
+        className="w-1.5 h-1.5 bg-background-tertiary0 rounded-full"
       />
       <motion.span
         animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
         transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.26 }}
-        className="w-1.5 h-1.5 bg-white/50 rounded-full"
+        className="w-1.5 h-1.5 bg-background-tertiary0 rounded-full"
       />
     </div>
   );

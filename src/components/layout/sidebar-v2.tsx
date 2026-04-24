@@ -44,7 +44,7 @@ const secondaryNavItems = [
 const InviteButton = ({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/40 hover:text-white/70 hover:bg-white/5 transition-all w-full text-left ${
+    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-all w-full text-left ${
       collapsed ? "justify-center" : ""
     }`}
   >
@@ -84,15 +84,15 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-surface border-r border-white/5 transition-all duration-300 z-40 hidden lg:flex flex-col ${
+      className={`fixed left-0 top-0 h-screen bg-background-secondary border-r border-card-border transition-all duration-300 z-40 hidden lg:flex flex-col ${
         collapsed ? "w-20" : "w-64"
       }`}
     >
       {/* Logo区域 */}
-      <div className="h-16 flex items-center px-4 border-b border-white/5">
+      <div className="h-16 flex items-center px-4 border-b border-card-border">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
-            <Heart className="w-5 h-5 text-white" fill="white" />
+            <Heart className="w-5 h-5 text-foreground" fill="white" />
           </div>
           <AnimatePresence>
             {!collapsed && (
@@ -121,8 +121,8 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${
                 active
-                  ? "bg-gradient-to-r from-primary/10 to-secondary/10 text-white"
-                  : "text-white/50 hover:text-white hover:bg-white/5"
+                  ? "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground"
+                  : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
               }`}
             >
               {/* 活跃指示条 */}
@@ -135,7 +135,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
               )}
 
               <div className={`relative p-2 rounded-lg transition-colors ${
-                active ? "bg-primary/20" : "group-hover:bg-white/5"
+                active ? "bg-primary/20" : "group-hover:bg-background-tertiary"
               }`}>
                 <Icon className={`w-5 h-5 ${active ? "text-primary" : ""}`} strokeWidth={active ? 2.5 : 2} />
                 
@@ -168,7 +168,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
         })}
 
         {/* 分隔线 */}
-        <div className="my-4 border-t border-white/5" />
+        <div className="my-4 border-t border-card-border" />
 
         {/* 辅助导航 */}
         {secondaryNavItems.map((item) => {
@@ -181,8 +181,8 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
                 active
-                  ? "bg-white/5 text-white"
-                  : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                  ? "bg-background-tertiary text-foreground"
+                  : "text-foreground-subtle hover:text-foreground-muted hover:bg-background-tertiary"
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -207,7 +207,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
       </nav>
 
       {/* 底部操作区 */}
-      <div className="p-3 border-t border-white/5 space-y-1">
+      <div className="p-3 border-t border-card-border space-y-1">
         {/* 升级Premium */}
         <Link
           href="/dashboard/subscription"
@@ -224,8 +224,8 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
                 exit={{ opacity: 0, x: -10 }}
                 className="flex-1"
               >
-                <p className="text-sm font-medium text-white">Premium</p>
-                <p className="text-xs text-white/50">Unlock all features</p>
+                <p className="text-sm font-medium text-foreground">Premium</p>
+                <p className="text-xs text-foreground-muted">Unlock all features</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -234,7 +234,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
         {/* 登出 */}
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/40 hover:text-white/70 hover:bg-white/5 transition-all w-full ${
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-foreground-subtle hover:text-foreground-muted hover:bg-background-tertiary transition-all w-full ${
             collapsed ? "justify-center" : ""
           }`}
         >
@@ -257,7 +257,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
       {/* 折叠按钮 */}
       <button
         onClick={toggleCollapse}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-surface border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 transition-all shadow-lg"
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-background-secondary border border-card-border flex items-center justify-center text-foreground-subtle hover:text-foreground hover:border-card-border transition-all shadow-lg"
       >
         {collapsed ? (
           <ChevronRight className="w-3 h-3" />

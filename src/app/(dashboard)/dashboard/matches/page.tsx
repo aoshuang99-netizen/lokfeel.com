@@ -70,7 +70,7 @@ export default function MatchesPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        <span className="ml-3 text-white/60">Loading matches...</span>
+        <span className="ml-3 text-foreground-muted">Loading matches...</span>
       </div>
     );
   }
@@ -79,16 +79,16 @@ export default function MatchesPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Your Matches</h1>
-          <p className="text-white/60">Discover curated connections based on your blueprint</p>
+          <h1 className="text-2xl font-bold text-foreground">Your Matches</h1>
+          <p className="text-foreground-muted">Discover curated connections based on your blueprint</p>
         </div>
         <div className="glass-card p-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <Heart className="w-8 h-8 text-white/30" />
+          <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-8 h-8 text-foreground-subtle" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">Service Unavailable</h3>
-          <p className="text-white/60">{error}</p>
-          <p className="text-white/40 text-sm mt-2">Complete database setup to see matches here.</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Service Unavailable</h3>
+          <p className="text-foreground-muted">{error}</p>
+          <p className="text-foreground-subtle text-sm mt-2">Complete database setup to see matches here.</p>
         </div>
       </div>
     );
@@ -99,8 +99,8 @@ export default function MatchesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Your Matches</h1>
-          <p className="text-white/60">Discover curated connections based on your blueprint</p>
+          <h1 className="text-2xl font-bold text-foreground">Your Matches</h1>
+          <p className="text-foreground-muted">Discover curated connections based on your blueprint</p>
         </div>
         <button className="btn-secondary flex items-center gap-2">
           <Filter className="w-4 h-4" />
@@ -116,14 +116,14 @@ export default function MatchesPage() {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
               activeTab === tab.id
-                ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                : "text-white/60 hover:text-white hover:bg-white/5"
+                ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+                : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
             }`}
           >
             {tab.label}
             {tab.count > 0 && (
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                activeTab === tab.id ? "bg-primary text-white" : "bg-white/10"
+                activeTab === tab.id ? "bg-primary text-foreground" : "bg-background-tertiary"
               }`}>
                 {tab.count}
               </span>
@@ -144,7 +144,7 @@ export default function MatchesPage() {
                     if (kind === 'none') {
                       return (
                         <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                          <User className="w-16 h-16 text-white/20" />
+                          <User className="w-16 h-16 text-foreground-faint" />
                         </div>
                       );
                     }
@@ -160,7 +160,7 @@ export default function MatchesPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute bottom-3 left-3 right-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-white">{match.otherUser.name}, {match.otherUser.age}</h3>
+                      <h3 className="font-semibold text-foreground">{match.otherUser.name}, {match.otherUser.age}</h3>
                       <span className={`match-score ${match.matchScore >= 90 ? "match-score-high" : match.matchScore >= 80 ? "match-score-medium" : "match-score-low"}`}>
                         {Math.round(match.matchScore)}%
                       </span>
@@ -170,18 +170,18 @@ export default function MatchesPage() {
               </Link>
 
               <div className="p-4">
-                <p className="text-sm text-white/60 mb-4 line-clamp-2">{match.matchReason}</p>
+                <p className="text-sm text-foreground-muted mb-4 line-clamp-2">{match.matchReason}</p>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
                         style={{ width: `${match.matchScore}%` }}
                       />
                     </div>
                   </div>
-                  <p className="text-xs text-white/40">Compatibility Score</p>
+                  <p className="text-xs text-foreground-subtle">Compatibility Score</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -220,11 +220,11 @@ export default function MatchesPage() {
         </div>
       ) : (
         <div className="glass-card p-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <Heart className="w-8 h-8 text-white/30" />
+          <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-8 h-8 text-foreground-subtle" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">No matches in this category</h3>
-          <p className="text-white/60">
+          <h3 className="text-lg font-semibold text-foreground mb-2">No matches in this category</h3>
+          <p className="text-foreground-muted">
             {activeTab === "new" && "Check back soon for new matches!"}
             {activeTab === "accepted" && "Accept some matches to see them here"}
             {activeTab === "passed" && "Passed matches won't show up here"}

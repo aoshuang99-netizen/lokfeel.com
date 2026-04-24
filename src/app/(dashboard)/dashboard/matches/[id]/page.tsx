@@ -167,11 +167,11 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
                 Interest Sent
               </button>
               {/* Status notification */}
-              <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-center">
-                <p className="text-sm text-white/70">
+              <div className="bg-background-tertiary border border-card-border rounded-lg p-3 text-center">
+                <p className="text-sm text-foreground-muted">
                   💌 Waiting for {match.otherUser.name} to respond
                 </p>
-                <p className="text-xs text-white/50 mt-1">
+                <p className="text-xs text-foreground-muted mt-1">
                   Typically responds within 24 hours
                 </p>
               </div>
@@ -229,7 +229,7 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
   if (!match) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
-        <p className="text-white/60">Match not found</p>
+        <p className="text-foreground-muted">Match not found</p>
         <Link href="/dashboard/matches" className="btn-primary mt-4 inline-block">
           Back to Matches
         </Link>
@@ -256,7 +256,7 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
       {/* Back Button */}
       <Link
         href="/dashboard/matches"
-        className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Matches
@@ -274,27 +274,27 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 right-4">
-                <h2 className="text-2xl font-bold text-white">{otherUser.name}, {otherUser.age}</h2>
-                <p className="text-white/60 text-sm">{otherUser.city || "Location unknown"}</p>
+                <h2 className="text-2xl font-bold text-foreground">{otherUser.name}, {otherUser.age}</h2>
+                <p className="text-foreground-muted text-sm">{otherUser.city || "Location unknown"}</p>
               </div>
             </div>
 
             <div className="p-4 space-y-4">
-              <p className="text-white/80 text-sm">{otherUser.bio || "No bio yet"}</p>
+              <p className="text-foreground text-sm">{otherUser.bio || "No bio yet"}</p>
 
               <div className="flex flex-wrap gap-2">
                 {otherUser.attachmentStyle && (
-                  <span className="text-xs px-3 py-1 rounded-full bg-white/5 text-white/80">
+                  <span className="text-xs px-3 py-1 rounded-full bg-background-tertiary text-foreground">
                     {otherUser.attachmentStyle}
                   </span>
                 )}
                 {otherUser.communicationStyle && (
-                  <span className="text-xs px-3 py-1 rounded-full bg-white/5 text-white/80">
+                  <span className="text-xs px-3 py-1 rounded-full bg-background-tertiary text-foreground">
                     {otherUser.communicationStyle}
                   </span>
                 )}
                 {otherUser.loveLanguage && (
-                  <span className="text-xs px-3 py-1 rounded-full bg-white/5 text-white/80">
+                  <span className="text-xs px-3 py-1 rounded-full bg-background-tertiary text-foreground">
                     {otherUser.loveLanguage}
                   </span>
                 )}
@@ -308,19 +308,19 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
 
           {/* Quick Info */}
           <div className="glass-card p-4">
-            <h3 className="font-semibold text-white mb-3">Details</h3>
+            <h3 className="font-semibold text-foreground mb-3">Details</h3>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-white/60">Relationship Goals</dt>
-                <dd className="text-white">{otherUser.relationshipGoal || "Not specified"}</dd>
+                <dt className="text-foreground-muted">Relationship Goals</dt>
+                <dd className="text-foreground">{otherUser.relationshipGoal || "Not specified"}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-white/60">Attachment Style</dt>
-                <dd className="text-white">{otherUser.attachmentStyle || "Not specified"}</dd>
+                <dt className="text-foreground-muted">Attachment Style</dt>
+                <dd className="text-foreground">{otherUser.attachmentStyle || "Not specified"}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-white/60">Match Status</dt>
-                <dd className="text-white capitalize">{match.status.toLowerCase()}</dd>
+                <dt className="text-foreground-muted">Match Status</dt>
+                <dd className="text-foreground capitalize">{match.status.toLowerCase()}</dd>
               </div>
             </dl>
           </div>
@@ -350,30 +350,30 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
                   </defs>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">{overallScore}%</span>
+                  <span className="text-lg font-bold text-foreground">{overallScore}%</span>
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="text-base font-semibold text-white mb-1">Compatibility Score</h3>
-                <p className="text-sm text-white/60 line-clamp-2">{match.matchReason}</p>
+                <h3 className="text-base font-semibold text-foreground mb-1">Compatibility Score</h3>
+                <p className="text-sm text-foreground-muted line-clamp-2">{match.matchReason}</p>
               </div>
             </div>
 
             {/* Compact Dimension Breakdown */}
-            <div className="mt-4 pt-4 border-t border-white/10">
+            <div className="mt-4 pt-4 border-t border-card-border">
               <div className="flex items-center gap-3 flex-wrap">
                 {Object.entries(match.compatibilityBreakdown)
                   .filter(([_, value]) => value !== null)
                   .map(([key, value]) => (
                   <div key={key} className="flex items-center gap-2">
-                    <span className="text-xs text-white/50">{dimensionLabels[key]}</span>
-                    <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <span className="text-xs text-foreground-muted">{dimensionLabels[key]}</span>
+                    <div className="w-16 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
                         style={{ width: `${value}%` }}
                       />
                     </div>
-                    <span className="text-xs font-semibold text-white">{Math.round(value as number)}%</span>
+                    <span className="text-xs font-semibold text-foreground">{Math.round(value as number)}%</span>
                   </div>
                 ))}
               </div>
@@ -388,7 +388,7 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
                     <p className="text-xs font-medium text-warning mb-1">Considerations</p>
                     <div className="flex flex-wrap gap-1">
                       {warnings.map((warning: string, idx: number) => (
-                        <span key={idx} className="text-xs text-white/70 bg-white/5 px-2 py-0.5 rounded-full">
+                        <span key={idx} className="text-xs text-foreground-muted bg-background-tertiary px-2 py-0.5 rounded-full">
                           {warning}
                         </span>
                       ))}

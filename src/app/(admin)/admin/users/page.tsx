@@ -33,8 +33,8 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">User Management</h1>
-          <p className="text-white/60">Manage and monitor all users</p>
+          <h1 className="text-2xl font-bold text-foreground">User Management</h1>
+          <p className="text-foreground-muted">Manage and monitor all users</p>
         </div>
         <button className="btn-primary flex items-center gap-2">
           <UserPlus className="w-4 h-4" />
@@ -45,7 +45,7 @@ export default function UsersPage() {
       {/* Filters */}
       <div className="glass-card p-4 flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-subtle" />
           <input
             type="text"
             placeholder="Search users..."
@@ -72,30 +72,30 @@ export default function UsersPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10 bg-white/5">
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">User</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Role</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Profile</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Matches</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Last Active</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Status</th>
-                <th className="text-right py-4 px-6 text-sm font-medium text-white/60">Actions</th>
+              <tr className="border-b border-card-border bg-background-tertiary">
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">User</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Role</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Profile</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Matches</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Last Active</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Status</th>
+                <th className="text-right py-4 px-6 text-sm font-medium text-foreground-muted">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <tr key={user.id} className="border-b border-card-border hover:bg-background-tertiary transition-colors">
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground font-semibold">
                         {user.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-medium text-white flex items-center gap-2">
+                        <p className="font-medium text-foreground flex items-center gap-2">
                           {user.name}
                           {user.isVerified && <CheckCircle className="w-4 h-4 text-success" />}
                         </p>
-                        <p className="text-sm text-white/60">{user.email}</p>
+                        <p className="text-sm text-foreground-muted">{user.email}</p>
                       </div>
                     </div>
                   </td>
@@ -109,8 +109,8 @@ export default function UsersPage() {
                       {user.profileStatus}
                     </span>
                   </td>
-                  <td className="py-4 px-6 text-white">{user.matches}</td>
-                  <td className="py-4 px-6 text-white/60">{user.lastActive}</td>
+                  <td className="py-4 px-6 text-foreground">{user.matches}</td>
+                  <td className="py-4 px-6 text-foreground-muted">{user.lastActive}</td>
                   <td className="py-4 px-6">
                     {user.isBanned ? (
                       <span className="badge badge-error">Banned</span>
@@ -120,13 +120,13 @@ export default function UsersPage() {
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center justify-end gap-2">
-                      <Link href={`/admin/users/${user.id}`} className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors">
+                      <Link href={`/admin/users/${user.id}`} className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors">
                         <Eye className="w-4 h-4" />
                       </Link>
                       {!user.isBanned && user.role !== "admin" && (
                         <button
                           onClick={() => { setSelectedUser(user); setShowBanDialog(true); }}
-                          className="p-2 rounded-lg hover:bg-error/20 text-white/60 hover:text-error transition-colors"
+                          className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors"
                         >
                           <Ban className="w-4 h-4" />
                         </button>
@@ -140,8 +140,8 @@ export default function UsersPage() {
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-white/10 flex items-center justify-between">
-          <p className="text-sm text-white/60">Showing {filteredUsers.length} of {mockUsers.length} users</p>
+        <div className="p-4 border-t border-card-border flex items-center justify-between">
+          <p className="text-sm text-foreground-muted">Showing {filteredUsers.length} of {mockUsers.length} users</p>
           <div className="flex gap-2">
             <button className="btn-secondary text-sm" disabled>Previous</button>
             <button className="btn-primary text-sm">Next</button>

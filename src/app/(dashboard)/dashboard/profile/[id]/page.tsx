@@ -219,10 +219,10 @@ export default function UserProfilePage() {
           >
             <AlertCircle className="w-10 h-10 text-error" />
           </motion.div>
-          <h2 className="text-2xl font-bold text-white mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-2">
             {error ? 'Unable to load profile' : 'Profile not found'}
           </h2>
-          <p className="text-white/60 mb-6">{error || 'This user profile could not be found.'}</p>
+          <p className="text-foreground-muted mb-6">{error || 'This user profile could not be found.'}</p>
           <div className="flex items-center justify-center gap-3">
             <button onClick={loadProfile} className="btn-primary">
               <RefreshCw className="w-4 h-4 mr-2" />
@@ -244,17 +244,17 @@ export default function UserProfilePage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-card-border">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/dashboard/square" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+            <Link href="/dashboard/square" className="flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
               Back
             </Link>
             
             {currentUser && (
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-white/60">Remaining connections:</span>
+                <span className="text-foreground-muted">Remaining connections:</span>
                 <span className={`font-semibold ${currentUser.remainingConnections > 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {currentUser.remainingConnections}
                 </span>
@@ -284,7 +284,7 @@ export default function UserProfilePage() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setActivePhotoIndex(prev => prev > 0 ? prev - 1 : photos.length - 1)}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-foreground hover:bg-black/70 transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
               </motion.button>
@@ -292,7 +292,7 @@ export default function UserProfilePage() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setActivePhotoIndex(prev => prev < photos.length - 1 ? prev + 1 : 0)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-foreground hover:bg-black/70 transition-colors"
               >
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
@@ -310,19 +310,19 @@ export default function UserProfilePage() {
           
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
             {profile.isBot && (
-              <span className="px-3 py-1 bg-primary/90 text-white text-sm font-medium rounded-full flex items-center gap-1">
+              <span className="px-3 py-1 bg-primary/90 text-foreground text-sm font-medium rounded-full flex items-center gap-1">
                 <Bot className="w-4 h-4" />
                 AI User
               </span>
             )}
             {profile.isNew && (
-              <span className="px-3 py-1 bg-green-500/90 text-white text-sm font-medium rounded-full flex items-center gap-1">
+              <span className="px-3 py-1 bg-green-500/90 text-foreground text-sm font-medium rounded-full flex items-center gap-1">
                 <Sparkles className="w-4 h-4" />
                 New
               </span>
             )}
             {profile.linkedInVerified && (
-              <span className="px-3 py-1 bg-blue-500/90 text-white text-sm font-medium rounded-full flex items-center gap-1">
+              <span className="px-3 py-1 bg-blue-500/90 text-foreground text-sm font-medium rounded-full flex items-center gap-1">
                 <LinkedinIcon className="w-4 h-4" />
                 LinkedIn Verified
               </span>
@@ -334,7 +334,7 @@ export default function UserProfilePage() {
               <div className={`px-4 py-2 rounded-full font-bold text-lg ${
                 profile.matchScore >= 80 ? 'bg-green-500/90 text-white' :
                 profile.matchScore >= 60 ? 'bg-yellow-500/90 text-white' :
-                'bg-white/20 text-white backdrop-blur-sm'
+                'bg-background-tertiary text-foreground backdrop-blur-sm'
               }`}>
                 {profile.matchScore}% Match
               </div>
@@ -351,10 +351,10 @@ export default function UserProfilePage() {
         >
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-1">
+              <h1 className="text-3xl font-bold text-foreground mb-1">
                 {profile.displayName}, {profile.age}
               </h1>
-              <p className="text-white/60">{getGenderLabel(profile.gender)}</p>
+              <p className="text-foreground-muted">{getGenderLabel(profile.gender)}</p>
             </div>
             
             <motion.button
@@ -364,8 +364,8 @@ export default function UserProfilePage() {
               disabled={!canConnect}
               className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all ${
                 canConnect
-                  ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer'
-                  : 'bg-white/10 text-white/40 cursor-not-allowed'
+                  ? 'bg-primary text-foreground hover:bg-primary/90 cursor-pointer'
+                  : 'bg-background-tertiary text-foreground-subtle cursor-not-allowed'
               }`}
             >
               <Heart className="w-5 h-5" />
@@ -385,25 +385,25 @@ export default function UserProfilePage() {
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {profile.location && (
-              <div className="flex items-center gap-2 text-white/60">
+              <div className="flex items-center gap-2 text-foreground-muted">
                 <MapPin className="w-4 h-4" />
                 <span>{profile.location}</span>
               </div>
             )}
             {profile.occupation && (
-              <div className="flex items-center gap-2 text-white/60">
+              <div className="flex items-center gap-2 text-foreground-muted">
                 <Briefcase className="w-4 h-4" />
                 <span>{profile.occupation}</span>
               </div>
             )}
             {profile.company && (
-              <div className="flex items-center gap-2 text-white/60">
+              <div className="flex items-center gap-2 text-foreground-muted">
                 <BuildingIcon className="w-4 h-4" />
                 <span>{profile.company}</span>
               </div>
             )}
             {profile.education && (
-              <div className="flex items-center gap-2 text-white/60">
+              <div className="flex items-center gap-2 text-foreground-muted">
                 <GraduationCap className="w-4 h-4" />
                 <span>{profile.education}</span>
               </div>
@@ -418,8 +418,8 @@ export default function UserProfilePage() {
             transition={{ delay: 0.2 }}
             className="bg-surface rounded-2xl p-6 mb-6"
           >
-            <h2 className="text-lg font-semibold text-white mb-3">About</h2>
-            <p className="text-white/70 leading-relaxed">{profile.bio}</p>
+            <h2 className="text-lg font-semibold text-foreground mb-3">About</h2>
+            <p className="text-foreground-muted leading-relaxed">{profile.bio}</p>
           </motion.div>
         )}
 
@@ -434,7 +434,7 @@ export default function UserProfilePage() {
               <BadgeCheck className="w-5 h-5" />
               Why You Might Match
             </h2>
-            <p className="text-white/70 leading-relaxed">{profile.matchReason}</p>
+            <p className="text-foreground-muted leading-relaxed">{profile.matchReason}</p>
           </motion.div>
         )}
 
@@ -444,53 +444,53 @@ export default function UserProfilePage() {
           transition={{ delay: 0.4 }}
           className="bg-surface rounded-2xl p-6 mb-6"
         >
-          <h2 className="text-lg font-semibold text-white mb-4">Relationship Profile</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Relationship Profile</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {profile.relationshipGoal && (
               <div>
-                <p className="text-sm text-white/40 mb-1">Looking for</p>
-                <p className="text-white font-medium">{getRelationshipGoalLabel(profile.relationshipGoal)}</p>
+                <p className="text-sm text-foreground-subtle mb-1">Looking for</p>
+                <p className="text-foreground font-medium">{getRelationshipGoalLabel(profile.relationshipGoal)}</p>
               </div>
             )}
             {profile.attachmentStyle && (
               <div>
-                <p className="text-sm text-white/40 mb-1">Attachment Style</p>
-                <p className="text-white font-medium">{profile.attachmentStyle}</p>
+                <p className="text-sm text-foreground-subtle mb-1">Attachment Style</p>
+                <p className="text-foreground font-medium">{profile.attachmentStyle}</p>
               </div>
             )}
             {profile.communicationStyle && (
               <div>
-                <p className="text-sm text-white/40 mb-1">Communication Style</p>
-                <p className="text-white font-medium">{profile.communicationStyle}</p>
+                <p className="text-sm text-foreground-subtle mb-1">Communication Style</p>
+                <p className="text-foreground font-medium">{profile.communicationStyle}</p>
               </div>
             )}
             {profile.conflictResolution && (
               <div>
-                <p className="text-sm text-white/40 mb-1">Conflict Resolution</p>
-                <p className="text-white font-medium">{profile.conflictResolution}</p>
+                <p className="text-sm text-foreground-subtle mb-1">Conflict Resolution</p>
+                <p className="text-foreground font-medium">{profile.conflictResolution}</p>
               </div>
             )}
             {profile.loveLanguage && (
               <div>
-                <p className="text-sm text-white/40 mb-1">Love Language</p>
-                <p className="text-white font-medium">{profile.loveLanguage}</p>
+                <p className="text-sm text-foreground-subtle mb-1">Love Language</p>
+                <p className="text-foreground font-medium">{profile.loveLanguage}</p>
               </div>
             )}
             {profile.emotionalAvailability && (
               <div>
-                <p className="text-sm text-white/40 mb-1">Emotional Availability</p>
-                <p className="text-white font-medium">{profile.emotionalAvailability}</p>
+                <p className="text-sm text-foreground-subtle mb-1">Emotional Availability</p>
+                <p className="text-foreground font-medium">{profile.emotionalAvailability}</p>
               </div>
             )}
           </div>
           
           {profile.lifePriorities && profile.lifePriorities.length > 0 && (
             <div className="mt-6">
-              <p className="text-sm text-white/40 mb-2">Life Priorities</p>
+              <p className="text-sm text-foreground-subtle mb-2">Life Priorities</p>
               <div className="flex flex-wrap gap-2">
                 {profile.lifePriorities.map((priority, i) => (
-                  <span key={i} className="px-3 py-1 bg-white/5 text-white/70 text-sm rounded-full">
+                  <span key={i} className="px-3 py-1 bg-background-tertiary text-foreground-muted text-sm rounded-full">
                     {priority}
                   </span>
                 ))}
@@ -500,10 +500,10 @@ export default function UserProfilePage() {
           
           {profile.interests && profile.interests.length > 0 && (
             <div className="mt-6">
-              <p className="text-sm text-white/40 mb-2">Interests</p>
+              <p className="text-sm text-foreground-subtle mb-2">Interests</p>
               <div className="flex flex-wrap gap-2">
                 {profile.interests.map((interest, i) => (
-                  <span key={i} className="px-3 py-1 bg-white/5 text-white/70 text-sm rounded-full">
+                  <span key={i} className="px-3 py-1 bg-background-tertiary text-foreground-muted text-sm rounded-full">
                     {interest}
                   </span>
                 ))}
@@ -518,19 +518,19 @@ export default function UserProfilePage() {
           transition={{ delay: 0.5 }}
           className="bg-surface rounded-2xl p-6"
         >
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Shield className="w-5 h-5 text-green-400" />
             Verification Status
           </h2>
           
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-white/60">Identity Verified</span>
+              <span className="text-foreground-muted">Identity Verified</span>
               <BadgeCheck className="w-5 h-5 text-green-400" />
             </div>
             {profile.linkedInVerified && (
               <div className="flex items-center justify-between">
-                <span className="text-white/60">LinkedIn Verified</span>
+                <span className="text-foreground-muted">LinkedIn Verified</span>
                 <div className="flex items-center gap-2">
                   <LinkedinIcon className="w-5 h-5 text-blue-400" />
                   <span className="text-green-400 text-sm">Verified</span>
@@ -538,12 +538,12 @@ export default function UserProfilePage() {
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-white/60">Profile Status</span>
+              <span className="text-foreground-muted">Profile Status</span>
               <span className="text-green-400 text-sm">Active</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-white/60">Member Since</span>
-              <span className="text-white/40 text-sm">
+              <span className="text-foreground-muted">Member Since</span>
+              <span className="text-foreground-subtle text-sm">
                 {new Date(profile.joinedAt).toLocaleDateString()}
               </span>
             </div>
@@ -568,7 +568,7 @@ export default function UserProfilePage() {
               onClick={(e) => e.stopPropagation()}
               className="bg-surface rounded-2xl p-6 max-w-md w-full"
             >
-              <h3 className="text-xl font-bold text-white mb-4">Send Connection Request</h3>
+              <h3 className="text-xl font-bold text-foreground mb-4">Send Connection Request</h3>
               
               <div className="flex items-center gap-4 mb-6">
                 <img
@@ -578,34 +578,34 @@ export default function UserProfilePage() {
                   onError={() => setImageError(true)}
                 />
                 <div>
-                  <p className="text-white font-semibold">{profile.displayName}</p>
-                  <p className="text-white/60 text-sm">{profile.age} years old</p>
+                  <p className="text-foreground font-semibold">{profile.displayName}</p>
+                  <p className="text-foreground-muted text-sm">{profile.age} years old</p>
                   {profile.matchScore && (
                     <p className="text-primary text-sm">{profile.matchScore}% Match</p>
                   )}
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-xl p-4 mb-6">
+              <div className="bg-background-tertiary rounded-xl p-4 mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-white/60">Your remaining connections:</span>
+                  <span className="text-foreground-muted">Your remaining connections:</span>
                   <span className={`font-bold ${currentUser!.remainingConnections > 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {currentUser!.remainingConnections}
                   </span>
                 </div>
-                <p className="text-sm text-white/40">
+                <p className="text-sm text-foreground-subtle">
                   {isMale ? 'Male users get 5 free connections. Upgrade to Premium for unlimited.' : 'Female users get 5 free connections per week.'}
                 </p>
               </div>
               
               <div className="flex gap-3">
-                <button onClick={() => setShowConnectModal(false)} className="flex-1 px-4 py-3 bg-white/5 text-white rounded-xl hover:bg-white/10 transition-colors">
+                <button onClick={() => setShowConnectModal(false)} className="flex-1 px-4 py-3 bg-background-tertiary text-foreground rounded-xl hover:bg-background-tertiary transition-colors">
                   Cancel
                 </button>
                 <button
                   onClick={handleConnect}
                   disabled={connectLoading || !canConnect}
-                  className="flex-1 px-4 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-primary text-foreground rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {connectLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

@@ -30,14 +30,14 @@ interface EmptyStateProps {
 function EmptyState({ hasSearch, searchQuery }: EmptyStateProps) {
   return (
     <div className="p-8 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-        <MessageCircle className="w-6 h-6 text-white/20" />
+      <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-card-border/[0.06] flex items-center justify-center mx-auto mb-4">
+        <MessageCircle className="w-6 h-6 text-foreground-faint" />
       </div>
-      <p className="text-white/40 text-sm">
+      <p className="text-foreground-subtle text-sm">
         {hasSearch ? "No conversations match your search" : "No conversations yet"}
       </p>
       {!hasSearch && (
-        <p className="text-white/25 text-xs mt-2">
+        <p className="text-foreground-faint text-xs mt-2">
           Accept a match to start chatting
         </p>
       )}
@@ -55,9 +55,9 @@ interface HeaderProps {
 
 function Header({ onNewChat }: HeaderProps) {
   return (
-    <div className="px-4 pt-5 pb-3 bg-[#13121a]/90 backdrop-blur-lg">
+    <div className="px-4 pt-5 pb-3 bg-background-secondary/90 backdrop-blur-lg">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white tracking-tight">Messages</h2>
+        <h2 className="text-lg font-semibold text-foreground tracking-tight">Messages</h2>
         <div className="flex items-center gap-2">
           {onNewChat && (
             <button
@@ -65,7 +65,7 @@ function Header({ onNewChat }: HeaderProps) {
               className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200"
               aria-label="New chat"
             >
-              <MoreVertical className="w-[18px] h-[18px] text-white/30" />
+              <MoreVertical className="w-[18px] h-[18px] text-foreground-subtle" />
             </button>
           )}
         </div>
@@ -88,13 +88,13 @@ function SearchBar({ value, onChange, placeholder = "Search conversations..." }:
   return (
     <div className="px-4 pb-3">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-faint" />
         <input
           type="text"
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-white/[0.04] text-white/90 placeholder:text-white/25 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-white/10 focus:bg-white/[0.06] transition-all duration-200 border border-transparent focus:border-white/[0.06]"
+          className="w-full bg-white/[0.04] text-foreground placeholder:text-foreground-faint rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-white/10 focus:bg-white/[0.06] transition-all duration-200 border border-transparent focus:border-card-border/[0.06]"
         />
       </div>
     </div>
@@ -140,7 +140,7 @@ function ConversationListComponent({
   // Render loading state
   if (isLoading) {
     return (
-      <div className={`flex flex-col h-full bg-[#0d0c11] ${className}`}>
+      <div className={`flex flex-col h-full bg-background ${className}`}>
         <Header />
         <SearchBar value={searchQuery} onChange={handleSearchChange} />
         <div className="flex-1 flex items-center justify-center">
@@ -153,7 +153,7 @@ function ConversationListComponent({
   // Render error state
   if (error) {
     return (
-      <div className={`flex flex-col h-full bg-[#0d0c11] ${className}`}>
+      <div className={`flex flex-col h-full bg-background ${className}`}>
         <Header />
         <SearchBar value={searchQuery} onChange={handleSearchChange} />
         <div className="flex-1 flex items-center justify-center p-4">
@@ -166,7 +166,7 @@ function ConversationListComponent({
   // Render empty state
   if (filteredConversations.length === 0) {
     return (
-      <div className={`flex flex-col h-full bg-[#0d0c11] ${className}`}>
+      <div className={`flex flex-col h-full bg-background ${className}`}>
         <Header />
         <SearchBar value={searchQuery} onChange={handleSearchChange} />
         <EmptyState hasSearch={!!searchQuery} searchQuery={searchQuery} />
@@ -176,7 +176,7 @@ function ConversationListComponent({
 
   // Render conversation list
   return (
-    <div className={`flex flex-col h-full bg-[#0d0c11] ${className}`}>
+    <div className={`flex flex-col h-full bg-background ${className}`}>
       <Header />
       <SearchBar value={searchQuery} onChange={handleSearchChange} />
       

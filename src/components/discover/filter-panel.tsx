@@ -139,17 +139,17 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md z-50 bg-[#0d0c11] border-l border-white/10 overflow-y-auto"
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md z-50 bg-background border-l border-card-border overflow-y-auto"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-[#0d0c11] border-b border-white/10 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-background border-b border-card-border px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <SlidersHorizontal className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold text-white">Filters</h2>
+                <h2 className="text-lg font-semibold text-foreground">Filters</h2>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-white/5 text-white/60"
+                className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -160,8 +160,8 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
               {/* Gender */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Users className="w-4 h-4 text-white/40" />
-                  <label className="text-sm font-medium text-white">Interested In</label>
+                  <Users className="w-4 h-4 text-foreground-subtle" />
+                  <label className="text-sm font-medium text-foreground">Interested In</label>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {options.genders.map((gender) => (
@@ -170,8 +170,8 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
                       onClick={() => updateFilter("preferredGender", gender.value)}
                       className={`px-4 py-2 rounded-full text-sm transition-all ${
                         filters.preferredGender === gender.value
-                          ? "bg-primary text-white"
-                          : "bg-white/5 text-white/70 hover:bg-white/10 border border-white/10"
+                          ? "bg-primary text-foreground"
+                          : "bg-background-tertiary text-foreground-muted hover:bg-background-tertiary border border-card-border"
                       }`}
                     >
                       {gender.label}
@@ -183,8 +183,8 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
               {/* Age Range */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Target className="w-4 h-4 text-white/40" />
-                  <label className="text-sm font-medium text-white">Age Range</label>
+                  <Target className="w-4 h-4 text-foreground-subtle" />
+                  <label className="text-sm font-medium text-foreground">Age Range</label>
                 </div>
                 <div className="flex items-center gap-4">
                   <input
@@ -193,16 +193,16 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
                     onChange={(e) => updateFilter("preferredAgeMin", parseInt(e.target.value) || 18)}
                     min={18}
                     max={100}
-                    className="w-20 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-center"
+                    className="w-20 px-3 py-2 rounded-lg bg-background-tertiary border border-card-border text-foreground text-center"
                   />
-                  <span className="text-white/40">to</span>
+                  <span className="text-foreground-subtle">to</span>
                   <input
                     type="number"
                     value={filters.preferredAgeMax}
                     onChange={(e) => updateFilter("preferredAgeMax", parseInt(e.target.value) || 99)}
                     min={18}
                     max={100}
-                    className="w-20 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-center"
+                    className="w-20 px-3 py-2 rounded-lg bg-background-tertiary border border-card-border text-foreground text-center"
                   />
                 </div>
                 <input
@@ -218,8 +218,8 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
               {/* Distance */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <MapPin className="w-4 h-4 text-white/40" />
-                  <label className="text-sm font-medium text-white">Maximum Distance</label>
+                  <MapPin className="w-4 h-4 text-foreground-subtle" />
+                  <label className="text-sm font-medium text-foreground">Maximum Distance</label>
                 </div>
                 <div className="flex items-center gap-3 mb-3">
                   <input
@@ -231,7 +231,7 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
                     onChange={(e) => updateFilter("preferredDistance", parseInt(e.target.value))}
                     className="flex-1 accent-primary"
                   />
-                  <span className="text-sm text-white/60 w-20 text-right">
+                  <span className="text-sm text-foreground-muted w-20 text-right">
                     {filters.preferredDistance} km
                   </span>
                 </div>
@@ -240,8 +240,8 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
               {/* Relationship Goal */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Heart className="w-4 h-4 text-white/40" />
-                  <label className="text-sm font-medium text-white">Relationship Goal</label>
+                  <Heart className="w-4 h-4 text-foreground-subtle" />
+                  <label className="text-sm font-medium text-foreground">Relationship Goal</label>
                 </div>
                 <div className="space-y-2">
                   {options.relationshipGoals.map((goal) => (
@@ -254,10 +254,10 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
                       className={`w-full px-4 py-3 rounded-xl border text-left transition-all ${
                         filters.relationshipGoal === goal.value
                           ? "bg-primary/20 border-primary"
-                          : "bg-white/5 border-white/10 hover:bg-white/10"
+                          : "bg-background-tertiary border-card-border hover:bg-background-tertiary"
                       }`}
                     >
-                      <span className="text-white">{goal.label}</span>
+                      <span className="text-foreground">{goal.label}</span>
                     </button>
                   ))}
                 </div>
@@ -265,7 +265,7 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
 
               {/* Attachment Style */}
               <div>
-                <label className="text-sm font-medium text-white mb-3 block">Attachment Style</label>
+                <label className="text-sm font-medium text-foreground mb-3 block">Attachment Style</label>
                 <div className="flex flex-wrap gap-2">
                   {options.attachmentStyles.map((style) => (
                     <button
@@ -276,8 +276,8 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
                       )}
                       className={`px-4 py-2 rounded-full text-sm transition-all ${
                         filters.attachmentStyle === style.value
-                          ? "bg-primary text-white"
-                          : "bg-white/5 text-white/70 hover:bg-white/10 border border-white/10"
+                          ? "bg-primary text-foreground"
+                          : "bg-background-tertiary text-foreground-muted hover:bg-background-tertiary border border-card-border"
                       }`}
                     >
                       {style.label}
@@ -289,11 +289,11 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
               {/* City Filter (if available) */}
               {options.cities.length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-white mb-3 block">City</label>
+                  <label className="text-sm font-medium text-foreground mb-3 block">City</label>
                   <select
                     value={filters.city || ""}
                     onChange={(e) => updateFilter("city", e.target.value || null)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary focus:outline-none"
+                    className="w-full px-4 py-3 rounded-xl bg-background-tertiary border border-card-border text-foreground focus:border-primary focus:outline-none"
                   >
                     <option value="">Any city</option>
                     {options.cities.map((city) => (
@@ -305,16 +305,16 @@ export function FilterPanel({ isOpen, onClose, onApply }: FilterPanelProps) {
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-[#0d0c11] border-t border-white/10 p-6 space-y-3">
+            <div className="sticky bottom-0 bg-background border-t border-card-border p-6 space-y-3">
               <button
                 onClick={handleApply}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:opacity-90 transition-opacity"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-foreground font-semibold hover:opacity-90 transition-opacity"
               >
                 Apply Filters
               </button>
               <button
                 onClick={handleReset}
-                className="w-full py-3 text-white/50 hover:text-white transition-colors"
+                className="w-full py-3 text-foreground-muted hover:text-foreground transition-colors"
               >
                 Reset to Default
               </button>

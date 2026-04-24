@@ -75,11 +75,11 @@ export default function ContentManagementPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Content Management</h1>
-          <p className="text-white/60">Manage static pages and email templates</p>
+          <h1 className="text-2xl font-bold text-foreground">Content Management</h1>
+          <p className="text-foreground-muted">Manage static pages and email templates</p>
         </div>
         <button onClick={handleSave} disabled={isSaving} className="btn-primary flex items-center gap-2">
-          {isSaving ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Saving...</> : saved ? <><Save className="w-4 h-4" />Saved!</> : <><Save className="w-4 h-4" />Save Changes</>}
+          {isSaving ? <><span className="w-4 h-4 border-2 border-card-border border-t-white rounded-full animate-spin" />Saving...</> : saved ? <><Save className="w-4 h-4" />Saved!</> : <><Save className="w-4 h-4" />Save Changes</>}
         </button>
       </div>
 
@@ -87,20 +87,20 @@ export default function ContentManagementPage() {
         {/* Sidebar */}
         <div className="lg:col-span-1">
           <div className="glass-card p-4">
-            <h3 className="text-sm font-semibold text-white/60 mb-3">Static Pages</h3>
+            <h3 className="text-sm font-semibold text-foreground-muted mb-3">Static Pages</h3>
             <div className="space-y-1">
               {pages.map((page) => (
                 <button
                   key={page.id}
                   onClick={() => handlePageSelect(page.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    selectedPage === page.id ? "bg-primary/20 text-white" : "text-white/60 hover:bg-white/5 hover:text-white"
+                    selectedPage === page.id ? "bg-primary/20 text-foreground" : "text-foreground-muted hover:bg-background-tertiary hover:text-foreground"
                   }`}
                 >
                   <FileText className="w-4 h-4" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{page.title}</p>
-                    <p className="text-xs text-white/40">{page.lastUpdated}</p>
+                    <p className="text-xs text-foreground-subtle">{page.lastUpdated}</p>
                   </div>
                   <span className={`badge ${page.status === "published" ? "badge-success" : "badge-warning"}`}>{page.status}</span>
                 </button>
@@ -109,17 +109,17 @@ export default function ContentManagementPage() {
           </div>
 
           <div className="glass-card p-4 mt-4">
-            <h3 className="text-sm font-semibold text-white/60 mb-3">Email Templates</h3>
+            <h3 className="text-sm font-semibold text-foreground-muted mb-3">Email Templates</h3>
             <div className="space-y-1">
               {templates.map((template) => (
                 <button
                   key={template.id}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-foreground-muted hover:bg-background-tertiary hover:text-foreground transition-colors"
                 >
                   <FileText className="w-4 h-4" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{template.name}</p>
-                    <p className="text-xs text-white/40 truncate">{template.description}</p>
+                    <p className="text-xs text-foreground-subtle truncate">{template.description}</p>
                   </div>
                 </button>
               ))}
@@ -132,8 +132,8 @@ export default function ContentManagementPage() {
           <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-semibold text-white">{pages.find((p) => p.id === selectedPage)?.title || "Email Template"}</h2>
-                <p className="text-sm text-white/60">Edit content using Markdown</p>
+                <h2 className="text-lg font-semibold text-foreground">{pages.find((p) => p.id === selectedPage)?.title || "Email Template"}</h2>
+                <p className="text-sm text-foreground-muted">Edit content using Markdown</p>
               </div>
               <div className="flex gap-2">
                 <button className="btn-secondary flex items-center gap-2">
@@ -146,13 +146,13 @@ export default function ContentManagementPage() {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full h-[500px] bg-transparent text-white placeholder:text-white/40 p-4 rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none resize-none font-mono text-sm"
+              className="w-full h-[500px] bg-transparent text-foreground placeholder:text-foreground-subtle p-4 rounded-xl border border-card-border focus:border-primary/50 focus:outline-none resize-none font-mono text-sm"
               placeholder="Write your content here using Markdown..."
             />
 
-            <div className="mt-4 p-4 bg-white/5 rounded-xl">
-              <h4 className="text-sm font-medium text-white/60 mb-2">Tips</h4>
-              <ul className="text-sm text-white/40 space-y-1">
+            <div className="mt-4 p-4 bg-background-tertiary rounded-xl">
+              <h4 className="text-sm font-medium text-foreground-muted mb-2">Tips</h4>
+              <ul className="text-sm text-foreground-subtle space-y-1">
                 <li>• Use # for headings, ## for subheadings</li>
                 <li>• Use **text** for bold, *text* for italic</li>
                 <li>• Use - for bullet lists</li>

@@ -47,12 +47,12 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="px-3.5 py-2 text-sm text-white/60 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                  className="px-3.5 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors rounded-lg hover:bg-background-tertiary"
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="flex items-center gap-3 ml-4 pl-4 border-l border-white/10">
+              <div className="flex items-center gap-3 ml-4 pl-4 border-l border-card-border">
                 <Link
                   href="/login"
                   className="btn-ghost text-sm"
@@ -71,7 +71,7 @@ export default function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-white/80 hover:text-white transition-colors"
+              className="md:hidden p-2 text-foreground hover:text-foreground transition-colors"
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
@@ -94,48 +94,48 @@ export default function Navbar() {
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
-        <div className="absolute top-0 right-0 w-80 h-full bg-background-secondary border-l border-white/10 p-6 pt-20 animate-slide-in-right">
+        <div className="absolute top-0 right-0 w-80 h-full bg-background-secondary border-l border-card-border p-6 pt-20 animate-slide-in-right">
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-lg text-white/80 hover:text-white transition-colors py-2.5 rounded-lg hover:bg-white/5"
+                className="text-lg text-foreground hover:text-foreground transition-colors py-2.5 rounded-lg hover:bg-background-tertiary"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <div className="h-px bg-white/10 my-3" />
+            <div className="h-px bg-background-tertiary my-3" />
             <Link
               href="/privacy"
-              className="text-sm text-white/60 hover:text-white transition-colors py-2"
+              className="text-sm text-foreground-muted hover:text-foreground transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-sm text-white/60 hover:text-white transition-colors py-2"
+              className="text-sm text-foreground-muted hover:text-foreground transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Terms of Service
             </Link>
             <Link
               href="/cookies"
-              className="text-sm text-white/60 hover:text-white transition-colors py-2"
+              className="text-sm text-foreground-muted hover:text-foreground transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Cookie Policy
             </Link>
             <a
               href="mailto:hello@lokfeel.com"
-              className="text-sm text-white/60 hover:text-white transition-colors py-2"
+              className="text-sm text-foreground-muted hover:text-foreground transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Contact Us
             </a>
-            <div className="h-px bg-white/10 my-3" />
+            <div className="h-px bg-background-tertiary my-3" />
             <Link
               href="/login"
               className="btn-secondary w-full"

@@ -18,7 +18,7 @@ export function Skeleton({
   height,
   animation = "pulse",
 }: SkeletonProps) {
-  const baseClasses = "bg-white/5";
+  const baseClasses = "bg-background-tertiary";
 
   const variantClasses = {
     text: "rounded h-4",
@@ -150,12 +150,12 @@ export function LoadingScreen({
         transition={{ duration: 1.5, repeat: Infinity }}
         className="space-y-4 text-center"
       >
-        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mx-auto">
           <div className="w-8 h-8 rounded-full bg-primary/50 animate-pulse" />
         </div>
         <div>
-          <p className="text-white/80 font-medium">{title}</p>
-          {subtitle && <p className="text-white/40 text-sm mt-1">{subtitle}</p>}
+          <p className="text-foreground font-medium">{title}</p>
+          {subtitle && <p className="text-foreground-subtle text-sm mt-1">{subtitle}</p>}
         </div>
       </motion.div>
     </div>
@@ -166,7 +166,7 @@ export function LoadingScreen({
 export function InlineLoading({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/60 animate-spin" />
+      <div className="w-4 h-4 rounded-full border-2 border-card-border border-t-white/60 animate-spin" />
     </div>
   );
 }
@@ -175,7 +175,7 @@ export function InlineLoading({ className = "" }: { className?: string }) {
 export function ButtonLoading({ text = "Loading..." }: { text?: string }) {
   return (
     <span className="flex items-center gap-2">
-      <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/60 animate-spin" />
+      <div className="w-4 h-4 rounded-full border-2 border-card-border border-t-white/60 animate-spin" />
       {text}
     </span>
   );

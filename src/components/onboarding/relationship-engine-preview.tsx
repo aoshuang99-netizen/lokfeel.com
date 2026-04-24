@@ -393,7 +393,7 @@ export function RelationshipEnginePreview({
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-white truncate">
+              <h4 className="font-semibold text-foreground truncate">
                 {currentMatch.name}, {currentMatch.age}
               </h4>
               <p className="text-xs opacity-60 truncate">{currentMatch.location}</p>
@@ -453,7 +453,7 @@ export function RelationshipEnginePreview({
               className="w-8 h-8 rounded-full object-cover"
             />
             <div className="flex-1 text-left">
-              <span className="text-sm font-medium text-white">{match.name}</span>
+              <span className="text-sm font-medium text-foreground">{match.name}</span>
               <span className="text-xs opacity-50 ml-2">{match.age}</span>
             </div>
             <div 
@@ -470,17 +470,17 @@ export function RelationshipEnginePreview({
       </div>
 
       {/* Engine Stats */}
-      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10">
+      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-card-border">
         <div className="text-center">
-          <p className="text-lg font-bold text-white">7</p>
+          <p className="text-lg font-bold text-foreground">7</p>
           <p className="text-[10px] opacity-50">Dimensions</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-bold text-white">{Math.round(topMatches.reduce((a, m) => a + m.overallScore, 0) / topMatches.length)}%</p>
+          <p className="text-lg font-bold text-foreground">{Math.round(topMatches.reduce((a, m) => a + m.overallScore, 0) / topMatches.length)}%</p>
           <p className="text-[10px] opacity-50">Avg Match</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-bold text-white">{topMatches.filter(m => m.overallScore >= 75).length}</p>
+          <p className="text-lg font-bold text-foreground">{topMatches.filter(m => m.overallScore >= 75).length}</p>
           <p className="text-[10px] opacity-50">High Match</p>
         </div>
       </div>

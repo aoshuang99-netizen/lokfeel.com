@@ -86,7 +86,7 @@ function getActivityIcon(type: Activity["type"]) {
     case "match":
       return <Sparkles className="w-4 h-4 text-primary" />;
     case "view":
-      return <Eye className="w-4 h-4 text-white/40" />;
+      return <Eye className="w-4 h-4 text-foreground-subtle" />;
     case "message":
       return <MessageCircle className="w-4 h-4 text-primary" />;
     default:
@@ -213,10 +213,10 @@ export default function ActivityPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {userGender === "female" ? "Inbox" : "Activity"}
           </h1>
-          <p className="text-white/50 text-sm mt-1">
+          <p className="text-foreground-muted text-sm mt-1">
             {userGender === "female"
               ? "Review and respond to connection requests"
               : "Track your likes, matches, and views"}
@@ -224,9 +224,9 @@ export default function ActivityPage() {
         </div>
         <button
           onClick={fetchActivities}
-          className="p-2 rounded-xl hover:bg-white/5 transition-colors"
+          className="p-2 rounded-xl hover:bg-background-tertiary transition-colors"
         >
-          <RefreshCw className="w-4 h-4 text-white/50" />
+          <RefreshCw className="w-4 h-4 text-foreground-muted" />
         </button>
       </div>
 
@@ -238,8 +238,8 @@ export default function ActivityPage() {
           transition={{ delay: 0.1 }}
           className="glass-card p-4 text-center"
         >
-          <p className="text-xl font-bold text-white">{stats.likes}</p>
-          <p className="text-[11px] text-white/50">New Likes</p>
+          <p className="text-xl font-bold text-foreground">{stats.likes}</p>
+          <p className="text-[11px] text-foreground-muted">New Likes</p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -248,7 +248,7 @@ export default function ActivityPage() {
           className="glass-card p-4 text-center"
         >
           <p className="text-xl font-bold text-primary">{stats.matches}</p>
-          <p className="text-[11px] text-white/50">Matches</p>
+          <p className="text-[11px] text-foreground-muted">Matches</p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -256,8 +256,8 @@ export default function ActivityPage() {
           transition={{ delay: 0.2 }}
           className="glass-card p-4 text-center"
         >
-          <p className="text-xl font-bold text-white">{stats.unread}</p>
-          <p className="text-[11px] text-white/50">Unread</p>
+          <p className="text-xl font-bold text-foreground">{stats.unread}</p>
+          <p className="text-[11px] text-foreground-muted">Unread</p>
         </motion.div>
       </div>
 
@@ -275,7 +275,7 @@ export default function ActivityPage() {
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
                 isActive
                   ? "bg-primary/20 text-primary"
-                  : "text-white/50 hover:text-white/70 hover:bg-white/5"
+                  : "text-foreground-muted hover:text-foreground-muted hover:bg-background-tertiary"
               }`}
               style={{ transitionTimingFunction: EASING }}
             >
@@ -284,7 +284,7 @@ export default function ActivityPage() {
               {count > 0 && (
                 <span
                   className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center ${
-                    isActive ? "bg-primary text-white" : "bg-white/10 text-white/50"
+                    isActive ? "bg-primary text-foreground" : "bg-background-tertiary text-foreground-muted"
                   }`}
                 >
                   {count}
@@ -327,7 +327,7 @@ export default function ActivityPage() {
                 className={`rounded-xl p-4 transition-colors ${
                   !activity.read
                     ? "bg-primary/5 border border-primary/20"
-                    : "bg-white/[0.03] border border-white/5"
+                    : "bg-white/[0.03] border border-card-border"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -336,7 +336,7 @@ export default function ActivityPage() {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden">
                       {(() => {
                         const kind = getAvatarKind(activity.user.avatar);
-                        if (kind === 'none') return <User className="w-6 h-6 text-white/30" />;
+                        if (kind === 'none') return <User className="w-6 h-6 text-foreground-subtle" />;
                         if (kind === 'emoji') {
                           const parsed = parseEmojiAvatar(activity.user.avatar);
                           return <span className="text-xl">{parsed?.emoji}</span>;
@@ -352,7 +352,7 @@ export default function ActivityPage() {
                       })()}
                     </div>
                     {/* Activity type icon */}
-                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#13121a] border border-white/10 flex items-center justify-center">
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-background-secondary border border-card-border flex items-center justify-center">
                       {getActivityIcon(activity.type)}
                     </div>
                   </div>
@@ -360,7 +360,7 @@ export default function ActivityPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-white truncate text-sm">
+                      <h3 className="font-semibold text-foreground truncate text-sm">
                         {activity.user.name}, {activity.user.age}
                       </h3>
                       {activity.matchScore && (
@@ -375,8 +375,8 @@ export default function ActivityPage() {
                         <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       )}
                     </div>
-                    <p className="text-xs text-white/50">{getActivityText(activity)}</p>
-                    <p className="text-[10px] text-white/30 mt-0.5 flex items-center gap-1">
+                    <p className="text-xs text-foreground-muted">{getActivityText(activity)}</p>
+                    <p className="text-[10px] text-foreground-subtle mt-0.5 flex items-center gap-1">
                       <Clock className="w-2.5 h-2.5" />
                       {formatTime(activity.timestamp)}
                     </p>
@@ -390,13 +390,13 @@ export default function ActivityPage() {
                       <>
                         <button
                           onClick={() => handleRequest(activity.id, "decline")}
-                          className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                          className="p-2 rounded-full bg-background-tertiary hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
                         >
                           <X className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleRequest(activity.id, "accept")}
-                          className="p-2 rounded-full bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90 transition-opacity"
+                          className="p-2 rounded-full bg-gradient-to-r from-primary to-secondary text-foreground hover:opacity-90 transition-opacity"
                         >
                           <Check className="w-4 h-4" />
                         </button>
@@ -411,7 +411,7 @@ export default function ActivityPage() {
                     ) : (
                       <Link
                         href="/dashboard/matches"
-                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+                        className="p-2 rounded-lg bg-background-tertiary hover:bg-background-tertiary text-foreground-subtle hover:text-foreground transition-colors"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </Link>
@@ -421,12 +421,12 @@ export default function ActivityPage() {
 
                 {/* Request status */}
                 {activity.type === "request" && activity.requestStatus !== "pending" && (
-                  <div className="mt-3 pt-3 border-t border-white/5">
+                  <div className="mt-3 pt-3 border-t border-card-border">
                     <span
                       className={`text-xs ${
                         activity.requestStatus === "accepted"
                           ? "text-green-400"
-                          : "text-white/40"
+                          : "text-foreground-subtle"
                       }`}
                     >
                       {activity.requestStatus === "accepted" ? "✓ Accepted" : "✗ Declined"}
@@ -450,8 +450,8 @@ export default function ActivityPage() {
           <div className="flex items-start gap-3">
             <Zap className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-white text-sm">You&apos;re in control</h4>
-              <p className="text-xs text-white/50 mt-1">
+              <h4 className="font-medium text-foreground text-sm">You&apos;re in control</h4>
+              <p className="text-xs text-foreground-muted mt-1">
                 Only you can initiate conversations. Review connection requests and decide who can message you.
               </p>
             </div>

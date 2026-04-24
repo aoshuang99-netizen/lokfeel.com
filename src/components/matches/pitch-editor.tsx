@@ -78,14 +78,14 @@ const CharacterCounter = ({ current, min, max }: { current: number; min: number;
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
         <motion.div
           className={cn(
             "h-full rounded-full transition-colors",
             isValid 
               ? isNearLimit 
                 ? "bg-gradient-to-r from-[#f59e0b] to-[#ef4444]" 
-                : "bg-gradient-to-r from-[#c94d7a] to-[#818cf8]"
+                : "bg-gradient-to-r from-amber-600 to-rose-500"
               : "bg-white/30"
           )}
           initial={{ width: 0 }}
@@ -99,9 +99,9 @@ const CharacterCounter = ({ current, min, max }: { current: number; min: number;
           isValid 
             ? isNearLimit 
               ? "text-[#f59e0b]" 
-              : "text-white/60"
+              : "text-foreground-muted"
             : current < min 
-              ? "text-white/40" 
+              ? "text-foreground-subtle" 
               : "text-[#ef4444]"
         )}
       >
@@ -127,8 +127,8 @@ const ToneButton = ({
       className={cn(
         "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
         selected
-          ? "bg-gradient-to-r from-[#c94d7a] to-[#818cf8] text-white shadow-lg shadow-[#c94d7a]/25"
-          : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80 border border-white/10"
+          ? "bg-gradient-to-r from-amber-600 to-rose-500 text-foreground shadow-lg shadow-amber-600/25"
+          : "bg-background-tertiary text-foreground-muted hover:bg-background-tertiary hover:text-foreground border border-card-border"
       )}
     >
       <Icon className="w-3.5 h-3.5" />
@@ -153,21 +153,21 @@ const AISuggestionCard = ({
       transition={{ delay: index * 0.1, duration: 0.3 }}
       className={cn(
         "group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer",
-        "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#c94d7a]/30"
+        "bg-background-tertiary border-card-border hover:bg-background-tertiary hover:border-amber-500/30"
       )}
       onClick={() => onUse(suggestion.text)}
     >
-      <p className="text-sm text-white/80 leading-relaxed mb-3 line-clamp-3">
+      <p className="text-sm text-foreground leading-relaxed mb-3 line-clamp-3">
         {suggestion.text}
       </p>
       <div className="flex items-center justify-between">
-        <span className="text-xs text-white/40 capitalize">{suggestion.tone} tone</span>
+        <span className="text-xs text-foreground-subtle capitalize">{suggestion.tone} tone</span>
         <button
           onClick={(e) => {
             e.stopPropagation()
             onUse(suggestion.text)
           }}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-[#c94d7a] bg-[#c94d7a]/10 hover:bg-[#c94d7a]/20 transition-colors"
+          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition-colors"
         >
           <Check className="w-3 h-3" />
           Use This
@@ -180,15 +180,15 @@ const AISuggestionCard = ({
 const ShimmerLoader = () => (
   <div className="space-y-3">
     {[1, 2, 3].map((i) => (
-      <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
+      <div key={i} className="p-4 rounded-xl bg-background-tertiary border border-card-border">
         <div className="space-y-2">
-          <div className="h-3 bg-white/10 rounded animate-shimmer w-full" />
-          <div className="h-3 bg-white/10 rounded animate-shimmer w-4/5" />
-          <div className="h-3 bg-white/10 rounded animate-shimmer w-2/3" />
+          <div className="h-3 bg-background-tertiary rounded animate-shimmer w-full" />
+          <div className="h-3 bg-background-tertiary rounded animate-shimmer w-4/5" />
+          <div className="h-3 bg-background-tertiary rounded animate-shimmer w-2/3" />
         </div>
         <div className="mt-3 flex justify-between items-center">
-          <div className="h-3 bg-white/10 rounded animate-shimmer w-16" />
-          <div className="h-6 bg-white/10 rounded animate-shimmer w-20" />
+          <div className="h-3 bg-background-tertiary rounded animate-shimmer w-16" />
+          <div className="h-6 bg-background-tertiary rounded animate-shimmer w-20" />
         </div>
       </div>
     ))}
@@ -430,16 +430,16 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className={cn(
           "relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl",
-          "bg-[#13121a]/95 backdrop-blur-xl border border-white/10 shadow-2xl"
+          "bg-background-secondary/95 backdrop-blur-xl border border-card-border shadow-2xl"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-card-border">
           <div>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold text-foreground">
               Write to <span className="text-gradient">{targetUser.name}</span>
             </h2>
-            <p className="text-sm text-white/50">
+            <p className="text-sm text-foreground-muted">
               {targetUser.age} years old
               {targetUser.interests && targetUser.interests.length > 0 && (
                 <span className="ml-2">• {targetUser.interests.slice(0, 3).join(', ')}</span>
@@ -448,7 +448,7 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
           </div>
           <button
             onClick={onCancel}
-            className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -473,7 +473,7 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
 
           {/* Tone Selector */}
           <div className="space-y-3">
-            <label className="text-sm font-medium text-white/70">Choose your tone</label>
+            <label className="text-sm font-medium text-foreground-muted">Choose your tone</label>
             <div className="flex flex-wrap gap-2">
               {TONE_OPTIONS.map((tone) => (
                 <ToneButton
@@ -493,8 +493,8 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300",
                 showAISuggestions
-                  ? "bg-gradient-to-r from-[#c94d7a] to-[#818cf8] text-white shadow-lg shadow-[#c94d7a]/25"
-                  : "bg-gradient-to-r from-[#c94d7a]/20 to-[#818cf8]/20 text-white/80 hover:from-[#c94d7a]/30 hover:to-[#818cf8]/30 border border-[#c94d7a]/30"
+                  ? "bg-gradient-to-r from-amber-600 to-rose-500 text-foreground shadow-lg shadow-amber-600/25"
+                  : "bg-gradient-to-r from-amber-600/20 to-rose-500/20 text-foreground hover:from-amber-600/30 hover:to-rose-500/30 border border-amber-500/30"
               )}
             >
               <Sparkles className={cn("w-4 h-4", showAISuggestions && "animate-pulse")} />
@@ -505,7 +505,7 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
               <button
                 onClick={generateSuggestions}
                 disabled={isGeneratingAI}
-                className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white/70 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 text-sm text-foreground-muted hover:text-foreground-muted transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={cn("w-3.5 h-3.5", isGeneratingAI && "animate-spin")} />
                 Regenerate
@@ -523,10 +523,10 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
               >
-                <div className="p-4 rounded-xl bg-gradient-to-br from-[#c94d7a]/5 to-[#818cf8]/5 border border-[#c94d7a]/20">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-600/5 to-rose-500/5 border border-amber-500/20">
                   <div className="flex items-center gap-2 mb-4">
-                    <Wand2 className="w-4 h-4 text-[#c94d7a]" />
-                    <span className="text-sm font-medium text-white/80">AI-Generated Suggestions</span>
+                    <Wand2 className="w-4 h-4 text-amber-400" />
+                    <span className="text-sm font-medium text-foreground">AI-Generated Suggestions</span>
                   </div>
 
                   {isGeneratingAI ? (
@@ -551,8 +551,8 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
           {/* Text Area */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-white/70">Your message</label>
-              <span className="text-xs text-white/40">
+              <label className="text-sm font-medium text-foreground-muted">Your message</label>
+              <span className="text-xs text-foreground-subtle">
                 Min {MIN_CHARS} characters
               </span>
             </div>
@@ -564,8 +564,8 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
                 placeholder={placeholder}
                 className={cn(
                   "w-full min-h-[120px] max-h-[200px] p-4 rounded-xl resize-none",
-                  "bg-white/5 border border-white/10 text-white placeholder:text-white/30",
-                  "focus:outline-none focus:border-[#c94d7a]/50 focus:ring-1 focus:ring-[#c94d7a]/25",
+                  "bg-background-tertiary border border-card-border text-foreground placeholder:text-foreground-subtle",
+                  "focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/25",
                   "transition-all duration-200"
                 )}
               />
@@ -585,26 +585,26 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
             className={cn(
               "flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all duration-200",
               addGift
-                ? "bg-gradient-to-r from-[#c94d7a]/10 to-[#818cf8]/10 border-[#c94d7a]/30"
-                : "bg-white/5 border-white/10 hover:bg-white/8"
+                ? "bg-gradient-to-r from-amber-600/10 to-rose-500/10 border-amber-500/30"
+                : "bg-background-tertiary border-card-border hover:bg-white/8"
             )}
           >
             <div
               className={cn(
                 "flex items-center justify-center w-10 h-10 rounded-lg transition-colors",
-                addGift ? "bg-[#c94d7a]/20" : "bg-white/10"
+                addGift ? "bg-amber-500/20" : "bg-background-tertiary"
               )}
             >
-              <Gift className={cn("w-5 h-5", addGift ? "text-[#c94d7a]" : "text-white/50")} />
+              <Gift className={cn("w-5 h-5", addGift ? "text-amber-400" : "text-foreground-muted")} />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-white">Add Sincerity Gift</span>
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#c94d7a]/20 text-[#c94d7a]">
+                <span className="font-medium text-foreground">Add Sincerity Gift</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400">
                   +25 points
                 </span>
               </div>
-              <p className="text-sm text-white/50">
+              <p className="text-sm text-foreground-muted">
                 Show extra sincerity with a gift to stand out from other matches
               </p>
             </div>
@@ -612,20 +612,20 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
               className={cn(
                 "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
                 addGift
-                  ? "bg-[#c94d7a] border-[#c94d7a]"
-                  : "border-white/30"
+                  ? "bg-amber-600 border-amber-600"
+                  : "border-card-border"
               )}
             >
-              {addGift && <Check className="w-3.5 h-3.5 text-white" />}
+              {addGift && <Check className="w-3.5 h-3.5 text-foreground" />}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-white/10 bg-white/5">
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-card-border bg-background-tertiary">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-medium text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
           >
             Cancel
           </button>

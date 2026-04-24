@@ -75,15 +75,15 @@ export function ErrorFallback({
       </div>
 
       {/* Title */}
-      <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
+      <h2 className="text-2xl font-bold text-foreground mb-2">{title}</h2>
 
       {/* Description */}
-      <p className="text-white/60 max-w-md mb-6">{description}</p>
+      <p className="text-foreground-muted max-w-md mb-6">{description}</p>
 
       {/* Error details (dev only) */}
       {process.env.NODE_ENV === "development" && error && (
-        <div className="w-full max-w-lg mb-6 p-4 rounded-xl bg-white/5 border border-white/10 text-left overflow-auto">
-          <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Error Details</p>
+        <div className="w-full max-w-lg mb-6 p-4 rounded-xl bg-background-tertiary border border-card-border text-left overflow-auto">
+          <p className="text-xs text-foreground-subtle uppercase tracking-wider mb-2">Error Details</p>
           <pre className="text-xs text-error/80 whitespace-pre-wrap break-words">
             {error.message}
           </pre>
@@ -168,8 +168,8 @@ export function NetworkError({
       <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
         <AlertCircle className="w-8 h-8 text-warning" />
       </div>
-      <h3 className="text-lg font-semibold text-white mb-2">Connection Issue</h3>
-      <p className="text-white/60 text-sm mb-4">
+      <h3 className="text-lg font-semibold text-foreground mb-2">Connection Issue</h3>
+      <p className="text-foreground-muted text-sm mb-4">
         Unable to connect to the server. Please check your internet connection.
       </p>
       {onRetry && (
@@ -202,8 +202,8 @@ export function AuthError({ message = "Please sign in to continue" }: { message?
       <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
         <AlertCircle className="w-10 h-10 text-primary" />
       </div>
-      <h2 className="text-2xl font-bold text-white mb-2">Authentication Required</h2>
-      <p className="text-white/60 max-w-md mb-6">{message}</p>
+      <h2 className="text-2xl font-bold text-foreground mb-2">Authentication Required</h2>
+      <p className="text-foreground-muted max-w-md mb-6">{message}</p>
       <Link href="/login" className="btn-primary">
         Sign In
       </Link>

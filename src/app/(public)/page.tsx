@@ -69,7 +69,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[#0d0c11]" />
+          <div className="absolute inset-0 bg-background" />
           <div className="absolute inset-0 opacity-30 animate-ken-burns" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=1920&h=1080&fit=crop&q=80')", backgroundSize: "cover", backgroundPosition: "center" }} />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0d0c11] via-[#0d0c11]/80 to-[#0d0c11]/50" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0d0c11]/60 via-transparent to-[#0d0c11]/60" />
@@ -82,16 +82,16 @@ export default function LandingPage() {
           <div className="animate-slide-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm text-white/80">Relationship Matching Reimagined</span>
+              <span className="text-sm text-foreground">Relationship Matching Reimagined</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              <span className="text-white">Real Matches.</span><br />
+              <span className="text-foreground">Real Matches.</span><br />
               <span className="text-gradient">Real Connection.</span><br />
-              <span className="text-white/60">No Swiping.</span>
+              <span className="text-foreground-muted">No Swiping.</span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10">
+            <p className="text-lg sm:text-xl text-foreground-muted max-w-2xl mx-auto mb-10">
               Tired of endless swiping? LokFeel delivers 5 curated relationship matches per week with explanations of why you connect. Built for those who want quality over quantity.
             </p>
 
@@ -104,7 +104,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="mt-12 flex items-center justify-center gap-8 text-white/40 text-sm">
+            <div className="mt-12 flex items-center justify-center gap-8 text-foreground-subtle text-sm">
               <div className="flex items-center gap-2"><Users className="w-4 h-4" /><span>10,000+ waiting</span></div>
               <div className="flex items-center gap-2"><Heart className="w-4 h-4 text-primary" /><span>500+ successful matches</span></div>
             </div>
@@ -112,7 +112,7 @@ export default function LandingPage() {
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <ChevronRight className="w-6 h-6 text-white/40 rotate-90" />
+          <ChevronRight className="w-6 h-6 text-foreground-subtle rotate-90" />
         </div>
       </section>
 
@@ -122,8 +122,8 @@ export default function LandingPage() {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Meet Your <span className="text-gradient">Matches</span></h2>
-            <p className="text-white/60 max-w-xl mx-auto">Our algorithm considers emotional compatibility, not just shared interests</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Meet Your <span className="text-gradient">Matches</span></h2>
+            <p className="text-foreground-muted max-w-xl mx-auto">Our algorithm considers emotional compatibility, not just shared interests</p>
           </div>
 
           <div className="relative overflow-hidden">
@@ -135,12 +135,12 @@ export default function LandingPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-white font-semibold">{user.name}, {user.age}</span>
+                        <span className="text-foreground font-semibold">{user.name}, {user.age}</span>
                         <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-medium ${user.sexuality === 'straight' ? 'bg-secondary/30 text-secondary' : 'bg-primary/30 text-primary'}`}>{user.sexuality}</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {user.traits.map((trait, i) => (
-                          <span key={i} className="text-xs text-white/60 bg-white/10 px-2 py-0.5 rounded">{trait}</span>
+                          <span key={i} className="text-xs text-foreground-muted bg-background-tertiary px-2 py-0.5 rounded">{trait}</span>
                         ))}
                       </div>
                     </div>
@@ -156,8 +156,8 @@ export default function LandingPage() {
       <section className="relative py-20 lg:py-28 bg-background-secondary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Why <span className="text-gradient">Nexus</span>?</h2>
-            <p className="text-white/60 max-w-2xl mx-auto">Dating apps were designed for volume. We were designed for connection.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Why <span className="text-gradient">Nexus</span>?</h2>
+            <p className="text-foreground-muted max-w-2xl mx-auto">Dating apps were designed for volume. We were designed for connection.</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -169,8 +169,8 @@ export default function LandingPage() {
                   {feature.icon === 'shield' && <Shield className="w-6 h-6 text-primary" />}
                   {feature.icon === 'target' && <ChevronRight className="w-6 h-6 text-primary" />}
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-white/60 text-sm">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
+                <p className="text-foreground-muted text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -183,8 +183,8 @@ export default function LandingPage() {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">How It <span className="text-gradient">Works</span></h2>
-            <p className="text-white/60 max-w-xl mx-auto">Three simple steps to find meaningful connection</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">How It <span className="text-gradient">Works</span></h2>
+            <p className="text-foreground-muted max-w-xl mx-auto">Three simple steps to find meaningful connection</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -196,10 +196,10 @@ export default function LandingPage() {
               <div key={idx} className="relative">
                 <div className="glass-card p-8 h-full">
                   <span className="text-5xl font-bold text-gradient/20 mb-4 block">{item.step}</span>
-                  <h3 className="text-xl font-semibold text-white mb-3">{item.title}</h3>
-                  <p className="text-white/60">{item.description}</p>
+                  <h3 className="text-xl font-semibold text-foreground mb-3">{item.title}</h3>
+                  <p className="text-foreground-muted">{item.description}</p>
                 </div>
-                {idx < 2 && <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2"><ChevronRight className="w-8 h-8 text-white/20" /></div>}
+                {idx < 2 && <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2"><ChevronRight className="w-8 h-8 text-foreground-faint" /></div>}
               </div>
             ))}
           </div>
@@ -210,16 +210,16 @@ export default function LandingPage() {
       <section className="relative py-20 lg:py-28 bg-background-secondary/30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">The <span className="text-gradient">Difference</span></h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">The <span className="text-gradient">Difference</span></h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
             <div className="glass-card p-8 opacity-60">
-              <h3 className="text-xl font-semibold text-white/40 mb-6">Traditional Dating Apps</h3>
+              <h3 className="text-xl font-semibold text-foreground-subtle mb-6">Traditional Dating Apps</h3>
               <ul className="space-y-4">
                 {["Endless swiping, decision fatigue", "Surface-level matching on photos", "No understanding of why you match", "High volume, low quality", "Game-playing and misrepresentation"].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-white/40">
-                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="w-2 h-2 rounded-full bg-white/20" /></span>
+                  <li key={idx} className="flex items-start gap-3 text-foreground-subtle">
+                    <span className="w-5 h-5 rounded-full bg-background-tertiary flex items-center justify-center flex-shrink-0 mt-0.5"><span className="w-2 h-2 rounded-full bg-background-tertiary" /></span>
                     {item}
                   </li>
                 ))}
@@ -227,10 +227,10 @@ export default function LandingPage() {
             </div>
 
             <div className="glass-card p-8 border-primary/30">
-              <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2"><Heart className="w-5 h-5 text-primary" /> Nexus</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2"><Heart className="w-5 h-5 text-primary" /> Nexus</h3>
               <ul className="space-y-4">
                 {["Curated weekly matches, no overwhelm", "Deep matching on relationship needs", "Full explanation of compatibility", "High quality, intentional connections", "Transparent and authentic experience"].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-white">
+                  <li key={idx} className="flex items-start gap-3 text-foreground">
                     <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5"><Check className="w-3 h-3 text-primary" /></span>
                     {item}
                   </li>
@@ -247,7 +247,7 @@ export default function LandingPage() {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">What Our <span className="text-gradient">Members</span> Say</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">What Our <span className="text-gradient">Members</span> Say</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -256,8 +256,8 @@ export default function LandingPage() {
                 <div className="flex gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (<Star key={i} className="w-4 h-4 fill-primary text-primary" />))}
                 </div>
-                <p className="text-white/80 mb-4 italic">"{testimonial.quote}"</p>
-                <div><p className="font-semibold text-white">{testimonial.name}</p><p className="text-sm text-white/40">{testimonial.role}</p></div>
+                <p className="text-foreground mb-4 italic">"{testimonial.quote}"</p>
+                <div><p className="font-semibold text-foreground">{testimonial.name}</p><p className="text-sm text-foreground-subtle">{testimonial.role}</p></div>
               </div>
             ))}
           </div>
@@ -271,8 +271,8 @@ export default function LandingPage() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <div className="glass-card p-10">
             <Zap className="w-12 h-12 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Join the <span className="text-gradient">Waitlist</span></h2>
-            <p className="text-white/60 mb-8">Be among the first to experience relationship matching reimagined. We launch in early 2026.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Join the <span className="text-gradient">Waitlist</span></h2>
+            <p className="text-foreground-muted mb-8">Be among the first to experience relationship matching reimagined. We launch in early 2026.</p>
 
             {!isSubmitted ? (
               <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-3">
@@ -282,7 +282,7 @@ export default function LandingPage() {
             ) : (
               <div className="flex items-center justify-center gap-2 text-success"><Check className="w-5 h-5" /><span className="font-medium">You're on the list!</span></div>
             )}
-            <p className="text-xs text-white/40 mt-4">No spam, ever. Unsubscribe anytime.</p>
+            <p className="text-xs text-foreground-subtle mt-4">No spam, ever. Unsubscribe anytime.</p>
           </div>
         </div>
       </section>

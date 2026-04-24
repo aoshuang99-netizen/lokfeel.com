@@ -291,8 +291,8 @@ export default function SettingsPage() {
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
-        <p className="text-white/60">Manage your profile and preferences</p>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <p className="text-foreground-muted">Manage your profile and preferences</p>
       </div>
 
       {/* Error */}
@@ -304,15 +304,15 @@ export default function SettingsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-white/10 overflow-x-auto">
+      <div className="flex gap-2 border-b border-card-border overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? "border-primary text-white"
-                : "border-transparent text-white/60 hover:text-white"
+                ? "border-primary text-foreground"
+                : "border-transparent text-foreground-muted hover:text-foreground"
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -326,11 +326,11 @@ export default function SettingsPage() {
         <div className="space-y-6">
           {/* Basic Info */}
           <div className="glass-card p-6 space-y-6">
-            <h2 className="text-lg font-semibold text-white">Basic Information</h2>
+            <h2 className="text-lg font-semibold text-foreground">Basic Information</h2>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Display Name</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Display Name</label>
                 <input
                   type="text"
                   value={formData.displayName}
@@ -340,7 +340,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Age</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Age</label>
                 <input
                   type="number"
                   value={formData.age}
@@ -353,7 +353,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Bio</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Bio</label>
               <textarea
                 value={formData.bio}
                 onChange={(e) => handleChange("bio", e.target.value)}
@@ -361,12 +361,12 @@ export default function SettingsPage() {
                 placeholder="Tell others about yourself..."
                 maxLength={500}
               />
-              <p className="text-xs text-white/40 mt-1">{formData.bio?.length || 0}/500</p>
+              <p className="text-xs text-foreground-subtle mt-1">{formData.bio?.length || 0}/500</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   <MapPin className="w-4 h-4 inline mr-1" />
                   City
                 </label>
@@ -379,7 +379,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Country</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Country</label>
                 <select
                   value={formData.country}
                   onChange={(e) => handleChange("country", e.target.value)}
@@ -400,11 +400,11 @@ export default function SettingsPage() {
 
           {/* Professional Info */}
           <div className="glass-card p-6 space-y-6">
-            <h2 className="text-lg font-semibold text-white">Professional Information</h2>
+            <h2 className="text-lg font-semibold text-foreground">Professional Information</h2>
 
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   <Briefcase className="w-4 h-4 inline mr-1" />
                   Occupation
                 </label>
@@ -417,7 +417,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   <Building2 className="w-4 h-4 inline mr-1" />
                   Company
                 </label>
@@ -430,7 +430,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   <Factory className="w-4 h-4 inline mr-1" />
                   Industry
                 </label>
@@ -449,16 +449,16 @@ export default function SettingsPage() {
           <div className="glass-card p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Tag className="w-5 h-5 text-primary" />
                   Your Tags
                 </h2>
-                <p className="text-sm text-white/60 mt-1">
+                <p className="text-sm text-foreground-muted mt-1">
                   Select up to 5 tags that describe you. These help us find better matches.
                 </p>
               </div>
               <span className={`text-sm font-medium ${
-                formData.selectedTags.length >= 5 ? 'text-amber-400' : 'text-white/60'
+                formData.selectedTags.length >= 5 ? 'text-amber-400' : 'text-foreground-muted'
               }`}>
                 {formData.selectedTags.length}/5
               </span>
@@ -504,7 +504,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               {['relationship', 'orientation', 'interest'].map((category) => (
                 <div key={category}>
-                  <h3 className="text-sm font-medium text-white/70 mb-3 uppercase tracking-wide">
+                  <h3 className="text-sm font-medium text-foreground-muted mb-3 uppercase tracking-wide">
                     {CATEGORY_LABELS[category].label}
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -521,8 +521,8 @@ export default function SettingsPage() {
                             title={tag.description}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all ${
                               isDisabled
-                                ? 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
-                                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20'
+                                ? 'bg-background-tertiary border-card-border text-foreground-subtle cursor-not-allowed'
+                                : 'bg-background-tertiary border-card-border text-foreground-muted hover:bg-background-tertiary hover:border-card-border'
                             }`}
                           >
                             <Icon className="w-3.5 h-3.5" />
@@ -541,11 +541,11 @@ export default function SettingsPage() {
       {/* Matching Preferences Tab */}
       {activeTab === "preferences" && (
         <div className="glass-card p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-white">Matching Preferences</h2>
+          <h2 className="text-lg font-semibold text-foreground">Matching Preferences</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Preferred Age Range</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Preferred Age Range</label>
               <div className="flex items-center gap-3">
                 <input
                   type="number"
@@ -555,7 +555,7 @@ export default function SettingsPage() {
                   min={18}
                   max={100}
                 />
-                <span className="text-white/60">to</span>
+                <span className="text-foreground-muted">to</span>
                 <input
                   type="number"
                   value={formData.preferredAgeMax}
@@ -568,7 +568,7 @@ export default function SettingsPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Preferred Gender</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Preferred Gender</label>
               <select
                 value={formData.preferredGender}
                 onChange={(e) => handleChange("preferredGender", e.target.value)}
@@ -583,7 +583,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Maximum Distance: {formData.preferredDistance} miles
             </label>
             <input
@@ -595,7 +595,7 @@ export default function SettingsPage() {
               max={500}
               step={5}
             />
-            <div className="flex justify-between text-xs text-white/40 mt-1">
+            <div className="flex justify-between text-xs text-foreground-subtle mt-1">
               <span>5 miles</span>
               <span>500 miles</span>
             </div>
@@ -606,7 +606,7 @@ export default function SettingsPage() {
       {/* Notifications Tab */}
       {activeTab === "notifications" && (
         <div className="glass-card p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-white">Notification Preferences</h2>
+          <h2 className="text-lg font-semibold text-foreground">Notification Preferences</h2>
 
           <div className="space-y-4">
             {[
@@ -616,16 +616,16 @@ export default function SettingsPage() {
               { key: 'messageNotifications', label: 'Messages', desc: 'Get notified for new messages' },
               { key: 'marketingEmails', label: 'Marketing Emails', desc: 'Updates, tips, and special offers' },
             ].map((item) => (
-              <label key={item.key} className="flex items-center justify-between p-4 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+              <label key={item.key} className="flex items-center justify-between p-4 rounded-xl bg-background-tertiary cursor-pointer hover:bg-background-tertiary transition-colors">
                 <div>
-                  <p className="font-medium text-white">{item.label}</p>
-                  <p className="text-sm text-white/60">{item.desc}</p>
+                  <p className="font-medium text-foreground">{item.label}</p>
+                  <p className="text-sm text-foreground-muted">{item.desc}</p>
                 </div>
                 <input
                   type="checkbox"
                   checked={formData[item.key as keyof typeof formData] as boolean}
                   onChange={(e) => handleChange(item.key, e.target.checked)}
-                  className="w-5 h-5 rounded border-white/20 bg-white/5 text-primary accent-primary"
+                  className="w-5 h-5 rounded border-card-border bg-background-tertiary text-primary accent-primary"
                 />
               </label>
             ))}
@@ -637,11 +637,11 @@ export default function SettingsPage() {
       {activeTab === "privacy" && (
         <div className="space-y-6">
           <div className="glass-card p-6 space-y-6">
-            <h2 className="text-lg font-semibold text-white">Privacy Settings</h2>
+            <h2 className="text-lg font-semibold text-foreground">Privacy Settings</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Profile Visibility</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Profile Visibility</label>
                 <select
                   value={formData.profileVisibility}
                   onChange={(e) => handleChange("profileVisibility", e.target.value)}
@@ -658,16 +658,16 @@ export default function SettingsPage() {
                 { key: 'readReceipts', label: 'Read Receipts', desc: 'Show when you\'ve read messages' },
                 { key: 'showDistance', label: 'Show Distance', desc: 'Display your distance from others' },
               ].map((item) => (
-                <label key={item.key} className="flex items-center justify-between p-4 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                <label key={item.key} className="flex items-center justify-between p-4 rounded-xl bg-background-tertiary cursor-pointer hover:bg-background-tertiary transition-colors">
                   <div>
-                    <p className="font-medium text-white">{item.label}</p>
-                    <p className="text-sm text-white/60">{item.desc}</p>
+                    <p className="font-medium text-foreground">{item.label}</p>
+                    <p className="text-sm text-foreground-muted">{item.desc}</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={formData[item.key as keyof typeof formData] as boolean}
                     onChange={(e) => handleChange(item.key, e.target.checked)}
-                    className="w-5 h-5 rounded border-white/20 bg-white/5 text-primary accent-primary"
+                    className="w-5 h-5 rounded border-card-border bg-background-tertiary text-primary accent-primary"
                   />
                 </label>
               ))}
@@ -676,13 +676,13 @@ export default function SettingsPage() {
 
           {/* Danger Zone */}
           <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Danger Zone</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Danger Zone</h2>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background-tertiary">
                 <div>
-                  <p className="font-medium text-white">Export Your Data</p>
-                  <p className="text-sm text-white/60">Download all your data in a portable format</p>
+                  <p className="font-medium text-foreground">Export Your Data</p>
+                  <p className="text-sm text-foreground-muted">Download all your data in a portable format</p>
                 </div>
                 <button
                   onClick={() => setShowExportDialog(true)}
@@ -695,8 +695,8 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between p-4 rounded-xl bg-red-500/10 border border-red-500/30">
                 <div>
-                  <p className="font-medium text-white">Delete Account</p>
-                  <p className="text-sm text-white/60">Permanently delete your account and all data</p>
+                  <p className="font-medium text-foreground">Delete Account</p>
+                  <p className="text-sm text-foreground-muted">Permanently delete your account and all data</p>
                 </div>
                 <button
                   onClick={() => setShowDeleteDialog(true)}

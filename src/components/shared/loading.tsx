@@ -29,10 +29,10 @@ export function LoadingPage({ message = "Loading..." }: LoadingPageProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
       <div className="relative">
-        <div className="w-16 h-16 rounded-full border-2 border-white/10" />
+        <div className="w-16 h-16 rounded-full border-2 border-card-border" />
         <LoadingSpinner size="lg" className="absolute inset-0 m-auto" />
       </div>
-      <p className="text-white/60 text-sm">{message}</p>
+      <p className="text-foreground-muted text-sm">{message}</p>
     </div>
   );
 }

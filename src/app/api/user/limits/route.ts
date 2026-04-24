@@ -9,10 +9,13 @@ export async function GET() {
     const { user } = await requireAuth();
     const userId = user.id;
 
-    // Get user's subscription status
+    // Get user's subscription status and gender
     const userData = await db.user.findUnique({
       where: { id: userId },
       include: {
+        profile: {
+          select: { gender: true },
+        },
         subscriptions: {
           where: {
             status: 'ACTIVE',
@@ -23,6 +26,11 @@ export async function GET() {
     });
 
     const isPremium = userData?.subscriptions && userData.subscriptions.length > 0;
+    const gender = userData?.profile?.gender?.toLowerCase() || "";
+    const isFemale = gender === "woman" || gender === "female" || gender === "trans_woman";
+
+    // Plan determination: Premium > Lady Free > Basic Free
+    const planId = isPremium ? "PREMIUM" : isFemale ? "LADY_FREE" : "FREE";
 
     // Count active chats (rooms with messages in last 7 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -48,17 +56,54 @@ export async function GET() {
       },
     });
 
-    // Free user limits
-    const maxChats = isPremium ? Infinity : 3;
-    const maxMessagesPerChat = isPremium ? Infinity : 2;
+    // Limits by plan
+    const PLAN_LIMITS = {
+      FREE: {
+        maxChats: 3,
+        maxMessagesPerMatch: 2,
+        weeklyMatches: 3,
+        canSeeWhoLikedMe: false,
+        advancedFilters: false,
+        readReceipts: false,
+        incognitoMode: false,
+        vaultControl: "readonly" as const,
+        matchExplanation: "basic" as const,
+      },
+      LADY_FREE: {
+        maxChats: -1, // unlimited
+        maxMessagesPerMatch: -1, // unlimited
+        weeklyMatches: 5,
+        canSeeWhoLikedMe: true,
+        advancedFilters: true,
+        readReceipts: true,
+        incognitoMode: true,
+        vaultControl: "full" as const,
+        matchExplanation: "full" as const,
+      },
+      PREMIUM: {
+        maxChats: -1, // unlimited
+        maxMessagesPerMatch: -1, // unlimited
+        weeklyMatches: 5,
+        canSeeWhoLikedMe: true,
+        advancedFilters: true,
+        readReceipts: true,
+        incognitoMode: true,
+        vaultControl: "readonly" as const,
+        matchExplanation: "full" as const,
+      },
+    };
+
+    const limits = PLAN_LIMITS[planId as keyof typeof PLAN_LIMITS];
 
     return NextResponse.json({
+      planId,
       isPremium,
-      maxChats: isPremium ? -1 : 3,
+      isFemale,
+      ...limits,
       currentChats: activeChats,
       messagesSent,
-      messagesRemaining: isPremium ? -1 : Math.max(0, maxMessagesPerChat - (messagesSent % maxMessagesPerChat)),
-      chatsRemaining: isPremium ? -1 : Math.max(0, maxChats - activeChats),
+      messagesRemaining: limits.maxMessagesPerMatch === -1 ? -1 : Math.max(0, limits.maxMessagesPerMatch - (messagesSent % limits.maxMessagesPerMatch)),
+      chatsRemaining: limits.maxChats === -1 ? -1 : Math.max(0, limits.maxChats - activeChats),
     });
   } catch (error: any) {
     if (error.message === 'Unauthorized') {

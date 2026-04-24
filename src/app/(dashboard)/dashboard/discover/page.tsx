@@ -192,7 +192,7 @@ function SwipeCard({
       onDragEnd={handleDragEnd}
       style={{ zIndex: isTop ? 10 : 5 }}
     >
-      <div className="relative w-full h-full rounded-3xl overflow-hidden bg-[#0d0c11] border border-white/10"
+      <div className="relative w-full h-full rounded-3xl overflow-hidden bg-background border border-card-border"
         style={{ transitionTimingFunction: EASING }}
       >
         {/* Photo / Avatar Area (60%+ of card) */}
@@ -203,7 +203,7 @@ function SwipeCard({
               return (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 via-[#13121a] to-[#0d0c11] flex items-center justify-center">
                   <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
-                    <User className="w-16 h-16 text-white/20" />
+                    <User className="w-16 h-16 text-foreground-faint" />
                   </div>
                 </div>
               );
@@ -261,7 +261,7 @@ function SwipeCard({
         {/* Match Score Badge (top right) */}
         <div className="absolute top-4 right-4 z-20">
           <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold text-white bg-gradient-to-r ${getMatchScoreGradient(user.matchScore)} shadow-lg`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold text-foreground bg-gradient-to-r ${getMatchScoreGradient(user.matchScore)} shadow-lg`}
           >
             <Flame className="w-4 h-4" />
             {user.matchScore}%
@@ -271,7 +271,7 @@ function SwipeCard({
         {/* Verified Badge */}
         {user.verified && (
           <div className="absolute top-4 left-4 z-20">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/80 text-white text-xs font-medium shadow-lg">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/80 text-foreground text-xs font-medium shadow-lg">
               <Zap className="w-3 h-3" /> Verified
             </span>
           </div>
@@ -281,11 +281,11 @@ function SwipeCard({
         <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
           {/* Name & Age */}
           <div className="mb-3">
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-foreground">
               {user.name}, {user.age}
             </h2>
             {user.city && (
-              <div className="flex items-center gap-1.5 text-white/60 text-sm mt-1">
+              <div className="flex items-center gap-1.5 text-foreground-muted text-sm mt-1">
                 <MapPin className="w-3.5 h-3.5" />
                 {user.city}
               </div>
@@ -294,7 +294,7 @@ function SwipeCard({
 
           {/* Bio */}
           {user.bio && (
-            <p className="text-white/60 text-sm line-clamp-2 mb-3">{user.bio}</p>
+            <p className="text-foreground-muted text-sm line-clamp-2 mb-3">{user.bio}</p>
           )}
 
           {/* Tags */}
@@ -302,7 +302,7 @@ function SwipeCard({
             {user.tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
-                className="px-2.5 py-1 bg-white/10 text-white/70 rounded-full text-[11px] font-medium border border-white/5"
+                className="px-2.5 py-1 bg-background-tertiary text-foreground-muted rounded-full text-[11px] font-medium border border-card-border"
               >
                 {tag}
               </span>
@@ -317,21 +317,21 @@ function SwipeCard({
             <div className={`rounded-xl p-3 border transition-all duration-200 ${
               showWhyMatch
                 ? "bg-primary/15 border-primary/30"
-                : "bg-white/5 border-white/5 hover:border-primary/20"
+                : "bg-background-tertiary border-card-border hover:border-primary/20"
             }`}
               style={{ transitionTimingFunction: EASING }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Star className={`w-4 h-4 ${showWhyMatch ? "text-primary" : "text-white/40"}`} />
-                  <span className="text-xs font-medium text-white/70">
+                  <Star className={`w-4 h-4 ${showWhyMatch ? "text-primary" : "text-foreground-subtle"}`} />
+                  <span className="text-xs font-medium text-foreground-muted">
                     Why this match?
                   </span>
                 </div>
                 {showWhyMatch ? (
-                  <ChevronUp className="w-4 h-4 text-white/40" />
+                  <ChevronUp className="w-4 h-4 text-foreground-subtle" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-white/40" />
+                  <ChevronDown className="w-4 h-4 text-foreground-subtle" />
                 )}
               </div>
               <AnimatePresence>
@@ -446,7 +446,7 @@ export default function DiscoverPage() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="w-14 h-14 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
-          <p className="text-white/60 text-sm">Loading profiles...</p>
+          <p className="text-foreground-muted text-sm">Loading profiles...</p>
         </div>
       </div>
     );
@@ -457,11 +457,11 @@ export default function DiscoverPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
-          <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
-            <Heart className="w-10 h-10 text-white/20" />
+          <div className="w-20 h-20 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-6">
+            <Heart className="w-10 h-10 text-foreground-faint" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">No more profiles</h2>
-          <p className="text-white/50 text-sm mb-6">
+          <h2 className="text-xl font-bold text-foreground mb-2">No more profiles</h2>
+          <p className="text-foreground-muted text-sm mb-6">
             Check back later for more matches
           </p>
           <Link href="/dashboard" className="btn-primary text-sm">
@@ -478,36 +478,36 @@ export default function DiscoverPage() {
   return (
     <div className="flex flex-col -mx-4 -mt-6 lg:mx-0 lg:mt-0">
       {/* ── Header ── */}
-      <header className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#0d0c11]">
+      <header className="px-5 py-4 border-b border-card-border flex items-center justify-between bg-background">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="p-2 -ml-2 rounded-full hover:bg-white/5 transition-colors"
+            className="p-2 -ml-2 rounded-full hover:bg-background-tertiary transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </Link>
           <div>
-            <h1 className="font-semibold text-white text-sm">Discover</h1>
-            <p className="text-[11px] text-white/40">
+            <h1 className="font-semibold text-foreground text-sm">Discover</h1>
+            <p className="text-[11px] text-foreground-subtle">
               {currentIndex + 1} of {users.length}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
-            <Filter className="w-4 h-4 text-white/50" />
+          <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors">
+            <Filter className="w-4 h-4 text-foreground-muted" />
           </button>
           <button
             onClick={loadUsers}
-            className="p-2 rounded-full hover:bg-white/5 transition-colors"
+            className="p-2 rounded-full hover:bg-background-tertiary transition-colors"
           >
-            <RefreshCw className="w-4 h-4 text-white/50" />
+            <RefreshCw className="w-4 h-4 text-foreground-muted" />
           </button>
         </div>
       </header>
 
       {/* ── Progress Bar ── */}
-      <div className="h-0.5 bg-white/5">
+      <div className="h-0.5 bg-background-tertiary">
         <motion.div
           className="h-full bg-gradient-to-r from-primary to-secondary"
           initial={{ width: 0 }}
@@ -542,8 +542,8 @@ export default function DiscoverPage() {
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <Sparkles className="w-10 h-10 text-primary/50" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">All caught up!</h3>
-                  <p className="text-white/50 text-sm mb-4">
+                  <h3 className="text-xl font-bold text-foreground mb-2">All caught up!</h3>
+                  <p className="text-foreground-muted text-sm mb-4">
                     Check back later for more profiles
                   </p>
                   <button
@@ -586,13 +586,13 @@ export default function DiscoverPage() {
           <button
             onClick={() => handleButtonSwipe("right")}
             disabled={currentIndex >= users.length}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all disabled:opacity-30"
+            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-foreground flex items-center justify-center shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all disabled:opacity-30"
             style={{ transitionTimingFunction: EASING }}
           >
             <Heart className="w-7 h-7" fill="white" />
           </button>
         </div>
-        <p className="text-center text-xs text-white/40 mt-3">
+        <p className="text-center text-xs text-foreground-subtle mt-3">
           Swipe right to like, left to pass
         </p>
       </div>

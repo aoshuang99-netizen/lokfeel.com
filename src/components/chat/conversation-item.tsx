@@ -80,7 +80,7 @@ function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${
+          <div className={`w-full h-full flex items-center justify-center text-foreground font-bold text-sm ${
             isBot 
               ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
               : 'bg-gradient-to-br from-primary to-secondary'
@@ -91,9 +91,9 @@ function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
       </div>
       {/* Online Status Indicator */}
       {isOnline ? (
-        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-[#0d0c11]" />
+        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-background" />
       ) : !isBot ? (
-        <div className="absolute bottom-0 right-0 w-3 h-3 bg-white/20 rounded-full ring-2 ring-[#0d0c11]" />
+        <div className="absolute bottom-0 right-0 w-3 h-3 bg-background-tertiary rounded-full ring-2 ring-background" />
       ) : null}
 
     </div>
@@ -158,17 +158,17 @@ function ConversationItemComponent({
       <div className="flex-1 min-w-0">
         {/* Header row: name and time */}
         <div className="flex items-center justify-between mb-0.5">
-          <h3 className={`text-white truncate text-[14px] ${hasUnread ? "font-semibold" : "font-medium"}`}>
+          <h3 className={`text-foreground truncate text-[14px] ${hasUnread ? "font-semibold" : "font-medium"}`}>
             {otherUser.name}
             {otherUser.age !== undefined && (
-              <span className="text-white/40 font-normal ml-1">, {otherUser.age}</span>
+              <span className="text-foreground-subtle font-normal ml-1">, {otherUser.age}</span>
             )}
             {isVault && <VaultBadge expiresAt={vaultExpiresAt} />}
           </h3>
           {lastMessage && (
             <span
               className={`text-[11px] flex-shrink-0 ml-2 tabular-nums ${
-                hasUnread ? "text-amber-400" : "text-white/25"
+                hasUnread ? "text-amber-400" : "text-foreground-faint"
               }`}
             >
               {formatMessageTime(lastMessage.timestamp)}
@@ -180,21 +180,21 @@ function ConversationItemComponent({
         <div className="flex items-center justify-between">
           <p
             className={`text-[13px] truncate ${
-              hasUnread ? "text-white/70" : "text-white/35"
+              hasUnread ? "text-foreground-muted" : "text-foreground-subtle"
             }`}
           >
             {lastMessage ? (
               <>
-                {lastMessage.isFromMe && <span className="text-white/25">You: </span>}
+                {lastMessage.isFromMe && <span className="text-foreground-faint">You: </span>}
                 {lastMessage.content}
               </>
             ) : (
-              <span className="italic text-white/20">Start chatting...</span>
+              <span className="italic text-foreground-faint">Start chatting...</span>
             )}
           </p>
           {hasUnread && (
             <div className="flex-shrink-0 ml-2 min-w-[20px] h-5 rounded-full bg-amber-600 flex items-center justify-center">
-              <span className="text-[10px] font-bold text-white px-1.5 tabular-nums">
+              <span className="text-[10px] font-bold text-foreground px-1.5 tabular-nums">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             </div>
@@ -206,9 +206,9 @@ function ConversationItemComponent({
           {otherUser.isOnline ? (
             <span className="text-emerald-400/60">Online</span>
           ) : isBot ? (
-            <span className="text-white/20">Online</span>
+            <span className="text-foreground-faint">Online</span>
           ) : (
-            <span className="text-white/20">{formatLastSeen(otherUser.lastSeen)}</span>
+            <span className="text-foreground-faint">{formatLastSeen(otherUser.lastSeen)}</span>
           )}
         </p>
       </div>
@@ -220,7 +220,7 @@ function ConversationItemComponent({
     return (
       <div
         onClick={onClick}
-        className="border-b border-white/5"
+        className="border-b border-card-border"
       >
         {content}
       </div>
@@ -230,7 +230,7 @@ function ConversationItemComponent({
   return (
     <Link
       href={`/dashboard/chat/${id}`}
-      className="block border-b border-white/5"
+      className="block border-b border-card-border"
     >
       {content}
     </Link>

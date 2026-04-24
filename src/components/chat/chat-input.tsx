@@ -118,18 +118,18 @@ export function ChatInput({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
-            className="absolute bottom-full left-3 right-3 mb-2 p-3 bg-[#1c1b28]/95 backdrop-blur-lg rounded-xl border border-white/[0.06]"
+            className="absolute bottom-full left-3 right-3 mb-2 p-3 bg-background-tertiary/95 backdrop-blur-lg rounded-xl border border-card-border/[0.06]"
           >
             <div className="flex items-center gap-2 mb-2.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-400/70" />
-              <span className="text-[11px] text-white/40 font-medium">Quick replies</span>
+              <span className="text-[11px] text-foreground-subtle font-medium">Quick replies</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {QUICK_REPLIES.map((reply, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleQuickReply(reply)}
-                  className="px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-white/70 hover:text-white/90 text-[13px] transition-all duration-200 border border-white/[0.04] hover:border-white/[0.08]"
+                  className="px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-foreground-muted hover:text-foreground/90 text-[13px] transition-all duration-200 border border-card-border/[0.04] hover:border-card-border/[0.08]"
                 >
                   {reply}
                 </button>
@@ -147,7 +147,7 @@ export function ChatInput({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
-            className="absolute bottom-full left-3 right-3 mb-2 p-3 bg-[#1c1b28]/95 backdrop-blur-lg rounded-xl border border-white/[0.06]"
+            className="absolute bottom-full left-3 right-3 mb-2 p-3 bg-background-tertiary/95 backdrop-blur-lg rounded-xl border border-card-border/[0.06]"
           >
             <div className="grid grid-cols-8 gap-1">
               {EMOJIS.map((emoji, idx) => (
@@ -171,20 +171,20 @@ export function ChatInput({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-2 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center gap-2"
+            className="mb-2 px-3 py-2 rounded-lg bg-white/[0.04] border border-card-border/[0.06] flex items-center gap-2"
           >
             <Reply className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-white/40 mb-0.5">
+              <p className="text-[11px] text-foreground-subtle mb-0.5">
                 Reply to {quotedMessage.senderName || 'message'}
               </p>
-              <p className="text-[13px] text-white/60 truncate">
+              <p className="text-[13px] text-foreground-muted truncate">
                 {quotedMessage.content}
               </p>
             </div>
             <button
               onClick={onCancelQuote}
-              className="p-1 rounded-full hover:bg-white/[0.06] text-white/30 hover:text-white/60 transition-colors duration-200"
+              className="p-1 rounded-full hover:bg-white/[0.06] text-foreground-subtle hover:text-foreground-muted transition-colors duration-200"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -193,7 +193,7 @@ export function ChatInput({
       </AnimatePresence>
 
       {/* 输入框 */}
-      <form onSubmit={handleSend} className="flex items-center gap-1.5 bg-white/[0.04] backdrop-blur-lg border border-white/[0.06] rounded-2xl px-2 py-1.5">
+      <form onSubmit={handleSend} className="flex items-center gap-1.5 bg-white/[0.04] backdrop-blur-lg border border-card-border/[0.06] rounded-2xl px-2 py-1.5">
         {/* 快捷回复按钮 */}
         <button
           type="button"
@@ -202,7 +202,7 @@ export function ChatInput({
             setShowEmojiPicker(false);
           }}
           className={`p-2 rounded-xl transition-all duration-200 ${
-            showQuickReplies ? "bg-amber-500/15 text-amber-400" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
+            showQuickReplies ? "bg-amber-500/15 text-amber-400" : "text-foreground-faint hover:text-foreground-muted hover:bg-white/[0.04]"
           }`}
           aria-label="Quick replies"
         >
@@ -217,7 +217,7 @@ export function ChatInput({
             setShowQuickReplies(false);
           }}
           className={`p-2 rounded-xl transition-all duration-200 ${
-            showEmojiPicker ? "bg-amber-500/15 text-amber-400" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
+            showEmojiPicker ? "bg-amber-500/15 text-amber-400" : "text-foreground-faint hover:text-foreground-muted hover:bg-white/[0.04]"
           }`}
           aria-label="Emoji"
         >
@@ -231,7 +231,7 @@ export function ChatInput({
           value={message}
           onChange={(e) => handleTyping(e.target.value)}
           placeholder={disabled ? "Chat unavailable" : "Say something..."}
-          className="flex-1 bg-transparent text-white/90 placeholder:text-white/25 outline-none text-[15px] min-w-0"
+          className="flex-1 bg-transparent text-foreground placeholder:text-foreground-faint outline-none text-[15px] min-w-0"
           disabled={isSending || disabled}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -248,12 +248,12 @@ export function ChatInput({
           whileTap={{ scale: 0.92 }}
           className={`p-2.5 rounded-xl transition-all duration-200 ${
             message.trim() && !isSending && !disabled
-              ? "bg-gradient-to-br from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-600/20"
-              : "bg-white/[0.04] text-white/20"
+              ? "bg-gradient-to-br from-amber-600 to-amber-500 text-foreground shadow-lg shadow-amber-600/20"
+              : "bg-white/[0.04] text-foreground-faint"
           }`}
         >
           {isSending ? (
-            <div className="w-[18px] h-[18px] border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-[18px] h-[18px] border-2 border-card-border border-t-white rounded-full animate-spin" />
           ) : (
             <Send className="w-[18px] h-[18px]" />
           )}

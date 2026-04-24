@@ -31,8 +31,8 @@ export default function MatchesManagementPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Match Management</h1>
-          <p className="text-white/60">View and manage all matches</p>
+          <h1 className="text-2xl font-bold text-foreground">Match Management</h1>
+          <p className="text-foreground-muted">View and manage all matches</p>
         </div>
         <button className="btn-primary flex items-center gap-2">
           <Plus className="w-4 h-4" />
@@ -42,7 +42,7 @@ export default function MatchesManagementPage() {
 
       <div className="glass-card p-4 flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-subtle" />
           <input type="text" placeholder="Search matches..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input-feeld pl-11" />
         </div>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-feeld w-auto">
@@ -57,18 +57,18 @@ export default function MatchesManagementPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10 bg-white/5">
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Users</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Score</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Status</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Created</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-white/60">Messages</th>
-                <th className="text-right py-4 px-6 text-sm font-medium text-white/60">Actions</th>
+              <tr className="border-b border-card-border bg-background-tertiary">
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Users</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Score</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Status</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Created</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-foreground-muted">Messages</th>
+                <th className="text-right py-4 px-6 text-sm font-medium text-foreground-muted">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredMatches.map((match) => (
-                <tr key={match.id} className="border-b border-white/5 hover:bg-white/5">
+                <tr key={match.id} className="border-b border-card-border hover:bg-background-tertiary">
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-2">
@@ -76,9 +76,9 @@ export default function MatchesManagementPage() {
                         <img src={match.user2.avatar} alt={match.user2.name} className="w-8 h-8 rounded-full border-2 border-[#0d0c11]" />
                       </div>
                       <div>
-                        <p className="text-white">{match.user1.name}</p>
-                        <p className="text-xs text-white/60">&</p>
-                        <p className="text-white">{match.user2.name}</p>
+                        <p className="text-foreground">{match.user1.name}</p>
+                        <p className="text-xs text-foreground-muted">&</p>
+                        <p className="text-foreground">{match.user2.name}</p>
                       </div>
                     </div>
                   </td>
@@ -88,12 +88,12 @@ export default function MatchesManagementPage() {
                   <td className="py-4 px-6">
                     <span className={`badge ${match.status === "accepted" ? "badge-success" : match.status === "pending" ? "badge-warning" : "badge-error"}`}>{match.status}</span>
                   </td>
-                  <td className="py-4 px-6 text-white/60">{match.createdAt}</td>
-                  <td className="py-4 px-6 text-white">{match.messages}</td>
+                  <td className="py-4 px-6 text-foreground-muted">{match.createdAt}</td>
+                  <td className="py-4 px-6 text-foreground">{match.messages}</td>
                   <td className="py-4 px-6">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white"><Eye className="w-4 h-4" /></button>
-                      <button onClick={() => { setSelectedMatch(match); setShowCancelDialog(true); }} className="p-2 rounded-lg hover:bg-error/20 text-white/60 hover:text-error"><X className="w-4 h-4" /></button>
+                      <button className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground"><Eye className="w-4 h-4" /></button>
+                      <button onClick={() => { setSelectedMatch(match); setShowCancelDialog(true); }} className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error"><X className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -102,8 +102,8 @@ export default function MatchesManagementPage() {
           </table>
         </div>
 
-        <div className="p-4 border-t border-white/10 flex items-center justify-between">
-          <p className="text-sm text-white/60">Showing {filteredMatches.length} matches</p>
+        <div className="p-4 border-t border-card-border flex items-center justify-between">
+          <p className="text-sm text-foreground-muted">Showing {filteredMatches.length} matches</p>
         </div>
       </div>
 

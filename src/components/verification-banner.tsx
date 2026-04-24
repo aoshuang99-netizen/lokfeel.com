@@ -49,7 +49,7 @@ export default function VerificationBanner() {
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
               <AlertTriangle className="w-4 h-4 text-amber-400" />
             </div>
-            <p className="text-sm text-white/80">
+            <p className="text-sm text-foreground">
               <span className="text-amber-300 font-medium">Verify your account</span>{" "}
               to unlock messaging, matching reactions & profile updates.
             </p>
@@ -58,13 +58,13 @@ export default function VerificationBanner() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => setShowVerifyPanel(true)}
-              className="px-4 py-1.5 text-sm font-medium bg-primary hover:bg-primary/80 text-white rounded-lg transition-colors"
+              className="px-4 py-1.5 text-sm font-medium bg-primary hover:bg-primary/80 text-foreground rounded-lg transition-colors"
             >
               Verify Now
             </button>
             <button
               onClick={() => setDismissed(true)}
-              className="p-1 text-white/40 hover:text-white/60 transition-colors"
+              className="p-1 text-foreground-subtle hover:text-foreground-muted transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -194,13 +194,13 @@ function VerifyInlinePanel({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-foreground-subtle hover:text-foreground transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-xl font-bold text-white mb-1">Verify Your Account</h2>
-        <p className="text-sm text-white/60 mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-1">Verify Your Account</h2>
+        <p className="text-sm text-foreground-muted mb-6">
           Complete verification to unlock all features
         </p>
 
@@ -219,7 +219,7 @@ function VerifyInlinePanel({
                 className={`flex items-center gap-2 p-4 rounded-xl border transition-all ${
                   method === 'email'
                     ? 'border-primary bg-primary/10'
-                    : 'border-white/10 bg-white/5 hover:border-white/30'
+                    : 'border-card-border bg-background-tertiary hover:border-card-border'
                 }`}
               >
                 <Mail className="w-5 h-5" />
@@ -230,7 +230,7 @@ function VerifyInlinePanel({
                 className={`flex items-center gap-2 p-4 rounded-xl border transition-all ${
                   method === 'sms'
                     ? 'border-primary bg-primary/10'
-                    : 'border-white/10 bg-white/5 hover:border-white/30'
+                    : 'border-card-border bg-background-tertiary hover:border-card-border'
                 }`}
               >
                 <Phone className="w-5 h-5" />
@@ -263,8 +263,8 @@ function VerifyInlinePanel({
         ) : (
           /* Code entry */
           <div className="space-y-4">
-            <p className="text-sm text-white/70 text-center">
-              Code sent to <span className="text-white font-medium">{sentInfo}</span>
+            <p className="text-sm text-foreground-muted text-center">
+              Code sent to <span className="text-foreground font-medium">{sentInfo}</span>
             </p>
             
             {/* Dev Mode: Show code directly */}
@@ -303,7 +303,7 @@ function VerifyInlinePanel({
                       document.getElementById(`verify-code-${i - 1}`)?.focus();
                     if (e.key === "Enter") handleVerify();
                   }}
-                  className="w-11 h-13 text-center text-xl font-bold bg-white/5 border border-white/10 rounded-lg text-white focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  className="w-11 h-13 text-center text-xl font-bold bg-background-tertiary border border-card-border rounded-lg text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                   disabled={loading}
                   autoFocus={i === 0}
                 />
@@ -324,11 +324,11 @@ function VerifyInlinePanel({
             <div className="flex items-center justify-center gap-4 text-sm">
               <button
                 onClick={() => { setStep("choose"); setCode(["","","","","",""]); }}
-                className="text-white/40 hover:text-white/60 transition-colors"
+                className="text-foreground-subtle hover:text-foreground-muted transition-colors"
               >
                 Change method
               </button>
-              <span className="text-white/20">|</span>
+              <span className="text-foreground-faint">|</span>
               <button
                 onClick={handleSendCode}
                 disabled={countdown > 0 || loading}

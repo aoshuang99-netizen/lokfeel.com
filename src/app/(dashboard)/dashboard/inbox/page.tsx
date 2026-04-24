@@ -78,8 +78,8 @@ interface InboxData {
 function getMatchScoreColor(score: number): string {
   // 90%+ gold, 80-89% purple, <80% gray
   if (score >= 90) return "bg-gradient-to-r from-amber-400 to-yellow-300 text-black";
-  if (score >= 80) return "bg-gradient-to-r from-orange-500 to-pink-500 text-white";
-  return "bg-white/10 text-white/60";
+  if (score >= 80) return "bg-gradient-to-r from-orange-500 to-pink-500 text-foreground";
+  return "bg-background-tertiary text-foreground-muted";
 }
 
 function formatTimeRemaining(expiresAt: string): string {
@@ -96,7 +96,7 @@ function getTimeColor(expiresAt: string): string {
   const hours = diff / 3600000;
   if (hours < 2) return "text-red-400";
   if (hours < 6) return "text-yellow-400";
-  return "text-white/40";
+  return "text-foreground-subtle";
 }
 
 export default function InboxPage() {
@@ -188,7 +188,7 @@ export default function InboxPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        <span className="ml-3 text-white/60">Loading your inbox...</span>
+        <span className="ml-3 text-foreground-muted">Loading your inbox...</span>
       </div>
     );
   }
@@ -197,15 +197,15 @@ export default function InboxPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Your Inbox</h1>
-          <p className="text-white/60">Requests from people interested in you</p>
+          <h1 className="text-2xl font-bold text-foreground">Your Inbox</h1>
+          <p className="text-foreground-muted">Requests from people interested in you</p>
         </div>
         <div className="glass-card p-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <Mail className="w-8 h-8 text-white/30" />
+          <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-8 h-8 text-foreground-subtle" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">Service Unavailable</h3>
-          <p className="text-white/60">{error}</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Service Unavailable</h3>
+          <p className="text-foreground-muted">{error}</p>
         </div>
       </div>
     );
@@ -216,8 +216,8 @@ export default function InboxPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Your Inbox</h1>
-          <p className="text-white/60">Requests from people interested in you</p>
+          <h1 className="text-2xl font-bold text-foreground">Your Inbox</h1>
+          <p className="text-foreground-muted">Requests from people interested in you</p>
         </div>
         {totalUnread > 0 && (
           <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-medium">
@@ -235,8 +235,8 @@ export default function InboxPage() {
               onClick={() => setFilter(f.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 filter === f.id
-                  ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
+                  ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
+                  : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
               }`}
             >
               {f.icon}
@@ -258,7 +258,7 @@ export default function InboxPage() {
       {/* Batch Actions */}
       {selectedItems.size > 0 && (
         <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
-          <span className="text-sm text-white/80">{selectedItems.size} selected</span>
+          <span className="text-sm text-foreground">{selectedItems.size} selected</span>
           <div className="flex-1" />
           <button
             onClick={() => handleBatchAction("accept")}
@@ -288,12 +288,12 @@ export default function InboxPage() {
       {items.length > 0 ? (
         <div className="space-y-4">
           {/* Select All */}
-          <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-foreground-muted cursor-pointer">
             <input
               type="checkbox"
               checked={selectedItems.size === items.length && items.length > 0}
               onChange={handleSelectAll}
-              className="rounded border-white/20 bg-white/5"
+              className="rounded border-card-border bg-background-tertiary"
             />
             Select All
           </label>
@@ -311,18 +311,18 @@ export default function InboxPage() {
                   type="checkbox"
                   checked={selectedItems.has(item.id)}
                   onChange={() => handleSelect(item.id)}
-                  className="mt-1 rounded border-white/20 bg-white/5"
+                  className="mt-1 rounded border-card-border bg-background-tertiary"
                 />
 
                 {/* Avatar */}
                 <Link href={`/dashboard/matches/${item.id}`} className="flex-shrink-0">
-                  <div className="relative w-16 h-16 rounded-full overflow-hidden bg-white/5">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden bg-background-tertiary">
                     {(() => {
                       const kind = getAvatarKind(item.otherUser.avatar);
                       if (kind === 'none') {
                         return (
                           <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-2xl text-white/30">{item.otherUser.name[0]}</span>
+                            <span className="text-2xl text-foreground-subtle">{item.otherUser.name[0]}</span>
                           </div>
                         );
                       }
@@ -341,7 +341,7 @@ export default function InboxPage() {
                     })()}
                     {item.otherUser.isVerified && (
                       <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                        <Shield className="w-3 h-3 text-white" />
+                        <Shield className="w-3 h-3 text-foreground" />
                       </div>
                     )}
                   </div>
@@ -352,14 +352,14 @@ export default function InboxPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-white">
+                        <h3 className="font-semibold text-foreground">
                           {item.otherUser.name}, {item.otherUser.age}
                         </h3>
                         {item.isUnread && (
                           <span className="w-2 h-2 rounded-full bg-primary" />
                         )}
                       </div>
-                      <p className="text-sm text-white/60">
+                      <p className="text-sm text-foreground-muted">
                         {item.otherUser.city}
                         {item.otherUser.occupation && ` • ${item.otherUser.occupation}`}
                       </p>
@@ -378,10 +378,10 @@ export default function InboxPage() {
 
                   {/* Pitch Message */}
                   {item.pitchMessage && (
-                    <div className="mt-3 p-3 rounded-lg bg-white/5">
-                      <p className="text-sm text-white/80 line-clamp-2">"{item.pitchMessage}"</p>
+                    <div className="mt-3 p-3 rounded-lg bg-background-tertiary">
+                      <p className="text-sm text-foreground line-clamp-2">"{item.pitchMessage}"</p>
                       {item.aiAssisted && (
-                        <span className="flex items-center gap-1 mt-1 text-xs text-white/40">
+                        <span className="flex items-center gap-1 mt-1 text-xs text-foreground-subtle">
                           <Sparkles className="w-3 h-3" /> AI-assisted
                         </span>
                       )}
@@ -389,7 +389,7 @@ export default function InboxPage() {
                   )}
 
                   {/* Meta */}
-                  <div className="flex items-center gap-4 mt-3 text-xs text-white/40">
+                  <div className="flex items-center gap-4 mt-3 text-xs text-foreground-subtle">
                     <span className={getTimeColor(item.expiresAt)}>
                       <Clock className="w-3 h-3 inline mr-1" />
                       Expires in {formatTimeRemaining(item.expiresAt)}
@@ -423,11 +423,11 @@ export default function InboxPage() {
         </div>
       ) : (
         <div className="glass-card p-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <Mail className="w-8 h-8 text-white/30" />
+          <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-8 h-8 text-foreground-subtle" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">No requests yet</h3>
-          <p className="text-white/60">
+          <h3 className="text-lg font-semibold text-foreground mb-2">No requests yet</h3>
+          <p className="text-foreground-muted">
             When someone is interested in you, they&apos;ll appear here
           </p>
         </div>

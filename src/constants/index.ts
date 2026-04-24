@@ -33,6 +33,7 @@ export const MATCH_CONFIG = {
   // Weekly match limits by plan
   weeklyMatches: {
     FREE: 3,
+    LADY_FREE: 5,
     PREMIUM_MONTHLY: 5,
     PREMIUM_YEARLY: 5,
   },
@@ -76,12 +77,42 @@ export const SUBSCRIPTION_PLANS = {
     },
     features: {
       weeklyMatches: 3,
+      messagesPerMatch: 2,
       canSeeWhoLikedMe: false,
       canRematch: false,
       advancedFilters: false,
       prioritySupport: false,
       incognitoMode: false,
       readReceipts: false,
+      vaultControl: 'readonly',
+      matchExplanation: 'basic',
+      priorityMatching: false,
+      travelMode: false,
+      premiumBadge: false,
+    },
+  },
+  LADY_FREE: {
+    id: 'LADY_FREE',
+    name: 'Lady Free',
+    description: 'Because you deserve the best — always free for women',
+    price: {
+      monthly: 0,
+      yearly: 0,
+    },
+    features: {
+      weeklyMatches: 5,
+      messagesPerMatch: -1, // unlimited
+      canSeeWhoLikedMe: true,
+      canRematch: false,
+      advancedFilters: true,
+      prioritySupport: false,
+      incognitoMode: true,
+      readReceipts: true,
+      vaultControl: 'full',
+      matchExplanation: 'full',
+      priorityMatching: false,
+      travelMode: false,
+      premiumBadge: false,
     },
   },
   PREMIUM_MONTHLY: {
@@ -89,17 +120,23 @@ export const SUBSCRIPTION_PLANS = {
     name: 'Premium Monthly',
     description: 'Unlock full matching potential',
     price: {
-      monthly: 29.99,
+      monthly: 19.99,
       yearly: 0,
     },
     features: {
       weeklyMatches: 5,
+      messagesPerMatch: -1, // unlimited
       canSeeWhoLikedMe: true,
       canRematch: true,
       advancedFilters: true,
       prioritySupport: true,
       incognitoMode: true,
       readReceipts: true,
+      vaultControl: 'readonly',
+      matchExplanation: 'full',
+      priorityMatching: true,
+      travelMode: true,
+      premiumBadge: true,
     },
   },
   PREMIUM_YEARLY: {
@@ -108,16 +145,22 @@ export const SUBSCRIPTION_PLANS = {
     description: 'Best value for serious seekers',
     price: {
       monthly: 0,
-      yearly: 239.99, // ~$20/month, 33% savings
+      yearly: 149.99, // ~$12.50/month, 37% savings
     },
     features: {
       weeklyMatches: 5,
+      messagesPerMatch: -1, // unlimited
       canSeeWhoLikedMe: true,
       canRematch: true,
       advancedFilters: true,
       prioritySupport: true,
       incognitoMode: true,
       readReceipts: true,
+      vaultControl: 'readonly',
+      matchExplanation: 'full',
+      priorityMatching: true,
+      travelMode: true,
+      premiumBadge: true,
     },
   },
 } as const

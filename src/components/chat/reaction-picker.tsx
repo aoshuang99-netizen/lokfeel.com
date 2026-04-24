@@ -49,7 +49,7 @@ function EmojiButton({ emoji, isSelected, onClick, onHover }: EmojiButtonProps) 
         transition-all duration-150
         ${isSelected 
           ? "bg-pink-500/30 ring-2 ring-pink-400" 
-          : "hover:bg-white/10"
+          : "hover:bg-background-tertiary"
         }
       `}
     >
@@ -99,12 +99,12 @@ function ReactionPickerComponent({
         onClick={handleToggle}
         className={`
           w-6 h-6 flex items-center justify-center rounded-full
-          bg-white/10 hover:bg-white/20 transition-all duration-150
-          ${isOpen ? "bg-white/20 rotate-45" : ""}
+          bg-background-tertiary hover:bg-background-tertiary transition-all duration-150
+          ${isOpen ? "bg-background-tertiary rotate-45" : ""}
         `}
         title="Add reaction"
       >
-        <Plus className="w-3 h-3 text-white/70" />
+        <Plus className="w-3 h-3 text-foreground-muted" />
       </motion.button>
 
       {/* Reaction Picker Dropdown */}
@@ -119,7 +119,7 @@ function ReactionPickerComponent({
               absolute ${position === "above" ? "bottom-full mb-2" : "top-full mt-2"}
               left-1/2 -translate-x-1/2
               z-50
-              bg-[#1a1926] rounded-2xl border border-white/10 
+              bg-background-tertiary rounded-2xl border border-card-border 
               shadow-xl overflow-hidden
               p-2
             `}
@@ -180,8 +180,8 @@ function ReactionSummaryComponent({ reactions, onToggle }: ReactionSummaryProps)
             flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
             transition-all duration-150
             ${reaction.hasReacted
-              ? "bg-pink-500/20 border border-pink-400/50 text-white"
-              : "bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
+              ? "bg-pink-500/20 border border-pink-400/50 text-foreground"
+              : "bg-background-tertiary border border-card-border text-foreground-muted hover:bg-background-tertiary"
             }
           `}
         >

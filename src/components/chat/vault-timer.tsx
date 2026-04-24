@@ -48,7 +48,7 @@ function getStatusBadge(status: string): { text: string; className: string } {
     case "REVOKED":
       return { text: "Ended", className: "bg-red-500/20 text-red-400" };
     default:
-      return { text: status, className: "bg-white/10 text-white/60" };
+      return { text: status, className: "bg-background-tertiary text-foreground-muted" };
   }
 }
 
@@ -127,12 +127,12 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-white">The Vault</h3>
+                <h3 className="font-semibold text-foreground">The Vault</h3>
                 <span className={`px-2 py-0.5 rounded-full text-xs ${statusBadge.className}`}>
                   {statusBadge.text}
                 </span>
               </div>
-              <p className="text-sm text-white/60">
+              <p className="text-sm text-foreground-muted">
                 {vaultStatus === "EXPIRED"
                   ? "This conversation has expired and been archived"
                   : "This conversation has been ended"}
@@ -142,8 +142,8 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
         </div>
         
         {/* Archive Notice */}
-        <div className="mt-3 pt-3 border-t border-white/5">
-          <p className="text-xs text-white/40">
+        <div className="mt-3 pt-3 border-t border-card-border">
+          <p className="text-xs text-foreground-subtle">
             💡 This chat is now archived. You can still view the history, but no new messages can be sent.
           </p>
         </div>
@@ -168,8 +168,8 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
               className="flex items-start gap-2 mb-3 p-2 rounded-lg bg-primary/5 border border-primary/10"
             >
               <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-white/50">
-                <span className="text-white/70 font-medium">The Vault</span> — 
+              <div className="text-xs text-foreground-muted">
+                <span className="text-foreground-muted font-medium">The Vault</span> — 
                 Conversations auto-expire after 24 hours. 
                 {isFemale ? "As a woman, you can extend or end this chat anytime." : "She can extend or end this chat anytime."}
               </div>
@@ -196,7 +196,7 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
               {/* Circular Progress */}
               <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                 <path
-                  className="text-white/10"
+                  className="text-foreground-faint"
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   fill="none"
                   stroke="currentColor"
@@ -219,7 +219,7 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
 
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-white">The Vault</h3>
+                <h3 className="font-semibold text-foreground">The Vault</h3>
                 <span className={`px-2 py-0.5 rounded-full text-xs ${statusBadge.className}`}>
                   {statusBadge.text}
                 </span>
@@ -227,7 +227,7 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
               <p className={`text-lg font-mono font-bold ${timeColor}`}>
                 {formatTime(timeLeft.hours, timeLeft.minutes, timeLeft.seconds)}
               </p>
-              <p className="text-xs text-white/40">
+              <p className="text-xs text-foreground-subtle">
                 Extended {vault?.extensionCount || 0}/{vault?.maxExtensions || 3} times
               </p>
             </div>
@@ -275,25 +275,25 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
                 <AlertTriangle className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">End Conversation?</h3>
-                <p className="text-sm text-white/60">This action cannot be undone</p>
+                <h3 className="text-lg font-semibold text-foreground">End Conversation?</h3>
+                <p className="text-sm text-foreground-muted">This action cannot be undone</p>
               </div>
             </div>
 
-            <p className="text-white/80 mb-4">
+            <p className="text-foreground mb-4">
               You are about to end this conversation. The other person will no longer be able to send messages.
             </p>
 
-            <label className="flex items-center gap-3 p-3 rounded-lg bg-white/5 cursor-pointer mb-4">
+            <label className="flex items-center gap-3 p-3 rounded-lg bg-background-tertiary cursor-pointer mb-4">
               <input
                 type="checkbox"
                 checked={showDeleteConfirm}
                 onChange={(e) => setShowDeleteConfirm(e.target.checked)}
-                className="rounded border-white/20 bg-white/5"
+                className="rounded border-card-border bg-background-tertiary"
               />
               <div className="flex items-center gap-2">
                 <Trash2 className="w-4 h-4 text-red-400" />
-                <span className="text-sm text-white">Also delete chat history</span>
+                <span className="text-sm text-foreground">Also delete chat history</span>
               </div>
             </label>
 
@@ -307,7 +307,7 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
               <button
                 onClick={handleRevoke}
                 disabled={isRevoking}
-                className="flex-1 py-2 px-4 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+                className="flex-1 py-2 px-4 rounded-xl bg-red-500 text-foreground font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
               >
                 {isRevoking ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "End Conversation"}
               </button>

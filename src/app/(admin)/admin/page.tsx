@@ -30,8 +30,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-        <p className="text-white/60">Overview of your platform's performance</p>
+        <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
+        <p className="text-foreground-muted">Overview of your platform's performance</p>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -46,15 +46,15 @@ export default function AdminDashboardPage() {
                 {stat.change}
               </span>
             </div>
-            <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
-            <p className="text-sm text-white/60">{stat.name}</p>
+            <p className="text-2xl font-bold text-foreground mb-1">{stat.value}</p>
+            <p className="text-sm text-foreground-muted">{stat.name}</p>
           </div>
         ))}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">User Growth</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">User Growth</h2>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={userGrowthData}>
               <defs>
@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Matches This Week</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Matches This Week</h2>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={matchCreationData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -93,17 +93,17 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="glass-card p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Conversion Funnel</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Conversion Funnel</h2>
         <div className="space-y-4">
           {conversionData.map((stage, idx) => {
             const percentage = (stage.value / conversionData[0].value) * 100;
             return (
               <div key={idx}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-white/80">{stage.stage}</span>
-                  <span className="text-sm font-medium text-white">{stage.value.toLocaleString()} ({percentage.toFixed(1)}%)</span>
+                  <span className="text-sm text-foreground">{stage.stage}</span>
+                  <span className="text-sm font-medium text-foreground">{stage.value.toLocaleString()} ({percentage.toFixed(1)}%)</span>
                 </div>
-                <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-3 bg-background-tertiary rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style={{ width: `${percentage}%` }} />
                 </div>
               </div>
@@ -113,15 +113,15 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="glass-card p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Recent Signups</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Recent Signups</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-3 px-4 text-sm font-medium text-white/60">User</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-white/60">Email</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-white/60">Role</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-white/60">Joined</th>
+              <tr className="border-b border-card-border">
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground-muted">User</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground-muted">Email</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground-muted">Role</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground-muted">Joined</th>
               </tr>
             </thead>
             <tbody>
@@ -131,11 +131,11 @@ export default function AdminDashboardPage() {
                 { name: "Emma Wilson", email: "emma@example.com", role: "user", joined: "6 hours ago" },
                 { name: "James Lee", email: "james@example.com", role: "premium", joined: "8 hours ago" },
               ].map((user, idx) => (
-                <tr key={idx} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="py-3 px-4 text-white">{user.name}</td>
-                  <td className="py-3 px-4 text-white/60">{user.email}</td>
+                <tr key={idx} className="border-b border-card-border hover:bg-background-tertiary">
+                  <td className="py-3 px-4 text-foreground">{user.name}</td>
+                  <td className="py-3 px-4 text-foreground-muted">{user.email}</td>
                   <td className="py-3 px-4"><span className={`badge ${user.role === "premium" ? "badge-primary" : "badge-secondary"}`}>{user.role}</span></td>
-                  <td className="py-3 px-4 text-white/60">{user.joined}</td>
+                  <td className="py-3 px-4 text-foreground-muted">{user.joined}</td>
                 </tr>
               ))}
             </tbody>

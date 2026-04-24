@@ -85,7 +85,7 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-md bg-[#111] rounded-2xl overflow-hidden"
+          className="w-full max-w-md bg-background-tertiary rounded-2xl overflow-hidden"
           style={{ border: "1px solid rgba(255,255,255,0.1)" }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -99,8 +99,8 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
               >
                 <Check className="w-8 h-8 text-green-400" />
               </motion.div>
-              <h3 className="text-xl font-semibold text-white mb-2">Report Submitted</h3>
-              <p className="text-sm text-white/60">
+              <h3 className="text-xl font-semibold text-foreground mb-2">Report Submitted</h3>
+              <p className="text-sm text-foreground-muted">
                 Thank you for helping keep our community safe. We&apos;ll review this report promptly.
               </p>
             </div>
@@ -108,16 +108,16 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
             // Report Form
             <>
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <div className="flex items-center justify-between p-4 border-b border-card-border">
                 <div className="flex items-center gap-2">
                   <Flag className="w-5 h-5 text-red-400" />
-                  <h3 className="text-lg font-semibold text-white">Report User</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Report User</h3>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-lg hover:bg-background-tertiary transition-colors"
                 >
-                  <X className="w-5 h-5 text-white/70" />
+                  <X className="w-5 h-5 text-foreground-muted" />
                 </button>
               </div>
 
@@ -139,7 +139,7 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
 
                 {/* Reason Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-white mb-3">
+                  <label className="block text-sm font-medium text-foreground mb-3">
                     Why are you reporting this user? <span className="text-red-400">*</span>
                   </label>
                   <div className="space-y-2">
@@ -149,29 +149,29 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
                         onClick={() => setSelectedReason(reason.value)}
                         className={`w-full p-3 rounded-xl border text-left transition-all ${
                           selectedReason === reason.value
-                            ? "border-white bg-white/10"
-                            : "border-white/10 hover:border-white/30"
+                            ? "border-primary/50 bg-primary/10"
+                            : "border-card-border hover:border-card-border"
                         }`}
                       >
                         <div className="flex items-start gap-3">
                           <div
                             className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
                               selectedReason === reason.value
-                                ? "border-white bg-white"
-                                : "border-white/30"
+                                ? "border-primary bg-primary"
+                                : "border-card-border"
                             }`}
                           >
                             {selectedReason === reason.value && (
                               <div className="w-full h-full flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-black" />
+                                <div className="w-2 h-2 rounded-full bg-white" />
                               </div>
                             )}
                           </div>
                           <div>
-                            <span className="block text-sm font-medium text-white">
+                            <span className="block text-sm font-medium text-foreground">
                               {reason.label}
                             </span>
-                            <span className="block text-xs text-white/50 mt-0.5">
+                            <span className="block text-xs text-foreground-muted mt-0.5">
                               {reason.description}
                             </span>
                           </div>
@@ -183,8 +183,8 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Additional Details <span className="text-white/40">(optional)</span>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Additional Details <span className="text-foreground-subtle">(optional)</span>
                   </label>
                   <textarea
                     value={description}
@@ -192,9 +192,9 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
                     placeholder="Tell us more about what happened..."
                     maxLength={500}
                     rows={3}
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-sm resize-none focus:outline-none focus:border-white/30"
+                    className="w-full p-3 rounded-xl bg-background-tertiary border border-card-border text-foreground placeholder:text-foreground-subtle text-sm resize-none focus:outline-none focus:border-card-border"
                   />
-                  <p className="text-xs text-white/40 mt-1 text-right">
+                  <p className="text-xs text-foreground-subtle mt-1 text-right">
                     {description.length}/500
                   </p>
                 </div>
@@ -203,7 +203,7 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
                 <button
                   onClick={handleSubmit}
                   disabled={!selectedReason || isSubmitting}
-                  className="w-full py-3 px-4 rounded-xl bg-red-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 rounded-xl bg-red-500 text-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -220,7 +220,7 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
 
                 <button
                   onClick={onClose}
-                  className="w-full py-2 text-sm text-white/50 hover:text-white transition-colors"
+                  className="w-full py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
                 >
                   Cancel
                 </button>

@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex items-center gap-3">
               <div className="hidden lg:flex items-center gap-2">
                 <Shield className="w-5 h-5 text-secondary" />
-                <span className="font-semibold text-white">Admin Dashboard</span>
+                <span className="font-semibold text-foreground">Admin Dashboard</span>
               </div>
             </div>
 
@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {/* Back to App */}
               <Link
                 href="/dashboard"
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/60 hover:text-white text-sm"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-background-tertiary hover:bg-background-tertiary transition-colors text-foreground-muted hover:text-foreground text-sm"
               >
                 <Heart className="w-4 h-4" />
                 <span>Back to App</span>
@@ -44,12 +44,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {/* Notifications */}
               <Link
                 href="/admin/notifications"
-                className="relative p-2 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white"
+                className="relative p-2 rounded-xl hover:bg-background-tertiary transition-colors text-foreground-muted hover:text-foreground"
                 aria-label="Notifications"
               >
                 <Bell className="w-5 h-5" />
                 {notifications > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-secondary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-secondary text-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
                     {notifications}
                   </span>
                 )}
@@ -58,12 +58,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {/* Admin Profile */}
               <Link
                 href="/admin/users/1"
-                className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-colors"
+                className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-background-tertiary transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-white text-sm font-semibold">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-foreground text-sm font-semibold">
                   A
                 </div>
-                <span className="hidden md:block text-sm text-white/80">Admin</span>
+                <span className="hidden md:block text-sm text-foreground">Admin</span>
               </Link>
             </div>
           </div>

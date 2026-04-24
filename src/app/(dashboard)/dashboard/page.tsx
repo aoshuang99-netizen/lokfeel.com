@@ -262,7 +262,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
               if (kind === 'none') {
                 return (
                   <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                    <User className="w-12 h-12 text-white/20" />
+                    <User className="w-12 h-12 text-foreground-faint" />
                   </div>
                 );
               }
@@ -310,7 +310,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
             {/* Match Score Badge */}
             <div className="absolute top-3 left-3">
               <span
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getMatchScoreColor(user.matchScore)}`}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-foreground bg-gradient-to-r ${getMatchScoreColor(user.matchScore)}`}
               >
                 <Flame className="w-3 h-3" />
                 {Math.round(user.matchScore)}%
@@ -320,7 +320,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
             {/* Verified Badge */}
             {user.verified && (
               <div className="absolute top-3 right-3">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/80 text-white text-[10px] font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/80 text-foreground text-[10px] font-medium">
                   <Zap className="w-2.5 h-2.5" /> Verified
                 </span>
               </div>
@@ -332,7 +332,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
                 {user.name}, {user.age}
               </h3>
               {user.city && (
-                <p className="text-white/70 text-xs mt-0.5">{user.city}</p>
+                <p className="text-foreground-muted text-xs mt-0.5">{user.city}</p>
               )}
             </div>
           </div>
@@ -384,7 +384,7 @@ function ActivityItem({
           <p className="text-xs text-foreground-muted truncate">{subtitle}</p>
         </div>
         {count !== undefined && count > 0 && (
-          <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+          <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-foreground text-[10px] font-bold flex items-center justify-center">
             {count > 99 ? "99+" : count}
           </span>
         )}
@@ -556,7 +556,7 @@ export default function DashboardPage() {
             <div className="relative flex items-center justify-between gap-6">
               <div className="flex items-center gap-4 flex-1">
                 <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-lg" style={{ boxShadow: "var(--shadow-glow)" }}>
-                  <Sparkles className="w-6 h-6 text-white" />
+                  <Sparkles className="w-6 h-6 text-foreground" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground-muted text-sm mb-1">
@@ -690,7 +690,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 pt-4 border-t border-white/55">
+              <div className="mt-4 pt-4 border-t border-card-border5">
                 <p className="text-xs text-foreground-subtle text-center">
                   Complete your profile to unlock full engine potential
                 </p>
@@ -757,7 +757,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="mt-4 pt-4 border-t border-white/55">
+            <div className="mt-4 pt-4 border-t border-card-border5">
               <p className="text-xs text-foreground-subtle mb-3">Quick Actions</p>
               <div className="grid grid-cols-3 gap-2">
                 <Link
@@ -801,7 +801,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5" />
             <div className="relative flex flex-col sm:flex-row items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center flex-shrink-0" style={{ boxShadow: "var(--shadow-glow)" }}>
-                <Zap className="w-6 h-6 text-white" />
+                <Zap className="w-6 h-6 text-foreground" />
               </div>
               <div className="flex-1 text-center sm:text-left">
                 <h3 className="font-semibold text-foreground-muted text-sm mb-0.5">

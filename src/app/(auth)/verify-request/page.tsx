@@ -54,22 +54,22 @@ export default function VerifyRequestPage() {
         <Mail className="w-10 h-10 text-primary" />
       </div>
 
-      <h1 className="text-2xl font-bold text-white mb-2">Check Your Email</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-2">Check Your Email</h1>
       
       {email ? (
-        <p className="text-white/60 mb-4">
+        <p className="text-foreground-muted mb-4">
           We sent a verification link to{" "}
-          <span className="text-white font-medium">{email}</span>
+          <span className="text-foreground font-medium">{email}</span>
         </p>
       ) : (
-        <p className="text-white/60 mb-4">
+        <p className="text-foreground-muted mb-4">
           We sent a verification link to your email address
         </p>
       )}
 
-      <div className="bg-white/5 rounded-xl p-6 mb-6 text-left">
-        <h3 className="text-sm font-semibold text-white mb-3">Didn't receive the email?</h3>
-        <ul className="text-sm text-white/60 space-y-2">
+      <div className="bg-background-tertiary rounded-xl p-6 mb-6 text-left">
+        <h3 className="text-sm font-semibold text-foreground mb-3">Didn't receive the email?</h3>
+        <ul className="text-sm text-foreground-muted space-y-2">
           <li className="flex items-start gap-2">
             <span className="text-primary mt-0.5">•</span>
             Check your spam or junk folder
@@ -111,7 +111,7 @@ export default function VerifyRequestPage() {
 
       <Link
         href="/login"
-        className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Sign In

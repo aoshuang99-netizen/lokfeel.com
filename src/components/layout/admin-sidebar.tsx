@@ -32,12 +32,12 @@ export default function AdminSidebar() {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-background-secondary border-r border-white/10 transition-all duration-300 z-fixed ${
+        className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-background-secondary border-r border-card-border transition-all duration-300 z-fixed ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-card-border">
           <Link href="/admin" className="flex items-center gap-2">
             <Shield className="w-7 h-7 text-secondary" />
             {!isCollapsed && (
@@ -46,7 +46,7 @@ export default function AdminSidebar() {
           </Link>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-white/40 hover:text-white"
+            className="p-1.5 rounded-lg hover:bg-background-tertiary transition-colors text-foreground-subtle hover:text-foreground"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
@@ -76,13 +76,13 @@ export default function AdminSidebar() {
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                   isActive
-                    ? "bg-gradient-to-r from-secondary/20 to-primary/20 text-white border border-secondary/30"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
+                    ? "bg-gradient-to-r from-secondary/20 to-primary/20 text-foreground border border-secondary/30"
+                    : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
                 } ${isCollapsed ? "justify-center" : ""}`}
               >
                 <Icon
                   className={`w-5 h-5 flex-shrink-0 ${
-                    isActive ? "text-secondary" : "text-white/40 group-hover:text-white"
+                    isActive ? "text-secondary" : "text-foreground-subtle group-hover:text-foreground"
                   }`}
                 />
                 {!isCollapsed && (
@@ -94,10 +94,10 @@ export default function AdminSidebar() {
         </nav>
 
         {/* Back to App */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-card-border">
           <Link
             href="/dashboard"
-            className={`flex items-center gap-3 text-white/40 hover:text-white transition-colors ${
+            className={`flex items-center gap-3 text-foreground-subtle hover:text-foreground transition-colors ${
               isCollapsed ? "justify-center" : ""
             }`}
           >
@@ -110,7 +110,7 @@ export default function AdminSidebar() {
       {/* Mobile Sidebar Overlay */}
       <aside className="lg:hidden fixed inset-0 z-fixed">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <div className="absolute left-0 top-0 h-full w-72 bg-background-secondary border-r border-white/10 p-6 pt-20">
+        <div className="absolute left-0 top-0 h-full w-72 bg-background-secondary border-r border-card-border p-6 pt-20">
           {/* Logo */}
           <div className="flex items-center gap-2 mb-4">
             <Shield className="w-7 h-7 text-secondary" />
@@ -130,8 +130,8 @@ export default function AdminSidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     isActive
-                      ? "bg-gradient-to-r from-secondary/20 to-primary/20 text-white border border-secondary/30"
-                      : "text-white/60 hover:text-white hover:bg-white/5"
+                      ? "bg-gradient-to-r from-secondary/20 to-primary/20 text-foreground border border-secondary/30"
+                      : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? "text-secondary" : ""}`} />
@@ -144,7 +144,7 @@ export default function AdminSidebar() {
           {/* Back to App */}
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 mt-6 text-white/40 hover:text-white transition-colors"
+            className="flex items-center gap-3 mt-6 text-foreground-subtle hover:text-foreground transition-colors"
           >
             <Shield className="w-4 h-4" />
             <span className="text-sm">Back to App</span>

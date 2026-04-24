@@ -15,7 +15,7 @@ const sizeClasses = {
 const variantClasses = {
   default: 'border-muted-foreground/30 border-t-muted-foreground',
   primary: 'border-primary/30 border-t-primary',
-  white: 'border-white/30 border-t-white',
+  white: 'border-card-border border-t-white',
 }
 
 const Spinner = React.forwardRef<HTMLDivElement, SpinnerProps>(

@@ -131,20 +131,20 @@ export function PushNotificationManager() {
             <Bell className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
-            <h4 className="font-medium text-white mb-1">Enable Notifications</h4>
-            <p className="text-sm text-white/60 mb-3">
+            <h4 className="font-medium text-foreground mb-1">Enable Notifications</h4>
+            <p className="text-sm text-foreground-muted mb-3">
               Get notified about new matches, messages, and when your Vault is about to expire.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={requestPermission}
-                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors"
+                className="px-4 py-2 rounded-lg bg-primary text-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
               >
                 Enable
               </button>
               <button
                 onClick={() => setShowPermissionPrompt(false)}
-                className="px-4 py-2 rounded-lg bg-white/10 text-white/70 text-sm hover:bg-white/20 transition-colors"
+                className="px-4 py-2 rounded-lg bg-background-tertiary text-foreground-muted text-sm hover:bg-background-tertiary transition-colors"
               >
                 Not Now
               </button>
@@ -152,7 +152,7 @@ export function PushNotificationManager() {
           </div>
           <button
             onClick={() => setShowPermissionPrompt(false)}
-            className="text-white/40 hover:text-white"
+            className="text-foreground-subtle hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -164,21 +164,21 @@ export function PushNotificationManager() {
   return (
     <div className="space-y-6">
       {/* Push Status */}
-      <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+      <div className="p-4 rounded-2xl bg-background-tertiary border border-card-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              settings.pushEnabled ? "bg-green-500/20" : "bg-white/10"
+              settings.pushEnabled ? "bg-green-500/20" : "bg-background-tertiary"
             }`}>
               {settings.pushEnabled ? (
                 <Bell className="w-5 h-5 text-green-400" />
               ) : (
-                <BellOff className="w-5 h-5 text-white/40" />
+                <BellOff className="w-5 h-5 text-foreground-subtle" />
               )}
             </div>
             <div>
-              <h4 className="font-medium text-white">Push Notifications</h4>
-              <p className="text-sm text-white/50">
+              <h4 className="font-medium text-foreground">Push Notifications</h4>
+              <p className="text-sm text-foreground-muted">
                 {settings.pushEnabled ? "Enabled" : "Disabled"}
               </p>
             </div>
@@ -196,7 +196,7 @@ export function PushNotificationManager() {
 
       {/* Notification Types */}
       <div className="space-y-3">
-        <h4 className="text-sm font-medium text-white/60 uppercase tracking-wider">Notify Me About</h4>
+        <h4 className="text-sm font-medium text-foreground-muted uppercase tracking-wider">Notify Me About</h4>
         
         <ToggleItem
           icon={Heart}
@@ -232,7 +232,7 @@ export function PushNotificationManager() {
       </div>
 
       {/* Email Settings */}
-      <div className="pt-6 border-t border-white/10">
+      <div className="pt-6 border-t border-card-border">
         <ToggleItem
           icon={Settings}
           label="Marketing Emails"
@@ -259,18 +259,18 @@ function ToggleItem({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+    <div className="flex items-center justify-between p-3 rounded-xl bg-background-tertiary hover:bg-background-tertiary transition-colors">
       <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 text-white/40" />
+        <Icon className="w-5 h-5 text-foreground-subtle" />
         <div>
-          <p className="text-white font-medium">{label}</p>
-          <p className="text-xs text-white/50">{description}</p>
+          <p className="text-foreground font-medium">{label}</p>
+          <p className="text-xs text-foreground-muted">{description}</p>
         </div>
       </div>
       <button
         onClick={() => onChange(!checked)}
         className={`w-12 h-6 rounded-full transition-colors relative ${
-          checked ? "bg-primary" : "bg-white/20"
+          checked ? "bg-primary" : "bg-background-tertiary"
         }`}
       >
         <motion.div

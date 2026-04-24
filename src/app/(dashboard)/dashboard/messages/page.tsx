@@ -93,8 +93,8 @@ export default function MessagesPage() {
       {/* 页面标题 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Messages</h1>
-          <p className="text-white/50 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Messages</h1>
+          <p className="text-foreground-muted text-sm mt-1">
             Your active conversations
           </p>
         </div>
@@ -105,8 +105,8 @@ export default function MessagesPage() {
         <div className="flex items-start gap-3">
           <Lock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-medium text-white text-sm">The Vault</h4>
-            <p className="text-xs text-white/60 mt-1">
+            <h4 className="font-medium text-foreground text-sm">The Vault</h4>
+            <p className="text-xs text-foreground-muted mt-1">
               Conversations are available for 24 hours after matching. 
               Women can extend or close the Vault at any time.
             </p>
@@ -156,7 +156,7 @@ export default function MessagesPage() {
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden">
                           {(() => {
                             const kind = getAvatarKind(chat.otherUser.avatar);
-                            if (kind === 'none') return <User className="w-7 h-7 text-white/30" />;
+                            if (kind === 'none') return <User className="w-7 h-7 text-foreground-subtle" />;
                             if (kind === 'emoji') {
                               const parsed = parseEmojiAvatar(chat.otherUser.avatar);
                               return <span className="text-2xl">{parsed?.emoji}</span>;
@@ -173,7 +173,7 @@ export default function MessagesPage() {
                         </div>
                         {/* 未读标记 */}
                         {chat.unreadCount > 0 && (
-                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">
+                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-foreground">
                             {chat.unreadCount}
                           </div>
                         )}
@@ -182,11 +182,11 @@ export default function MessagesPage() {
                       {/* 信息 */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-white truncate">
+                          <h3 className="font-semibold text-foreground truncate">
                             {chat.otherUser.name}, {chat.otherUser.age}
                           </h3>
                           {chat.isVaultExpired && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/40">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-background-tertiary text-foreground-subtle">
                               Vault Closed
                             </span>
                           )}
@@ -194,12 +194,12 @@ export default function MessagesPage() {
 
                         {/* 最后消息 */}
                         {chat.lastMessage ? (
-                          <p className="text-sm text-white/60 truncate">
+                          <p className="text-sm text-foreground-muted truncate">
                             {chat.lastMessage.isFromMe ? "You: " : ""}
                             {chat.lastMessage.content}
                           </p>
                         ) : (
-                          <p className="text-sm text-white/40 italic">
+                          <p className="text-sm text-foreground-subtle italic">
                             No messages yet. Say hello! 👋
                           </p>
                         )}
@@ -213,7 +213,7 @@ export default function MessagesPage() {
                             </p>
                           )}
                           {chat.lastMessage && (
-                            <p className="text-xs text-white/40">
+                            <p className="text-xs text-foreground-subtle">
                               {formatTime(chat.lastMessage.timestamp)}
                             </p>
                           )}
@@ -221,7 +221,7 @@ export default function MessagesPage() {
                       </div>
 
                       {/* 箭头 */}
-                      <ChevronRight className="w-5 h-5 text-white/20" />
+                      <ChevronRight className="w-5 h-5 text-foreground-faint" />
                     </div>
                   </div>
                 </Link>

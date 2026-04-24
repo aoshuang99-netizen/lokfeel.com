@@ -33,9 +33,9 @@ export function EmptyState({
     <div className={`flex flex-col items-center justify-center py-16 px-4 text-center ${className}`}>
       {/* Icon */}
       <div className="relative mb-6">
-        <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center">
+        <div className="w-20 h-20 rounded-full bg-background-tertiary flex items-center justify-center">
           {IconComponent ? (
-            <IconComponent className="w-10 h-10 text-white/30" />
+            <IconComponent className="w-10 h-10 text-foreground-subtle" />
           ) : (
             icon
           )}
@@ -45,9 +45,9 @@ export function EmptyState({
       </div>
 
       {/* Content */}
-      <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
+      <h3 className="text-xl font-semibold text-foreground mb-2">{title}</h3>
       {description && (
-        <p className="text-white/60 max-w-sm mb-6">{description}</p>
+        <p className="text-foreground-muted max-w-sm mb-6">{description}</p>
       )}
 
       {/* Action */}

@@ -77,9 +77,9 @@ export default function ShareButton({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="glass-card p-6 w-full max-w-md animate-slide-up">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Share LokFeel</h3>
-              <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-full">
-                <X className="w-5 h-5 text-white/60" />
+              <h3 className="text-xl font-bold text-foreground">Share LokFeel</h3>
+              <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-background-tertiary rounded-full">
+                <X className="w-5 h-5 text-foreground-muted" />
               </button>
             </div>
 
@@ -88,26 +88,26 @@ export default function ShareButton({
                 <button
                   key={link.name}
                   onClick={() => window.open(link.url, "_blank", "width=600,height=400")}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/10 transition-colors"
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-background-tertiary transition-colors"
                 >
                   <span className="text-2xl">{link.icon}</span>
-                  <span className="text-xs text-white/60">{link.name}</span>
+                  <span className="text-xs text-foreground-muted">{link.name}</span>
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 p-3 bg-white/5 rounded-xl">
+            <div className="flex items-center gap-2 p-3 bg-background-tertiary rounded-xl">
               <input
                 type="text"
                 value={url}
                 readOnly
-                className="flex-1 bg-transparent text-sm text-white/60 outline-none"
+                className="flex-1 bg-transparent text-sm text-foreground-muted outline-none"
               />
               <button
                 onClick={handleCopyLink}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 hover:bg-background-tertiary rounded-lg transition-colors"
               >
-                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Link2 className="w-4 h-4 text-white/60" />}
+                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Link2 className="w-4 h-4 text-foreground-muted" />}
               </button>
             </div>
           </div>

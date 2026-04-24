@@ -70,11 +70,11 @@ const ScoreBar = ({ label, score, icon, color, description }: ScoreBarProps) => 
           <div className={cn("p-1.5 rounded-lg", color)}>
             {icon}
           </div>
-          <span className="text-sm font-medium text-white/80">{label}</span>
+          <span className="text-sm font-medium text-foreground">{label}</span>
           {description && (
             <div className="group relative">
-              <Info className="w-3.5 h-3.5 text-white/40 cursor-help" />
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#1a1a2e] border border-white/10 rounded-lg text-xs text-white/70 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              <Info className="w-3.5 h-3.5 text-foreground-subtle cursor-help" />
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-background-tertiary border border-card-border rounded-lg text-xs text-foreground-muted whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                 {description}
               </div>
             </div>
@@ -84,7 +84,7 @@ const ScoreBar = ({ label, score, icon, color, description }: ScoreBarProps) => 
           {score}%
         </span>
       </div>
-      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+      <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
         <motion.div
           className={cn("h-full rounded-full transition-all duration-500", getScoreBg(score))}
           initial={{ width: 0 }}
@@ -159,16 +159,16 @@ export function CompatibilityBreakdown({
             <span className={cn("text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent", getOverallColor(overall))}>
               {overall}
             </span>
-            <span className="text-xs text-white/50 mt-1">Match Score</span>
+            <span className="text-xs text-foreground-muted mt-1">Match Score</span>
           </div>
         </div>
-        <p className="text-lg font-medium text-white/90">{getOverallLabel(overall)}</p>
-        <p className="text-sm text-white/60 max-w-md mx-auto">{explanation}</p>
+        <p className="text-lg font-medium text-foreground">{getOverallLabel(overall)}</p>
+        <p className="text-sm text-foreground-muted max-w-md mx-auto">{explanation}</p>
       </div>
 
       {/* Detailed Breakdown */}
-      <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-        <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wider">
+      <div className="space-y-4 p-4 rounded-xl bg-background-tertiary border border-card-border">
+        <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wider">
           Compatibility Breakdown
         </h3>
         
@@ -211,7 +211,7 @@ export function CompatibilityBreakdown({
           />
 
           {/* New Dimensions */}
-          <div className="pt-4 border-t border-white/10 space-y-4">
+          <div className="pt-4 border-t border-card-border space-y-4">
             <ScoreBar
               label="Relationship Type"
               score={breakdown.relationshipType}
@@ -240,7 +240,7 @@ export function CompatibilityBreakdown({
       {/* Warnings */}
       {warnings.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wider flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-yellow-400" />
             Things to Consider
           </h3>
@@ -254,7 +254,7 @@ export function CompatibilityBreakdown({
                 className="flex items-start gap-2 p-3 rounded-lg bg-yellow-400/10 border border-yellow-400/20"
               >
                 <Info className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-white/70">{warning}</p>
+                <p className="text-sm text-foreground-muted">{warning}</p>
               </motion.div>
             ))}
           </div>
@@ -271,7 +271,7 @@ export function CompatibilityBreakdown({
           <CheckCircle2 className="w-5 h-5 text-green-400" />
           <div>
             <p className="text-sm font-medium text-green-400">Strong Compatibility</p>
-            <p className="text-xs text-white/60">No significant concerns detected in your compatibility profile</p>
+            <p className="text-xs text-foreground-muted">No significant concerns detected in your compatibility profile</p>
           </div>
         </motion.div>
       )}

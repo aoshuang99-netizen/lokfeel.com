@@ -414,7 +414,7 @@ export default function ChatRoomPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Loading conversation...</p>
+          <p className="text-foreground-muted">Loading conversation...</p>
         </div>
       </div>
     );
@@ -424,18 +424,18 @@ export default function ChatRoomPage() {
   // RENDER
   // ═══════════════════════════════════════════════════════
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0d0c11]">
+    <div className="flex-1 flex flex-col h-full bg-background">
       {/* ═══════════════════════════════════════════════════════
           CHAT HEADER
           ═══════════════════════════════════════════════════════ */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#13121a] border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-3 bg-background-secondary border-b border-card-border">
         <div className="flex items-center gap-3">
           {/* Back Button (Mobile) */}
           <Link
             href="/dashboard/chat"
-            className="md:hidden p-2 -ml-2 rounded-full hover:bg-white/10"
+            className="md:hidden p-2 -ml-2 rounded-full hover:bg-background-tertiary"
           >
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </Link>
 
           {/* Avatar with Online Status */}
@@ -464,16 +464,16 @@ export default function ChatRoomPage() {
                   />
                 )
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
+                <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground font-bold">
                   {roomInfo?.otherUser?.name?.[0] || "?"}
                 </div>
               )}
             </div>
             {/* Online Status */}
             {roomInfo?.otherUser?.isOnline ? (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#13121a]" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background-secondary" />
             ) : (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-[#13121a]" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-background-secondary" />
             )}
 
           </div>
@@ -481,12 +481,12 @@ export default function ChatRoomPage() {
           {/* User Info */}
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-white text-sm">
+              <h3 className="font-semibold text-foreground text-sm">
                 {roomInfo?.otherUser?.name || "Unknown"}
               </h3>
 
             </div>
-            <p className="text-xs text-white/50">
+            <p className="text-xs text-foreground-muted">
               {roomInfo?.otherUser?.isOnline 
                 ? "Online" 
                 : formatLastSeen(roomInfo?.otherUser?.lastSeen)
@@ -497,18 +497,18 @@ export default function ChatRoomPage() {
 
         {/* Header Actions */}
         <div className="flex items-center gap-1">
-          <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
-            <Phone className="w-5 h-5 text-white/60" />
+          <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors">
+            <Phone className="w-5 h-5 text-foreground-muted" />
           </button>
-          <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
-            <Video className="w-5 h-5 text-white/60" />
+          <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors">
+            <Video className="w-5 h-5 text-foreground-muted" />
           </button>
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              className="p-2 rounded-full hover:bg-background-tertiary transition-colors"
             >
-              <MoreVertical className="w-5 h-5 text-white/60" />
+              <MoreVertical className="w-5 h-5 text-foreground-muted" />
             </button>
 
             {/* More Menu Dropdown */}
@@ -518,14 +518,14 @@ export default function ChatRoomPage() {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-2 w-48 bg-[#1a1926] rounded-xl border border-white/10 shadow-xl z-50"
+                  className="absolute right-0 top-full mt-2 w-48 bg-background-tertiary rounded-xl border border-card-border shadow-xl z-50"
                 >
                   <button
                     onClick={() => {
                       setShowReportModal(true);
                       setShowMoreMenu(false);
                     }}
-                    className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/5 flex items-center gap-2"
+                    className="w-full px-4 py-3 text-left text-sm text-foreground hover:bg-background-tertiary flex items-center gap-2"
                   >
                     <ShieldAlert className="w-4 h-4" />
                     Report User
@@ -533,7 +533,7 @@ export default function ChatRoomPage() {
                   <button
                     onClick={handleBlockUser}
                     disabled={isBlocking}
-                    className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 flex items-center gap-2"
+                    className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-background-tertiary flex items-center gap-2"
                   >
                     <Ban className="w-4 h-4" />
                     {isBlocking ? "Blocking..." : "Block User"}
@@ -552,7 +552,7 @@ export default function ChatRoomPage() {
         <div className="bg-gradient-to-r from-primary/20 to-secondary/20 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-primary" />
-            <span className="text-sm text-white/80">
+            <span className="text-sm text-foreground">
               Vault Chat - Exchange contacts to unlock
             </span>
           </div>
@@ -569,20 +569,20 @@ export default function ChatRoomPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mb-4">
               {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) ? (
                 <Bot className="w-8 h-8 text-orange-400" />
               ) : (
-                <Sparkles className="w-8 h-8 text-white/30" />
+                <Sparkles className="w-8 h-8 text-foreground-subtle" />
               )}
             </div>
-            <p className="text-white/60 mb-2">
+            <p className="text-foreground-muted mb-2">
               {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-"))
                 ? `Start chatting with ${roomInfo?.otherUser?.name || "them"}`
                 : "No messages yet"
               }
             </p>
-            <p className="text-white/40 text-sm">
+            <p className="text-foreground-subtle text-sm">
               {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-"))
                 ? "Say hello and start the conversation!"
                 : "Start the conversation!"
@@ -629,14 +629,14 @@ export default function ChatRoomPage() {
                           />
                         )
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold">
+                        <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground text-xs font-bold">
                           {roomInfo?.otherUser?.name?.[0] || "?"}
                         </div>
                       )}
                       {/* Bot indicator on avatar */}
                       {fromBot && (
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
-                          <Bot className="w-2 h-2 text-white" />
+                          <Bot className="w-2 h-2 text-foreground" />
                         </div>
                       )}
                     </div>
@@ -647,15 +647,15 @@ export default function ChatRoomPage() {
                   <div
                     className={`px-4 py-2.5 rounded-2xl max-w-[75%] ${
                       fromMe
-                        ? "bg-gradient-to-br from-pink-500 to-orange-500 text-white rounded-br-md"
+                        ? "bg-gradient-to-br from-amber-600/90 to-amber-500/90 text-foreground rounded-br-md"
                         : fromBot
-                        ? "bg-white/[0.08] text-white/90 rounded-bl-md border border-white/[0.08]"
-                        : "bg-white/[0.08] text-white/90 rounded-bl-md"
+                        ? "bg-white/[0.07] text-foreground rounded-bl-md border border-card-border/[0.06]"
+                        : "bg-white/[0.08] text-foreground rounded-bl-md"
                     }`}
                   >
 
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">{msg.content}</p>
-                    <p className={`text-xs mt-1 ${fromMe ? "text-white/70" : "text-white/50"}`}>
+                    <p className={`text-xs mt-1 ${fromMe ? "text-foreground-muted" : "text-foreground-muted"}`}>
                       {formatTime(msg.createdAt)}
                     </p>
                   </div>
@@ -676,14 +676,14 @@ export default function ChatRoomPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="px-4 py-2 bg-[#13121a] border-t border-white/5"
+            className="px-4 py-2 bg-background-secondary border-t border-card-border"
           >
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-xs text-white/60">AI Suggestions</span>
+              <span className="text-xs text-foreground-muted">AI Suggestions</span>
               <button
                 onClick={() => setShowAiSuggestions(false)}
-                className="ml-auto text-white/40 hover:text-white"
+                className="ml-auto text-foreground-subtle hover:text-foreground"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -693,7 +693,7 @@ export default function ChatRoomPage() {
                 <button
                   key={idx}
                   onClick={() => handleSend(suggestion)}
-                  className="flex-shrink-0 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full text-xs text-white/80 transition-colors whitespace-nowrap"
+                  className="flex-shrink-0 px-3 py-1.5 bg-background-tertiary hover:bg-background-tertiary rounded-full text-xs text-foreground transition-colors whitespace-nowrap"
                 >
                   {suggestion}
                 </button>
@@ -712,14 +712,14 @@ export default function ChatRoomPage() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-2 bg-[#13121a] border-t border-white/5"
+            className="px-4 py-2 bg-background-secondary border-t border-card-border"
           >
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {QUICK_REPLIES.map((reply, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSend(reply)}
-                  className="flex-shrink-0 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full text-xs text-white/80 transition-colors whitespace-nowrap"
+                  className="flex-shrink-0 px-3 py-1.5 bg-background-tertiary hover:bg-background-tertiary rounded-full text-xs text-foreground transition-colors whitespace-nowrap"
                 >
                   {reply}
                 </button>
@@ -738,7 +738,7 @@ export default function ChatRoomPage() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-3 bg-[#13121a] border-t border-white/5"
+            className="px-4 py-3 bg-background-secondary border-t border-card-border"
           >
             <div className="grid grid-cols-8 gap-2">
               {EMOJIS.map((emoji, idx) => (
@@ -748,7 +748,7 @@ export default function ChatRoomPage() {
                     setNewMessage((prev) => prev + emoji);
                     inputRef.current?.focus();
                   }}
-                  className="text-2xl hover:bg-white/10 rounded-lg p-1 transition-colors"
+                  className="text-2xl hover:bg-background-tertiary rounded-lg p-1 transition-colors"
                 >
                   {emoji}
                 </button>
@@ -761,7 +761,7 @@ export default function ChatRoomPage() {
       {/* ═══════════════════════════════════════════════════════
           INPUT AREA
           ═══════════════════════════════════════════════════════ */}
-      <div className="p-3 bg-[#13121a] border-t border-white/10">
+      <div className="p-3 bg-background-secondary border-t border-card-border">
         <div className="flex items-center gap-2">
           {/* Emoji Button */}
           <button
@@ -770,14 +770,14 @@ export default function ChatRoomPage() {
               setShowQuickReplies(false);
             }}
             className={`p-2 rounded-full transition-colors ${
-              showEmojiPicker ? "bg-primary/20 text-primary" : "hover:bg-white/10 text-white/60"
+              showEmojiPicker ? "bg-primary/20 text-primary" : "hover:bg-background-tertiary text-foreground-muted"
             }`}
           >
             <Smile className="w-5 h-5" />
           </button>
 
           {/* Attachment Button */}
-          <button className="p-2 rounded-full hover:bg-white/10 text-white/60 transition-colors">
+          <button className="p-2 rounded-full hover:bg-background-tertiary text-foreground-muted transition-colors">
             <ImageIcon className="w-5 h-5" />
           </button>
 
@@ -788,7 +788,7 @@ export default function ChatRoomPage() {
               setShowEmojiPicker(false);
             }}
             className={`p-2 rounded-full transition-colors ${
-              showQuickReplies ? "bg-primary/20 text-primary" : "hover:bg-white/10 text-white/60"
+              showQuickReplies ? "bg-primary/20 text-primary" : "hover:bg-background-tertiary text-foreground-muted"
             }`}
           >
             <Zap className="w-5 h-5" />
@@ -808,7 +808,7 @@ export default function ChatRoomPage() {
                 }
               }}
               placeholder="Type a message..."
-              className="w-full bg-[#0d0c11] text-white placeholder:text-white/40 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full bg-background-tertiary text-foreground placeholder:text-foreground-subtle rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
 
@@ -817,7 +817,7 @@ export default function ChatRoomPage() {
             <button
               onClick={() => handleSend()}
               disabled={sending}
-              className="p-2 rounded-full bg-primary hover:bg-primary-hover text-white transition-colors disabled:opacity-50"
+              className="p-2 rounded-full bg-primary hover:bg-primary-hover text-foreground transition-colors disabled:opacity-50"
             >
               {sending ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -826,7 +826,7 @@ export default function ChatRoomPage() {
               )}
             </button>
           ) : (
-            <button className="p-2 rounded-full hover:bg-white/10 text-white/60 transition-colors">
+            <button className="p-2 rounded-full hover:bg-background-tertiary text-foreground-muted transition-colors">
               <Mic className="w-5 h-5" />
             </button>
           )}
@@ -835,7 +835,7 @@ export default function ChatRoomPage() {
         {/* Free User Limit Warning */}
         {userLimits && !userLimits.isPremium && userLimits.messagesRemaining <= 5 && (
           <div className="mt-2 text-center">
-            <p className="text-xs text-white/50">
+            <p className="text-xs text-foreground-muted">
               {userLimits.messagesRemaining} free messages remaining.{" "}
               <button
                 onClick={() => setShowUpgradeModal(true)}
@@ -863,22 +863,22 @@ export default function ChatRoomPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#1a1926] rounded-2xl p-6 max-w-sm w-full border border-white/10"
+              className="bg-background-tertiary rounded-2xl p-6 max-w-sm w-full border border-card-border"
             >
               <div className="text-center">
                 <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
                   <Zap className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
+                <h3 className="text-xl font-bold text-foreground mb-2">
                   Upgrade to Premium
                 </h3>
-                <p className="text-white/60 text-sm mb-6">
+                <p className="text-foreground-muted text-sm mb-6">
                   You&apos;ve used all your free messages. Upgrade to unlock unlimited messaging and more features.
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowUpgradeModal(false)}
-                    className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors"
+                    className="flex-1 py-2.5 rounded-xl bg-background-tertiary hover:bg-background-tertiary text-foreground transition-colors"
                   >
                     Maybe Later
                   </button>
@@ -887,7 +887,7 @@ export default function ChatRoomPage() {
                       setShowUpgradeModal(false);
                       window.location.href = "/dashboard/settings/billing";
                     }}
-                    className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white transition-colors"
+                    className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-foreground transition-colors"
                   >
                     Upgrade
                   </button>

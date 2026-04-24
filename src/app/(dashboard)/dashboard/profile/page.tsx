@@ -297,8 +297,8 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">Complete Your Profile</h1>
-        <p className="text-white/60">Build your relationship blueprint to get better matches</p>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Complete Your Profile</h1>
+        <p className="text-foreground-muted">Build your relationship blueprint to get better matches</p>
       </div>
 
       {/* Progress Steps */}
@@ -309,10 +309,10 @@ export default function ProfilePage() {
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                   currentStep > step.id
-                    ? "bg-success text-white"
+                    ? "bg-success text-foreground"
                     : currentStep === step.id
-                    ? "bg-gradient-to-br from-primary to-secondary text-white"
-                    : "bg-white/10 text-white/40"
+                    ? "bg-gradient-to-br from-primary to-secondary text-foreground"
+                    : "bg-background-tertiary text-foreground-subtle"
                 }`}
               >
                 {currentStep > step.id ? (
@@ -323,19 +323,19 @@ export default function ProfilePage() {
               </div>
               {idx < steps.length - 1 && (
                 <div className={`w-12 sm:w-20 h-0.5 mx-2 ${
-                  currentStep > step.id ? "bg-success" : "bg-white/10"
+                  currentStep > step.id ? "bg-success" : "bg-background-tertiary"
                 }`} />
               )}
             </div>
           ))}
         </div>
-        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-sm text-white/60 mt-2 text-center">
+        <p className="text-sm text-foreground-muted mt-2 text-center">
           Step {currentStep} of {steps.length}: {steps[currentStep - 1].title}
         </p>
       </div>
@@ -347,9 +347,9 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Avatar Upload */}
             <div className="flex flex-col items-center">
-              <label className="block text-sm font-medium text-white/80 mb-3">Profile Photo</label>
+              <label className="block text-sm font-medium text-foreground mb-3">Profile Photo</label>
               <div className="relative">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-white/10 border-2 border-white/20">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-background-tertiary border-2 border-card-border">
                   {formData.avatar ? (
                     <img
                       src={formData.avatar}
@@ -365,7 +365,7 @@ export default function ProfilePage() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-10 h-10 text-white/40" />
+                      <User className="w-10 h-10 text-foreground-subtle" />
                     </div>
                   )}
                 </div>
@@ -374,9 +374,9 @@ export default function ProfilePage() {
                   className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/80 transition-colors shadow-lg"
                 >
                   {isUploading ? (
-                    <Loader2 className="w-4 h-4 text-white animate-spin" />
+                    <Loader2 className="w-4 h-4 text-foreground animate-spin" />
                   ) : (
-                    <Camera className="w-4 h-4 text-white" />
+                    <Camera className="w-4 h-4 text-foreground" />
                   )}
                 </label>
                 <input
@@ -396,11 +396,11 @@ export default function ProfilePage() {
                   onCropComplete={handleCropComplete}
                 />
               </div>
-              <p className="text-xs text-white/40 mt-2">Click camera to upload photo</p>
+              <p className="text-xs text-foreground-subtle mt-2">Click camera to upload photo</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Display Name</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Display Name</label>
               <input
                 type="text"
                 value={formData.displayName}
@@ -412,7 +412,7 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Age</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Age</label>
                 <input
                   type="number"
                   value={formData.age}
@@ -422,7 +422,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Gender</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Gender</label>
                 <select
                   value={formData.gender}
                   onChange={(e) => handleChange("gender", e.target.value)}
@@ -437,7 +437,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Sexual Orientation</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Sexual Orientation</label>
               <select
                 value={formData.sexuality}
                 onChange={(e) => handleChange("sexuality", e.target.value)}
@@ -452,7 +452,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Bio</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Bio</label>
               <textarea
                 value={formData.bio}
                 onChange={(e) => handleChange("bio", e.target.value)}
@@ -462,7 +462,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Location</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Location</label>
               <input
                 type="text"
                 value={formData.location}
@@ -477,7 +477,7 @@ export default function ProfilePage() {
         {currentStep === 2 && (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Relationship Type</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Relationship Type</label>
               <select
                 value={formData.relationshipType}
                 onChange={(e) => handleChange("relationshipType", e.target.value)}
@@ -492,7 +492,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Sexual Orientation</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Sexual Orientation</label>
               <select
                 value={formData.sexualOrientation}
                 onChange={(e) => handleChange("sexualOrientation", e.target.value)}
@@ -512,7 +512,7 @@ export default function ProfilePage() {
         {currentStep === 3 && (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Relationship Goal</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Relationship Goal</label>
               <select
                 value={formData.relationshipGoal}
                 onChange={(e) => handleChange("relationshipGoal", e.target.value)}
@@ -526,7 +526,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Attachment Style</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Attachment Style</label>
               <select
                 value={formData.attachmentStyle}
                 onChange={(e) => handleChange("attachmentStyle", e.target.value)}
@@ -540,7 +540,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Communication Style</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Communication Style</label>
               <select
                 value={formData.communicationStyle}
                 onChange={(e) => handleChange("communicationStyle", e.target.value)}
@@ -554,7 +554,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Conflict Resolution</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Conflict Resolution</label>
               <select
                 value={formData.conflictResolution}
                 onChange={(e) => handleChange("conflictResolution", e.target.value)}
@@ -573,7 +573,7 @@ export default function ProfilePage() {
         {currentStep === 4 && (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Love Language</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Love Language</label>
               <select
                 value={formData.loveLanguage}
                 onChange={(e) => handleChange("loveLanguage", e.target.value)}
@@ -588,7 +588,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Top 3 Dealbreakers</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Top 3 Dealbreakers</label>
               <div className="space-y-2">
                 {formData.dealbreakers.map((deal, idx) => (
                   <input
@@ -608,7 +608,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Key Boundaries</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Key Boundaries</label>
               <div className="space-y-2">
                 {formData.boundaries.map((boundary, idx) => (
                   <input
@@ -633,10 +633,10 @@ export default function ProfilePage() {
         {currentStep === 5 && (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Life Priorities (select all that apply)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Life Priorities (select all that apply)</label>
               <div className="grid grid-cols-2 gap-3">
                 {["Career growth", "Family", "Personal development", "Health", "Travel", "Financial stability", "Friendships", "Creativity"].map((priority) => (
-                  <label key={priority} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-colors">
+                  <label key={priority} className="flex items-center gap-3 p-3 rounded-xl bg-background-tertiary hover:bg-background-tertiary cursor-pointer transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.priorities.includes(priority)}
@@ -647,16 +647,16 @@ export default function ProfilePage() {
                           handleChange("priorities", formData.priorities.filter((p) => p !== priority));
                         }
                       }}
-                      className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary"
+                      className="w-4 h-4 rounded border-card-border bg-background-tertiary text-primary"
                     />
-                    <span className="text-sm text-white/80">{priority}</span>
+                    <span className="text-sm text-foreground">{priority}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Emotional Availability: {formData.emotionalAvailability}/5
               </label>
               <input
@@ -665,16 +665,16 @@ export default function ProfilePage() {
                 max={5}
                 value={formData.emotionalAvailability}
                 onChange={(e) => handleChange("emotionalAvailability", e.target.value)}
-                className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer"
+                className="w-full h-2 bg-background-tertiary rounded-full appearance-none cursor-pointer"
               />
-              <div className="flex justify-between text-xs text-white/40 mt-1">
+              <div className="flex justify-between text-xs text-foreground-subtle mt-1">
                 <span>Less available</span>
                 <span>Very available</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Location Preferences</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Location Preferences</label>
               <input
                 type="text"
                 value={formData.locationPreferences.join(", ")}
@@ -682,7 +682,7 @@ export default function ProfilePage() {
                 className="input-feeld"
                 placeholder="San Francisco, Los Angeles, Seattle..."
               />
-              <p className="text-xs text-white/40 mt-1">Comma-separated cities</p>
+              <p className="text-xs text-foreground-subtle mt-1">Comma-separated cities</p>
             </div>
           </div>
         )}
@@ -697,28 +697,28 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4">
-                  <Check className="w-10 h-10 text-white" />
+                  <Check className="w-10 h-10 text-foreground" />
                 </div>
               )}
-              <h3 className="text-xl font-semibold text-white mb-2">Ready to Submit!</h3>
-              <p className="text-white/60">Review your profile and submit for matching</p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Ready to Submit!</h3>
+              <p className="text-foreground-muted">Review your profile and submit for matching</p>
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-white/5">
-                <h4 className="text-sm font-medium text-white/60 mb-2">Basic Info</h4>
-                <p className="text-white">{formData.displayName}, {formData.age}</p>
-                <p className="text-sm text-white/60">{formData.gender} · {formData.sexuality}</p>
+              <div className="p-4 rounded-xl bg-background-tertiary">
+                <h4 className="text-sm font-medium text-foreground-muted mb-2">Basic Info</h4>
+                <p className="text-foreground">{formData.displayName}, {formData.age}</p>
+                <p className="text-sm text-foreground-muted">{formData.gender} · {formData.sexuality}</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white/5">
-                <h4 className="text-sm font-medium text-white/60 mb-2">Relationship Blueprint</h4>
-                <p className="text-white">Goal: {formData.relationshipGoal}</p>
-                <p className="text-white">Attachment: {formData.attachmentStyle}</p>
+              <div className="p-4 rounded-xl bg-background-tertiary">
+                <h4 className="text-sm font-medium text-foreground-muted mb-2">Relationship Blueprint</h4>
+                <p className="text-foreground">Goal: {formData.relationshipGoal}</p>
+                <p className="text-foreground">Attachment: {formData.attachmentStyle}</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white/5">
-                <h4 className="text-sm font-medium text-white/60 mb-2">Priorities</h4>
+              <div className="p-4 rounded-xl bg-background-tertiary">
+                <h4 className="text-sm font-medium text-foreground-muted mb-2">Priorities</h4>
                 <div className="flex flex-wrap gap-2">
                   {formData.priorities.map((p) => (
                     <span key={p} className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary">{p}</span>

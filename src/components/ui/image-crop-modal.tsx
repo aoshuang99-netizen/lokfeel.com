@@ -110,17 +110,17 @@ export function ImageCropModal({ isOpen, imageSrc, onClose, onCropComplete }: Im
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-md bg-[#111] rounded-2xl overflow-hidden"
+          className="w-full max-w-md bg-background-tertiary rounded-2xl overflow-hidden"
           style={{ border: "1px solid rgba(255,255,255,0.1)" }}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
-            <h3 className="text-lg font-semibold text-white">Crop Photo</h3>
+            <h3 className="text-lg font-semibold text-foreground">Crop Photo</h3>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg hover:bg-background-tertiary transition-colors"
             >
-              <X className="w-5 h-5 text-white/70" />
+              <X className="w-5 h-5 text-foreground-muted" />
             </button>
           </div>
 
@@ -163,7 +163,7 @@ export function ImageCropModal({ isOpen, imageSrc, onClose, onCropComplete }: Im
           <div className="p-4 space-y-4">
             {/* Zoom Slider */}
             <div className="flex items-center gap-3">
-              <ZoomOut className="w-4 h-4 text-white/50" />
+              <ZoomOut className="w-4 h-4 text-foreground-muted" />
               <input
                 type="range"
                 min="0.5"
@@ -171,19 +171,19 @@ export function ImageCropModal({ isOpen, imageSrc, onClose, onCropComplete }: Im
                 step="0.1"
                 value={zoom}
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="flex-1 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                className="flex-1 h-1 bg-background-tertiary rounded-lg appearance-none cursor-pointer"
                 style={{
                   background: `linear-gradient(to right, white ${((zoom - 0.5) / 2.5) * 100}%, rgba(255,255,255,0.2) ${((zoom - 0.5) / 2.5) * 100}%)`,
                 }}
               />
-              <ZoomIn className="w-4 h-4 text-white/50" />
+              <ZoomIn className="w-4 h-4 text-foreground-muted" />
             </div>
 
             {/* Action Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/20 text-white/70 hover:bg-white/5 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-card-border text-foreground-muted hover:bg-background-tertiary transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
                 Reset
@@ -197,7 +197,7 @@ export function ImageCropModal({ isOpen, imageSrc, onClose, onCropComplete }: Im
               </button>
             </div>
 
-            <p className="text-xs text-center text-white/40">
+            <p className="text-xs text-center text-foreground-subtle">
               Drag to position • Use slider to zoom
             </p>
           </div>

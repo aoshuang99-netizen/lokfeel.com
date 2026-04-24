@@ -4,109 +4,106 @@
 @import "tailwindcss";
 
 /* ================================================
-   LOKFEEL — NEXUS DESIGN SYSTEM v3 — Ember Night
-   Bold × Passionate × Mysterious
-   OKLCH color space · Outfit typeface · Dark Glass
-   Dark-first: Amber → Orange → Rose gradient
+   LOKFEEL — NEXUS DESIGN SYSTEM v4 — Warm Sand
+   Warm × Inviting × Female-Friendly
+   OKLCH color space · Outfit typeface · Light Glass
+   Light-first: Terra Cotta primary · Warm sand backgrounds
+   
+   Palette: Terra Cotta oklch(68% .14 40)
    ================================================ */
 
-/* CSS Custom Properties — OKLCH Color System */
-::root {
-  /* ─── Background: Deep charcoal with warm undertone (dark-first) ─── */
-  --background: oklch(12% 0.01 55);
-  --background-secondary: oklch(15% 0.015 55);
-  --background-tertiary: oklch(19% 0.02 55);
+/* CSS Custom Properties — OKLCH Color System (Light-First) */
+:root {
+  /* ─── Background: Warm sand / cream tones (light-first) ─── */
+  --background: oklch(98% 0.005 55);
+  --background-secondary: oklch(96% 0.008 55);
+  --background-tertiary: oklch(93% 0.012 55);
   
-  /* ─── Foreground: Warm light tones ─── */
+  /* ─── Foreground: Warm dark tones ─── */
+  --foreground: oklch(20% 0.03 40);
+  --foreground-muted: oklch(45% 0.025 40);
+  --foreground-subtle: oklch(60% 0.02 40);
+  --foreground-faint: oklch(78% 0.012 40);
+  
+  /* ─── Primary: Terra Cotta — warm earthy confidence ─── */
+  --primary: oklch(68% 0.14 40);
+  --primary-hover: oklch(62% 0.16 38);
+  --primary-muted: oklch(68% 0.05 40);
+  
+  /* ─── Secondary: Soft Coral — gentle accent ─── */
+  --secondary: oklch(72% 0.12 20);
+  --secondary-hover: oklch(67% 0.14 18);
+  --secondary-muted: oklch(72% 0.04 20);
+  
+  /* ─── LokFeel Signature Gradient: Terra Cotta → Coral → Warm Pink ─── */
+  --gradient-start: oklch(68% 0.14 40);
+  --gradient-mid: oklch(72% 0.14 25);
+  --gradient-end: oklch(70% 0.14 10);
+  
+  /* ─── Card: Warm cream glass cards ─── */
+  --card: oklch(100% 0.003 55 / 0.92);
+  --card-hover: oklch(100% 0.004 55);
+  --card-border: oklch(85% 0.015 55 / 0.6);
+  
+  /* ─── Semantic Colors ─── */
+  --success: oklch(62% 0.17 150);
+  --success-muted: oklch(62% 0.06 150);
+  --warning: oklch(78% 0.17 70);
+  --warning-muted: oklch(78% 0.06 70);
+  --error: oklch(58% 0.22 20);
+  --error-muted: oklch(58% 0.08 20);
+  --info: oklch(60% 0.14 240);
+  --info-muted: oklch(60% 0.05 240);
+  
+  /* ─── Input ─── */
+  --input-bg: oklch(100% 0.003 55);
+  --input-border: oklch(82% 0.015 55 / 0.6);
+  --input-border-focus: oklch(68% 0.10 40 / 0.5);
+  --input-placeholder: oklch(65% 0.015 40);
+  
+  /* ─── Glow & Atmosphere (subtle warm glow for light theme) ─── */
+  --glow-primary: oklch(68% 0.10 40 / 0.08);
+  --glow-secondary: oklch(72% 0.08 20 / 0.06);
+  --glow-accent: oklch(70% 0.06 25 / 0.05);
+  
+  /* ─── Shadows: Soft warm shadows ─── */
+  --shadow-sm: 0 1px 3px oklch(40% 0.03 40 / 0.06);
+  --shadow-md: 0 4px 12px oklch(40% 0.03 40 / 0.08);
+  --shadow-lg: 0 12px 32px oklch(40% 0.03 40 / 0.10);
+  --shadow-glow: 0 0 40px oklch(68% 0.08 40 / 0.08);
+}
+
+/* ================================================
+   DARK MODE OVERRIDE
+   ================================================ */
+.dark,
+[data-theme="dark"] {
+  --background: oklch(14% 0.012 40);
+  --background-secondary: oklch(17% 0.015 40);
+  --background-tertiary: oklch(22% 0.02 40);
+  
   --foreground: oklch(96% 0.008 55);
   --foreground-muted: oklch(68% 0.02 55);
   --foreground-subtle: oklch(45% 0.02 55);
   --foreground-faint: oklch(28% 0.015 55);
   
-  /* ─── Primary: Amber — warm bold energy ─── */
-  --primary: oklch(72% 0.18 55);
-  --primary-hover: oklch(68% 0.20 50);
-  --primary-muted: oklch(72% 0.07 55);
-
-  /* ─── Secondary: Deep Rose — passionate accent ─── */
-  --secondary: oklch(70% 0.15 10);
-  --secondary-hover: oklch(65% 0.17 10);
-  --secondary-muted: oklch(70% 0.06 10);
-
-  /* ─── LokFeel Signature Gradient: Amber → Orange → Rose (Ember) ─── */
-  --gradient-start: oklch(72% 0.18 55);
-  --gradient-mid: oklch(70% 0.20 35);
-  --gradient-end: oklch(68% 0.20 10);
+  --card: oklch(19% 0.015 40 / 0.85);
+  --card-hover: oklch(22% 0.02 40 / 0.95);
+  --card-border: oklch(32% 0.03 40 / 0.4);
   
-  /* ─── Card: Dark glass cards with warm glow ─── */
-  --card: oklch(17% 0.015 55 / 0.85);
-  --card-hover: oklch(20% 0.02 55 / 0.95);
-  --card-border: oklch(30% 0.03 55 / 0.4);
+  --input-bg: oklch(19% 0.015 40 / 0.6);
+  --input-border: oklch(32% 0.03 40 / 0.3);
+  --input-border-focus: oklch(68% 0.12 40 / 0.5);
+  --input-placeholder: oklch(50% 0.02 55);
   
-  /* ─── Semantic Colors ─── */
-  --success: oklch(72% 0.17 150);
-  --success-muted: oklch(72% 0.06 150);
-  --warning: oklch(78% 0.17 70);
-  --warning-muted: oklch(78% 0.06 70);
-  --error: oklch(62% 0.22 20);
-  --error-muted: oklch(62% 0.08 20);
-  --info: oklch(68% 0.14 55);
-  --info-muted: oklch(68% 0.05 55);
+  --glow-primary: oklch(68% 0.14 40 / 0.25);
+  --glow-secondary: oklch(72% 0.12 20 / 0.2);
+  --glow-accent: oklch(70% 0.10 25 / 0.15);
   
-  /* ─── Input ─── */
-  --input-bg: oklch(17% 0.015 55 / 0.6);
-  --input-border: oklch(30% 0.03 55 / 0.3);
-  --input-border-focus: oklch(72% 0.12 55 / 0.5);
-  --input-placeholder: oklch(48% 0.02 55);
-  
-  /* ─── Glow & Atmosphere ─── */
-  --glow-primary: oklch(72% 0.14 55 / 0.25);
-  --glow-secondary: oklch(70% 0.12 10 / 0.2);
-  --glow-accent: oklch(68% 0.10 35 / 0.15);
-  
-  /* ─── Shadows: Warm dark shadows ─── */
-  --shadow-sm: 0 1px 3px oklch(5% 0.02 55 / 0.5);
-  --shadow-md: 0 4px 12px oklch(5% 0.02 55 / 0.6);
-  --shadow-lg: 0 12px 32px oklch(5% 0.02 55 / 0.7);
-  --shadow-glow: 0 0 40px oklch(72% 0.10 55 / 0.2);
-}
-
-/* Dark mode override — same as root (dark-first design) */
-/* For components that explicitly add .dark class */
-.dark,
-[data-theme="dark"],
-.sidebar-dark,
-.chat-dark {
-  /* Inherits from ::root — Ember Night is already dark-first */
-  /* This block ensures class-based dark mode doesn't override */
-}
-
-/* ================================================
-   LIGHT MODE OVERRIDE (for future light theme support)
-   ================================================ */
-.light,
-[data-theme="light"] {
-  --background: oklch(99% 0.003 55);
-  --background-secondary: oklch(97% 0.004 55);
-  --background-tertiary: oklch(94% 0.005 55);
-  --foreground: oklch(15% 0.02 55);
-  --foreground-muted: oklch(45% 0.015 55);
-  --foreground-subtle: oklch(60% 0.012 55);
-  --foreground-faint: oklch(75% 0.008 55);
-  --card: oklch(100% 0 0 / 0.95);
-  --card-hover: oklch(100% 0 0);
-  --card-border: oklch(88% 0.008 55 / 0.6);
-  --input-bg: oklch(97% 0.004 55);
-  --input-border: oklch(85% 0.01 55 / 0.5);
-  --input-border-focus: oklch(72% 0.12 55 / 0.5);
-  --input-placeholder: oklch(65% 0.01 55);
-  --glow-primary: oklch(72% 0.14 55 / 0.08);
-  --glow-secondary: oklch(70% 0.12 10 / 0.06);
-  --glow-accent: oklch(68% 0.10 35 / 0.05);
-  --shadow-sm: 0 1px 3px oklch(0% 0 0 / 0.06);
-  --shadow-md: 0 4px 12px oklch(0% 0 0 / 0.08);
-  --shadow-lg: 0 12px 32px oklch(0% 0 0 / 0.1);
-  --shadow-glow: 0 0 40px oklch(72% 0.10 55 / 0.08);
+  --shadow-sm: 0 1px 3px oklch(5% 0.02 40 / 0.5);
+  --shadow-md: 0 4px 12px oklch(5% 0.02 40 / 0.6);
+  --shadow-lg: 0 12px 32px oklch(5% 0.02 40 / 0.7);
+  --shadow-glow: 0 0 40px oklch(68% 0.10 40 / 0.2);
 }
 
 /* Tailwind v4 Theme Configuration */
@@ -141,11 +138,19 @@
   --color-info: var(--info);
   --color-info-muted: var(--info-muted);
 
-  /* ─── Extended palette ─── */
-  --color-white/5: rgba(255, 255, 255, 0.05);
-  --color-white/10: rgba(255, 255, 255, 0.10);
-  --color-white/15: rgba(255, 255, 255, 0.15);
-  
+  /* ─── Surface (legacy alias for background-secondary) ─── */
+  --color-surface: var(--background-secondary);
+
+  /* ─── Shadcn/ui compatibility tokens ─── */
+  --color-accent: var(--background-tertiary);
+  --color-accent-foreground: var(--foreground);
+  --color-muted: var(--background-tertiary);
+  --color-muted-foreground: var(--foreground-muted);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: white;
+  --color-input: var(--input-border);
+  --color-ring: var(--primary);
+
   /* ─── Typography: Outfit (UI) + Sora (Display) ─── */
   --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
   --font-display: "Sora", "Outfit", system-ui, sans-serif;
@@ -157,6 +162,7 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
 }
 
 body {
@@ -174,38 +180,38 @@ body {
 }
 
 /* ================================================
-   GLASS MORPHISM UTILITIES — Dark Glass (Ember Night)
+   GLASS MORPHISM UTILITIES — Warm Sand Light Glass
    ================================================ */
 
 .glass {
-  background: rgba(20, 16, 12, 0.7);
+  background: rgba(255, 250, 245, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 200, 100, 0.08);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 1px solid rgba(180, 100, 60, 0.08);
+  box-shadow: 0 1px 3px rgba(80, 40, 20, 0.04);
 }
 
 .glass-strong {
-  background: rgba(20, 16, 12, 0.85);
+  background: rgba(255, 250, 245, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 200, 100, 0.12);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  border: 1px solid rgba(180, 100, 60, 0.12);
+  box-shadow: 0 4px 16px rgba(80, 40, 20, 0.06);
 }
 
 .glass-card {
-  background: rgba(25, 20, 16, 0.85);
+  background: rgba(255, 252, 248, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 180, 80, 0.08);
+  border: 1px solid rgba(180, 100, 60, 0.08);
   border-radius: 1rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 1px 4px rgba(80, 40, 20, 0.04), 0 4px 16px rgba(80, 40, 20, 0.03);
 }
 
 .glass-card:hover {
-  background: rgba(30, 24, 18, 0.95);
-  border-color: rgba(255, 180, 80, 0.15);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.2);
+  background: rgba(255, 252, 248, 0.98);
+  border-color: rgba(180, 100, 60, 0.15);
+  box-shadow: 0 2px 8px rgba(80, 40, 20, 0.06), 0 8px 24px rgba(80, 40, 20, 0.04);
 }
 
 /* ================================================
@@ -281,13 +287,13 @@ body {
   animation: slide-down 0.6s ease-out forwards;
 }
 
-/* Pulse Glow — Ember Night: amber + rose glow */
+/* Pulse Glow — Warm Sand: terra cotta + coral glow */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(232, 160, 56, 0.3);
+    box-shadow: 0 0 20px rgba(180, 100, 60, 0.15);
   }
   50% {
-    box-shadow: 0 0 40px rgba(232, 160, 56, 0.5), 0 0 60px rgba(200, 80, 80, 0.3);
+    box-shadow: 0 0 40px rgba(180, 100, 60, 0.25), 0 0 60px rgba(200, 120, 90, 0.15);
   }
 }
 
@@ -309,7 +315,7 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(232, 160, 56, 0.08) 50%,
+    rgba(180, 100, 60, 0.06) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
@@ -392,7 +398,7 @@ body {
 }
 
 /* ================================================
-   ATMOSPHERE / GLOW ORBS — Ember Night
+   ATMOSPHERE / GLOW ORBS — Warm Sand
    ================================================ */
 
 .glow-orb {
@@ -404,15 +410,15 @@ body {
 }
 
 .glow-orb-primary {
-  background: radial-gradient(circle, rgba(232, 160, 56, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(180, 100, 60, 0.10) 0%, transparent 70%);
 }
 
 .glow-orb-secondary {
-  background: radial-gradient(circle, rgba(200, 80, 80, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(200, 120, 90, 0.08) 0%, transparent 70%);
 }
 
 .glow-orb-mixed {
-  background: radial-gradient(circle, rgba(232, 160, 56, 0.12) 0%, rgba(200, 80, 80, 0.10) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(180, 100, 60, 0.08) 0%, rgba(200, 120, 90, 0.06) 50%, transparent 70%);
 }
 
 /* ================================================
@@ -430,7 +436,7 @@ body {
 }
 
 /* ================================================
-   CUSTOM SCROLLBAR — Dark Warm
+   CUSTOM SCROLLBAR — Warm Sand
    ================================================ */
 
 ::-webkit-scrollbar {
@@ -443,18 +449,18 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(232, 160, 56, 0.15);
+  background: rgba(180, 100, 60, 0.12);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(232, 160, 56, 0.25);
+  background: rgba(180, 100, 60, 0.22);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(232, 160, 56, 0.15) var(--background);
+  scrollbar-color: rgba(180, 100, 60, 0.12) var(--background);
 }
 
 /* ================================================
@@ -522,7 +528,7 @@ body {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(232, 160, 56, 0.4);
+  box-shadow: 0 4px 20px rgba(180, 100, 60, 0.25);
 }
 
 .btn-primary:active {
@@ -553,7 +559,7 @@ body {
 
 .btn-secondary:hover {
   background: var(--card-hover);
-  border-color: rgba(232, 160, 56, 0.2);
+  border-color: rgba(180, 100, 60, 0.2);
 }
 
 .btn-secondary:disabled {
@@ -634,7 +640,7 @@ body {
 
 .card-feeld:hover {
   background: var(--card-hover);
-  border-color: rgba(232, 160, 56, 0.15);
+  border-color: rgba(180, 100, 60, 0.15);
   transform: translateY(-2px);
 }
 
@@ -692,7 +698,7 @@ body {
 .progress-bar {
   width: 100%;
   height: 6px;
-  background: rgba(232, 160, 56, 0.1);
+  background: rgba(180, 100, 60, 0.08);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -710,7 +716,7 @@ body {
 }
 
 .circular-progress-bg {
-  stroke: rgba(232, 160, 56, 0.1);
+  stroke: rgba(180, 100, 60, 0.08);
   fill: none;
 }
 
@@ -811,6 +817,7 @@ body {
   visibility: hidden;
   transition: all 0.2s ease;
   z-index: 50;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .tooltip:hover::after {
@@ -849,18 +856,18 @@ body {
 }
 
 .match-score-high {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
-  color: #22c55e;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.08));
+  color: #16a34a;
 }
 
 .match-score-medium {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
-  color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
+  color: #d97706;
 }
 
 .match-score-low {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
-  color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+  color: #dc2626;
 }
 
 /* ================================================
@@ -929,28 +936,28 @@ body {
 .animate-typing-dot-2 { animation-delay: 0.15s; }
 .animate-typing-dot-3 { animation-delay: 0.3s; }
 
-/* Send button glow when active — Ember Night amber glow */
+/* Send button glow when active — Warm Sand terra cotta glow */
 @keyframes send-glow {
-  0% { box-shadow: 0 0 0 0 rgba(232, 160, 56, 0.4); }
-  70% { box-shadow: 0 0 0 8px rgba(232, 160, 56, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(232, 160, 56, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(180, 100, 60, 0.3); }
+  70% { box-shadow: 0 0 0 8px rgba(180, 100, 60, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(180, 100, 60, 0); }
 }
 
 .animate-send-glow {
   animation: send-glow 0.6s ease-out;
 }
 
-/* Chat input focus ring — Ember Night amber */
+/* Chat input focus ring — Warm Sand terra cotta */
 .chat-input-focus {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .chat-input-focus:focus-within {
-  border-color: rgba(232, 160, 56, 0.2);
-  box-shadow: 0 0 0 3px rgba(232, 160, 56, 0.08);
+  border-color: rgba(180, 100, 60, 0.2);
+  box-shadow: 0 0 0 3px rgba(180, 100, 60, 0.06);
 }
 
-/* Conversation item active indicator — Ember gradient */
+/* Conversation item active indicator — Warm Sand gradient */
 .conversation-active {
   position: relative;
 }
@@ -963,7 +970,7 @@ body {
   transform: translateY(-50%);
   width: 3px;
   height: 60%;
-  background: linear-gradient(180deg, #e8a038, #c85050);
+  background: linear-gradient(180deg, #b4643c, #c8785a);
   border-radius: 0 2px 2px 0;
 }
 
