@@ -1,18 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Check, Sparkles, Crown, Zap, Flower2, Shield, Eye, MessageCircle, Filter, Ghost, Heart, MapPin, RotateCcw, Award } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  Check, Sparkles, Crown, Zap, Flower2, Shield, Eye,
+  MessageCircle, Filter, Ghost, Heart, MapPin, RotateCcw,
+  Award, ArrowRight, Lock, CreditCard, Loader2, AlertCircle,
+} from "lucide-react";
 
-// ─── Plan Features ─────────────────────────────────────────────────
+// ─── Constants ───────────────────────────────────────────────
+const MONTHLY_PRICE = 19.99;
+const YEARLY_PRICE = 149.99;
+const MONTHLY_EQUIVALENT = YEARLY_PRICE / 12;
+const SAVINGS_PCT = ((MONTHLY_PRICE * 12 - YEARLY_PRICE) / (MONTHLY_PRICE * 12)) * 100;
+
+// ─── Feature Lists ───────────────────────────────────────────
 const ladyFreeFeatures = [
   { icon: Heart, text: "5 matches per week", highlight: true },
   { icon: MessageCircle, text: "Unlimited messages", highlight: true },
-  { icon: Eye, text: "See who liked you", highlight: false },
-  { icon: Filter, text: "Advanced relationship filters", highlight: false },
+  { icon: Eye, text: "See who liked you" },
+  { icon: Filter, text: "Advanced relationship filters" },
   { icon: Shield, text: "Full Vault Timer control", highlight: true },
-  { icon: Sparkles, text: "Full match explanation", highlight: false },
-  { icon: Ghost, text: "Incognito mode", highlight: false },
-  { icon: Check, text: "Read receipts", highlight: false },
+  { icon: Sparkles, text: "Full match explanation" },
+  { icon: Ghost, text: "Incognito mode" },
+  { icon: Check, text: "Read receipts" },
 ];
 
 const basicFreeFeatures = [
@@ -36,93 +46,224 @@ const premiumFeatures = [
   { icon: Award, text: "Premium badge", highlight: true },
 ];
 
+// ─── Types ───────────────────────────────────────────────────
+type PaymentStatus = {
+  plan: string;
+  isActive: boolean;
+  isPremium: boolean;
+  isLadyFree: boolean;
+  isFemale: boolean;
+  hasStripeCustomer: boolean;
+  subscription: {
+    id: string;
+    plan: string;
+    status: string;
+    startsAt: string;
+    endsAt: string | null;
+    cancelledAt: string | null;
+    stripeCurrentPeriodEnd: string | null;
+  } | null;
+  recentPayments: Array<{
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    description: string;
+    createdAt: string;
+  }>;
+};
+
+// ─── Component ───────────────────────────────────────────────
 export default function SubscriptionPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [isLoading, setIsLoading] = useState<string | null>(null);
-  const [userGender, setUserGender] = useState<"woman" | "man" | "other" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
+  const [showManageModal, setShowManageModal] = useState(false);
 
-  const monthlyPrice = 19.99;
-  const yearlyPrice = 149.99;
-  const monthlyEquivalent = yearlyPrice / 12;
-  const savings = ((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100;
-
-  // Detect user gender
-  useEffect(() => {
-    async function detectGender() {
-      try {
-        const res = await fetch("/api/auth/session");
-        if (res.ok) {
-          const data = await res.json();
-          const gender = data?.user?.gender?.toLowerCase();
-          if (gender === "woman" || gender === "female" || gender === "trans_woman") {
-            setUserGender("woman");
-          } else if (gender === "man" || gender === "male" || gender === "trans_man") {
-            setUserGender("man");
-          } else {
-            setUserGender("other");
-          }
+  // ═══ Fetch payment status ═══
+  const fetchPaymentStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/payments/status");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.data) {
+          setPaymentStatus(data.data);
         }
-      } catch {
-        setUserGender(null);
       }
+    } catch {
+      // Silent fail — page still works without status
     }
-    detectGender();
   }, []);
 
-  const isFemaleUser = userGender === "woman";
+  useEffect(() => {
+    fetchPaymentStatus();
+  }, [fetchPaymentStatus]);
 
+  const isFemaleUser = paymentStatus?.isFemale ?? false;
+  const isPremiumUser = paymentStatus?.isPremium ?? false;
+  const isLadyFreeUser = paymentStatus?.isLadyFree ?? false;
+  const isCancelled = paymentStatus?.subscription?.cancelledAt != null;
+
+  // ═══ Handle subscribe — redirect to Stripe Checkout ═══
   const handleSubscribe = async (plan: string) => {
+    setError(null);
     setIsLoading(plan);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    alert(`Would redirect to Stripe Checkout for ${plan} plan`);
-    setIsLoading(null);
+
+    try {
+      const res = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg = data.message || data.error || "Failed to create checkout session";
+        setError(msg);
+        setIsLoading(null);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      const checkoutUrl = data.data?.checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        setError("No checkout URL received");
+        setIsLoading(null);
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+      setIsLoading(null);
+    }
   };
 
+  // ═══ Handle manage subscription — redirect to Stripe Portal ═══
+  const handleManageSubscription = async () => {
+    setIsLoading("portal");
+    try {
+      const res = await fetch("/api/payments/portal", { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.data?.portalUrl) {
+        window.location.href = data.data.portalUrl;
+      } else {
+        setError(data.message || "Failed to open billing portal");
+        setIsLoading(null);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setIsLoading(null);
+    }
+  };
+
+  // ═══ Determine current plan label ═══
+  const currentPlanLabel = isPremiumUser
+    ? (paymentStatus?.subscription?.plan === "PREMIUM_YEARLY" ? "Premium Yearly" : "Premium Monthly")
+    : isLadyFreeUser
+      ? "Lady Free"
+      : "Free";
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className="space-y-8 max-w-5xl mx-auto">
+      {/* ═══ Header ═══ */}
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-foreground mb-2">Upgrade Your Experience</h1>
-        <p className="text-foreground-muted">Unlock premium features to find your perfect match faster</p>
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          {isPremiumUser ? "You're Premium ✨" : "Upgrade Your Experience"}
+        </h1>
+        <p className="text-foreground-muted">
+          {isPremiumUser
+            ? isCancelled
+              ? "Your subscription ends at the current period. Resubscribe anytime."
+              : "You have full access to all premium features."
+            : "Unlock premium features to find your perfect match faster"}
+        </p>
       </div>
 
-      {/* Ladies First Banner */}
-      <div className="relative overflow-hidden rounded-2xl p-6 text-center"
-        style={{ background: "linear-gradient(135deg, oklch(68% .14 40), oklch(72% .12 20), oklch(75% .12 350))" }}>
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 20% 80%, oklch(80% .15 350) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(75% .14 40) 0%, transparent 50%)" }} />
-        <div className="relative">
-          <Flower2 className="w-8 h-8 mx-auto mb-3 text-white" />
-          <h2 className="text-xl font-bold text-white mb-1">Ladies Never Pay</h2>
-          <p className="text-white/80 text-sm max-w-md mx-auto">
-            Women get premium-level features completely free — because you deserve the best experience, always.
-          </p>
+      {/* ═══ Error Banner ═══ */}
+      {error && (
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-500/30 bg-red-500/5">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+          <p className="text-sm text-red-500">{error}</p>
+          <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-300">✕</button>
         </div>
-      </div>
+      )}
 
-      {/* Current Plan Banner */}
-      <div className="glass-card p-6 text-center">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-foreground-muted" />
-          </div>
-          <div>
-            <p className="text-sm text-foreground-muted">Current Plan</p>
-            <p className="text-xl font-bold text-foreground">
-              {isFemaleUser ? "Lady Free" : "Free"}
+      {/* ═══ Ladies Never Pay Banner ═══ */}
+      {!isPremiumUser && (
+        <div className="relative overflow-hidden rounded-2xl p-6 text-center"
+          style={{ background: "linear-gradient(135deg, oklch(68% .14 40), oklch(72% .12 20), oklch(75% .12 350))" }}>
+          <div className="absolute inset-0 opacity-10"
+            style={{ backgroundImage: "radial-gradient(circle at 20% 80%, oklch(80% .15 350) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(75% .14 40) 0%, transparent 50%)" }} />
+          <div className="relative">
+            <Flower2 className="w-8 h-8 mx-auto mb-3 text-white" />
+            <h2 className="text-xl font-bold text-white mb-1">Ladies Never Pay</h2>
+            <p className="text-white/80 text-sm max-w-md mx-auto">
+              Women get premium-level features completely free — because you deserve the best experience, always.
             </p>
           </div>
         </div>
-        {isFemaleUser && (
+      )}
+
+      {/* ═══ Current Plan Card ═══ */}
+      <div className="glass-card p-6 text-center">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
+            {isPremiumUser ? (
+              <Crown className="w-5 h-5 text-primary" />
+            ) : isLadyFreeUser ? (
+              <Flower2 className="w-5 h-5 text-primary" />
+            ) : (
+              <Sparkles className="w-5 h-5 text-foreground-muted" />
+            )}
+          </div>
+          <div className="text-left">
+            <p className="text-sm text-foreground-muted">Current Plan</p>
+            <p className="text-xl font-bold text-foreground">{currentPlanLabel}</p>
+          </div>
+        </div>
+        {isPremiumUser && paymentStatus?.subscription?.stripeCurrentPeriodEnd && (
+          <p className="text-xs text-foreground-muted mt-2">
+            {isCancelled ? "Access until" : "Renews on"}{" "}
+            {new Date(paymentStatus.subscription.stripeCurrentPeriodEnd).toLocaleDateString("en-US", {
+              year: "numeric", month: "long", day: "numeric",
+            })}
+          </p>
+        )}
+        {isLadyFreeUser && (
           <p className="text-sm text-primary mt-2 flex items-center justify-center gap-1">
             <Flower2 className="w-4 h-4" />
             You have premium-level access at no cost
           </p>
         )}
+        {isPremiumUser && !isCancelled && (
+          <button
+            onClick={handleManageSubscription}
+            disabled={isLoading === "portal"}
+            className="mt-3 text-sm text-foreground-muted hover:text-foreground transition-colors flex items-center gap-1.5 mx-auto"
+          >
+            {isLoading === "portal" ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <CreditCard className="w-3.5 h-3.5" />
+            )}
+            Manage subscription
+          </button>
+        )}
+        {isCancelled && (
+          <button
+            onClick={() => handleSubscribe("PREMIUM_MONTHLY")}
+            className="mt-3 btn-primary text-sm px-6 py-2 inline-flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Resubscribe
+          </button>
+        )}
       </div>
 
-      {/* Billing Toggle */}
-      {!isFemaleUser && (
+      {/* ═══ Billing Toggle (only for non-premium, non-female) ═══ */}
+      {!isPremiumUser && !isFemaleUser && (
         <div className="flex justify-center">
           <div className="glass-card p-1 inline-flex">
             <button
@@ -145,48 +286,42 @@ export default function SubscriptionPage() {
             >
               Yearly
               <span className="text-xs bg-success/20 text-success px-2 py-0.5 rounded-full">
-                Save {savings.toFixed(0)}%
+                Save {SAVINGS_PCT.toFixed(0)}%
               </span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Pricing Cards — Three Column */}
-      <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
-        {/* Basic Free — Left */}
+      {/* ═══ Pricing Cards — Three Column ═══ */}
+      <div className="grid md:grid-cols-3 gap-5">
+        {/* ─── Basic Free ─── */}
         <div className="glass-card p-6 flex flex-col">
           <div className="mb-5">
             <h3 className="text-lg font-semibold text-foreground mb-1">Free</h3>
             <p className="text-foreground-muted text-xs">Get started with basics</p>
           </div>
-
           <div className="mb-5">
             <span className="text-3xl font-bold text-foreground">$0</span>
             <span className="text-foreground-muted text-sm">/month</span>
           </div>
-
           <ul className="space-y-2.5 mb-6 flex-1">
-            {basicFreeFeatures.map((feature, idx) => (
-              <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground">
-                <feature.icon className="w-4 h-4 text-foreground-subtle flex-shrink-0" />
-                {feature.text}
+            {basicFreeFeatures.map((f, i) => (
+              <li key={i} className="flex items-center gap-2.5 text-xs text-foreground">
+                <f.icon className="w-4 h-4 text-foreground-subtle flex-shrink-0" />
+                {f.text}
               </li>
             ))}
           </ul>
-
-          <button className="btn-secondary w-full text-sm" disabled>
-            Current Plan
+          <button className="btn-secondary w-full text-sm opacity-50 cursor-not-allowed" disabled>
+            {!isPremiumUser && !isLadyFreeUser ? "Current Plan" : "Downgrade"}
           </button>
         </div>
 
-        {/* Lady Free — Center (Highlighted) */}
+        {/* ─── Lady Free (Highlighted) ─── */}
         <div className="glass-card p-6 border-primary/50 relative overflow-hidden flex flex-col">
-          {/* Glow Effect */}
           <div className="absolute -inset-px bg-gradient-to-b from-primary via-secondary to-primary opacity-15 rounded-2xl" />
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-secondary/5 rounded-2xl" />
-
-          {/* Badge */}
           <div className="absolute top-3 right-3 z-10">
             <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full"
               style={{ background: "linear-gradient(135deg, oklch(68% .14 40), oklch(72% .12 20))", color: "white" }}>
@@ -194,7 +329,6 @@ export default function SubscriptionPage() {
               Women Only
             </span>
           </div>
-
           <div className="relative flex flex-col flex-1">
             <div className="mb-5">
               <div className="flex items-center gap-2 mb-1">
@@ -203,22 +337,19 @@ export default function SubscriptionPage() {
               </div>
               <p className="text-foreground-muted text-xs">Premium features, zero cost</p>
             </div>
-
             <div className="mb-5">
               <span className="text-3xl font-bold text-foreground">$0</span>
               <span className="text-foreground-muted text-sm">/forever</span>
             </div>
-
             <ul className="space-y-2.5 mb-6 flex-1">
-              {ladyFreeFeatures.map((feature, idx) => (
-                <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground">
-                  <feature.icon className={`w-4 h-4 flex-shrink-0 ${feature.highlight ? "text-primary" : "text-primary/60"}`} />
-                  <span className={feature.highlight ? "font-medium" : ""}>{feature.text}</span>
+              {ladyFreeFeatures.map((f, i) => (
+                <li key={i} className="flex items-center gap-2.5 text-xs text-foreground">
+                  <f.icon className={`w-4 h-4 flex-shrink-0 ${f.highlight ? "text-primary" : "text-primary/60"}`} />
+                  <span className={f.highlight ? "font-medium" : ""}>{f.text}</span>
                 </li>
               ))}
             </ul>
-
-            {isFemaleUser ? (
+            {isLadyFreeUser ? (
               <div className="btn-primary w-full text-sm text-center py-2.5 flex items-center justify-center gap-2 opacity-80 cursor-default">
                 <Flower2 className="w-4 h-4" />
                 You&apos;re All Set!
@@ -231,16 +362,14 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
-        {/* Premium — Right */}
+        {/* ─── Premium ─── */}
         <div className="glass-card p-6 border-primary/30 relative overflow-hidden flex flex-col">
-          {/* Popular Badge */}
           <div className="absolute top-3 right-3 z-10">
             <span className="badge badge-primary flex items-center gap-1 text-xs">
               <Crown className="w-3 h-3" />
               Best Value
             </span>
           </div>
-
           <div className="relative flex flex-col flex-1">
             <div className="mb-5">
               <div className="flex items-center gap-2 mb-1">
@@ -249,52 +378,56 @@ export default function SubscriptionPage() {
               </div>
               <p className="text-foreground-muted text-xs">Full power for serious seekers</p>
             </div>
-
             <div className="mb-5">
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-bold text-foreground">
-                  ${billingCycle === "monthly" ? monthlyPrice.toFixed(2) : monthlyEquivalent.toFixed(2)}
+                  ${billingCycle === "monthly" ? MONTHLY_PRICE.toFixed(2) : MONTHLY_EQUIVALENT.toFixed(2)}
                 </span>
                 <span className="text-foreground-muted text-sm">/month</span>
               </div>
               {billingCycle === "yearly" && (
                 <p className="text-xs text-foreground-muted mt-1">
-                  Billed ${yearlyPrice.toFixed(2)} yearly
+                  Billed ${YEARLY_PRICE.toFixed(2)} yearly
                 </p>
               )}
             </div>
-
             <ul className="space-y-2.5 mb-6 flex-1">
-              {premiumFeatures.map((feature, idx) => (
-                <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground">
-                  <feature.icon className={`w-4 h-4 flex-shrink-0 ${feature.highlight ? "text-secondary" : "text-primary/60"}`} />
-                  <span className={feature.highlight ? "font-medium" : ""}>{feature.text}</span>
+              {premiumFeatures.map((f, i) => (
+                <li key={i} className="flex items-center gap-2.5 text-xs text-foreground">
+                  <f.icon className={`w-4 h-4 flex-shrink-0 ${f.highlight ? "text-secondary" : "text-primary/60"}`} />
+                  <span className={f.highlight ? "font-medium" : ""}>{f.text}</span>
                 </li>
               ))}
             </ul>
-
-            <button
-              onClick={() => handleSubscribe("premium")}
-              disabled={isLoading !== null}
-              className="btn-primary w-full text-sm flex items-center justify-center gap-2"
-            >
-              {isLoading === "premium" ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-card-border border-t-foreground rounded-full animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Zap className="w-4 h-4" />
-                  Upgrade to Premium
-                </>
-              )}
-            </button>
+            {isPremiumUser ? (
+              <div className="text-center text-sm text-primary font-medium py-2.5">
+                ✨ Active
+              </div>
+            ) : (
+              <button
+                onClick={() => handleSubscribe(billingCycle === "monthly" ? "PREMIUM_MONTHLY" : "PREMIUM_YEARLY")}
+                disabled={isLoading !== null || isFemaleUser}
+                className="btn-primary w-full text-sm flex items-center justify-center gap-2 relative overflow-hidden group"
+              >
+                {isLoading === "PREMIUM_MONTHLY" || isLoading === "PREMIUM_YEARLY" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Redirecting to checkout...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 group-hover:hidden" />
+                    <ArrowRight className="w-4 h-4 hidden group-hover:block" />
+                    Upgrade to Premium
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Feature Comparison Table */}
+      {/* ═══ Feature Comparison Table ═══ */}
       <div className="max-w-3xl mx-auto">
         <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Full Feature Comparison</h2>
         <div className="glass-card overflow-hidden">
@@ -336,7 +469,7 @@ export default function SubscriptionPage() {
                 <td className="p-3 text-center font-bold text-foreground">$0</td>
                 <td className="p-3 text-center font-bold text-primary">$0</td>
                 <td className="p-3 text-center font-bold text-foreground">
-                  ${billingCycle === "monthly" ? monthlyPrice.toFixed(2) : monthlyEquivalent.toFixed(2)}/mo
+                  ${billingCycle === "monthly" ? MONTHLY_PRICE.toFixed(2) : MONTHLY_EQUIVALENT.toFixed(2)}/mo
                 </td>
               </tr>
             </tbody>
@@ -344,27 +477,61 @@ export default function SubscriptionPage() {
         </div>
       </div>
 
-      {/* Trust Badges */}
+      {/* ═══ Trust Badges ═══ */}
       <div className="flex flex-wrap justify-center gap-6 text-center">
-        <div className="flex items-center gap-2 text-foreground-subtle text-sm">
-          <Check className="w-4 h-4 text-success" />
-          Cancel anytime
-        </div>
-        <div className="flex items-center gap-2 text-foreground-subtle text-sm">
-          <Check className="w-4 h-4 text-success" />
-          Secure payment via Stripe
-        </div>
-        <div className="flex items-center gap-2 text-foreground-subtle text-sm">
-          <Check className="w-4 h-4 text-success" />
-          7-day refund guarantee
-        </div>
-        <div className="flex items-center gap-2 text-foreground-subtle text-sm">
-          <Flower2 className="w-4 h-4 text-primary" />
-          Women always free
-        </div>
+        {[
+          { icon: Check, text: "Cancel anytime", color: "text-success" },
+          { icon: Lock, text: "Secure payment via Stripe", color: "text-success" },
+          { icon: Shield, text: "7-day refund guarantee", color: "text-success" },
+          { icon: Flower2, text: "Women always free", color: "text-primary" },
+        ].map((badge, i) => (
+          <div key={i} className="flex items-center gap-2 text-foreground-subtle text-sm">
+            <badge.icon className={`w-4 h-4 ${badge.color}`} />
+            {badge.text}
+          </div>
+        ))}
       </div>
 
-      {/* FAQ */}
+      {/* ═══ Recent Payments (for Premium users) ═══ */}
+      {isPremiumUser && paymentStatus?.recentPayments && paymentStatus.recentPayments.length > 0 && (
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Payment History</h2>
+          <div className="glass-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-card-border">
+                  <th className="text-left p-3 text-foreground-muted font-medium">Date</th>
+                  <th className="text-left p-3 text-foreground-muted font-medium">Description</th>
+                  <th className="text-right p-3 text-foreground-muted font-medium">Amount</th>
+                  <th className="text-right p-3 text-foreground-muted font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paymentStatus.recentPayments.map((p, i) => (
+                  <tr key={i} className={i % 2 === 0 ? "bg-background-tertiary/30" : ""}>
+                    <td className="p-3 text-foreground">
+                      {new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </td>
+                    <td className="p-3 text-foreground">{p.description}</td>
+                    <td className="p-3 text-right text-foreground font-medium">
+                      ${p.amount.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        p.status === "SUCCEEDED" ? "bg-success/20 text-success" : "bg-red-500/20 text-red-500"
+                      }`}>
+                        {p.status === "SUCCEEDED" ? "Paid" : "Failed"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ FAQ ═══ */}
       <div className="max-w-2xl mx-auto">
         <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Frequently Asked Questions</h2>
         <div className="space-y-4">
@@ -375,15 +542,19 @@ export default function SubscriptionPage() {
             },
             {
               q: "Can I cancel anytime?",
-              a: "Yes, you can cancel your Premium subscription at any time. You'll retain premium access until the end of your billing period.",
+              a: "Yes, you can cancel your Premium subscription at any time. You'll retain premium access until the end of your billing period. No questions asked.",
             },
             {
               q: "What payment methods do you accept?",
-              a: "We accept all major credit cards, debit cards, and PayPal through our secure payment provider, Stripe.",
+              a: "We accept all major credit cards, debit cards, and Apple Pay / Google Pay through our secure payment provider, Stripe.",
             },
             {
               q: "Is there a refund policy?",
               a: "We offer a 7-day money-back guarantee. If you're not satisfied with Premium, contact us within 7 days for a full refund.",
+            },
+            {
+              q: "How do I switch between monthly and yearly?",
+              a: "You can switch billing cycles through the subscription management portal. The change takes effect at your next billing date.",
             },
           ].map((faq, idx) => (
             <div key={idx} className="glass-card p-4">

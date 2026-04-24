@@ -440,6 +440,7 @@ export type NotificationType = (typeof NotificationType)[keyof typeof Notificati
 
 export const SubscriptionPlan: {
   FREE: 'FREE',
+  LADY_FREE: 'LADY_FREE',
   PREMIUM_MONTHLY: 'PREMIUM_MONTHLY',
   PREMIUM_YEARLY: 'PREMIUM_YEARLY',
   LIFETIME: 'LIFETIME'

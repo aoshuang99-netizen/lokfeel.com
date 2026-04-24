@@ -893,6 +893,7 @@ exports.NotificationType = exports.$Enums.NotificationType = {
 
 exports.SubscriptionPlan = exports.$Enums.SubscriptionPlan = {
   FREE: 'FREE',
+  LADY_FREE: 'LADY_FREE',
   PREMIUM_MONTHLY: 'PREMIUM_MONTHLY',
   PREMIUM_YEARLY: 'PREMIUM_YEARLY',
   LIFETIME: 'LIFETIME'

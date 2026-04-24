@@ -265,6 +265,25 @@ export async function POST(request: NextRequest) {
         select: { id: true, email: true, name: true, role: true },
       })
 
+      // ═══ LADY FREE: Auto-assign premium-level plan for female users ═══
+      const mappedGender = mapGender(gender)
+      const isFemale = mappedGender === 'FEMALE'
+      if (isFemale) {
+        await db.subscription.create({
+          data: {
+            userId: user.id,
+            plan: 'LADY_FREE',
+            status: 'ACTIVE',
+            weeklyMatchLimit: 5,
+            canInitiateChat: true,
+            canViewFullProfile: true,
+            startsAt: new Date(),
+            endsAt: new Date('2099-12-31'),
+          },
+        })
+        console.log(`[Lady Free] Auto-assigned LADY_FREE plan for ${user.email}`)
+      }
+
       // Send welcome email (async)
       sendWelcomeEmail(email, name).catch(console.error)
 

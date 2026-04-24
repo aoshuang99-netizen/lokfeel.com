@@ -15,15 +15,22 @@ import { calculateMatchScore } from '@/lib/matching/engine';
 
 export const dynamic = 'force-dynamic';
 
-// 每周免费连接次数配置
+// ═══ Connection limits by plan ═══
+// Lady Free (women): 5/week, no total limit
+// Free (men): 3/week, after that upgrade required
+// Premium: 5/week, no total limit
 const CONNECTION_LIMITS = {
-  MALE: {
-    FREE: 5, // 男用户总共5次免费
-    WEEKLY: 0, // 无周限制，用完即止
+  FREE: {
+    WEEKLY: 3,
+    TOTAL: 3, // 3 total free, then upgrade
   },
-  FEMALE: {
-    FREE: Infinity, // 女用户免费次数无上限
-    WEEKLY: 5, // 但每周限制5次
+  LADY_FREE: {
+    WEEKLY: 5,
+    TOTAL: Infinity,
+  },
+  PREMIUM: {
+    WEEKLY: 5,
+    TOTAL: Infinity,
   },
 };
 
@@ -108,21 +115,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 检查连接次数限制
-    const isMale = currentUserProfile.gender === 'MALE';
+    // 检查连接次数限制 — Plan-based logic
+    const isFemale = currentUserProfile.gender === 'FEMALE';
     
     // 检查是否有活跃订阅
     const subscription = await db.subscription.findFirst({
       where: {
         userId: session.user.id,
         status: 'ACTIVE',
-        endsAt: {
-          gt: new Date(),
-        },
       },
     });
 
     const hasActiveSubscription = !!subscription;
+    
+    // Determine plan: Premium > Lady Free > Free
+    const planId = hasActiveSubscription
+      ? (subscription.plan === 'LADY_FREE' ? 'LADY_FREE' : 'PREMIUM')
+      : (isFemale ? 'LADY_FREE' : 'FREE'); // Fallback: detect gender for users without subscription record
+    
+    const limits = CONNECTION_LIMITS[planId as keyof typeof CONNECTION_LIMITS];
 
     // 计算本周已使用的连接次数
     const now = new Date();
@@ -137,36 +148,33 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 计算总连接次数（男用户）
-    const totalConnections = isMale ? await db.match.count({
+    // 计算总连接次数（Free男用户有总限制）
+    const totalConnections = await db.match.count({
       where: {
         senderId: session.user.id,
       },
-    }) : 0;
+    });
 
-    // 检查限制
-    if (isMale && !hasActiveSubscription) {
-      // 男用户：总共5次免费
-      if (totalConnections >= CONNECTION_LIMITS.MALE.FREE) {
-        return NextResponse.json(
-          { 
-            message: 'You have used all your free connections. Please upgrade to Premium.',
-            code: 'UPGRADE_REQUIRED',
-          },
-          { status: 403 }
-        );
-      }
-    } else {
-      // 女用户：每周5次
-      if (weeklyConnections >= CONNECTION_LIMITS.FEMALE.WEEKLY) {
-        return NextResponse.json(
-          { 
-            message: 'You have reached your weekly connection limit. Please try again next week.',
-            code: 'WEEKLY_LIMIT_REACHED',
-          },
-          { status: 403 }
-        );
-      }
+    // 检查周限制
+    if (weeklyConnections >= limits.WEEKLY) {
+      const message = planId === 'FREE'
+        ? 'You have reached your weekly connection limit (3/week). Upgrade to Premium for 5 matches/week.'
+        : 'You have reached your weekly connection limit. Please try again next week.';
+      return NextResponse.json(
+        { message, code: planId === 'FREE' ? 'UPGRADE_REQUIRED' : 'WEEKLY_LIMIT_REACHED' },
+        { status: 403 }
+      );
+    }
+
+    // 检查总限制（Free用户只有3次总连接）
+    if (limits.TOTAL !== Infinity && totalConnections >= limits.TOTAL) {
+      return NextResponse.json(
+        { 
+          message: 'You have used all your free connections. Upgrade to Premium for unlimited matching.',
+          code: 'UPGRADE_REQUIRED',
+        },
+        { status: 403 }
+      );
     }
 
     // 计算匹配度
@@ -255,9 +263,9 @@ export async function POST(request: NextRequest) {
     });
 
     // 计算剩余次数
-    const remainingConnections = isMale && !hasActiveSubscription
-      ? Math.max(0, CONNECTION_LIMITS.MALE.FREE - (totalConnections + 1))
-      : Math.max(0, CONNECTION_LIMITS.FEMALE.WEEKLY - (weeklyConnections + 1));
+    const remainingConnections = limits.TOTAL === Infinity
+      ? Math.max(0, limits.WEEKLY - (weeklyConnections + 1))
+      : Math.max(0, limits.TOTAL - (totalConnections + 1));
 
     return NextResponse.json({
       success: true,

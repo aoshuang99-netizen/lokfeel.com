@@ -247,13 +247,23 @@ export async function POST(
     })
 
     if (member) {
-      // ═══ FREE USER LIMIT CHECK ═══
+      // ═══ MESSAGE LIMIT CHECK — Plan-based ═══
+      // Lady Free (women) & Premium: unlimited messages
+      // Free (men): 2 messages per conversation
       const userWithSub = await db.user.findUnique({
         where: { id: user.id },
-        include: { subscriptions: { where: { status: 'ACTIVE' }, take: 1 } },
+        include: { 
+          subscriptions: { where: { status: 'ACTIVE' }, take: 1 },
+          profile: { select: { gender: true } },
+        },
       })
-      const isPremium = userWithSub?.subscriptions && userWithSub.subscriptions.length > 0
-      if (!isPremium) {
+      const hasActiveSub = userWithSub?.subscriptions && userWithSub.subscriptions.length > 0
+      const isLadyFree = userWithSub?.subscriptions?.[0]?.plan === 'LADY_FREE'
+      const isFemale = userWithSub?.profile?.gender === 'FEMALE'
+      
+      // Skip limit for Lady Free and Premium users
+      if (!hasActiveSub && !isFemale) {
+        // Free male users: 2 messages per conversation
         const messageCount = await db.message.count({ where: { roomId, senderId: user.id } })
         if (messageCount >= 2) {
           return NextResponse.json(

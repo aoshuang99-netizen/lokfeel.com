@@ -1,19 +1,36 @@
 export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/auth/auth"
-import { success, badRequest, serverError } from "@/lib/api-response";
+import { requireAuth } from "@/lib/auth/auth";
+import { success, badRequest, serverError, forbidden } from "@/lib/api-response";
 import Stripe from "stripe";
 
+// ═══ Checkout Schema ═══════════════════════════════════════════
 const checkoutSchema = z.object({
-  plan: z.enum(["PREMIUM_MONTHLY", "PREMIUM_YEARLY", "LIFETIME"]),
+  plan: z.enum(["PREMIUM_MONTHLY", "PREMIUM_YEARLY"]),
 });
+
+// ═══ Plan Config ═══════════════════════════════════════════════
+const PLAN_CONFIG = {
+  PREMIUM_MONTHLY: {
+    name: "LokFeel Premium Monthly",
+    description: "Full power for serious seekers — monthly billing",
+    amount: 1999, // $19.99
+    interval: "month" as const,
+    perks: { weeklyLimit: 5, canInitiateChat: true, canViewFullProfile: true },
+  },
+  PREMIUM_YEARLY: {
+    name: "LokFeel Premium Yearly",
+    description: "Full power for serious seekers — yearly billing (save 37%)",
+    amount: 14999, // $149.99/year = $12.50/month
+    interval: "year" as const,
+    perks: { weeklyLimit: 5, canInitiateChat: true, canViewFullProfile: true },
+  },
+} as const;
 
 export async function POST(request: NextRequest) {
   try {
-    
-
     const { user } = await requireAuth();
     const body = await request.json();
 
@@ -23,89 +40,89 @@ export async function POST(request: NextRequest) {
     }
 
     const { plan } = parseResult.data;
+    const planConfig = PLAN_CONFIG[plan];
 
-    // Initialize Stripe
+    // ═══ Guard: Female users already have Lady Free ═══
+    const userProfile = await db.profile.findFirst({
+      where: { userId: user.id },
+      select: { gender: true },
+    });
+
+    if (userProfile?.gender === "FEMALE") {
+      return forbidden("Women already have premium-level access for free via Lady Free plan");
+    }
+
+    // ═══ Guard: Check if already has active premium ═══
+    const existingSub = await db.subscription.findFirst({
+      where: { userId: user.id, status: "ACTIVE" },
+    });
+
+    if (existingSub && existingSub.plan === "PREMIUM_MONTHLY" || existingSub?.plan === "PREMIUM_YEARLY") {
+      return badRequest("You already have an active Premium subscription");
+    }
+
+    // ═══ Initialize Stripe ═══
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
       apiVersion: "2026-03-25.dahlia",
     });
 
-    // Get or create Stripe customer
-    let subscription = await db.subscription.findFirst({
-      where: { userId: user.id },
-    });
-
-    let stripeCustomerId = subscription?.stripeCustomerId;
+    // ═══ Get or create Stripe customer ═══
+    let stripeCustomerId = existingSub?.stripeCustomerId;
 
     if (!stripeCustomerId) {
-      const userRecord = await db.user.findUnique({
-        where: { id: user.id },
-      });
-
-      if (!userRecord) {
-        return badRequest("User not found");
-      }
+      const userRecord = await db.user.findUnique({ where: { id: user.id } });
+      if (!userRecord) return badRequest("User not found");
 
       const customer = await stripe.customers.create({
         email: userRecord.email,
         name: userRecord.name || undefined,
-        metadata: {
-          userId: user.id,
-        },
+        metadata: { userId: user.id },
       });
-
       stripeCustomerId = customer.id;
     }
 
-    // Price IDs (from Stripe Dashboard)
-    const priceIds: Record<string, string> = {
-      PREMIUM_MONTHLY: process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID || "price_monthly",
-      PREMIUM_YEARLY: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID || "price_yearly",
-      LIFETIME: process.env.STRIPE_LIFETIME_PRICE_ID || "price_lifetime",
-    };
+    // ═══ Create Checkout Session ═══
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.lokfeel.com";
 
-    // Get user's name for display
-    const userRecord = await db.user.findUnique({
-      where: { id: user.id },
-    });
-
-    // Create checkout session
+    // Use price_data for dynamic pricing (no need to create products in Stripe Dashboard)
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
-      mode: plan === "LIFETIME" ? "payment" : "subscription",
+      mode: "subscription",
       payment_method_types: ["card"],
-      line_items: plan === "LIFETIME"
-        ? [{
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Nexus Lifetime Premium",
-                description: "One-time payment for lifetime premium access",
-              },
-              unit_amount: 29900, // $299.00
-            },
-            quantity: 1,
-          }]
-        : [{
-            price: priceIds[plan],
-            quantity: 1,
-          }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription/cancel`,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: planConfig.name,
+            description: planConfig.description,
+            images: [`${appUrl}/og-image.png`],
+          },
+          unit_amount: planConfig.amount,
+          recurring: { interval: planConfig.interval },
+        },
+        quantity: 1,
+      }],
+      success_url: `${appUrl}/dashboard/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/dashboard/subscription/cancel`,
       metadata: {
         userId: user.id,
         plan,
       },
-      subscription_data: plan !== "LIFETIME" ? {
+      subscription_data: {
         metadata: {
           userId: user.id,
           plan,
         },
-      } : undefined,
+      },
+      allow_promotion_codes: true,
+      billing_address_collection: "auto",
     });
 
-    return success({ checkoutUrl: session.url });
+    console.log(`[Checkout] Created session for user ${user.id}, plan: ${plan}, session: ${session.id}`);
+
+    return success({ checkoutUrl: session.url, sessionId: session.id });
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    console.error("[Checkout] Error:", error);
     return serverError("Failed to create checkout session");
   }
 }

@@ -1263,6 +1263,7 @@ enum NotificationType {
 
 enum SubscriptionPlan {
   FREE
+  LADY_FREE
   PREMIUM_MONTHLY
   PREMIUM_YEARLY
   LIFETIME

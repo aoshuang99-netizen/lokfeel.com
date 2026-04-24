@@ -18,153 +18,142 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get("stripe-signature");
 
     if (!signature) {
-      return NextResponse.json(
-        { error: "Missing stripe-signature header" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
     }
 
     let event: Stripe.Event;
-
     try {
       event = getStripe().webhooks.constructEvent(body, signature, endpointSecret);
     } catch (err) {
-      console.error("Webhook signature verification failed:", err);
-      return NextResponse.json(
-        { error: "Webhook signature verification failed" },
-        { status: 400 }
-      );
+      console.error("[Webhook] Signature verification failed:", err);
+      return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 400 });
     }
 
-    // Handle the event
+    // ═══ Route events ═══
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         await handleCheckoutCompleted(session);
         break;
       }
-
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         await handleSubscriptionUpdated(subscription);
         break;
       }
-
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         await handleSubscriptionDeleted(subscription);
         break;
       }
-
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         await handleInvoicePaymentSucceeded(invoice);
         break;
       }
-
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         await handleInvoicePaymentFailed(invoice);
         break;
       }
-
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`[Webhook] Unhandled event: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Webhook error:", error);
-    return NextResponse.json(
-      { error: "Webhook handler failed" },
-      { status: 500 }
-    );
+    console.error("[Webhook] Error:", error);
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
 }
 
+// ═══ Checkout Completed — Grant Premium ═════════════════════
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
-  const plan = session.metadata?.plan as "PREMIUM_MONTHLY" | "PREMIUM_YEARLY" | "LIFETIME" | undefined;
+  const plan = session.metadata?.plan as "PREMIUM_MONTHLY" | "PREMIUM_YEARLY" | undefined;
 
   if (!userId) {
-    console.error("No userId in checkout session metadata");
+    console.error("[Webhook] No userId in checkout session metadata");
     return;
   }
 
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
 
-  // Get plan details
-  const subscriptionPerks: Record<string, { weeklyLimit: number; canInitiateChat: boolean; canViewFullProfile: boolean }> = {
-    PREMIUM_MONTHLY: { weeklyLimit: 10, canInitiateChat: true, canViewFullProfile: true },
-    PREMIUM_YEARLY: { weeklyLimit: 15, canInitiateChat: true, canViewFullProfile: true },
-    LIFETIME: { weeklyLimit: 20, canInitiateChat: true, canViewFullProfile: true },
+  // ═══ Plan perks ═══
+  const planPerks: Record<string, { weeklyLimit: number; canInitiateChat: boolean; canViewFullProfile: boolean }> = {
+    PREMIUM_MONTHLY: { weeklyLimit: 5, canInitiateChat: true, canViewFullProfile: true },
+    PREMIUM_YEARLY: { weeklyLimit: 5, canInitiateChat: true, canViewFullProfile: true },
   };
 
-  const perks = subscriptionPerks[plan || "PREMIUM_MONTHLY"];
+  const perks = planPerks[plan || "PREMIUM_MONTHLY"];
+  const effectivePlan = plan || "PREMIUM_MONTHLY";
 
-  // Create or update subscription (upsert by stripeCustomerId)
+  // ═══ Upsert subscription ═══
   const existingSub = await db.subscription.findFirst({ where: { userId } });
-  
+
   const subData = {
-    plan: (plan || "PREMIUM_MONTHLY") as "FREE" | "PREMIUM_MONTHLY" | "PREMIUM_YEARLY",
+    plan: effectivePlan as "PREMIUM_MONTHLY" | "PREMIUM_YEARLY",
     status: "ACTIVE" as const,
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscriptionId || undefined,
     weeklyMatchLimit: perks.weeklyLimit,
     canInitiateChat: perks.canInitiateChat,
     canViewFullProfile: perks.canViewFullProfile,
+    startsAt: new Date(),
     stripeCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    cancelledAt: null,
   };
-  
+
   if (existingSub) {
     await db.subscription.update({
       where: { id: existingSub.id },
-      data: { ...subData, cancelledAt: null },
+      data: subData,
     });
+    console.log(`[Webhook] Updated subscription for user ${userId} → ${effectivePlan}`);
   } else {
     await db.subscription.create({ data: { userId, ...subData } });
+    console.log(`[Webhook] Created subscription for user ${userId} → ${effectivePlan}`);
   }
 
-  // Create payment record
+  // ═══ Create payment record ═══
   await db.payment.create({
     data: {
       userId,
-      stripePaymentIntentId: session.payment_intent as string || undefined,
-      amount: (session.amount_total || 0) / 100, // Convert from cents
+      stripePaymentIntentId: (session.payment_intent as string) || undefined,
+      amount: (session.amount_total || 0) / 100,
       currency: session.currency || "usd",
       status: "SUCCEEDED",
-      description: `Nexus ${plan || "Premium"} subscription`,
+      description: `LokFeel ${effectivePlan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium`,
     },
   });
 
-  // Create notification
+  // ═══ Notification ═══
   await db.notification.create({
     data: {
       userId,
       type: "SYSTEM_ANNOUNCEMENT",
-      title: "订阅成功！",
-      body: `您已成功订阅Nexus ${plan === "LIFETIME" ? "终身" : plan === "PREMIUM_YEARLY" ? "年度" : "月度"}高级会员`,
-      data: JSON.stringify({ plan }),
+      title: "Premium Activated! 🎉",
+      body: `Your LokFeel ${effectivePlan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium is now active. Enjoy unlimited matching!`,
+      data: JSON.stringify({ plan: effectivePlan }),
     },
   });
 }
 
+// ═══ Subscription Updated ═══════════════════════════════════
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
 
-  // Find user by customer ID
   const userSubscription = await db.subscription.findFirst({
     where: { stripeCustomerId: customerId },
   });
 
   if (!userSubscription) {
-    console.error("No subscription found for customer:", customerId);
+    console.error("[Webhook] No subscription found for customer:", customerId);
     return;
   }
 
-  // Update subscription status
   const statusMap: Record<string, "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "TRIALING"> = {
     active: "ACTIVE",
     trialing: "TRIALING",
@@ -173,19 +162,26 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     unpaid: "EXPIRED",
   };
 
+  // Detect plan from price ID
+  const priceId = subscription.items.data[0]?.price.id;
+  let detectedPlan = userSubscription.plan;
+  // Could map priceId to plan type here if needed
+
   await db.subscription.update({
     where: { id: userSubscription.id },
     data: {
+      plan: detectedPlan,
       status: statusMap[subscription.status] || "ACTIVE",
       stripeCurrentPeriodEnd: (subscription as any).current_period_end
         ? new Date((subscription as any).current_period_end * 1000)
         : null,
-      stripePriceId: subscription.items.data[0]?.price.id,
+      stripePriceId: priceId,
       cancelledAt: subscription.cancel_at_period_end ? new Date() : null,
     },
   });
 }
 
+// ═══ Subscription Deleted ═══════════════════════════════════
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
 
@@ -193,29 +189,42 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     where: { stripeCustomerId: customerId },
   });
 
-  if (!userSubscription) {
-    return;
-  }
+  if (!userSubscription) return;
+
+  // Downgrade to FREE (or LADY_FREE if female)
+  const userProfile = await db.profile.findFirst({
+    where: { userId: userSubscription.userId },
+    select: { gender: true },
+  });
+
+  const newPlan = userProfile?.gender === "FEMALE" ? "LADY_FREE" : "FREE";
+  const newLimit = userProfile?.gender === "FEMALE" ? 5 : 3;
 
   await db.subscription.update({
     where: { id: userSubscription.id },
     data: {
+      plan: newPlan as any,
       status: "CANCELLED",
+      weeklyMatchLimit: newLimit,
+      canInitiateChat: userProfile?.gender === "FEMALE",
+      canViewFullProfile: userProfile?.gender === "FEMALE",
       endsAt: new Date(),
     },
   });
 
-  // Notify user
   await db.notification.create({
     data: {
       userId: userSubscription.userId,
       type: "SUBSCRIPTION_EXPIRED",
-      title: "订阅已取消",
-      body: "您的Nexus高级会员订阅已取消。您将保留高级功能至本期结束。",
+      title: "Subscription Cancelled",
+      body: userProfile?.gender === "FEMALE"
+        ? "Your Premium subscription has ended, but you still have Lady Free access with premium-level features."
+        : "Your Premium subscription has ended. Upgrade again anytime to get full access.",
     },
   });
 }
 
+// ═══ Invoice Payment Succeeded ══════════════════════════════
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string;
 
@@ -223,11 +232,8 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     where: { stripeCustomerId: customerId },
   });
 
-  if (!userSubscription) {
-    return;
-  }
+  if (!userSubscription) return;
 
-  // Create payment record
   await db.payment.create({
     data: {
       userId: userSubscription.userId,
@@ -235,11 +241,14 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
       amount: (invoice.amount_paid || 0) / 100,
       currency: invoice.currency || "usd",
       status: "SUCCEEDED",
-      description: `Nexus ${userSubscription.plan} subscription renewal`,
+      description: `LokFeel ${userSubscription.plan} renewal`,
     },
   });
+
+  console.log(`[Webhook] Renewal payment recorded for user ${userSubscription.userId}`);
 }
 
+// ═══ Invoice Payment Failed ═════════════════════════════════
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string;
 
@@ -247,19 +256,13 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     where: { stripeCustomerId: customerId },
   });
 
-  if (!userSubscription) {
-    return;
-  }
+  if (!userSubscription) return;
 
-  // Update subscription to past due
   await db.subscription.update({
     where: { id: userSubscription.id },
-    data: {
-      status: "PAST_DUE",
-    },
+    data: { status: "PAST_DUE" },
   });
 
-  // Create payment record
   await db.payment.create({
     data: {
       userId: userSubscription.userId,
@@ -267,17 +270,16 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       amount: (invoice.amount_due || 0) / 100,
       currency: invoice.currency || "usd",
       status: "FAILED",
-      description: `Nexus ${userSubscription.plan} subscription payment failed`,
+      description: `LokFeel ${userSubscription.plan} payment failed`,
     },
   });
 
-  // Notify user
   await db.notification.create({
     data: {
       userId: userSubscription.userId,
       type: "SUBSCRIPTION_EXPIRED",
-      title: "支付失败",
-      body: "您的订阅扣款失败，请更新支付方式以继续享受高级会员特权。",
+      title: "Payment Failed",
+      body: "Your subscription payment failed. Please update your payment method to keep your Premium access.",
     },
   });
 }
