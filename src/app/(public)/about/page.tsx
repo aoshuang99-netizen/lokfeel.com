@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Heart, Users, Sparkles, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About - Nexus",
-  description: "Learn about Nexus - a relationship matching engine built for genuine connection.",
+  title: "About - LokFeel",
+  description: "Learn about LokFeel - a relationship matching engine built for genuine connection.",
 };
 
 const values = [
@@ -60,7 +60,7 @@ export default function AboutPage() {
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-            About <span className="text-gradient">Nexus</span>
+            About <span className="text-gradient">LokFeel</span>
           </h1>
           <p className="text-xl text-foreground-muted max-w-2xl mx-auto">
             We're building the future of relationship matching — one where technology helps people find genuine connection, not just endless options.
@@ -74,7 +74,7 @@ export default function AboutPage() {
           <div className="glass-card p-8 lg:p-12">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">Our Mission</h2>
             <p className="text-foreground text-lg leading-relaxed mb-6">
-              The dating app industry was built on engagement metrics, not relationship success. We created Nexus to change that.
+              The dating app industry was built on engagement metrics, not relationship success. We created LokFeel to change that.
             </p>
             <p className="text-foreground-muted leading-relaxed mb-6">
               Our mission is simple: help people find meaningful, lasting relationships through better matching. We believe everyone deserves to understand why they connect with someone — not just that they do.

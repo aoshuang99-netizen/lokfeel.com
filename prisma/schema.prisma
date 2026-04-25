@@ -378,6 +378,7 @@ model Profile {
   bio             String?  @db.Text
   avatar          String?  // Upload URL
   avatarType      String?  // "photo" | "cartoon"
+  galleryPhotos   String[] @default([]) // User photo album URLs
   city            String?
   country         String?  @default("US")
   

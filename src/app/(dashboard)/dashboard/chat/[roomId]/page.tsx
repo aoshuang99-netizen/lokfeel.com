@@ -132,7 +132,6 @@ export default function ChatRoomPage() {
   // Load room info and messages
   useEffect(() => {
     if (roomId) {
-      console.log('[Chat] Loading room:', roomId);
       setLoading(true);
       Promise.all([
         loadRoomInfo(),
@@ -144,15 +143,44 @@ export default function ChatRoomPage() {
     }
   }, [roomId]);
 
-  // Poll for new messages every 3 seconds
+  // Optimized polling: Check for new messages every 5 seconds (reduced from 3s)
+  // Use incremental loading with cursor-based pagination for efficiency
   useEffect(() => {
     if (!roomId) return;
-    
-    const interval = setInterval(() => {
-      loadMessages();
-    }, 3000);
 
-    return () => clearInterval(interval);
+    // Adaptive polling: 5s when active, pause when tab is hidden
+    let intervalId: ReturnType<typeof setInterval>;
+    let isVisible = true;
+
+    const handleVisibility = () => {
+      isVisible = !document.hidden;
+      if (isVisible) {
+        // Tab became visible - immediately check for new messages
+        loadMessages();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+
+    const startPolling = () => {
+      stopPolling();
+      intervalId = setInterval(() => {
+        if (isVisible) loadMessages();
+      }, 5000);
+    };
+
+    const stopPolling = () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+
+    startPolling();
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [roomId]);
 
   // Scroll to bottom when messages change
@@ -295,7 +323,7 @@ export default function ChatRoomPage() {
       if (roomInfo?.otherUser?.isBot) {
         console.log('[Chat] Bot conversation detected, will refresh for reply');
         // Poll for bot reply after a short delay
-        setTimeout(() => loadMessages(), 2000);
+        setTimeout(() => loadMessages(), 1000);
       }
     } catch (e) {
       console.error('[Chat] Failed to send:', e);

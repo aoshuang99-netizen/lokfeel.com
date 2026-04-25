@@ -27,7 +27,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Agreement to Terms</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              Welcome to Nexus. These Terms of Service (&quot;Terms&quot;) constitute a legally binding agreement between you (&quot;User,&quot; &quot;you,&quot; or &quot;your&quot;) and <strong>LokFeel Inc.</strong> (&quot;Nexus,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), a Delaware corporation, governing your access to and use of the Nexus service at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
+              Welcome to LokFeel. These Terms of Service (&quot;Terms&quot;) constitute a legally binding agreement between you (&quot;User,&quot; &quot;you,&quot; or &quot;your&quot;) and <strong>LokFeel Inc.</strong> ("LokFeel," "we," "us," or "our"), a Delaware corporation, governing your access to and use of the LokFeel service at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
             </p>
             <p className="text-foreground leading-relaxed">
               By accessing or using our Service, you agree to be bound by these Terms and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this Service.
@@ -44,13 +44,13 @@ export default function TermsPage() {
             </div>
             
             <p className="text-foreground leading-relaxed mb-4">
-              Nexus provides a relationship matching service that helps users find compatible partners based on relationship psychology principles, including attachment styles, communication preferences, conflict resolution styles, love languages, and life priorities.
+              LokFeel provides a relationship matching service that helps users find compatible partners based on relationship psychology principles, including attachment styles, communication preferences, conflict resolution styles, love languages, and life priorities.
             </p>
             <p className="text-foreground leading-relaxed mb-4">
               Our service includes curated match recommendations, compatibility explanations, and communication tools to facilitate meaningful connections between users.
             </p>
             <p className="text-foreground leading-relaxed text-sm italic">
-              Nexus does not guarantee the accuracy of match recommendations, the suitability of any user, or the success of any relationship. Users are solely responsible for their interactions and safety when meeting others through the Service.
+              LokFeel does not guarantee the accuracy of match recommendations, the suitability of any user, or the success of any relationship. Users are solely responsible for their interactions and safety when meeting others through the Service.
             </p>
           </section>
 
@@ -63,7 +63,7 @@ export default function TermsPage() {
               <h2 className="text-2xl font-bold text-foreground">3. User Eligibility</h2>
             </div>
             
-            <p className="text-foreground leading-relaxed mb-4">To use Nexus, you must:</p>
+            <p className="text-foreground leading-relaxed mb-4">To use LokFeel, you must:</p>
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
               <li>Be at least 18 years of age</li>
               <li>Not be prohibited from using the Service under any applicable law</li>
@@ -118,7 +118,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">6. Intellectual Property</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              The Nexus service, including but not limited to the website, mobile application, logos, trademarks (&quot;Nexus&quot; and &quot;LokFeel&quot;), matching algorithms, and content, is owned by LokFeel Inc. and protected by United States and international intellectual property laws.
+              The LokFeel service, including but not limited to the website, mobile application, logos, trademarks ("LokFeel"), matching algorithms, and content, is owned by LokFeel Inc. and protected by United States and international intellectual property laws.
             </p>
             <p className="text-foreground leading-relaxed">
               You retain ownership of content you submit but grant us a limited, non-exclusive, royalty-free license to use, reproduce, and display your content solely for the purpose of providing the Service.
@@ -134,7 +134,7 @@ export default function TermsPage() {
               <h2 className="text-2xl font-bold text-foreground">7. Payment and Subscription</h2>
             </div>
             <p className="text-foreground leading-relaxed mb-4">
-              Nexus offers both free and premium subscription plans. Premium features are billed according to the plan you select:
+              LokFeel offers both free and premium subscription plans. Premium features are billed according to the plan you select:
             </p>
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
               <li>Monthly subscription: Billed monthly at the current rate</li>
@@ -166,11 +166,11 @@ export default function TermsPage() {
               TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW:
             </p>
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-              <li>Nexus is not responsible for the conduct, actions, or statements of any users</li>
+              <li>LokFeel is not responsible for the conduct, actions, or statements of any users</li>
               <li>We do not guarantee the accuracy, completeness, or suitability of match recommendations</li>
               <li>Users are solely responsible for their own safety when meeting others through the Service</li>
               <li>We are not liable for any indirect, incidental, special, consequential, or punitive damages</li>
-              <li>Our total liability shall not exceed the total amount paid by you to Nexus in the 12 months preceding the claim</li>
+              <li>Our total liability shall not exceed the total amount paid by you to LokFeel in the 12 months preceding the claim</li>
               <li>We do not warrant that the Service will be uninterrupted, error-free, or secure</li>
             </ul>
             <p className="text-foreground leading-relaxed mt-4 text-sm">
@@ -249,7 +249,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">15. General Provisions</h2>
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-              <li><strong>Entire Agreement:</strong> These Terms, together with the Privacy Policy and Cookie Policy, constitute the entire agreement between you and Nexus.</li>
+              <li><strong>Entire Agreement:</strong> These Terms, together with the Privacy Policy and Cookie Policy, constitute the entire agreement between you and LokFeel.</li>
               <li><strong>Severability:</strong> If any provision is found unenforceable, the remaining provisions remain in full force and effect.</li>
               <li><strong>Waiver:</strong> Our failure to enforce any right under these Terms does not constitute a waiver of that right.</li>
               <li><strong>Assignment:</strong> You may not assign these Terms without our written consent. We may assign our rights and obligations freely.</li>

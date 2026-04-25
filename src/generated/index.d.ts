@@ -17351,6 +17351,7 @@ export namespace Prisma {
     bio: number
     avatar: number
     avatarType: number
+    galleryPhotos: number
     city: number
     country: number
     relationshipGoal: number
@@ -17501,6 +17502,7 @@ export namespace Prisma {
     bio?: true
     avatar?: true
     avatarType?: true
+    galleryPhotos?: true
     city?: true
     country?: true
     relationshipGoal?: true
@@ -17632,6 +17634,7 @@ export namespace Prisma {
     bio: string | null
     avatar: string | null
     avatarType: string | null
+    galleryPhotos: string[]
     city: string | null
     country: string | null
     relationshipGoal: $Enums.RelationshipGoal
@@ -17695,6 +17698,7 @@ export namespace Prisma {
     bio?: boolean
     avatar?: boolean
     avatarType?: boolean
+    galleryPhotos?: boolean
     city?: boolean
     country?: boolean
     relationshipGoal?: boolean
@@ -17742,6 +17746,7 @@ export namespace Prisma {
     bio?: boolean
     avatar?: boolean
     avatarType?: boolean
+    galleryPhotos?: boolean
     city?: boolean
     country?: boolean
     relationshipGoal?: boolean
@@ -17787,6 +17792,7 @@ export namespace Prisma {
     bio?: boolean
     avatar?: boolean
     avatarType?: boolean
+    galleryPhotos?: boolean
     city?: boolean
     country?: boolean
     relationshipGoal?: boolean
@@ -17832,6 +17838,7 @@ export namespace Prisma {
     bio?: boolean
     avatar?: boolean
     avatarType?: boolean
+    galleryPhotos?: boolean
     city?: boolean
     country?: boolean
     relationshipGoal?: boolean
@@ -17865,7 +17872,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "displayName" | "age" | "gender" | "genderIdentity" | "sexuality" | "bio" | "avatar" | "avatarType" | "city" | "country" | "relationshipGoal" | "attachmentStyle" | "communicationStyle" | "conflictResolution" | "loveLanguage" | "boundaries" | "dealbreakers" | "lifePriorities" | "emotionalAvailability" | "selectedTags" | "preferredAgeMin" | "preferredAgeMax" | "preferredGender" | "preferredDistance" | "preferredLocation" | "compatibilityScore" | "profileStatus" | "onboardingStep" | "isApproved" | "isVerified" | "personalityData" | "adminNotes" | "occupation" | "company" | "industry" | "linkedInVerified" | "verificationBadge" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
+  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "displayName" | "age" | "gender" | "genderIdentity" | "sexuality" | "bio" | "avatar" | "avatarType" | "galleryPhotos" | "city" | "country" | "relationshipGoal" | "attachmentStyle" | "communicationStyle" | "conflictResolution" | "loveLanguage" | "boundaries" | "dealbreakers" | "lifePriorities" | "emotionalAvailability" | "selectedTags" | "preferredAgeMin" | "preferredAgeMax" | "preferredGender" | "preferredDistance" | "preferredLocation" | "compatibilityScore" | "profileStatus" | "onboardingStep" | "isApproved" | "isVerified" | "personalityData" | "adminNotes" | "occupation" | "company" | "industry" | "linkedInVerified" | "verificationBadge" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
   export type ProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     botProfile?: boolean | Profile$botProfileArgs<ExtArgs>
@@ -17896,6 +17903,7 @@ export namespace Prisma {
       bio: string | null
       avatar: string | null
       avatarType: string | null
+      galleryPhotos: string[]
       city: string | null
       country: string | null
       relationshipGoal: $Enums.RelationshipGoal
@@ -18363,6 +18371,7 @@ export namespace Prisma {
     readonly bio: FieldRef<"Profile", 'String'>
     readonly avatar: FieldRef<"Profile", 'String'>
     readonly avatarType: FieldRef<"Profile", 'String'>
+    readonly galleryPhotos: FieldRef<"Profile", 'String[]'>
     readonly city: FieldRef<"Profile", 'String'>
     readonly country: FieldRef<"Profile", 'String'>
     readonly relationshipGoal: FieldRef<"Profile", 'RelationshipGoal'>
@@ -47649,6 +47658,7 @@ export namespace Prisma {
     bio: 'bio',
     avatar: 'avatar',
     avatarType: 'avatarType',
+    galleryPhotos: 'galleryPhotos',
     city: 'city',
     country: 'country',
     relationshipGoal: 'relationshipGoal',
@@ -49684,6 +49694,7 @@ export namespace Prisma {
     bio?: StringNullableFilter<"Profile"> | string | null
     avatar?: StringNullableFilter<"Profile"> | string | null
     avatarType?: StringNullableFilter<"Profile"> | string | null
+    galleryPhotos?: StringNullableListFilter<"Profile">
     city?: StringNullableFilter<"Profile"> | string | null
     country?: StringNullableFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalFilter<"Profile"> | $Enums.RelationshipGoal
@@ -49731,6 +49742,7 @@ export namespace Prisma {
     bio?: SortOrderInput | SortOrder
     avatar?: SortOrderInput | SortOrder
     avatarType?: SortOrderInput | SortOrder
+    galleryPhotos?: SortOrder
     city?: SortOrderInput | SortOrder
     country?: SortOrderInput | SortOrder
     relationshipGoal?: SortOrder
@@ -49781,6 +49793,7 @@ export namespace Prisma {
     bio?: StringNullableFilter<"Profile"> | string | null
     avatar?: StringNullableFilter<"Profile"> | string | null
     avatarType?: StringNullableFilter<"Profile"> | string | null
+    galleryPhotos?: StringNullableListFilter<"Profile">
     city?: StringNullableFilter<"Profile"> | string | null
     country?: StringNullableFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalFilter<"Profile"> | $Enums.RelationshipGoal
@@ -49828,6 +49841,7 @@ export namespace Prisma {
     bio?: SortOrderInput | SortOrder
     avatar?: SortOrderInput | SortOrder
     avatarType?: SortOrderInput | SortOrder
+    galleryPhotos?: SortOrder
     city?: SortOrderInput | SortOrder
     country?: SortOrderInput | SortOrder
     relationshipGoal?: SortOrder
@@ -49880,6 +49894,7 @@ export namespace Prisma {
     bio?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     avatar?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     avatarType?: StringNullableWithAggregatesFilter<"Profile"> | string | null
+    galleryPhotos?: StringNullableListFilter<"Profile">
     city?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     country?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalWithAggregatesFilter<"Profile"> | $Enums.RelationshipGoal
@@ -53392,6 +53407,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -53439,6 +53455,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -53484,6 +53501,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -53531,6 +53549,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -53577,6 +53596,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -53620,6 +53640,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -53664,6 +53685,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -57433,6 +57455,7 @@ export namespace Prisma {
     bio?: SortOrder
     avatar?: SortOrder
     avatarType?: SortOrder
+    galleryPhotos?: SortOrder
     city?: SortOrder
     country?: SortOrder
     relationshipGoal?: SortOrder
@@ -60663,6 +60686,10 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVerificationTokensInput, UserUpdateWithoutVerificationTokensInput>, UserUncheckedUpdateWithoutVerificationTokensInput>
   }
 
+  export type ProfileCreategalleryPhotosInput = {
+    set: string[]
+  }
+
   export type ProfileCreateselectedTagsInput = {
     set: string[]
   }
@@ -60699,6 +60726,11 @@ export namespace Prisma {
 
   export type EnumGenderFieldUpdateOperationsInput = {
     set?: $Enums.Gender
+  }
+
+  export type ProfileUpdategalleryPhotosInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type EnumRelationshipGoalFieldUpdateOperationsInput = {
@@ -62744,6 +62776,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -62790,6 +62823,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -62850,6 +62884,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -62896,6 +62931,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -63034,6 +63070,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -63079,6 +63116,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -64262,6 +64300,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -64307,6 +64346,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -72582,6 +72622,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -72628,6 +72669,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
+    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -72726,6 +72768,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -72772,6 +72815,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
+    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal

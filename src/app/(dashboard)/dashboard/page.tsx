@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import OnboardingTour from "@/components/onboarding/onboarding-tour";
 import {
   Heart,
   MessageCircle,
@@ -22,6 +23,7 @@ import {
   Eye,
   Flame,
   Compass,
+  Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -29,16 +31,16 @@ import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/compone
 import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
-// DESIGN TOKENS — Nexus v2 (OKLCH)
+// DESIGN TOKENS — LokFeel v4 Warm Sand (OKLCH)
 // ══════════════════════════════════════
 const COLORS = {
-  primary: "oklch(62% 0.22 280)",        // Electric Violet
-  primaryLight: "oklch(68% 0.20 280)",
-  primaryDark: "oklch(55% 0.24 280)",
-  accent: "oklch(78% 0.14 55)",           // Warm Rose Gold
-  accentLight: "oklch(82% 0.12 55)",
-  pink: "oklch(65% 0.22 350)",            // Fuchsia
-  purple: "oklch(58% 0.20 310)",          // Deep Purple
+  primary: "oklch(68% 0.14 40)",         // Terra Cotta
+  primaryLight: "oklch(72% 0.12 20)",    // Soft Coral
+  primaryDark: "oklch(62% 0.16 38)",     // Deep Terra Cotta
+  accent: "oklch(72% 0.12 20)",          // Soft Coral
+  accentLight: "oklch(82% 0.12 55)",     // Warm Rose Gold
+  pink: "oklch(70% 0.14 10)",            // Warm Pink
+  purple: "oklch(68% 0.14 40)",          // Terra Cotta (warm, not purple)
   success: "oklch(72% 0.19 155)",
   warning: "oklch(78% 0.16 75)",
   error: "oklch(63% 0.22 25)",
@@ -328,7 +330,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
 
             {/* Name & Age */}
             <div className="absolute bottom-3 left-3 right-3">
-              <h3 className="text-lg font-bold text-foreground font-[family-name:var(--font-display)]">
+              <h3 className="text-lg font-bold text-foreground font-display">
                 {user.name}, {user.age}
               </h3>
               {user.city && (
@@ -439,6 +441,21 @@ export default function DashboardPage() {
   const discoverUsers = discoverData?.users || [];
 
   // ═══ AUTO-MATCH: Ensure user has matches & conversations with bot users ═══
+  // Tour completed state — used to gate mandatory field popups
+  const [tourCompleted, setTourCompleted] = useState(false);
+  useEffect(() => {
+    const completed = localStorage.getItem("lokfeel-tour-completed");
+    if (completed) setTourCompleted(true);
+    // Listen for tour completion
+    const observer = new MutationObserver(() => {
+      const c = localStorage.getItem("lokfeel-tour-completed");
+      if (c) setTourCompleted(true);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-match: ensure user has matches & conversations with bot users
   const [autoMatchTriggered, setAutoMatchTriggered] = useState(false);
   useEffect(() => {
     if (autoMatchTriggered || authStatus === "loading") return;
@@ -458,15 +475,6 @@ export default function DashboardPage() {
     }
   }, [profileData, pendingMatches.length, autoMatchTriggered, authStatus]);
 
-  // Onboarding status
-  const onboardingStep = profile?.onboardingStep || 0;
-  const profileStatus = profile?.profileStatus;
-  const isOnboardingComplete = onboardingStep >= 8 || profileStatus === "ACTIVE";
-  const needsOnboarding = !isOnboardingComplete;
-
-  // Profile completion
-  const profileCompletion = profile ? calculateProfileCompletion(profile) : 0;
-
   // Greeting based on time
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -483,6 +491,23 @@ export default function DashboardPage() {
     { label: "Commitment", value: profile?.relationshipGoal ? 82 : 50 },
     { label: "Emotional", value: profile?.emotionalAvailability ? 87 : 50 },
   ];
+
+  // Onboarding status
+  const onboardingStep = profile?.onboardingStep || 0;
+  const profileStatus = profile?.profileStatus;
+  const isOnboardingComplete = onboardingStep >= 8 || profileStatus === "ACTIVE";
+  const needsOnboarding = !isOnboardingComplete;
+
+  // 五维卡（Relationship Blueprint）必填检查
+  const radarData = getRadarData();
+  const radarIncomplete = radarData.every(d => d.value === 50); // 全部是默认值=未填
+  const needsBlueprint = radarIncomplete && !profile?.attachmentStyle && !profile?.relationshipGoal;
+
+  // Profile必填项检查（头像/名字/年龄/性别/地点）
+  const profileRequiredMissing = !profile?.avatar || !profile?.displayName || !profile?.age || !profile?.gender || !profile?.city;
+
+  // Profile completion
+  const profileCompletion = profile ? calculateProfileCompletion(profile) : 0;
 
   const handleRetry = () => {
     setRetryKey((prev) => prev + 1);
@@ -532,55 +557,174 @@ export default function DashboardPage() {
   }
 
   // ═══════════════════════════════════════════════════════
+  // PROFILE LOCK STATE
+  // ═══════════════════════════════════════════════════════
+  const isProfileLocked = needsOnboarding || needsBlueprint || profileRequiredMissing;
+
+  // ═══════════════════════════════════════════════════════
   // MAIN RENDER
   // ═══════════════════════════════════════════════════════
   return (
-    <div className="max-w-5xl mx-auto space-y-0 relative">
+    <div className="max-w-5xl mx-auto space-y-0 relative min-h-[60vh]">
       {/* ── Atmosphere: Subtle glow orbs for light theme ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
         <div className="glow-orb glow-orb-primary w-[600px] h-[600px] -top-48 -right-48 opacity-40 animate-breathe" />
         <div className="glow-orb glow-orb-secondary w-[500px] h-[500px] bottom-32 -left-40 opacity-30 animate-breathe" style={{ animationDelay: "2s" }} />
       </div>
 
-      {/* ═══ ONBOARDING CTA BANNER ═══ */}
-      <AnimatePresence>
-        {needsOnboarding && (
+      {/* ═══ PROFILE LOCK OVERLAY ═══ */}
+      {/* When profile is incomplete, show a comprehensive lock screen */}
+      {isProfileLocked && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="fixed inset-0 z-[90] flex items-center justify-center"
+          style={{ background: "rgba(255, 250, 245, 0.94)", backdropFilter: "blur(10px)" }}
+        >
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="glass-card border-primary/30 p-5 mb-8 relative overflow-hidden"
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="glass-card p-8 max-w-md mx-4 w-full border-primary/30 shadow-xl"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10" />
-            <div className="relative flex items-center justify-between gap-6">
-              <div className="flex items-center gap-4 flex-1">
-                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-lg" style={{ boxShadow: "var(--shadow-glow)" }}>
-                  <Sparkles className="w-6 h-6 text-foreground" />
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-4" style={{ boxShadow: "var(--shadow-glow)" }}>
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground mb-1 font-display">
+                Welcome to LokFeel
+              </h2>
+              <p className="text-sm text-foreground-muted">
+                Complete the steps below to unlock all features
+              </p>
+            </div>
+
+            {/* Step list */}
+            <div className="space-y-3 mb-6">
+              {/* Step 1: Onboarding */}
+              <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
+                !needsOnboarding
+                  ? "border-green-500/30 bg-green-500/5"
+                  : "border-primary/30 bg-primary/5"
+              }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  !needsOnboarding ? "bg-green-500" : "bg-primary"
+                }`}>
+                  {!needsOnboarding ? (
+                    <Check className="w-4 h-4 text-white" />
+                  ) : (
+                    <span className="text-xs font-bold text-white">1</span>
+                  )}
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground-muted text-sm mb-1">
-                    Complete Your Relationship Blueprint
-                  </h3>
+                <div className="flex-1">
+                  <p className={`text-sm font-semibold ${!needsOnboarding ? "text-green-600" : "text-foreground"}`}>
+                    Relationship Blueprint
+                  </p>
                   <p className="text-xs text-foreground-muted">
-                    Finish your profile setup to unlock matches and messaging
-                    {onboardingStep > 0 && onboardingStep < 8
-                      ? ` (step ${Math.min(onboardingStep, 4)} of 4)`
-                      : ""}
+                    {needsOnboarding ? "5 dimensions" : "Completed ✓"}
+                  </p>
+                </div>
+                {needsOnboarding && (
+                  <Link href="/dashboard/onboarding" className="btn-primary text-xs px-3 py-1.5 flex-shrink-0">
+                    Start
+                  </Link>
+                )}
+              </div>
+
+              {/* Step 2: Profile Info */}
+              <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
+                !profileRequiredMissing
+                  ? "border-green-500/30 bg-green-500/5"
+                  : needsOnboarding
+                  ? "border-card-border bg-background-tertiary opacity-50"
+                  : "border-primary/30 bg-primary/5"
+              }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  !profileRequiredMissing ? "bg-green-500" : needsOnboarding ? "bg-foreground-faint" : "bg-primary"
+                }`}>
+                  {!profileRequiredMissing ? (
+                    <Check className="w-4 h-4 text-white" />
+                  ) : (
+                    <span className={`text-xs font-bold ${needsOnboarding ? "text-foreground-subtle" : "text-white"}`}>2</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className={`text-sm font-semibold ${
+                    !profileRequiredMissing ? "text-green-600" : needsOnboarding ? "text-foreground-subtle" : "text-foreground"
+                  }`}>
+                    Basic Info
+                  </p>
+                  <p className="text-xs text-foreground-muted">
+                    {profileRequiredMissing
+                      ? `${[!profile?.avatar, !profile?.displayName, !profile?.age, !profile?.gender, !profile?.city].filter(Boolean).length} fields remaining`
+                      : "Completed ✓"}
+                  </p>
+                </div>
+                {profileRequiredMissing && !needsOnboarding && (
+                  <Link href="/dashboard/profile" className="btn-primary text-xs px-3 py-1.5 flex-shrink-0">
+                    Fill
+                  </Link>
+                )}
+              </div>
+
+              {/* Step 3: Go to Discover */}
+              <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
+                isProfileLocked
+                  ? "border-card-border bg-background-tertiary opacity-50"
+                  : "border-green-500/30 bg-green-500/5"
+              }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  isProfileLocked ? "bg-foreground-faint" : "bg-green-500"
+                }`}>
+                  <span className={`text-xs font-bold ${isProfileLocked ? "text-foreground-subtle" : "text-white"}`}>3</span>
+                </div>
+                <div className="flex-1">
+                  <p className={`text-sm font-semibold ${isProfileLocked ? "text-foreground-subtle" : "text-green-600"}`}>
+                    Start Matching
+                  </p>
+                  <p className="text-xs text-foreground-muted">
+                    {isProfileLocked ? "Complete steps 1 & 2 first" : "Ready to go!"}
                   </p>
                 </div>
               </div>
-              <Link
-                href="/dashboard/onboarding"
-                className="btn-primary whitespace-nowrap text-sm flex-shrink-0"
-              >
-                Continue Setup
-              </Link>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
+            {/* Missing fields detail */}
+            {profileRequiredMissing && !needsOnboarding && (
+              <div className="mb-6 p-3 rounded-lg bg-warning/5 border border-warning/20">
+                <p className="text-xs text-warning font-medium mb-2">Missing fields:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {!profile?.avatar && <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/10 text-warning">Photo</span>}
+                  {!profile?.displayName && <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/10 text-warning">Name</span>}
+                  {!profile?.age && <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/10 text-warning">Age</span>}
+                  {!profile?.gender && <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/10 text-warning">Gender</span>}
+                  {!profile?.city && <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/10 text-warning">Location</span>}
+                </div>
+              </div>
+            )}
+
+            {/* Primary CTA */}
+            <Link
+              href={needsOnboarding ? "/dashboard/onboarding" : "/dashboard/profile"}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
+              {needsOnboarding ? <Radar className="w-4 h-4" /> : <User className="w-4 h-4" />}
+              {needsOnboarding ? "Start Blueprint" : "Complete Profile"}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <p className="text-xs text-foreground-faint mt-3 text-center">
+              All features will unlock once your profile is complete
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* ═══ NORMAL DASHBOARD CONTENT — hidden when profile is locked ═══ */}
+      {!isProfileLocked && (
+        <>
       {/* ═══════════════════════════════════════════════════════
           SECTION 1: PERSONALIZED GREETING
           ═══════════════════════════════════════════════════════ */}
@@ -590,7 +734,7 @@ export default function DashboardPage() {
         transition={{ duration: 0.4 }}
         className="mb-8"
       >
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1 font-[family-name:var(--font-display)]">
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1 font-display">
           {getGreeting()}, <span className="text-gradient">{firstName}</span>
         </h1>
         <p className="text-foreground-muted text-sm">
@@ -605,13 +749,13 @@ export default function DashboardPage() {
       {/* ═══════════════════════════════════════════════════════
           SECTION 2: TODAY'S PICKS (Horizontal Scroll)
           ═══════════════════════════════════════════════════════ */}
-      <section className="mb-8">
+      <section className="mb-8" data-tour="today-picks">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center">
               <Flame className="w-4 h-4 text-accent" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground font-[family-name:var(--font-display)]">Today&apos;s Picks</h2>
+            <h2 className="text-lg font-semibold text-foreground font-display">Today&apos;s Picks</h2>
           </div>
           <Link
             href="/dashboard/discover"
@@ -670,6 +814,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
+          data-tour="relationship-engine"
         >
           <div className="glass-card p-6 h-full relative overflow-hidden">
             {/* Subtle radial glow inside card */}
@@ -679,7 +824,7 @@ export default function DashboardPage() {
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                   <Radar className="w-4 h-4 text-primary" />
                 </div>
-                <h2 className="text-base font-semibold text-foreground font-[family-name:var(--font-display)]">Your Relationship Engine</h2>
+                <h2 className="text-base font-semibold text-foreground font-display">Your Relationship Engine</h2>
               </div>
               <RadarChart data={getRadarData()} size={220} />
               <div className="mt-4 grid grid-cols-5 gap-1">
@@ -713,13 +858,14 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
+          data-tour="activity-summary"
         >
           <div className="glass-card p-6 h-full">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                 <Bell className="w-4 h-4 text-primary" />
               </div>
-              <h2 className="text-base font-semibold text-foreground font-[family-name:var(--font-display)]">Activity Summary</h2>
+              <h2 className="text-base font-semibold text-foreground font-display">Activity Summary</h2>
             </div>
 
             <div className="space-y-1">
@@ -770,6 +916,7 @@ export default function DashboardPage() {
                 <Link
                   href="/dashboard/profile"
                   className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-foreground-faint hover:bg-primary/15 transition-colors group"
+                  data-tour="profile-link"
                 >
                   <User className="w-4 h-4 text-foreground-muted group-hover:text-primary transition-colors" />
                   <span className="text-[10px] text-foreground-muted group-hover:text-foreground">Profile</span>
@@ -821,6 +968,11 @@ export default function DashboardPage() {
           </div>
         </motion.section>
       )}
+
+      {/* ═══ 新用户功能引导 ═══ */}
+      <OnboardingTour />
+        </>
+      )}
     </div>
   );
 }
@@ -841,25 +993,45 @@ function useApiGetWithRetry<T>(url: string | null, retryKey: number): FetchState
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const refetch = () => {
-    setData(null);
-    setError(null);
+    setRetryCount(prev => prev + 1);
   };
 
   useEffect(() => {
     if (!url) return;
-    if (authStatus === "loading") return;
+    if (authStatus === "loading") return; // Wait for auth to resolve
+    
+    // If not authenticated, don't fetch
+    if (authStatus === "unauthenticated") {
+      setIsLoading(false);
+      setError("Please sign in to continue");
+      return;
+    }
+
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout>;
 
     const fetchData = async () => {
+      if (cancelled) return;
       setIsLoading(true);
       setError(null);
 
       try {
         const res = await fetch(url);
 
+        if (cancelled) return;
+
         if (!res.ok) {
           if (res.status === 401) {
+            // Session expired - retry once after delay
+            if (retryCount < 1) {
+              retryTimer = setTimeout(() => {
+                setRetryCount(prev => prev + 1);
+              }, 2000);
+              return;
+            }
             setError("Please sign in to continue");
             return;
           }
@@ -869,17 +1041,32 @@ function useApiGetWithRetry<T>(url: string | null, retryKey: number): FetchState
         }
 
         const json = await res.json();
-        setData(json);
+        if (!cancelled) {
+          setData(json);
+        }
       } catch (err) {
+        if (cancelled) return;
         console.warn(`API fetch failed for ${url}:`, err);
-        setError("Service unavailable — please try again");
+        // Auto-retry on network error (up to 2 times)
+        if (retryCount < 2) {
+          retryTimer = setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, 3000);
+        } else {
+          setError("Service unavailable — please try again");
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [url, authStatus, retryKey]);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+    };
+  }, [url, authStatus, retryKey, retryCount]);
 
   return { data, isLoading, error, refetch };
 }

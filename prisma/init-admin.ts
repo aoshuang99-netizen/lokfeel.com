@@ -19,10 +19,10 @@ const prisma = new (PrismaClient as any)({ adapter }) as PrismaClient
 
 // ── 修改这里的管理员信息 ──────────────────────
 const ADMIN_CONFIG = {
-  name: 'Nexus Admin',
-  email: process.env.ADMIN_EMAIL || 'admin@nexus.app',
+  name: 'LokFeel Admin',
+  email: process.env.ADMIN_EMAIL || 'admin@lokfeel.com',
   // 首次运行时设置的默认密码，之后请立即修改
-  defaultPassword: process.env.ADMIN_PASSWORD || 'Nexus@Admin2026!',
+  defaultPassword: process.env.ADMIN_PASSWORD || 'LokFeel@Admin2026!',
   role: UserRole.SUPER_ADMIN as UserRole,
 }
 // ──────────────────────────────────────────────

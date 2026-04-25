@@ -161,8 +161,6 @@ export default function RegisterPage() {
       setError("Please enter a valid email address");
       return;
     }
-    if (!formData.gender) { setError("Please select your gender"); return; }
-    if (!formData.sexuality) { setError("Please select who you're interested in"); return; }
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -188,8 +186,8 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          gender: formData.gender,
-          sexuality: formData.sexuality,
+          gender: "woman",
+          sexuality: "straight",
           verifyMethod: "email",
         }),
       });
@@ -290,8 +288,8 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          gender: formData.gender,
-          sexuality: formData.sexuality,
+          gender: "woman",
+          sexuality: "straight",
           code,
           verifyMethod: "email",
         }),
@@ -310,19 +308,22 @@ export default function RegisterPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               token: data.autoLoginToken,
-              email: formData.email,
+              email: formData.email.toLowerCase().trim(),
             }),
           });
 
           if (autoLoginRes.ok) {
+            // Use signIn with credentials - this is the official NextAuth method
             const signInResult = await signIn("credentials", {
-              email: formData.email,
+              email: formData.email.toLowerCase().trim(),
               password: formData.password,
               redirect: false,
             });
 
-            if ((signInResult as any)?.ok) {
+            if ((signInResult as any)?.ok || (signInResult as any)?.url) {
               clearRegState();
+              // Wait for session to be established
+              await new Promise(resolve => setTimeout(resolve, 500));
               window.location.href = data.redirectTo || "/dashboard/onboarding";
               return;
             }
@@ -332,6 +333,8 @@ export default function RegisterPage() {
         }
       }
 
+      // Fallback: redirect to login page
+      clearRegState();
       router.push("/login?registered=true");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -410,24 +413,10 @@ export default function RegisterPage() {
           </p>
 
           {sentInfo.devMode && (
-            <div className="mt-4 p-4 rounded-xl" style={{ background: "rgba(232,160,56,0.06)", border: `1px solid rgba(232,160,56,0.15)` }}>
-              <p style={{ color: colors.textMuted, fontSize: "12px", marginBottom: "8px" }}>Dev Mode — Your verification code:</p>
-              <div className="flex items-center justify-center gap-2">
-                {sentInfo.code && sentInfo.code.split('').map((digit, i) => (
-                  <span key={i} className="w-10 h-12 flex items-center justify-center rounded-lg text-2xl font-bold font-mono" 
-                    style={{ background: colors.input, color: colors.primary, border: `1px solid ${colors.inputBorder}` }}>
-                    {digit}
-                  </span>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => sentInfo.code && navigator.clipboard.writeText(sentInfo.code)}
-                className="mt-3 text-xs transition-colors cursor-pointer"
-                style={{ color: colors.primary, background: "none", border: "none" }}
-              >
-                Click to copy
-              </button>
+            <div className="mt-3 p-2 rounded-lg text-center" style={{ background: "rgba(232,160,56,0.04)", border: `1px solid rgba(232,160,56,0.08)` }}>
+              <p style={{ color: colors.textMuted, fontSize: "11px" }}>
+                Dev mode: code sent — check server console for the 6-digit code
+              </p>
             </div>
           )}
         </div>
@@ -612,45 +601,10 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Gender & Sexuality - Side by side */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-          <div>
-            <label htmlFor="reg-gender" style={{ display: "block", fontSize: "14px", fontWeight: "500", color: colors.textSecondary, marginBottom: "8px" }}>
-              I am <span style={{ color: colors.error }}>*</span>
-            </label>
-            <select
-              id="reg-gender"
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              required
-              style={selectStyle}
-            >
-              <option value="" style={{ color: colors.inputPlaceholder }}>Choose...</option>
-              {genderOptions.map((opt) => (
-                <option key={opt.value} value={opt.value} style={{ color: colors.text }}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="reg-sexuality" style={{ display: "block", fontSize: "14px", fontWeight: "500", color: colors.textSecondary, marginBottom: "8px" }}>
-              Interested in <span style={{ color: colors.error }}>*</span>
-            </label>
-            <select
-              id="reg-sexuality"
-              name="sexuality"
-              value={formData.sexuality}
-              onChange={handleChange}
-              required
-              style={selectStyle}
-            >
-              <option value="" style={{ color: colors.inputPlaceholder }}>Choose...</option>
-              {sexualityOptions.map((opt) => (
-                <option key={opt.value} value={opt.value} style={{ color: colors.text }}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+        {/* Gender & Sexuality - Hidden from user, set defaults for registration */}
+        <div style={{ display: "none" }}>
+          <input type="hidden" name="gender" value="woman" />
+          <input type="hidden" name="sexuality" value="straight" />
         </div>
 
         {/* Password */}

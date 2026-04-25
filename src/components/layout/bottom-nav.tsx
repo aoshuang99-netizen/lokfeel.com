@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -9,8 +10,10 @@ import {
   MessageCircle,
   Bell,
   User,
+  LogOut,
 } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
+import { signOut } from "next-auth/react";
 
 // ══════════════════════════════════════
 // 5-ENTRY NAVIGATION — UX Redesign Spec
@@ -23,6 +26,7 @@ const navItems = [
   { name: "Messages", href: "/dashboard/chat", icon: MessageCircle, label: "Messages", badgeKey: "unreadMessages" },
   { name: "Activity", href: "/dashboard/activity", icon: Bell, label: "Activity", badgeKey: "unreadMatches" },
   { name: "Profile", href: "/dashboard/profile", icon: User, label: "Profile" },
+  { name: "Logout", href: "#", icon: LogOut, label: "Logout", isLogout: true },
 ];
 
 // Design tokens
@@ -39,6 +43,7 @@ interface MatchesData {
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Fetch unread message count
   const { data: unreadMessagesData } = useApiGet<UnreadData>("/api/chats/unread-count");
@@ -72,7 +77,22 @@ export default function BottomNav() {
             const Icon = item.icon;
             const badgeCount = item.badgeKey ? badgeMap[item.badgeKey] || 0 : 0;
 
-            return (
+            const isLogoutItem = (item as any).isLogout;
+
+            return isLogoutItem ? (
+              <button
+                key={item.name}
+                onClick={() => setShowLogoutConfirm(true)}
+                className="relative flex flex-col items-center gap-0.5 px-2 py-1.5 min-w-[56px]"
+              >
+                <div className="relative p-1.5 rounded-xl text-foreground-subtle hover:text-red-500 transition-colors">
+                  <Icon className="w-5 h-5" strokeWidth={1.8} />
+                </div>
+                <span className="text-[9px] font-medium text-foreground-subtle">
+                  {item.label}
+                </span>
+              </button>
+            ) : (
               <Link
                 key={item.name}
                 href={item.href}
@@ -123,6 +143,39 @@ export default function BottomNav() {
           })}
         </div>
       </div>
+
+      {/* ── Logout Confirmation Modal ── */}
+      {showLogoutConfirm && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ background: "rgba(20,10,5,0.5)", backdropFilter: "blur(4px)" }}
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div
+            className="bg-background rounded-2xl p-6 max-w-xs w-full shadow-2xl border border-card-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-bold text-foreground mb-2 font-display">Sign out?</h3>
+            <p className="text-sm text-foreground-muted mb-5">
+              Are you sure you want to leave LokFeel?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-foreground-faint text-foreground-muted hover:bg-foreground-subtle transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

@@ -375,11 +375,12 @@ model Profile {
   gender         Gender
   genderIdentity String? // Free text for non-binary identification
   sexuality      String // "Straight", "Bisexual", "Pansexual", "Queer", "Lesbian", "Gay", "Fluid", etc.
-  bio            String? @db.Text
+  bio            String?  @db.Text
   avatar         String? // Upload URL
   avatarType     String? // "photo" | "cartoon"
+  galleryPhotos  String[] @default([]) // User photo album URLs
   city           String?
-  country        String? @default("US")
+  country        String?  @default("US")
 
   // Relationship Blueprint (核心差异化数据)
   relationshipGoal      RelationshipGoal @default(LONG_TERM)

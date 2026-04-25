@@ -3,11 +3,11 @@ import Navbar from "@/components/layout/navbar";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "Nexus — Real Matches. Real Connection.",
+  title: "LokFeel — Feel the Connection Before You Meet",
   description: "A relationship matching engine that delivers curated matches with explanations of why you connect. Built for women who value quality over quantity.",
-  keywords: ["dating", "relationships", "matchmaking", "connection", "compatibility", "attachment theory"],
+  keywords: ["dating", "relationships", "matchmaking", "connection", "compatibility", "attachment theory", "lokfeel"],
   openGraph: {
-    title: "Nexus — Real Matches. Real Connection.",
+    title: "LokFeel — Feel the Connection Before You Meet",
     description: "A relationship matching engine that delivers curated matches with explanations.",
     type: "website",
     url: "https://app.lokfeel.com",
@@ -123,7 +123,7 @@ function Footer() {
         <div className="mt-12 pt-8 border-t border-card-border">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-foreground-subtle text-xs text-center sm:text-left">
-              &copy; {new Date().getFullYear()} LokFeel Inc. All rights reserved. Nexus is a registered trademark of LokFeel Inc.
+              &copy; {new Date().getFullYear()} LokFeel Inc. All rights reserved.
             </p>
             <p className="text-foreground-subtle text-xs">
               Made with care for people who value real connection.

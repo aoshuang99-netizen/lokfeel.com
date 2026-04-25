@@ -285,6 +285,7 @@ exports.Prisma.ProfileScalarFieldEnum = {
   bio: 'bio',
   avatar: 'avatar',
   avatarType: 'avatarType',
+  galleryPhotos: 'galleryPhotos',
   city: 'city',
   country: 'country',
   relationshipGoal: 'relationshipGoal',

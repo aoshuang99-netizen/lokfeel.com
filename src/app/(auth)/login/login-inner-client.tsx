@@ -53,11 +53,11 @@ export default function LoginInnerClient({
 
     try {
       const result = (await signIn("credentials", {
-        email,
+        email: email.toLowerCase().trim(),
         password,
         redirect: false,
         callbackUrl,
-      })) as { error?: string | null; url?: string | null } | undefined;
+      })) as { error?: string | null; url?: string | null; ok?: boolean; status?: number } | undefined;
 
       if (result?.error) {
         switch (result.error) {
@@ -67,18 +67,29 @@ export default function LoginInnerClient({
           case "MissingCSRF":
             setError("Security check failed. Please refresh and try again.");
             break;
+          case "AccessDenied":
+            setError("Access denied. Your account may not have access.");
+            break;
           default:
             setError(`Sign in failed. Please try again.`);
         }
-      } else if (result?.url) {
-        window.location.href = result.url;
+        setIsLoading(false);
+      } else if (result?.ok || result?.url) {
+        // Sign in successful - use router for client-side navigation
+        // Small delay to ensure session cookie is set
+        await new Promise(resolve => setTimeout(resolve, 300));
+        window.location.href = callbackUrl || "/dashboard";
+      } else {
+        // Unexpected: no error but no success either
+        setError("Sign in failed. Please try again.");
+        setIsLoading(false);
       }
     } catch (err) {
       console.error("[Login] Error:", err);
       setError("An unexpected error occurred. Please try again.");
-    } finally {
       setIsLoading(false);
     }
+    // Note: don't setIsLoading(false) on success - page will redirect
   };
 
   // ─── OAuth handlers ───

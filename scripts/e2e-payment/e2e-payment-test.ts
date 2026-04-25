@@ -23,7 +23,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-const APP_URL = process.env.NEXTAUTH_URL || 'https://app.lokfeel.com';
+const APP_URL = process.env.E2E_APP_URL || process.env.NEXTAUTH_URL || 'https://app.lokfeel.com';
 const TEST_EMAIL_PREFIX = 'test.paid.';
 
 // ─── Test Result Tracking ────────────────────────────────

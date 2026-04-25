@@ -29,7 +29,7 @@ const showcaseUsers = [
 const testimonials = [
   { name: "Jennifer K.", role: "Marketing Director", quote: "After years of swiping, I finally found someone who truly gets me. The match explanation was spot-on.", rating: 5 },
   { name: "Rebecca S.", role: "Software Engineer", quote: "The relationship blueprint feature helped me understand what I was actually looking for. Game changer.", rating: 5 },
-  { name: "Amanda T.", role: "Therapist", quote: "As a therapist, I'm picky about dating apps. Nexus is the first one that takes emotional compatibility seriously.", rating: 5 },
+  { name: "Amanda T.", role: "Therapist", quote: "As a therapist, I'm picky about dating apps. LokFeel is the first one that takes emotional compatibility seriously.", rating: 5 },
 ];
 
 const features = [
@@ -156,7 +156,7 @@ export default function LandingPage() {
       <section className="relative py-20 lg:py-28 bg-background-secondary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Why <span className="text-gradient">Nexus</span>?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Why <span className="text-gradient">LokFeel</span>?</h2>
             <p className="text-foreground-muted max-w-2xl mx-auto">Dating apps were designed for volume. We were designed for connection.</p>
           </div>
 
@@ -227,7 +227,7 @@ export default function LandingPage() {
             </div>
 
             <div className="glass-card p-8 border-primary/30">
-              <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2"><Heart className="w-5 h-5 text-primary" /> Nexus</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2"><Heart className="w-5 h-5 text-primary" /> LokFeel</h3>
               <ul className="space-y-4">
                 {["Curated weekly matches, no overwhelm", "Deep matching on relationship needs", "Full explanation of compatibility", "High quality, intentional connections", "Transparent and authentic experience"].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3 text-foreground">

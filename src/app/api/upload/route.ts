@@ -26,6 +26,7 @@ const MIN_WIDTH = 100;
 const MIN_HEIGHT = 100;
 const MAX_WIDTH = 4000;
 const MAX_HEIGHT = 4000;
+const MIN_MEGAPIXELS = 1.0; // 1 megapixel minimum
 
 /**
  * Validates image dimensions using Sharp
@@ -48,6 +49,15 @@ async function validateImageDimensions(buffer: Buffer): Promise<{ width: number;
   if (metadata.width > MAX_WIDTH || metadata.height > MAX_HEIGHT) {
     throw new Error(`Image dimensions too large. Maximum: ${MAX_WIDTH}x${MAX_HEIGHT}px`);
   }
+
+  // Check minimum megapixels (1MP = 100万像素)
+  const megapixels = (metadata.width * metadata.height) / 1000000;
+  if (megapixels < MIN_MEGAPIXELS) {
+    throw new Error(
+      `Photo too blurry (${metadata.width}x${metadata.height} = ${megapixels.toFixed(1)}MP). ` +
+      `Please upload a clearer photo — at least ${MIN_MEGAPIXELS}MP (e.g., 1280x800 or higher).`
+    );
+  }
   
   return { width: metadata.width, height: metadata.height };
 }
@@ -57,7 +67,7 @@ type AllowedMimeType = typeof ALLOWED_MIME_TYPES[number];
 const uploadSchema = z.object({
   file: z.string(), // Base64 encoded file
   filename: z.string().optional(),
-  type: z.enum(["avatar", "image", "document"]).default("image"),
+  type: z.enum(["avatar", "image", "document", "gallery"]).default("image"),
 });
 
 export async function POST(request: NextRequest) {
@@ -132,9 +142,9 @@ export async function POST(request: NextRequest) {
       // Directory may already exist
     }
 
-    // For avatars, save to user's avatar folder
-    const saveDir = type === "avatar"
-      ? join(process.cwd(), "public", "uploads", "avatars", user.id)
+    // For avatars/gallery, save to user's folder
+    const saveDir = type === "avatar" || type === "gallery"
+      ? join(process.cwd(), "public", "uploads", type === "avatar" ? "avatars" : "gallery", user.id)
       : uploadsDir;
 
     try {
@@ -149,13 +159,23 @@ export async function POST(request: NextRequest) {
     await writeFile(filePath, buffer);
 
     // Generate URL
-    const url = `/uploads/${type === "avatar" ? `avatars/${user.id}/${uniqueFilename}` : `${type}/${uniqueFilename}`}`;
+    const url = `/uploads/${type === "avatar" ? `avatars/${user.id}/${uniqueFilename}` : type === "gallery" ? `gallery/${user.id}/${uniqueFilename}` : `${type}/${uniqueFilename}`}`;
 
     // If avatar, update user profile
     if (type === "avatar") {
       await db.profile.update({
         where: { userId: user.id },
         data: { avatar: url },
+      });
+    }
+
+    // If gallery, append to galleryPhotos array
+    if (type === "gallery") {
+      await db.profile.update({
+        where: { userId: user.id },
+        data: {
+          galleryPhotos: { push: url },
+        },
       });
     }
 
@@ -235,9 +255,9 @@ export async function PUT(request: NextRequest) {
     const uploadsDir = join(process.cwd(), "public", "uploads", type);
     await mkdir(uploadsDir, { recursive: true });
 
-    // For avatars, save to user's avatar folder
-    const saveDir = type === "avatar"
-      ? join(process.cwd(), "public", "uploads", "avatars", user.id)
+    // For avatars/gallery, save to user's folder
+    const saveDir = type === "avatar" || type === "gallery"
+      ? join(process.cwd(), "public", "uploads", type === "avatar" ? "avatars" : "gallery", user.id)
       : uploadsDir;
 
     await mkdir(saveDir, { recursive: true });
@@ -248,13 +268,23 @@ export async function PUT(request: NextRequest) {
     await writeFile(filePath, buffer);
 
     // Generate URL
-    const url = `/uploads/${type === "avatar" ? `avatars/${user.id}/${uniqueFilename}` : `${type}/${uniqueFilename}`}`;
+    const url = `/uploads/${type === "avatar" ? `avatars/${user.id}/${uniqueFilename}` : type === "gallery" ? `gallery/${user.id}/${uniqueFilename}` : `${type}/${uniqueFilename}`}`;
 
     // If avatar, update user profile
     if (type === "avatar") {
       await db.profile.update({
         where: { userId: user.id },
         data: { avatar: url },
+      });
+    }
+
+    // If gallery, append to galleryPhotos array
+    if (type === "gallery") {
+      await db.profile.update({
+        where: { userId: user.id },
+        data: {
+          galleryPhotos: { push: url },
+        },
       });
     }
 

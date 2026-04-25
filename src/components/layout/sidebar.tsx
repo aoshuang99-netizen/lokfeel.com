@@ -249,7 +249,7 @@ export default function Sidebar({ onCollapseChange }: SidebarProps) {
           <div className="flex items-center justify-between mb-8">
             <Link href="/dashboard" className="flex items-center gap-2">
               <Heart className="w-7 h-7 text-primary" />
-              <span className="text-xl font-bold text-gradient">Nexus</span>
+              <span className="text-xl font-bold text-gradient">LokFeel</span>
             </Link>
           </div>
 

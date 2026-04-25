@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Introduction</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              Nexus (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is operated by <strong>LokFeel Inc.</strong>, a company registered in the State of Delaware, USA. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
+              LokFeel ("we," "our," or "us") is operated by <strong>LokFeel Inc.</strong>, a company registered in the State of Delaware, USA. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
             </p>
             <p className="text-foreground leading-relaxed">
               We&apos;re committed to transparency and giving you control over your data. Dating apps shouldn&apos;t require you to sacrifice your privacy to find meaningful connections.

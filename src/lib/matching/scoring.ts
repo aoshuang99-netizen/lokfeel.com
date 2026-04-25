@@ -513,7 +513,7 @@ export function generateMatchExplanation(
   
   // Add generic starters if needed
   if (conversationStarters.length < 2) {
-    conversationStarters.push('What brought you to Nexus?')
+    conversationStarters.push('What brought you to LokFeel?')
     conversationStarters.push('What are you most passionate about right now?')
   }
   

@@ -228,7 +228,7 @@ export const NOTIFICATION_TYPES = {
   },
   SYSTEM: {
     id: 'SYSTEM',
-    title: 'Nexus Update',
+    title: 'LokFeel Update',
     priority: 'low',
     push: false,
     email: false,

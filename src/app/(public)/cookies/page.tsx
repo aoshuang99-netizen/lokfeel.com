@@ -26,7 +26,7 @@ export default function CookiePolicyPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Introduction</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              This Cookie Policy explains how Nexus (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) uses cookies and similar tracking technologies when you visit our website at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
+              This Cookie Policy explains how LokFeel (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) uses cookies and similar tracking technologies when you visit our website at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
             </p>
             <p className="text-foreground leading-relaxed">
               This policy should be read alongside our <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>, which provides more detail on how we handle your personal data.

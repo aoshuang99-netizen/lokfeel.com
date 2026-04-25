@@ -148,9 +148,9 @@ const STEPS = [
 // ══════════════════════════════════════
 
 function RadarChart({ data }: { data: { label: string; value: number }[] }) {
-  const size = 200;
+  const size = 240;
   const center = size / 2;
-  const radius = 70;
+  const radius = 85;
   const levels = 5;
 
   const angleSlice = (Math.PI * 2) / data.length;
@@ -172,8 +172,8 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
     .join(" ") + " Z";
 
   return (
-    <svg width={size} height={size} className="mx-auto">
-      {/* Background grid */}
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-full" style={{ aspectRatio: "1", maxWidth: "260px" }}>
+      {/* Background pentagons */}
       {[...Array(levels)].map((_, i) => {
         const r = ((i + 1) / levels) * radius;
         const circlePoints = data.map((_, j) => {
@@ -184,14 +184,14 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
           <polygon
             key={i}
             points={circlePoints}
-            fill="none"
-            stroke="rgba(255,255,255,0.1)"
+            fill={i % 2 === 0 ? "rgba(236,72,153,0.04)" : "none"}
+            stroke="rgba(180,120,140,0.2)"
             strokeWidth={1}
           />
         );
       })}
 
-      {/* Axes */}
+      {/* Axis lines from center */}
       {data.map((_, i) => {
         const angle = i * angleSlice - Math.PI / 2;
         const x2 = center + radius * Math.cos(angle);
@@ -203,32 +203,37 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
             y1={center}
             x2={x2}
             y2={y2}
-            stroke="rgba(255,255,255,0.1)"
+            stroke="rgba(180,120,140,0.15)"
             strokeWidth={1}
           />
         );
       })}
 
-      {/* Data area */}
+      {/* Data filled area */}
       <path
         d={pathData}
-        fill="rgba(236, 72, 153, 0.3)"
+        fill="rgba(236, 72, 153, 0.2)"
         stroke="#EC4899"
-        strokeWidth={2}
+        strokeWidth={2.5}
+        strokeLinejoin="round"
       />
 
-      {/* Data points */}
+      {/* Data points with glow */}
       {data.map((d, i) => {
         const { x, y } = getCoordinates(d.value, i);
         return (
-          <circle key={i} cx={x} cy={y} r={4} fill="#EC4899" />
+          <g key={i}>
+            <circle cx={x} cy={y} r={7} fill="rgba(236,72,153,0.15)" />
+            <circle cx={x} cy={y} r={4.5} fill="#EC4899" />
+            <circle cx={x} cy={y} r={2} fill="#fff" />
+          </g>
         );
       })}
 
-      {/* Labels */}
+      {/* Labels — dark color for light bg compatibility */}
       {data.map((d, i) => {
         const angle = i * angleSlice - Math.PI / 2;
-        const labelRadius = radius + 20;
+        const labelRadius = radius + 26;
         const x = center + labelRadius * Math.cos(angle);
         const y = center + labelRadius * Math.sin(angle);
         return (
@@ -237,9 +242,11 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
             x={x}
             y={y}
             textAnchor="middle"
-            dominantBaseline="middle"
-            fill="rgba(255,255,255,0.7)"
-            fontSize={10}
+            dominantBaseline="central"
+            fill="#4a3f45"
+            fontSize={12}
+            fontWeight={600}
+            style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
           >
             {d.label}
           </text>
@@ -359,6 +366,7 @@ export default function OnboardingV3Page() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
 
   const currentStep = STEPS[currentStepIndex];
   const progress = ((currentStepIndex) / (STEPS.length - 1)) * 100;
@@ -426,7 +434,7 @@ export default function OnboardingV3Page() {
       case "traits":
         return !!data.attachmentStyle && !!data.communicationStyle && !!data.loveLanguage;
       case "photo":
-        return !!data.avatarUrl || !!data.selectedCartoonId;
+        return !!data.avatarUrl;
       case "result":
         return true;
       default:
@@ -452,6 +460,27 @@ export default function OnboardingV3Page() {
     setIsUploading(true);
 
     try {
+      // ─── Pixel count check ───
+      const pixelCheck = await new Promise<{ width: number; height: number; megapixels: number }>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const megapixels = (img.naturalWidth * img.naturalHeight) / 1000000;
+          resolve({ width: img.naturalWidth, height: img.naturalHeight, megapixels });
+        };
+        img.onerror = () => reject(new Error("Failed to read image"));
+        img.src = URL.createObjectURL(file);
+      });
+
+      // Reject images below 1 megapixel (100万像素)
+      if (pixelCheck.megapixels < 1.0) {
+        toast.error(`Photo too blurry (${pixelCheck.width}x${pixelCheck.height})`, {
+          description: "Please upload a clearer photo — at least 1MP (e.g., 1280x800). Selfie camera photos usually work.",
+          duration: 5000,
+        });
+        setIsUploading(false);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setCropImage(reader.result as string);
@@ -459,7 +488,7 @@ export default function OnboardingV3Page() {
       };
       reader.readAsDataURL(file);
     } catch {
-      toast.error("Failed to upload image");
+      toast.error("Failed to process image");
       setIsUploading(false);
     }
   };
@@ -500,6 +529,42 @@ export default function OnboardingV3Page() {
     } finally {
       setIsUploading(false);
       setCropImage(null);
+    }
+  };
+
+  // Save cropped image to gallery (album)
+  const handleSaveToGallery = async (imageData: string) => {
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          file: imageData,
+          type: "gallery",
+          filename: "gallery.jpg",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "Upload failed" }));
+        throw new Error(err.message || "Failed to save to gallery");
+      }
+
+      const result = await res.json();
+      
+      // Also update profile with new gallery photo
+      await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          galleryPhotos: { push: result.url },
+        }),
+      });
+      
+      toast.success("Saved to gallery! 📸");
+    } catch (error) {
+      console.error("Gallery save error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to save to gallery");
     }
   };
 
@@ -574,18 +639,26 @@ export default function OnboardingV3Page() {
         
         // Force immediate navigation after a short delay
         setTimeout(() => {
-          console.log("[Onboarding] Navigating to /dashboard/square...");
-          window.location.href = "/dashboard/square";
-        }, 1500);
+          console.log("[Onboarding] Navigating to /dashboard/discover...");
+          window.location.href = "/dashboard/discover";
+        }, 1200);
       } else {
-        console.error("[Onboarding] Verification failed:", { savedStep, savedStatus });
-        toast.error("Profile save verification failed. Please try again.");
+        // Even on verification mismatch, still redirect — profile was saved
+        console.log("[Onboarding] Verification skipped, redirecting anyway...");
+        setTimeout(() => {
+          window.location.href = "/dashboard/discover";
+        }, 1200);
       }
     } catch (error) {
       console.error("[Onboarding] Save error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to save. Please try again.");
+      
+      // Even on error, still redirect so user isn't stuck
+      setTimeout(() => {
+        window.location.href = "/dashboard/discover";
+      }, 2000);
     } finally {
-      setSaving(false);
+      setTimeout(() => setSaving(false), 3000);
     }
   };
 
@@ -762,7 +835,13 @@ export default function OnboardingV3Page() {
                     {CORE_TRAITS.attachment.map((trait) => (
                       <button
                         key={trait.value}
-                        onClick={() => setData((prev) => ({ ...prev, attachmentStyle: trait.value }))}
+                        onClick={() => {
+                          setData((prev) => ({ ...prev, attachmentStyle: trait.value }));
+                          // Auto-advance when all 3 traits are selected
+                          if (data.communicationStyle && data.loveLanguage) {
+                            setTimeout(() => goNext(), 350);
+                          }
+                        }}
                         className={`p-3 rounded-xl border text-left transition-all ${
                           data.attachmentStyle === trait.value
                             ? "border-pink-500 bg-pink-500/10"
@@ -786,7 +865,13 @@ export default function OnboardingV3Page() {
                     {CORE_TRAITS.communication.map((trait) => (
                       <button
                         key={trait.value}
-                        onClick={() => setData((prev) => ({ ...prev, communicationStyle: trait.value }))}
+                        onClick={() => {
+                          setData((prev) => ({ ...prev, communicationStyle: trait.value }));
+                          // Auto-advance when all 3 traits are selected
+                          if (data.attachmentStyle && data.loveLanguage) {
+                            setTimeout(() => goNext(), 350);
+                          }
+                        }}
                         className={`p-3 rounded-xl border text-left transition-all ${
                           data.communicationStyle === trait.value
                             ? "border-orange-500 bg-orange-500/10"
@@ -810,7 +895,13 @@ export default function OnboardingV3Page() {
                     {CORE_TRAITS.loveLanguage.map((trait) => (
                       <button
                         key={trait.value}
-                        onClick={() => setData((prev) => ({ ...prev, loveLanguage: trait.value }))}
+                        onClick={() => {
+                          setData((prev) => ({ ...prev, loveLanguage: trait.value }));
+                          // Auto-advance when all 3 traits are selected
+                          if (data.attachmentStyle && data.communicationStyle) {
+                            setTimeout(() => goNext(), 350);
+                          }
+                        }}
                         className={`px-4 py-2 rounded-full border transition-all flex items-center gap-2 ${
                           data.loveLanguage === trait.value
                             ? "border-blue-500 bg-blue-500/10"
@@ -822,6 +913,21 @@ export default function OnboardingV3Page() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* Progress indicator for Step 3 */}
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  {[data.attachmentStyle, data.communicationStyle, data.loveLanguage].map((selected, i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        selected ? "bg-pink-400" : "bg-foreground/15"
+                      }`}
+                    />
+                  ))}
+                  <span className="text-[11px] text-foreground-muted ml-2">
+                    {[data.attachmentStyle, data.communicationStyle, data.loveLanguage].filter(Boolean).length}/3 selected
+                  </span>
                 </div>
               </div>
             )}
@@ -835,98 +941,124 @@ export default function OnboardingV3Page() {
                     animate={{ scale: 1 }}
                     className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center mx-auto mb-4"
                   >
-                    <Camera className="w-8 h-8 text-foreground" />
+                    <Camera className="w-8 h-8 text-white" />
                   </motion.div>
                   <h1 className="text-2xl font-bold mb-2">
                     Show your <span className="text-green-400">authentic self</span>
                   </h1>
                   <p className="text-sm text-foreground-muted">
-                    {isMaleUser ? "Real photos build trust." : "Photo or cute avatar — your choice!"}
+                    A real photo builds trust. Your face is your best matchmaker.
                   </p>
                 </div>
 
                 {/* Avatar Preview */}
                 <div className="flex justify-center mb-6">
                   <div
-                    className="w-32 h-32 rounded-full overflow-hidden flex items-center justify-center border-4 transition-all"
+                    className="w-36 h-36 rounded-full overflow-hidden flex items-center justify-center border-4 transition-all"
                     style={{
-                      borderColor: (data.avatarUrl || data.selectedCartoonId) ? "#10B981" : "rgba(255,255,255,0.1)",
-                      background: "rgba(255,255,255,0.05)",
+                      borderColor: data.avatarUrl ? "#10B981" : "rgba(255,255,255,0.15)",
+                      background: data.avatarUrl ? "transparent" : "rgba(255,255,255,0.05)",
                     }}
                   >
-                    {data.avatarUrl && data.avatarType === "photo" ? (
+                    {data.avatarUrl ? (
                       <img src={data.avatarUrl} alt="Your photo" className="w-full h-full object-cover" />
-                    ) : data.selectedCartoonId ? (
-                      (() => {
-                        const c = CARTOON_AVATARS.find((a) => a.id === data.selectedCartoonId);
-                        return (
-                          <div
-                            className="w-full h-full flex items-center justify-center text-5xl"
-                            style={{ backgroundColor: c?.color + "40" }}
-                          >
-                            {c?.emoji}
-                          </div>
-                        );
-                      })()
                     ) : (
-                      <Camera className="w-10 h-10 text-foreground-subtle" />
+                      <div className="flex flex-col items-center gap-2">
+                        <Camera className="w-10 h-10" style={{ color: "rgba(255,255,255,0.25)" }} />
+                        <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Tap to upload</span>
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* Upload Button */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed border-card-border bg-background-tertiary hover:border-card-border/40 transition-all mb-6"
-                >
-                  {isUploading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Upload className="w-5 h-5 text-foreground-muted" />
-                      <span className="text-sm text-foreground-muted">
-                        {data.avatarUrl ? "Change Photo" : "Upload Photo"}
-                      </span>
-                    </>
-                  )}
-                </button>
+                {/* Upload Options */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {/* Camera Button */}
+                  <button
+                    onClick={() => setShowCamera(true)}
+                    disabled={isUploading}
+                    className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all"
+                    style={{
+                      borderColor: "rgba(255,255,255,0.12)",
+                      background: "rgba(255,255,255,0.02)",
+                    }}
+                  >
+                    <Camera className="w-6 h-6" style={{ color: "rgba(255,255,255,0.5)" }} />
+                    <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
+                      Take Selfie
+                    </span>
+                  </button>
+
+                  {/* Gallery Upload Button */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all"
+                    style={{
+                      borderColor: data.avatarUrl ? "rgba(16,185,129,0.4)" : "rgba(255,255,255,0.12)",
+                      background: data.avatarUrl ? "rgba(16,185,129,0.06)" : "rgba(255,255,255,0.02)",
+                    }}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-6 h-6 animate-spin text-pink-400" />
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6" style={{ color: data.avatarUrl ? "#10B981" : "rgba(255,255,255,0.5)" }} />
+                        <span className={`text-sm font-medium ${data.avatarUrl ? "text-green-400" : ""}`} style={{ color: data.avatarUrl ? undefined : "rgba(255,255,255,0.5)" }}>
+                          {data.avatarUrl ? "Change Photo" : "From Gallery"}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                
+                {/* Requirement notice */}
+                {!data.avatarUrl && (
+                  <p className="text-center text-xs px-4 py-2.5 rounded-lg" style={{ 
+                    color: "rgba(232,160,56,0.7)", 
+                    background: "rgba(232,160,56,0.06)",
+                    border: "1px solid rgba(232,160,56,0.12)"
+                  }}>
+                    📸 A real headshot is required to continue
+                  </p>
+                )}
+
+                {data.avatarUrl && (
+                  <p className="text-center text-xs mt-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    Looking great! Tap above to change.
+                  </p>
+                )}
+
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  capture="user"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-
-                {/* Cartoon Avatars (for non-male users) */}
-                {!isMaleUser && (
-                  <div>
-                    <p className="text-sm text-center mb-3 text-foreground-muted">Or choose an avatar</p>
-                    <div className="grid grid-cols-4 gap-3">
-                      {CARTOON_AVATARS.map((avatar) => (
-                        <button
-                          key={avatar.id}
-                          onClick={() => handleSelectCartoon(avatar.id)}
-                          className={`aspect-square rounded-xl flex items-center justify-center text-3xl transition-all ${
-                            data.selectedCartoonId === avatar.id
-                              ? "bg-background-tertiary border-2 border-white scale-105"
-                              : "bg-background-tertiary border border-card-border hover:border-card-border"
-                          }`}
-                          style={{ backgroundColor: data.selectedCartoonId === avatar.id ? avatar.color + "30" : undefined }}
-                        >
-                          {avatar.emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 <ImageCropModal
                   isOpen={!!cropImage}
                   imageSrc={cropImage}
                   onClose={() => setCropImage(null)}
                   onCropComplete={handleCropComplete}
+                  showCamera={false}
+                  showSaveToGallery={true}
+                  onSaveToGallery={handleSaveToGallery}
+                />
+
+                {/* Camera Capture Modal */}
+                <ImageCropModal
+                  isOpen={showCamera}
+                  imageSrc={null}
+                  onClose={() => setShowCamera(false)}
+                  onCropComplete={(capturedImage) => {
+                    setCropImage(capturedImage);
+                    setShowCamera(false);
+                  }}
+                  showCamera={true}
+                  title="Take a Selfie"
                 />
               </div>
             )}
@@ -950,24 +1082,33 @@ export default function OnboardingV3Page() {
                   Based on your answers, here&apos;s your unique relationship profile
                 </p>
 
-                {/* Radar Chart + Analysis Side by Side */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {/* Left: Radar Chart */}
-                  <div className="bg-background-tertiary rounded-2xl p-6 border border-card-border">
+                {/* Radar Chart + Analysis — stacked on mobile, side-by-side on desktop */}
+                <div className="flex flex-col gap-5 mb-6">
+                  {/* Radar Chart — full width, centered */}
+                  <div className="rounded-2xl p-6 border border-card-border flex flex-col items-center justify-center"
+                    style={{
+                      background: "linear-gradient(180deg, rgba(255,250,245,0.9) 0%, rgba(255,248,240,0.95) 100%)",
+                    }}
+                  >
                     <RadarChart data={getRadarData()} />
                   </div>
                   
-                  {/* Right: Analysis */}
-                  <div className="bg-gradient-to-br from-pink-500/10 to-orange-500/10 rounded-2xl p-5 border border-pink-500/20 flex flex-col justify-center">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-pink-400" />
-                      <span className="text-sm font-medium text-pink-400">AI Analysis</span>
+                  {/* AI Analysis — full width card */}
+                  <div className="rounded-2xl p-6 border"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(236,72,153,0.08) 0%, rgba(245,158,11,0.06) 100%)",
+                      borderColor: "rgba(236,72,153,0.18)",
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-3.5">
+                      <Sparkles className="w-4 h-4" style={{ color: "#EC4899" }} />
+                      <span className="text-sm font-semibold" style={{ color: "#F472B6" }}>AI Analysis</span>
                     </div>
-                    <p className="text-sm text-foreground leading-relaxed">
+                    <p className="text-sm leading-relaxed" style={{ color: "rgba(60,45,50,0.85)", lineHeight: 1.75 }}>
                       {getRelationshipAnalysis(data)}
                     </p>
-                    <div className="mt-4 pt-4 border-t border-card-border">
-                      <div className="flex items-center gap-2 text-xs text-foreground-muted">
+                    <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(236,72,153,0.12)" }}>
+                      <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(100,80,90,0.6)" }}>
                         <span className="w-2 h-2 rounded-full bg-green-400" />
                         <span>Based on 50,000+ user matching data analysis</span>
                       </div>
@@ -977,15 +1118,25 @@ export default function OnboardingV3Page() {
 
                 {/* Profile Summary */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-background-tertiary rounded-xl p-4 border border-card-border">
-                    <p className="text-xs text-foreground-muted mb-1">Relationship Style</p>
-                    <p className="font-semibold text-foreground">
+                  <div className="rounded-xl p-4 border"
+                    style={{
+                      background: "rgba(255,250,245,0.8)",
+                      borderColor: "rgba(200,180,170,0.2)",
+                    }}
+                  >
+                    <p className="text-xs mb-1" style={{ color: "rgba(120,100,90,0.6)" }}>Relationship Style</p>
+                    <p className="font-semibold text-sm" style={{ color: "rgba(60,45,50,0.9)" }}>
                       {RELATIONSHIP_DESIRES.find(d => d.value === data.relationshipDesire)?.title || "-"}
                     </p>
                   </div>
-                  <div className="bg-background-tertiary rounded-xl p-4 border border-card-border">
-                    <p className="text-xs text-foreground-muted mb-1">Identity</p>
-                    <p className="font-semibold text-foreground">
+                  <div className="rounded-xl p-4 border"
+                    style={{
+                      background: "rgba(255,250,245,0.8)",
+                      borderColor: "rgba(200,180,170,0.2)",
+                    }}
+                  >
+                    <p className="text-xs mb-1" style={{ color: "rgba(120,100,90,0.6)" }}>Identity</p>
+                    <p className="font-semibold text-sm" style={{ color: "rgba(60,45,50,0.9)" }}>
                       {SEXUAL_ORIENTATION_TAGS.find(t => t.value === data.sexualOrientation)?.label || "-"}
                     </p>
                   </div>

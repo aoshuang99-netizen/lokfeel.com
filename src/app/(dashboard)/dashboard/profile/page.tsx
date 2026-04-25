@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2, Sparkles } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2, Sparkles, AlertCircle, ImageIcon, Star } from "lucide-react";
 import { LoadingButton } from "@/components/shared/loading";
 import { toast } from "sonner";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
@@ -52,9 +53,15 @@ export default function ProfilePage() {
     priorities: [] as string[],
     emotionalAvailability: "3",
     locationPreferences: [] as string[],
+    
+    // Photo Gallery
+    galleryPhotos: [] as string[],
   });
   const [isUploading, setIsUploading] = useState(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
+  const [stepErrors, setStepErrors] = useState<string[]>([]);
+  const [showGalleryUploader, setShowGalleryUploader] = useState(false);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing profile on mount
   useEffect(() => {
@@ -85,6 +92,7 @@ export default function ProfilePage() {
             priorities: data.profile.lifePriorities ? JSON.parse(data.profile.lifePriorities) : [],
             emotionalAvailability: data.profile.emotionalAvailability || "3",
             locationPreferences: data.profile.preferredLocation ? data.profile.preferredLocation.split(", ") : [],
+            galleryPhotos: data.profile.galleryPhotos || [],
           });
           
           // Resume from last completed step
@@ -142,13 +150,13 @@ export default function ProfilePage() {
       // Convert base64 to blob
       const res = await fetch(croppedImage);
       const blob = await res.blob();
-      const formData = new FormData();
-      formData.append("file", blob, "avatar.jpg");
-      formData.append("type", "avatar");
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", blob, "avatar.jpg");
+      formDataUpload.append("type", "avatar");
 
       const uploadRes = await fetch("/api/upload", {
         method: "PUT",
-        body: formData,
+        body: formDataUpload,
       });
       if (!uploadRes.ok) throw new Error("Upload failed");
       const data = await uploadRes.json();
@@ -159,6 +167,65 @@ export default function ProfilePage() {
       toast.error("Failed to upload avatar");
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  // Handle gallery photo upload
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("type", "gallery");
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "PUT",
+        body: formDataUpload,
+      });
+      if (!uploadRes.ok) throw new Error("Upload failed");
+      const data = await uploadRes.json();
+      
+      setFormData(prev => ({
+        ...prev,
+        galleryPhotos: [...prev.galleryPhotos, data.url],
+      }));
+      toast.success("Photo added to gallery!");
+    } catch (error) {
+      console.error("Gallery upload error:", error);
+      toast.error("Failed to upload photo");
+    } finally {
+      setIsUploading(false);
+      setShowGalleryUploader(false);
+    }
+  };
+
+  // Set gallery photo as avatar
+  const handleSetAsAvatar = async (photoUrl: string) => {
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: photoUrl }),
+      });
+      if (!res.ok) throw new Error("Failed to update avatar");
+      
+      handleChange("avatar", photoUrl);
+      toast.success("Avatar updated!");
+    } catch (error) {
+      console.error("Set avatar error:", error);
+      toast.error("Failed to set as avatar");
     }
   };
 
@@ -206,7 +273,41 @@ export default function ProfilePage() {
     }
   };
 
+  // Step 1必填验证
+  const validateStep1 = (): string[] => {
+    const errors: string[] = [];
+    if (!formData.avatar) errors.push("Photo is required");
+    if (!formData.displayName.trim()) errors.push("Name is required");
+    if (!formData.age || formData.age < 18) errors.push("Age is required (18+)");
+    if (!formData.gender) errors.push("Gender is required");
+    if (!formData.location.trim()) errors.push("Location is required");
+    return errors;
+  };
+
+  // 下一步按钮处理
+  const handleNextStep = () => {
+    if (currentStep === 1) {
+      const errors = validateStep1();
+      if (errors.length > 0) {
+        setStepErrors(errors);
+        toast.error("Please fill in all required fields");
+        return;
+      }
+    }
+    setStepErrors([]);
+    setCurrentStep((prev) => prev + 1);
+  };
+
   const handleSubmit = async () => {
+    // 最终提交前再次验证Step 1必填项
+    const errors = validateStep1();
+    if (errors.length > 0) {
+      setStepErrors(errors);
+      toast.error("Please fill in all required fields before submitting");
+      setCurrentStep(1); // 回到Step 1
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // First save the profile data
@@ -250,9 +351,10 @@ export default function ProfilePage() {
 
       if (!submitRes.ok) throw new Error("Failed to submit");
 
-      toast.success("Profile submitted successfully!");
-      router.push("/dashboard");
-      router.refresh();
+      toast.success("Profile saved successfully! You will be signed out.");
+      
+      // 保存后退出账号
+      await signOut({ callbackUrl: "/login" });
     } catch (error) {
       console.error("Submit error:", error);
       toast.error("Failed to submit profile");
@@ -345,9 +447,26 @@ export default function ProfilePage() {
         {/* Step 1: Basic Info */}
         {currentStep === 1 && (
           <div className="space-y-6">
+            {/* Validation Errors */}
+            {stepErrors.length > 0 && (
+              <div className="p-4 rounded-xl bg-error/10 border border-error/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-4 h-4 text-error" />
+                  <span className="text-sm font-medium text-error">Please fill in required fields</span>
+                </div>
+                <ul className="list-disc list-inside space-y-0.5">
+                  {stepErrors.map((err, i) => (
+                    <li key={i} className="text-xs text-error/80">{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Avatar Upload */}
             <div className="flex flex-col items-center">
-              <label className="block text-sm font-medium text-foreground mb-3">Profile Photo</label>
+              <label className="block text-sm font-medium text-foreground mb-3">
+                Profile Photo <span className="text-error">*</span>
+              </label>
               <div className="relative">
                 <div className="w-24 h-24 rounded-full overflow-hidden bg-background-tertiary border-2 border-card-border">
                   {formData.avatar ? (
@@ -399,8 +518,71 @@ export default function ProfilePage() {
               <p className="text-xs text-foreground-subtle mt-2">Click camera to upload photo</p>
             </div>
 
+            {/* Photo Gallery */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Display Name</label>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-medium text-foreground">
+                  Photo Gallery
+                </label>
+                <button
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  Add Photo
+                </button>
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleGalleryUpload}
+                  className="hidden"
+                />
+              </div>
+
+              {formData.galleryPhotos.length > 0 ? (
+                <div className="grid grid-cols-4 gap-2">
+                  {formData.galleryPhotos.map((photo, idx) => (
+                    <div
+                      key={idx}
+                      className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer border border-card-border"
+                      onClick={() => handleSetAsAvatar(photo)}
+                    >
+                      <img
+                        src={photo}
+                        alt={`Gallery ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Star className="w-5 h-5 text-white" />
+                      </div>
+                      {/* Current avatar indicator */}
+                      {formData.avatar === photo && (
+                        <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed border-card-border cursor-pointer hover:border-primary/30 transition-colors"
+                  onClick={() => galleryInputRef.current?.click()}
+                >
+                  <ImageIcon className="w-8 h-8 text-foreground-subtle" />
+                  <p className="text-xs text-foreground-subtle">No photos yet. Tap to add.</p>
+                </div>
+              )}
+              <p className="text-xs text-foreground-subtle mt-2">
+                Tap any photo to set it as your avatar
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Display Name <span className="text-error">*</span></label>
               <input
                 type="text"
                 value={formData.displayName}
@@ -412,7 +594,7 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Age</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Age <span className="text-error">*</span></label>
                 <input
                   type="number"
                   value={formData.age}
@@ -422,7 +604,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Gender</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Gender <span className="text-error">*</span></label>
                 <select
                   value={formData.gender}
                   onChange={(e) => handleChange("gender", e.target.value)}
@@ -462,7 +644,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Location</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Location <span className="text-error">*</span></label>
               <input
                 type="text"
                 value={formData.location}
@@ -755,7 +937,7 @@ export default function ProfilePage() {
 
         {currentStep < steps.length ? (
           <button
-            onClick={() => setCurrentStep((prev) => prev + 1)}
+            onClick={handleNextStep}
             className="btn-primary flex items-center gap-2"
           >
             Next
