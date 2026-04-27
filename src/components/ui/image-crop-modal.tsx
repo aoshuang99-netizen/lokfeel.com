@@ -16,8 +16,10 @@ interface ImageCropModalProps {
   title?: string;
   /** Whether to show camera capture button */
   showCamera?: boolean;
-  /** Whether to show save-to-gallery button */
+  /** Whether to show save-to-gallery option (Tab: Save to Gallery) */
   showSaveToGallery?: boolean;
+  /** Default action tab: "avatar" or "gallery" */
+  defaultAction?: "avatar" | "gallery";
 }
 
 export function ImageCropModal({
@@ -30,16 +32,24 @@ export function ImageCropModal({
   title = "Adjust Your Photo",
   showCamera = false,
   showSaveToGallery = false,
+  defaultAction = "avatar",
 }: ImageCropModalProps) {
-  // Default zoom slightly zoomed out so face isn't cropped too tightly
   const [zoom, setZoom] = useState(0.85);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isCapturing, setIsCapturing] = useState(false);
+  const [actionTab, setActionTab] = useState<"avatar" | "gallery">(defaultAction);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // Reset tab when modal opens with a new default
+  useEffect(() => {
+    if (isOpen) {
+      setActionTab(defaultAction);
+    }
+  }, [isOpen, defaultAction]);
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.2, 3));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.2, 0.5));
@@ -113,14 +123,25 @@ export function ImageCropModal({
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Cap camera capture to 512px long side for avatar
+    const MAX_SIDE = 512;
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    let outW: number, outH: number;
+    if (vw >= vh) {
+      outW = Math.min(vw, MAX_SIDE);
+      outH = Math.round(outW * (vh / vw));
+    } else {
+      outH = Math.min(vh, MAX_SIDE);
+      outW = Math.round(outH * (vw / vh));
+    }
+    canvas.width = outW;
+    canvas.height = outH;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    ctx.drawImage(video, 0, 0, outW, outH);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
     stopCamera();
-    // Pass captured image back via onCropComplete
     onCropComplete(dataUrl);
   }, [onCropComplete, stopCamera]);
 
@@ -134,7 +155,7 @@ export function ImageCropModal({
     return () => stopCamera();
   }, [isOpen, stopCamera]);
 
-  // ─── Crop Logic (rectangular, based on aspect ratio) ───
+  // ─── Crop Logic ───
   const getCropDimensions = useCallback((imgWidth: number, imgHeight: number) => {
     let ratio: number;
     switch (aspectRatio) {
@@ -144,15 +165,12 @@ export function ImageCropModal({
     }
     if (typeof aspectRatio === "number") ratio = aspectRatio;
 
-    // Determine crop size based on image dimensions and desired ratio
     let cropW: number, cropH: number;
     const imgRatio = imgWidth / imgHeight;
     if (imgRatio > ratio) {
-      // Image is wider than target ratio — crop height is limiting
       cropH = imgHeight;
       cropW = cropH * ratio;
     } else {
-      // Image is taller than target ratio — crop width is limiting
       cropW = imgWidth;
       cropH = cropW / ratio;
     }
@@ -167,45 +185,71 @@ export function ImageCropModal({
     if (!ctx) return;
 
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    // ⚠️ Do NOT set crossOrigin for data: URLs — Safari silently refuses to load them
     img.onload = () => {
-      const { cropW, cropH } = getCropDimensions(img.width, img.height);
+      console.log("[Crop] Image loaded, natural size:", img.naturalWidth, "x", img.naturalHeight);
+      try {
+        const { cropW, cropH } = getCropDimensions(img.width, img.height);
+        // Avatar: max 1024px long side — high quality for display and lightbox zoom
+        const OUTPUT_LONG_SIDE = 1024;
+        let outW: number, outH: number;
+        if (cropW >= cropH) {
+          outW = OUTPUT_LONG_SIDE;
+          outH = Math.round(OUTPUT_LONG_SIDE * (cropH / cropW));
+        } else {
+          outH = OUTPUT_LONG_SIDE;
+          outW = Math.round(OUTPUT_LONG_SIDE * (cropW / cropH));
+        }
+        canvas.width = outW;
+        canvas.height = outH;
 
-      // Output size — maintain good quality
-      const OUTPUT_LONG_SIDE = 800;
-      let outW: number, outH: number;
-      if (cropW >= cropH) {
-        outW = OUTPUT_LONG_SIDE;
-        outH = Math.round(OUTPUT_LONG_SIDE * (cropH / cropW));
-      } else {
-        outH = OUTPUT_LONG_SIDE;
-        outW = Math.round(OUTPUT_LONG_SIDE * (cropW / cropH));
+        const sourceX = (img.width - cropW) / 2 - position.x / zoom;
+        const sourceY = (img.height - cropH) / 2 - position.y / zoom;
+        const sourceW = cropW / zoom;
+        const sourceH = cropH / zoom;
+
+        ctx.drawImage(
+          img,
+          Math.max(0, sourceX),
+          Math.max(0, sourceY),
+          Math.min(img.width, sourceW),
+          Math.min(img.height, sourceH),
+          0,
+          0,
+          outW,
+          outH
+        );
+
+        const croppedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        console.log("[Crop] Canvas output length:", croppedDataUrl.length);
+
+        // Fallback: if canvas output is empty/invalid, use original imageSrc
+        if (croppedDataUrl.length < 100) {
+          console.warn("[Crop] Canvas output too small, using original image");
+          onCropComplete(imageSrc);
+        } else {
+          onCropComplete(croppedDataUrl);
+        }
+      } catch (err) {
+        // toDataURL can throw on tainted canvas
+        console.error("[Crop] Canvas operation failed:", err);
+        onCropComplete(imageSrc);
       }
-      canvas.width = outW;
-      canvas.height = outH;
-
-      // Center the crop on the image, adjusted by user pan
-      const sourceX = (img.width - cropW) / 2 - position.x / zoom;
-      const sourceY = (img.height - cropH) / 2 - position.y / zoom;
-      const sourceW = cropW / zoom;
-      const sourceH = cropH / zoom;
-
-      ctx.drawImage(
-        img,
-        Math.max(0, sourceX),
-        Math.max(0, sourceY),
-        Math.min(img.width, sourceW),
-        Math.min(img.height, sourceH),
-        0,
-        0,
-        outW,
-        outH
-      );
-
-      const croppedDataUrl = canvas.toDataURL("image/jpeg", 0.92);
-      onCropComplete(croppedDataUrl);
+    };
+    img.onerror = (e) => {
+      // If image fails to load, pass original through as fallback
+      console.warn("[Crop] Image failed to load, using original. Event:", e);
+      onCropComplete(imageSrc);
     };
     img.src = imageSrc;
+
+    // Timeout safety — if img never loads (e.g. Safari data URL block), use original after 3s
+    setTimeout(() => {
+      if (!canvas.width) {
+        console.warn("[Crop] Image load timed out, using original");
+        onCropComplete(imageSrc);
+      }
+    }, 3000);
   }, [imageSrc, position, zoom, onCropComplete, getCropDimensions]);
 
   const handleSaveToGallery = useCallback(() => {
@@ -216,42 +260,65 @@ export function ImageCropModal({
     if (!ctx) return;
 
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    // ⚠️ Do NOT set crossOrigin for data: URLs — Safari silently refuses to load them
     img.onload = () => {
-      const { cropW, cropH } = getCropDimensions(img.width, img.height);
-      const OUTPUT_LONG_SIDE = 1200;
-      let outW: number, outH: number;
-      if (cropW >= cropH) {
-        outW = OUTPUT_LONG_SIDE;
-        outH = Math.round(OUTPUT_LONG_SIDE * (cropH / cropW));
-      } else {
-        outH = OUTPUT_LONG_SIDE;
-        outW = Math.round(OUTPUT_LONG_SIDE * (cropW / cropH));
+      try {
+        const { cropW, cropH } = getCropDimensions(img.width, img.height);
+        // Gallery: max 1024px long side — good quality for album photos
+        const OUTPUT_LONG_SIDE = 1024;
+        let outW: number, outH: number;
+        if (cropW >= cropH) {
+          outW = OUTPUT_LONG_SIDE;
+          outH = Math.round(OUTPUT_LONG_SIDE * (cropH / cropW));
+        } else {
+          outH = OUTPUT_LONG_SIDE;
+          outW = Math.round(OUTPUT_LONG_SIDE * (cropW / cropH));
+        }
+        canvas.width = outW;
+        canvas.height = outH;
+
+        const sourceX = (img.width - cropW) / 2 - position.x / zoom;
+        const sourceY = (img.height - cropH) / 2 - position.y / zoom;
+        const sourceW = cropW / zoom;
+        const sourceH = cropH / zoom;
+
+        ctx.drawImage(
+          img,
+          Math.max(0, sourceX),
+          Math.max(0, sourceY),
+          Math.min(img.width, sourceW),
+          Math.min(img.height, sourceH),
+          0,
+          0,
+          outW,
+          outH
+        );
+
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        if (dataUrl.length < 100) {
+          console.warn("[Gallery] Canvas output too small, using original");
+          onSaveToGallery(imageSrc);
+        } else {
+          onSaveToGallery(dataUrl);
+        }
+      } catch (err) {
+        console.error("[Gallery] Canvas operation failed:", err);
+        onSaveToGallery(imageSrc);
       }
-      canvas.width = outW;
-      canvas.height = outH;
-
-      const sourceX = (img.width - cropW) / 2 - position.x / zoom;
-      const sourceY = (img.height - cropH) / 2 - position.y / zoom;
-      const sourceW = cropW / zoom;
-      const sourceH = cropH / zoom;
-
-      ctx.drawImage(
-        img,
-        Math.max(0, sourceX),
-        Math.max(0, sourceY),
-        Math.min(img.width, sourceW),
-        Math.min(img.height, sourceH),
-        0,
-        0,
-        outW,
-        outH
-      );
-
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-      onSaveToGallery(dataUrl);
+    };
+    img.onerror = (e) => {
+      console.warn("[Gallery] Image failed to load, using original. Event:", e);
+      onSaveToGallery(imageSrc);
     };
     img.src = imageSrc;
+
+    // Timeout safety — if img never loads, use original after 3s
+    setTimeout(() => {
+      if (!canvas.width) {
+        console.warn("[Gallery] Image load timed out, using original");
+        onSaveToGallery(imageSrc);
+      }
+    }, 3000);
   }, [imageSrc, position, zoom, onSaveToGallery, getCropDimensions]);
 
   if (!isOpen) return null;
@@ -271,13 +338,19 @@ export function ImageCropModal({
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="w-full max-w-md bg-background-tertiary rounded-2xl overflow-hidden"
-            style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+            className="w-full max-w-md rounded-2xl overflow-hidden"
+            style={{
+              background: "var(--background-secondary, #f5f0eb)",
+              border: "1px solid var(--card-border, rgba(0,0,0,0.08))",
+            }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+            <div
+              className="flex items-center justify-between p-4 border-b"
+              style={{ borderColor: "var(--card-border, rgba(0,0,0,0.08))" }}
+            >
               <h3 className="text-lg font-semibold text-foreground">Take a Selfie</h3>
-              <button onClick={stopCamera} className="p-2 rounded-lg hover:bg-background-tertiary transition-colors">
+              <button onClick={stopCamera} className="p-2 rounded-lg hover:bg-black/5 transition-colors">
                 <X className="w-5 h-5 text-foreground-muted" />
               </button>
             </div>
@@ -290,12 +363,10 @@ export function ImageCropModal({
                 playsInline
                 muted
                 className="w-full h-full object-cover"
-                style={{ transform: "scaleX(-1)" }} // Mirror for selfie feel
+                style={{ transform: "scaleX(-1)" }}
               />
-              {/* Overlay guide — rectangular frame */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                 <div className="border-2 border-white/60 rounded-lg" style={{ width: "80%", height: "80%" }}>
-                  {/* Corner markers */}
                   <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-white" />
                   <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-white" />
                   <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-white" />
@@ -308,9 +379,9 @@ export function ImageCropModal({
             <div className="p-4 flex justify-center">
               <button
                 onClick={capturePhoto}
-                className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center hover:bg-white/10 transition-colors"
+                className="w-16 h-16 rounded-full border-4 border-primary flex items-center justify-center hover:bg-primary/10 transition-colors"
               >
-                <div className="w-12 h-12 rounded-full bg-white" />
+                <div className="w-12 h-12 rounded-full bg-primary" />
               </button>
             </div>
 
@@ -324,35 +395,46 @@ export function ImageCropModal({
   // ─── Normal Crop Mode ───
   if (!imageSrc) return null;
 
+  const isAvatarTab = actionTab === "avatar";
+  const confirmLabel = isAvatarTab ? "Set as Avatar" : "Save to Gallery";
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: "rgba(0,0,0,0.9)" }}
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+        style={{ background: "rgba(0,0,0,0.6)" }}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-md bg-background-tertiary rounded-2xl overflow-hidden"
-          style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 40, opacity: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+          style={{
+            maxHeight: "min(90vh, 700px)",
+            background: "var(--background-secondary, #f5f0eb)",
+            border: "1px solid var(--card-border, rgba(0,0,0,0.08))",
+          }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+          {/* Header — fixed at top */}
+          <div
+            className="flex items-center justify-between p-4 border-b shrink-0"
+            style={{ borderColor: "var(--card-border, rgba(0,0,0,0.08))" }}
+          >
             <h3 className="text-lg font-semibold text-foreground">{title}</h3>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-background-tertiary transition-colors"
+              className="p-2 rounded-lg hover:bg-black/5 transition-colors"
             >
               <X className="w-5 h-5 text-foreground-muted" />
             </button>
           </div>
 
-          {/* Crop Area */}
-          <div className="relative aspect-square overflow-hidden bg-black">
+          {/* Crop Area — capped height, can shrink on small screens */}
+          <div className="relative overflow-hidden bg-black shrink min-h-0" style={{ maxHeight: "55vh", aspectRatio: "1 / 1", width: "100%" }}>
             <div
               className="absolute inset-0 flex items-center justify-center cursor-move"
               onMouseDown={handleMouseDown}
@@ -377,32 +459,28 @@ export function ImageCropModal({
 
             {/* Overlay — rectangular crop frame */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              {/* Dark overlay outside crop area */}
               <div className="absolute inset-0" style={{
                 background: `radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 70%)`,
               }} />
-              {/* Rectangular crop border */}
               <div
                 className="border-2 border-white/80 rounded-lg relative"
                 style={{ width: "80%", height: "80%" }}
               >
-                {/* Corner markers */}
                 <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white" />
                 <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-white" />
                 <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-white" />
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-white" />
-                {/* Crosshair guides */}
                 <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20" />
                 <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
               </div>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="p-4 space-y-4">
+          {/* Controls — fixed at bottom, always visible, scrollable if needed */}
+          <div className="p-4 space-y-3 shrink-0 overflow-y-auto">
             {/* Zoom Slider */}
             <div className="flex items-center gap-3">
-              <ZoomOut className="w-4 h-4 text-foreground-muted" />
+              <ZoomOut className="w-4 h-4 text-foreground-muted shrink-0" />
               <input
                 type="range"
                 min="0.5"
@@ -410,19 +488,65 @@ export function ImageCropModal({
                 step="0.1"
                 value={zoom}
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="flex-1 h-1 bg-background-tertiary rounded-lg appearance-none cursor-pointer"
+                className="flex-1 h-1.5 rounded-lg appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, white ${((zoom - 0.5) / 2.5) * 100}%, rgba(255,255,255,0.2) ${((zoom - 0.5) / 2.5) * 100}%)`,
+                  background: `linear-gradient(to right, var(--primary, #b5644b) ${((zoom - 0.5) / 2.5) * 100}%, var(--background-tertiary, #e8e0d8) ${((zoom - 0.5) / 2.5) * 100}%)`,
                 }}
               />
-              <ZoomIn className="w-4 h-4 text-foreground-muted" />
+              <ZoomIn className="w-4 h-4 text-foreground-muted shrink-0" />
             </div>
 
-            {/* Action Buttons */}
+            {/* Tab Switcher: Set as Avatar / Save to Gallery */}
+            {showSaveToGallery && onSaveToGallery && (
+              <div
+                className="flex rounded-xl overflow-hidden p-1"
+                style={{ background: "var(--background-tertiary, #e8e0d8)" }}
+              >
+                <button
+                  onClick={() => setActionTab("avatar")}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all"
+                  style={{
+                    background: isAvatarTab
+                      ? "var(--background-secondary, #f5f0eb)"
+                      : "transparent",
+                    color: isAvatarTab
+                      ? "var(--foreground, #1a1a1a)"
+                      : "var(--foreground-muted, #888)",
+                    boxShadow: isAvatarTab
+                      ? "0 1px 3px rgba(0,0,0,0.08)"
+                      : "none",
+                  }}
+                >
+                  <Camera className="w-4 h-4" />
+                  Set as Avatar
+                </button>
+                <button
+                  onClick={() => setActionTab("gallery")}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all"
+                  style={{
+                    background: !isAvatarTab
+                      ? "var(--background-secondary, #f5f0eb)"
+                      : "transparent",
+                    color: !isAvatarTab
+                      ? "var(--foreground, #1a1a1a)"
+                      : "var(--foreground-muted, #888)",
+                    boxShadow: !isAvatarTab
+                      ? "0 1px 3px rgba(0,0,0,0.08)"
+                      : "none",
+                  }}
+                >
+                  <Upload className="w-4 h-4" />
+                  Save to Gallery
+                </button>
+              </div>
+            )}
+
+            {/* Confirm + Reset Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-card-border text-foreground-muted hover:bg-background-tertiary transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-foreground-muted hover:bg-black/5 transition-colors shrink-0"
+                style={{ borderColor: "var(--card-border, rgba(0,0,0,0.12))" }}
               >
                 <RotateCcw className="w-4 h-4" />
                 Reset
@@ -430,32 +554,34 @@ export function ImageCropModal({
               {showCamera && (
                 <button
                   onClick={startCamera}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl border border-card-border text-foreground-muted hover:bg-background-tertiary transition-colors"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-foreground-muted hover:bg-black/5 transition-colors shrink-0"
+                  style={{ borderColor: "var(--card-border, rgba(0,0,0,0.12))" }}
                 >
                   <Camera className="w-4 h-4" />
-                  Camera
-                </button>
-              )}
-              {showSaveToGallery && (
-                <button
-                  onClick={handleSaveToGallery}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl border border-card-border text-foreground-muted hover:bg-background-tertiary transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  Save
+                  Retake
                 </button>
               )}
               <button
-                onClick={getCroppedImage}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white text-black font-medium hover:bg-white/90 transition-colors"
+                onClick={() => {
+                  console.log("[CropModal] Confirm clicked, actionTab:", actionTab, "hasSaveToGallery:", !!onSaveToGallery);
+                  if (actionTab === "gallery" && onSaveToGallery) {
+                    handleSaveToGallery();
+                  } else {
+                    getCroppedImage();
+                  }
+                }}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-white transition-colors"
+                style={{
+                  background: "var(--primary, #b5644b)",
+                }}
               >
                 <Check className="w-4 h-4" />
-                Apply
+                {confirmLabel}
               </button>
             </div>
 
-            <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.4)" }}>
-              Drag to position • Zoom to adjust • Tap Apply to confirm
+            <p className="text-xs text-center text-foreground-muted">
+              Drag to position &middot; Zoom to adjust &middot; Tap <strong>{confirmLabel}</strong> to confirm
             </p>
           </div>
         </motion.div>
