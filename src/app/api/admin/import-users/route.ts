@@ -51,24 +51,29 @@ interface SeedUser {
 
 function mapRelationshipGoal(goal: string): string {
   const mapping: Record<string, string> = {
-    'Serious Relationship': 'LONG_TERM',
-    'Long Term': 'LONG_TERM',
-    'Casual Dating': 'DATING',
-    'Casual': 'DATING',
-    'Friendship': 'FRIENDSHIP',
-    'Something Casual': 'DATING',
-    'Long-term Partner': 'LONG_TERM',
-    'Marriage': 'LONG_TERM',
+    'Serious Relationship': 'MONOGAMY',
+    'Long Term': 'MONOGAMY',
+    'Long-term Partner': 'MONOGAMY',
+    'Marriage': 'MONOGAMY',
+    'Casual Dating': 'CASUAL_DATING',
+    'Casual': 'CASUAL_DATING',
+    'Something Casual': 'CASUAL_DATING',
+    'Friendship': 'FRIENDSHIP_FIRST',
+    'Open Relationship': 'ETHICAL_NON_MONOGAMY',
+    'Polyamory': 'POLYAMORY',
   };
-  return mapping[goal] || 'DATING';
+  return mapping[goal] || 'CASUAL_DATING';
 }
 
 function mapAttachmentStyle(style: string): string {
   const mapping: Record<string, string> = {
     'Secure': 'Secure',
-    'Anxious': 'Anxious-Preoccupied',
-    'Avoidant': 'Dismissive-Avoidant',
-    'Fearful': 'Fearful-Avoidant',
+    'Anxious': 'Anxious',
+    'Anxious-Preoccupied': 'Anxious',
+    'Dismissive-Avoidant': 'Avoidant',
+    'Avoidant': 'Avoidant',
+    'Fearful-Avoidant': 'Fearful',
+    'Fearful': 'Fearful',
   };
   return mapping[style] || 'Secure';
 }

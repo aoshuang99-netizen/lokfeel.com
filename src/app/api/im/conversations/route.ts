@@ -20,7 +20,11 @@ export async function GET(req: NextRequest) {
       },
       include: {
         userA: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            isBot: true,
             profile: {
               select: {
                 displayName: true,
@@ -30,7 +34,11 @@ export async function GET(req: NextRequest) {
           },
         },
         userB: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            isBot: true,
             profile: {
               select: {
                 displayName: true,
@@ -64,7 +72,8 @@ export async function GET(req: NextRequest) {
         otherUser: {
           id: otherUser.id,
           name: otherUser.profile?.displayName || otherUser.name || "Unknown",
-          avatar: otherUser.profile?.avatar,
+          avatar: otherUser.profile?.avatar || otherUser.image || null,
+          isBot: otherUser.isBot || false,
         },
         lastMessage: lastMessage
           ? {

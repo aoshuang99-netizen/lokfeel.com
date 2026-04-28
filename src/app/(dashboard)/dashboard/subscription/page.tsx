@@ -6,6 +6,7 @@ import {
   MessageCircle, Filter, Ghost, Heart, MapPin, RotateCcw,
   Award, ArrowRight, Lock, CreditCard, Loader2, AlertCircle,
 } from "lucide-react";
+import { CardVerificationWall } from "@/components/payment/CardVerificationWall";
 
 // ─── Constants ───────────────────────────────────────────────
 const MONTHLY_PRICE = 19.99;
@@ -54,6 +55,7 @@ type PaymentStatus = {
   isLadyFree: boolean;
   isFemale: boolean;
   hasStripeCustomer: boolean;
+  cardVerified: boolean;
   subscription: {
     id: string;
     plan: string;
@@ -104,6 +106,7 @@ export default function SubscriptionPage() {
   const isPremiumUser = paymentStatus?.isPremium ?? false;
   const isLadyFreeUser = paymentStatus?.isLadyFree ?? false;
   const isCancelled = paymentStatus?.subscription?.cancelledAt != null;
+  const cardVerified = paymentStatus?.cardVerified ?? false;
 
   // ═══ Handle subscribe — redirect to Stripe Checkout ═══
   const handleSubscribe = async (plan: string) => {
@@ -201,6 +204,7 @@ export default function SubscriptionPage() {
             <h2 className="text-xl font-bold text-white mb-1">Ladies Never Pay</h2>
             <p className="text-white/80 text-sm max-w-md mx-auto">
               Women get premium-level features completely free — because you deserve the best experience, always.
+              {!cardVerified && " Card verification is required for safety."}
             </p>
           </div>
         </div>
@@ -261,6 +265,24 @@ export default function SubscriptionPage() {
           </button>
         )}
       </div>
+
+      {/* ═══ Card Verification Required ═══ */}
+      {!cardVerified && !isPremiumUser && (
+        <div className="glass-card border-primary/30 p-6 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5" />
+          <div className="relative">
+            <CardVerificationWall
+              variant="inline"
+              title={isLadyFreeUser ? "Verify Your Card to Continue" : "Card Verification Required"}
+              description={
+                isLadyFreeUser
+                  ? "Your Lady Free plan is free forever! We just need to verify your identity with a card — no charges, ever."
+                  : "Verify your card to keep using LokFeel after your free matches. Identity verification only — no charges."
+              }
+            />
+          </div>
+        </div>
+      )}
 
       {/* ═══ Billing Toggle (only for non-premium, non-female) ═══ */}
       {!isPremiumUser && !isFemaleUser && (
@@ -484,6 +506,7 @@ export default function SubscriptionPage() {
           { icon: Lock, text: "Secure payment via Stripe", color: "text-success" },
           { icon: Shield, text: "7-day refund guarantee", color: "text-success" },
           { icon: Flower2, text: "Women always free", color: "text-primary" },
+          { icon: CreditCard, text: "Card verify only — no charges", color: "text-primary" },
         ].map((badge, i) => (
           <div key={i} className="flex items-center gap-2 text-foreground-subtle text-sm">
             <badge.icon className={`w-4 h-4 ${badge.color}`} />

@@ -274,7 +274,7 @@ function scoreDealbreakers(userBreakers: string | null | undefined, otherProfile
       // Check if breaker is a negation pattern (e.g., "Not looking for casual")
       if (breakerLower.startsWith('not ') || breakerLower.startsWith("don't") || breakerLower.startsWith("no ")) {
         // Check if other user might violate this
-        if (otherProfile.relationshipGoal === 'NOT_SURE' || otherProfile.emotionalAvailability === 'Needs Space') {
+        if (otherProfile.relationshipGoal === 'CASUAL_DATING' || otherProfile.emotionalAvailability === 'Needs Space') {
           violations++;
         }
       } else {
@@ -325,7 +325,7 @@ function scoreLifestyle(userA: UserProfile, userB: UserProfile): number {
   // Relationship goal alignment
   if (userA.relationshipGoal && userB.relationshipGoal) {
     if (userA.relationshipGoal === userB.relationshipGoal) score += 15;
-    else if (userA.relationshipGoal === 'NOT_SURE' || userB.relationshipGoal === 'NOT_SURE') score -= 5;
+    else if (userA.relationshipGoal === 'CASUAL_DATING' || userB.relationshipGoal === 'CASUAL_DATING') score -= 5;
     else score += 5;
   }
 
@@ -434,7 +434,7 @@ function generateMatchReason(
     reasons.push('Similar lifestyle preferences and relationship goals');
   }
 
-  if (a.relationshipGoal === b.relationshipGoal && a.relationshipGoal === 'LONG_TERM') {
+  if (a.relationshipGoal === b.relationshipGoal && a.relationshipGoal === 'MONOGAMY') {
     reasons.push('Both seeking a long-term committed relationship');
   }
 

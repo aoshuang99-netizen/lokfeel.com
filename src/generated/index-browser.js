@@ -235,6 +235,8 @@ exports.Prisma.UserScalarFieldEnum = {
   isBot: 'isBot',
   botType: 'botType',
   botConfig: 'botConfig',
+  cardVerified: 'cardVerified',
+  cardVerifiedAt: 'cardVerifiedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -756,6 +758,12 @@ exports.Gender = exports.$Enums.Gender = {
 };
 
 exports.RelationshipGoal = exports.$Enums.RelationshipGoal = {
+  MONOGAMY: 'MONOGAMY',
+  ETHICAL_NON_MONOGAMY: 'ETHICAL_NON_MONOGAMY',
+  POLYAMORY: 'POLYAMORY',
+  CASUAL_DATING: 'CASUAL_DATING',
+  FRIENDSHIP_FIRST: 'FRIENDSHIP_FIRST',
+  KINK_BDSM: 'KINK_BDSM',
   LONG_TERM: 'LONG_TERM',
   DATING: 'DATING',
   FRIENDSHIP: 'FRIENDSHIP',

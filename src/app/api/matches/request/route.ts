@@ -177,6 +177,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ═══ Card Verification Check ═══
+    // After using free matches, ALL users (including Lady Free) must verify a card
+    const userRecord = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { cardVerified: true },
+    });
+
+    const cardVerified = userRecord?.cardVerified ?? false;
+    const freeMatchesUsed = totalConnections >= 2; // After 2 free matches, require card
+
+    if (!cardVerified && freeMatchesUsed) {
+      return NextResponse.json(
+        {
+          message: 'Please verify your card to continue matching. This is for identity verification only — no charges.',
+          code: 'CARD_VERIFICATION_REQUIRED',
+        },
+        { status: 403 }
+      );
+    }
+
     // 计算匹配度
     const currentUserData = {
       id: currentUserProfile.userId,

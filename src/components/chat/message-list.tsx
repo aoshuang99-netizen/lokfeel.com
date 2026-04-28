@@ -16,8 +16,17 @@ interface MessageListProps {
   /** 当前用户 ID */
   currentUserId?: string;
   isLoading?: boolean;
+  /** 真实用户正在输入（来自socket事件） */
   isTyping?: boolean;
   typingUserName?: string;
+  /** Bot模拟的typing状态（2秒延迟后获取回复） */
+  isBotTyping?: boolean;
+  /** 对方用户的头像URL（用于显示消息头像） */
+  otherUserAvatar?: string | null;
+  /** 对方用户的名字（用于显示消息头像fallback） */
+  otherUserName?: string;
+  /** 对方用户是否是Bot */
+  otherUserIsBot?: boolean;
   onRetry?: (msgId: string) => void;
   onLoadMore?: () => void;
   onCopy?: (content: string) => void;
@@ -35,6 +44,7 @@ interface MessageGroup {
   isFromBot: boolean;
   senderName: string;
   senderAvatar?: string | null;
+  senderId: string;
 }
 
 // ============================================================================
@@ -44,17 +54,27 @@ interface MessageGroup {
 /**
  * Group consecutive messages from the same sender
  */
-function groupMessages(messages: IMMessagePayload[], currentUserId?: string): MessageGroup[] {
+function groupMessages(
+  messages: IMMessagePayload[], 
+  currentUserId?: string,
+  otherUserAvatar?: string | null,
+  otherUserName?: string,
+  otherUserIsBot?: boolean,
+): MessageGroup[] {
   const groups: MessageGroup[] = [];
   
   messages.forEach((message, index) => {
     const isFromMe = message.senderId === currentUserId || message.senderId === "me";
-    const isFromBot = message.senderId?.startsWith("bot-");
+    // Bot detection: prefer otherUserIsBot prop, fallback to ID patterns
+    const isFromBot = otherUserIsBot || 
+                      message.senderId?.startsWith("bot-") || 
+                      message.senderId?.startsWith("bot_") || false;
     
     // Check if this message should be grouped with the previous one
     const prevMessage = messages[index - 1];
     const prevIsFromMe = prevMessage && (prevMessage.senderId === currentUserId || prevMessage.senderId === "me");
-    const prevIsFromBot = prevMessage && prevMessage.senderId?.startsWith("bot-");
+    const prevIsFromBot = otherUserIsBot || 
+                          (prevMessage?.senderId?.startsWith("bot-") || prevMessage?.senderId?.startsWith("bot_") || false);
     
     const shouldGroup = prevMessage && isFromMe === prevIsFromMe && isFromBot === prevIsFromBot;
     
@@ -68,8 +88,9 @@ function groupMessages(messages: IMMessagePayload[], currentUserId?: string): Me
         messages: [message],
         isFromMe,
         isFromBot,
-        senderName: isFromMe ? "You" : isFromBot ? "Bot" : "Unknown",
-        senderAvatar: undefined,
+        senderName: isFromMe ? "You" : otherUserName || (isFromBot ? "Bot" : "Unknown"),
+        senderAvatar: isFromMe ? undefined : otherUserAvatar,
+        senderId: message.senderId,
       });
     }
   });
@@ -123,7 +144,13 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
 // Typing Indicator Component
 // ============================================================================
 
-function TypingIndicator({ name }: { name?: string }) {
+interface TypingIndicatorProps {
+  name?: string;
+  avatar?: string | null;
+  isBot?: boolean;
+}
+
+function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
@@ -132,14 +159,54 @@ function TypingIndicator({ name }: { name?: string }) {
       transition={{ duration: 0.2 }}
       className="flex items-center gap-2.5 px-4 py-2"
     >
-      <div className="flex items-center gap-[3px]">
-        <span className="w-[5px] h-[5px] bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1.4s" }} />
-        <span className="w-[5px] h-[5px] bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1.4s" }} />
-        <span className="w-[5px] h-[5px] bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1.4s" }} />
+      {/* Avatar */}
+      <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10">
+        {avatar ? (
+          avatar.startsWith("emoji:") ? (
+            <div className={`w-full h-full flex items-center justify-center ${
+              isBot 
+                ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
+                : 'bg-gradient-to-br from-primary to-secondary'
+            }`}>
+              <span
+                className="select-none leading-none"
+                style={{
+                  display: 'inline-block',
+                  width: '100%',
+                  height: '100%',
+                  fontSize: 'clamp(0.9rem, 180%, 1.8rem)',
+                  lineHeight: '1',
+                  textAlign: 'center',
+                  verticalAlign: 'middle',
+                }}
+              >
+                {avatar.split(":")[1]}
+              </span>
+            </div>
+          ) : (
+            <img src={avatar} alt={name || "User"} className="w-full h-full object-cover" />
+          )
+        ) : (
+          <div className={`w-full h-full flex items-center justify-center text-foreground text-xs font-bold ${
+            isBot 
+              ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
+              : 'bg-gradient-to-br from-primary to-secondary'
+          }`}>
+            {name?.[0] || "?"}
+          </div>
+        )}
       </div>
-      <span className="text-[11px] text-foreground-subtle">
-        {name ? `${name} is typing...` : "Typing..."}
-      </span>
+      {/* Typing dots + text */}
+      <div className="flex items-center gap-2 bg-white/[0.05] rounded-2xl px-4 py-2.5 border border-card-border/[0.06]">
+        <div className="flex items-center gap-[3px]">
+          <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1.4s" }} />
+          <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1.4s" }} />
+          <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1.4s" }} />
+        </div>
+        <span className="text-[11px] text-foreground-subtle">
+          {name ? `${name} is typing...` : "Typing..."}
+        </span>
+      </div>
     </motion.div>
   );
 }
@@ -154,6 +221,10 @@ function MessageListComponent({
   isLoading = false,
   isTyping = false,
   typingUserName,
+  isBotTyping = false,
+  otherUserAvatar,
+  otherUserName,
+  otherUserIsBot,
   onRetry,
   onLoadMore,
   onCopy,
@@ -169,7 +240,7 @@ function MessageListComponent({
   const previousMessagesLengthRef = useRef(0);
 
   // Group messages
-  const messageGroups = useMemo(() => groupMessages(messages, currentUserId), [messages, currentUserId]);
+  const messageGroups = useMemo(() => groupMessages(messages, currentUserId, otherUserAvatar, otherUserName, otherUserIsBot), [messages, currentUserId, otherUserAvatar, otherUserName, otherUserIsBot]);
 
   // Check if we have bot messages
   const hasBotMessages = useMemo(
@@ -305,10 +376,14 @@ function MessageListComponent({
           </div>
         ))}
 
-        {/* Typing indicator */}
-        {isTyping && (
+        {/* Typing indicator - socket typing OR bot simulated typing */}
+        {(isTyping || isBotTyping) && (
           <div className="py-2">
-            <TypingIndicator name={typingUserName} />
+            <TypingIndicator 
+              name={typingUserName || otherUserName} 
+              avatar={otherUserAvatar}
+              isBot={otherUserIsBot || isBotTyping}
+            />
           </div>
         )}
 

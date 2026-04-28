@@ -34,6 +34,7 @@ export async function GET(
                 id: true,
                 name: true,
                 image: true,
+                isBot: true,
                 profile: {
                   select: {
                     displayName: true,
@@ -54,8 +55,8 @@ export async function GET(
 
     const otherParticipant = room.members[0]
     
-    // Check if other user is a bot
-    const isBot = otherParticipant?.user.id?.startsWith('bot-') || 
+    // Check if other user is a bot — use isBot field from User model
+    const isBot = otherParticipant?.user.isBot === true || 
                   otherParticipant?.user.profile?.avatarType === 'bot'
 
     return NextResponse.json({
@@ -67,8 +68,10 @@ export async function GET(
                 otherParticipant?.user.name || 
                 'Unknown User',
           avatar: otherParticipant?.user.profile?.avatar || 
-                  otherParticipant?.user.image,
+                  otherParticipant?.user.image ||
+                  null,
           isOnline: isBot || Math.random() > 0.5, // Bots are always "online"
+          isBot: isBot,
           lastSeen: isBot ? 'Active now' : 'Recently',
         },
         isVault: false,

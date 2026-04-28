@@ -241,14 +241,14 @@ export function scoreRelationshipGoalCompatibility(
   
   if (goal1 === goal2) return 95
   
-  // Some goals are more compatible than others
+  // Some goals are more compatible than others (v3 enum values)
   const compatiblePairs: Record<string, string[]> = {
-    long_term: ['short_term', 'open_relationship'],
-    short_term: ['long_term', 'casual', 'open_relationship'],
-    casual: ['short_term', 'open_relationship', 'friendship'],
-    friendship: ['casual', 'open_relationship'],
-    open_relationship: ['long_term', 'short_term', 'casual', 'friendship'],
-    not_sure: ['long_term', 'short_term', 'casual', 'friendship', 'open_relationship'],
+    MONOGAMY: ['CASUAL_DATING', 'FRIENDSHIP_FIRST'],
+    ETHICAL_NON_MONOGAMY: ['POLYAMORY', 'CASUAL_DATING', 'KINK_BDSM'],
+    POLYAMORY: ['ETHICAL_NON_MONOGAMY', 'CASUAL_DATING'],
+    CASUAL_DATING: ['MONOGAMY', 'FRIENDSHIP_FIRST', 'ETHICAL_NON_MONOGAMY'],
+    FRIENDSHIP_FIRST: ['MONOGAMY', 'CASUAL_DATING'],
+    KINK_BDSM: ['ETHICAL_NON_MONOGAMY', 'POLYAMORY', 'CASUAL_DATING'],
   }
   
   if (compatiblePairs[goal1]?.includes(goal2)) {

@@ -261,6 +261,12 @@ export type Gender = (typeof Gender)[keyof typeof Gender]
 
 
 export const RelationshipGoal: {
+  MONOGAMY: 'MONOGAMY',
+  ETHICAL_NON_MONOGAMY: 'ETHICAL_NON_MONOGAMY',
+  POLYAMORY: 'POLYAMORY',
+  CASUAL_DATING: 'CASUAL_DATING',
+  FRIENDSHIP_FIRST: 'FRIENDSHIP_FIRST',
+  KINK_BDSM: 'KINK_BDSM',
   LONG_TERM: 'LONG_TERM',
   DATING: 'DATING',
   FRIENDSHIP: 'FRIENDSHIP',
@@ -11887,6 +11893,8 @@ export namespace Prisma {
     isBot: boolean | null
     botType: string | null
     botConfig: string | null
+    cardVerified: boolean | null
+    cardVerifiedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -11902,6 +11910,8 @@ export namespace Prisma {
     isBot: boolean | null
     botType: string | null
     botConfig: string | null
+    cardVerified: boolean | null
+    cardVerifiedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -11917,6 +11927,8 @@ export namespace Prisma {
     isBot: number
     botType: number
     botConfig: number
+    cardVerified: number
+    cardVerifiedAt: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -11934,6 +11946,8 @@ export namespace Prisma {
     isBot?: true
     botType?: true
     botConfig?: true
+    cardVerified?: true
+    cardVerifiedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -11949,6 +11963,8 @@ export namespace Prisma {
     isBot?: true
     botType?: true
     botConfig?: true
+    cardVerified?: true
+    cardVerifiedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -11964,6 +11980,8 @@ export namespace Prisma {
     isBot?: true
     botType?: true
     botConfig?: true
+    cardVerified?: true
+    cardVerifiedAt?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -12052,6 +12070,8 @@ export namespace Prisma {
     isBot: boolean
     botType: string | null
     botConfig: string | null
+    cardVerified: boolean
+    cardVerifiedAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -12084,6 +12104,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: boolean
     botConfig?: boolean
+    cardVerified?: boolean
+    cardVerifiedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     accounts?: boolean | User$accountsArgs<ExtArgs>
@@ -12129,6 +12151,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: boolean
     botConfig?: boolean
+    cardVerified?: boolean
+    cardVerifiedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -12144,6 +12168,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: boolean
     botConfig?: boolean
+    cardVerified?: boolean
+    cardVerifiedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -12159,11 +12185,13 @@ export namespace Prisma {
     isBot?: boolean
     botType?: boolean
     botConfig?: boolean
+    cardVerified?: boolean
+    cardVerifiedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "password" | "role" | "isBot" | "botType" | "botConfig" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "password" | "role" | "isBot" | "botType" | "botConfig" | "cardVerified" | "cardVerifiedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
@@ -12243,6 +12271,8 @@ export namespace Prisma {
       isBot: boolean
       botType: string | null
       botConfig: string | null
+      cardVerified: boolean
+      cardVerifiedAt: Date | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -12707,6 +12737,8 @@ export namespace Prisma {
     readonly isBot: FieldRef<"User", 'Boolean'>
     readonly botType: FieldRef<"User", 'String'>
     readonly botConfig: FieldRef<"User", 'String'>
+    readonly cardVerified: FieldRef<"User", 'Boolean'>
+    readonly cardVerifiedAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -47596,6 +47628,8 @@ export namespace Prisma {
     isBot: 'isBot',
     botType: 'botType',
     botConfig: 'botConfig',
+    cardVerified: 'cardVerified',
+    cardVerifiedAt: 'cardVerifiedAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -49294,6 +49328,8 @@ export namespace Prisma {
     isBot?: BoolFilter<"User"> | boolean
     botType?: StringNullableFilter<"User"> | string | null
     botConfig?: StringNullableFilter<"User"> | string | null
+    cardVerified?: BoolFilter<"User"> | boolean
+    cardVerifiedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
@@ -49338,6 +49374,8 @@ export namespace Prisma {
     isBot?: SortOrder
     botType?: SortOrderInput | SortOrder
     botConfig?: SortOrderInput | SortOrder
+    cardVerified?: SortOrder
+    cardVerifiedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     accounts?: AccountOrderByRelationAggregateInput
@@ -49385,6 +49423,8 @@ export namespace Prisma {
     isBot?: BoolFilter<"User"> | boolean
     botType?: StringNullableFilter<"User"> | string | null
     botConfig?: StringNullableFilter<"User"> | string | null
+    cardVerified?: BoolFilter<"User"> | boolean
+    cardVerifiedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
@@ -49429,6 +49469,8 @@ export namespace Prisma {
     isBot?: SortOrder
     botType?: SortOrderInput | SortOrder
     botConfig?: SortOrderInput | SortOrder
+    cardVerified?: SortOrder
+    cardVerifiedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -49450,6 +49492,8 @@ export namespace Prisma {
     isBot?: BoolWithAggregatesFilter<"User"> | boolean
     botType?: StringNullableWithAggregatesFilter<"User"> | string | null
     botConfig?: StringNullableWithAggregatesFilter<"User"> | string | null
+    cardVerified?: BoolWithAggregatesFilter<"User"> | boolean
+    cardVerifiedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -52945,6 +52989,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -52989,6 +53035,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -53033,6 +53081,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -53077,6 +53127,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -53121,6 +53173,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -53136,6 +53190,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -53151,6 +53207,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -57226,6 +57284,8 @@ export namespace Prisma {
     isBot?: SortOrder
     botType?: SortOrder
     botConfig?: SortOrder
+    cardVerified?: SortOrder
+    cardVerifiedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -57241,6 +57301,8 @@ export namespace Prisma {
     isBot?: SortOrder
     botType?: SortOrder
     botConfig?: SortOrder
+    cardVerified?: SortOrder
+    cardVerifiedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -57256,6 +57318,8 @@ export namespace Prisma {
     isBot?: SortOrder
     botType?: SortOrder
     botConfig?: SortOrder
+    cardVerified?: SortOrder
+    cardVerifiedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -65167,6 +65231,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     sessions?: SessionCreateNestedManyWithoutUserInput
@@ -65210,6 +65276,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
@@ -65269,6 +65337,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sessions?: SessionUpdateManyWithoutUserNestedInput
@@ -65312,6 +65382,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -65355,6 +65427,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -65398,6 +65472,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -65457,6 +65533,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -65500,6 +65578,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -65543,6 +65623,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -65586,6 +65668,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -65645,6 +65729,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -65688,6 +65774,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -65731,6 +65819,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -65774,6 +65864,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -65941,6 +66033,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -65984,6 +66078,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -66147,6 +66243,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -66190,6 +66288,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -66238,6 +66338,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -66281,6 +66383,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -66413,6 +66517,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -66456,6 +66562,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -66510,6 +66618,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -66553,6 +66663,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -66730,6 +66842,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -66773,6 +66887,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -66903,6 +67019,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -66946,6 +67064,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -67378,6 +67498,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -67421,6 +67543,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -67533,6 +67657,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -67576,6 +67702,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -67666,6 +67794,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -67709,6 +67839,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -67821,6 +67953,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -67864,6 +67998,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -67907,6 +68043,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -67950,6 +68088,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -67998,6 +68138,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -68041,6 +68183,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -68361,6 +68505,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -68404,6 +68550,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -68458,6 +68606,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -68501,6 +68651,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -68732,6 +68884,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -68775,6 +68929,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -68895,6 +69051,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -68938,6 +69096,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -69036,6 +69196,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -69079,6 +69241,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -69253,6 +69417,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -69296,6 +69462,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -69491,6 +69659,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -69534,6 +69704,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -69725,6 +69897,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -69768,6 +69942,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -69876,6 +70052,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -69919,6 +70097,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -70049,6 +70229,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -70092,6 +70274,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -70135,6 +70319,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -70178,6 +70364,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -70237,6 +70425,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -70280,6 +70470,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -70323,6 +70515,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -70366,6 +70560,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -70414,6 +70610,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -70457,6 +70655,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -70571,6 +70771,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -70614,6 +70816,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -70668,6 +70872,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -70711,6 +70917,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -70815,6 +71023,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -70858,6 +71068,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -70906,6 +71118,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -70949,6 +71163,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -71063,6 +71279,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -71106,6 +71324,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -71160,6 +71380,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -71203,6 +71425,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -71307,6 +71531,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -71350,6 +71576,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -71409,6 +71637,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -71452,6 +71682,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -71495,6 +71727,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -71538,6 +71772,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -71597,6 +71833,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -71640,6 +71878,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -71683,6 +71923,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -71726,6 +71968,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -71785,6 +72029,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -71828,6 +72074,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -71871,6 +72119,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -71914,6 +72164,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -71973,6 +72225,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -72016,6 +72270,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -72059,6 +72315,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -72102,6 +72360,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -72161,6 +72421,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -72204,6 +72466,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -72247,6 +72511,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -72290,6 +72556,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -72349,6 +72617,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -72392,6 +72662,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -72435,6 +72707,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -72478,6 +72752,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -72537,6 +72813,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -72580,6 +72858,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -72975,6 +73255,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -73018,6 +73300,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -73066,6 +73350,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -73109,6 +73395,8 @@ export namespace Prisma {
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -73168,6 +73456,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -73211,6 +73501,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -73265,6 +73557,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -73308,6 +73602,8 @@ export namespace Prisma {
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput

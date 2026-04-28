@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { CardVerificationWall } from "@/components/payment/CardVerificationWall";
 import {
   ArrowLeft,
   MoreVertical,
@@ -121,27 +122,31 @@ export default function ChatRoomPage() {
   const [showAiSuggestions, setShowAiSuggestions] = useState(true);
   const [userLimits, setUserLimits] = useState<UserLimits | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showCardVerificationModal, setShowCardVerificationModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [isBotTyping, setIsBotTyping] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load room info and messages
+  // Stable reference that always enriches with current roomInfo
+  const loadMessagesWithAvatar = useCallback(() => loadMessages(), [roomId, roomInfo?.otherUser?.avatar]);
+
+  // Load room info and messages — load roomInfo first, then messages with avatar context
   useEffect(() => {
     if (roomId) {
       setLoading(true);
-      Promise.all([
-        loadRoomInfo(),
-        loadMessages(),
-        loadUserLimits(),
-      ]).finally(() => {
+      loadRoomInfo().then(() => {
+        return loadMessagesWithAvatar();
+      }).finally(() => {
         setLoading(false);
       });
+      loadUserLimits();
     }
-  }, [roomId]);
+  }, [roomId, loadMessagesWithAvatar]);
 
   // Optimized polling: Check for new messages every 5 seconds (reduced from 3s)
   // Use incremental loading with cursor-based pagination for efficiency
@@ -156,7 +161,7 @@ export default function ChatRoomPage() {
       isVisible = !document.hidden;
       if (isVisible) {
         // Tab became visible - immediately check for new messages
-        loadMessages();
+        loadMessagesWithAvatar();
         startPolling();
       } else {
         stopPolling();
@@ -166,7 +171,7 @@ export default function ChatRoomPage() {
     const startPolling = () => {
       stopPolling();
       intervalId = setInterval(() => {
-        if (isVisible) loadMessages();
+        if (isVisible) loadMessagesWithAvatar();
       }, 5000);
     };
 
@@ -194,15 +199,66 @@ export default function ChatRoomPage() {
 
   const loadRoomInfo = async () => {
     try {
-      const res = await fetch(`/api/chat/${roomId}`);
-      if (!res.ok) {
-        const errText = await res.text().catch(() => 'Unknown error');
-        console.error('[Chat] Room API error:', res.status, errText);
-        throw new Error(`Failed to load room: ${res.status}`);
+      // Try legacy ChatRoom API first (for old chat rooms)
+      let res = await fetch(`/api/chat/${roomId}`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log('[Chat] Room info loaded (legacy):', data);
+        setRoomInfo(data.room || data);
+        return;
       }
-      const data = await res.json();
-      console.log('[Chat] Room info loaded:', data);
-      setRoomInfo(data.room || data);
+
+      // Fallback: use IM v2 conversations API to find this conversation
+      console.log('[Chat] Legacy API failed, trying IM conversations API for:', roomId);
+      res = await fetch('/api/im/conversations?limit=100');
+      if (!res.ok) {
+        throw new Error(`Failed to load room info: ${res.status}`);
+      }
+      const convData = await res.json();
+      const conv = convData.conversations?.find((c: any) => c.id === roomId);
+      if (conv?.otherUser) {
+        console.log('[Chat] Room info loaded (IM v2):', conv);
+        setRoomInfo({
+          id: roomId,
+          otherUser: {
+            id: conv.otherUser.id,
+            name: conv.otherUser.name || 'Unknown',
+            avatar: conv.otherUser.avatar || null,
+            isOnline: conv.otherUser.presence === 'ONLINE',
+            isBot: conv.otherUser.isBot || false,
+            lastSeen: undefined,
+          },
+          isVault: false,
+          vaultExpiresAt: undefined,
+        });
+        return;
+      }
+
+      // Last resort: query messages API which supports both systems
+      console.log('[Chat] Conversation not in list, trying messages API...');
+      const msgRes = await fetch(`/api/chat/${roomId}/messages?limit=1`);
+      if (msgRes.ok) {
+        const msgData = await msgRes.json();
+        const msgs = msgData.messages || [];
+        if (msgs.length > 0 && msgs[0].sender && !msgs[0].sender.isSelf) {
+          console.log('[Chat] Room info inferred from messages:', msgs[0].sender);
+          setRoomInfo({
+            id: roomId,
+            otherUser: {
+              id: msgs[0].sender.id,
+              name: msgs[0].sender.name || 'Unknown',
+              avatar: msgs[0].sender.avatar || null,
+              isBot: msgs[0].sender.isBot || false,
+              lastSeen: undefined,
+            },
+            isVault: false,
+            vaultExpiresAt: undefined,
+          });
+          return;
+        }
+      }
+
+      console.warn('[Chat] Could not determine room info for:', roomId);
     } catch (e) {
       console.error("[Chat] Failed to load chat room:", e);
       toast.error("Failed to load chat room");
@@ -223,7 +279,30 @@ export default function ChatRoomPage() {
       // Handle both old and new API response formats
       const msgs = data.messages || data;
       if (Array.isArray(msgs)) {
-        setMessages(msgs);
+        // Ensure every message from the other user has avatar from roomInfo
+        const enrichedMsgs = msgs.map((msg: Message) => {
+          if (!msg.sender && roomInfo?.otherUser) {
+            return {
+              ...msg,
+              sender: {
+                id: msg.senderId,
+                name: roomInfo.otherUser.name,
+                avatar: roomInfo.otherUser.avatar,
+                isBot: roomInfo.otherUser.isBot,
+                isSelf: false,
+              },
+            };
+          }
+          // Patch avatar if missing on non-self messages
+          if (msg.sender && !msg.sender.avatar && !msg.sender.isSelf && roomInfo?.otherUser?.avatar) {
+            return {
+              ...msg,
+              sender: { ...msg.sender, avatar: roomInfo.otherUser.avatar },
+            };
+          }
+          return msg;
+        });
+        setMessages(enrichedMsgs);
         // Extract current user ID from first message if available
         if (msgs.length > 0 && msgs[0].sender) {
           const selfMsg = msgs.find((m: Message) => m.sender?.isSelf);
@@ -292,6 +371,11 @@ export default function ChatRoomPage() {
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         console.error('[Chat] Send error:', errData);
+        if (res.status === 403 && errData.code === "CARD_VERIFICATION_REQUIRED") {
+          setShowCardVerificationModal(true);
+          setMessages((prev) => prev.filter((m) => m.id !== tempId));
+          return;
+        }
         if (res.status === 403 && errData.code === "UPGRADE_REQUIRED") {
           setShowUpgradeModal(true);
           setMessages((prev) => prev.filter((m) => m.id !== tempId));
@@ -317,13 +401,16 @@ export default function ChatRoomPage() {
         });
       }
 
-      // Trigger AI response if this is a bot conversation
-      // Bot replies are now handled server-side in the API, but we also
-      // trigger a client-side refresh to show the bot's reply
+      // Trigger Bot response with typing indicator + 2s delay (simulate real human behavior)
       if (roomInfo?.otherUser?.isBot) {
-        console.log('[Chat] Bot conversation detected, will refresh for reply');
-        // Poll for bot reply after a short delay
-        setTimeout(() => loadMessages(), 1000);
+        console.log('[Chat] Bot conversation detected, showing typing indicator then refreshing for reply');
+        // Show typing indicator immediately
+        setIsBotTyping(true);
+        // Wait 2 seconds before polling for the bot reply (simulate real person reading + typing)
+        setTimeout(() => {
+          setIsBotTyping(false);
+          loadMessagesWithAvatar();
+        }, 2000);
       }
     } catch (e) {
       console.error('[Chat] Failed to send:', e);
@@ -429,7 +516,7 @@ export default function ChatRoomPage() {
   // Determine if a message is from a bot
   const isMessageFromBot = (msg: Message): boolean => {
     if (msg.sender?.isBot) return true;
-    if (msg.senderId?.startsWith("bot-")) return true;
+    if (msg.senderId?.startsWith("bot-") || msg.senderId?.startsWith("bot_")) return true;
     if (msg.senderId === roomInfo?.otherUser?.id && roomInfo?.otherUser?.isBot) return true;
     return false;
   };
@@ -598,20 +685,20 @@ export default function ChatRoomPage() {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mb-4">
-              {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-")) ? (
+              {(roomInfo?.otherUser?.isBot) ? (
                 <Bot className="w-8 h-8 text-orange-400" />
               ) : (
                 <Sparkles className="w-8 h-8 text-foreground-subtle" />
               )}
             </div>
             <p className="text-foreground-muted mb-2">
-              {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-"))
+              {(roomInfo?.otherUser?.isBot)
                 ? `Start chatting with ${roomInfo?.otherUser?.name || "them"}`
                 : "No messages yet"
               }
             </p>
             <p className="text-foreground-subtle text-sm">
-              {(roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-"))
+              {(roomInfo?.otherUser?.isBot)
                 ? "Say hello and start the conversation!"
                 : "Start the conversation!"
               }
@@ -692,6 +779,43 @@ export default function ChatRoomPage() {
             );
           })
         )}
+        {/* Bot typing indicator */}
+        <AnimatePresence>
+          {isBotTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              className="flex items-center gap-2.5 px-4 py-2"
+            >
+              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 relative">
+                {roomInfo?.otherUser?.avatar ? (
+                  roomInfo.otherUser.avatar.startsWith("emoji:") ? (
+                    <div className="w-full h-full bg-gradient-to-br from-amber-500/80 to-rose-500/80 flex items-center justify-center">
+                      <span className="select-none leading-none" style={{ fontSize: 'clamp(0.9rem, 180%, 1.8rem)', lineHeight: '1' }}>
+                        {roomInfo.otherUser.avatar.split(":")[1]}
+                      </span>
+                    </div>
+                  ) : (
+                    <img src={roomInfo.otherUser.avatar} alt={roomInfo.otherUser.name} className="w-full h-full object-cover" />
+                  )
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-amber-500/80 to-rose-500/80 flex items-center justify-center text-foreground text-xs font-bold">
+                    {roomInfo?.otherUser?.name?.[0] || "?"}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 bg-white/[0.05] rounded-2xl px-4 py-2.5 border border-card-border/[0.06]">
+                <div className="flex items-center gap-[3px]">
+                  <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1.4s" }} />
+                  <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1.4s" }} />
+                  <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1.4s" }} />
+                </div>
+                <span className="text-[11px] text-foreground-subtle">typing...</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
 
@@ -879,6 +1003,19 @@ export default function ChatRoomPage() {
       {/* ═══════════════════════════════════════════════════════
           UPGRADE MODAL
           ═══════════════════════════════════════════════════════ */}
+      {/* Card Verification Modal */}
+      {showCardVerificationModal && (
+        <CardVerificationWall
+          variant="modal"
+          title="Verify Your Card to Continue"
+          description="Verify your card to keep chatting — identity check only, no charges."
+          onSuccess={() => {
+            setShowCardVerificationModal(false);
+            toast.success("Card verified! You can now send messages.");
+          }}
+        />
+      )}
+
       <AnimatePresence>
         {showUpgradeModal && (
           <motion.div

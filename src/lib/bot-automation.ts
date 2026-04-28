@@ -16,12 +16,14 @@ import { db as prisma } from "./db";
 // ═══════════════════════════════════════════════════════════════
 
 export const RELATIONSHIP_TAGS = {
-  // 关系类型标签 - 匹配数据库枚举
+  // 关系类型标签 - 匹配 v3 onboarding enum
   RELATIONSHIP_TYPE: [
-    { id: "LONG_TERM", label: "Serious Relationship", emoji: "💍", weight: 0.40 },
-    { id: "DATING", label: "Casual Dating", emoji: "☕", weight: 0.30 },
-    { id: "FRIENDSHIP", label: "Friendship First", emoji: "🤝", weight: 0.20 },
-    { id: "NOT_SURE", label: "Exploring", emoji: "🌟", weight: 0.10 },
+    { id: "MONOGAMY", label: "Serious Relationship", emoji: "💍", weight: 0.40 },
+    { id: "CASUAL_DATING", label: "Casual Dating", emoji: "☕", weight: 0.30 },
+    { id: "FRIENDSHIP_FIRST", label: "Friendship First", emoji: "🤝", weight: 0.15 },
+    { id: "ETHICAL_NON_MONOGAMY", label: "Open Relationship", emoji: "🔗", weight: 0.10 },
+    { id: "POLYAMORY", label: "Polyamory", emoji: "💕", weight: 0.03 },
+    { id: "KINK_BDSM", label: "Exploring", emoji: "🌟", weight: 0.02 },
   ],
   
   // 依恋风格标签

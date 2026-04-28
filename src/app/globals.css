@@ -71,6 +71,15 @@
   --shadow-md: 0 4px 12px oklch(40% 0.03 40 / 0.08);
   --shadow-lg: 0 12px 32px oklch(40% 0.03 40 / 0.10);
   --shadow-glow: 0 0 40px oklch(68% 0.08 40 / 0.08);
+  
+  /* ─── Radar Chart (Five-Dimension Card) ─── */
+  --radar-grid-fill: rgba(180,140,110,0.06);
+  --radar-grid-stroke: rgba(180,140,110,0.18);
+  --radar-axis-stroke: rgba(180,140,110,0.12);
+  --radar-data-fill: rgba(200,120,60,0.15);
+  --radar-data-stroke: oklch(68% 0.14 40);
+  --radar-point-glow: rgba(200,120,60,0.15);
+  --radar-glow-fill: rgba(200,120,60,0.06);
 }
 
 /* ================================================
@@ -104,6 +113,15 @@
   --shadow-md: 0 4px 12px oklch(5% 0.02 40 / 0.6);
   --shadow-lg: 0 12px 32px oklch(5% 0.02 40 / 0.7);
   --shadow-glow: 0 0 40px oklch(68% 0.10 40 / 0.2);
+  
+  /* ─── Radar Chart (Dark Mode) ─── */
+  --radar-grid-fill: rgba(200,180,160,0.06);
+  --radar-grid-stroke: rgba(200,180,160,0.15);
+  --radar-axis-stroke: rgba(200,180,160,0.10);
+  --radar-data-fill: rgba(220,160,100,0.18);
+  --radar-data-stroke: oklch(72% 0.14 40);
+  --radar-point-glow: rgba(220,160,100,0.12);
+  --radar-glow-fill: rgba(220,160,100,0.06);
 }
 
 /* Tailwind v4 Theme Configuration */

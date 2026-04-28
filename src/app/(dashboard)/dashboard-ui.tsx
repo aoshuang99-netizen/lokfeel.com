@@ -3,8 +3,7 @@
 import { useState, ReactNode, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Radar, User, AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight } from "lucide-react";
 import SidebarV2 from "@/components/layout/sidebar-v2";
 import BottomNav from "@/components/layout/bottom-nav";
 import DashboardFooter from "@/components/layout/dashboard-footer";
@@ -109,20 +108,15 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
         <main className="p-4 lg:p-8 pb-24 lg:pb-8 flex-1 relative">
           {/* ── Global Lock Overlay (non-dashboard locked pages) ── */}
           {isLocked && !isDashboard && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center"
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
               style={{
                 background: "rgba(255, 250, 245, 0.92)",
                 backdropFilter: "blur(12px)",
               }}
             >
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.15 }}
-                className="glass-card p-8 max-w-md mx-4 text-center border-primary/30 shadow-lg"
+              <div
+                className="glass-card p-8 max-w-md mx-4 text-center border-primary/30 shadow-lg animate-slideUp"
               >
                 <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-5">
                   <AlertTriangle className="w-8 h-8 text-white" />
@@ -140,8 +134,8 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
                   Go to Dashboard
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
 
           {children}

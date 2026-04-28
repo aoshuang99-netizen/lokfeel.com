@@ -31,6 +31,12 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Get cardVerified status from User
+    const userRecord = await db.user.findUnique({
+      where: { id: user.id },
+      select: { cardVerified: true },
+    });
+
     const isFemale = profile?.gender === "FEMALE";
     const effectivePlan = subscription?.plan || (isFemale ? "LADY_FREE" : "FREE");
     const isActive = subscription?.status === "ACTIVE";
@@ -45,6 +51,7 @@ export async function GET(request: NextRequest) {
       isLadyFree,
       isFemale,
       hasStripeCustomer,
+      cardVerified: userRecord?.cardVerified ?? false,
       subscription: subscription ? {
         id: subscription.id,
         plan: subscription.plan,

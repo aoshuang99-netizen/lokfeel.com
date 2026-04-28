@@ -304,39 +304,39 @@ export const ONBOARDING_STEPS = [
 
 export const RELATIONSHIP_OPTIONS = [
   {
-    value: 'long_term',
+    value: 'MONOGAMY',
     label: 'Long-term relationship',
     description: 'Looking for a committed, lasting partnership',
     icon: 'Heart',
   },
   {
-    value: 'short_term',
-    label: 'Short-term dating',
+    value: 'CASUAL_DATING',
+    label: 'Casual dating',
     description: 'Open to dating without immediate commitment',
     icon: 'Sparkles',
   },
   {
-    value: 'casual',
-    label: 'Casual connections',
-    description: 'Keeping things light and fun',
-    icon: 'Coffee',
-  },
-  {
-    value: 'friendship',
-    label: 'New friends',
-    description: 'Looking to expand my social circle',
-    icon: 'Users',
-  },
-  {
-    value: 'open_relationship',
-    label: 'Open to various arrangements',
-    description: 'Flexible about relationship structures',
+    value: 'ETHICAL_NON_MONOGAMY',
+    label: 'Open relationship',
+    description: 'Multiple connections with honest boundaries',
     icon: 'GitBranch',
   },
   {
-    value: 'not_sure',
-    label: 'Figuring it out',
-    description: 'Still exploring what I want',
+    value: 'POLYAMORY',
+    label: 'Polyamory',
+    description: 'Multiple meaningful relationships',
+    icon: 'Users',
+  },
+  {
+    value: 'FRIENDSHIP_FIRST',
+    label: 'Friends first',
+    description: 'Building trust and friendship as foundation',
+    icon: 'Coffee',
+  },
+  {
+    value: 'KINK_BDSM',
+    label: 'Alternative dynamics',
+    description: 'Exploring relationship dynamics and desires',
     icon: 'HelpCircle',
   },
 ] as const

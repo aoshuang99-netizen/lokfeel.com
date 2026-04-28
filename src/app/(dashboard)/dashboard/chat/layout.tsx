@@ -19,7 +19,6 @@ import {
   Eye,
 } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
-import { motion, AnimatePresence } from "framer-motion";
 import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
@@ -289,14 +288,8 @@ export default function ChatLayout({
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {filteredChats.map((chat, index) => (
-                <motion.div
-                  key={chat.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03, duration: 0.2 }}
-                >
-                  <Link
+              {filteredChats.map((chat) => (
+                <Link
                     href={`/dashboard/chat/${chat.id}`}
                     className={`flex items-center gap-3 p-3 hover:bg-background-tertiary transition-colors ${
                       currentRoomId === chat.id ? "bg-background-tertiary" : ""
@@ -411,8 +404,7 @@ export default function ChatLayout({
                         )}
                       </div>
                     </div>
-                  </Link>
-                </motion.div>
+                </Link>
               ))}
             </div>
           )}

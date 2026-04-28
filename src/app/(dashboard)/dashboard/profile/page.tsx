@@ -1,12 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2, Sparkles, AlertCircle, ImageIcon, Star } from "lucide-react";
 import { LoadingButton } from "@/components/shared/loading";
+import { LocationPicker } from "@/components/ui/location-picker";
 import { toast } from "sonner";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
+import { AvatarLightbox } from "@/components/ui/avatar-lightbox";
+
+/**
+ * Client-side image pre-compression: resize to max 2048px long side, output JPEG.
+ * Reduces base64 size before passing to crop modal, preventing upload failures.
+ */
+function preCompressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX_SIDE = 2048;
+      let w = img.naturalWidth;
+      let h = img.naturalHeight;
+      if (w > MAX_SIDE || h > MAX_SIDE) {
+        if (w >= h) {
+          h = Math.round(MAX_SIDE * (h / w));
+          w = MAX_SIDE;
+        } else {
+          w = Math.round(MAX_SIDE * (w / h));
+          h = MAX_SIDE;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas error")); return; }
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => reject(new Error("Failed to read image"));
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 const steps = [
   { id: 1, title: "Basic Info", icon: User },
@@ -39,10 +74,10 @@ export default function ProfilePage() {
     sexualOrientation: "BISEXUAL",
     
     // Step 3: Relationship Blueprint
-    relationshipGoal: "LONG_TERM",
-    attachmentStyle: "secure",
-    communicationStyle: "direct",
-    conflictResolution: "talk-it-out",
+    relationshipGoal: "MONOGAMY",
+    attachmentStyle: "Secure",
+    communicationStyle: "Direct",
+    conflictResolution: "Collaborative",
     
     // Step 4: Love & Boundaries
     loveLanguage: "words-of-affirmation",
@@ -59,8 +94,8 @@ export default function ProfilePage() {
   });
   const [isUploading, setIsUploading] = useState(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
+  const [cropAction, setCropAction] = useState<"avatar" | "gallery">("avatar");
   const [stepErrors, setStepErrors] = useState<string[]>([]);
-  const [showGalleryUploader, setShowGalleryUploader] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing profile on mount
@@ -82,7 +117,7 @@ export default function ProfilePage() {
             // Identity fields
             relationshipType: data.profile.relationshipType || "MONOGAMY",
             sexualOrientation: data.profile.sexualOrientation || "BISEXUAL",
-            relationshipGoal: data.profile.relationshipGoal || "LONG_TERM",
+            relationshipGoal: data.profile.relationshipGoal || "MONOGAMY",
             attachmentStyle: data.profile.attachmentStyle?.toLowerCase() || "secure",
             communicationStyle: data.profile.communicationStyle?.toLowerCase() || "direct",
             conflictResolution: data.profile.conflictResolution?.toLowerCase().replace(/_/g, "-") || "talk-it-out",
@@ -123,31 +158,31 @@ export default function ProfilePage() {
       toast.error("Please upload an image file");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB");
       return;
     }
 
-    // Read file and open crop modal instead of direct upload
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCropImage(reader.result as string);
-      setIsUploading(false);
-    };
-    reader.onerror = () => {
-      toast.error("Failed to read image");
-      setIsUploading(false);
-    };
+    // Pre-compress large images before crop modal
     setIsUploading(true);
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await preCompressImage(file);
+      setCropImage(compressed);
+      setCropAction("avatar");
+    } catch {
+      toast.error("Failed to process image");
+    }
+    setIsUploading(false);
   };
 
   // Handle crop complete: upload cropped image
   const handleCropComplete = async (croppedImage: string) => {
     setCropImage(null);
+    // Immediately set avatar preview from local crop (no server round-trip delay)
+    handleChange("avatar", croppedImage);
     setIsUploading(true);
     try {
-      // Convert base64 to blob
+      // Convert base64 to blob for multipart upload
       const res = await fetch(croppedImage);
       const blob = await res.blob();
       const formDataUpload = new FormData();
@@ -160,17 +195,21 @@ export default function ProfilePage() {
       });
       if (!uploadRes.ok) throw new Error("Upload failed");
       const data = await uploadRes.json();
+      // Update with server-processed URL
       handleChange("avatar", data.url);
       toast.success("Avatar uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload avatar");
+      // Avatar preview still visible from local crop
+      toast.error("Saved locally, but server sync failed. It may not persist after refresh.", {
+        duration: 5000,
+      });
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Handle gallery photo upload
+  // Handle gallery photo upload — route through crop modal first
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -179,15 +218,32 @@ export default function ProfilePage() {
       toast.error("Please select an image file");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB");
       return;
     }
 
+    // Pre-compress large images before crop modal
+    try {
+      const compressed = await preCompressImage(file);
+      setCropImage(compressed);
+      setCropAction("gallery");
+    } catch {
+      toast.error("Failed to process image");
+    }
+    // Reset input so same file can be selected again
+    e.target.value = "";
+  };
+
+  // Save cropped image to gallery (called from ImageCropModal)
+  const handleSaveToGallery = async (croppedImage: string) => {
+    setCropImage(null);
     setIsUploading(true);
     try {
+      const res = await fetch(croppedImage);
+      const blob = await res.blob();
       const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
+      formDataUpload.append("file", blob, "gallery.jpg");
       formDataUpload.append("type", "gallery");
 
       const uploadRes = await fetch("/api/upload", {
@@ -207,7 +263,6 @@ export default function ProfilePage() {
       toast.error("Failed to upload photo");
     } finally {
       setIsUploading(false);
-      setShowGalleryUploader(false);
     }
   };
 
@@ -240,9 +295,7 @@ export default function ProfilePage() {
         bio: formData.bio,
         city: formData.location,
         avatar: formData.avatar,
-        // Identity fields
-        relationshipType: formData.relationshipType,
-        sexualOrientation: formData.sexualOrientation,
+        // Blueprint fields (must match Prisma Profile schema exactly)
         relationshipGoal: formData.relationshipGoal,
         attachmentStyle: formData.attachmentStyle.charAt(0).toUpperCase() + formData.attachmentStyle.slice(1),
         communicationStyle: formData.communicationStyle.charAt(0).toUpperCase() + formData.communicationStyle.slice(1),
@@ -252,7 +305,6 @@ export default function ProfilePage() {
         boundaries: JSON.stringify(formData.boundaries.filter(b => b.trim())),
         lifePriorities: JSON.stringify(formData.priorities),
         emotionalAvailability: formData.emotionalAvailability,
-        preferredLocation: formData.locationPreferences.join(", "),
         onboardingStep: currentStep,
       };
 
@@ -262,12 +314,17 @@ export default function ProfilePage() {
         body: JSON.stringify(profileData),
       });
 
-      if (!res.ok) throw new Error("Failed to save");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData.message || errData.error || `Server error ${res.status}`;
+        console.error("[Profile SaveDraft] API error:", res.status, errMsg);
+        throw new Error(errMsg);
+      }
       
       toast.success("Draft saved successfully");
     } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Failed to save draft");
+      console.error("[Profile SaveDraft] Error:", error);
+      toast.error(`Failed to save draft: ${error instanceof Error ? error.message : "Unknown error"}`, { duration: 5000 });
     } finally {
       setIsSaving(false);
     }
@@ -319,9 +376,7 @@ export default function ProfilePage() {
         bio: formData.bio,
         city: formData.location,
         avatar: formData.avatar,
-        // Identity fields
-        relationshipType: formData.relationshipType,
-        sexualOrientation: formData.sexualOrientation,
+        // Blueprint fields (must match Prisma Profile schema exactly)
         relationshipGoal: formData.relationshipGoal,
         attachmentStyle: formData.attachmentStyle.charAt(0).toUpperCase() + formData.attachmentStyle.slice(1),
         communicationStyle: formData.communicationStyle.charAt(0).toUpperCase() + formData.communicationStyle.slice(1),
@@ -331,36 +386,49 @@ export default function ProfilePage() {
         boundaries: JSON.stringify(formData.boundaries.filter(b => b.trim())),
         lifePriorities: JSON.stringify(formData.priorities),
         emotionalAvailability: formData.emotionalAvailability,
-        preferredLocation: formData.locationPreferences.join(", "),
-        onboardingStep: 6,
+        onboardingStep: 9,
+        profileStatus: "APPROVED",
       };
+
+      // Profile save with 20s timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       const saveRes = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData),
+        signal: controller.signal,
       });
 
-      if (!saveRes.ok) throw new Error("Failed to save profile");
+      clearTimeout(timeoutId);
 
-      // Then submit for review
-      const submitRes = await fetch("/api/profile/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      if (!saveRes.ok) {
+        const errData = await saveRes.json().catch(() => ({}));
+        const errMsg = errData.message || errData.error || `Server error ${saveRes.status}`;
+        console.error("[Profile Submit] API error:", saveRes.status, errMsg, errData);
+        throw new Error(errMsg);
+      }
 
-      if (!submitRes.ok) throw new Error("Failed to submit");
+      toast.success("Profile saved successfully! Redirecting...");
 
-      toast.success("Profile saved successfully! You will be signed out.");
-      
-      // 保存后退出账号
-      await signOut({ callbackUrl: "/login" });
+      // Use window.location for hard redirect — more reliable than router.push
+      // which can be interrupted by React re-renders from setIsSubmitting(false)
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 800);
     } catch (error) {
-      console.error("Submit error:", error);
-      toast.error("Failed to submit profile");
-    } finally {
-      setIsSubmitting(false);
+      console.error("[Profile Submit] Error:", error);
+      const isTimeout = error instanceof DOMException && error.name === "AbortError";
+      const errorMsg = isTimeout
+        ? "Save timed out. Please try again."
+        : `Failed to save: ${error instanceof Error ? error.message : "Unknown error"}`;
+      toast.error(errorMsg, { duration: 8000 });
+      setIsSubmitting(false); // Only re-enable on error, so user can retry
     }
+    // NOTE: no finally setIsSubmitting(false) — we don't want to re-render
+    // the component after a successful save, as it can cancel the redirect.
+    // The hard redirect (window.location.href) will unmount the component anyway.
   };
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
@@ -468,26 +536,30 @@ export default function ProfilePage() {
                 Profile Photo <span className="text-error">*</span>
               </label>
               <div className="relative">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-background-tertiary border-2 border-card-border">
-                  {formData.avatar ? (
-                    <img
-                      src={formData.avatar}
-                      alt="Avatar"
-                      className={(() => {
-                        const kind = formData.avatar?.includes('dicebear') || formData.avatar?.endsWith('.svg') ? 'svg' : 'photo';
-                        return kind === 'svg' ? 'w-full h-full object-contain p-2' : 'w-full h-full object-cover';
-                      })()}
-                      style={(() => {
-                        const kind = formData.avatar?.includes('dicebear') || formData.avatar?.endsWith('.svg') ? 'svg' : 'photo';
-                        return kind === 'svg' ? { background: 'linear-gradient(135deg, #f0f0ff, #e8e8f8)' } : undefined;
-                      })()}
-                    />
-                  ) : (
+                {formData.avatar ? (
+                  <AvatarLightbox src={formData.avatar} alt="Avatar">
+                    <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-card-border hover:ring-2 hover:ring-primary/30 transition-all">
+                      <img
+                        src={formData.avatar}
+                        alt="Avatar"
+                        className={(() => {
+                          const kind = formData.avatar?.includes('dicebear') || formData.avatar?.endsWith('.svg') ? 'svg' : 'photo';
+                          return kind === 'svg' ? 'w-full h-full object-contain p-2' : 'w-full h-full object-cover object-center';
+                        })()}
+                        style={(() => {
+                          const kind = formData.avatar?.includes('dicebear') || formData.avatar?.endsWith('.svg') ? 'svg' : 'photo';
+                          return kind === 'svg' ? { background: 'linear-gradient(135deg, #f0f0ff, #e8e8f8)' } : undefined;
+                        })()}
+                      />
+                    </div>
+                  </AvatarLightbox>
+                ) : (
+                  <div className="w-28 h-28 rounded-full overflow-hidden bg-background-tertiary border-2 border-card-border">
                     <div className="w-full h-full flex items-center justify-center">
                       <User className="w-10 h-10 text-foreground-subtle" />
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
                 <label
                   htmlFor="avatar-upload"
                   className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/80 transition-colors shadow-lg"
@@ -513,6 +585,9 @@ export default function ProfilePage() {
                   imageSrc={cropImage}
                   onClose={() => setCropImage(null)}
                   onCropComplete={handleCropComplete}
+                  showSaveToGallery={true}
+                  onSaveToGallery={handleSaveToGallery}
+                  defaultAction={cropAction}
                 />
               </div>
               <p className="text-xs text-foreground-subtle mt-2">Click camera to upload photo</p>
@@ -645,11 +720,9 @@ export default function ProfilePage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Location <span className="text-error">*</span></label>
-              <input
-                type="text"
+              <LocationPicker
                 value={formData.location}
-                onChange={(e) => handleChange("location", e.target.value)}
-                className="input-feeld"
+                onChange={(v) => handleChange("location", v)}
               />
             </div>
           </div>
@@ -855,17 +928,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Location Preferences</label>
-              <input
-                type="text"
-                value={formData.locationPreferences.join(", ")}
-                onChange={(e) => handleChange("locationPreferences", e.target.value.split(", "))}
-                className="input-feeld"
-                placeholder="San Francisco, Los Angeles, Seattle..."
-              />
-              <p className="text-xs text-foreground-subtle mt-1">Comma-separated cities</p>
-            </div>
           </div>
         )}
 
@@ -875,7 +937,9 @@ export default function ProfilePage() {
             <div className="text-center py-4">
               {formData.avatar ? (
                 <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 border-2 border-primary">
-                  <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  <AvatarLightbox src={formData.avatar} alt="Profile">
+                    <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover object-center" decoding="async" />
+                  </AvatarLightbox>
                 </div>
               ) : (
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4">

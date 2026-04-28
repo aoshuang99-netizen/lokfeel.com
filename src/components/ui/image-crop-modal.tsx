@@ -20,6 +20,8 @@ interface ImageCropModalProps {
   showSaveToGallery?: boolean;
   /** Default action tab: "avatar" or "gallery" */
   defaultAction?: "avatar" | "gallery";
+  /** Max output long side in pixels (default: 1024) */
+  maxOutputSize?: number;
 }
 
 export function ImageCropModal({
@@ -33,6 +35,7 @@ export function ImageCropModal({
   showCamera = false,
   showSaveToGallery = false,
   defaultAction = "avatar",
+  maxOutputSize = 1024,
 }: ImageCropModalProps) {
   const [zoom, setZoom] = useState(0.85);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -184,14 +187,17 @@ export function ImageCropModal({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    let completed = false; // Guard against timeout + onload double-fire
     const img = new Image();
     // ⚠️ Do NOT set crossOrigin for data: URLs — Safari silently refuses to load them
     img.onload = () => {
+      if (completed) return;
+      completed = true;
       console.log("[Crop] Image loaded, natural size:", img.naturalWidth, "x", img.naturalHeight);
       try {
         const { cropW, cropH } = getCropDimensions(img.width, img.height);
-        // Avatar: max 1024px long side — high quality for display and lightbox zoom
-        const OUTPUT_LONG_SIDE = 1024;
+        // Use configurable max output size
+        const OUTPUT_LONG_SIDE = maxOutputSize;
         let outW: number, outH: number;
         if (cropW >= cropH) {
           outW = OUTPUT_LONG_SIDE;
@@ -221,7 +227,7 @@ export function ImageCropModal({
         );
 
         const croppedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
-        console.log("[Crop] Canvas output length:", croppedDataUrl.length);
+        console.log("[Crop] Canvas output length:", croppedDataUrl.length, `(${outW}x${outH})`);
 
         // Fallback: if canvas output is empty/invalid, use original imageSrc
         if (croppedDataUrl.length < 100) {
@@ -237,6 +243,8 @@ export function ImageCropModal({
       }
     };
     img.onerror = (e) => {
+      if (completed) return;
+      completed = true;
       // If image fails to load, pass original through as fallback
       console.warn("[Crop] Image failed to load, using original. Event:", e);
       onCropComplete(imageSrc);
@@ -245,12 +253,13 @@ export function ImageCropModal({
 
     // Timeout safety — if img never loads (e.g. Safari data URL block), use original after 3s
     setTimeout(() => {
-      if (!canvas.width) {
+      if (!completed && !canvas.width) {
+        completed = true;
         console.warn("[Crop] Image load timed out, using original");
         onCropComplete(imageSrc);
       }
     }, 3000);
-  }, [imageSrc, position, zoom, onCropComplete, getCropDimensions]);
+  }, [imageSrc, position, zoom, onCropComplete, getCropDimensions, maxOutputSize]);
 
   const handleSaveToGallery = useCallback(() => {
     if (!imageSrc || !onSaveToGallery) return;
@@ -259,13 +268,16 @@ export function ImageCropModal({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    let completed = false; // Guard against timeout + onload double-fire
     const img = new Image();
     // ⚠️ Do NOT set crossOrigin for data: URLs — Safari silently refuses to load them
     img.onload = () => {
+      if (completed) return;
+      completed = true;
       try {
         const { cropW, cropH } = getCropDimensions(img.width, img.height);
-        // Gallery: max 1024px long side — good quality for album photos
-        const OUTPUT_LONG_SIDE = 1024;
+        // Gallery: use configurable max output size
+        const OUTPUT_LONG_SIDE = maxOutputSize;
         let outW: number, outH: number;
         if (cropW >= cropH) {
           outW = OUTPUT_LONG_SIDE;
@@ -307,6 +319,8 @@ export function ImageCropModal({
       }
     };
     img.onerror = (e) => {
+      if (completed) return;
+      completed = true;
       console.warn("[Gallery] Image failed to load, using original. Event:", e);
       onSaveToGallery(imageSrc);
     };
@@ -314,12 +328,13 @@ export function ImageCropModal({
 
     // Timeout safety — if img never loads, use original after 3s
     setTimeout(() => {
-      if (!canvas.width) {
+      if (!completed && !canvas.width) {
+        completed = true;
         console.warn("[Gallery] Image load timed out, using original");
         onSaveToGallery(imageSrc);
       }
     }, 3000);
-  }, [imageSrc, position, zoom, onSaveToGallery, getCropDimensions]);
+  }, [imageSrc, position, zoom, onSaveToGallery, getCropDimensions, maxOutputSize]);
 
   if (!isOpen) return null;
 

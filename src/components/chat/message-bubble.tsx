@@ -294,7 +294,12 @@ function MessageBubbleComponent({
   
   // Determine if message is from current user
   const isFromMe = currentUserId ? senderId === currentUserId : sender?.id === currentUserId;
-  const isBot = sender?.isBot || senderId?.startsWith("bot-");
+  // Use isBot from sender prop first, then fallback to ID pattern detection
+  const isBot = sender?.isBot || 
+    senderId?.startsWith("bot-") || 
+    senderId?.startsWith("bot_") ||
+    sender?.id?.includes("bot-") ||
+    false;
 
   // Format time from timestamp (milliseconds)
   const formatTime = (ts: number) => {

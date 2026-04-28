@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
+import { AvatarLightbox } from "@/components/ui/avatar-lightbox";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
 // ══════════════════════════════════════
 // SEXUAL ORIENTATION TAGS (Primary Filter)
@@ -173,7 +175,7 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} className="w-full" style={{ aspectRatio: "1", maxWidth: "260px" }}>
-      {/* Background pentagons */}
+      {/* Background pentagons — 加深对比度 */}
       {[...Array(levels)].map((_, i) => {
         const r = ((i + 1) / levels) * radius;
         const circlePoints = data.map((_, j) => {
@@ -184,14 +186,14 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
           <polygon
             key={i}
             points={circlePoints}
-            fill={i % 2 === 0 ? "rgba(236,72,153,0.04)" : "none"}
-            stroke="rgba(180,120,140,0.2)"
+            fill={i % 2 === 0 ? "oklch(88% 0.02 55 / 0.5)" : "none"}
+            stroke="oklch(55% 0.04 40 / 0.35)"
             strokeWidth={1}
           />
         );
       })}
 
-      {/* Axis lines from center */}
+      {/* Axis lines from center — 加深 */}
       {data.map((_, i) => {
         const angle = i * angleSlice - Math.PI / 2;
         const x2 = center + radius * Math.cos(angle);
@@ -203,7 +205,7 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
             y1={center}
             x2={x2}
             y2={y2}
-            stroke="rgba(180,120,140,0.15)"
+            stroke="oklch(55% 0.04 40 / 0.3)"
             strokeWidth={1}
           />
         );
@@ -212,8 +214,8 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
       {/* Data filled area */}
       <path
         d={pathData}
-        fill="rgba(236, 72, 153, 0.2)"
-        stroke="#EC4899"
+        fill="oklch(68% 0.12 40 / 0.18)"
+        stroke="oklch(68% 0.14 40)"
         strokeWidth={2.5}
         strokeLinejoin="round"
       />
@@ -223,14 +225,14 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
         const { x, y } = getCoordinates(d.value, i);
         return (
           <g key={i}>
-            <circle cx={x} cy={y} r={7} fill="rgba(236,72,153,0.15)" />
-            <circle cx={x} cy={y} r={4.5} fill="#EC4899" />
-            <circle cx={x} cy={y} r={2} fill="#fff" />
+            <circle cx={x} cy={y} r={7} fill="oklch(68% 0.12 40 / 0.15)" />
+            <circle cx={x} cy={y} r={4.5} fill="oklch(68% 0.14 40)" />
+            <circle cx={x} cy={y} r={2} fill="oklch(98% 0.005 55)" />
           </g>
         );
       })}
 
-      {/* Labels — dark color for light bg compatibility */}
+      {/* Labels — 深色粗体，清晰可读 */}
       {data.map((d, i) => {
         const angle = i * angleSlice - Math.PI / 2;
         const labelRadius = radius + 26;
@@ -243,10 +245,9 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
             y={y}
             textAnchor="middle"
             dominantBaseline="central"
-            fill="#4a3f45"
+            fill="oklch(25% 0.03 40)"
             fontSize={12}
-            fontWeight={600}
-            style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+            fontWeight={700}
           >
             {d.label}
           </text>
@@ -340,7 +341,8 @@ function getRelationshipAnalysis(data: {
   return analysis.slice(0, 400);
 }
 
-export default function OnboardingV3Page() {
+// Wrap the inner component with ErrorBoundary to prevent white-screen crashes
+function OnboardingV3Page() {
   const router = useRouter();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -364,9 +366,9 @@ export default function OnboardingV3Page() {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
-  const [showCamera, setShowCamera] = useState(false);
 
   const currentStep = STEPS[currentStepIndex];
   const progress = ((currentStepIndex) / (STEPS.length - 1)) * 100;
@@ -452,15 +454,49 @@ export default function OnboardingV3Page() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5MB");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10MB");
       return;
     }
 
     setIsUploading(true);
 
     try {
-      // ─── Pixel count check ───
+      // ─── Client-side pre-compress before crop ───
+      // Onboarding uses smaller max size (1024px) to keep data URLs manageable
+      // The full-res upload happens on the profile page, not here
+      const preCompress = (rawFile: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            const MAX_SIDE = 1024;
+            let w = img.naturalWidth;
+            let h = img.naturalHeight;
+            if (w > MAX_SIDE || h > MAX_SIDE) {
+              if (w >= h) {
+                h = Math.round(MAX_SIDE * (h / w));
+                w = MAX_SIDE;
+              } else {
+                w = Math.round(MAX_SIDE * (w / h));
+                h = MAX_SIDE;
+              }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) { reject(new Error("Canvas error")); return; }
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/jpeg", 0.80));
+          };
+          img.onerror = () => reject(new Error("Failed to read image"));
+          img.src = URL.createObjectURL(rawFile);
+        });
+      };
+
+      const compressedDataUrl = await preCompress(file);
+
+      // ─── Pixel count check (relaxed: 0.3MP = 640x480 minimum) ───
       const pixelCheck = await new Promise<{ width: number; height: number; megapixels: number }>((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
@@ -468,25 +504,21 @@ export default function OnboardingV3Page() {
           resolve({ width: img.naturalWidth, height: img.naturalHeight, megapixels });
         };
         img.onerror = () => reject(new Error("Failed to read image"));
-        img.src = URL.createObjectURL(file);
+        img.src = compressedDataUrl;
       });
 
-      // Reject images below 1 megapixel (100万像素)
-      if (pixelCheck.megapixels < 1.0) {
+      // Relaxed: 0.3MP (640×480 equivalent) — crop will further resize
+      if (pixelCheck.megapixels < 0.3) {
         toast.error(`Photo too blurry (${pixelCheck.width}x${pixelCheck.height})`, {
-          description: "Please upload a clearer photo — at least 1MP (e.g., 1280x800). Selfie camera photos usually work.",
+          description: "Please upload a clearer photo — at least 640x480 pixels.",
           duration: 5000,
         });
         setIsUploading(false);
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCropImage(reader.result as string);
-        setIsUploading(false);
-      };
-      reader.readAsDataURL(file);
+      setCropImage(compressedDataUrl);
+      setIsUploading(false);
     } catch {
       toast.error("Failed to process image");
       setIsUploading(false);
@@ -494,77 +526,41 @@ export default function OnboardingV3Page() {
   };
 
   const handleCropComplete = async (croppedImage: string) => {
-    setIsUploading(true);
+    // Guard: prevent re-entry (crop modal timeout can fire after initial load)
+    if (isUploading) {
+      console.log("[Upload] Skipping duplicate call (already uploading)");
+      return;
+    }
     
+    if (!croppedImage || croppedImage.length < 100) {
+      console.warn("[Upload] Invalid cropped image, skipping");
+      return;
+    }
+    
+    setIsUploading(true);
+    setCropImage(null); // Close crop modal immediately to show loading state
+    
+    // During onboarding, skip server upload entirely.
+    // The local cropped image is stored in React state and will be
+    // persisted to DB in handleComplete (one single API call).
+    // This eliminates the #1 crash point: upload timeout/failure.
     try {
-      // Upload the cropped image to server
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file: croppedImage,
-          type: "avatar",
-          filename: "avatar.jpg",
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Upload failed" }));
-        throw new Error(err.message || "Failed to upload");
-      }
-
-      const result = await res.json();
-      
       setData((prev) => ({
         ...prev,
-        avatarUrl: result.url,
+        avatarUrl: croppedImage,
         avatarType: "photo",
         selectedCartoonId: "",
       }));
       
-      toast.success("Photo uploaded successfully! 📸");
+      toast.success("Photo selected!", {
+        description: "Looking great! Tap Continue to proceed.",
+        duration: 3000,
+      });
     } catch (error) {
-      console.error("Upload error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to upload photo");
+      console.error("[Onboarding] Failed to set avatar:", error);
+      toast.error("Failed to set photo. Please try again.");
     } finally {
       setIsUploading(false);
-      setCropImage(null);
-    }
-  };
-
-  // Save cropped image to gallery (album)
-  const handleSaveToGallery = async (imageData: string) => {
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file: imageData,
-          type: "gallery",
-          filename: "gallery.jpg",
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Upload failed" }));
-        throw new Error(err.message || "Failed to save to gallery");
-      }
-
-      const result = await res.json();
-      
-      // Also update profile with new gallery photo
-      await fetch("/api/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          galleryPhotos: { push: result.url },
-        }),
-      });
-      
-      toast.success("Saved to gallery! 📸");
-    } catch (error) {
-      console.error("Gallery save error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to save to gallery");
     }
   };
 
@@ -602,63 +598,48 @@ export default function OnboardingV3Page() {
         avatar: finalAvatarUrl,
         avatarType: data.avatarType,
         onboardingStep: 9,
-        profileStatus: "ACTIVE",
+        profileStatus: "APPROVED",
       };
 
-      console.log("[Onboarding] Sending profile update:", payload);
+      console.log("[Onboarding] Sending profile update, avatar length:", finalAvatarUrl?.length || 0);
 
+      // Profile save with 20s timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      
       const res = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       const responseData = await res.json().catch(() => ({}));
       console.log("[Onboarding] Profile update response:", res.status, responseData);
 
       if (!res.ok) {
-        throw new Error(responseData.message || responseData.error || "Failed to save profile");
+        throw new Error(responseData.message || responseData.error || `Server error ${res.status}`);
       }
 
-      // 🆕 验证保存是否成功
-      console.log("[Onboarding] Verifying profile update...");
-      const verifyRes = await fetch("/api/profile");
-      const verifyData = await verifyRes.json();
+      toast.success("🎉 Profile complete! Let's fill in your details.", {
+        description: "Redirecting to profile setup...",
+        duration: 3000,
+      });
       
-      console.log("[Onboarding] Verification response:", verifyData);
-      
-      const savedStep = verifyData.profile?.onboardingStep;
-      const savedStatus = verifyData.profile?.profileStatus;
-      
-      // ✅ 放宽验证条件 - 只要API返回成功就认为完成
-      if (res.ok) {
-        toast.success("🎉 Profile complete! Unlocking matches...", {
-          description: "Your Relationship Blueprint is ready! Redirecting to matches...",
-          duration: 3000,
-        });
-        
-        // Force immediate navigation after a short delay
-        setTimeout(() => {
-          console.log("[Onboarding] Navigating to /dashboard/discover...");
-          window.location.href = "/dashboard/discover";
-        }, 1200);
-      } else {
-        // Even on verification mismatch, still redirect — profile was saved
-        console.log("[Onboarding] Verification skipped, redirecting anyway...");
-        setTimeout(() => {
-          window.location.href = "/dashboard/discover";
-        }, 1200);
-      }
+      setTimeout(() => {
+        console.log("[Onboarding] Navigating to /dashboard/profile...");
+        window.location.href = "/dashboard/profile";
+      }, 1200);
     } catch (error) {
       console.error("[Onboarding] Save error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to save. Please try again.");
-      
-      // Even on error, still redirect so user isn't stuck
-      setTimeout(() => {
-        window.location.href = "/dashboard/discover";
-      }, 2000);
-    } finally {
-      setTimeout(() => setSaving(false), 3000);
+      const isTimeout = error instanceof DOMException && error.name === "AbortError";
+      const message = isTimeout 
+        ? "Save timed out. Please check your connection and try again."
+        : (error instanceof Error ? error.message : "Failed to save. Please try again.");
+      toast.error(message, { duration: 5000 });
+      setSaving(false); // Allow retry
     }
   };
 
@@ -676,24 +657,24 @@ export default function OnboardingV3Page() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="w-8 h-8 animate-spin text-foreground" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-foreground flex flex-col relative overflow-hidden">
-      {/* Gradient Background */}
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+      {/* Gradient Background — subtle warm glow */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-pink-500/10 to-orange-500/10 blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-blue-500/10 to-cyan-500/10 blur-[100px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-secondary/8 to-primary/6 blur-[100px]" />
       </div>
 
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-background-tertiary z-50">
         <motion.div
-          className="h-full bg-gradient-to-r from-pink-500 to-orange-500"
+          className="h-full bg-gradient-primary"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
@@ -733,7 +714,7 @@ export default function OnboardingV3Page() {
                     <Heart className="w-8 h-8 text-foreground" />
                   </motion.div>
                   <h1 className="text-2xl font-bold mb-2">
-                    What are you <span className="text-pink-400">looking for</span>?
+                    What are you <span className="text-primary">looking for</span>?
                   </h1>
                   <p className="text-sm text-foreground-muted">
                     Be honest. This helps us find people who want the same thing.
@@ -828,7 +809,7 @@ export default function OnboardingV3Page() {
                 {/* Attachment Style */}
                 <div>
                   <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-pink-500/20 text-pink-400 flex items-center justify-center text-xs">1</span>
+                    <span className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs">1</span>
                     Your attachment style
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
@@ -921,7 +902,7 @@ export default function OnboardingV3Page() {
                     <div
                       key={i}
                       className={`w-2 h-2 rounded-full transition-colors ${
-                        selected ? "bg-pink-400" : "bg-foreground/15"
+                        selected ? "bg-primary" : "bg-foreground/15"
                       }`}
                     />
                   ))}
@@ -939,98 +920,143 @@ export default function OnboardingV3Page() {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center mx-auto mb-4"
+                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-4"
                   >
                     <Camera className="w-8 h-8 text-white" />
                   </motion.div>
-                  <h1 className="text-2xl font-bold mb-2">
-                    Show your <span className="text-green-400">authentic self</span>
+                  <h1 className="text-2xl font-bold text-foreground mb-2">
+                    Show your <span className="text-primary">authentic self</span>
                   </h1>
-                  <p className="text-sm text-foreground-muted">
+                  <p className="text-sm text-foreground-muted leading-relaxed">
                     A real photo builds trust. Your face is your best matchmaker.
                   </p>
                 </div>
 
-                {/* Avatar Preview */}
+                {/* Avatar Preview — clickable to open gallery */}
                 <div className="flex justify-center mb-6">
-                  <div
-                    className="w-36 h-36 rounded-full overflow-hidden flex items-center justify-center border-4 transition-all"
-                    style={{
-                      borderColor: data.avatarUrl ? "#10B981" : "rgba(255,255,255,0.15)",
-                      background: data.avatarUrl ? "transparent" : "rgba(255,255,255,0.05)",
-                    }}
-                  >
+                  <div className="relative">
                     {data.avatarUrl ? (
-                      <img src={data.avatarUrl} alt="Your photo" className="w-full h-full object-cover" />
+                      <AvatarLightbox src={data.avatarUrl} alt="Your photo">
+                        <div
+                          className="w-36 h-36 rounded-full overflow-hidden border-4"
+                          style={{ borderColor: "#10B981" }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={data.avatarUrl}
+                            alt="Your photo"
+                            className="w-full h-full object-cover object-center"
+                            ref={(el) => {
+                              if (el) {
+                                el.onload = () => console.log("[Avatar] Image loaded, size:", el.naturalWidth, "x", el.naturalHeight);
+                                el.onerror = () => console.warn("[Avatar] Image failed to render, length:", data.avatarUrl?.length);
+                              }
+                            }}
+                          />
+                        </div>
+                      </AvatarLightbox>
                     ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <Camera className="w-10 h-10" style={{ color: "rgba(255,255,255,0.25)" }} />
-                        <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Tap to upload</span>
+                      <button
+                        type="button"
+                        onClick={() => !isUploading && fileInputRef.current?.click()}
+                        className="w-36 h-36 rounded-full overflow-hidden flex items-center justify-center border-4 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                        style={{
+                          borderColor: "oklch(70% 0.02 40 / 0.25)",
+                          background: "oklch(70% 0.02 40 / 0.06)",
+                        }}
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <Camera className="w-10 h-10 text-foreground-muted" />
+                          <span className="text-xs text-foreground-muted font-medium">Tap to upload</span>
+                        </div>
+                      </button>
+                    )}
+                    {/* Uploading overlay spinner */}
+                    {isUploading && (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                        <Loader2 className="w-8 h-8 animate-spin text-white" />
                       </div>
                     )}
                   </div>
                 </div>
 
+                {/* Uploading status text */}
+                {isUploading && (
+                  <p className="text-center text-sm text-foreground-muted mb-4 animate-pulse">
+                    Uploading your photo...
+                  </p>
+                )}
+
                 {/* Upload Options */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  {/* Camera Button */}
+                  {/* Camera / Take Selfie Button — triggers separate camera input */}
                   <button
-                    onClick={() => setShowCamera(true)}
+                    type="button"
+                    onClick={() => !isUploading && cameraInputRef.current?.click()}
                     disabled={isUploading}
-                    className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all"
+                    className="flex flex-col items-center justify-center gap-2.5 p-5 rounded-2xl border-2 border-dashed transition-all hover:border-primary/30 active:scale-[0.97]"
                     style={{
-                      borderColor: "rgba(255,255,255,0.12)",
-                      background: "rgba(255,255,255,0.02)",
+                      borderColor: "oklch(70% 0.02 40 / 0.2)",
+                      background: "oklch(70% 0.02 40 / 0.04)",
                     }}
                   >
-                    <Camera className="w-6 h-6" style={{ color: "rgba(255,255,255,0.5)" }} />
-                    <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    {isUploading ? (
+                      <Loader2 className="w-6 h-6 animate-spin text-foreground-muted" />
+                    ) : (
+                      <Camera className="w-6 h-6 text-foreground-muted" />
+                    )}
+                    <span className="text-sm font-medium text-foreground-muted">
                       Take Selfie
                     </span>
                   </button>
 
                   {/* Gallery Upload Button */}
                   <button
-                    onClick={() => fileInputRef.current?.click()}
+                    type="button"
+                    onClick={() => !isUploading && fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all"
+                    className="flex flex-col items-center justify-center gap-2.5 p-5 rounded-2xl border-2 border-dashed transition-all hover:border-emerald-500/30 active:scale-[0.97]"
                     style={{
-                      borderColor: data.avatarUrl ? "rgba(16,185,129,0.4)" : "rgba(255,255,255,0.12)",
-                      background: data.avatarUrl ? "rgba(16,185,129,0.06)" : "rgba(255,255,255,0.02)",
+                      borderColor: data.avatarUrl ? "rgba(16,185,129,0.5)" : "oklch(70% 0.02 40 / 0.3)",
+                      background: data.avatarUrl ? "rgba(16,185,129,0.08)" : "oklch(70% 0.02 40 / 0.06)",
                     }}
                   >
                     {isUploading ? (
-                      <Loader2 className="w-6 h-6 animate-spin text-pink-400" />
+                      <Loader2 className="w-6 h-6 animate-spin text-foreground-muted" />
                     ) : (
-                      <>
-                        <Upload className="w-6 h-6" style={{ color: data.avatarUrl ? "#10B981" : "rgba(255,255,255,0.5)" }} />
-                        <span className={`text-sm font-medium ${data.avatarUrl ? "text-green-400" : ""}`} style={{ color: data.avatarUrl ? undefined : "rgba(255,255,255,0.5)" }}>
-                          {data.avatarUrl ? "Change Photo" : "From Gallery"}
-                        </span>
-                      </>
+                      <Upload className="w-6 h-6" style={{ color: data.avatarUrl ? "#10B981" : "oklch(45% 0.02 40)" }} />
                     )}
+                    <span className="text-sm font-medium" style={{ color: data.avatarUrl ? "#10B981" : "oklch(45% 0.02 40)" }}>
+                      {data.avatarUrl ? "Change Photo" : "From Gallery"}
+                    </span>
                   </button>
                 </div>
-                
+
                 {/* Requirement notice */}
                 {!data.avatarUrl && (
-                  <p className="text-center text-xs px-4 py-2.5 rounded-lg" style={{ 
-                    color: "rgba(232,160,56,0.7)", 
-                    background: "rgba(232,160,56,0.06)",
-                    border: "1px solid rgba(232,160,56,0.12)"
-                  }}>
-                    📸 A real headshot is required to continue
+                  <p className="text-center text-xs px-4 py-2.5 rounded-lg text-foreground-muted bg-background-tertiary border border-card-border">
+                    A real headshot is required to continue
                   </p>
                 )}
 
                 {data.avatarUrl && (
-                  <p className="text-center text-xs mt-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <p className="text-center text-xs mt-2 text-foreground-muted">
                     Looking great! Tap above to change.
                   </p>
                 )}
 
+                {/* Gallery input — NO capture attribute, for "From Gallery" and "Tap to upload" */}
                 <input
                   ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+
+                {/* Camera input — WITH capture attribute, for "Take Selfie" only */}
+                <input
+                  ref={cameraInputRef}
                   type="file"
                   accept="image/*"
                   capture="user"
@@ -1038,28 +1064,16 @@ export default function OnboardingV3Page() {
                   className="hidden"
                 />
 
+                {/* Crop Modal — opens after file selected, simplified for onboarding (no gallery tab) */}
                 <ImageCropModal
                   isOpen={!!cropImage}
                   imageSrc={cropImage}
                   onClose={() => setCropImage(null)}
                   onCropComplete={handleCropComplete}
                   showCamera={false}
-                  showSaveToGallery={true}
-                  onSaveToGallery={handleSaveToGallery}
+                  maxOutputSize={512}
                 />
 
-                {/* Camera Capture Modal */}
-                <ImageCropModal
-                  isOpen={showCamera}
-                  imageSrc={null}
-                  onClose={() => setShowCamera(false)}
-                  onCropComplete={(capturedImage) => {
-                    setCropImage(capturedImage);
-                    setShowCamera(false);
-                  }}
-                  showCamera={true}
-                  title="Take a Selfie"
-                />
               </div>
             )}
 
@@ -1076,7 +1090,7 @@ export default function OnboardingV3Page() {
                 </motion.div>
 
                 <h2 className="text-2xl font-bold mb-2 text-center">
-                  Your <span className="text-pink-400">Relationship Radar</span>
+                  Your <span className="text-primary">Relationship Radar</span>
                 </h2>
                 <p className="text-sm text-foreground-muted mb-6 text-center">
                   Based on your answers, here&apos;s your unique relationship profile
@@ -1085,31 +1099,27 @@ export default function OnboardingV3Page() {
                 {/* Radar Chart + Analysis — stacked on mobile, side-by-side on desktop */}
                 <div className="flex flex-col gap-5 mb-6">
                   {/* Radar Chart — full width, centered */}
-                  <div className="rounded-2xl p-6 border border-card-border flex flex-col items-center justify-center"
-                    style={{
-                      background: "linear-gradient(180deg, rgba(255,250,245,0.9) 0%, rgba(255,248,240,0.95) 100%)",
-                    }}
+                  <div className="rounded-2xl p-6 border border-card-border bg-card flex flex-col items-center justify-center"
                   >
                     <RadarChart data={getRadarData()} />
                   </div>
                   
                   {/* AI Analysis — full width card */}
-                  <div className="rounded-2xl p-6 border"
+                  <div className="rounded-2xl p-6 border border-primary/20"
                     style={{
-                      background: "linear-gradient(135deg, rgba(236,72,153,0.08) 0%, rgba(245,158,11,0.06) 100%)",
-                      borderColor: "rgba(236,72,153,0.18)",
+                      background: "linear-gradient(135deg, oklch(68% 0.06 40 / 0.08) 0%, oklch(72% 0.06 20 / 0.06) 100%)",
                     }}
                   >
                     <div className="flex items-center gap-2 mb-3.5">
-                      <Sparkles className="w-4 h-4" style={{ color: "#EC4899" }} />
-                      <span className="text-sm font-semibold" style={{ color: "#F472B6" }}>AI Analysis</span>
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-semibold text-primary">AI Analysis</span>
                     </div>
-                    <p className="text-sm leading-relaxed" style={{ color: "rgba(60,45,50,0.85)", lineHeight: 1.75 }}>
+                    <p className="text-sm leading-relaxed text-foreground" style={{ lineHeight: 1.75 }}>
                       {getRelationshipAnalysis(data)}
                     </p>
-                    <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(236,72,153,0.12)" }}>
-                      <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(100,80,90,0.6)" }}>
-                        <span className="w-2 h-2 rounded-full bg-green-400" />
+                    <div className="mt-4 pt-4 border-t border-primary/10">
+                      <div className="flex items-center gap-2 text-xs text-foreground-muted">
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
                         <span>Based on 50,000+ user matching data analysis</span>
                       </div>
                     </div>
@@ -1118,25 +1128,15 @@ export default function OnboardingV3Page() {
 
                 {/* Profile Summary */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="rounded-xl p-4 border"
-                    style={{
-                      background: "rgba(255,250,245,0.8)",
-                      borderColor: "rgba(200,180,170,0.2)",
-                    }}
-                  >
-                    <p className="text-xs mb-1" style={{ color: "rgba(120,100,90,0.6)" }}>Relationship Style</p>
-                    <p className="font-semibold text-sm" style={{ color: "rgba(60,45,50,0.9)" }}>
+                  <div className="rounded-xl p-4 border border-card-border bg-card">
+                    <p className="text-xs mb-1 text-foreground-muted">Relationship Style</p>
+                    <p className="font-semibold text-sm text-foreground">
                       {RELATIONSHIP_DESIRES.find(d => d.value === data.relationshipDesire)?.title || "-"}
                     </p>
                   </div>
-                  <div className="rounded-xl p-4 border"
-                    style={{
-                      background: "rgba(255,250,245,0.8)",
-                      borderColor: "rgba(200,180,170,0.2)",
-                    }}
-                  >
-                    <p className="text-xs mb-1" style={{ color: "rgba(120,100,90,0.6)" }}>Identity</p>
-                    <p className="font-semibold text-sm" style={{ color: "rgba(60,45,50,0.9)" }}>
+                  <div className="rounded-xl p-4 border border-card-border bg-card">
+                    <p className="text-xs mb-1 text-foreground-muted">Identity</p>
+                    <p className="font-semibold text-sm text-foreground">
                       {SEXUAL_ORIENTATION_TAGS.find(t => t.value === data.sexualOrientation)?.label || "-"}
                     </p>
                   </div>
@@ -1149,7 +1149,7 @@ export default function OnboardingV3Page() {
                   transition={{ delay: 0.6 }}
                   onClick={handleComplete}
                   disabled={saving}
-                  className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-orange-500 text-foreground hover:opacity-90 transition-opacity"
+                  className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl font-semibold bg-gradient-primary text-white hover:opacity-90 transition-opacity"
                 >
                   {saving ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -1169,7 +1169,7 @@ export default function OnboardingV3Page() {
 
       {/* Bottom Navigation */}
       {currentStep.id !== "result" && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 bg-black/80 backdrop-blur-xl border-t border-card-border">
+        <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 bg-background/80 backdrop-blur-xl border-t border-card-border">
           <div className="max-w-md mx-auto flex items-center justify-between">
             <button
               onClick={goBack}
@@ -1193,3 +1193,14 @@ export default function OnboardingV3Page() {
     </div>
   );
 }
+
+// Wrap with ErrorBoundary to prevent white-screen crashes on React errors
+function OnboardingWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <OnboardingV3Page />
+    </ErrorBoundary>
+  );
+}
+
+export default OnboardingWithErrorBoundary;

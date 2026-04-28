@@ -28,6 +28,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/components/ui";
+import { CardVerificationWall } from "@/components/payment/CardVerificationWall";
 import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
@@ -125,7 +126,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
 
   return (
     <svg width={size} height={size} className="mx-auto">
-      {/* Background grid */}
+      {/* Background grid — 加深对比度 */}
       {[...Array(levels)].map((_, i) => {
         const r = ((i + 1) / levels) * radius;
         const circlePoints = data
@@ -138,14 +139,14 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
           <polygon
             key={i}
             points={circlePoints}
-            fill="none"
-            stroke="rgba(0,0,0,0.08)"
+            fill={i % 2 === 0 ? "oklch(88% 0.02 55 / 0.5)" : "none"}
+            stroke="oklch(55% 0.04 40 / 0.35)"
             strokeWidth={1}
           />
         );
       })}
 
-      {/* Axes */}
+      {/* Axes — 加深 */}
       {data.map((_, i) => {
         const angle = i * angleSlice - Math.PI / 2;
         const x2 = center + radius * Math.cos(angle);
@@ -157,7 +158,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             y1={center}
             x2={x2}
             y2={y2}
-            stroke="rgba(0,0,0,0.06)"
+            stroke="oklch(55% 0.04 40 / 0.3)"
             strokeWidth={1}
           />
         );
@@ -166,7 +167,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
       {/* Data area glow */}
       <path
         d={pathData}
-        fill="rgba(232, 160, 56, 0.08)"
+        fill="oklch(68% 0.12 40 / 0.08)"
         stroke="none"
         filter="url(#glow)"
       />
@@ -189,16 +190,16 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             cy={y}
             r={4}
             fill={COLORS.primary}
-            stroke="#fff"
+            stroke="oklch(98% 0.005 55)"
             strokeWidth={1.5}
           />
         );
       })}
 
-      {/* Labels */}
+      {/* Labels — 深色粗体，清晰可读 */}
       {data.map((d, i) => {
         const angle = i * angleSlice - Math.PI / 2;
-        const labelRadius = radius + 20;
+        const labelRadius = radius + 24;
         const x = center + labelRadius * Math.cos(angle);
         const y = center + labelRadius * Math.sin(angle);
         return (
@@ -208,9 +209,9 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             y={y}
             textAnchor="middle"
             dominantBaseline="middle"
-            fill="rgba(0,0,0,0.5)"
-            fontSize={10}
-            fontWeight={500}
+            fill="oklch(25% 0.03 40)"
+            fontSize={11}
+            fontWeight={700}
           >
             {d.label}
           </text>
@@ -495,16 +496,21 @@ export default function DashboardPage() {
   // Onboarding status
   const onboardingStep = profile?.onboardingStep || 0;
   const profileStatus = profile?.profileStatus;
-  const isOnboardingComplete = onboardingStep >= 8 || profileStatus === "ACTIVE";
-  const needsOnboarding = !isOnboardingComplete;
-
-  // 五维卡（Relationship Blueprint）必填检查
-  const radarData = getRadarData();
-  const radarIncomplete = radarData.every(d => d.value === 50); // 全部是默认值=未填
-  const needsBlueprint = radarIncomplete && !profile?.attachmentStyle && !profile?.relationshipGoal;
 
   // Profile必填项检查（头像/名字/年龄/性别/地点）
   const profileRequiredMissing = !profile?.avatar || !profile?.displayName || !profile?.age || !profile?.gender || !profile?.city;
+
+  // 五维卡（Relationship Blueprint）必填检查
+  const radarData = getRadarData();
+  const radarIncomplete = radarData.every(d => d.value === 50);
+  const needsBlueprint = radarIncomplete && !profile?.attachmentStyle && !profile?.relationshipGoal;
+
+  // Onboarding considered complete if:
+  // 1. onboardingStep >= 6, OR
+  // 2. profileStatus is APPROVED/ACTIVE, OR
+  // 3. All required fields filled AND blueprint exists (implicit completion — guards against stale DB data)
+  const isOnboardingComplete = onboardingStep >= 6 || profileStatus === "APPROVED" || profileStatus === "ACTIVE" || (!profileRequiredMissing && !needsBlueprint);
+  const needsOnboarding = !isOnboardingComplete;
 
   // Profile completion
   const profileCompletion = profile ? calculateProfileCompletion(profile) : 0;
@@ -816,10 +822,8 @@ export default function DashboardPage() {
           transition={{ duration: 0.4, delay: 0.2 }}
           data-tour="relationship-engine"
         >
-          <div className="glass-card p-6 h-full relative overflow-hidden">
-            {/* Subtle radial glow inside card */}
-            <div className="absolute inset-0 bg-gradient-radial opacity-40 pointer-events-none" />
-            <div className="relative">
+          <div className="glass-card p-6 h-full">
+            <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                   <Radar className="w-4 h-4 text-primary" />
@@ -830,13 +834,13 @@ export default function DashboardPage() {
               <div className="mt-4 grid grid-cols-5 gap-1">
                 {getRadarData().map((d, i) => (
                   <div key={i} className="text-center">
-                    <p className="text-xs text-foreground-subtle mb-0.5">{d.label}</p>
-                    <p className="text-sm font-semibold text-primary">{d.value}%</p>
+                    <p className="text-xs font-medium text-foreground mb-0.5">{d.label}</p>
+                    <p className="text-sm font-bold text-primary">{d.value}%</p>
                   </div>
                 ))}
               </div>
               <div className="mt-4 pt-4 border-t border-card-border5">
-                <p className="text-xs text-foreground-subtle text-center">
+                <p className="text-xs text-foreground text-center">
                   Complete your profile to unlock full engine potential
                 </p>
                 <div className="mt-2 w-full h-1.5 bg-foreground-faint rounded-full overflow-hidden">
@@ -933,6 +937,30 @@ export default function DashboardPage() {
           </div>
         </motion.section>
       </div>
+
+      {/* ═══════════════════════════════════════════════════════
+          SECTION 3.5: CARD VERIFICATION WALL
+          When user has used free matches but hasn't verified card
+          ═══════════════════════════════════════════════════════ */}
+      {!isProfileLocked && !profileData?.user?.cardVerified && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="mb-8"
+        >
+          <div className="glass-card border-primary/30 p-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5" />
+            <div className="relative">
+              <CardVerificationWall
+                variant="inline"
+                title="Verify to Continue Matching"
+                description="You've used your free matches. Add a card to keep going — verification only, no charges."
+              />
+            </div>
+          </div>
+        </motion.section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 4: PREMIUM BANNER

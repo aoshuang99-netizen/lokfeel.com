@@ -57,6 +57,11 @@ export async function POST(request: NextRequest) {
         await handleInvoicePaymentFailed(invoice);
         break;
       }
+      case "setup_intent.succeeded": {
+        const setupIntent = event.data.object as Stripe.SetupIntent;
+        await handleSetupIntentSucceeded(setupIntent);
+        break;
+      }
       default:
         console.log(`[Webhook] Unhandled event: ${event.type}`);
     }
@@ -282,4 +287,30 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       body: "Your subscription payment failed. Please update your payment method to keep your Premium access.",
     },
   });
+}
+
+// ═══ Handle setup_intent.succeeded ═══════════════════════════
+// Marks User.cardVerified = true when card verification (SetupIntent) succeeds
+async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
+  const userId = setupIntent.metadata?.userId;
+
+  if (!userId) {
+    console.warn("[Webhook] SetupIntent succeeded but no userId in metadata:", setupIntent.id);
+    return;
+  }
+
+  // Only process if purpose is card_verification
+  if (setupIntent.metadata?.purpose !== "card_verification") {
+    return;
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      cardVerified: true,
+      cardVerifiedAt: new Date(),
+    },
+  });
+
+  console.log(`[Webhook] Card verified for user ${userId} via SetupIntent ${setupIntent.id}`);
 }

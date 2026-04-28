@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Heart,
   Sparkles,
@@ -131,7 +132,7 @@ export default function LandingPage() {
               {[...showcaseUsers, ...showcaseUsers].map((user, idx) => (
                 <div key={`${user.id}-${idx}`} className="flex-shrink-0 w-64 glass-card overflow-hidden group hover:scale-105 transition-transform duration-300">
                   <div className="relative h-80">
-                    <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                    <Image src={user.image} alt={user.name} fill className="object-cover" sizes="256px" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <div className="flex items-center gap-2 mb-2">

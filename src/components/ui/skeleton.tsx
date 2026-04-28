@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 interface SkeletonProps {
   className?: string;
   variant?: "text" | "circular" | "rectangular" | "rounded";
@@ -145,11 +143,7 @@ export function LoadingScreen({
 }) {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-      <motion.div
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-        className="space-y-4 text-center"
-      >
+      <div className="animate-pulse space-y-4 text-center">
         <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mx-auto">
           <div className="w-8 h-8 rounded-full bg-primary/50 animate-pulse" />
         </div>
@@ -157,7 +151,7 @@ export function LoadingScreen({
           <p className="text-foreground font-medium">{title}</p>
           {subtitle && <p className="text-foreground-subtle text-sm mt-1">{subtitle}</p>}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

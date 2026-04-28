@@ -305,6 +305,10 @@ model User {
   reportsMade     UserReport[]  @relation("ReportsMade")
   reportsReceived UserReport[]  @relation("ReportsReceived")
 
+  // Credit Card Verification (age + identity proof, no charge)
+  cardVerified     Boolean       @default(false)
+  cardVerifiedAt   DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1132,10 +1136,18 @@ enum Gender {
 }
 
 enum RelationshipGoal {
-  LONG_TERM        // Seeking serious relationship
-  DATING           // Open to exploring
-  FRIENDSHIP       // Want connections first
-  NOT_SURE         // Still figuring out
+  // v3 onboarding standard values (migrated from LONG_TERM/DATING/FRIENDSHIP/NOT_SURE)
+  MONOGAMY              // One & Only — committed exclusive connection
+  ETHICAL_NON_MONOGAMY  // Open Hearts — multiple connections, honest boundaries
+  POLYAMORY             // Many Loves — multiple meaningful relationships
+  CASUAL_DATING         // Go With Flow — no labels, see where it goes
+  FRIENDSHIP_FIRST      // Friends First — connection before romance
+  KINK_BDSM             // Power Play — exploring dynamics & desires
+  // Legacy values (kept for backward compat, no longer used)
+  LONG_TERM
+  DATING
+  FRIENDSHIP
+  NOT_SURE
 }
 
 enum ProfileStatus {

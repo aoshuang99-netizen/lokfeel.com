@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { CardVerificationWall } from "@/components/payment/CardVerificationWall";
 import {
   ArrowLeft,
   MapPin,
@@ -98,6 +99,7 @@ export default function UserProfilePage() {
   const [error, setError] = useState("");
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [connectLoading, setConnectLoading] = useState(false);
+  const [showCardVerification, setShowCardVerification] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
 
@@ -147,7 +149,14 @@ export default function UserProfilePage() {
       
       const data = await res.json();
       
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) {
+        // Handle card verification requirement
+        if (data.code === 'CARD_VERIFICATION_REQUIRED') {
+          setShowCardVerification(true);
+          return;
+        }
+        throw new Error(data.message);
+      }
       
       setCurrentUser(prev => prev ? {
         ...prev,
@@ -186,10 +195,12 @@ export default function UserProfilePage() {
 
   const getRelationshipGoalLabel = (goal?: string) => {
     const labels: Record<string, string> = {
-      'LONG_TERM': 'Long-term Relationship',
-      'DATING': 'Dating',
-      'FRIENDSHIP': 'Friendship',
-      'NOT_SURE': 'Figuring it out',
+      'MONOGAMY': 'Long-term Relationship',
+      'ETHICAL_NON_MONOGAMY': 'Open Relationship',
+      'POLYAMORY': 'Polyamory',
+      'CASUAL_DATING': 'Casual Dating',
+      'FRIENDSHIP_FIRST': 'Friends First',
+      'KINK_BDSM': 'Alternative Dynamics',
     };
     return labels[goal || ''] || goal;
   };
@@ -550,6 +561,19 @@ export default function UserProfilePage() {
           </div>
         </motion.div>
       </div>
+
+      {/* Card Verification Modal */}
+      {showCardVerification && (
+        <CardVerificationWall
+          variant="modal"
+          title="Verify Your Card to Connect"
+          description="You've used your free matches. Verify your card to continue — identity check only, no charges."
+          onSuccess={() => {
+            setShowCardVerification(false);
+            toast.success("Card verified! You can now connect.");
+          }}
+        />
+      )}
 
       {/* Connect Modal */}
       <AnimatePresence>

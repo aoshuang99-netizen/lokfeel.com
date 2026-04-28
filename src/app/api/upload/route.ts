@@ -1,18 +1,11 @@
 export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth"
 import { success, badRequest, serverError } from "@/lib/api-response";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { randomUUID } from "crypto";
 import { fileTypeFromBuffer } from "file-type";
 import sharp from "sharp";
-
-// Turbopack: scope filesystem operations to public/uploads
-/* eslint-disable @typescript-eslint/no-require-imports */
-const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
 
 // Allowed image MIME types for security
 const ALLOWED_MIME_TYPES = [
@@ -22,17 +15,20 @@ const ALLOWED_MIME_TYPES = [
 ] as const;
 
 // Image dimension constraints
-const MIN_WIDTH = 100;
-const MIN_HEIGHT = 100;
-const MAX_WIDTH = 4000;
-const MAX_HEIGHT = 4000;
-const MIN_MEGAPIXELS = 1.0; // 1 megapixel minimum
+const MIN_WIDTH = 50;
+const MIN_HEIGHT = 50;
+const MAX_WIDTH = 8000;
+const MAX_HEIGHT = 8000;
+
+// Target dimensions after server-side resize
+const AVATAR_MAX_SIZE = 1024;
+const GALLERY_MAX_SIZE = 1024;
+const JPEG_QUALITY = 82;
 
 /**
- * Validates image dimensions using Sharp
- * @returns { width: number, height: number } or throws error
+ * Validates image using Sharp — basic size check only (no minimum MP for crop outputs)
  */
-async function validateImageDimensions(buffer: Buffer): Promise<{ width: number; height: number }> {
+async function validateImage(buffer: Buffer): Promise<{ width: number; height: number }> {
   const image = sharp(buffer);
   const metadata = await image.metadata();
   
@@ -40,23 +36,12 @@ async function validateImageDimensions(buffer: Buffer): Promise<{ width: number;
     throw new Error("Unable to read image dimensions");
   }
   
-  // Check minimum dimensions
   if (metadata.width < MIN_WIDTH || metadata.height < MIN_HEIGHT) {
-    throw new Error(`Image dimensions too small. Minimum: ${MIN_WIDTH}x${MIN_HEIGHT}px`);
+    throw new Error(`Image too small. Minimum: ${MIN_WIDTH}x${MIN_HEIGHT}px`);
   }
   
-  // Check maximum dimensions
   if (metadata.width > MAX_WIDTH || metadata.height > MAX_HEIGHT) {
-    throw new Error(`Image dimensions too large. Maximum: ${MAX_WIDTH}x${MAX_HEIGHT}px`);
-  }
-
-  // Check minimum megapixels (1MP = 100万像素)
-  const megapixels = (metadata.width * metadata.height) / 1000000;
-  if (megapixels < MIN_MEGAPIXELS) {
-    throw new Error(
-      `Photo too blurry (${metadata.width}x${metadata.height} = ${megapixels.toFixed(1)}MP). ` +
-      `Please upload a clearer photo — at least ${MIN_MEGAPIXELS}MP (e.g., 1280x800 or higher).`
-    );
+    throw new Error(`Image too large. Maximum: ${MAX_WIDTH}x${MAX_HEIGHT}px`);
   }
   
   return { width: metadata.width, height: metadata.height };
@@ -65,15 +50,13 @@ async function validateImageDimensions(buffer: Buffer): Promise<{ width: number;
 type AllowedMimeType = typeof ALLOWED_MIME_TYPES[number];
 
 const uploadSchema = z.object({
-  file: z.string(), // Base64 encoded file
+  file: z.string(), // Base64 encoded file (with or without data: prefix)
   filename: z.string().optional(),
   type: z.enum(["avatar", "image", "document", "gallery"]).default("image"),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    
-
     const { user } = await requireAuth();
     const body = await request.json();
 
@@ -82,122 +65,112 @@ export async function POST(request: NextRequest) {
       return badRequest("Invalid request body", parseResult.error.issues);
     }
 
-    const { file, filename, type } = parseResult.data;
+    const { file, type } = parseResult.data;
 
     // Validate base64 data
     const base64Data = file.replace(/^data:[^;]+;base64,/, "");
     const buffer = Buffer.from(base64Data, "base64");
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
+    // Validate file size (max 10MB raw — will be compressed down)
+    const maxSize = 10 * 1024 * 1024;
     if (buffer.length > maxSize) {
-      return badRequest("File size exceeds 5MB limit");
+      return badRequest("File size exceeds 10MB limit");
     }
 
-    // 🔐 BUG-P0-1 FIX: Verify actual file content using file-type library
-    // This prevents attacks where malicious files are disguised with fake MIME types
+    // 🔐 Verify actual file content using file-type library
     const detectedType = await fileTypeFromBuffer(buffer);
     
     if (!detectedType) {
       return badRequest("Unable to verify file type. Please upload a valid image.");
     }
 
-    // Strict MIME type validation - only allow explicitly safe image formats
+    // Strict MIME type validation
     if (!ALLOWED_MIME_TYPES.includes(detectedType.mime as AllowedMimeType)) {
       return badRequest(
-        `Invalid file type detected: ${detectedType.mime}. Only JPEG, PNG, and WebP images are allowed.`
+        `Invalid file type: ${detectedType.mime}. Only JPEG, PNG, and WebP allowed.`
       );
     }
 
-    // 🔐 BUG-P0-1 FIX: Validate image dimensions (min 100x100, max 4000x4000)
-    let dimensions: { width: number; height: number };
-    try {
-      dimensions = await validateImageDimensions(buffer);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Image dimension validation failed";
-      return badRequest(message);
-    }
+    // Validate image dimensions (basic check, no minimum MP requirement)
+    const dimensions = await validateImage(buffer);
 
-    // Use the detected MIME type and extension from actual file content
-    const mimeType = detectedType.mime;
-    const detectedExtension = detectedType.ext;
-
-    // Map to our allowed extensions only
-    const extensionMap: Record<string, string> = {
-      "jpeg": ".jpg",
-      "png": ".png",
-      "webp": ".webp",
-    };
-
-    const extension = extensionMap[detectedExtension] || ".bin";
-    const originalName = filename || "upload";
-    const uniqueFilename = `${randomUUID()}-${originalName.replace(/[^a-zA-Z0-9.-]/g, "_")}${extension}`;
-
-    // Create uploads directory structure
-    const uploadsDir = join(process.cwd(), "public", "uploads", type);
+    // ─── Server-side resize + compress with Sharp ───
+    // Vercel serverless has no persistent disk — return data URL instead of writing file
+    const maxPx = type === "avatar" ? AVATAR_MAX_SIZE : type === "gallery" ? GALLERY_MAX_SIZE : GALLERY_MAX_SIZE;
+    let processedBuffer: Buffer;
+    let finalWidth = dimensions.width;
+    let finalHeight = dimensions.height;
 
     try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch {
-      // Directory may already exist
+      // Avatar: force square output (cover) — prevents distortion in circular containers
+      // Gallery: preserve aspect ratio (inside) — keeps original proportions for album
+      const resizeOpts = type === "avatar"
+        ? { fit: "cover" as const }
+        : { fit: "inside" as const, withoutEnlargement: true as const };
+
+      const pipeline = sharp(buffer)
+        .resize(maxPx, maxPx, resizeOpts);
+
+      processedBuffer = await pipeline.jpeg({ quality: JPEG_QUALITY }).toBuffer();
+
+      const processedMeta = await sharp(processedBuffer).metadata();
+      finalWidth = processedMeta.width || finalWidth;
+      finalHeight = processedMeta.height || finalHeight;
+    } catch (sharpErr) {
+      console.warn("Sharp processing failed, using original:", sharpErr);
+      processedBuffer = buffer;
     }
 
-    // For avatars/gallery, save to user's folder
-    const saveDir = type === "avatar" || type === "gallery"
-      ? join(process.cwd(), "public", "uploads", type === "avatar" ? "avatars" : "gallery", user.id)
-      : uploadsDir;
+    // Build data URL (no file system write — works in Vercel serverless)
+    const dataUrl = `data:image/jpeg;base64,${processedBuffer.toString("base64")}`;
 
-    try {
-      await mkdir(saveDir, { recursive: true });
-    } catch {
-      // Directory may already exist
-    }
-
-    const filePath = join(saveDir, uniqueFilename);
-
-    // Write file
-    await writeFile(filePath, buffer);
-
-    // Generate URL
-    const url = `/uploads/${type === "avatar" ? `avatars/${user.id}/${uniqueFilename}` : type === "gallery" ? `gallery/${user.id}/${uniqueFilename}` : `${type}/${uniqueFilename}`}`;
-
-    // If avatar, update user profile
+    // Update user profile avatar — ONLY if profile already exists
+    // During onboarding, profile doesn't exist yet; the frontend stores avatarUrl
+    // in React state and saves it to DB via PUT /api/profile on completion
     if (type === "avatar") {
-      await db.profile.update({
-        where: { userId: user.id },
-        data: { avatar: url },
-      });
+      try {
+        await db.profile.update({
+          where: { userId: user.id },
+          data: { avatar: dataUrl },
+        });
+      } catch {
+        // Profile may not exist yet during onboarding — that's fine
+        // The frontend stores avatarUrl in state and will save it on onboarding completion
+        console.log(`[Upload] Profile not found for user ${user.id}, skipping DB avatar update (onboarding mode)`);
+      }
     }
 
-    // If gallery, append to galleryPhotos array
+    // Append to gallery photos — ONLY if profile already exists
     if (type === "gallery") {
-      await db.profile.update({
-        where: { userId: user.id },
-        data: {
-          galleryPhotos: { push: url },
-        },
-      });
+      try {
+        await db.profile.update({
+          where: { userId: user.id },
+          data: {
+            galleryPhotos: { push: dataUrl },
+          },
+        });
+      } catch {
+        console.log(`[Upload] Profile not found for user ${user.id}, skipping gallery update (onboarding mode)`);
+      }
     }
 
     return success({
-      url,
-      filename: uniqueFilename,
-      size: buffer.length,
-      mimeType,
-      width: dimensions.width,
-      height: dimensions.height,
+      url: dataUrl,
+      size: processedBuffer.length,
+      mimeType: "image/jpeg",
+      width: finalWidth,
+      height: finalHeight,
     }, 201);
   } catch (error) {
-    console.error("Error uploading file:", error);
-    return serverError("Failed to upload file");
+    console.error("Upload POST error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return serverError(`Upload failed: ${message}`);
   }
 }
 
 // Handle multipart form data upload
 export async function PUT(request: NextRequest) {
   try {
-    
-
     const { user } = await requireAuth();
     const formData = await request.formData();
 
@@ -208,96 +181,97 @@ export async function PUT(request: NextRequest) {
       return badRequest("No file provided");
     }
 
-    // Validate file size
-    const maxSize = 5 * 1024 * 1024;
+    // Validate file size (max 10MB — will be compressed)
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      return badRequest("File size exceeds 5MB limit");
+      return badRequest("File size exceeds 10MB limit");
     }
 
     // Get file buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 🔐 BUG-P0-1 FIX: Verify actual file content using file-type library
-    // This prevents attacks where malicious files are disguised with fake MIME types
+    // 🔐 Verify actual file content
     const detectedType = await fileTypeFromBuffer(buffer);
     
     if (!detectedType) {
       return badRequest("Unable to verify file type. Please upload a valid image.");
     }
 
-    // Strict MIME type validation - only allow explicitly safe image formats
+    // Strict MIME type validation
     if (!ALLOWED_MIME_TYPES.includes(detectedType.mime as AllowedMimeType)) {
       return badRequest(
-        `Invalid file type detected: ${detectedType.mime}. Only JPEG, PNG, and WebP images are allowed.`
+        `Invalid file type: ${detectedType.mime}. Only JPEG, PNG, and WebP allowed.`
       );
     }
 
-    // 🔐 BUG-P0-1 FIX: Validate image dimensions (min 100x100, max 4000x4000)
-    let dimensions: { width: number; height: number };
+    // Validate image dimensions
+    const dimensions = await validateImage(buffer);
+
+    // ─── Server-side resize + compress with Sharp ───
+    const maxPx = type === "avatar" ? AVATAR_MAX_SIZE : type === "gallery" ? GALLERY_MAX_SIZE : GALLERY_MAX_SIZE;
+    let processedBuffer: Buffer;
+    let finalWidth = dimensions.width;
+    let finalHeight = dimensions.height;
+
     try {
-      dimensions = await validateImageDimensions(buffer);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Image dimension validation failed";
-      return badRequest(message);
+      const resizeOpts = type === "avatar"
+        ? { fit: "cover" as const }
+        : { fit: "inside" as const, withoutEnlargement: true as const };
+
+      const pipeline = sharp(buffer)
+        .resize(maxPx, maxPx, resizeOpts);
+
+      processedBuffer = await pipeline.jpeg({ quality: JPEG_QUALITY }).toBuffer();
+
+      const processedMeta = await sharp(processedBuffer).metadata();
+      finalWidth = processedMeta.width || finalWidth;
+      finalHeight = processedMeta.height || finalHeight;
+    } catch (sharpErr) {
+      console.warn("Sharp processing failed, using original:", sharpErr);
+      processedBuffer = buffer;
     }
 
-    // Generate unique filename using the detected extension
-    const extensionMap: Record<string, string> = {
-      "jpeg": ".jpg",
-      "png": ".png",
-      "webp": ".webp",
-    };
-    const extension = extensionMap[detectedType.ext] || ".bin";
-    const uniqueFilename = `${randomUUID()}${extension}`;
+    // Build data URL (no file system write — works in Vercel serverless)
+    const dataUrl = `data:image/jpeg;base64,${processedBuffer.toString("base64")}`;
 
-    // Create uploads directory
-    const uploadsDir = join(process.cwd(), "public", "uploads", type);
-    await mkdir(uploadsDir, { recursive: true });
-
-    // For avatars/gallery, save to user's folder
-    const saveDir = type === "avatar" || type === "gallery"
-      ? join(process.cwd(), "public", "uploads", type === "avatar" ? "avatars" : "gallery", user.id)
-      : uploadsDir;
-
-    await mkdir(saveDir, { recursive: true });
-
-    const filePath = join(saveDir, uniqueFilename);
-
-    // Write file
-    await writeFile(filePath, buffer);
-
-    // Generate URL
-    const url = `/uploads/${type === "avatar" ? `avatars/${user.id}/${uniqueFilename}` : type === "gallery" ? `gallery/${user.id}/${uniqueFilename}` : `${type}/${uniqueFilename}`}`;
-
-    // If avatar, update user profile
+    // Update user profile avatar (only if profile already exists)
     if (type === "avatar") {
-      await db.profile.update({
-        where: { userId: user.id },
-        data: { avatar: url },
-      });
+      try {
+        await db.profile.update({
+          where: { userId: user.id },
+          data: { avatar: dataUrl },
+        });
+      } catch (profileErr: unknown) {
+        const msg = profileErr instanceof Error ? profileErr.message : String(profileErr);
+        console.warn(`Profile not found for user ${user.id}, skipping DB update: ${msg}`);
+      }
     }
 
-    // If gallery, append to galleryPhotos array
     if (type === "gallery") {
-      await db.profile.update({
-        where: { userId: user.id },
-        data: {
-          galleryPhotos: { push: url },
-        },
-      });
+      try {
+        await db.profile.update({
+          where: { userId: user.id },
+          data: {
+            galleryPhotos: { push: dataUrl },
+          },
+        });
+      } catch (profileErr: unknown) {
+        const msg = profileErr instanceof Error ? profileErr.message : String(profileErr);
+        console.warn(`Profile not found for user ${user.id}, skipping gallery update: ${msg}`);
+      }
     }
 
     return success({
-      url,
-      filename: uniqueFilename,
-      size: buffer.length,
-      mimeType: file.type,
-      width: dimensions.width,
-      height: dimensions.height,
+      url: dataUrl,
+      size: processedBuffer.length,
+      mimeType: "image/jpeg",
+      width: finalWidth,
+      height: finalHeight,
     }, 201);
   } catch (error) {
-    console.error("Error uploading file:", error);
-    return serverError("Failed to upload file");
+    console.error("Upload PUT error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return serverError(`Upload failed: ${message}`);
   }
 }

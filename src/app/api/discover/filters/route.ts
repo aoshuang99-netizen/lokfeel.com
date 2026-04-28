@@ -60,10 +60,12 @@ export async function GET() {
         ageRange: { min: 18, max: 100 },
         distanceRange: { min: 5, max: 500 },
         relationshipGoals: [
-          { value: "LONG_TERM", label: "Long-Term Relationship" },
-          { value: "DATING", label: "Dating & Exploring" },
-          { value: "FRIENDSHIP", label: "Connection First" },
-          { value: "NOT_SURE", label: "Figuring It Out" },
+          { value: "MONOGAMY", label: "Long-Term Relationship" },
+          { value: "CASUAL_DATING", label: "Dating & Exploring" },
+          { value: "FRIENDSHIP_FIRST", label: "Connection First" },
+          { value: "ETHICAL_NON_MONOGAMY", label: "Open Relationship" },
+          { value: "POLYAMORY", label: "Polyamory" },
+          { value: "KINK_BDSM", label: "Alternative Dynamics" },
         ],
         attachmentStyles: [
           { value: "Secure", label: "Secure" },

@@ -273,6 +273,22 @@ export async function POST(
         }
       }
 
+      // Card verification check — all non-premium users must verify after 3 total messages
+      const isPremiumPlan = hasActiveSub && (userWithSub?.subscriptions?.[0]?.plan === 'PREMIUM_MONTHLY' || userWithSub?.subscriptions?.[0]?.plan === 'PREMIUM_YEARLY')
+      if (!isPremiumPlan) {
+        const userRecord = await db.user.findUnique({
+          where: { id: user.id },
+          select: { cardVerified: true },
+        })
+        const totalMessages = await db.message.count({ where: { senderId: user.id } })
+        if (!userRecord?.cardVerified && totalMessages >= 3) {
+          return NextResponse.json(
+            { message: 'Please verify your card to continue messaging. Identity verification only — no charges.', code: 'CARD_VERIFICATION_REQUIRED' },
+            { status: 403 }
+          )
+        }
+      }
+
       const message = await db.message.create({
         data: { roomId, senderId: user.id, content: content.trim(), messageType },
         include: { sender: { select: { id: true, name: true, image: true, isBot: true, profile: { select: { displayName: true, avatar: true } } } } },

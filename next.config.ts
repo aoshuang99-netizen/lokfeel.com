@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     },
   },
   
-  // Image domains for external avatar sources
+  // ─── Image Optimization ───
   images: {
     remotePatterns: [
       {
@@ -27,10 +27,36 @@ const nextConfig: NextConfig = {
         hostname: 'api.dicebear.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'thispersondoesnotexist.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'xsgames.co',
+        pathname: '/**',
+      },
     ],
+    // Prefer AVIF (smallest) then WebP, fallback to original
+    formats: ['image/avif', 'image/webp'],
+    // Cache optimized images for 60 minutes on CDN
+    minimumCacheTTL: 3600,
+    // Device sizes for responsive srcset
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    // Image sizes for avatar/detail views
+    imageSizes: [32, 48, 64, 96, 128, 256, 384],
   },
   
-  // Headers for security
+  // ─── Security ───
+  poweredByHeader: false,
+
+  // ─── Headers for security + performance ───
   async headers() {
     return [
       {
@@ -48,11 +74,28 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'no-store, max-age=0' },
         ],
       },
+      // Static assets: aggressive caching
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      // Optimized images from next/image: cache 7 days
+      {
+        source: '/_next/image',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' },
+        ],
+      },
     ]
   },
   
-  // Silence turbopack root warning
-  serverExternalPackages: ['@prisma/client', 'bcryptjs'],
+  // ─── Compress responses ───
+  compress: true,
+  
+  // Keep heavy server-only packages out of client bundle
+  serverExternalPackages: ['@prisma/client', 'bcryptjs', 'stripe'],
   
   // Logging
   logging: {

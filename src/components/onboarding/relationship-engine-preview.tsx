@@ -157,10 +157,12 @@ function calculateLifestyleScore(
   if (userGoal === matchGoal) score += 20;
   else if (userGoal && matchGoal) {
     const compatibleGoals: Record<string, string[]> = {
-      "LONG_TERM": ["DATING", "FRIENDSHIP"],
-      "DATING": ["LONG_TERM", "FRIENDSHIP", "NOT_SURE"],
-      "FRIENDSHIP": ["LONG_TERM", "DATING"],
-      "NOT_SURE": ["DATING", "FRIENDSHIP"],
+      "MONOGAMY": ["CASUAL_DATING", "FRIENDSHIP_FIRST"],
+      "CASUAL_DATING": ["MONOGAMY", "FRIENDSHIP_FIRST", "ETHICAL_NON_MONOGAMY"],
+      "FRIENDSHIP_FIRST": ["MONOGAMY", "CASUAL_DATING"],
+      "ETHICAL_NON_MONOGAMY": ["POLYAMORY", "CASUAL_DATING", "KINK_BDSM"],
+      "POLYAMORY": ["ETHICAL_NON_MONOGAMY", "CASUAL_DATING"],
+      "KINK_BDSM": ["ETHICAL_NON_MONOGAMY", "POLYAMORY"],
     };
     if (compatibleGoals[userGoal]?.includes(matchGoal)) score += 10;
   }
@@ -219,7 +221,7 @@ export function RelationshipEnginePreview({
       const matchCommunication = ["Direct", "Reflective", "Expressive", "Analytical", "Supportive"][seed % 5];
       const matchConflict = ["Collaborative", "Compromising", "Accommodating", "Competing", "Avoiding", "Negotiating"][seed % 6];
       const matchRelationshipType = ["MONOGAMY", "ETHICAL_NON_MONOGAMY", "POLYAMORY", "KINK_BDSM", "CASUAL_DATING", "FRIENDSHIP_FIRST"][seed % 6];
-      const matchGoal = ["LONG_TERM", "DATING", "FRIENDSHIP", "NOT_SURE"][seed % 4];
+      const matchGoal = ["MONOGAMY", "CASUAL_DATING", "FRIENDSHIP_FIRST", "ETHICAL_NON_MONOGAMY", "POLYAMORY", "KINK_BDSM"][seed % 6];
       const matchAvailability = ["Fully Available", "Building Trust", "Processing Past", "Needs Space", "Curious & Open"][seed % 5];
       
       // Calculate dimension scores

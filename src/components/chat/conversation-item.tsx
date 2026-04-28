@@ -70,15 +70,39 @@ interface AvatarProps {
 }
 
 function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
+  // Detect avatar type: emoji format, photo URL, or none
+  const isEmoji = avatar?.startsWith("emoji:");
+  const emojiChar = isEmoji ? avatar!.split(":")[1] : null;
+
   return (
     <div className="relative flex-shrink-0">
       <div className="w-12 h-12 rounded-full overflow-hidden bg-white/[0.04] flex items-center justify-center ring-1 ring-white/[0.06]">
         {avatar ? (
-          <img
-            src={avatar}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
+          isEmoji ? (
+            <div className={`w-full h-full flex items-center justify-center ${
+              isBot
+                ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
+                : 'bg-gradient-to-br from-primary to-secondary'
+            }`}>
+              <span
+                className="select-none leading-none"
+                style={{
+                  fontSize: 'clamp(1.2rem, 200%, 2.5rem)',
+                  lineHeight: '1',
+                  textAlign: 'center',
+                  verticalAlign: 'middle',
+                }}
+              >
+                {emojiChar}
+              </span>
+            </div>
+          ) : (
+            <img
+              src={avatar}
+              alt={name}
+              className="w-full h-full object-cover"
+            />
+          )
         ) : (
           <div className={`w-full h-full flex items-center justify-center text-foreground font-bold text-sm ${
             isBot 

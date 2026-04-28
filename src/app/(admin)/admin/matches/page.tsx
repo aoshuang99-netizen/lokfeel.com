@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Search, Filter, Eye, Plus, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
@@ -72,8 +73,8 @@ export default function MatchesManagementPage() {
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-2">
-                        <img src={match.user1.avatar} alt={match.user1.name} className="w-8 h-8 rounded-full border-2 border-[#0d0c11]" />
-                        <img src={match.user2.avatar} alt={match.user2.name} className="w-8 h-8 rounded-full border-2 border-[#0d0c11]" />
+                        <Image src={match.user1.avatar || '/default-avatar.png'} alt={match.user1.name} width={32} height={32} className="w-8 h-8 rounded-full border-2 border-card-border object-cover" />
+                        <Image src={match.user2.avatar || '/default-avatar.png'} alt={match.user2.name} width={32} height={32} className="w-8 h-8 rounded-full border-2 border-card-border object-cover" />
                       </div>
                       <div>
                         <p className="text-foreground">{match.user1.name}</p>

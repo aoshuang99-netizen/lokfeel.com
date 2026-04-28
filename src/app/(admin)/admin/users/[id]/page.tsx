@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Mail, Calendar, MapPin, Shield, Heart, MessageCircle, CreditCard, Ban, CheckCircle, XCircle } from "lucide-react";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useState } from "react";
@@ -58,8 +59,8 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
       <div className="glass-card p-6">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-shrink-0">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/30">
-              <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/30 relative">
+              <Image src={user.avatar || '/default-avatar.png'} alt={user.name} fill className="object-cover" sizes="96px" />
             </div>
           </div>
           <div className="flex-1">

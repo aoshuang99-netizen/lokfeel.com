@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, Users, Sparkles, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -119,8 +120,8 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {team.map((member, idx) => (
               <div key={idx} className="glass-card p-6 text-center">
-                <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-2 border-primary/30">
-                  <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-2 border-primary/30 relative">
+                  <Image src={member.image} alt={member.name} fill className="object-cover" sizes="128px" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-1">{member.name}</h3>
                 <p className="text-primary text-sm mb-3">{member.role}</p>

@@ -285,10 +285,10 @@ function calculateMatchScore(userProfile: any, targetProfile: any): number {
     if (userProfile.relationshipGoal === targetProfile.relationshipGoal) {
       score += 15;
     } else if (
-      (userProfile.relationshipGoal === "LONG_TERM" &&
-        targetProfile.relationshipGoal === "DATING") ||
-      (userProfile.relationshipGoal === "DATING" &&
-        targetProfile.relationshipGoal === "LONG_TERM")
+      (userProfile.relationshipGoal === "MONOGAMY" &&
+        targetProfile.relationshipGoal === "CASUAL_DATING") ||
+      (userProfile.relationshipGoal === "CASUAL_DATING" &&
+        targetProfile.relationshipGoal === "MONOGAMY")
     ) {
       score += 8;
     }

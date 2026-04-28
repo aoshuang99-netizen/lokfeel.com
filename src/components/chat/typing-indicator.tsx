@@ -1,7 +1,6 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
 import { Bot } from "lucide-react";
 
 // ============================================================================
@@ -23,11 +22,8 @@ export interface TypingIndicatorProps {
 
 function TypingIndicatorComponent({ name, isBot = false, className = "" }: TypingIndicatorProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className={`flex items-center gap-2 px-4 py-2 ${className}`}
+    <div
+      className={`flex items-center gap-2 px-4 py-2 animate-fade-in ${className}`}
     >
       {/* Avatar placeholder */}
       {isBot ? (
@@ -38,36 +34,18 @@ function TypingIndicatorComponent({ name, isBot = false, className = "" }: Typin
         <div className="w-8 h-8 rounded-full bg-background-tertiary flex-shrink-0" />
       )}
 
-      {/* Typing dots */}
+      {/* Typing dots — pure CSS animation */}
       <div className="flex items-center gap-1">
-        <motion.span
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-2 h-2 bg-white/40 rounded-full"
-        />
-        <motion.span
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
-          className="w-2 h-2 bg-white/40 rounded-full"
-        />
-        <motion.span
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-          className="w-2 h-2 bg-white/40 rounded-full"
-        />
+        <span className="w-2 h-2 bg-white/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite]" />
+        <span className="w-2 h-2 bg-white/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite_0.15s]" />
+        <span className="w-2 h-2 bg-white/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite_0.3s]" />
       </div>
 
       {/* Label */}
       <span className="text-xs text-foreground-muted">
-        {isBot ? (
-          <span className="flex items-center gap-1">
-            {name ? `${name} is typing...` : "Typing..."}
-          </span>
-        ) : (
-          name ? `${name} is typing...` : "Typing..."
-        )}
+        {name ? `${name} is typing...` : "Typing..."}
       </span>
-    </motion.div>
+    </div>
   );
 }
 
@@ -88,21 +66,9 @@ export interface SimpleTypingIndicatorProps {
 export function SimpleTypingIndicator({ className = "" }: SimpleTypingIndicatorProps) {
   return (
     <div className={`flex items-center gap-1 ${className}`}>
-      <motion.span
-        animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
-        transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
-        className="w-1.5 h-1.5 bg-background-tertiary0 rounded-full"
-      />
-      <motion.span
-        animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
-        transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.13 }}
-        className="w-1.5 h-1.5 bg-background-tertiary0 rounded-full"
-      />
-      <motion.span
-        animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
-        transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.26 }}
-        className="w-1.5 h-1.5 bg-background-tertiary0 rounded-full"
-      />
+      <span className="w-1.5 h-1.5 bg-foreground-subtle rounded-full animate-[typing-dot_0.8s_ease-in-out_infinite]" />
+      <span className="w-1.5 h-1.5 bg-foreground-subtle rounded-full animate-[typing-dot_0.8s_ease-in-out_infinite_0.13s]" />
+      <span className="w-1.5 h-1.5 bg-foreground-subtle rounded-full animate-[typing-dot_0.8s_ease-in-out_infinite_0.26s]" />
     </div>
   );
 }

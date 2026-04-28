@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, MoreVertical, Phone, Video, Sparkles, MessageCircle, Shield, X } from "lucide-react";
 import Link from "next/link";
@@ -158,7 +158,7 @@ interface ChatHeaderProps {
 function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   
-  const isBot = roomInfo?.otherUser?.isBot || roomInfo?.otherUser?.id?.startsWith("bot-");
+  const isBot = roomInfo?.otherUser?.isBot || false;
   const isOnline = roomInfo?.otherUser?.isOnline;
 
   const formatLastSeen = (dateStr?: string) => {
@@ -193,11 +193,31 @@ function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
         <div className="relative">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-background-tertiary flex items-center justify-center ring-1 ring-white/10">
             {roomInfo?.otherUser?.avatar ? (
-              <img
-                src={roomInfo.otherUser.avatar}
-                alt={roomInfo.otherUser.name}
-                className="w-full h-full object-cover"
-              />
+              roomInfo.otherUser.avatar.startsWith("emoji:") ? (
+                <div className={`w-full h-full flex items-center justify-center ${
+                  isBot 
+                    ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
+                    : 'bg-gradient-to-br from-primary to-secondary'
+                }`}>
+                  <span
+                    className="select-none leading-none"
+                    style={{
+                      fontSize: 'clamp(1rem, 200%, 2rem)',
+                      lineHeight: '1',
+                      textAlign: 'center',
+                      verticalAlign: 'middle',
+                    }}
+                  >
+                    {roomInfo.otherUser.avatar.split(":")[1]}
+                  </span>
+                </div>
+              ) : (
+                <img
+                  src={roomInfo.otherUser.avatar}
+                  alt={roomInfo.otherUser.name}
+                  className="w-full h-full object-cover"
+                />
+              )
             ) : (
               <div className={`w-full h-full flex items-center justify-center text-foreground font-bold text-sm ${
                 isBot 
@@ -359,6 +379,8 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [quotedMessage, setQuotedMessage] = useState<QuotedMessageState | null>(null);
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Socket connection (IM API v2 - 使用 conversationId)
   const {
@@ -412,7 +434,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
             name: (conv as any).otherUser?.name || "Unknown",
             avatar: (conv as any).otherUser?.avatar || null,
             isOnline: (conv as any).otherUser?.presence === 'ONLINE',
-            isBot: (conv as any).otherUser?.id?.startsWith("bot-"),
+            isBot: (conv as any).otherUser?.isBot || false,
           },
         });
       }
@@ -457,6 +479,12 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
   // Handle back navigation
   const handleBack = useCallback(() => {
     setCurrentConvId(null);
+    // Clear bot typing state when navigating away
+    if (botTypingTimeoutRef.current) {
+      clearTimeout(botTypingTimeoutRef.current);
+      botTypingTimeoutRef.current = null;
+    }
+    setIsBotTyping(false);
   }, []);
 
   // Handle send message
@@ -485,11 +513,28 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
             messagesRemaining: Math.max(0, userLimits.messagesRemaining - 1),
           });
         }
+
+        // Bot typing indicator + 2s delay (simulate real human behavior)
+        const isBot = roomInfo?.otherUser?.isBot || false;
+        if (isBot) {
+          // Clear any existing bot typing timeout
+          if (botTypingTimeoutRef.current) {
+            clearTimeout(botTypingTimeoutRef.current);
+          }
+          // Show typing indicator immediately
+          setIsBotTyping(true);
+          // Wait 2 seconds before refreshing for bot reply
+          botTypingTimeoutRef.current = setTimeout(() => {
+            setIsBotTyping(false);
+            botTypingTimeoutRef.current = null;
+            // Refresh messages to get bot reply (socket should deliver it, but poll as fallback)
+          }, 2000);
+        }
       } catch (err) {
         toast.error("Failed to send message");
       }
     },
-    [currentConvId, sendMessage, userLimits]
+    [currentConvId, sendMessage, userLimits, roomInfo]
   );
 
   // Handle typing
@@ -613,6 +658,10 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
               }))}
               isTyping={isTyping}
               typingUserName={typingUserId ? roomInfo.otherUser.name : undefined}
+              isBotTyping={isBotTyping}
+              otherUserAvatar={roomInfo.otherUser.avatar}
+              otherUserName={roomInfo.otherUser.name}
+              otherUserIsBot={roomInfo.otherUser.isBot}
               onRetry={handleRetry}
               onCopy={handleCopy}
               onDelete={handleDelete}
