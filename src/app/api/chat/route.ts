@@ -100,14 +100,22 @@ export async function GET() {
       },
       include: {
         userA: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            isBot: true,
             profile: {
               select: { displayName: true, age: true, avatar: true },
             },
           },
         },
         userB: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            isBot: true,
             profile: {
               select: { displayName: true, age: true, avatar: true },
             },
