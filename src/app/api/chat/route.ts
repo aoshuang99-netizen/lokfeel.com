@@ -143,7 +143,7 @@ export async function GET() {
           id: otherUser.id,
           name: otherUser.profile?.displayName || otherUser.name || 'Unknown',
           age: otherUser.profile?.age,
-          avatar: otherUser.profile?.avatar,
+          avatar: otherUser.profile?.avatar || otherUser.image,
           isOnline: false,
           isBot: otherUser.isBot,
         },
