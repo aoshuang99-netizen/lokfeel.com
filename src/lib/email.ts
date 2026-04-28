@@ -359,3 +359,86 @@ export async function sendWelcomeEmail(
     `Welcome to LokFeel! Your email has been verified. Complete your profile to start receiving matches: ${appUrl}/onboarding`
   );
 }
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  resetUrl: string,
+  name?: string
+): Promise<{ success: boolean; error?: string }> {
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset Your Password - LokFeel</title>
+</head>
+<body style="margin:0; padding:40px 20px; background-color:#f8f8fc; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; text-align:center;">
+
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-bottom:30px;">
+    <tr>
+      <td style="text-align:center;">
+        <div style="font-size:28px; font-weight:700; color:#e8a038;">LokFeel</div>
+      </td>
+    </tr>
+  </table>
+
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:480px; width:100%; background:#ffffff; border:1px solid rgba(0,0,0,0.08); border-radius:16px;">
+    <tr>
+      <td style="padding:40px 32px; text-align:center;">
+        
+        <h1 style="margin:0 0 20px; font-size:24px; font-weight:600; color:#1a1a2e; line-height:1.3;">
+          Reset Your Password
+        </h1>
+        
+        <p style="margin:0 0 28px; font-size:16px; color:rgba(0,0,0,0.65); line-height:1.6;">
+          We received a request to reset the password for your LokFeel account${name ? `, ${name}` : ''}. Click the button below to create a new password.
+        </p>
+        
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 0 28px;">
+          <tr>
+            <td style="background-color:#e8a038; border-radius:12px; text-align:center;">
+              <a href="${resetUrl}" style="display:inline-block; padding:16px 32px; color:#ffffff; font-size:16px; font-weight:600; text-decoration:none; border-radius:12px;">Reset Password</a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:0 0 20px; font-size:14px; color:rgba(0,0,0,0.45); line-height:1.6;">
+          If the button doesn't work, copy and paste this link into your browser:
+        </p>
+        <p style="margin:0 0 28px; font-size:13px; color:#e8a038; word-break:break-all;">
+          ${resetUrl}
+        </p>
+        
+        <p style="margin:20px 0 0; font-size:14px; color:rgba(0,0,0,0.45); text-align:center;">
+          This link will expire in 30 minutes.
+        </p>
+        
+        <p style="margin:16px 0 0; font-size:13px; color:rgba(0,0,0,0.35); text-align:center;">
+          If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
+        </p>
+        
+      </td>
+    </tr>
+  </table>
+
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-top:30px;">
+    <tr>
+      <td style="text-align:center; font-size:12px; color:rgba(0,0,0,0.35);">
+        <p style="margin:0;">LokFeel Inc. &bull; noreply@lokfeel.com</p>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>`;
+
+  return sendEmailWithResend(
+    email,
+    'Reset your password - LokFeel',
+    htmlContent,
+    `Reset your LokFeel password by clicking this link: ${resetUrl}. This link expires in 30 minutes. If you didn't request this, ignore this email.`
+  );
+}
