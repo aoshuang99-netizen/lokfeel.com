@@ -8,6 +8,7 @@
  */
 
 import { db } from '@/lib/db';
+import { jsonArr, toJson } from '@/lib/json-helpers';
 import {
   IMMessageType,
   ConversationState,
@@ -412,7 +413,7 @@ export async function createMessage(
         encryptionMode: options?.encryptionMode || 'SERVER',
         ephemeralPublicKey: options?.ephemeralPublicKey,
         boundaryVersion: options?.boundaryVersion,
-        complianceTags: options?.complianceTags || [],
+        complianceTags: toJson(options?.complianceTags || []),
         consentState: options?.consentState || 'CONSENT_NONE',
         mediaLevel: options?.mediaLevel || 'L0_TEXT',
         status: 'SENT',
@@ -645,7 +646,6 @@ export async function markMessagesAsRead(
           deliveredAt: new Date(),
           readAt: new Date(),
         })),
-        skipDuplicates: true,
       });
 
       // Reset unread count for this user
@@ -831,7 +831,8 @@ function conversationToPayload(conv: ConversationWithParticipants): Conversation
   };
 }
 
-function messageToPayload(msg: IMMessageWithRelations): IMMessagePayload {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function messageToPayload(msg: any): IMMessagePayload {
   return {
     msgId: msg.id,
     clientMsgId: msg.clientMsgId || undefined,
@@ -844,7 +845,7 @@ function messageToPayload(msg: IMMessageWithRelations): IMMessagePayload {
     encryptionMode: msg.encryptionMode as EncryptionMode,
     ephemeralPublicKey: msg.ephemeralPublicKey || undefined,
     boundaryVersion: msg.boundaryVersion || undefined,
-    complianceTags: msg.complianceTags,
+    complianceTags: jsonArr(msg.complianceTags),
     consentState: msg.consentState as ConsentState,
     mediaLevel: msg.mediaLevel as MediaAccessLevel,
     ruleResult: msg.ruleResult as RuleEngineResult,

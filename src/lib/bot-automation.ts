@@ -1,3 +1,5 @@
+import { jsonArr } from '@/lib/json-helpers';
+
 /**
  * AI数字人自动化系统
  * 
@@ -298,8 +300,8 @@ export function generateIcebreaker(botProfile: any, targetProfile: any): string 
   let message = templates[Math.floor(Math.random() * templates.length)];
   
   // 替换变量
-  const sharedInterests = botProfile.interests?.filter((i: string) => targetProfile.interests?.includes(i)) || [];
-  const interest = sharedInterests[0] || botProfile.interests?.[0] || "exploring new things";
+  const sharedInterests = jsonArr(botProfile.interests).filter((i: string) => jsonArr(targetProfile.interests).includes(i));
+  const interest = sharedInterests[0] || jsonArr(botProfile.interests)[0] || "exploring new things";
   const value = botProfile.values?.[0] || "authentic connections";
   
   message = message.replace("{interest}", interest);

@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LokFeel 管理后台系统 — 产品规划与系统设计 v2.0</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fafaf8; color: #1a1a1a; line-height: 1.6; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 28px; font-weight: 700; color: #111; margin-bottom: 8px; }
+  h2 { font-size: 22px; font-weight: 600; color: #18181b; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #e4e4e7; }
+  h3 { font-size: 17px; font-weight: 600; color: #27272a; margin: 24px 0 12px; }
+  h4 { font-size: 15px; font-weight: 600; color: #3f3f46; margin: 16px 0 8px; }
+  p { margin-bottom: 12px; }
+  .meta { background: #f4f4f5; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; color: #71717a; }
+  .badge { display: inline-block; background: #dbeafe; color: #1d4ed8; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+  .badge-new { background: #dcfce7; color: #15803d; }
+  .badge-v2 { background: #fef3c7; color: #92400e; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+  th { background: #f4f4f5; text-align: left; padding: 10px 14px; border: 1px solid #e4e4e7; font-weight: 600; }
+  td { padding: 8px 14px; border: 1px solid #e4e4e7; vertical-align: top; }
+  tr:hover td { background: #fafafa; }
+  .code-block { background: #1e1e2e; color: #cdd6f4; padding: 16px 20px; border-radius: 10px; font-family: 'Monaco', 'Menlo', monospace; font-size: 13px; overflow-x: auto; margin-bottom: 20px; white-space: pre; line-height: 1.7; }
+  .tree { background: #f8f8f8; border: 1px solid #e4e4e7; border-radius: 10px; padding: 16px 20px; font-family: 'Monaco', monospace; font-size: 13px; overflow-x: auto; white-space: pre; line-height: 1.8; margin-bottom: 20px; }
+  ul { padding-left: 24px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+  .priority-P0 { color: #dc2626; font-weight: 700; }
+  .priority-P1 { color: #d97706; font-weight: 700; }
+  .priority-P2 { color: #2563eb; font-weight: 700; }
+  .toc { background: #fff; border: 1px solid #e4e4e7; border-radius: 10px; padding: 24px; margin-bottom: 32px; }
+  .toc-item { display: flex; align-items: center; padding: 6px 0; }
+  .toc-num { min-width: 28px; height: 28px; background: #f4f4f5; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #52525b; margin-right: 12px; }
+  .toc-link { color: #2563eb; text-decoration: none; font-size: 14px; }
+  .toc-link:hover { text-decoration: underline; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: #fff; border: 1px solid #e4e4e7; border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-val { font-size: 28px; font-weight: 800; color: #18181b; }
+  .stat-val.new { color: #15803d; }
+  .stat-label { font-size: 13px; color: #71717a; margin-top: 4px; }
+  .compare { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #71717a; }
+  .compare-old { text-decoration: line-through; color: #a1a1aa; }
+  .compare-arrow { color: #15803d; font-weight: 700; }
+  .compare-new { color: #15803d; font-weight: 700; }
+  .module-header { background: linear-gradient(135deg, #1e1e2e, #2d2d44); color: #fff; border-radius: 12px; padding: 20px 24px; margin: 32px 0 16px; display: flex; align-items: center; gap: 16px; }
+  .module-icon { font-size: 32px; }
+  .module-title { font-size: 18px; font-weight: 700; }
+  .module-sub { font-size: 13px; opacity: 0.7; margin-top: 2px; }
+  hr { border: none; border-top: 1px solid #e4e4e7; margin: 32px 0; }
+  .appendix-table td:first-child { font-weight: 600; }
+  @media (max-width: 640px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🏛 LokFeel 管理后台系统 — 产品规划与系统设计 v2.0</h1>
+<div class="meta">
+  <strong>文档版本:</strong> v2.0 &nbsp;|&nbsp; <strong>日期:</strong> 2026-04-29 &nbsp;|&nbsp; <strong>作者:</strong> Scout &nbsp;|&nbsp; <strong>状态:</strong> <span style="color:#d97706;font-weight:700">Draft — 待评审</span>
+</div>
+
+<div class="toc">
+  <h3 style="margin-top:0">📑 目录</h3>
+  <div class="toc-item"><span class="toc-num">一</span><a href="#sec1" class="toc-link">执行摘要</a></div>
+  <div class="toc-item"><span class="toc-num">二</span><a href="#sec2" class="toc-link">模块功能树（8大模块全部展开至二/三/四级）</a></div>
+  <div class="toc-item"><span class="toc-num">三</span><a href="#sec3" class="toc-link">数据分析模块 <span class="badge badge-new">v2.0新增</span></a></div>
+  <div class="toc-item"><span class="toc-num">四</span><a href="#sec4" class="toc-link">AI推广图生成模块 <span class="badge badge-new">v2.0新增</span></a></div>
+  <div class="toc-item"><span class="toc-num">五</span><a href="#sec5" class="toc-link">AI客服设置模块 <span class="badge badge-new">v2.0新增</span></a></div>
+  <div class="toc-item"><span class="toc-num">六</span><a href="#sec6" class="toc-link">VIP客户收件箱模块 <span class="badge badge-new">v2.0新增</span></a></div>
+  <div class="toc-item"><span class="toc-num">七</span><a href="#sec7" class="toc-link">路由规划（35条完整路由）</a></div>
+  <div class="toc-item"><span class="toc-num">八</span><a href="#sec8" class="toc-link">API设计（~180个端点）</a></div>
+  <div class="toc-item"><span class="toc-num">九</span><a href="#sec9" class="toc-link">数据库变更（17张新表Prisma Schema）</a></div>
+  <div class="toc-item"><span class="toc-num">十</span><a href="#sec10" class="toc-link">UI/UX设计规范</a></div>
+  <div class="toc-item"><span class="toc-num">十一</span><a href="#sec11" class="toc-link">实施路线图（Week 7-12）</a></div>
+  <div class="toc-item"><span class="toc-num">十二</span><a href="#sec12" class="toc-link">风险与依赖</a></div>
+</div>
+
+<!-- 核心数字 -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-val">7→<span class="stat-val new">24</span></div>
+    <div class="stat-label">页面总数</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val">93→<span class="stat-val new">180</span></div>
+    <div class="stat-label">API端点</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val">30→<span class="stat-val new">46</span></div>
+    <div class="stat-label">数据表</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val">50→<span class="stat-val new">200+</span></div>
+    <div class="stat-label">四级功能项</div>
+  </div>
+</div>
+
+<!-- 一、执行摘要 -->
+<h2 id="sec1">一、执行摘要</h2>
+
+<h3>1.1 背景与动机</h3>
+<p>LokFeel 当前管理后台 (<code>/admin</code>) 原有7个基础页面（概览/用户/用户详情/匹配/内容/分析/设置），功能停留在只读查看和数据导入阶段。v2.0在v1.0基础上进行全面深化：</p>
+<ul>
+  <li><strong>所有模块展开到二级、三级、四级功能树</strong></li>
+  <li><strong>数据分析模块</strong>：用户追踪 + 流量属性细化到四级</li>
+  <li><strong>新增 AI推广图生成模块</strong>（展开到四级）</li>
+  <li><strong>新增 AI客服设置模块</strong>（展开到四级）</li>
+  <li><strong>新增 VIP客户收件箱模块</strong>（展开到四级）</li>
+  <li>更新路由规划、API设计、数据库变更</li>
+</ul>
+
+<h3>1.2 核心目标（v2.0 新增）</h3>
+<table>
+  <tr><th>优先级</th><th>目标</th><th>衡量指标</th></tr>
+  <tr><td><span class="priority-P0">P0</span></td><td>全局监控仪表盘</td><td>实时数据 &lt;5s 延迟，覆盖 8 大核心指标</td></tr>
+  <tr><td><span class="priority-P0">P0</span></td><td>用户全生命周期管理</td><td>从注册→Onboarding→活跃→流失，全链路可干预</td></tr>
+  <tr><td><span class="priority-P0">P0</span></td><td>安全与内容审核</td><td>举报处理 &lt;2h SLA，Bot 异常行为实时告警</td></tr>
+  <tr><td><span class="priority-P0">P0</span> <span class="badge badge-new">新增</span></td><td><strong>AI增长工具链</strong></td><td><strong>推广图自动生成、客服自动回复、VIP专属服务</strong></td></tr>
+  <tr><td><span class="priority-P1">P1</span></td><td>匹配引擎监控</td><td>匹配成功率、冲突预警、算法参数可调</td></tr>
+  <tr><td><span class="priority-P1">P1</span></td><td>支付与订阅管理</td><td>收入追踪、退款处理、套餐配置</td></tr>
+  <tr><td><span class="priority-P2">P2</span></td><td>Bot 数字用户管理</td><td>Bot 生命周期、学习效果、行为模拟调控</td></tr>
+  <tr><td><span class="priority-P2">P2</span></td><td>系统配置与权限</td><td>多管理员、RBAC、操作审计</td></tr>
+</table>
+
+<!-- 二、模块功能树 -->
+<h2 id="sec2">二、模块功能树（全部展开至二/三/四级）</h2>
+
+<!-- 2.1 仪表盘 -->
+<div class="module-header">
+  <div class="module-icon">📊</div>
+  <div><div class="module-title">2.1 全局监控仪表盘 `/admin`</div><div class="module-sub">一级：仪表盘 | 二级：4项（KPI卡片/趋势图/告警/活动流）</div></div>
+</div>
+
+<h4>二级模块：</h4>
+<ol>
+  <li><span class="priority-P0">P0</span> <strong>核心指标卡片（KPI Cards）</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>实时趋势图</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>告警面板</strong></li>
+  <li><span class="priority-P2">P2</span> <strong>最近活动流（Activity Feed）</strong></li>
+</ol>
+
+<h4>三级展开 — P0 核心指标卡片：</h4>
+<div class="tree">P0 核心指标卡片
+├── 👥 总用户卡片
+│   ├── 四级：真实用户数（按日/周/月）
+│   ├── 四级：Bot用户数（按SEED/SIMULATION/TRAINING/ACTIVE）
+│   ├── 四级：本日新增趋势（折线图）
+│   └── 四级：环比增长率（↑↓）
+├── 💳 付费用户卡片
+│   ├── 四级：Premium活跃用户数
+│   ├── 四级：Lady Free用户数
+│   ├── 四级：总MRR（月经常性收入）
+│   └── 四级：付费转化率（%）
+├── 💬 活跃会话卡片
+│   ├── 四级：进行中Conversation数
+│   ├── 四级：今日消息总数
+│   └── 四级：平均会话时长
+├── ❤️ 匹配效果卡片
+│   ├── 四级：本周匹配总数
+│   ├── 四级：匹配接受率（%）
+│   └── 四级：平均匹配分
+├── 🚨 待处理告警卡片
+│   ├── 四级：未读举报数
+│   ├── 四级：异常Bot数（>80%拒绝率）
+│   └── 四级：付款失败数
+└── 📈 增长漏斗卡片
+    ├── 四级：注册→Onboarding完成率
+    ├── 四级：Onboarding→首匹配转化率
+    └── 四级：首匹配→付费转化率</div>
+
+<h4>三级展开 — P1 实时趋势图：</h4>
+<div class="tree">P1 实时趋势图
+├── 📈 用户注册趋势
+│   ├── 四级：7天折线图 / 30天 / 90天
+│   └── 四级：真实用户 vs Bot用户分层
+├── ❤️ 匹配成功率趋势
+│   ├── 四级：按天展示 accept/(accept+reject+pass+expired)
+│   ├── 四级：按周 / 按月展示
+├── 💬 消息活跃度
+│   ├── 四级：日消息量柱状图
+│   ├── 四级：按小时分布heatmap
+│   └── 四级：消息类型分布（TEXT/IMAGE/SYSTEM）
+└── 💰 收入趋势
+    ├── 四级：MRR折线图
+    ├── 四级：日收入柱状图
+    └── 四级：累计收入</div>
+
+<h4>三级展开 — P1 告警面板：</h4>
+<div class="tree">P1 告警面板
+├── 🔴 CRITICAL（需立即处理）
+│   ├── 四级：Bot异常行为（3h内匹配拒绝率>80%）
+│   ├── 四级：支付失败（连续3次）
+│   └── 四级：数据库连接异常
+├── 🟡 WARNING（需关注）
+│   ├── 四级：举报积压（>10条未处理）
+│   ├── 四级：Bot响应延迟（>60min）
+│   └── 四级：匹配成功率连续3天下降
+└── 🟢 INFO（信息通知）
+    ├── 四级：新版本部署成功
+    └── 四级：数据备份完成</div>
+
+<!-- 2.2 用户管理 -->
+<div class="module-header">
+  <div class="module-icon">👥</div>
+  <div><div class="module-title">2.2 用户管理 `/admin/users`</div><div class="module-sub">二级：4项 | 三级：用户列表/用户详情/Bot管理/行为追踪 <span class="badge badge-new">v2.0新增</span></div></div>
+</div>
+
+<h4>二级模块：</h4>
+<ol>
+  <li><span class="priority-P0">P0</span> <strong>用户列表页</strong></li>
+  <li><span class="priority-P0">P0</span> <strong>用户详情页</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>Bot用户管理</strong></li>
+  <li><span class="priority-P2">P2</span> <strong>用户行为追踪</strong> <span class="badge badge-new">v2.0新增</span></li>
+</ol>
+
+<h4>三级展开 — 用户列表页：</h4>
+<div class="tree">P0 用户列表页
+├── 🔍 筛选器
+│   ├── 四级：关键词搜索（邮箱/昵称/ID，模糊匹配）
+│   ├── 四级：角色筛选（真实用户 / Bot用户）
+│   ├── 四级：性别筛选（Male / Female / Non-binary）
+│   ├── 四级：状态筛选（DRAFT/PENDING_REVIEW/APPROVED/REJECTED/DEACTIVATED/BANNED）
+│   ├── 四级：订阅筛选（Free / Lady Free / Premium）
+│   ├── 四级：注册时间范围（日期区间选择器）
+│   ├── 四级：举报状态筛选（有举报 / 无举报）
+│   ├── 四级：Bot类型筛选（SEED/SIMULATION/TRAINING/ACTIVE）
+│   └── 四级：Bot活跃度筛选（GHOST/LOW/MEDIUM/HIGH/FULL）
+├── 📋 列表字段
+│   ├── 四级：头像（40px缩略图）
+│   ├── 四级：昵称（displayName，可排序）
+│   ├── 四级：邮箱（脱敏显示，隐藏@前3位）
+│   ├── 四级：性别（icon标识）
+│   ├── 四级：年龄 / Profile状态badge / 订阅badge / Bot标识tag
+│   ├── 四级：匹配数 / 注册时间 / 最后活跃（可排序）
+│   └── 四级：操作列（查看/编辑/封禁/删除）
+└── ⚡ 批量操作
+    ├── 四级：导出CSV（自定义导出字段）
+    ├── 四级：批量修改状态
+    ├── 四级：批量分配Lady Free
+    └── 四级：批量禁用Bot</div>
+
+<h4>三级展开 — 用户详情页（Tab化设计）：</h4>
+<div class="tree">P0 用户详情页（7个Tab，全部展开到四级）
+├── Tab1 基础信息
+│   ├── 四级：头像大图 + 基本信息卡片
+│   ├── 四级：邮箱（解密显示）+ 注册时间 + 最后活跃
+│   ├── 四级：Role标签 + 身份验证状态
+│   ├── 四级：Card Verified状态
+│   └── 四级：操作按钮（编辑/重置密码/切换角色/删除）
+├── Tab2 关系蓝图（Profile）
+│   ├── 四级：关系目标（RelationshipGoal）
+│   ├── 四级：依恋风格（AttachmentStyle）
+│   ├── 四级：沟通风格（CommunicationStyle）
+│   ├── 四级：冲突解决方式（ConflictResolution）
+│   ├── 四级：爱的语言（LoveLanguage）
+│   ├── 四级：情绪可用性（EmotionalAvailability）
+│   ├── 四级：生命优先级（JSON可视化）
+│   ├── 四级：Dealbreakers列表 / 偏好标签 / 匹配偏好
+│   └── 四级：职业信息 / 地理位置信息
+├── Tab3 订阅与支付
+│   ├── 四级：当前套餐 + 状态 + 到期时间
+│   ├── 四级：支付历史（Payment表）
+│   ├── 四级：诚意值余额 + 等级 + 交易明细
+│   └── 四级：手动操作（分配/取消Lady Free，调整诚意值）
+├── Tab4 匹配记录
+│   ├── 四级：发出/收到的匹配列表
+│   ├── 四级：匹配分数分布图
+│   ├── 四级：反馈汇总（accept/pass/maybe/block比例）
+│   └── 四级：匹配解释（matchReason）
+├── Tab5 聊天记录
+│   ├── 四级：会话列表（Conversation表）
+│   ├── 四级：消息详情（IMMessage + Message）
+│   ├── 四级：在线状态历史（UserPresence）
+│   └── 四级：Vault状态（vaultStatus/vaultExpiry）
+├── Tab6 安全与举报
+│   ├── 四级：发出的举报（reportsMade）
+│   ├── 四级：收到的举报（reportsReceived）+ 处理状态
+│   ├── 四级：AuditLog相关记录
+│   └── 四级：设备/IP信息
+└── Tab7 Admin备注 <span class="badge badge-new">v2.0新增</span>
+    ├── 四级：adminNotes文本框
+    ├── 四级：内部标签（adminTags String[]）
+    └── 四级：操作历史时间线</div>
+
+<h4>三级展开 — 用户行为追踪（v2.0新增）：</h4>
+<div class="tree">P2 用户行为追踪 <span class="badge badge-new">v2.0新增</span>
+├── 📍 用户轨迹追踪
+│   ├── 四级：页面访问路径（按时间排列）
+│   ├── 四级：关键行为事件（注册/Onboarding/匹配/聊天/付费）
+│   ├── 四级：停留时长分析（各页面）
+│   └── 四级：设备信息（OS/Browser/分辨率）
+├── ⏱️ 活跃度分析
+│   ├── 四级：DAU / WAU / MAU
+│   ├── 四级：平均在线时长
+│   ├── 四级：活跃时段分布（heatmap）
+│   └── 四级：沉默用户预警（X天未活跃）
+└── 🎯 用户分群
+    ├── 四级：高价值用户（付费 + 高活跃）
+    ├── 四级：流失风险用户（活跃下降趋势）
+    ├── 四级：沉睡用户（注册后未完成Onboarding）
+    └── 四级：超级活跃用户（Top 10%参与度）</div>
+
+<!-- 2.3 安全与内容审核 -->
+<div class="module-header">
+  <div class="module-icon">🛡️</div>
+  <div><div class="module-title">2.3 安全与内容审核 `/admin/users/reports`</div><div class="module-sub">二级：3项（举报管理/敏感词监控/封禁白名单）</div></div>
+</div>
+
+<h4>二级模块：</h4>
+<ol>
+  <li><span class="priority-P0">P0</span> <strong>举报管理</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>敏感词监控</strong></li>
+  <li><span class="priority-P2">P2</span> <strong>封禁/白名单管理</strong></li>
+</ol>
+
+<h4>三级展开 — 举报管理：</h4>
+<div class="tree">P0 举报管理
+├── 📋 举报列表视图
+│   ├── 四级：举报ID / 举报人 / 被举报人 / 原因 / 状态 / 创建时间 / 处理人
+│   ├── 四级：状态筛选（PENDING/UNDER_REVIEW/RESOLVED_*/DISMISSED）
+│   ├── 四级：原因筛选（INAPPROPRIATE_CONTENT/HARASSMENT/FAKE_PROFILE/SPAM）
+│   └── 四级：SLA状态标签（正常/预警/逾期）
+├── 🔄 处理工作流
+│   ├── 四级：PENDING → UNDER_REVIEW（认领操作）
+│   ├── 四级：RESOLVED_NO_ACTION / RESOLVED_WARNING / RESOLVED_BANNED
+│   └── 四级：DISMISSED（误报标记）
+├── 📊 处理面板
+│   ├── 四级：举报详情 + 关联聊天记录截图
+│   ├── 四级：举报人历史（举报次数统计）
+│   ├── 四级：被举报人历史（被举报次数/处理历史）
+│   └── 四级：处理备注（adminNotes）
+└── 📈 SLA追踪
+    ├── 四级：举报平均处理时间
+    ├── 四级：逾期未处理数量（>2小时）
+    └── 四级：按原因分类的举报趋势图</div>
+
+<!-- 2.4 匹配引擎监控 -->
+<div class="module-header">
+  <div class="module-icon">❤️</div>
+  <div><div class="module-title">2.4 匹配引擎监控 `/admin/matches/engine`</div><div class="module-sub">二级：5项 | 三级：引擎健康/五维兼容性/匹配质量/匹配漏斗/参数配置</div></div>
+</div>
+
+<h4>二级模块：</h4>
+<ol>
+  <li><span class="priority-P1">P1</span> <strong>引擎健康指标</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>五维兼容性分布</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>匹配质量分析</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>匹配漏斗</strong></li>
+  <li><span class="priority-P2">P2</span> <strong>引擎参数配置</strong></li>
+</ol>
+
+<h4>三级展开 — 引擎健康指标：</h4>
+<div class="tree">P1 引擎健康指标
+├── 📊 基础指标
+│   ├── 四级：日匹配量（每日生成总数）
+│   ├── 四级：接受率（accept / 总反应数）
+│   ├── 四级：平均匹配分（matchScore均值）
+│   ├── 四级：冲突预警率（有conflictWarnings占比）
+│   ├── 四级：过期率（expired / total）
+│   └── 四级：Pitch使用率（有pitchMessage占比）
+├── 📈 趋势图
+│   ├── 四级：7天/30天/90天接受率折线图
+│   ├── 四级：接受率 vs 拒绝率堆叠图
+│   └── 四级：匹配量热力图（按小时/星期）
+└── 🚨 告警阈值配置
+    ├── 四级：日匹配量下限（<50告警）
+    ├── 四级：接受率下限（<30%连续3天告警）
+    └── 四级：过期率上限（>40%告警）</div>
+
+<h4>三级展开 — 五维兼容性分布：</h4>
+<div class="tree">P1 五维兼容性分布
+├── 📊 分项兼容性直方图
+│   ├── 四级：Attachment Compatibility（依恋风格兼容度）
+│   ├── 四级：Communication Compatibility（沟通风格兼容度）
+│   ├── 四级：Conflict Resolution Compatibility（冲突解决兼容度）
+│   ├── 四级：Values Compatibility（价值观兼容度）
+│   └── 四级：Lifestyle Compatibility（生活方式兼容度）
+├── 📈 综合分布
+│   ├── 四级：总分（0-100）分布直方图
+│   ├── 四级：高分区（80-100）占比
+│   ├── 四级：低分区（0-30）占比
+│   └── 四级：五维雷达图（单个用户维度）
+└── 🔍 异常检测
+    ├── 四级：高分手对被reject案例（score>80但reject）
+    ├── 四级：低分通过案例（score<40但accept）
+    └── 四级：五维分数差异异常检测</div>
+
+<!-- 2.5 聊天监控 -->
+<div class="module-header">
+  <div class="module-icon">💬</div>
+  <div><div class="module-title">2.5 聊天监控 `/admin/chats`</div><div class="module-sub">二级：3项（会话列表/会话详情/敏感词监控）</div></div>
+</div>
+
+<h4>三级展开 — 会话详情：</h4>
+<div class="tree">P1 会话详情
+├── 👥 参与者摘要
+│   ├── 四级：用户A基础信息（头像/昵称/订阅）
+│   ├── 四级：用户B基础信息（头像/昵称/订阅）
+│   └── 四级：Bot标识（若是Bot-User交互）
+├── 💬 消息时间线
+│   ├── 四级：完整消息列表（按时间排序）
+│   ├── 四级：已删除消息标记（显示"[消息已删除]"）
+│   ├── 四级：媒体文件列表（IMAGE类型消息）
+│   └── 四级：消息发送频率分析
+├── 🔐 Consent状态流
+│   ├── 四级：ConsentRequest时间线
+│   ├── 四级：ConsentGrant/Denied记录
+│   └── 四级：Consent过期预警
+├── 🔒 Vault状态
+│   ├── 四级：Vault激活时间
+│   ├── 四级：Vault倒计时
+│   └── 四级：vaultStatus变更记录
+└── ⚙️ PowerBoard状态
+    ├── 四级：双方PowerBoardRule配置查看
+    ├── 四级：Rate Limiting状态（PACE_LIMIT触发次数）
+    └── 四级：AuditLog相关条目</div>
+
+<!-- 2.6 支付与订阅管理 -->
+<div class="module-header">
+  <div class="module-icon">💳</div>
+  <div><div class="module-title">2.6 支付与订阅管理 `/admin/payments`</div><div class="module-sub">二级：4项（收入仪表盘/订阅管理/交易记录/退款管理）</div></div>
+</div>
+
+<h4>三级展开 — 收入仪表盘：</h4>
+<div class="tree">P1 收入仪表盘
+├── 💰 核心收入指标
+│   ├── 四级：MRR（月经常性收入）
+│   ├── 四级：ARR（年化经常性收入）
+│   ├── 四级：日/周/月收入趋势图
+│   ├── 四级：付费转化率（Premium / 总活跃用户）
+│   ├── 四级：ARPU（每用户平均收入）
+│   ├── 四级：月流失率（Churn Rate）
+│   └── 四级：LTV（用户生命周期价值，按Cohort估算）
+├── 📊 收入来源拆分
+│   ├── 四级：Premium Monthly vs Yearly占比饼图
+│   ├── 四级：各套餐ARR贡献柱状图
+│   └── 四级：新增付费 vs 续费收入对比
+└── 📈 趋势预测
+    ├── 四级：MRR预测线（基于历史趋势）
+    ├── 四级：下月预计流失额
+    └── 四级：收入健康度评分</div>
+
+<!-- 2.7 Bot系统总控 -->
+<div class="module-header">
+  <div class="module-icon">🤖</div>
+  <div><div class="module-title">2.7 Bot系统总控 `/admin/bot-system`</div><div class="module-sub">二级：4项（集群概览/学习效果/行为模拟/批量操作）</div></div>
+</div>
+
+<h4>三级展开 — 学习效果分析：</h4>
+<div class="tree">P2 学习效果分析
+├── 📊 BotPreference分布
+│   ├── 四级：五维偏好向量均值/标准差统计
+│   ├── 四级：各维度分布直方图
+│   └── 四级：Top偏好组合识别
+├── 🎯 学习置信度
+│   ├── 四级：按sampleSize分段的confidence分布
+│   ├── 四级：置信度提升趋势图
+│   └── 四级：低置信度Bot预警列表
+├── 🔬 A/B效果对比
+│   ├── 四级：学习前接受率 vs 学习后接受率对比
+│   ├── 四级：不同学习批次的成功率对比
+│   └── 四级：统计显著性检验结果
+└── 🧠 群体智慧
+    ├── 四级：成功模式识别（高接受率Bot的共同特征）
+    ├── 四级：季节性调整建议
+    └── 四级：偏好推荐（建议Bot学习哪些特征）</div>
+
+<!-- 2.8 同意管理与规则引擎 -->
+<div class="module-header">
+  <div class="module-icon">📋</div>
+  <div><div class="module-title">2.8 同意管理与规则引擎 `/admin/content`</div><div class="module-sub">二级：2项（同意请求监控/规则引擎监控）</div></div>
+</div>
+
+<h4>三级展开 — 规则引擎监控：</h4>
+<div class="tree">P2 规则引擎监控
+├── 📊 PowerBoardRule覆盖率
+│   ├── 四级：已配置规则用户占比
+│   ├── 四级：未配置规则用户占比
+│   └── 四级：规则配置完整度评分
+├── ⚡ 规则触发统计
+│   ├── 四级：PASS / SOFT_BLOCK / HARD_BLOCK / PACE_LIMIT分布
+│   ├── 四级：各规则类型触发频率排名
+│   └── 四级：HARD_BLOCK高发用户预警
+└── 👤 高频Block用户
+    ├── 四级：被Block次数最多用户Top 20
+    ├── 四级：Block触发原因分布
+    └── 四级：Pace Control生效统计</div>
+
+<!-- 三、数据分析 -->
+<h2 id="sec3">三、数据分析模块 <span class="badge badge-new">v2.0新增</span> `/admin/analytics`</h2>
+
+<div class="module-header" style="background: linear-gradient(135deg,#1e3a5f,#2d5a87)">
+  <div class="module-icon">📈</div>
+  <div><div class="module-title">v2.0 重点深化：用户追踪 + 流量属性细化到四级</div><div class="module-sub">二级：5项（转化漏斗/留存分析/收入分析/用户追踪/流量属性）</div></div>
+</div>
+
+<h4>二级模块：</h4>
+<ol>
+  <li><span class="priority-P1">P1</span> <strong>转化漏斗</strong> `/admin/analytics/funnel`</li>
+  <li><span class="priority-P1">P1</span> <strong>留存分析</strong> `/admin/analytics/retention`</li>
+  <li><span class="priority-P1">P1</span> <strong>收入分析</strong> `/admin/analytics/revenue`</li>
+  <li><span class="priority-P1">P1</span> <strong>用户追踪</strong> `/admin/analytics/users` <span class="badge badge-new">v2.0新增</span></li>
+  <li><span class="priority-P1">P1</span> <strong>流量属性</strong> `/admin/analytics/traffic` <span class="badge badge-new">v2.0新增</span></li>
+</ol>
+
+<h4>3.1 转化漏斗（展开至四级）：</h4>
+<div class="tree">P1 转化漏斗
+├── 🔄 漏斗步骤定义
+│   ├── 四级：访问Landing
+│   ├── 四级：注册账号
+│   ├── 四级：邮箱验证
+│   ├── 四级：开始Onboarding
+│   ├── 四级：完成Onboarding（step≥5）
+│   ├── 四级：首次匹配发起
+│   ├── 四级：首次消息发送
+│   ├── 四级：首次匹配接受
+│   └── 四级：付费转化
+├── 📊 漏斗分析
+│   ├── 四级：每步绝对人数
+│   ├── 四级：每步转化率（与上一步比）
+│   ├── 四级：总体转化率（注册→付费）
+│   ├── 四级：漏斗断点识别（最大流失步骤高亮）
+│   └── 四级：漏斗耗时分析（每步平均停留时长）
+├── 📈 时间对比
+│   ├── 四级：本周 vs 上周漏斗对比
+│   ├── 四级：本月 vs 上月漏斗对比
+│   ├── 四级：自定义时间段对比
+│   └── 四级：漏斗趋势线图
+└── 🎯 渠道拆分
+    ├── 四级：按UTM_source拆分漏斗
+    ├── 四级：按UTM_medium拆分漏斗
+    ├── 四级：按UTM_campaign拆分漏斗
+    └── 四级：按Referrer拆分漏斗</div>
+
+<h4>3.2 留存分析（展开至四级）：</h4>
+<div class="tree">P1 留存分析
+├── 📊 留存率指标
+│   ├── 四级：D1留存率（次日留存）
+│   ├── 四级：D7留存率（7日留存）
+│   ├── 四级：D30留存率（30日留存）
+│   ├── 四级：自定义日期留存率（N日留存）
+│   └── 四级：留存率置信区间
+├── 🗓️ Cohort分析
+│   ├── 四级：Cohort热力图（横轴：月份，纵轴：留存天数）
+│   ├── 四级：按注册月份分组的Cohort表格
+│   ├── 四级：留存率颜色梯度（绿=高，红=低）
+│   └── 四级：Cohort对比（某Cohort vs 全体均值）
+├── 🎯 用户分群留存
+│   ├── 四级：按性别分群的留存率对比
+│   ├── 四级：按订阅类型分群（Free vs Premium）
+│   ├── 四级：按年龄区间分群（18-24/25-34/35+）
+│   ├── 四级：按注册来源分群
+│   └── 四级：Bot用户 vs 真实用户留存对比
+└── ⚠️ 流失预警
+    ├── 四级：高流失风险Cohort识别
+    ├── 四级：流失前兆行为分析（流失前7天行为特征）
+    └── 四级：留存干预建议</div>
+
+<h4>3.3 收入分析（展开至四级）：</h4>
+<div class="tree">P1 收入分析
+├── 💰 收入总览
+│   ├── 四级：MRR趋势图 / ARR / ARPU / 收入完成率
+├── 📊 收入来源
+│   ├── 四级：Premium Monthly/Yearly收入占比
+│   ├── 四级：Lady Free隐性价值估算
+│   ├── 四级：各套餐净新增收入明细
+│   └── 四级：一次性 vs 经常性收入对比
+├── 📈 LTV分析
+│   ├── 四级：按Cohort估算的LTV曲线
+│   ├── 四级：不同获客渠道LTV对比
+│   ├── 四级：LTV预测（基于当前留存率）
+│   └── 四级：LTV vs CAC比值
+└── ⚠️ Churn分析
+    ├── 四级：月流失率趋势
+    ├── 四级：退订原因分布（cancelreason字段）
+    ├── 四级：高流失风险用户预警
+    └── 四级：诚意值经济系统（总发放量/总消费量/流通速度）</div>
+
+<h4>3.4 用户追踪（v2.0新增，展开至四级）：</h4>
+<div class="tree">P1 用户追踪 <span class="badge badge-new">v2.0新增</span>
+├── 👤 单用户追踪
+│   ├── 四级：用户档案卡片（ID/昵称/邮箱/注册时间/订阅）
+│   ├── 四级：事件时间线（Events Timeline）
+│   │   ├── 四级：注册事件（email/注册方式/来源UTM）
+│   │   ├── 四级：Onboarding步骤事件（每步完成时间）
+│   │   ├── 四级：Profile完成事件（头像上传/标签选择/偏好设置）
+│   │   ├── 四级：匹配事件（发起/接受/拒绝/过期）
+│   │   ├── 四级：聊天事件（首次消息/会话时长/消息数）
+│   │   ├── 四级：订阅事件（升级/降级/取消/到期）
+│   │   └── 四级：流失事件（最后活跃时间）
+│   ├── 四级：用户路径图（关键页面访问序列）
+│   ├── 四级：活跃热力图（按小时的活跃分布）
+│   └── 四级：用户健康度评分（0-100，综合活跃/匹配/付费）
+├── 📊 用户群组分析
+│   ├── 四级：新建群组（按注册日期/来源/行为自定义）
+│   ├── 四级：预置群组（高价值/流失风险/沉睡/活跃）
+│   ├── 四级：群组对比分析（群组A vs 群组B）
+│   └── 四级：群组用户导出
+├── 🔍 行为分析
+│   ├── 四级：用户行为序列模式挖掘
+│   ├── 四级：高价值用户行为特征分析
+│   ├── 四级：流失用户行为前兆识别
+│   └── 四级：Onboarding关键行为节点识别
+└── 📈 用户指标看板
+    ├── 四级：DAU / WAU / MAU 趋势
+    ├── 四级：用户分层（Active / Engaged / At Risk / Churned）
+    ├── 四级：新用户 vs 老用户占比趋势
+    └── 四级：用户净增长（新增-流失）趋势</div>
+
+<h4>3.5 流量属性（v2.0新增，展开至四级）：</h4>
+<div class="tree">P1 流量属性 <span class="badge badge-new">v2.0新增</span>
+├── 🌐 流量来源概览
+│   ├── 四级：总访问量（UV/独立访客）
+│   ├── 四级：流量来源分布（Pie chart）
+│   │   ├── 四级：Direct（直接访问）
+│   │   ├── 四级：Organic Search（SEO自然搜索）
+│   │   ├── 四级：Paid Search（SEM付费搜索）
+│   │   ├── 四级：Social（社交媒体）
+│   │   ├── 四级：Referral（外链引荐）
+│   │   └── 四级：Email（邮件营销）
+│   ├── 四级：各来源转化率对比
+│   └── 四级：流量趋势图（按来源分层）
+├── 🔍 UTM参数分析
+│   ├── 四级：utm_source分布（Google/Facebook/Twitter/Reddit/...）
+│   ├── 四级：utm_medium分布（CPC/banner/email/post/...）
+│   ├── 四级：utm_campaign分布（各广告活动）
+│   ├── 四级：utm_content分布（A/B测试素材）
+│   ├── 四级：utm_term分布（付费关键词）
+│   ├── 四级：UTM组合效果分析（Source × Medium × Campaign）
+│   └── 四级：无UTM流量（未标记流量占比）
+├── 🌏 地理位置分析
+│   ├── 四级：按国家分布（World map choropleth）
+│   ├── 四级：按城市分布（Top 20城市）
+│   ├── 四级：按语言/时区分布
+│   ├── 四级：各地区用户转化率热力图
+│   └── 四级：地区性偏好差异（不同地区的Top标签）
+└── 📱 设备与行为
+    ├── 四级：设备类型分布（Desktop/Mobile/Tablet）
+    ├── 四级：OS分布（iOS/Android/Windows/Mac/Linux）
+    ├── 四级：Browser分布（Chrome/Safari/Firefox/Edge）
+    ├── 四级：屏幕分辨率分布
+    ├── 四级：设备类型×转化率交叉分析
+    └── 四级：Bounce Rate按设备/来源分布</div>
+
+<!-- 四、AI推广图 -->
+<h2 id="sec4">四、AI推广图生成模块 <span class="badge badge-new">v2.0新增</span> `/admin/creative`</h2>
+
+<div class="module-header" style="background: linear-gradient(135deg,#5b21b6,#7c3aed)">
+  <div class="module-icon">🎨</div>
+  <div><div class="module-title">v2.0 新增模块：基于AI自动生成推广图片</div><div class="module-sub">二级：4项（模板管理/批量生成/A/B测试/素材管理）| 全部展开至四级</div></div>
+</div>
+
+<h4>二级模块：</h4>
+<ol>
+  <li><span class="priority-P1">P1</span> <strong>推广图模板管理</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>批量图片生成</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>A/B测试管理</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>素材资产管理</strong></li>
+</ol>
+
+<h4>4.1 推广图模板管理（展开至四级）：</h4>
+<div class="tree">P1 推广图模板管理
+├── 📐 模板类型
+│   ├── 四级：横版模板（1920×1080）— 用于Landing页/Banner
+│   ├── 四级：竖版模板（1080×1920）— Instagram Stories/TikTok
+│   ├── 四级：方形模板（1080×1080）— Instagram Feed/Facebook
+│   ├── 四级：故事模板（9:16）— Stories/Reels
+│   └── 四级：缩略图模板（1280×720）— YouTube/视频封面
+├── 🎨 模板组件库
+│   ├── 四级：背景层（纯色/渐变/图片/纹理）
+│   ├── 四级：文字层（标题/副标题/CTA按钮）
+│   ├── 四级：头像/人物层（支持Bot头像/真实用户头像）
+│   ├── 四级：徽章层（匹配成功率徽章/Premium徽章）
+│   ├── 四级：品牌元素层（Logo/水印/色块）
+│   └── 四级：统计数字层（动态插入数据）
+├── 🔧 模板变量（动态占位符）
+│   ├── 四级：{{user_name}} / {{match_count}} / {{success_rate}}
+│   ├── 四级：{{user_avatar}} / {{cta_text}} / {{platform_name}}
+│   └── 四级：{{qr_code}} — 落地页二维码
+└── 📋 模板管理操作
+    ├── 四级：模板列表（缩略图预览 + 使用次数 + 效果评分）
+    ├── 四级：模板克隆（复制已有模板进行修改）
+    ├── 四级：模板草稿（保存未发布模板）
+    └── 四级：模板历史版本（记录每次修改）</div>
+
+<h4>4.2 批量图片生成（展开至四级）：</h4>
+<div class="tree">P1 批量图片生成
+├── ⚡ 批量生成配置
+│   ├── 四级：选择目标模板（支持多模板同时生成）
+│   ├── 四级：数据源配置（用户列表/Cohort/CSV导入）
+│   ├── 四级：变量映射（CSV列 → 模板变量）
+│   ├── 四级：生成数量上限（防止滥用）
+│   └── 四级：去重策略（同名文件自动编号）
+├── 🤖 AI生成参数
+│   ├── 四级：风格选择（简约/活泼/专业/情感）
+│   ├── 四级：色调配置（品牌主色/辅色）
+│   ├── 四级：文字AI生成（支持AI改写CTA文案）
+│   ├── 四级：头像AI处理（自动裁剪/背景虚化）
+│   └── 四级：质量级别（草稿/标准/高清）
+├── 📊 生成任务管理
+│   ├── 四级：任务队列（待生成/生成中/已完成/失败）
+│   ├── 四级：生成进度条（已完成数/总数）
+│   ├── 四级：批量下载（ZIP打包）
+│   ├── 四级：单张预览 + 重新生成
+│   └── 四级：生成失败重试
+└── 📤 发布配置
+    ├── 四级：一键发布到 Reddit（选子版块 + 标题）
+    ├── 四级：一键发布到 Twitter/X（配文案）
+    ├── 四级：一键发布到 Discord（选频道）
+    ├── 四级：导出到本地（指定文件夹）
+    └── 四级：复制图片URL</div>
+
+<h4>4.3 A/B测试管理（展开至四级）：</h4>
+<div class="tree">P1 A/B测试管理
+├── 🧪 测试创建
+│   ├── 四级：测试名称 + 测试假设描述
+│   ├── 四级：添加测试变体（2-4个推广图版本）
+│   ├── 四级：设置流量分配比例（50%/25%/25%）
+│   ├── 四级：设置测试时长（1天/3天/7天/自定义）
+│   └── 四级：设置目标指标（点击率/注册转化/付费转化）
+├── 📈 测试结果分析
+│   ├── 四级：各变体曝光量（Impressions）
+│   ├── 四级：各变体点击率（CTR）
+│   ├── 四级：各变体转化率（CVR）
+│   ├── 四级：统计显著性检验（p-value / 置信区间）
+│   ├── 四级：胜出版本自动标识
+│   └── 四级：测试结论与建议
+├── 📊 历史测试记录
+│   ├── 四级：历史测试列表（名称/日期/结果/胜出版本）
+│   ├── 四级：测试详情回顾
+│   ├── 四级：测试复制（复用成功测试配置）
+│   └── 四级：测试数据导出（CSV/JSON）
+└── ⚙️ 测试规则
+    ├── 四级：每个用户看到同一变体（会话级分配）
+    ├── 四级：最小样本量要求（达到才出结论）
+    ├── 四级：自动停止规则（胜出明显时提前终止）
+    └── 四级：测试冲突检测（同一时间同一渠道不重复测试）</div>
+
+<h4>4.4 素材资产管理（展开至四级）：</h4>
+<div class="tree">P1 素材资产管理
+├── 📁 素材库
+│   ├── 四级：文件夹结构管理（按平台/类型/日期组织）
+│   ├── 四级：素材列表（图/视频/文案分类）
+│   ├── 四级：素材搜索（名称/标签/上传者）
+│   ├── 四级：素材标签（自定义标签系统）
+│   └── 四级：素材收藏（常用素材加星标）
+├── 🖼️ 图片管理
+│   ├── 四级：缩略图预览（网格/列表视图切换）
+│   ├── 四级：图片元数据（尺寸/格式/大小/上传时间）
+│   ├── 四级：图片使用记录（哪些帖子/测试用了这张图）
+│   ├── 四级：图片效果评分（点击率排名）
+│   ├── 四级：批量上传（拖拽上传）
+│   └── 四级：图片删除（软删除，保留30天）
+├── 📝 文案管理
+│   ├── 四级：文案库（Reddit/Twitter/Discord分类）
+│   ├── 四级：文案变体版本管理
+│   ├── 四级：文案效果追踪（关联推广图的点击率）
+│   ├── 四级：AI文案优化建议
+│   └── 四级：品牌语调规范（正式/轻松/情感/幽默）
+└── 📊 素材效果看板
+    ├── 四级：Top 10高点击素材（图片+文案）
+    ├── 四级：素材使用趋势（周/月）
+    ├── 四级：素材版权状态（原创/授权/免费）
+    └── 四级：素材存储用量统计（CDN成本估算）</div>
+
+<!-- 五、AI客服 -->
+<h2 id="sec5">五、AI客服设置模块 <span class="badge badge-new">v2.0新增</span> `/admin/ai-support`</h2>
+
+<div class="module-header" style="background: linear-gradient(135deg,#1e40af,#2563eb)">
+  <div class="module-icon">🤖</div>
+  <div><div class="module-title">v2.0 新增模块：配置AI自动回复、意图识别、客服工作流</div><div class="module-sub">二级：4项（响应模板/知识库/路由规则/情感监控）| 全部展开至四级</div></div>
+</div>
+
+<h4>二级模块：</h4>
+<ol>
+  <li><span class="priority-P1">P1</span> <strong>客服响应模板</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>知识库配置</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>路由规则</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>情感监控与质检</strong></li>
+</ol>
+
+<h4>5.1 客服响应模板（展开至四级）：</h4>
+<div class="tree">P1 客服响应模板
+├── 💬 模板分类
+│   ├── 四级：FAQ类（常见问题标准回复）
+│   ├── 四级：引导类（引导用户完成特定操作）
+│   ├── 四级：安抚类（用户投诉/不满时的情绪安抚）
+│   ├── 四级：转人工类（触发转人工的回复）
+│   └── 四级：营销类（解答中自然植入转化）
+├── 🔧 模板配置
+│   ├── 四级：触发条件配置
+│   │   ├── 四级：关键词触发（多个关键词OR/AND组合）
+│   │   ├── 四级：用户问题类型识别（意图分类）
+│   │   ├── 四级：用户情绪识别（正面/中性/负面/愤怒）
+│   │   ├── 四级：对话轮次触发（X轮未解决自动升级）
+│   │   └── 四级：时间条件触发（注册X天后/订阅到期前X天）
+│   ├── 四级：回复内容编辑（富文本/Markdown）
+│   ├── 四级：变量占位符（用户昵称/订单号/具体数值）
+│   ├── 四级：回复语气选择（正式/友好/专业/共情）
+│   └── 四级：多语言支持（英语/中文/其他）
+├── 📋 模板管理
+│   ├── 四级：模板列表（名称/类型/调用次数/满意度评分）
+│   ├── 四级：模板启用/禁用开关
+│   ├── 四级：模板优先级排序
+│   ├── 四级：模板使用统计（本周调用/平均响应时间）
+│   └── 四级：模板历史版本
+└── 🧪 模板测试
+    ├── 四级：模拟输入测试（输入问题→查看回复预览）
+    ├── 四级：A/B测试（同一触发条件测试多个回复版本）
+    └── 四级：模板效果对比（点击链接率/满意度/解决率）</div>
+
+<h4>5.2 知识库配置（展开至四级）：</h4>
+<div class="tree">P1 知识库配置
+├── 📚 知识库内容
+│   ├── 四级：文档分类（功能说明/支付问题/账号问题/安全指南/隐私政策）
+│   ├── 四级：文档编辑器（富文本，含图片/视频/链接）
+│   ├── 四级：文档版本管理（每次修改留版本记录）
+│   ├── 四级：文档状态（草稿/审核中/已发布/已归档）
+│   └── 四级：文档权限（谁可以编辑/审核/发布）
+├── 🔍 智能检索
+│   ├── 四级：全文检索配置
+│   ├── 四级：同义词配置（"pay"="payment"="付款"）
+│   ├── 四级：FAQ与文档关联（哪个文档回答哪个问题）
+│   ├── 四级：检索权重配置（标题匹配 vs 内容匹配）
+│   └── 四级：未命中问题追踪（用户问但没找到答案的问题）
+├── 🤖 AI理解配置
+│   ├── 四级：意图分类模型选择（使用哪个AI模型）
+│   ├── 四级：自定义意图（创建业务特定意图标签）
+│   ├── 四级：意图混淆矩阵（哪些意图容易被混淆）
+│   ├── 四级：实体提取配置（提取订单号/日期/金额等）
+│   └── 四级：置信度阈值（低于此值转人工）
+└── 📊 知识库效果
+    ├── 四级：知识库覆盖率（用户问题被回答的比例）
+    ├── 四级：平均检索匹配率
+    ├── 四级：知识库空白发现（高频未命中问题列表）
+    └── 四级：知识库质量评分（用户评价/编辑质量）</div>
+
+<h4>5.3 路由规则（展开至四级）：</h4>
+<div class="tree">P1 路由规则
+├── 🔀 路由策略
+│   ├── 四级：基于问题的路由（什么类型问题→什么渠道）
+│   ├── 四级：基于用户价值的路由（VIP用户→优先人工）
+│   ├── 四级：基于情绪的路由（负面/愤怒→优先人工）
+│   ├── 四级：基于语言的路由（非英语→特定客服）
+│   └── 四级：基于可用性的路由（当前排队人数最少）
+├── 👥 客服分组
+│   ├── 四级：分组列表（技术组/账单组/安全组/投诉组）
+│   ├── 四级：分组成员管理（添加/移除客服）
+│   ├── 四级：分组技能标签（每个客服的专长）
+│   ├── 四级：分组工作时段配置
+│   └── 四级：分组容量配置（同时接待上限）
+├── ⏰ 值班规则
+│   ├── 四级：工作时间配置（9×5 / 24×7 / 自定义）
+│   ├── 四级：节假日配置（节假日使用备用路由）
+│   ├── 四级：客服排班表（周排班/月排班）
+│   ├── 四级：值班状态（在线/忙碌/离线）
+│   └── 四级：下班后AI接管配置
+└── 🚨 升级规则
+    ├── 四级：AI解决失败次数阈值（3次未能解决→升级）
+    ├── 四级：用户明确要求转人工（关键词触发）
+    ├── 四级：敏感话题自动升级（涉及安全/法律的举报）
+    ├── 四级：排队等待超时升级（>10分钟未响应）
+    └── 四级：VIP用户专属快速通道</div>
+
+<h4>5.4 情感监控与质检（展开至四级）：</h4>
+<div class="tree">P1 情感监控与质检
+├── 😊 情感分析
+│   ├── 四级：实时情感检测（每条用户消息的情感标签）
+│   ├── 四级：情感趋势图（会话中情感变化）
+│   ├── 四级：情感极值预警（检测到愤怒/威胁时告警）
+│   ├── 四级：用户情感分布（正面/中性/负面占比）
+│   └── 四级：情感与满意度相关性分析
+├── 🔍 质检评分
+│   ├── 四级：AI回复质量评分（0-100，基于多维度评估）
+│   ├── 四级：评分维度（准确性/专业性/礼貌度/解决率）
+│   ├── 四级：随机抽样质检任务（每周自动抽取N条对话）
+│   ├── 四级：质检任务分配（分配给人工质检员）
+│   └── 四级：质检结果统计（团队平均分/个人得分）
+├── 📊 客服绩效看板
+│   ├── 四级：平均响应时间（首次响应/完全解决）
+│   ├── 四级：问题解决率（AI自助解决/人工介入解决）
+│   ├── 四级：用户满意度（CSAT评分分布）
+│   ├── 四级：客服个人绩效仪表盘
+│   └── 四级：绩效排名（支持组内/跨组排名）
+└── 📈 趋势与改进
+    ├── 四级：情感趋势周报/月报
+    ├── 四级：高频未解决问题汇总
+    ├── 四级：AI回复优化建议（基于质检发现）
+    └── 四级：客服培训建议（基于绩效短板）</div>
+
+<!-- 六、VIP收件箱 -->
+<h2 id="sec6">六、VIP客户收件箱模块 <span class="badge badge-new">v2.0新增</span> `/admin/vip-inbox`</h2>
+
+<div class="module-header" style="background: linear-gradient(135deg,#92400e,#d97706)">
+  <div class="module-icon">👑</div>
+  <div><div class="module-title">v2.0 新增模块：为高价值VIP用户提供专属人工客服通道</div><div class="module-sub">二级：4项（收件箱/VIP用户管理/工单/绩效）| 全部展开至四级</div></div>
+</div>
+
+<h4>二级模块：</h4>
+<ol>
+  <li><span class="priority-P1">P1</span> <strong>VIP收件箱</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>VIP用户管理</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>消息处理工作流</strong></li>
+  <li><span class="priority-P1">P1</span> <strong>VIP服务绩效</strong></li>
+</ol>
+
+<h4>6.1 VIP收件箱（展开至四级）：</h4>
+<div class="tree">P1 VIP收件箱
+├── 📥 收件箱队列
+│   ├── 四级：待处理消息列表（时间倒序）
+│   │   ├── 四级：消息摘要预览（最多显示前100字）
+│   │   ├── 四级：VIP用户标签（VIP等级颜色标识）
+│   │   ├── 四级：等待时间（已等待X小时）
+│   │   ├── 四级：消息类型（咨询/投诉/建议/求助）
+│   │   └── 四级：优先级标记（普通/加急/紧急）
+│   ├── 四级：已标记处理中的消息（当前客服认领）
+│   ├── 四级：已解决消息
+│   └── 四级：SLA告警（即将超时的消息高亮）
+├── 💬 消息详情面板
+│   ├── 四级：完整对话上下文（当前+历史消息，最长30天）
+│   ├── 四级：用户档案侧边栏
+│   │   ├── 四级：VIP等级 + 有效期
+│   │   ├── 四级：订阅详情（套餐/到期时间/付费金额）
+│   │   ├── 四级：历史服务记录（总服务次数/满意度）
+│   │   ├── 四级：用户偏好（沟通风格/语言）
+│   │   └── 四级：备注标签（可添加内部标签）
+│   ├── 四级：上下文感知（显示用户当前操作页面/状态）
+│   ├── 四级：快速操作（发送优惠券/延长VIP/封禁用户）
+│   └── 四级：对话标记（需跟进/已解决/升级）
+├── 🔍 高级筛选
+│   ├── 四级：VIP等级筛选（金/银/铜/普通）
+│   ├── 四级：问题类型筛选（咨询/投诉/建议/技术问题）
+│   ├── 四级：等待时长筛选（>1h / >3h / >24h）
+│   ├── 四级：历史处理状态筛选
+│   └── 四级：关键词全文搜索
+└── ⚡ 快捷操作
+    ├── 四级：一键回复（预置回复模板）
+    ├── 四级：批量认领（一次性认领N条消息）
+    ├── 四级：批量分配（分配给指定客服）
+    ├── 四级：快捷发送优惠券（选择金额/有效期的快捷操作）
+    └── 四级：会话转接（转给其他客服/其他部门）</div>
+
+<h4>6.2 VIP用户管理（展开至四级）：</h4>
+<div class="tree">P1 VIP用户管理
+├── 👑 VIP等级体系
+│   ├── 四级：VIP等级定义
+│   │   ├── 四级：Bronze（注册满30天+付费1次）
+│   │   ├── 四级：Silver（付费满$100或连续订阅3个月）
+│   │   ├── 四级：Gold（付费满$500或年费订阅用户）
+│   │   └── 四级：Platinum（付费满$2000或推荐3人付费）
+│   ├── 四级：等级权益配置（每等级对应服务权益）
+│   ├── 四级：等级有效期配置（永久/年度审核）
+│   └── 四级：等级升降规则（自动升级/降级条件）
+├── 📊 VIP用户列表
+│   ├── 四级：用户列表（VIP等级筛选）
+│   ├── 四级：付费金额（累计付费总额）
+│   ├── 四级：服务次数（发起咨询次数）
+│   ├── 四级：最近活跃时间 / 满意度平均分 / 到期时间
+│   └── 四级：操作（升级/降级/取消VIP/查看详情）
+├── ✏️ VIP手动配置
+│   ├── 四级：手动授予VIP资格（指定用户+等级）
+│   ├── 四级：手动取消VIP资格
+│   ├── 四级：VIP有效期调整
+│   ├── 四级：VIP备注（内部记录原因）
+│   └── 四级：批量授予/取消VIP
+└── 📈 VIP价值分析
+    ├── 四级：各级别用户数量分布
+    ├── 四级：各级别贡献收入占比
+    ├── 四级：各级别留存率对比
+    ├── 四级：VIP用户生命周期价值（LTV）
+    ├── 四级：VIP用户获客成本分析
+    └── 四级：VIP ROI报告</div>
+
+<h4>6.3 消息处理工作流（展开至四级）：</h4>
+<div class="tree">P1 消息处理工作流
+├── 🔄 标准处理流程
+│   ├── 四级：接收消息 → 自动分类 → 匹配最佳客服 → 认领处理
+│   ├── 四级：处理中（进行对话） → 解决 → 用户确认 → 关闭
+│   ├── 四级：超时未认领 → 自动升级告警
+│   └── 四级：SLA超时 → 自动升级 + 触发补偿
+├── 📋 工单系统
+│   ├── 四级：从消息创建工单（会话→工单）
+│   ├── 四级：工单状态（PENDING/IN_PROGRESS/RESOLVED/CLOSED）
+│   ├── 四级：工单优先级（P0/P1/P2/P3）
+│   ├── 四级：工单指派（分配给指定客服/组）
+│   ├── 四级：工单评论（内部沟通，用户不可见）
+│   ├── 四级：工单关联（关联同一用户的历史工单）
+│   └── 四级：工单字段（类型/产品/原因/解决方案）
+├── 🤝 协作处理
+│   ├── 四级：消息转发（转给其他客服查看）
+│   ├── 四级：三方会话（客服+用户+第三方）
+│   ├── 四级：内部备注（仅客服可见，用户不可见）
+│   ├── 四级：交接记录（转交客服时自动附带上下文摘要）
+│   └── 四级：协助模式（资深客服可查看初级客服的会话）
+└── ✅ 满意度管理
+    ├── 四级：会话结束时自动发送满意度评分
+    ├── 四级：满意度评分展示（1-5星）
+    ├── 四级：负面评价跟进（3星以下自动标记需跟进）
+    ├── 四级：满意度趋势（按月/按客服统计）
+    └── 四级：评价详情查看 + 客服申诉入口</div>
+
+<h4>6.4 VIP服务绩效（展开至四级）：</h4>
+<div class="tree">P1 VIP服务绩效
+├── 📊 绩效仪表盘
+│   ├── 四级：今日VIP消息量
+│   ├── 四级：当前等待中的VIP消息数
+│   ├── 四级：平均首次响应时间（目标：<5分钟）
+│   ├── 四级：平均解决时长（目标：<30分钟）
+│   ├── 四级：SLA达标率（目标：>95%）
+│   └── 四级：VIP满意度（本月均值）
+├── 👤 客服绩效详情
+│   ├── 四级：个人消息处理量（今日/本周/本月）
+│   ├── 四级：个人首次响应时间排名
+│   ├── 四级：个人问题解决率
+│   ├── 四级：个人VIP满意度评分
+│   ├── 四级：个人SLA达标率
+│   ├── 四级：响应速度评分
+│   └── 四级：绩效趋势（近30天）
+├── 📈 团队对比
+│   ├── 四级：各客服绩效排名
+│   ├── 四级：各客服处理问题类型分布
+│   ├── 四级：各班次（早/中/晚）服务质量对比
+│   └── 四级：组间对比（Team A vs Team B）
+└── 🎯 目标管理
+    ├── 四级：月度KPI目标设置（响应时间/解决率/满意度）
+    ├── 四级：KPI完成进度（实时更新）
+    ├── 四级：达标/未达标预警
+    ├── 四级：绩效奖金计算规则配置
+    └── 四级：绩效报告导出（PDF/Excel）</div>
+
+<!-- 七、路由规划 -->
+<h2 id="sec7">七、路由规划（v2.0 完整版）</h2>
+<div class="code-block"># === 一级导航 ===
+/admin                          → 仪表盘（Dashboard）
+
+# === 用户管理 ===
+/admin/users                    → 用户列表
+/admin/users/[id]               → 用户详情（Tab化）
+/admin/users/bots               → Bot用户管理
+/admin/users/bots/[id]           → Bot详情与调控
+/admin/users/reports             → 举报管理
+/admin/users/tracking            → 用户行为追踪 <span class="badge badge-new">v2.0新增</span>
+
+# === 匹配管理 ===
+/admin/matches                   → 匹配列表
+/admin/matches/[id]              → 匹配详情
+/admin/matches/engine            → 匹配引擎监控
+
+# === 聊天监控 ===
+/admin/chats                     → 会话列表
+/admin/chats/[id]               → 会话详情
+
+# === 支付管理 ===
+/admin/payments                  → 支付仪表盘
+/admin/payments/subscriptions   → 订阅管理
+/admin/payments/transactions     → 交易记录
+
+# === 内容管理 ===
+/admin/content                   → 内容总览
+/admin/content/consent           → 同意请求管理
+/admin/content/rules             → 规则引擎监控
+
+# === Bot系统 ===
+/admin/bot-system                → Bot系统总控
+/admin/bot-system/learning       → 学习效果分析
+/admin/bot-system/behavior       → 行为模拟配置
+
+# === 数据分析（v2.0展开）===
+/admin/analytics                 → 分析总览
+/admin/analytics/funnel          → 转化漏斗
+/admin/analytics/retention       → 留存分析
+/admin/analytics/revenue         → 收入分析
+/admin/analytics/users           → 用户追踪 <span class="badge badge-new">v2.0新增</span>
+/admin/analytics/traffic         → 流量属性 <span class="badge badge-new">v2.0新增</span>
+
+# === AI推广图（v2.0新增）===
+/admin/creative                   → AI推广图总览
+/admin/creative/templates         → 模板管理
+/admin/creative/generate          → 批量生成
+/admin/creative/ab-test           → A/B测试管理
+/admin/creative/assets            → 素材资产管理
+
+# === AI客服（v2.0新增）===
+/admin/ai-support                 → AI客服总览
+/admin/ai-support/templates       → 响应模板管理
+/admin/ai-support/knowledge       → 知识库配置
+/admin/ai-support/routing         → 路由规则
+/admin/ai-support/qa              → 情感监控与质检
+
+# === VIP收件箱（v2.0新增）===
+/admin/vip-inbox                 → VIP收件箱
+/admin/vip-inbox/users           → VIP用户管理
+/admin/vip-inbox/tickets         → 工单管理
+/admin/vip-inbox/performance     → 服务绩效
+
+# === 系统设置 ===
+/admin/settings                  → 系统设置
+/admin/settings/roles            → 角色管理
+/admin/settings/config           → 系统配置
+/admin/settings/audit            → 审计日志
+
+# === 系统健康 ===
+/admin/health                    → 系统健康</div>
+
+<!-- 八、API设计 -->
+<h2 id="sec8">八、API设计（~180个端点）</h2>
+
+<table>
+  <tr><th>模块</th><th>端点数量</th><th>核心端点示例</th></tr>
+  <tr>
+    <td><strong>用户管理</strong></td><td>~18</td>
+    <td><code>GET /api/admin/users</code> 列表 · <code>GET /api/admin/users/[id]/tracking</code> <span class="badge badge-new">新</span> · <code>GET /api/admin/users/[id]/timeline</code> <span class="badge badge-new">新</span> · <code>POST /api/admin/users/batch-action</code></td>
+  </tr>
+  <tr>
+    <td><strong>数据分析</strong></td><td>~20</td>
+    <td><code>GET /api/admin/analytics/funnel/compare</code> <span class="badge badge-new">新</span> · <code>GET /api/admin/analytics/retention/cohort</code> <span class="badge badge-new">新</span> · <code>GET /api/admin/analytics/traffic/utm</code> <span class="badge badge-new">新</span> · <code>GET /api/admin/analytics/users/cohorts</code> <span class="badge badge-new">新</span></td>
+  </tr>
+  <tr>
+    <td><strong>AI推广图</strong></td><td>~18</td>
+    <td><code>POST /api/admin/creative/generate</code> 触发生成 · <code>GET /api/admin/creative/generate/jobs</code> 任务列表 · <code>GET /api/admin/creative/ab-tests</code> A/B测试 · <code>POST /api/admin/creative/assets/upload</code> 上传素材</td>
+  </tr>
+  <tr>
+    <td><strong>AI客服</strong></td><td>~16</td>
+    <td><code>GET /api/admin/ai-support/templates</code> 模板列表 · <code>GET /api/admin/ai-support/knowledge/misses</code> 未命中问题 · <code>GET /api/admin/ai-support/qa/sentiment</code> 情感报告 · <code>GET /api/admin/ai-support/performance</code> 绩效报告</td>
+  </tr>
+  <tr>
+    <td><strong>VIP收件箱</strong></td><td>~15</td>
+    <td><code>GET /api/admin/vip-inbox/messages</code> VIP消息 · <code>POST /api/admin/vip-inbox/users/[id]/grant</code> 授予VIP · <code>GET /api/admin/vip-inbox/performance/staff/[id]</code> 客服绩效 · <code>POST /api/admin/vip-inbox/tickets</code> 创建工单</td>
+  </tr>
+  <tr>
+    <td><strong>匹配/聊天/支付</strong></td><td>~93</td>
+    <td>保留v1.0全部端点（引擎统计/会话详情/订阅管理/退款等）</td>
+  </tr>
+</table>
+
+<!-- 九、数据库变更 -->
+<h2 id="sec9">九、数据库变更（17张新表）</h2>
+
+<table>
+  <tr><th>#</th><th>表名</th><th>所属模块</th><th>核心字段</th></tr>
+  <tr><td>1</td><td><strong>AdminProfile</strong></td><td>系统</td><td>adminRole, permissions[], department</td></tr>
+  <tr><td>2</td><td><strong>AlertRule</strong></td><td>系统</td><td>metric, operator, threshold, severity</td></tr>
+  <tr><td>3</td><td><strong>Alert</strong></td><td>系统</td><td>severity, status, acknowledgedBy</td></tr>
+  <tr><td>4</td><td><strong>CreativeTemplate</strong></td><td>AI推广图</td><td>format, width, height, config (JSON)</td></tr>
+  <tr><td>5</td><td><strong>CreativeJob</strong></td><td>AI推广图</td><td>templateId, status, inputData, outputUrls[]</td></tr>
+  <tr><td>6</td><td><strong>CreativeAsset</strong></td><td>AI推广图</td><td>name, type, url, impressions, clicks, ctr</td></tr>
+  <tr><td>7</td><td><strong>CreativeABTest</strong></td><td>AI推广图</td><td>variants (JSON), metric, winnerVariantId</td></tr>
+  <tr><td>8</td><td><strong>SupportTemplate</strong></td><td>AI客服</td><td>category, triggerType, triggerConfig (JSON), content</td></tr>
+  <tr><td>9</td><td><strong>KnowledgeArticle</strong></td><td>AI客服</td><td>title, content, category, status, keywords[]</td></tr>
+  <tr><td>10</td><td><strong>SupportTicket</strong></td><td>AI客服</td><td>userId, assigneeId, type, priority, status</td></tr>
+  <tr><td>11</td><td><strong>SupportTicketNote</strong></td><td>AI客服</td><td>ticketId, authorId, content, isInternal</td></tr>
+  <tr><td>12</td><td><strong>VIPMembership</strong></td><td>VIP收件箱</td><td>userId, tier, status, startDate, endDate, totalSpent</td></tr>
+  <tr><td>13</td><td><strong>VIPMessage</strong></td><td>VIP收件箱</td><td>vipUserId, agentId, direction, status, slaDeadline</td></tr>
+  <tr><td>14</td><td><strong>VIPServiceRecord</strong></td><td>VIP收件箱</td><td>vipUserId, agentId, action, detail</td></tr>
+  <tr>15-17</td><td>Analytics扩展表</td><td>数据分析</td><td>TrafficEvent扩展, UserTrackingEvent</td></tr>
+</table>
+
+<p><strong>现有表扩展（migration）：</strong></p>
+<ul>
+  <li><code>User</code> 新增: <code>adminTags String[]</code>, <code>loginHistory</code></li>
+  <li><code>UserReport</code> 新增: <code>priority Int</code>, <code>assignedTo</code></li>
+</ul>
+
+<!-- 十、UI/UX规范 -->
+<h2 id="sec10">十、UI/UX设计规范</h2>
+
+<h4>侧边栏导航（v2.0更新）：</h4>
+<div class="tree" style="max-height: 400px; overflow-y: auto;">📊 Overview · 👥 Users（→ Bot / 举报 / 追踪）
+❤️ Matches · 💬 Analytics（→ 漏斗 / 留存 / 收入 / 用户 / 流量）
+🎨 AI Creative <span class="badge badge-new">新</span>（→ 模板 / 生成 / A/B / 素材）
+🤖 AI Support <span class="badge badge-new">新</span>（→ 模板 / 知识 / 路由 / 质检）
+👑 VIP Inbox <span class="badge badge-new">新</span>（→ 收件 / 用户 / 工单 / 绩效）
+⚙️ Settings · 🔧 Bot System · 📋 Content</div>
+
+<h4>设计系统（v2.0色彩规范）：</h4>
+<table>
+  <tr><th>模块</th><th>色彩系</th><th>色值</th></tr>
+  <tr><td>AI创意模块</td><td>紫色系</td><td style="background:#7c3aed;color:#fff;padding:4px 12px;border-radius:4px">#7C3AED → #A78BFA</td></tr>
+  <tr><td>AI客服模块</td><td>蓝色系</td><td style="background:#2563eb;color:#fff;padding:4px 12px;border-radius:4px">#2563EB → #60A5FA</td></tr>
+  <tr><td>VIP模块</td><td>金色系</td><td style="background:#d97706;color:#fff;padding:4px 12px;border-radius:4px">#D97706 → #FCD34D</td></tr>
+  <tr><td>VIP标识</td><td>金色边框</td><td style="border:1px solid #f59e0b;padding:4px 12px">1px solid #F59E0B</td></tr>
+</table>
+<ul>
+  <li><strong>组件库</strong>: shadcn/ui（与现有admin页面一致）</li>
+  <li><strong>图表库</strong>: Recharts（折线/柱状）+ Tremor（KPI卡片/表格）+ 地图库（geo分布）</li>
+  <li><strong>主题</strong>: Warm Sand v4（OKLCH 色彩）</li>
+  <li><strong>实时数据</strong>: 仪表盘指标 60s 自动刷新，可手动暂停</li>
+</ul>
+
+<!-- 十一、实施路线图 -->
+<h2 id="sec11">十一、实施路线图（Week 7-12）</h2>
+
+<table>
+  <tr><th>阶段</th><th>时间</th><th>内容</th><th>状态</th></tr>
+  <tr><td>Phase 1-3</td><td>Week 1-6</td><td>v1.0全部完成</td><td><span style="color:#15803d;font-weight:700">✅ 已完成</span></td></tr>
+  <tr><td>Sprint 4.1</td><td>Week 7</td><td>用户追踪 + 流量属性模块开发</td><td><span style="color:#d97706">⏳ 进行中</span></td></tr>
+  <tr><td>Sprint 4.2</td><td>Week 7-8</td><td>AI推广图模块（模板/生成/A/B/素材）</td><td><span style="color:#71717a">📋 待开始</span></td></tr>
+  <tr><td>Sprint 4.3</td><td>Week 8-9</td><td>AI客服模块（模板/知识库/路由/质检）</td><td><span style="color:#71717a">📋 待开始</span></td></tr>
+  <tr><td>Sprint 4.4</td><td>Week 9-10</td><td>VIP收件箱模块（收件/用户/工单/绩效）</td><td><span style="color:#71717a">📋 待开始</span></td></tr>
+  <tr><td>Phase 5</td><td>Week 11-12</td><td>优化与安全（告警/E2E测试/安全审计）</td><td><span style="color:#71717a">📋 待开始</span></td></tr>
+</table>
+
+<!-- 十二、风险与依赖 -->
+<h2 id="sec12">十二、风险与依赖</h2>
+<table>
+  <tr><th>风险</th><th>影响</th><th>缓解措施</th></tr>
+  <tr><td>Neon 512MB 限制</td><td>管理后台查询可能超时</td><td>增加readonly replica / 优化查询</td></tr>
+  <tr><td>现有Admin API不完整</td><td>需要大量新API</td><td>分阶段开发，复用已有端点</td></tr>
+  <tr><td>Bot数据量大(3500+)</td><td>列表查询慢</td><td>分页 + 索引优化 + 游标分页</td></tr>
+  <tr><td>单人开发</td><td>交付周期长</td><td>P0优先，v2.0新增模块可延后</td></tr>
+  <tr><td>AI推广图生成成本</td><td>调用图像生成API费用</td><td>设置每日生成上限 + 后备模型</td></tr>
+  <tr><td>AI客服质量</td><td>误回复影响用户体验</td><td>置信度阈值 + 强制转人工</td></tr>
+  <tr><td>VIP数据隐私</td><td>VIP用户信息更敏感</td><td>加密存储 + 访问审计</td></tr>
+</table>
+
+<hr>
+<h2>附录：v1.0 → v2.0 变更摘要</h2>
+<table class="appendix-table">
+  <tr><th>类型</th><th>模块</th><th>页面数</th><th>API端点</th><th>新增数据表</th></tr>
+  <tr><td><span class="badge badge-new">新增</span></td><td>AI推广图 `/admin/creative`</td><td>+5</td><td>+18</td><td>4</td></tr>
+  <tr><td><span class="badge badge-new">新增</span></td><td>AI客服 `/admin/ai-support`</td><td>+5</td><td>+16</td><td>4</td></tr>
+  <tr><td><span class="badge badge-new">新增</span></td><td>VIP客户收件箱 `/admin/vip-inbox`</td><td>+4</td><td>+15</td><td>4</td></tr>
+  <tr><td>扩展</td><td>数据分析 `/admin/analytics`</td><td>+2</td><td>+10</td><td>+2</td></tr>
+  <tr><td>扩展</td><td>用户管理 `/admin/users`</td><td>+1</td><td>+6</td><td>+1</td></tr>
+  <tr style="background:#f4f4f5;font-weight:700"><td colspan="2">总计</td><td>7 → 24（+17）</td><td>~93 → ~180（+87）</td><td>30+ → ~46（+16）</td></tr>
+</table>
+
+<hr>
+<div class="meta">
+  <strong>文档版本:</strong> v2.0 &nbsp;|&nbsp; <strong>创建日期:</strong> 2026-04-29 &nbsp;|&nbsp; <strong>作者:</strong> Scout（LokFeel AI协调员）<br>
+  <strong>下一步:</strong> 评审本文档 → 确认优先级 → 开始Phase 4开发（Week 7）
+</div>
+
+</div>
+</body>
+</html>

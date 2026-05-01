@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/auth'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
+import { jsonArr, toJson } from '@/lib/json-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,6 +82,7 @@ export async function GET() {
           preferredGender: true,
           preferredDistance: true,
           selectedTags: true,
+          galleryPhotos: true,
           profileStatus: true,
           onboardingStep: true,
           linkedInVerified: true,
@@ -99,7 +101,11 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       user,
-      profile,
+      profile: {
+        ...profile,
+        selectedTags: jsonArr(profile?.selectedTags),
+        galleryPhotos: jsonArr(profile?.galleryPhotos),
+      },
       availableTags: AVAILABLE_TAGS,
     })
   } catch (error: any) {
@@ -266,7 +272,7 @@ export async function PUT(request: NextRequest) {
     if (preferredAgeMax !== undefined) profileUpdateData.preferredAgeMax = preferredAgeMax
     if (preferredGender !== undefined) profileUpdateData.preferredGender = preferredGender
     if (preferredDistance !== undefined) profileUpdateData.preferredDistance = preferredDistance
-    if (selectedTags !== undefined) profileUpdateData.selectedTags = selectedTags
+    if (selectedTags !== undefined) profileUpdateData.selectedTags = toJson(selectedTags)
     if (occupation !== undefined) profileUpdateData.occupation = occupation
     if (company !== undefined) profileUpdateData.company = company
     if (industry !== undefined) profileUpdateData.industry = industry

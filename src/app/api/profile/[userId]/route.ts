@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth"
 import { calculateMatchScore } from '@/lib/matching/engine';
+import { jsonArr } from '@/lib/json-helpers';
 
 interface RouteParams {
   params: Promise<{ userId: string }>;
@@ -195,7 +196,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       boundaries: profile.boundaries ? JSON.parse(profile.boundaries) : [],
       dealbreakers: profile.dealbreakers ? JSON.parse(profile.dealbreakers) : [],
       emotionalAvailability: profile.emotionalAvailability,
-      interests: profile.botProfile?.interests || [],
+      interests: jsonArr(profile.botProfile?.interests),
       photos: profile.avatar ? [profile.avatar] : [],
     };
 

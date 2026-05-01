@@ -244,7 +244,6 @@ async function createMatchesForBots(
             { roomId: chatRoom.id, userId: userId },
             { roomId: chatRoom.id, userId: botUser.id },
           ],
-          skipDuplicates: true,
         });
 
         chatRoomId = chatRoom.id;

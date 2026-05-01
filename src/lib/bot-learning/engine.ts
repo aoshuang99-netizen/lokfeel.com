@@ -91,7 +91,7 @@ export async function recordInteraction(
         userId,
         interactionType,
         outcome,
-        context: context as object,
+        context: JSON.stringify(context),
         processed: false,
       },
     });

@@ -10,6 +10,7 @@
  */
 
 import { redis, RedisKeys } from '@/lib/im/redis';
+import { toJson, jsonArr } from '@/lib/json-helpers';
 import type {
   IMMessagePayload,
   MessageDeliveryStatus,
@@ -344,7 +345,7 @@ export class DeliveryManager {
           encryptionMode: message.encryptionMode,
           ephemeralPublicKey: message.ephemeralPublicKey,
           boundaryVersion: message.boundaryVersion,
-          complianceTags: message.complianceTags,
+          complianceTags: toJson(message.complianceTags),
           consentState: message.consentState,
           mediaLevel: message.mediaLevel,
           ruleResult: message.ruleResult,

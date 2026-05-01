@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { jsonArr } from '@/lib/json-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -237,7 +238,7 @@ function extractInterests(profile: any): string[] {
   
   // 从BotProfile获取兴趣
   if (profile.botProfile?.interests) {
-    interests.push(...profile.botProfile.interests);
+    interests.push(...jsonArr(profile.botProfile.interests));
   }
   
   // 从personalityData解析

@@ -5,6 +5,7 @@ import {
   MatchExplanation 
 } from '@/types'
 import { MATCH_CONFIG } from '@/constants'
+import { jsonArr } from '@/lib/json-helpers'
 
 // ============================================================================
 // Attachment Style Compatibility Matrix
@@ -308,13 +309,13 @@ export function calculateCompatibilityBreakdown(
   
   const lifestyle = scoreLifestyleCompatibility(
     // @ts-ignore
-    profile1.dealbreakers as string[] || [],
+    jsonArr(profile1.dealbreakers),
     // @ts-ignore
-    profile2.dealbreakers as string[] || [],
+    jsonArr(profile2.dealbreakers),
     // @ts-ignore
-    profile1.interests as string[] || [],
+    jsonArr(profile1.interests),
     // @ts-ignore
-    profile2.interests as string[] || []
+    jsonArr(profile2.interests)
   )
   
   const overall = calculateOverallScore({
@@ -486,9 +487,9 @@ export function generateMatchExplanation(
   
   // Generate conversation starters based on shared interests
   // @ts-ignore
-  const interests1 = profile1.interests as string[] || []
+  const interests1 = jsonArr(profile1.interests)
   // @ts-ignore
-  const interests2 = profile2.interests as string[] || []
+  const interests2 = jsonArr(profile2.interests)
   const sharedInterests = interests1.filter(i => interests2.includes(i))
   
   if (sharedInterests.length > 0) {

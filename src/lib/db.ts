@@ -1,20 +1,55 @@
 import { PrismaClient } from "@/generated";
+import path from "path";
 
 declare global {
   // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 
+/**
+ * Clean a DATABASE_URL for libSQL compatibility.
+ * - Strips PostgreSQL-specific query parameters that libSQL doesn't understand
+ * - Resolves relative file: paths to absolute paths
+ */
+function cleanLibsqlUrl(url: string): string {
+  // Handle file: URLs for local SQLite — resolve relative paths to absolute
+  if (url.startsWith("file:")) {
+    const filePath = url.replace("file:", "");
+    if (!path.isAbsolute(filePath)) {
+      const projectRoot = path.resolve(process.cwd());
+      return `file:${path.join(projectRoot, filePath)}`;
+    }
+    return url;
+  }
+
+  try {
+    const parsed = new URL(url);
+    // Remove unsupported query parameters
+    const unsupportedParams = ['sslmode', 'ssl', 'channel_binding', 'connect_timeout', 'statement_timeout', 'application_name', 'options'];
+    for (const param of unsupportedParams) {
+      parsed.searchParams.delete(param);
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 function createPrismaClient(): PrismaClient {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { PrismaPg } = require("@prisma/adapter-pg");
-  // Trim DATABASE_URL in case Vercel injected trailing newline
-  const connectionString = (process.env.DATABASE_URL || "").trim();
+  const { PrismaLibSql } = require("@prisma/adapter-libsql");
 
-  // Neon optimized: pooled connections + prepared statements for lower latency
-  const adapter = new PrismaPg({
-    connectionString,
-    schema: process.env.DATABASE_SCHEMA || "public",
+  // Trim DATABASE_URL in case Vercel injected trailing newline
+  const rawUrl = (process.env.DATABASE_URL || "").trim();
+  const authToken = (process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN || "").trim();
+
+  // Clean URL for libSQL compatibility
+  const url = cleanLibsqlUrl(rawUrl);
+
+  // PrismaLibSql accepts the same config as @libsql/client createClient()
+  const adapter = new PrismaLibSql({
+    url,
+    authToken: authToken || undefined,
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

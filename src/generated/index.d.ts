@@ -4925,10 +4925,17 @@ export namespace Prisma {
     industry: string | null
     educationLevel: string | null
     incomeRange: string | null
+    interests: string | null
+    hobbies: string | null
+    musicGenres: string | null
+    movieGenres: string | null
     onlinePattern: $Enums.OnlinePattern | null
     avgResponseTime: number | null
     maxDailyMatches: number | null
     behaviorConfig: string | null
+    preferredEthnicities: string | null
+    preferredOccupations: string | null
+    preferredEducation: string | null
     totalInteractions: number | null
     successfulMatches: number | null
     avgEngagementScore: number | null
@@ -4952,10 +4959,17 @@ export namespace Prisma {
     industry: string | null
     educationLevel: string | null
     incomeRange: string | null
+    interests: string | null
+    hobbies: string | null
+    musicGenres: string | null
+    movieGenres: string | null
     onlinePattern: $Enums.OnlinePattern | null
     avgResponseTime: number | null
     maxDailyMatches: number | null
     behaviorConfig: string | null
+    preferredEthnicities: string | null
+    preferredOccupations: string | null
+    preferredEducation: string | null
     totalInteractions: number | null
     successfulMatches: number | null
     avgEngagementScore: number | null
@@ -5031,10 +5045,17 @@ export namespace Prisma {
     industry?: true
     educationLevel?: true
     incomeRange?: true
+    interests?: true
+    hobbies?: true
+    musicGenres?: true
+    movieGenres?: true
     onlinePattern?: true
     avgResponseTime?: true
     maxDailyMatches?: true
     behaviorConfig?: true
+    preferredEthnicities?: true
+    preferredOccupations?: true
+    preferredEducation?: true
     totalInteractions?: true
     successfulMatches?: true
     avgEngagementScore?: true
@@ -5058,10 +5079,17 @@ export namespace Prisma {
     industry?: true
     educationLevel?: true
     incomeRange?: true
+    interests?: true
+    hobbies?: true
+    musicGenres?: true
+    movieGenres?: true
     onlinePattern?: true
     avgResponseTime?: true
     maxDailyMatches?: true
     behaviorConfig?: true
+    preferredEthnicities?: true
+    preferredOccupations?: true
+    preferredEducation?: true
     totalInteractions?: true
     successfulMatches?: true
     avgEngagementScore?: true
@@ -5206,17 +5234,17 @@ export namespace Prisma {
     industry: string | null
     educationLevel: string | null
     incomeRange: string | null
-    interests: string[]
-    hobbies: string[]
-    musicGenres: string[]
-    movieGenres: string[]
+    interests: string
+    hobbies: string
+    musicGenres: string
+    movieGenres: string
     onlinePattern: $Enums.OnlinePattern
     avgResponseTime: number
     maxDailyMatches: number
     behaviorConfig: string | null
-    preferredEthnicities: $Enums.Ethnicity[]
-    preferredOccupations: string[]
-    preferredEducation: string[]
+    preferredEthnicities: string
+    preferredOccupations: string
+    preferredEducation: string
     totalInteractions: number
     successfulMatches: number
     avgEngagementScore: number
@@ -5414,17 +5442,17 @@ export namespace Prisma {
       industry: string | null
       educationLevel: string | null
       incomeRange: string | null
-      interests: string[]
-      hobbies: string[]
-      musicGenres: string[]
-      movieGenres: string[]
+      interests: string
+      hobbies: string
+      musicGenres: string
+      movieGenres: string
       onlinePattern: $Enums.OnlinePattern
       avgResponseTime: number
       maxDailyMatches: number
       behaviorConfig: string | null
-      preferredEthnicities: $Enums.Ethnicity[]
-      preferredOccupations: string[]
-      preferredEducation: string[]
+      preferredEthnicities: string
+      preferredOccupations: string
+      preferredEducation: string
       totalInteractions: number
       successfulMatches: number
       avgEngagementScore: number
@@ -5869,17 +5897,17 @@ export namespace Prisma {
     readonly industry: FieldRef<"BotProfile", 'String'>
     readonly educationLevel: FieldRef<"BotProfile", 'String'>
     readonly incomeRange: FieldRef<"BotProfile", 'String'>
-    readonly interests: FieldRef<"BotProfile", 'String[]'>
-    readonly hobbies: FieldRef<"BotProfile", 'String[]'>
-    readonly musicGenres: FieldRef<"BotProfile", 'String[]'>
-    readonly movieGenres: FieldRef<"BotProfile", 'String[]'>
+    readonly interests: FieldRef<"BotProfile", 'String'>
+    readonly hobbies: FieldRef<"BotProfile", 'String'>
+    readonly musicGenres: FieldRef<"BotProfile", 'String'>
+    readonly movieGenres: FieldRef<"BotProfile", 'String'>
     readonly onlinePattern: FieldRef<"BotProfile", 'OnlinePattern'>
     readonly avgResponseTime: FieldRef<"BotProfile", 'Int'>
     readonly maxDailyMatches: FieldRef<"BotProfile", 'Int'>
     readonly behaviorConfig: FieldRef<"BotProfile", 'String'>
-    readonly preferredEthnicities: FieldRef<"BotProfile", 'Ethnicity[]'>
-    readonly preferredOccupations: FieldRef<"BotProfile", 'String[]'>
-    readonly preferredEducation: FieldRef<"BotProfile", 'String[]'>
+    readonly preferredEthnicities: FieldRef<"BotProfile", 'String'>
+    readonly preferredOccupations: FieldRef<"BotProfile", 'String'>
+    readonly preferredEducation: FieldRef<"BotProfile", 'String'>
     readonly totalInteractions: FieldRef<"BotProfile", 'Int'>
     readonly successfulMatches: FieldRef<"BotProfile", 'Int'>
     readonly avgEngagementScore: FieldRef<"BotProfile", 'Float'>
@@ -6125,7 +6153,6 @@ export namespace Prisma {
      * The data used to create many BotProfiles.
      */
     data: BotProfileCreateManyInput | BotProfileCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -6144,7 +6171,6 @@ export namespace Prisma {
      * The data used to create many BotProfiles.
      */
     data: BotProfileCreateManyInput | BotProfileCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -7265,7 +7291,6 @@ export namespace Prisma {
      * The data used to create many BotInteractionLogs.
      */
     data: BotInteractionLogCreateManyInput | BotInteractionLogCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -7284,7 +7309,6 @@ export namespace Prisma {
      * The data used to create many BotInteractionLogs.
      */
     data: BotInteractionLogCreateManyInput | BotInteractionLogCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -8402,7 +8426,6 @@ export namespace Prisma {
      * The data used to create many BotLearningBatches.
      */
     data: BotLearningBatchCreateManyInput | BotLearningBatchCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -8421,7 +8444,6 @@ export namespace Prisma {
      * The data used to create many BotLearningBatches.
      */
     data: BotLearningBatchCreateManyInput | BotLearningBatchCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -8579,6 +8601,7 @@ export namespace Prisma {
     userId: string | null
     interactionType: string | null
     outcome: string | null
+    context: string | null
     processed: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -8590,6 +8613,7 @@ export namespace Prisma {
     userId: string | null
     interactionType: string | null
     outcome: string | null
+    context: string | null
     processed: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -8615,6 +8639,7 @@ export namespace Prisma {
     userId?: true
     interactionType?: true
     outcome?: true
+    context?: true
     processed?: true
     createdAt?: true
     updatedAt?: true
@@ -8626,6 +8651,7 @@ export namespace Prisma {
     userId?: true
     interactionType?: true
     outcome?: true
+    context?: true
     processed?: true
     createdAt?: true
     updatedAt?: true
@@ -8722,7 +8748,7 @@ export namespace Prisma {
     userId: string
     interactionType: string
     outcome: string
-    context: JsonValue | null
+    context: string | null
     processed: boolean
     createdAt: Date
     updatedAt: Date
@@ -8804,7 +8830,7 @@ export namespace Prisma {
       userId: string
       interactionType: string
       outcome: string
-      context: Prisma.JsonValue | null
+      context: string | null
       processed: boolean
       createdAt: Date
       updatedAt: Date
@@ -9236,7 +9262,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"BotLearningRecord", 'String'>
     readonly interactionType: FieldRef<"BotLearningRecord", 'String'>
     readonly outcome: FieldRef<"BotLearningRecord", 'String'>
-    readonly context: FieldRef<"BotLearningRecord", 'Json'>
+    readonly context: FieldRef<"BotLearningRecord", 'String'>
     readonly processed: FieldRef<"BotLearningRecord", 'Boolean'>
     readonly createdAt: FieldRef<"BotLearningRecord", 'DateTime'>
     readonly updatedAt: FieldRef<"BotLearningRecord", 'DateTime'>
@@ -9450,7 +9476,6 @@ export namespace Prisma {
      * The data used to create many BotLearningRecords.
      */
     data: BotLearningRecordCreateManyInput | BotLearningRecordCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -9469,7 +9494,6 @@ export namespace Prisma {
      * The data used to create many BotLearningRecords.
      */
     data: BotLearningRecordCreateManyInput | BotLearningRecordCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -10586,7 +10610,6 @@ export namespace Prisma {
      * The data used to create many BotPreferences.
      */
     data: BotPreferenceCreateManyInput | BotPreferenceCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -10605,7 +10628,6 @@ export namespace Prisma {
      * The data used to create many BotPreferences.
      */
     data: BotPreferenceCreateManyInput | BotPreferenceCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -11711,7 +11733,6 @@ export namespace Prisma {
      * The data used to create many BotAvatars.
      */
     data: BotAvatarCreateManyInput | BotAvatarCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -11730,7 +11751,6 @@ export namespace Prisma {
      * The data used to create many BotAvatars.
      */
     data: BotAvatarCreateManyInput | BotAvatarCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -12975,7 +12995,6 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -12994,7 +13013,6 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -14836,7 +14854,6 @@ export namespace Prisma {
      * The data used to create many Accounts.
      */
     data: AccountCreateManyInput | AccountCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -14855,7 +14872,6 @@ export namespace Prisma {
      * The data used to create many Accounts.
      */
     data: AccountCreateManyInput | AccountCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -15886,7 +15902,6 @@ export namespace Prisma {
      * The data used to create many Sessions.
      */
     data: SessionCreateManyInput | SessionCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -15905,7 +15920,6 @@ export namespace Prisma {
      * The data used to create many Sessions.
      */
     data: SessionCreateManyInput | SessionCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -17052,7 +17066,6 @@ export namespace Prisma {
      * The data used to create many VerificationTokens.
      */
     data: VerificationTokenCreateManyInput | VerificationTokenCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -17071,7 +17084,6 @@ export namespace Prisma {
      * The data used to create many VerificationTokens.
      */
     data: VerificationTokenCreateManyInput | VerificationTokenCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -17297,6 +17309,7 @@ export namespace Prisma {
     bio: string | null
     avatar: string | null
     avatarType: string | null
+    galleryPhotos: string | null
     city: string | null
     country: string | null
     relationshipGoal: $Enums.RelationshipGoal | null
@@ -17308,6 +17321,7 @@ export namespace Prisma {
     dealbreakers: string | null
     lifePriorities: string | null
     emotionalAvailability: string | null
+    selectedTags: string | null
     preferredAgeMin: number | null
     preferredAgeMax: number | null
     preferredGender: string | null
@@ -17340,6 +17354,7 @@ export namespace Prisma {
     bio: string | null
     avatar: string | null
     avatarType: string | null
+    galleryPhotos: string | null
     city: string | null
     country: string | null
     relationshipGoal: $Enums.RelationshipGoal | null
@@ -17351,6 +17366,7 @@ export namespace Prisma {
     dealbreakers: string | null
     lifePriorities: string | null
     emotionalAvailability: string | null
+    selectedTags: string | null
     preferredAgeMin: number | null
     preferredAgeMax: number | null
     preferredGender: string | null
@@ -17448,6 +17464,7 @@ export namespace Prisma {
     bio?: true
     avatar?: true
     avatarType?: true
+    galleryPhotos?: true
     city?: true
     country?: true
     relationshipGoal?: true
@@ -17459,6 +17476,7 @@ export namespace Prisma {
     dealbreakers?: true
     lifePriorities?: true
     emotionalAvailability?: true
+    selectedTags?: true
     preferredAgeMin?: true
     preferredAgeMax?: true
     preferredGender?: true
@@ -17491,6 +17509,7 @@ export namespace Prisma {
     bio?: true
     avatar?: true
     avatarType?: true
+    galleryPhotos?: true
     city?: true
     country?: true
     relationshipGoal?: true
@@ -17502,6 +17521,7 @@ export namespace Prisma {
     dealbreakers?: true
     lifePriorities?: true
     emotionalAvailability?: true
+    selectedTags?: true
     preferredAgeMin?: true
     preferredAgeMax?: true
     preferredGender?: true
@@ -17666,7 +17686,7 @@ export namespace Prisma {
     bio: string | null
     avatar: string | null
     avatarType: string | null
-    galleryPhotos: string[]
+    galleryPhotos: string
     city: string | null
     country: string | null
     relationshipGoal: $Enums.RelationshipGoal
@@ -17678,7 +17698,7 @@ export namespace Prisma {
     dealbreakers: string | null
     lifePriorities: string | null
     emotionalAvailability: string | null
-    selectedTags: string[]
+    selectedTags: string
     preferredAgeMin: number | null
     preferredAgeMax: number | null
     preferredGender: string | null
@@ -17935,7 +17955,7 @@ export namespace Prisma {
       bio: string | null
       avatar: string | null
       avatarType: string | null
-      galleryPhotos: string[]
+      galleryPhotos: string
       city: string | null
       country: string | null
       relationshipGoal: $Enums.RelationshipGoal
@@ -17947,7 +17967,7 @@ export namespace Prisma {
       dealbreakers: string | null
       lifePriorities: string | null
       emotionalAvailability: string | null
-      selectedTags: string[]
+      selectedTags: string
       preferredAgeMin: number | null
       preferredAgeMax: number | null
       preferredGender: string | null
@@ -18403,7 +18423,7 @@ export namespace Prisma {
     readonly bio: FieldRef<"Profile", 'String'>
     readonly avatar: FieldRef<"Profile", 'String'>
     readonly avatarType: FieldRef<"Profile", 'String'>
-    readonly galleryPhotos: FieldRef<"Profile", 'String[]'>
+    readonly galleryPhotos: FieldRef<"Profile", 'String'>
     readonly city: FieldRef<"Profile", 'String'>
     readonly country: FieldRef<"Profile", 'String'>
     readonly relationshipGoal: FieldRef<"Profile", 'RelationshipGoal'>
@@ -18415,7 +18435,7 @@ export namespace Prisma {
     readonly dealbreakers: FieldRef<"Profile", 'String'>
     readonly lifePriorities: FieldRef<"Profile", 'String'>
     readonly emotionalAvailability: FieldRef<"Profile", 'String'>
-    readonly selectedTags: FieldRef<"Profile", 'String[]'>
+    readonly selectedTags: FieldRef<"Profile", 'String'>
     readonly preferredAgeMin: FieldRef<"Profile", 'Int'>
     readonly preferredAgeMax: FieldRef<"Profile", 'Int'>
     readonly preferredGender: FieldRef<"Profile", 'String'>
@@ -18669,7 +18689,6 @@ export namespace Prisma {
      * The data used to create many Profiles.
      */
     data: ProfileCreateManyInput | ProfileCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -18688,7 +18707,6 @@ export namespace Prisma {
      * The data used to create many Profiles.
      */
     data: ProfileCreateManyInput | ProfileCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -20123,7 +20141,6 @@ export namespace Prisma {
      * The data used to create many Matches.
      */
     data: MatchCreateManyInput | MatchCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -20142,7 +20159,6 @@ export namespace Prisma {
      * The data used to create many Matches.
      */
     data: MatchCreateManyInput | MatchCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -21250,7 +21266,6 @@ export namespace Prisma {
      * The data used to create many MatchReactions.
      */
     data: MatchReactionCreateManyInput | MatchReactionCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -21269,7 +21284,6 @@ export namespace Prisma {
      * The data used to create many MatchReactions.
      */
     data: MatchReactionCreateManyInput | MatchReactionCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -22508,7 +22522,6 @@ export namespace Prisma {
      * The data used to create many ChatRooms.
      */
     data: ChatRoomCreateManyInput | ChatRoomCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -22527,7 +22540,6 @@ export namespace Prisma {
      * The data used to create many ChatRooms.
      */
     data: ChatRoomCreateManyInput | ChatRoomCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -23678,7 +23690,6 @@ export namespace Prisma {
      * The data used to create many ChatRoomMembers.
      */
     data: ChatRoomMemberCreateManyInput | ChatRoomMemberCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -23697,7 +23708,6 @@ export namespace Prisma {
      * The data used to create many ChatRoomMembers.
      */
     data: ChatRoomMemberCreateManyInput | ChatRoomMemberCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -24801,7 +24811,6 @@ export namespace Prisma {
      * The data used to create many Messages.
      */
     data: MessageCreateManyInput | MessageCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -24820,7 +24829,6 @@ export namespace Prisma {
      * The data used to create many Messages.
      */
     data: MessageCreateManyInput | MessageCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -26113,7 +26121,6 @@ export namespace Prisma {
      * The data used to create many Conversations.
      */
     data: ConversationCreateManyInput | ConversationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -26132,7 +26139,6 @@ export namespace Prisma {
      * The data used to create many Conversations.
      */
     data: ConversationCreateManyInput | ConversationCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -27409,7 +27415,6 @@ export namespace Prisma {
      * The data used to create many ConversationParticipants.
      */
     data: ConversationParticipantCreateManyInput | ConversationParticipantCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -27428,7 +27433,6 @@ export namespace Prisma {
      * The data used to create many ConversationParticipants.
      */
     data: ConversationParticipantCreateManyInput | ConversationParticipantCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -27627,6 +27631,7 @@ export namespace Prisma {
     encryptionMode: $Enums.EncryptionMode | null
     ephemeralPublicKey: string | null
     boundaryVersion: string | null
+    complianceTags: string | null
     consentState: $Enums.ConsentState | null
     mediaLevel: $Enums.MediaAccessLevel | null
     ruleResult: $Enums.RuleEngineResult | null
@@ -27655,6 +27660,7 @@ export namespace Prisma {
     encryptionMode: $Enums.EncryptionMode | null
     ephemeralPublicKey: string | null
     boundaryVersion: string | null
+    complianceTags: string | null
     consentState: $Enums.ConsentState | null
     mediaLevel: $Enums.MediaAccessLevel | null
     ruleResult: $Enums.RuleEngineResult | null
@@ -27722,6 +27728,7 @@ export namespace Prisma {
     encryptionMode?: true
     ephemeralPublicKey?: true
     boundaryVersion?: true
+    complianceTags?: true
     consentState?: true
     mediaLevel?: true
     ruleResult?: true
@@ -27750,6 +27757,7 @@ export namespace Prisma {
     encryptionMode?: true
     ephemeralPublicKey?: true
     boundaryVersion?: true
+    complianceTags?: true
     consentState?: true
     mediaLevel?: true
     ruleResult?: true
@@ -27894,7 +27902,7 @@ export namespace Prisma {
     encryptionMode: $Enums.EncryptionMode
     ephemeralPublicKey: string | null
     boundaryVersion: string | null
-    complianceTags: string[]
+    complianceTags: string
     consentState: $Enums.ConsentState
     mediaLevel: $Enums.MediaAccessLevel
     ruleResult: $Enums.RuleEngineResult
@@ -28092,7 +28100,7 @@ export namespace Prisma {
       encryptionMode: $Enums.EncryptionMode
       ephemeralPublicKey: string | null
       boundaryVersion: string | null
-      complianceTags: string[]
+      complianceTags: string
       consentState: $Enums.ConsentState
       mediaLevel: $Enums.MediaAccessLevel
       ruleResult: $Enums.RuleEngineResult
@@ -28545,7 +28553,7 @@ export namespace Prisma {
     readonly encryptionMode: FieldRef<"IMMessage", 'EncryptionMode'>
     readonly ephemeralPublicKey: FieldRef<"IMMessage", 'String'>
     readonly boundaryVersion: FieldRef<"IMMessage", 'String'>
-    readonly complianceTags: FieldRef<"IMMessage", 'String[]'>
+    readonly complianceTags: FieldRef<"IMMessage", 'String'>
     readonly consentState: FieldRef<"IMMessage", 'ConsentState'>
     readonly mediaLevel: FieldRef<"IMMessage", 'MediaAccessLevel'>
     readonly ruleResult: FieldRef<"IMMessage", 'RuleEngineResult'>
@@ -28793,7 +28801,6 @@ export namespace Prisma {
      * The data used to create many IMMessages.
      */
     data: IMMessageCreateManyInput | IMMessageCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -28812,7 +28819,6 @@ export namespace Prisma {
      * The data used to create many IMMessages.
      */
     data: IMMessageCreateManyInput | IMMessageCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -29959,7 +29965,6 @@ export namespace Prisma {
      * The data used to create many MessageReceipts.
      */
     data: MessageReceiptCreateManyInput | MessageReceiptCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -29978,7 +29983,6 @@ export namespace Prisma {
      * The data used to create many MessageReceipts.
      */
     data: MessageReceiptCreateManyInput | MessageReceiptCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -31030,7 +31034,6 @@ export namespace Prisma {
      * The data used to create many MessageReactions.
      */
     data: MessageReactionCreateManyInput | MessageReactionCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -31049,7 +31052,6 @@ export namespace Prisma {
      * The data used to create many MessageReactions.
      */
     data: MessageReactionCreateManyInput | MessageReactionCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -32184,7 +32186,6 @@ export namespace Prisma {
      * The data used to create many UserPresences.
      */
     data: UserPresenceCreateManyInput | UserPresenceCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -32203,7 +32204,6 @@ export namespace Prisma {
      * The data used to create many UserPresences.
      */
     data: UserPresenceCreateManyInput | UserPresenceCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -33393,7 +33393,6 @@ export namespace Prisma {
      * The data used to create many ConsentRequests.
      */
     data: ConsentRequestCreateManyInput | ConsentRequestCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -33412,7 +33411,6 @@ export namespace Prisma {
      * The data used to create many ConsentRequests.
      */
     data: ConsentRequestCreateManyInput | ConsentRequestCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -34563,7 +34561,6 @@ export namespace Prisma {
      * The data used to create many ConsentGrants.
      */
     data: ConsentGrantCreateManyInput | ConsentGrantCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -34582,7 +34579,6 @@ export namespace Prisma {
      * The data used to create many ConsentGrants.
      */
     data: ConsentGrantCreateManyInput | ConsentGrantCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -35717,7 +35713,6 @@ export namespace Prisma {
      * The data used to create many PowerBoardRules.
      */
     data: PowerBoardRuleCreateManyInput | PowerBoardRuleCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -35736,7 +35731,6 @@ export namespace Prisma {
      * The data used to create many PowerBoardRules.
      */
     data: PowerBoardRuleCreateManyInput | PowerBoardRuleCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -36884,7 +36878,6 @@ export namespace Prisma {
      * The data used to create many AuditLogs.
      */
     data: AuditLogCreateManyInput | AuditLogCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -36903,7 +36896,6 @@ export namespace Prisma {
      * The data used to create many AuditLogs.
      */
     data: AuditLogCreateManyInput | AuditLogCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -38012,7 +38004,6 @@ export namespace Prisma {
      * The data used to create many Notifications.
      */
     data: NotificationCreateManyInput | NotificationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -38031,7 +38022,6 @@ export namespace Prisma {
      * The data used to create many Notifications.
      */
     data: NotificationCreateManyInput | NotificationCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -39252,7 +39242,6 @@ export namespace Prisma {
      * The data used to create many Subscriptions.
      */
     data: SubscriptionCreateManyInput | SubscriptionCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -39271,7 +39260,6 @@ export namespace Prisma {
      * The data used to create many Subscriptions.
      */
     data: SubscriptionCreateManyInput | SubscriptionCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -40414,7 +40402,6 @@ export namespace Prisma {
      * The data used to create many Payments.
      */
     data: PaymentCreateManyInput | PaymentCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -40433,7 +40420,6 @@ export namespace Prisma {
      * The data used to create many Payments.
      */
     data: PaymentCreateManyInput | PaymentCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -41529,7 +41515,6 @@ export namespace Prisma {
      * The data used to create many AdminLogs.
      */
     data: AdminLogCreateManyInput | AdminLogCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -41548,7 +41533,6 @@ export namespace Prisma {
      * The data used to create many AdminLogs.
      */
     data: AdminLogCreateManyInput | AdminLogCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -42650,7 +42634,6 @@ export namespace Prisma {
      * The data used to create many AnalyticsEvents.
      */
     data: AnalyticsEventCreateManyInput | AnalyticsEventCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -42669,7 +42652,6 @@ export namespace Prisma {
      * The data used to create many AnalyticsEvents.
      */
     data: AnalyticsEventCreateManyInput | AnalyticsEventCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -43693,7 +43675,6 @@ export namespace Prisma {
      * The data used to create many SystemConfigs.
      */
     data: SystemConfigCreateManyInput | SystemConfigCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -43712,7 +43693,6 @@ export namespace Prisma {
      * The data used to create many SystemConfigs.
      */
     data: SystemConfigCreateManyInput | SystemConfigCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -44896,7 +44876,6 @@ export namespace Prisma {
      * The data used to create many SincerityWallets.
      */
     data: SincerityWalletCreateManyInput | SincerityWalletCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -44915,7 +44894,6 @@ export namespace Prisma {
      * The data used to create many SincerityWallets.
      */
     data: SincerityWalletCreateManyInput | SincerityWalletCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -46108,7 +46086,6 @@ export namespace Prisma {
      * The data used to create many SincerityTransactions.
      */
     data: SincerityTransactionCreateManyInput | SincerityTransactionCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -46127,7 +46104,6 @@ export namespace Prisma {
      * The data used to create many SincerityTransactions.
      */
     data: SincerityTransactionCreateManyInput | SincerityTransactionCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -47296,7 +47272,6 @@ export namespace Prisma {
      * The data used to create many UserReports.
      */
     data: UserReportCreateManyInput | UserReportCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -47315,7 +47290,6 @@ export namespace Prisma {
      * The data used to create many UserReports.
      */
     data: UserReportCreateManyInput | UserReportCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -47486,9 +47460,6 @@ export namespace Prisma {
    */
 
   export const TransactionIsolationLevel: {
-    ReadUncommitted: 'ReadUncommitted',
-    ReadCommitted: 'ReadCommitted',
-    RepeatableRead: 'RepeatableRead',
     Serializable: 'Serializable'
   };
 
@@ -48171,37 +48142,12 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
-  export const NullableJsonNullValueInput: {
-    DbNull: typeof DbNull,
-    JsonNull: typeof JsonNull
-  };
-
-  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
-
-
-  export const QueryMode: {
-    default: 'default',
-    insensitive: 'insensitive'
-  };
-
-  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
-
-
   export const NullsOrder: {
     first: 'first',
     last: 'last'
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
-  export const JsonNullValueFilter: {
-    DbNull: typeof DbNull,
-    JsonNull: typeof JsonNull,
-    AnyNull: typeof AnyNull
-  };
-
-  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -48217,23 +48163,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'String[]'
-   */
-  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
-    
-
-
-  /**
    * Reference to a field of type 'BotType'
    */
   export type EnumBotTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotType'>
-    
-
-
-  /**
-   * Reference to a field of type 'BotType[]'
-   */
-  export type ListEnumBotTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotType[]'>
     
 
 
@@ -48245,23 +48177,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'BotActivityLevel[]'
-   */
-  export type ListEnumBotActivityLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BotActivityLevel[]'>
-    
-
-
-  /**
    * Reference to a field of type 'Ethnicity'
    */
   export type EnumEthnicityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Ethnicity'>
-    
-
-
-  /**
-   * Reference to a field of type 'Ethnicity[]'
-   */
-  export type ListEnumEthnicityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Ethnicity[]'>
     
 
 
@@ -48273,13 +48191,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'OnlinePattern[]'
-   */
-  export type ListEnumOnlinePatternFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OnlinePattern[]'>
-    
-
-
-  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -48287,23 +48198,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 
@@ -48322,37 +48219,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'DateTime[]'
-   */
-  export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Json'
-   */
-  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-  /**
-   * Reference to a field of type 'QueryMode'
-   */
-  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
-    
-
-
-  /**
    * Reference to a field of type 'UserRole'
    */
   export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
-    
-
-
-  /**
-   * Reference to a field of type 'UserRole[]'
-   */
-  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
     
 
 
@@ -48364,23 +48233,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Gender[]'
-   */
-  export type ListEnumGenderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Gender[]'>
-    
-
-
-  /**
    * Reference to a field of type 'RelationshipGoal'
    */
   export type EnumRelationshipGoalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RelationshipGoal'>
-    
-
-
-  /**
-   * Reference to a field of type 'RelationshipGoal[]'
-   */
-  export type ListEnumRelationshipGoalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RelationshipGoal[]'>
     
 
 
@@ -48392,23 +48247,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'ProfileStatus[]'
-   */
-  export type ListEnumProfileStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProfileStatus[]'>
-    
-
-
-  /**
    * Reference to a field of type 'MatchStatus'
    */
   export type EnumMatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchStatus'>
-    
-
-
-  /**
-   * Reference to a field of type 'MatchStatus[]'
-   */
-  export type ListEnumMatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchStatus[]'>
     
 
 
@@ -48420,23 +48261,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'MatchType[]'
-   */
-  export type ListEnumMatchTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchType[]'>
-    
-
-
-  /**
    * Reference to a field of type 'MatchAction'
    */
   export type EnumMatchActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchAction'>
-    
-
-
-  /**
-   * Reference to a field of type 'MatchAction[]'
-   */
-  export type ListEnumMatchActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchAction[]'>
     
 
 
@@ -48448,23 +48275,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'VaultStatus[]'
-   */
-  export type ListEnumVaultStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VaultStatus[]'>
-    
-
-
-  /**
    * Reference to a field of type 'MessageType'
    */
   export type EnumMessageTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MessageType'>
-    
-
-
-  /**
-   * Reference to a field of type 'MessageType[]'
-   */
-  export type ListEnumMessageTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MessageType[]'>
     
 
 
@@ -48476,23 +48289,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'ConversationState[]'
-   */
-  export type ListEnumConversationStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ConversationState[]'>
-    
-
-
-  /**
    * Reference to a field of type 'ConsentState'
    */
   export type EnumConsentStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ConsentState'>
-    
-
-
-  /**
-   * Reference to a field of type 'ConsentState[]'
-   */
-  export type ListEnumConsentStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ConsentState[]'>
     
 
 
@@ -48504,23 +48303,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'IMMessageType[]'
-   */
-  export type ListEnumIMMessageTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IMMessageType[]'>
-    
-
-
-  /**
    * Reference to a field of type 'EncryptionMode'
    */
   export type EnumEncryptionModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EncryptionMode'>
-    
-
-
-  /**
-   * Reference to a field of type 'EncryptionMode[]'
-   */
-  export type ListEnumEncryptionModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EncryptionMode[]'>
     
 
 
@@ -48532,23 +48317,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'MediaAccessLevel[]'
-   */
-  export type ListEnumMediaAccessLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MediaAccessLevel[]'>
-    
-
-
-  /**
    * Reference to a field of type 'RuleEngineResult'
    */
   export type EnumRuleEngineResultFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RuleEngineResult'>
-    
-
-
-  /**
-   * Reference to a field of type 'RuleEngineResult[]'
-   */
-  export type ListEnumRuleEngineResultFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RuleEngineResult[]'>
     
 
 
@@ -48560,23 +48331,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'MessageDeliveryStatus[]'
-   */
-  export type ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MessageDeliveryStatus[]'>
-    
-
-
-  /**
    * Reference to a field of type 'PresenceStatus'
    */
   export type EnumPresenceStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PresenceStatus'>
-    
-
-
-  /**
-   * Reference to a field of type 'PresenceStatus[]'
-   */
-  export type ListEnumPresenceStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PresenceStatus[]'>
     
 
 
@@ -48588,23 +48345,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'ConsentRequestType[]'
-   */
-  export type ListEnumConsentRequestTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ConsentRequestType[]'>
-    
-
-
-  /**
    * Reference to a field of type 'NotificationType'
    */
   export type EnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType'>
-    
-
-
-  /**
-   * Reference to a field of type 'NotificationType[]'
-   */
-  export type ListEnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType[]'>
     
 
 
@@ -48616,23 +48359,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'SubscriptionPlan[]'
-   */
-  export type ListEnumSubscriptionPlanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SubscriptionPlan[]'>
-    
-
-
-  /**
    * Reference to a field of type 'SubscriptionStatus'
    */
   export type EnumSubscriptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SubscriptionStatus'>
-    
-
-
-  /**
-   * Reference to a field of type 'SubscriptionStatus[]'
-   */
-  export type ListEnumSubscriptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SubscriptionStatus[]'>
     
 
 
@@ -48644,23 +48373,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'PaymentStatus[]'
-   */
-  export type ListEnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentStatus[]'>
-    
-
-
-  /**
    * Reference to a field of type 'SincerityTier'
    */
   export type EnumSincerityTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SincerityTier'>
-    
-
-
-  /**
-   * Reference to a field of type 'SincerityTier[]'
-   */
-  export type ListEnumSincerityTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SincerityTier[]'>
     
 
 
@@ -48672,13 +48387,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'SincerityTransactionType[]'
-   */
-  export type ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SincerityTransactionType[]'>
-    
-
-
-  /**
    * Reference to a field of type 'ReportReason'
    */
   export type EnumReportReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReportReason'>
@@ -48686,23 +48394,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'ReportReason[]'
-   */
-  export type ListEnumReportReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReportReason[]'>
-    
-
-
-  /**
    * Reference to a field of type 'ReportStatus'
    */
   export type EnumReportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReportStatus'>
-    
-
-
-  /**
-   * Reference to a field of type 'ReportStatus[]'
-   */
-  export type ListEnumReportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReportStatus[]'>
     
   /**
    * Deep Input Types
@@ -48722,17 +48416,17 @@ export namespace Prisma {
     industry?: StringNullableFilter<"BotProfile"> | string | null
     educationLevel?: StringNullableFilter<"BotProfile"> | string | null
     incomeRange?: StringNullableFilter<"BotProfile"> | string | null
-    interests?: StringNullableListFilter<"BotProfile">
-    hobbies?: StringNullableListFilter<"BotProfile">
-    musicGenres?: StringNullableListFilter<"BotProfile">
-    movieGenres?: StringNullableListFilter<"BotProfile">
+    interests?: StringFilter<"BotProfile"> | string
+    hobbies?: StringFilter<"BotProfile"> | string
+    musicGenres?: StringFilter<"BotProfile"> | string
+    movieGenres?: StringFilter<"BotProfile"> | string
     onlinePattern?: EnumOnlinePatternFilter<"BotProfile"> | $Enums.OnlinePattern
     avgResponseTime?: IntFilter<"BotProfile"> | number
     maxDailyMatches?: IntFilter<"BotProfile"> | number
     behaviorConfig?: StringNullableFilter<"BotProfile"> | string | null
-    preferredEthnicities?: EnumEthnicityNullableListFilter<"BotProfile">
-    preferredOccupations?: StringNullableListFilter<"BotProfile">
-    preferredEducation?: StringNullableListFilter<"BotProfile">
+    preferredEthnicities?: StringFilter<"BotProfile"> | string
+    preferredOccupations?: StringFilter<"BotProfile"> | string
+    preferredEducation?: StringFilter<"BotProfile"> | string
     totalInteractions?: IntFilter<"BotProfile"> | number
     successfulMatches?: IntFilter<"BotProfile"> | number
     avgEngagementScore?: FloatFilter<"BotProfile"> | number
@@ -48795,17 +48489,17 @@ export namespace Prisma {
     industry?: StringNullableFilter<"BotProfile"> | string | null
     educationLevel?: StringNullableFilter<"BotProfile"> | string | null
     incomeRange?: StringNullableFilter<"BotProfile"> | string | null
-    interests?: StringNullableListFilter<"BotProfile">
-    hobbies?: StringNullableListFilter<"BotProfile">
-    musicGenres?: StringNullableListFilter<"BotProfile">
-    movieGenres?: StringNullableListFilter<"BotProfile">
+    interests?: StringFilter<"BotProfile"> | string
+    hobbies?: StringFilter<"BotProfile"> | string
+    musicGenres?: StringFilter<"BotProfile"> | string
+    movieGenres?: StringFilter<"BotProfile"> | string
     onlinePattern?: EnumOnlinePatternFilter<"BotProfile"> | $Enums.OnlinePattern
     avgResponseTime?: IntFilter<"BotProfile"> | number
     maxDailyMatches?: IntFilter<"BotProfile"> | number
     behaviorConfig?: StringNullableFilter<"BotProfile"> | string | null
-    preferredEthnicities?: EnumEthnicityNullableListFilter<"BotProfile">
-    preferredOccupations?: StringNullableListFilter<"BotProfile">
-    preferredEducation?: StringNullableListFilter<"BotProfile">
+    preferredEthnicities?: StringFilter<"BotProfile"> | string
+    preferredOccupations?: StringFilter<"BotProfile"> | string
+    preferredEducation?: StringFilter<"BotProfile"> | string
     totalInteractions?: IntFilter<"BotProfile"> | number
     successfulMatches?: IntFilter<"BotProfile"> | number
     avgEngagementScore?: FloatFilter<"BotProfile"> | number
@@ -48872,17 +48566,17 @@ export namespace Prisma {
     industry?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
     educationLevel?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
     incomeRange?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
-    interests?: StringNullableListFilter<"BotProfile">
-    hobbies?: StringNullableListFilter<"BotProfile">
-    musicGenres?: StringNullableListFilter<"BotProfile">
-    movieGenres?: StringNullableListFilter<"BotProfile">
+    interests?: StringWithAggregatesFilter<"BotProfile"> | string
+    hobbies?: StringWithAggregatesFilter<"BotProfile"> | string
+    musicGenres?: StringWithAggregatesFilter<"BotProfile"> | string
+    movieGenres?: StringWithAggregatesFilter<"BotProfile"> | string
     onlinePattern?: EnumOnlinePatternWithAggregatesFilter<"BotProfile"> | $Enums.OnlinePattern
     avgResponseTime?: IntWithAggregatesFilter<"BotProfile"> | number
     maxDailyMatches?: IntWithAggregatesFilter<"BotProfile"> | number
     behaviorConfig?: StringNullableWithAggregatesFilter<"BotProfile"> | string | null
-    preferredEthnicities?: EnumEthnicityNullableListFilter<"BotProfile">
-    preferredOccupations?: StringNullableListFilter<"BotProfile">
-    preferredEducation?: StringNullableListFilter<"BotProfile">
+    preferredEthnicities?: StringWithAggregatesFilter<"BotProfile"> | string
+    preferredOccupations?: StringWithAggregatesFilter<"BotProfile"> | string
+    preferredEducation?: StringWithAggregatesFilter<"BotProfile"> | string
     totalInteractions?: IntWithAggregatesFilter<"BotProfile"> | number
     successfulMatches?: IntWithAggregatesFilter<"BotProfile"> | number
     avgEngagementScore?: FloatWithAggregatesFilter<"BotProfile"> | number
@@ -49078,7 +48772,7 @@ export namespace Prisma {
     userId?: StringFilter<"BotLearningRecord"> | string
     interactionType?: StringFilter<"BotLearningRecord"> | string
     outcome?: StringFilter<"BotLearningRecord"> | string
-    context?: JsonNullableFilter<"BotLearningRecord">
+    context?: StringNullableFilter<"BotLearningRecord"> | string | null
     processed?: BoolFilter<"BotLearningRecord"> | boolean
     createdAt?: DateTimeFilter<"BotLearningRecord"> | Date | string
     updatedAt?: DateTimeFilter<"BotLearningRecord"> | Date | string
@@ -49105,7 +48799,7 @@ export namespace Prisma {
     userId?: StringFilter<"BotLearningRecord"> | string
     interactionType?: StringFilter<"BotLearningRecord"> | string
     outcome?: StringFilter<"BotLearningRecord"> | string
-    context?: JsonNullableFilter<"BotLearningRecord">
+    context?: StringNullableFilter<"BotLearningRecord"> | string | null
     processed?: BoolFilter<"BotLearningRecord"> | boolean
     createdAt?: DateTimeFilter<"BotLearningRecord"> | Date | string
     updatedAt?: DateTimeFilter<"BotLearningRecord"> | Date | string
@@ -49135,7 +48829,7 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"BotLearningRecord"> | string
     interactionType?: StringWithAggregatesFilter<"BotLearningRecord"> | string
     outcome?: StringWithAggregatesFilter<"BotLearningRecord"> | string
-    context?: JsonNullableWithAggregatesFilter<"BotLearningRecord">
+    context?: StringNullableWithAggregatesFilter<"BotLearningRecord"> | string | null
     processed?: BoolWithAggregatesFilter<"BotLearningRecord"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"BotLearningRecord"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"BotLearningRecord"> | Date | string
@@ -49738,7 +49432,7 @@ export namespace Prisma {
     bio?: StringNullableFilter<"Profile"> | string | null
     avatar?: StringNullableFilter<"Profile"> | string | null
     avatarType?: StringNullableFilter<"Profile"> | string | null
-    galleryPhotos?: StringNullableListFilter<"Profile">
+    galleryPhotos?: StringFilter<"Profile"> | string
     city?: StringNullableFilter<"Profile"> | string | null
     country?: StringNullableFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalFilter<"Profile"> | $Enums.RelationshipGoal
@@ -49750,7 +49444,7 @@ export namespace Prisma {
     dealbreakers?: StringNullableFilter<"Profile"> | string | null
     lifePriorities?: StringNullableFilter<"Profile"> | string | null
     emotionalAvailability?: StringNullableFilter<"Profile"> | string | null
-    selectedTags?: StringNullableListFilter<"Profile">
+    selectedTags?: StringFilter<"Profile"> | string
     preferredAgeMin?: IntNullableFilter<"Profile"> | number | null
     preferredAgeMax?: IntNullableFilter<"Profile"> | number | null
     preferredGender?: StringNullableFilter<"Profile"> | string | null
@@ -49837,7 +49531,7 @@ export namespace Prisma {
     bio?: StringNullableFilter<"Profile"> | string | null
     avatar?: StringNullableFilter<"Profile"> | string | null
     avatarType?: StringNullableFilter<"Profile"> | string | null
-    galleryPhotos?: StringNullableListFilter<"Profile">
+    galleryPhotos?: StringFilter<"Profile"> | string
     city?: StringNullableFilter<"Profile"> | string | null
     country?: StringNullableFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalFilter<"Profile"> | $Enums.RelationshipGoal
@@ -49849,7 +49543,7 @@ export namespace Prisma {
     dealbreakers?: StringNullableFilter<"Profile"> | string | null
     lifePriorities?: StringNullableFilter<"Profile"> | string | null
     emotionalAvailability?: StringNullableFilter<"Profile"> | string | null
-    selectedTags?: StringNullableListFilter<"Profile">
+    selectedTags?: StringFilter<"Profile"> | string
     preferredAgeMin?: IntNullableFilter<"Profile"> | number | null
     preferredAgeMax?: IntNullableFilter<"Profile"> | number | null
     preferredGender?: StringNullableFilter<"Profile"> | string | null
@@ -49938,7 +49632,7 @@ export namespace Prisma {
     bio?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     avatar?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     avatarType?: StringNullableWithAggregatesFilter<"Profile"> | string | null
-    galleryPhotos?: StringNullableListFilter<"Profile">
+    galleryPhotos?: StringWithAggregatesFilter<"Profile"> | string
     city?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     country?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     relationshipGoal?: EnumRelationshipGoalWithAggregatesFilter<"Profile"> | $Enums.RelationshipGoal
@@ -49950,7 +49644,7 @@ export namespace Prisma {
     dealbreakers?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     lifePriorities?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     emotionalAvailability?: StringNullableWithAggregatesFilter<"Profile"> | string | null
-    selectedTags?: StringNullableListFilter<"Profile">
+    selectedTags?: StringWithAggregatesFilter<"Profile"> | string
     preferredAgeMin?: IntNullableWithAggregatesFilter<"Profile"> | number | null
     preferredAgeMax?: IntNullableWithAggregatesFilter<"Profile"> | number | null
     preferredGender?: StringNullableWithAggregatesFilter<"Profile"> | string | null
@@ -50712,7 +50406,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFilter<"IMMessage"> | $Enums.EncryptionMode
     ephemeralPublicKey?: StringNullableFilter<"IMMessage"> | string | null
     boundaryVersion?: StringNullableFilter<"IMMessage"> | string | null
-    complianceTags?: StringNullableListFilter<"IMMessage">
+    complianceTags?: StringFilter<"IMMessage"> | string
     consentState?: EnumConsentStateFilter<"IMMessage"> | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFilter<"IMMessage"> | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFilter<"IMMessage"> | $Enums.RuleEngineResult
@@ -50781,7 +50475,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFilter<"IMMessage"> | $Enums.EncryptionMode
     ephemeralPublicKey?: StringNullableFilter<"IMMessage"> | string | null
     boundaryVersion?: StringNullableFilter<"IMMessage"> | string | null
-    complianceTags?: StringNullableListFilter<"IMMessage">
+    complianceTags?: StringFilter<"IMMessage"> | string
     consentState?: EnumConsentStateFilter<"IMMessage"> | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFilter<"IMMessage"> | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFilter<"IMMessage"> | $Enums.RuleEngineResult
@@ -50851,7 +50545,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeWithAggregatesFilter<"IMMessage"> | $Enums.EncryptionMode
     ephemeralPublicKey?: StringNullableWithAggregatesFilter<"IMMessage"> | string | null
     boundaryVersion?: StringNullableWithAggregatesFilter<"IMMessage"> | string | null
-    complianceTags?: StringNullableListFilter<"IMMessage">
+    complianceTags?: StringWithAggregatesFilter<"IMMessage"> | string
     consentState?: EnumConsentStateWithAggregatesFilter<"IMMessage"> | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelWithAggregatesFilter<"IMMessage"> | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultWithAggregatesFilter<"IMMessage"> | $Enums.RuleEngineResult
@@ -52260,17 +51954,17 @@ export namespace Prisma {
     industry?: string | null
     educationLevel?: string | null
     incomeRange?: string | null
-    interests?: BotProfileCreateinterestsInput | string[]
-    hobbies?: BotProfileCreatehobbiesInput | string[]
-    musicGenres?: BotProfileCreatemusicGenresInput | string[]
-    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    interests?: string
+    hobbies?: string
+    musicGenres?: string
+    movieGenres?: string
     onlinePattern?: $Enums.OnlinePattern
     avgResponseTime?: number
     maxDailyMatches?: number
     behaviorConfig?: string | null
-    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    preferredEthnicities?: string
+    preferredOccupations?: string
+    preferredEducation?: string
     totalInteractions?: number
     successfulMatches?: number
     avgEngagementScore?: number
@@ -52295,17 +51989,17 @@ export namespace Prisma {
     industry?: string | null
     educationLevel?: string | null
     incomeRange?: string | null
-    interests?: BotProfileCreateinterestsInput | string[]
-    hobbies?: BotProfileCreatehobbiesInput | string[]
-    musicGenres?: BotProfileCreatemusicGenresInput | string[]
-    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    interests?: string
+    hobbies?: string
+    musicGenres?: string
+    movieGenres?: string
     onlinePattern?: $Enums.OnlinePattern
     avgResponseTime?: number
     maxDailyMatches?: number
     behaviorConfig?: string | null
-    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    preferredEthnicities?: string
+    preferredOccupations?: string
+    preferredEducation?: string
     totalInteractions?: number
     successfulMatches?: number
     avgEngagementScore?: number
@@ -52328,17 +52022,17 @@ export namespace Prisma {
     industry?: NullableStringFieldUpdateOperationsInput | string | null
     educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
     incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
-    interests?: BotProfileUpdateinterestsInput | string[]
-    hobbies?: BotProfileUpdatehobbiesInput | string[]
-    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
-    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    interests?: StringFieldUpdateOperationsInput | string
+    hobbies?: StringFieldUpdateOperationsInput | string
+    musicGenres?: StringFieldUpdateOperationsInput | string
+    movieGenres?: StringFieldUpdateOperationsInput | string
     onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
     avgResponseTime?: IntFieldUpdateOperationsInput | number
     maxDailyMatches?: IntFieldUpdateOperationsInput | number
     behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
-    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    preferredEthnicities?: StringFieldUpdateOperationsInput | string
+    preferredOccupations?: StringFieldUpdateOperationsInput | string
+    preferredEducation?: StringFieldUpdateOperationsInput | string
     totalInteractions?: IntFieldUpdateOperationsInput | number
     successfulMatches?: IntFieldUpdateOperationsInput | number
     avgEngagementScore?: FloatFieldUpdateOperationsInput | number
@@ -52363,17 +52057,17 @@ export namespace Prisma {
     industry?: NullableStringFieldUpdateOperationsInput | string | null
     educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
     incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
-    interests?: BotProfileUpdateinterestsInput | string[]
-    hobbies?: BotProfileUpdatehobbiesInput | string[]
-    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
-    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    interests?: StringFieldUpdateOperationsInput | string
+    hobbies?: StringFieldUpdateOperationsInput | string
+    musicGenres?: StringFieldUpdateOperationsInput | string
+    movieGenres?: StringFieldUpdateOperationsInput | string
     onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
     avgResponseTime?: IntFieldUpdateOperationsInput | number
     maxDailyMatches?: IntFieldUpdateOperationsInput | number
     behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
-    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    preferredEthnicities?: StringFieldUpdateOperationsInput | string
+    preferredOccupations?: StringFieldUpdateOperationsInput | string
+    preferredEducation?: StringFieldUpdateOperationsInput | string
     totalInteractions?: IntFieldUpdateOperationsInput | number
     successfulMatches?: IntFieldUpdateOperationsInput | number
     avgEngagementScore?: FloatFieldUpdateOperationsInput | number
@@ -52397,17 +52091,17 @@ export namespace Prisma {
     industry?: string | null
     educationLevel?: string | null
     incomeRange?: string | null
-    interests?: BotProfileCreateinterestsInput | string[]
-    hobbies?: BotProfileCreatehobbiesInput | string[]
-    musicGenres?: BotProfileCreatemusicGenresInput | string[]
-    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    interests?: string
+    hobbies?: string
+    musicGenres?: string
+    movieGenres?: string
     onlinePattern?: $Enums.OnlinePattern
     avgResponseTime?: number
     maxDailyMatches?: number
     behaviorConfig?: string | null
-    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    preferredEthnicities?: string
+    preferredOccupations?: string
+    preferredEducation?: string
     totalInteractions?: number
     successfulMatches?: number
     avgEngagementScore?: number
@@ -52430,17 +52124,17 @@ export namespace Prisma {
     industry?: NullableStringFieldUpdateOperationsInput | string | null
     educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
     incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
-    interests?: BotProfileUpdateinterestsInput | string[]
-    hobbies?: BotProfileUpdatehobbiesInput | string[]
-    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
-    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    interests?: StringFieldUpdateOperationsInput | string
+    hobbies?: StringFieldUpdateOperationsInput | string
+    musicGenres?: StringFieldUpdateOperationsInput | string
+    movieGenres?: StringFieldUpdateOperationsInput | string
     onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
     avgResponseTime?: IntFieldUpdateOperationsInput | number
     maxDailyMatches?: IntFieldUpdateOperationsInput | number
     behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
-    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    preferredEthnicities?: StringFieldUpdateOperationsInput | string
+    preferredOccupations?: StringFieldUpdateOperationsInput | string
+    preferredEducation?: StringFieldUpdateOperationsInput | string
     totalInteractions?: IntFieldUpdateOperationsInput | number
     successfulMatches?: IntFieldUpdateOperationsInput | number
     avgEngagementScore?: FloatFieldUpdateOperationsInput | number
@@ -52464,17 +52158,17 @@ export namespace Prisma {
     industry?: NullableStringFieldUpdateOperationsInput | string | null
     educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
     incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
-    interests?: BotProfileUpdateinterestsInput | string[]
-    hobbies?: BotProfileUpdatehobbiesInput | string[]
-    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
-    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    interests?: StringFieldUpdateOperationsInput | string
+    hobbies?: StringFieldUpdateOperationsInput | string
+    musicGenres?: StringFieldUpdateOperationsInput | string
+    movieGenres?: StringFieldUpdateOperationsInput | string
     onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
     avgResponseTime?: IntFieldUpdateOperationsInput | number
     maxDailyMatches?: IntFieldUpdateOperationsInput | number
     behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
-    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    preferredEthnicities?: StringFieldUpdateOperationsInput | string
+    preferredOccupations?: StringFieldUpdateOperationsInput | string
+    preferredEducation?: StringFieldUpdateOperationsInput | string
     totalInteractions?: IntFieldUpdateOperationsInput | number
     successfulMatches?: IntFieldUpdateOperationsInput | number
     avgEngagementScore?: FloatFieldUpdateOperationsInput | number
@@ -52697,7 +52391,7 @@ export namespace Prisma {
     userId: string
     interactionType: string
     outcome: string
-    context?: NullableJsonNullValueInput | InputJsonValue
+    context?: string | null
     processed?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -52709,7 +52403,7 @@ export namespace Prisma {
     userId: string
     interactionType: string
     outcome: string
-    context?: NullableJsonNullValueInput | InputJsonValue
+    context?: string | null
     processed?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -52721,7 +52415,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     interactionType?: StringFieldUpdateOperationsInput | string
     outcome?: StringFieldUpdateOperationsInput | string
-    context?: NullableJsonNullValueInput | InputJsonValue
+    context?: NullableStringFieldUpdateOperationsInput | string | null
     processed?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -52733,7 +52427,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     interactionType?: StringFieldUpdateOperationsInput | string
     outcome?: StringFieldUpdateOperationsInput | string
-    context?: NullableJsonNullValueInput | InputJsonValue
+    context?: NullableStringFieldUpdateOperationsInput | string | null
     processed?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -52745,7 +52439,7 @@ export namespace Prisma {
     userId: string
     interactionType: string
     outcome: string
-    context?: NullableJsonNullValueInput | InputJsonValue
+    context?: string | null
     processed?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -52757,7 +52451,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     interactionType?: StringFieldUpdateOperationsInput | string
     outcome?: StringFieldUpdateOperationsInput | string
-    context?: NullableJsonNullValueInput | InputJsonValue
+    context?: NullableStringFieldUpdateOperationsInput | string | null
     processed?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -52769,7 +52463,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     interactionType?: StringFieldUpdateOperationsInput | string
     outcome?: StringFieldUpdateOperationsInput | string
-    context?: NullableJsonNullValueInput | InputJsonValue
+    context?: NullableStringFieldUpdateOperationsInput | string | null
     processed?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -53465,7 +53159,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -53477,7 +53171,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -53513,7 +53207,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -53525,7 +53219,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -53559,7 +53253,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -53571,7 +53265,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53607,7 +53301,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -53619,7 +53313,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53654,7 +53348,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -53666,7 +53360,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -53698,7 +53392,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -53710,7 +53404,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53743,7 +53437,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -53755,7 +53449,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -54591,7 +54285,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -54624,7 +54318,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -54653,7 +54347,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -54686,7 +54380,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -54717,7 +54411,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -54744,7 +54438,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -54773,7 +54467,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -56326,8 +56020,8 @@ export namespace Prisma {
 
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -56335,35 +56029,34 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
   export type EnumBotTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[]
+    notIn?: $Enums.BotType[]
     not?: NestedEnumBotTypeFilter<$PrismaModel> | $Enums.BotType
   }
 
   export type EnumBotActivityLevelFilter<$PrismaModel = never> = {
     equals?: $Enums.BotActivityLevel | EnumBotActivityLevelFieldRefInput<$PrismaModel>
-    in?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
-    notIn?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.BotActivityLevel[]
+    notIn?: $Enums.BotActivityLevel[]
     not?: NestedEnumBotActivityLevelFilter<$PrismaModel> | $Enums.BotActivityLevel
   }
 
   export type EnumEthnicityNullableFilter<$PrismaModel = never> = {
     equals?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
-    in?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Ethnicity[] | null
+    notIn?: $Enums.Ethnicity[] | null
     not?: NestedEnumEthnicityNullableFilter<$PrismaModel> | $Enums.Ethnicity | null
   }
 
   export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -56371,29 +56064,20 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type StringNullableListFilter<$PrismaModel = never> = {
-    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    has?: string | StringFieldRefInput<$PrismaModel> | null
-    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
-    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
   }
 
   export type EnumOnlinePatternFilter<$PrismaModel = never> = {
     equals?: $Enums.OnlinePattern | EnumOnlinePatternFieldRefInput<$PrismaModel>
-    in?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
-    notIn?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    in?: $Enums.OnlinePattern[]
+    notIn?: $Enums.OnlinePattern[]
     not?: NestedEnumOnlinePatternFilter<$PrismaModel> | $Enums.OnlinePattern
   }
 
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -56401,18 +56085,10 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type EnumEthnicityNullableListFilter<$PrismaModel = never> = {
-    equals?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
-    has?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
-    hasEvery?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel>
-    hasSome?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
-  }
-
   export type FloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -56427,8 +56103,8 @@ export namespace Prisma {
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -56438,8 +56114,8 @@ export namespace Prisma {
 
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -56509,10 +56185,17 @@ export namespace Prisma {
     industry?: SortOrder
     educationLevel?: SortOrder
     incomeRange?: SortOrder
+    interests?: SortOrder
+    hobbies?: SortOrder
+    musicGenres?: SortOrder
+    movieGenres?: SortOrder
     onlinePattern?: SortOrder
     avgResponseTime?: SortOrder
     maxDailyMatches?: SortOrder
     behaviorConfig?: SortOrder
+    preferredEthnicities?: SortOrder
+    preferredOccupations?: SortOrder
+    preferredEducation?: SortOrder
     totalInteractions?: SortOrder
     successfulMatches?: SortOrder
     avgEngagementScore?: SortOrder
@@ -56536,10 +56219,17 @@ export namespace Prisma {
     industry?: SortOrder
     educationLevel?: SortOrder
     incomeRange?: SortOrder
+    interests?: SortOrder
+    hobbies?: SortOrder
+    musicGenres?: SortOrder
+    movieGenres?: SortOrder
     onlinePattern?: SortOrder
     avgResponseTime?: SortOrder
     maxDailyMatches?: SortOrder
     behaviorConfig?: SortOrder
+    preferredEthnicities?: SortOrder
+    preferredOccupations?: SortOrder
+    preferredEducation?: SortOrder
     totalInteractions?: SortOrder
     successfulMatches?: SortOrder
     avgEngagementScore?: SortOrder
@@ -56563,8 +56253,8 @@ export namespace Prisma {
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -56572,7 +56262,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -56581,8 +56270,8 @@ export namespace Prisma {
 
   export type EnumBotTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[]
+    notIn?: $Enums.BotType[]
     not?: NestedEnumBotTypeWithAggregatesFilter<$PrismaModel> | $Enums.BotType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumBotTypeFilter<$PrismaModel>
@@ -56591,8 +56280,8 @@ export namespace Prisma {
 
   export type EnumBotActivityLevelWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.BotActivityLevel | EnumBotActivityLevelFieldRefInput<$PrismaModel>
-    in?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
-    notIn?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.BotActivityLevel[]
+    notIn?: $Enums.BotActivityLevel[]
     not?: NestedEnumBotActivityLevelWithAggregatesFilter<$PrismaModel> | $Enums.BotActivityLevel
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumBotActivityLevelFilter<$PrismaModel>
@@ -56601,8 +56290,8 @@ export namespace Prisma {
 
   export type EnumEthnicityNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
-    in?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Ethnicity[] | null
+    notIn?: $Enums.Ethnicity[] | null
     not?: NestedEnumEthnicityNullableWithAggregatesFilter<$PrismaModel> | $Enums.Ethnicity | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumEthnicityNullableFilter<$PrismaModel>
@@ -56611,8 +56300,8 @@ export namespace Prisma {
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -56620,7 +56309,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -56629,8 +56317,8 @@ export namespace Prisma {
 
   export type EnumOnlinePatternWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.OnlinePattern | EnumOnlinePatternFieldRefInput<$PrismaModel>
-    in?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
-    notIn?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    in?: $Enums.OnlinePattern[]
+    notIn?: $Enums.OnlinePattern[]
     not?: NestedEnumOnlinePatternWithAggregatesFilter<$PrismaModel> | $Enums.OnlinePattern
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumOnlinePatternFilter<$PrismaModel>
@@ -56639,8 +56327,8 @@ export namespace Prisma {
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -56655,8 +56343,8 @@ export namespace Prisma {
 
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -56679,8 +56367,8 @@ export namespace Prisma {
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -56693,8 +56381,8 @@ export namespace Prisma {
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -56707,8 +56395,8 @@ export namespace Prisma {
 
   export type IntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -56770,8 +56458,8 @@ export namespace Prisma {
 
   export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -56842,29 +56530,6 @@ export namespace Prisma {
     avgEngagement?: SortOrder
     successRate?: SortOrder
   }
-  export type JsonNullableFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type BotLearningRecordCountOrderByAggregateInput = {
     id?: SortOrder
@@ -56884,6 +56549,7 @@ export namespace Prisma {
     userId?: SortOrder
     interactionType?: SortOrder
     outcome?: SortOrder
+    context?: SortOrder
     processed?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -56895,35 +56561,10 @@ export namespace Prisma {
     userId?: SortOrder
     interactionType?: SortOrder
     outcome?: SortOrder
+    context?: SortOrder
     processed?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedJsonNullableFilter<$PrismaModel>
-    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type BotPreferenceCountOrderByAggregateInput = {
@@ -57043,8 +56684,8 @@ export namespace Prisma {
 
   export type EnumUserRoleFilter<$PrismaModel = never> = {
     equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[]
+    notIn?: $Enums.UserRole[]
     not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
@@ -57326,8 +56967,8 @@ export namespace Prisma {
 
   export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[]
+    notIn?: $Enums.UserRole[]
     not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumUserRoleFilter<$PrismaModel>
@@ -57479,22 +57120,22 @@ export namespace Prisma {
 
   export type EnumGenderFilter<$PrismaModel = never> = {
     equals?: $Enums.Gender | EnumGenderFieldRefInput<$PrismaModel>
-    in?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
+    in?: $Enums.Gender[]
+    notIn?: $Enums.Gender[]
     not?: NestedEnumGenderFilter<$PrismaModel> | $Enums.Gender
   }
 
   export type EnumRelationshipGoalFilter<$PrismaModel = never> = {
     equals?: $Enums.RelationshipGoal | EnumRelationshipGoalFieldRefInput<$PrismaModel>
-    in?: $Enums.RelationshipGoal[] | ListEnumRelationshipGoalFieldRefInput<$PrismaModel>
-    notIn?: $Enums.RelationshipGoal[] | ListEnumRelationshipGoalFieldRefInput<$PrismaModel>
+    in?: $Enums.RelationshipGoal[]
+    notIn?: $Enums.RelationshipGoal[]
     not?: NestedEnumRelationshipGoalFilter<$PrismaModel> | $Enums.RelationshipGoal
   }
 
   export type EnumProfileStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ProfileStatus | EnumProfileStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ProfileStatus[]
+    notIn?: $Enums.ProfileStatus[]
     not?: NestedEnumProfileStatusFilter<$PrismaModel> | $Enums.ProfileStatus
   }
 
@@ -57573,6 +57214,7 @@ export namespace Prisma {
     bio?: SortOrder
     avatar?: SortOrder
     avatarType?: SortOrder
+    galleryPhotos?: SortOrder
     city?: SortOrder
     country?: SortOrder
     relationshipGoal?: SortOrder
@@ -57584,6 +57226,7 @@ export namespace Prisma {
     dealbreakers?: SortOrder
     lifePriorities?: SortOrder
     emotionalAvailability?: SortOrder
+    selectedTags?: SortOrder
     preferredAgeMin?: SortOrder
     preferredAgeMax?: SortOrder
     preferredGender?: SortOrder
@@ -57616,6 +57259,7 @@ export namespace Prisma {
     bio?: SortOrder
     avatar?: SortOrder
     avatarType?: SortOrder
+    galleryPhotos?: SortOrder
     city?: SortOrder
     country?: SortOrder
     relationshipGoal?: SortOrder
@@ -57627,6 +57271,7 @@ export namespace Prisma {
     dealbreakers?: SortOrder
     lifePriorities?: SortOrder
     emotionalAvailability?: SortOrder
+    selectedTags?: SortOrder
     preferredAgeMin?: SortOrder
     preferredAgeMax?: SortOrder
     preferredGender?: SortOrder
@@ -57659,8 +57304,8 @@ export namespace Prisma {
 
   export type EnumGenderWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.Gender | EnumGenderFieldRefInput<$PrismaModel>
-    in?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
+    in?: $Enums.Gender[]
+    notIn?: $Enums.Gender[]
     not?: NestedEnumGenderWithAggregatesFilter<$PrismaModel> | $Enums.Gender
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumGenderFilter<$PrismaModel>
@@ -57669,8 +57314,8 @@ export namespace Prisma {
 
   export type EnumRelationshipGoalWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.RelationshipGoal | EnumRelationshipGoalFieldRefInput<$PrismaModel>
-    in?: $Enums.RelationshipGoal[] | ListEnumRelationshipGoalFieldRefInput<$PrismaModel>
-    notIn?: $Enums.RelationshipGoal[] | ListEnumRelationshipGoalFieldRefInput<$PrismaModel>
+    in?: $Enums.RelationshipGoal[]
+    notIn?: $Enums.RelationshipGoal[]
     not?: NestedEnumRelationshipGoalWithAggregatesFilter<$PrismaModel> | $Enums.RelationshipGoal
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRelationshipGoalFilter<$PrismaModel>
@@ -57679,8 +57324,8 @@ export namespace Prisma {
 
   export type EnumProfileStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ProfileStatus | EnumProfileStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ProfileStatus[]
+    notIn?: $Enums.ProfileStatus[]
     not?: NestedEnumProfileStatusWithAggregatesFilter<$PrismaModel> | $Enums.ProfileStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumProfileStatusFilter<$PrismaModel>
@@ -57689,8 +57334,8 @@ export namespace Prisma {
 
   export type FloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -57700,22 +57345,22 @@ export namespace Prisma {
 
   export type EnumMatchStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchStatus | EnumMatchStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchStatus[] | ListEnumMatchStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchStatus[] | ListEnumMatchStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchStatus[]
+    notIn?: $Enums.MatchStatus[]
     not?: NestedEnumMatchStatusFilter<$PrismaModel> | $Enums.MatchStatus
   }
 
   export type EnumMatchTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchType | EnumMatchTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchType[] | ListEnumMatchTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchType[] | ListEnumMatchTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchType[]
+    notIn?: $Enums.MatchType[]
     not?: NestedEnumMatchTypeFilter<$PrismaModel> | $Enums.MatchType
   }
 
   export type EnumMatchActionNullableFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchAction | EnumMatchActionFieldRefInput<$PrismaModel> | null
-    in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
+    in?: $Enums.MatchAction[] | null
+    notIn?: $Enums.MatchAction[] | null
     not?: NestedEnumMatchActionNullableFilter<$PrismaModel> | $Enums.MatchAction | null
   }
 
@@ -57840,8 +57485,8 @@ export namespace Prisma {
 
   export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -57856,8 +57501,8 @@ export namespace Prisma {
 
   export type EnumMatchStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchStatus | EnumMatchStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchStatus[] | ListEnumMatchStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchStatus[] | ListEnumMatchStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchStatus[]
+    notIn?: $Enums.MatchStatus[]
     not?: NestedEnumMatchStatusWithAggregatesFilter<$PrismaModel> | $Enums.MatchStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMatchStatusFilter<$PrismaModel>
@@ -57866,8 +57511,8 @@ export namespace Prisma {
 
   export type EnumMatchTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchType | EnumMatchTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchType[] | ListEnumMatchTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchType[] | ListEnumMatchTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchType[]
+    notIn?: $Enums.MatchType[]
     not?: NestedEnumMatchTypeWithAggregatesFilter<$PrismaModel> | $Enums.MatchType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMatchTypeFilter<$PrismaModel>
@@ -57876,8 +57521,8 @@ export namespace Prisma {
 
   export type EnumMatchActionNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchAction | EnumMatchActionFieldRefInput<$PrismaModel> | null
-    in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
+    in?: $Enums.MatchAction[] | null
+    notIn?: $Enums.MatchAction[] | null
     not?: NestedEnumMatchActionNullableWithAggregatesFilter<$PrismaModel> | $Enums.MatchAction | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumMatchActionNullableFilter<$PrismaModel>
@@ -57886,8 +57531,8 @@ export namespace Prisma {
 
   export type EnumMatchActionFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchAction | EnumMatchActionFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchAction[]
+    notIn?: $Enums.MatchAction[]
     not?: NestedEnumMatchActionFilter<$PrismaModel> | $Enums.MatchAction
   }
 
@@ -57930,8 +57575,8 @@ export namespace Prisma {
 
   export type EnumMatchActionWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchAction | EnumMatchActionFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchAction[]
+    notIn?: $Enums.MatchAction[]
     not?: NestedEnumMatchActionWithAggregatesFilter<$PrismaModel> | $Enums.MatchAction
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMatchActionFilter<$PrismaModel>
@@ -57940,8 +57585,8 @@ export namespace Prisma {
 
   export type EnumVaultStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.VaultStatus | EnumVaultStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VaultStatus[]
+    notIn?: $Enums.VaultStatus[]
     not?: NestedEnumVaultStatusFilter<$PrismaModel> | $Enums.VaultStatus
   }
 
@@ -58024,8 +57669,8 @@ export namespace Prisma {
 
   export type EnumVaultStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.VaultStatus | EnumVaultStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VaultStatus[]
+    notIn?: $Enums.VaultStatus[]
     not?: NestedEnumVaultStatusWithAggregatesFilter<$PrismaModel> | $Enums.VaultStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumVaultStatusFilter<$PrismaModel>
@@ -58071,8 +57716,8 @@ export namespace Prisma {
 
   export type EnumMessageTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageType | EnumMessageTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageType[]
+    notIn?: $Enums.MessageType[]
     not?: NestedEnumMessageTypeFilter<$PrismaModel> | $Enums.MessageType
   }
 
@@ -58114,8 +57759,8 @@ export namespace Prisma {
 
   export type EnumMessageTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageType | EnumMessageTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageType[]
+    notIn?: $Enums.MessageType[]
     not?: NestedEnumMessageTypeWithAggregatesFilter<$PrismaModel> | $Enums.MessageType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMessageTypeFilter<$PrismaModel>
@@ -58124,15 +57769,15 @@ export namespace Prisma {
 
   export type EnumConversationStateFilter<$PrismaModel = never> = {
     equals?: $Enums.ConversationState | EnumConversationStateFieldRefInput<$PrismaModel>
-    in?: $Enums.ConversationState[] | ListEnumConversationStateFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConversationState[] | ListEnumConversationStateFieldRefInput<$PrismaModel>
+    in?: $Enums.ConversationState[]
+    notIn?: $Enums.ConversationState[]
     not?: NestedEnumConversationStateFilter<$PrismaModel> | $Enums.ConversationState
   }
 
   export type EnumConsentStateFilter<$PrismaModel = never> = {
     equals?: $Enums.ConsentState | EnumConsentStateFieldRefInput<$PrismaModel>
-    in?: $Enums.ConsentState[] | ListEnumConsentStateFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConsentState[] | ListEnumConsentStateFieldRefInput<$PrismaModel>
+    in?: $Enums.ConsentState[]
+    notIn?: $Enums.ConsentState[]
     not?: NestedEnumConsentStateFilter<$PrismaModel> | $Enums.ConsentState
   }
 
@@ -58218,8 +57863,8 @@ export namespace Prisma {
 
   export type EnumConversationStateWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ConversationState | EnumConversationStateFieldRefInput<$PrismaModel>
-    in?: $Enums.ConversationState[] | ListEnumConversationStateFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConversationState[] | ListEnumConversationStateFieldRefInput<$PrismaModel>
+    in?: $Enums.ConversationState[]
+    notIn?: $Enums.ConversationState[]
     not?: NestedEnumConversationStateWithAggregatesFilter<$PrismaModel> | $Enums.ConversationState
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumConversationStateFilter<$PrismaModel>
@@ -58228,8 +57873,8 @@ export namespace Prisma {
 
   export type EnumConsentStateWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ConsentState | EnumConsentStateFieldRefInput<$PrismaModel>
-    in?: $Enums.ConsentState[] | ListEnumConsentStateFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConsentState[] | ListEnumConsentStateFieldRefInput<$PrismaModel>
+    in?: $Enums.ConsentState[]
+    notIn?: $Enums.ConsentState[]
     not?: NestedEnumConsentStateWithAggregatesFilter<$PrismaModel> | $Enums.ConsentState
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumConsentStateFilter<$PrismaModel>
@@ -58292,36 +57937,36 @@ export namespace Prisma {
 
   export type EnumIMMessageTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.IMMessageType | EnumIMMessageTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.IMMessageType[] | ListEnumIMMessageTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.IMMessageType[] | ListEnumIMMessageTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.IMMessageType[]
+    notIn?: $Enums.IMMessageType[]
     not?: NestedEnumIMMessageTypeFilter<$PrismaModel> | $Enums.IMMessageType
   }
 
   export type EnumEncryptionModeFilter<$PrismaModel = never> = {
     equals?: $Enums.EncryptionMode | EnumEncryptionModeFieldRefInput<$PrismaModel>
-    in?: $Enums.EncryptionMode[] | ListEnumEncryptionModeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.EncryptionMode[] | ListEnumEncryptionModeFieldRefInput<$PrismaModel>
+    in?: $Enums.EncryptionMode[]
+    notIn?: $Enums.EncryptionMode[]
     not?: NestedEnumEncryptionModeFilter<$PrismaModel> | $Enums.EncryptionMode
   }
 
   export type EnumMediaAccessLevelFilter<$PrismaModel = never> = {
     equals?: $Enums.MediaAccessLevel | EnumMediaAccessLevelFieldRefInput<$PrismaModel>
-    in?: $Enums.MediaAccessLevel[] | ListEnumMediaAccessLevelFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MediaAccessLevel[] | ListEnumMediaAccessLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.MediaAccessLevel[]
+    notIn?: $Enums.MediaAccessLevel[]
     not?: NestedEnumMediaAccessLevelFilter<$PrismaModel> | $Enums.MediaAccessLevel
   }
 
   export type EnumRuleEngineResultFilter<$PrismaModel = never> = {
     equals?: $Enums.RuleEngineResult | EnumRuleEngineResultFieldRefInput<$PrismaModel>
-    in?: $Enums.RuleEngineResult[] | ListEnumRuleEngineResultFieldRefInput<$PrismaModel>
-    notIn?: $Enums.RuleEngineResult[] | ListEnumRuleEngineResultFieldRefInput<$PrismaModel>
+    in?: $Enums.RuleEngineResult[]
+    notIn?: $Enums.RuleEngineResult[]
     not?: NestedEnumRuleEngineResultFilter<$PrismaModel> | $Enums.RuleEngineResult
   }
 
   export type EnumMessageDeliveryStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageDeliveryStatus | EnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageDeliveryStatus[] | ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageDeliveryStatus[] | ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageDeliveryStatus[]
+    notIn?: $Enums.MessageDeliveryStatus[]
     not?: NestedEnumMessageDeliveryStatusFilter<$PrismaModel> | $Enums.MessageDeliveryStatus
   }
 
@@ -58371,6 +58016,7 @@ export namespace Prisma {
     encryptionMode?: SortOrder
     ephemeralPublicKey?: SortOrder
     boundaryVersion?: SortOrder
+    complianceTags?: SortOrder
     consentState?: SortOrder
     mediaLevel?: SortOrder
     ruleResult?: SortOrder
@@ -58399,6 +58045,7 @@ export namespace Prisma {
     encryptionMode?: SortOrder
     ephemeralPublicKey?: SortOrder
     boundaryVersion?: SortOrder
+    complianceTags?: SortOrder
     consentState?: SortOrder
     mediaLevel?: SortOrder
     ruleResult?: SortOrder
@@ -58420,8 +58067,8 @@ export namespace Prisma {
 
   export type EnumIMMessageTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.IMMessageType | EnumIMMessageTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.IMMessageType[] | ListEnumIMMessageTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.IMMessageType[] | ListEnumIMMessageTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.IMMessageType[]
+    notIn?: $Enums.IMMessageType[]
     not?: NestedEnumIMMessageTypeWithAggregatesFilter<$PrismaModel> | $Enums.IMMessageType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumIMMessageTypeFilter<$PrismaModel>
@@ -58430,8 +58077,8 @@ export namespace Prisma {
 
   export type EnumEncryptionModeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.EncryptionMode | EnumEncryptionModeFieldRefInput<$PrismaModel>
-    in?: $Enums.EncryptionMode[] | ListEnumEncryptionModeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.EncryptionMode[] | ListEnumEncryptionModeFieldRefInput<$PrismaModel>
+    in?: $Enums.EncryptionMode[]
+    notIn?: $Enums.EncryptionMode[]
     not?: NestedEnumEncryptionModeWithAggregatesFilter<$PrismaModel> | $Enums.EncryptionMode
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumEncryptionModeFilter<$PrismaModel>
@@ -58440,8 +58087,8 @@ export namespace Prisma {
 
   export type EnumMediaAccessLevelWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MediaAccessLevel | EnumMediaAccessLevelFieldRefInput<$PrismaModel>
-    in?: $Enums.MediaAccessLevel[] | ListEnumMediaAccessLevelFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MediaAccessLevel[] | ListEnumMediaAccessLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.MediaAccessLevel[]
+    notIn?: $Enums.MediaAccessLevel[]
     not?: NestedEnumMediaAccessLevelWithAggregatesFilter<$PrismaModel> | $Enums.MediaAccessLevel
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMediaAccessLevelFilter<$PrismaModel>
@@ -58450,8 +58097,8 @@ export namespace Prisma {
 
   export type EnumRuleEngineResultWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.RuleEngineResult | EnumRuleEngineResultFieldRefInput<$PrismaModel>
-    in?: $Enums.RuleEngineResult[] | ListEnumRuleEngineResultFieldRefInput<$PrismaModel>
-    notIn?: $Enums.RuleEngineResult[] | ListEnumRuleEngineResultFieldRefInput<$PrismaModel>
+    in?: $Enums.RuleEngineResult[]
+    notIn?: $Enums.RuleEngineResult[]
     not?: NestedEnumRuleEngineResultWithAggregatesFilter<$PrismaModel> | $Enums.RuleEngineResult
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRuleEngineResultFilter<$PrismaModel>
@@ -58460,8 +58107,8 @@ export namespace Prisma {
 
   export type EnumMessageDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageDeliveryStatus | EnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageDeliveryStatus[] | ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageDeliveryStatus[] | ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageDeliveryStatus[]
+    notIn?: $Enums.MessageDeliveryStatus[]
     not?: NestedEnumMessageDeliveryStatusWithAggregatesFilter<$PrismaModel> | $Enums.MessageDeliveryStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMessageDeliveryStatusFilter<$PrismaModel>
@@ -58543,8 +58190,8 @@ export namespace Prisma {
 
   export type EnumPresenceStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.PresenceStatus | EnumPresenceStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PresenceStatus[] | ListEnumPresenceStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PresenceStatus[] | ListEnumPresenceStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PresenceStatus[]
+    notIn?: $Enums.PresenceStatus[]
     not?: NestedEnumPresenceStatusFilter<$PrismaModel> | $Enums.PresenceStatus
   }
 
@@ -58595,8 +58242,8 @@ export namespace Prisma {
 
   export type EnumPresenceStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.PresenceStatus | EnumPresenceStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PresenceStatus[] | ListEnumPresenceStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PresenceStatus[] | ListEnumPresenceStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PresenceStatus[]
+    notIn?: $Enums.PresenceStatus[]
     not?: NestedEnumPresenceStatusWithAggregatesFilter<$PrismaModel> | $Enums.PresenceStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPresenceStatusFilter<$PrismaModel>
@@ -58605,8 +58252,8 @@ export namespace Prisma {
 
   export type EnumConsentRequestTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.ConsentRequestType | EnumConsentRequestTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ConsentRequestType[] | ListEnumConsentRequestTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConsentRequestType[] | ListEnumConsentRequestTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ConsentRequestType[]
+    notIn?: $Enums.ConsentRequestType[]
     not?: NestedEnumConsentRequestTypeFilter<$PrismaModel> | $Enums.ConsentRequestType
   }
 
@@ -58666,8 +58313,8 @@ export namespace Prisma {
 
   export type EnumConsentRequestTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ConsentRequestType | EnumConsentRequestTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ConsentRequestType[] | ListEnumConsentRequestTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConsentRequestType[] | ListEnumConsentRequestTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ConsentRequestType[]
+    notIn?: $Enums.ConsentRequestType[]
     not?: NestedEnumConsentRequestTypeWithAggregatesFilter<$PrismaModel> | $Enums.ConsentRequestType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumConsentRequestTypeFilter<$PrismaModel>
@@ -58814,8 +58461,8 @@ export namespace Prisma {
 
   export type EnumNotificationTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationType[]
+    notIn?: $Enums.NotificationType[]
     not?: NestedEnumNotificationTypeFilter<$PrismaModel> | $Enums.NotificationType
   }
 
@@ -58860,8 +58507,8 @@ export namespace Prisma {
 
   export type EnumNotificationTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationType[]
+    notIn?: $Enums.NotificationType[]
     not?: NestedEnumNotificationTypeWithAggregatesFilter<$PrismaModel> | $Enums.NotificationType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumNotificationTypeFilter<$PrismaModel>
@@ -58870,15 +58517,15 @@ export namespace Prisma {
 
   export type EnumSubscriptionPlanFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionPlan | EnumSubscriptionPlanFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionPlan[] | ListEnumSubscriptionPlanFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionPlan[] | ListEnumSubscriptionPlanFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionPlan[]
+    notIn?: $Enums.SubscriptionPlan[]
     not?: NestedEnumSubscriptionPlanFilter<$PrismaModel> | $Enums.SubscriptionPlan
   }
 
   export type EnumSubscriptionStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionStatus[]
+    notIn?: $Enums.SubscriptionStatus[]
     not?: NestedEnumSubscriptionStatusFilter<$PrismaModel> | $Enums.SubscriptionStatus
   }
 
@@ -58949,8 +58596,8 @@ export namespace Prisma {
 
   export type EnumSubscriptionPlanWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionPlan | EnumSubscriptionPlanFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionPlan[] | ListEnumSubscriptionPlanFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionPlan[] | ListEnumSubscriptionPlanFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionPlan[]
+    notIn?: $Enums.SubscriptionPlan[]
     not?: NestedEnumSubscriptionPlanWithAggregatesFilter<$PrismaModel> | $Enums.SubscriptionPlan
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSubscriptionPlanFilter<$PrismaModel>
@@ -58959,8 +58606,8 @@ export namespace Prisma {
 
   export type EnumSubscriptionStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionStatus[]
+    notIn?: $Enums.SubscriptionStatus[]
     not?: NestedEnumSubscriptionStatusWithAggregatesFilter<$PrismaModel> | $Enums.SubscriptionStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSubscriptionStatusFilter<$PrismaModel>
@@ -58969,8 +58616,8 @@ export namespace Prisma {
 
   export type EnumPaymentStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentStatus[]
+    notIn?: $Enums.PaymentStatus[]
     not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
   }
 
@@ -59023,8 +58670,8 @@ export namespace Prisma {
 
   export type EnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentStatus[]
+    notIn?: $Enums.PaymentStatus[]
     not?: NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel> | $Enums.PaymentStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
@@ -59126,8 +58773,8 @@ export namespace Prisma {
 
   export type EnumSincerityTierFilter<$PrismaModel = never> = {
     equals?: $Enums.SincerityTier | EnumSincerityTierFieldRefInput<$PrismaModel>
-    in?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTier[]
+    notIn?: $Enums.SincerityTier[]
     not?: NestedEnumSincerityTierFilter<$PrismaModel> | $Enums.SincerityTier
   }
 
@@ -59209,8 +58856,8 @@ export namespace Prisma {
 
   export type EnumSincerityTierWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SincerityTier | EnumSincerityTierFieldRefInput<$PrismaModel>
-    in?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTier[]
+    notIn?: $Enums.SincerityTier[]
     not?: NestedEnumSincerityTierWithAggregatesFilter<$PrismaModel> | $Enums.SincerityTier
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSincerityTierFilter<$PrismaModel>
@@ -59219,8 +58866,8 @@ export namespace Prisma {
 
   export type EnumSincerityTransactionTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.SincerityTransactionType | EnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTransactionType[]
+    notIn?: $Enums.SincerityTransactionType[]
     not?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel> | $Enums.SincerityTransactionType
   }
 
@@ -59284,8 +58931,8 @@ export namespace Prisma {
 
   export type EnumSincerityTransactionTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SincerityTransactionType | EnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTransactionType[]
+    notIn?: $Enums.SincerityTransactionType[]
     not?: NestedEnumSincerityTransactionTypeWithAggregatesFilter<$PrismaModel> | $Enums.SincerityTransactionType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel>
@@ -59294,15 +58941,15 @@ export namespace Prisma {
 
   export type EnumReportReasonFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportReason | EnumReportReasonFieldRefInput<$PrismaModel>
-    in?: $Enums.ReportReason[] | ListEnumReportReasonFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ReportReason[] | ListEnumReportReasonFieldRefInput<$PrismaModel>
+    in?: $Enums.ReportReason[]
+    notIn?: $Enums.ReportReason[]
     not?: NestedEnumReportReasonFilter<$PrismaModel> | $Enums.ReportReason
   }
 
   export type EnumReportStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportStatus | EnumReportStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.ReportStatus[] | ListEnumReportStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ReportStatus[] | ListEnumReportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ReportStatus[]
+    notIn?: $Enums.ReportStatus[]
     not?: NestedEnumReportStatusFilter<$PrismaModel> | $Enums.ReportStatus
   }
 
@@ -59359,8 +59006,8 @@ export namespace Prisma {
 
   export type EnumReportReasonWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportReason | EnumReportReasonFieldRefInput<$PrismaModel>
-    in?: $Enums.ReportReason[] | ListEnumReportReasonFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ReportReason[] | ListEnumReportReasonFieldRefInput<$PrismaModel>
+    in?: $Enums.ReportReason[]
+    notIn?: $Enums.ReportReason[]
     not?: NestedEnumReportReasonWithAggregatesFilter<$PrismaModel> | $Enums.ReportReason
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumReportReasonFilter<$PrismaModel>
@@ -59369,40 +59016,12 @@ export namespace Prisma {
 
   export type EnumReportStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportStatus | EnumReportStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.ReportStatus[] | ListEnumReportStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ReportStatus[] | ListEnumReportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ReportStatus[]
+    notIn?: $Enums.ReportStatus[]
     not?: NestedEnumReportStatusWithAggregatesFilter<$PrismaModel> | $Enums.ReportStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumReportStatusFilter<$PrismaModel>
     _max?: NestedEnumReportStatusFilter<$PrismaModel>
-  }
-
-  export type BotProfileCreateinterestsInput = {
-    set: string[]
-  }
-
-  export type BotProfileCreatehobbiesInput = {
-    set: string[]
-  }
-
-  export type BotProfileCreatemusicGenresInput = {
-    set: string[]
-  }
-
-  export type BotProfileCreatemovieGenresInput = {
-    set: string[]
-  }
-
-  export type BotProfileCreatepreferredEthnicitiesInput = {
-    set: $Enums.Ethnicity[]
-  }
-
-  export type BotProfileCreatepreferredOccupationsInput = {
-    set: string[]
-  }
-
-  export type BotProfileCreatepreferredEducationInput = {
-    set: string[]
   }
 
   export type ProfileCreateNestedOneWithoutBotProfileInput = {
@@ -59431,26 +59050,6 @@ export namespace Prisma {
     set?: string | null
   }
 
-  export type BotProfileUpdateinterestsInput = {
-    set?: string[]
-    push?: string | string[]
-  }
-
-  export type BotProfileUpdatehobbiesInput = {
-    set?: string[]
-    push?: string | string[]
-  }
-
-  export type BotProfileUpdatemusicGenresInput = {
-    set?: string[]
-    push?: string | string[]
-  }
-
-  export type BotProfileUpdatemovieGenresInput = {
-    set?: string[]
-    push?: string | string[]
-  }
-
   export type EnumOnlinePatternFieldUpdateOperationsInput = {
     set?: $Enums.OnlinePattern
   }
@@ -59461,21 +59060,6 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
-  }
-
-  export type BotProfileUpdatepreferredEthnicitiesInput = {
-    set?: $Enums.Ethnicity[]
-    push?: $Enums.Ethnicity | $Enums.Ethnicity[]
-  }
-
-  export type BotProfileUpdatepreferredOccupationsInput = {
-    set?: string[]
-    push?: string | string[]
-  }
-
-  export type BotProfileUpdatepreferredEducationInput = {
-    set?: string[]
-    push?: string | string[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -60750,14 +60334,6 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVerificationTokensInput, UserUpdateWithoutVerificationTokensInput>, UserUncheckedUpdateWithoutVerificationTokensInput>
   }
 
-  export type ProfileCreategalleryPhotosInput = {
-    set: string[]
-  }
-
-  export type ProfileCreateselectedTagsInput = {
-    set: string[]
-  }
-
   export type UserCreateNestedOneWithoutProfileInput = {
     create?: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
     connectOrCreate?: UserCreateOrConnectWithoutProfileInput
@@ -60792,18 +60368,8 @@ export namespace Prisma {
     set?: $Enums.Gender
   }
 
-  export type ProfileUpdategalleryPhotosInput = {
-    set?: string[]
-    push?: string | string[]
-  }
-
   export type EnumRelationshipGoalFieldUpdateOperationsInput = {
     set?: $Enums.RelationshipGoal
-  }
-
-  export type ProfileUpdateselectedTagsInput = {
-    set?: string[]
-    push?: string | string[]
   }
 
   export type EnumProfileStatusFieldUpdateOperationsInput = {
@@ -61498,10 +61064,6 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutImParticipantsInput, UserUpdateWithoutImParticipantsInput>, UserUncheckedUpdateWithoutImParticipantsInput>
   }
 
-  export type IMMessageCreatecomplianceTagsInput = {
-    set: string[]
-  }
-
   export type ConversationCreateNestedOneWithoutImMessagesInput = {
     create?: XOR<ConversationCreateWithoutImMessagesInput, ConversationUncheckedCreateWithoutImMessagesInput>
     connectOrCreate?: ConversationCreateOrConnectWithoutImMessagesInput
@@ -61548,11 +61110,6 @@ export namespace Prisma {
 
   export type EnumEncryptionModeFieldUpdateOperationsInput = {
     set?: $Enums.EncryptionMode
-  }
-
-  export type IMMessageUpdatecomplianceTagsInput = {
-    set?: string[]
-    push?: string | string[]
   }
 
   export type EnumMediaAccessLevelFieldUpdateOperationsInput = {
@@ -62049,8 +61606,8 @@ export namespace Prisma {
 
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -62063,29 +61620,29 @@ export namespace Prisma {
 
   export type NestedEnumBotTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[]
+    notIn?: $Enums.BotType[]
     not?: NestedEnumBotTypeFilter<$PrismaModel> | $Enums.BotType
   }
 
   export type NestedEnumBotActivityLevelFilter<$PrismaModel = never> = {
     equals?: $Enums.BotActivityLevel | EnumBotActivityLevelFieldRefInput<$PrismaModel>
-    in?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
-    notIn?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.BotActivityLevel[]
+    notIn?: $Enums.BotActivityLevel[]
     not?: NestedEnumBotActivityLevelFilter<$PrismaModel> | $Enums.BotActivityLevel
   }
 
   export type NestedEnumEthnicityNullableFilter<$PrismaModel = never> = {
     equals?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
-    in?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Ethnicity[] | null
+    notIn?: $Enums.Ethnicity[] | null
     not?: NestedEnumEthnicityNullableFilter<$PrismaModel> | $Enums.Ethnicity | null
   }
 
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -62098,15 +61655,15 @@ export namespace Prisma {
 
   export type NestedEnumOnlinePatternFilter<$PrismaModel = never> = {
     equals?: $Enums.OnlinePattern | EnumOnlinePatternFieldRefInput<$PrismaModel>
-    in?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
-    notIn?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    in?: $Enums.OnlinePattern[]
+    notIn?: $Enums.OnlinePattern[]
     not?: NestedEnumOnlinePatternFilter<$PrismaModel> | $Enums.OnlinePattern
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -62116,8 +61673,8 @@ export namespace Prisma {
 
   export type NestedFloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -62132,8 +61689,8 @@ export namespace Prisma {
 
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -62143,8 +61700,8 @@ export namespace Prisma {
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -62154,8 +61711,8 @@ export namespace Prisma {
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -62171,8 +61728,8 @@ export namespace Prisma {
 
   export type NestedEnumBotTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.BotType | EnumBotTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.BotType[] | ListEnumBotTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BotType[]
+    notIn?: $Enums.BotType[]
     not?: NestedEnumBotTypeWithAggregatesFilter<$PrismaModel> | $Enums.BotType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumBotTypeFilter<$PrismaModel>
@@ -62181,8 +61738,8 @@ export namespace Prisma {
 
   export type NestedEnumBotActivityLevelWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.BotActivityLevel | EnumBotActivityLevelFieldRefInput<$PrismaModel>
-    in?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
-    notIn?: $Enums.BotActivityLevel[] | ListEnumBotActivityLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.BotActivityLevel[]
+    notIn?: $Enums.BotActivityLevel[]
     not?: NestedEnumBotActivityLevelWithAggregatesFilter<$PrismaModel> | $Enums.BotActivityLevel
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumBotActivityLevelFilter<$PrismaModel>
@@ -62191,8 +61748,8 @@ export namespace Prisma {
 
   export type NestedEnumEthnicityNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.Ethnicity | EnumEthnicityFieldRefInput<$PrismaModel> | null
-    in?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.Ethnicity[] | ListEnumEthnicityFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Ethnicity[] | null
+    notIn?: $Enums.Ethnicity[] | null
     not?: NestedEnumEthnicityNullableWithAggregatesFilter<$PrismaModel> | $Enums.Ethnicity | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumEthnicityNullableFilter<$PrismaModel>
@@ -62201,8 +61758,8 @@ export namespace Prisma {
 
   export type NestedIntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -62212,8 +61769,8 @@ export namespace Prisma {
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -62229,8 +61786,8 @@ export namespace Prisma {
 
   export type NestedEnumOnlinePatternWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.OnlinePattern | EnumOnlinePatternFieldRefInput<$PrismaModel>
-    in?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
-    notIn?: $Enums.OnlinePattern[] | ListEnumOnlinePatternFieldRefInput<$PrismaModel>
+    in?: $Enums.OnlinePattern[]
+    notIn?: $Enums.OnlinePattern[]
     not?: NestedEnumOnlinePatternWithAggregatesFilter<$PrismaModel> | $Enums.OnlinePattern
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumOnlinePatternFilter<$PrismaModel>
@@ -62239,8 +61796,8 @@ export namespace Prisma {
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -62255,8 +61812,8 @@ export namespace Prisma {
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -62279,8 +61836,8 @@ export namespace Prisma {
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -62293,8 +61850,8 @@ export namespace Prisma {
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -62307,8 +61864,8 @@ export namespace Prisma {
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -62323,49 +61880,26 @@ export namespace Prisma {
 
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
-  export type NestedJsonNullableFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
     equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[]
+    notIn?: $Enums.UserRole[]
     not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
   export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[]
+    notIn?: $Enums.UserRole[]
     not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumUserRoleFilter<$PrismaModel>
@@ -62374,29 +61908,29 @@ export namespace Prisma {
 
   export type NestedEnumGenderFilter<$PrismaModel = never> = {
     equals?: $Enums.Gender | EnumGenderFieldRefInput<$PrismaModel>
-    in?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
+    in?: $Enums.Gender[]
+    notIn?: $Enums.Gender[]
     not?: NestedEnumGenderFilter<$PrismaModel> | $Enums.Gender
   }
 
   export type NestedEnumRelationshipGoalFilter<$PrismaModel = never> = {
     equals?: $Enums.RelationshipGoal | EnumRelationshipGoalFieldRefInput<$PrismaModel>
-    in?: $Enums.RelationshipGoal[] | ListEnumRelationshipGoalFieldRefInput<$PrismaModel>
-    notIn?: $Enums.RelationshipGoal[] | ListEnumRelationshipGoalFieldRefInput<$PrismaModel>
+    in?: $Enums.RelationshipGoal[]
+    notIn?: $Enums.RelationshipGoal[]
     not?: NestedEnumRelationshipGoalFilter<$PrismaModel> | $Enums.RelationshipGoal
   }
 
   export type NestedEnumProfileStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ProfileStatus | EnumProfileStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ProfileStatus[]
+    notIn?: $Enums.ProfileStatus[]
     not?: NestedEnumProfileStatusFilter<$PrismaModel> | $Enums.ProfileStatus
   }
 
   export type NestedEnumGenderWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.Gender | EnumGenderFieldRefInput<$PrismaModel>
-    in?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Gender[] | ListEnumGenderFieldRefInput<$PrismaModel>
+    in?: $Enums.Gender[]
+    notIn?: $Enums.Gender[]
     not?: NestedEnumGenderWithAggregatesFilter<$PrismaModel> | $Enums.Gender
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumGenderFilter<$PrismaModel>
@@ -62405,8 +61939,8 @@ export namespace Prisma {
 
   export type NestedEnumRelationshipGoalWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.RelationshipGoal | EnumRelationshipGoalFieldRefInput<$PrismaModel>
-    in?: $Enums.RelationshipGoal[] | ListEnumRelationshipGoalFieldRefInput<$PrismaModel>
-    notIn?: $Enums.RelationshipGoal[] | ListEnumRelationshipGoalFieldRefInput<$PrismaModel>
+    in?: $Enums.RelationshipGoal[]
+    notIn?: $Enums.RelationshipGoal[]
     not?: NestedEnumRelationshipGoalWithAggregatesFilter<$PrismaModel> | $Enums.RelationshipGoal
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRelationshipGoalFilter<$PrismaModel>
@@ -62415,8 +61949,8 @@ export namespace Prisma {
 
   export type NestedEnumProfileStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ProfileStatus | EnumProfileStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ProfileStatus[] | ListEnumProfileStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ProfileStatus[]
+    notIn?: $Enums.ProfileStatus[]
     not?: NestedEnumProfileStatusWithAggregatesFilter<$PrismaModel> | $Enums.ProfileStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumProfileStatusFilter<$PrismaModel>
@@ -62425,29 +61959,29 @@ export namespace Prisma {
 
   export type NestedEnumMatchStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchStatus | EnumMatchStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchStatus[] | ListEnumMatchStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchStatus[] | ListEnumMatchStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchStatus[]
+    notIn?: $Enums.MatchStatus[]
     not?: NestedEnumMatchStatusFilter<$PrismaModel> | $Enums.MatchStatus
   }
 
   export type NestedEnumMatchTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchType | EnumMatchTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchType[] | ListEnumMatchTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchType[] | ListEnumMatchTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchType[]
+    notIn?: $Enums.MatchType[]
     not?: NestedEnumMatchTypeFilter<$PrismaModel> | $Enums.MatchType
   }
 
   export type NestedEnumMatchActionNullableFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchAction | EnumMatchActionFieldRefInput<$PrismaModel> | null
-    in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
+    in?: $Enums.MatchAction[] | null
+    notIn?: $Enums.MatchAction[] | null
     not?: NestedEnumMatchActionNullableFilter<$PrismaModel> | $Enums.MatchAction | null
   }
 
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -62462,8 +61996,8 @@ export namespace Prisma {
 
   export type NestedEnumMatchStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchStatus | EnumMatchStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchStatus[] | ListEnumMatchStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchStatus[] | ListEnumMatchStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchStatus[]
+    notIn?: $Enums.MatchStatus[]
     not?: NestedEnumMatchStatusWithAggregatesFilter<$PrismaModel> | $Enums.MatchStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMatchStatusFilter<$PrismaModel>
@@ -62472,8 +62006,8 @@ export namespace Prisma {
 
   export type NestedEnumMatchTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchType | EnumMatchTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchType[] | ListEnumMatchTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchType[] | ListEnumMatchTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchType[]
+    notIn?: $Enums.MatchType[]
     not?: NestedEnumMatchTypeWithAggregatesFilter<$PrismaModel> | $Enums.MatchType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMatchTypeFilter<$PrismaModel>
@@ -62482,8 +62016,8 @@ export namespace Prisma {
 
   export type NestedEnumMatchActionNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchAction | EnumMatchActionFieldRefInput<$PrismaModel> | null
-    in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel> | null
+    in?: $Enums.MatchAction[] | null
+    notIn?: $Enums.MatchAction[] | null
     not?: NestedEnumMatchActionNullableWithAggregatesFilter<$PrismaModel> | $Enums.MatchAction | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumMatchActionNullableFilter<$PrismaModel>
@@ -62492,15 +62026,15 @@ export namespace Prisma {
 
   export type NestedEnumMatchActionFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchAction | EnumMatchActionFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchAction[]
+    notIn?: $Enums.MatchAction[]
     not?: NestedEnumMatchActionFilter<$PrismaModel> | $Enums.MatchAction
   }
 
   export type NestedEnumMatchActionWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MatchAction | EnumMatchActionFieldRefInput<$PrismaModel>
-    in?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MatchAction[] | ListEnumMatchActionFieldRefInput<$PrismaModel>
+    in?: $Enums.MatchAction[]
+    notIn?: $Enums.MatchAction[]
     not?: NestedEnumMatchActionWithAggregatesFilter<$PrismaModel> | $Enums.MatchAction
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMatchActionFilter<$PrismaModel>
@@ -62509,15 +62043,15 @@ export namespace Prisma {
 
   export type NestedEnumVaultStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.VaultStatus | EnumVaultStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VaultStatus[]
+    notIn?: $Enums.VaultStatus[]
     not?: NestedEnumVaultStatusFilter<$PrismaModel> | $Enums.VaultStatus
   }
 
   export type NestedEnumVaultStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.VaultStatus | EnumVaultStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.VaultStatus[] | ListEnumVaultStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VaultStatus[]
+    notIn?: $Enums.VaultStatus[]
     not?: NestedEnumVaultStatusWithAggregatesFilter<$PrismaModel> | $Enums.VaultStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumVaultStatusFilter<$PrismaModel>
@@ -62526,15 +62060,15 @@ export namespace Prisma {
 
   export type NestedEnumMessageTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageType | EnumMessageTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageType[]
+    notIn?: $Enums.MessageType[]
     not?: NestedEnumMessageTypeFilter<$PrismaModel> | $Enums.MessageType
   }
 
   export type NestedEnumMessageTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageType | EnumMessageTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageType[]
+    notIn?: $Enums.MessageType[]
     not?: NestedEnumMessageTypeWithAggregatesFilter<$PrismaModel> | $Enums.MessageType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMessageTypeFilter<$PrismaModel>
@@ -62543,22 +62077,22 @@ export namespace Prisma {
 
   export type NestedEnumConversationStateFilter<$PrismaModel = never> = {
     equals?: $Enums.ConversationState | EnumConversationStateFieldRefInput<$PrismaModel>
-    in?: $Enums.ConversationState[] | ListEnumConversationStateFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConversationState[] | ListEnumConversationStateFieldRefInput<$PrismaModel>
+    in?: $Enums.ConversationState[]
+    notIn?: $Enums.ConversationState[]
     not?: NestedEnumConversationStateFilter<$PrismaModel> | $Enums.ConversationState
   }
 
   export type NestedEnumConsentStateFilter<$PrismaModel = never> = {
     equals?: $Enums.ConsentState | EnumConsentStateFieldRefInput<$PrismaModel>
-    in?: $Enums.ConsentState[] | ListEnumConsentStateFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConsentState[] | ListEnumConsentStateFieldRefInput<$PrismaModel>
+    in?: $Enums.ConsentState[]
+    notIn?: $Enums.ConsentState[]
     not?: NestedEnumConsentStateFilter<$PrismaModel> | $Enums.ConsentState
   }
 
   export type NestedEnumConversationStateWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ConversationState | EnumConversationStateFieldRefInput<$PrismaModel>
-    in?: $Enums.ConversationState[] | ListEnumConversationStateFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConversationState[] | ListEnumConversationStateFieldRefInput<$PrismaModel>
+    in?: $Enums.ConversationState[]
+    notIn?: $Enums.ConversationState[]
     not?: NestedEnumConversationStateWithAggregatesFilter<$PrismaModel> | $Enums.ConversationState
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumConversationStateFilter<$PrismaModel>
@@ -62567,8 +62101,8 @@ export namespace Prisma {
 
   export type NestedEnumConsentStateWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ConsentState | EnumConsentStateFieldRefInput<$PrismaModel>
-    in?: $Enums.ConsentState[] | ListEnumConsentStateFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConsentState[] | ListEnumConsentStateFieldRefInput<$PrismaModel>
+    in?: $Enums.ConsentState[]
+    notIn?: $Enums.ConsentState[]
     not?: NestedEnumConsentStateWithAggregatesFilter<$PrismaModel> | $Enums.ConsentState
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumConsentStateFilter<$PrismaModel>
@@ -62577,43 +62111,43 @@ export namespace Prisma {
 
   export type NestedEnumIMMessageTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.IMMessageType | EnumIMMessageTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.IMMessageType[] | ListEnumIMMessageTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.IMMessageType[] | ListEnumIMMessageTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.IMMessageType[]
+    notIn?: $Enums.IMMessageType[]
     not?: NestedEnumIMMessageTypeFilter<$PrismaModel> | $Enums.IMMessageType
   }
 
   export type NestedEnumEncryptionModeFilter<$PrismaModel = never> = {
     equals?: $Enums.EncryptionMode | EnumEncryptionModeFieldRefInput<$PrismaModel>
-    in?: $Enums.EncryptionMode[] | ListEnumEncryptionModeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.EncryptionMode[] | ListEnumEncryptionModeFieldRefInput<$PrismaModel>
+    in?: $Enums.EncryptionMode[]
+    notIn?: $Enums.EncryptionMode[]
     not?: NestedEnumEncryptionModeFilter<$PrismaModel> | $Enums.EncryptionMode
   }
 
   export type NestedEnumMediaAccessLevelFilter<$PrismaModel = never> = {
     equals?: $Enums.MediaAccessLevel | EnumMediaAccessLevelFieldRefInput<$PrismaModel>
-    in?: $Enums.MediaAccessLevel[] | ListEnumMediaAccessLevelFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MediaAccessLevel[] | ListEnumMediaAccessLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.MediaAccessLevel[]
+    notIn?: $Enums.MediaAccessLevel[]
     not?: NestedEnumMediaAccessLevelFilter<$PrismaModel> | $Enums.MediaAccessLevel
   }
 
   export type NestedEnumRuleEngineResultFilter<$PrismaModel = never> = {
     equals?: $Enums.RuleEngineResult | EnumRuleEngineResultFieldRefInput<$PrismaModel>
-    in?: $Enums.RuleEngineResult[] | ListEnumRuleEngineResultFieldRefInput<$PrismaModel>
-    notIn?: $Enums.RuleEngineResult[] | ListEnumRuleEngineResultFieldRefInput<$PrismaModel>
+    in?: $Enums.RuleEngineResult[]
+    notIn?: $Enums.RuleEngineResult[]
     not?: NestedEnumRuleEngineResultFilter<$PrismaModel> | $Enums.RuleEngineResult
   }
 
   export type NestedEnumMessageDeliveryStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageDeliveryStatus | EnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageDeliveryStatus[] | ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageDeliveryStatus[] | ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageDeliveryStatus[]
+    notIn?: $Enums.MessageDeliveryStatus[]
     not?: NestedEnumMessageDeliveryStatusFilter<$PrismaModel> | $Enums.MessageDeliveryStatus
   }
 
   export type NestedEnumIMMessageTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.IMMessageType | EnumIMMessageTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.IMMessageType[] | ListEnumIMMessageTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.IMMessageType[] | ListEnumIMMessageTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.IMMessageType[]
+    notIn?: $Enums.IMMessageType[]
     not?: NestedEnumIMMessageTypeWithAggregatesFilter<$PrismaModel> | $Enums.IMMessageType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumIMMessageTypeFilter<$PrismaModel>
@@ -62622,8 +62156,8 @@ export namespace Prisma {
 
   export type NestedEnumEncryptionModeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.EncryptionMode | EnumEncryptionModeFieldRefInput<$PrismaModel>
-    in?: $Enums.EncryptionMode[] | ListEnumEncryptionModeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.EncryptionMode[] | ListEnumEncryptionModeFieldRefInput<$PrismaModel>
+    in?: $Enums.EncryptionMode[]
+    notIn?: $Enums.EncryptionMode[]
     not?: NestedEnumEncryptionModeWithAggregatesFilter<$PrismaModel> | $Enums.EncryptionMode
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumEncryptionModeFilter<$PrismaModel>
@@ -62632,8 +62166,8 @@ export namespace Prisma {
 
   export type NestedEnumMediaAccessLevelWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MediaAccessLevel | EnumMediaAccessLevelFieldRefInput<$PrismaModel>
-    in?: $Enums.MediaAccessLevel[] | ListEnumMediaAccessLevelFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MediaAccessLevel[] | ListEnumMediaAccessLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.MediaAccessLevel[]
+    notIn?: $Enums.MediaAccessLevel[]
     not?: NestedEnumMediaAccessLevelWithAggregatesFilter<$PrismaModel> | $Enums.MediaAccessLevel
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMediaAccessLevelFilter<$PrismaModel>
@@ -62642,8 +62176,8 @@ export namespace Prisma {
 
   export type NestedEnumRuleEngineResultWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.RuleEngineResult | EnumRuleEngineResultFieldRefInput<$PrismaModel>
-    in?: $Enums.RuleEngineResult[] | ListEnumRuleEngineResultFieldRefInput<$PrismaModel>
-    notIn?: $Enums.RuleEngineResult[] | ListEnumRuleEngineResultFieldRefInput<$PrismaModel>
+    in?: $Enums.RuleEngineResult[]
+    notIn?: $Enums.RuleEngineResult[]
     not?: NestedEnumRuleEngineResultWithAggregatesFilter<$PrismaModel> | $Enums.RuleEngineResult
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRuleEngineResultFilter<$PrismaModel>
@@ -62652,8 +62186,8 @@ export namespace Prisma {
 
   export type NestedEnumMessageDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageDeliveryStatus | EnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageDeliveryStatus[] | ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageDeliveryStatus[] | ListEnumMessageDeliveryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageDeliveryStatus[]
+    notIn?: $Enums.MessageDeliveryStatus[]
     not?: NestedEnumMessageDeliveryStatusWithAggregatesFilter<$PrismaModel> | $Enums.MessageDeliveryStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMessageDeliveryStatusFilter<$PrismaModel>
@@ -62662,15 +62196,15 @@ export namespace Prisma {
 
   export type NestedEnumPresenceStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.PresenceStatus | EnumPresenceStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PresenceStatus[] | ListEnumPresenceStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PresenceStatus[] | ListEnumPresenceStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PresenceStatus[]
+    notIn?: $Enums.PresenceStatus[]
     not?: NestedEnumPresenceStatusFilter<$PrismaModel> | $Enums.PresenceStatus
   }
 
   export type NestedEnumPresenceStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.PresenceStatus | EnumPresenceStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PresenceStatus[] | ListEnumPresenceStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PresenceStatus[] | ListEnumPresenceStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PresenceStatus[]
+    notIn?: $Enums.PresenceStatus[]
     not?: NestedEnumPresenceStatusWithAggregatesFilter<$PrismaModel> | $Enums.PresenceStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPresenceStatusFilter<$PrismaModel>
@@ -62679,15 +62213,15 @@ export namespace Prisma {
 
   export type NestedEnumConsentRequestTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.ConsentRequestType | EnumConsentRequestTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ConsentRequestType[] | ListEnumConsentRequestTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConsentRequestType[] | ListEnumConsentRequestTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ConsentRequestType[]
+    notIn?: $Enums.ConsentRequestType[]
     not?: NestedEnumConsentRequestTypeFilter<$PrismaModel> | $Enums.ConsentRequestType
   }
 
   export type NestedEnumConsentRequestTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ConsentRequestType | EnumConsentRequestTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ConsentRequestType[] | ListEnumConsentRequestTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ConsentRequestType[] | ListEnumConsentRequestTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ConsentRequestType[]
+    notIn?: $Enums.ConsentRequestType[]
     not?: NestedEnumConsentRequestTypeWithAggregatesFilter<$PrismaModel> | $Enums.ConsentRequestType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumConsentRequestTypeFilter<$PrismaModel>
@@ -62696,15 +62230,15 @@ export namespace Prisma {
 
   export type NestedEnumNotificationTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationType[]
+    notIn?: $Enums.NotificationType[]
     not?: NestedEnumNotificationTypeFilter<$PrismaModel> | $Enums.NotificationType
   }
 
   export type NestedEnumNotificationTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationType[]
+    notIn?: $Enums.NotificationType[]
     not?: NestedEnumNotificationTypeWithAggregatesFilter<$PrismaModel> | $Enums.NotificationType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumNotificationTypeFilter<$PrismaModel>
@@ -62713,22 +62247,22 @@ export namespace Prisma {
 
   export type NestedEnumSubscriptionPlanFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionPlan | EnumSubscriptionPlanFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionPlan[] | ListEnumSubscriptionPlanFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionPlan[] | ListEnumSubscriptionPlanFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionPlan[]
+    notIn?: $Enums.SubscriptionPlan[]
     not?: NestedEnumSubscriptionPlanFilter<$PrismaModel> | $Enums.SubscriptionPlan
   }
 
   export type NestedEnumSubscriptionStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionStatus[]
+    notIn?: $Enums.SubscriptionStatus[]
     not?: NestedEnumSubscriptionStatusFilter<$PrismaModel> | $Enums.SubscriptionStatus
   }
 
   export type NestedEnumSubscriptionPlanWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionPlan | EnumSubscriptionPlanFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionPlan[] | ListEnumSubscriptionPlanFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionPlan[] | ListEnumSubscriptionPlanFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionPlan[]
+    notIn?: $Enums.SubscriptionPlan[]
     not?: NestedEnumSubscriptionPlanWithAggregatesFilter<$PrismaModel> | $Enums.SubscriptionPlan
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSubscriptionPlanFilter<$PrismaModel>
@@ -62737,8 +62271,8 @@ export namespace Prisma {
 
   export type NestedEnumSubscriptionStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionStatus[]
+    notIn?: $Enums.SubscriptionStatus[]
     not?: NestedEnumSubscriptionStatusWithAggregatesFilter<$PrismaModel> | $Enums.SubscriptionStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSubscriptionStatusFilter<$PrismaModel>
@@ -62747,15 +62281,15 @@ export namespace Prisma {
 
   export type NestedEnumPaymentStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentStatus[]
+    notIn?: $Enums.PaymentStatus[]
     not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
   }
 
   export type NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentStatus[]
+    notIn?: $Enums.PaymentStatus[]
     not?: NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel> | $Enums.PaymentStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
@@ -62764,15 +62298,15 @@ export namespace Prisma {
 
   export type NestedEnumSincerityTierFilter<$PrismaModel = never> = {
     equals?: $Enums.SincerityTier | EnumSincerityTierFieldRefInput<$PrismaModel>
-    in?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTier[]
+    notIn?: $Enums.SincerityTier[]
     not?: NestedEnumSincerityTierFilter<$PrismaModel> | $Enums.SincerityTier
   }
 
   export type NestedEnumSincerityTierWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SincerityTier | EnumSincerityTierFieldRefInput<$PrismaModel>
-    in?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SincerityTier[] | ListEnumSincerityTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTier[]
+    notIn?: $Enums.SincerityTier[]
     not?: NestedEnumSincerityTierWithAggregatesFilter<$PrismaModel> | $Enums.SincerityTier
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSincerityTierFilter<$PrismaModel>
@@ -62781,15 +62315,15 @@ export namespace Prisma {
 
   export type NestedEnumSincerityTransactionTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.SincerityTransactionType | EnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTransactionType[]
+    notIn?: $Enums.SincerityTransactionType[]
     not?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel> | $Enums.SincerityTransactionType
   }
 
   export type NestedEnumSincerityTransactionTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SincerityTransactionType | EnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SincerityTransactionType[] | ListEnumSincerityTransactionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.SincerityTransactionType[]
+    notIn?: $Enums.SincerityTransactionType[]
     not?: NestedEnumSincerityTransactionTypeWithAggregatesFilter<$PrismaModel> | $Enums.SincerityTransactionType
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSincerityTransactionTypeFilter<$PrismaModel>
@@ -62798,22 +62332,22 @@ export namespace Prisma {
 
   export type NestedEnumReportReasonFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportReason | EnumReportReasonFieldRefInput<$PrismaModel>
-    in?: $Enums.ReportReason[] | ListEnumReportReasonFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ReportReason[] | ListEnumReportReasonFieldRefInput<$PrismaModel>
+    in?: $Enums.ReportReason[]
+    notIn?: $Enums.ReportReason[]
     not?: NestedEnumReportReasonFilter<$PrismaModel> | $Enums.ReportReason
   }
 
   export type NestedEnumReportStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportStatus | EnumReportStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.ReportStatus[] | ListEnumReportStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ReportStatus[] | ListEnumReportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ReportStatus[]
+    notIn?: $Enums.ReportStatus[]
     not?: NestedEnumReportStatusFilter<$PrismaModel> | $Enums.ReportStatus
   }
 
   export type NestedEnumReportReasonWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportReason | EnumReportReasonFieldRefInput<$PrismaModel>
-    in?: $Enums.ReportReason[] | ListEnumReportReasonFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ReportReason[] | ListEnumReportReasonFieldRefInput<$PrismaModel>
+    in?: $Enums.ReportReason[]
+    notIn?: $Enums.ReportReason[]
     not?: NestedEnumReportReasonWithAggregatesFilter<$PrismaModel> | $Enums.ReportReason
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumReportReasonFilter<$PrismaModel>
@@ -62822,8 +62356,8 @@ export namespace Prisma {
 
   export type NestedEnumReportStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportStatus | EnumReportStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.ReportStatus[] | ListEnumReportStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ReportStatus[] | ListEnumReportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ReportStatus[]
+    notIn?: $Enums.ReportStatus[]
     not?: NestedEnumReportStatusWithAggregatesFilter<$PrismaModel> | $Enums.ReportStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumReportStatusFilter<$PrismaModel>
@@ -62840,7 +62374,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -62852,7 +62386,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -62887,7 +62421,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -62899,7 +62433,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -62948,7 +62482,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -62960,7 +62494,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -62995,7 +62529,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -63007,7 +62541,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -63065,7 +62599,6 @@ export namespace Prisma {
 
   export type AccountCreateManyUserInputEnvelope = {
     data: AccountCreateManyUserInput | AccountCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type SessionCreateWithoutUserInput = {
@@ -63087,7 +62620,6 @@ export namespace Prisma {
 
   export type SessionCreateManyUserInputEnvelope = {
     data: SessionCreateManyUserInput | SessionCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type VerificationTokenCreateWithoutUserInput = {
@@ -63121,7 +62653,6 @@ export namespace Prisma {
 
   export type VerificationTokenCreateManyUserInputEnvelope = {
     data: VerificationTokenCreateManyUserInput | VerificationTokenCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type ProfileCreateWithoutUserInput = {
@@ -63134,7 +62665,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -63146,7 +62677,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -63180,7 +62711,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -63192,7 +62723,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -63288,7 +62819,6 @@ export namespace Prisma {
 
   export type MatchCreateManySenderInputEnvelope = {
     data: MatchCreateManySenderInput | MatchCreateManySenderInput[]
-    skipDuplicates?: boolean
   }
 
   export type MatchCreateWithoutReceiverInput = {
@@ -63358,7 +62888,6 @@ export namespace Prisma {
 
   export type MatchCreateManyReceiverInputEnvelope = {
     data: MatchCreateManyReceiverInput | MatchCreateManyReceiverInput[]
-    skipDuplicates?: boolean
   }
 
   export type MatchReactionCreateWithoutUserInput = {
@@ -63384,7 +62913,6 @@ export namespace Prisma {
 
   export type MatchReactionCreateManyUserInputEnvelope = {
     data: MatchReactionCreateManyUserInput | MatchReactionCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type ChatRoomMemberCreateWithoutUserInput = {
@@ -63410,7 +62938,6 @@ export namespace Prisma {
 
   export type ChatRoomMemberCreateManyUserInputEnvelope = {
     data: ChatRoomMemberCreateManyUserInput | ChatRoomMemberCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type MessageCreateWithoutSenderInput = {
@@ -63442,7 +62969,6 @@ export namespace Prisma {
 
   export type MessageCreateManySenderInputEnvelope = {
     data: MessageCreateManySenderInput | MessageCreateManySenderInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConversationCreateWithoutUserAInput = {
@@ -63502,7 +63028,6 @@ export namespace Prisma {
 
   export type ConversationCreateManyUserAInputEnvelope = {
     data: ConversationCreateManyUserAInput | ConversationCreateManyUserAInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConversationCreateWithoutUserBInput = {
@@ -63562,7 +63087,6 @@ export namespace Prisma {
 
   export type ConversationCreateManyUserBInputEnvelope = {
     data: ConversationCreateManyUserBInput | ConversationCreateManyUserBInput[]
-    skipDuplicates?: boolean
   }
 
   export type IMMessageCreateWithoutSenderInput = {
@@ -63576,7 +63100,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -63607,7 +63131,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -63632,7 +63156,6 @@ export namespace Prisma {
 
   export type IMMessageCreateManySenderInputEnvelope = {
     data: IMMessageCreateManySenderInput | IMMessageCreateManySenderInput[]
-    skipDuplicates?: boolean
   }
 
   export type MessageReceiptCreateWithoutUserInput = {
@@ -63662,7 +63185,6 @@ export namespace Prisma {
 
   export type MessageReceiptCreateManyUserInputEnvelope = {
     data: MessageReceiptCreateManyUserInput | MessageReceiptCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type MessageReactionCreateWithoutUserInput = {
@@ -63686,7 +63208,6 @@ export namespace Prisma {
 
   export type MessageReactionCreateManyUserInputEnvelope = {
     data: MessageReactionCreateManyUserInput | MessageReactionCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConversationParticipantCreateWithoutUserInput = {
@@ -63718,7 +63239,6 @@ export namespace Prisma {
 
   export type ConversationParticipantCreateManyUserInputEnvelope = {
     data: ConversationParticipantCreateManyUserInput | ConversationParticipantCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type UserPresenceCreateWithoutUserInput = {
@@ -63828,7 +63348,6 @@ export namespace Prisma {
 
   export type ConsentRequestCreateManyRequesterInputEnvelope = {
     data: ConsentRequestCreateManyRequesterInput | ConsentRequestCreateManyRequesterInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConsentRequestCreateWithoutTargetInput = {
@@ -63872,7 +63391,6 @@ export namespace Prisma {
 
   export type ConsentRequestCreateManyTargetInputEnvelope = {
     data: ConsentRequestCreateManyTargetInput | ConsentRequestCreateManyTargetInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConsentGrantCreateWithoutGranterInput = {
@@ -63910,7 +63428,6 @@ export namespace Prisma {
 
   export type ConsentGrantCreateManyGranterInputEnvelope = {
     data: ConsentGrantCreateManyGranterInput | ConsentGrantCreateManyGranterInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConsentGrantCreateWithoutGranteeInput = {
@@ -63948,7 +63465,6 @@ export namespace Prisma {
 
   export type ConsentGrantCreateManyGranteeInputEnvelope = {
     data: ConsentGrantCreateManyGranteeInput | ConsentGrantCreateManyGranteeInput[]
-    skipDuplicates?: boolean
   }
 
   export type AuditLogCreateWithoutUserInput = {
@@ -63988,7 +63504,6 @@ export namespace Prisma {
 
   export type AuditLogCreateManyUserInputEnvelope = {
     data: AuditLogCreateManyUserInput | AuditLogCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type SubscriptionCreateWithoutUserInput = {
@@ -64034,7 +63549,6 @@ export namespace Prisma {
 
   export type SubscriptionCreateManyUserInputEnvelope = {
     data: SubscriptionCreateManyUserInput | SubscriptionCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type PaymentCreateWithoutUserInput = {
@@ -64068,7 +63582,6 @@ export namespace Prisma {
 
   export type PaymentCreateManyUserInputEnvelope = {
     data: PaymentCreateManyUserInput | PaymentCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type NotificationCreateWithoutUserInput = {
@@ -64102,7 +63615,6 @@ export namespace Prisma {
 
   export type NotificationCreateManyUserInputEnvelope = {
     data: NotificationCreateManyUserInput | NotificationCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type AdminLogCreateWithoutAuthorInput = {
@@ -64134,7 +63646,6 @@ export namespace Prisma {
 
   export type AdminLogCreateManyAuthorInputEnvelope = {
     data: AdminLogCreateManyAuthorInput | AdminLogCreateManyAuthorInput[]
-    skipDuplicates?: boolean
   }
 
   export type AnalyticsEventCreateWithoutUserInput = {
@@ -64164,7 +63675,6 @@ export namespace Prisma {
 
   export type AnalyticsEventCreateManyUserInputEnvelope = {
     data: AnalyticsEventCreateManyUserInput | AnalyticsEventCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type UserReportCreateWithoutReporterInput = {
@@ -64206,7 +63716,6 @@ export namespace Prisma {
 
   export type UserReportCreateManyReporterInputEnvelope = {
     data: UserReportCreateManyReporterInput | UserReportCreateManyReporterInput[]
-    skipDuplicates?: boolean
   }
 
   export type UserReportCreateWithoutReportedUserInput = {
@@ -64248,7 +63757,6 @@ export namespace Prisma {
 
   export type UserReportCreateManyReportedUserInputEnvelope = {
     data: UserReportCreateManyReportedUserInput | UserReportCreateManyReportedUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type AccountUpsertWithWhereUniqueWithoutUserInput = {
@@ -64364,7 +63872,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -64376,7 +63884,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -64410,7 +63918,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -64422,7 +63930,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -64685,7 +64193,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFilter<"IMMessage"> | $Enums.EncryptionMode
     ephemeralPublicKey?: StringNullableFilter<"IMMessage"> | string | null
     boundaryVersion?: StringNullableFilter<"IMMessage"> | string | null
-    complianceTags?: StringNullableListFilter<"IMMessage">
+    complianceTags?: StringFilter<"IMMessage"> | string
     consentState?: EnumConsentStateFilter<"IMMessage"> | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFilter<"IMMessage"> | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFilter<"IMMessage"> | $Enums.RuleEngineResult
@@ -65912,17 +65420,17 @@ export namespace Prisma {
     industry?: string | null
     educationLevel?: string | null
     incomeRange?: string | null
-    interests?: BotProfileCreateinterestsInput | string[]
-    hobbies?: BotProfileCreatehobbiesInput | string[]
-    musicGenres?: BotProfileCreatemusicGenresInput | string[]
-    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    interests?: string
+    hobbies?: string
+    musicGenres?: string
+    movieGenres?: string
     onlinePattern?: $Enums.OnlinePattern
     avgResponseTime?: number
     maxDailyMatches?: number
     behaviorConfig?: string | null
-    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    preferredEthnicities?: string
+    preferredOccupations?: string
+    preferredEducation?: string
     totalInteractions?: number
     successfulMatches?: number
     avgEngagementScore?: number
@@ -65945,17 +65453,17 @@ export namespace Prisma {
     industry?: string | null
     educationLevel?: string | null
     incomeRange?: string | null
-    interests?: BotProfileCreateinterestsInput | string[]
-    hobbies?: BotProfileCreatehobbiesInput | string[]
-    musicGenres?: BotProfileCreatemusicGenresInput | string[]
-    movieGenres?: BotProfileCreatemovieGenresInput | string[]
+    interests?: string
+    hobbies?: string
+    musicGenres?: string
+    movieGenres?: string
     onlinePattern?: $Enums.OnlinePattern
     avgResponseTime?: number
     maxDailyMatches?: number
     behaviorConfig?: string | null
-    preferredEthnicities?: BotProfileCreatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileCreatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileCreatepreferredEducationInput | string[]
+    preferredEthnicities?: string
+    preferredOccupations?: string
+    preferredEducation?: string
     totalInteractions?: number
     successfulMatches?: number
     avgEngagementScore?: number
@@ -66132,17 +65640,17 @@ export namespace Prisma {
     industry?: NullableStringFieldUpdateOperationsInput | string | null
     educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
     incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
-    interests?: BotProfileUpdateinterestsInput | string[]
-    hobbies?: BotProfileUpdatehobbiesInput | string[]
-    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
-    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    interests?: StringFieldUpdateOperationsInput | string
+    hobbies?: StringFieldUpdateOperationsInput | string
+    musicGenres?: StringFieldUpdateOperationsInput | string
+    movieGenres?: StringFieldUpdateOperationsInput | string
     onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
     avgResponseTime?: IntFieldUpdateOperationsInput | number
     maxDailyMatches?: IntFieldUpdateOperationsInput | number
     behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
-    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    preferredEthnicities?: StringFieldUpdateOperationsInput | string
+    preferredOccupations?: StringFieldUpdateOperationsInput | string
+    preferredEducation?: StringFieldUpdateOperationsInput | string
     totalInteractions?: IntFieldUpdateOperationsInput | number
     successfulMatches?: IntFieldUpdateOperationsInput | number
     avgEngagementScore?: FloatFieldUpdateOperationsInput | number
@@ -66165,17 +65673,17 @@ export namespace Prisma {
     industry?: NullableStringFieldUpdateOperationsInput | string | null
     educationLevel?: NullableStringFieldUpdateOperationsInput | string | null
     incomeRange?: NullableStringFieldUpdateOperationsInput | string | null
-    interests?: BotProfileUpdateinterestsInput | string[]
-    hobbies?: BotProfileUpdatehobbiesInput | string[]
-    musicGenres?: BotProfileUpdatemusicGenresInput | string[]
-    movieGenres?: BotProfileUpdatemovieGenresInput | string[]
+    interests?: StringFieldUpdateOperationsInput | string
+    hobbies?: StringFieldUpdateOperationsInput | string
+    musicGenres?: StringFieldUpdateOperationsInput | string
+    movieGenres?: StringFieldUpdateOperationsInput | string
     onlinePattern?: EnumOnlinePatternFieldUpdateOperationsInput | $Enums.OnlinePattern
     avgResponseTime?: IntFieldUpdateOperationsInput | number
     maxDailyMatches?: IntFieldUpdateOperationsInput | number
     behaviorConfig?: NullableStringFieldUpdateOperationsInput | string | null
-    preferredEthnicities?: BotProfileUpdatepreferredEthnicitiesInput | $Enums.Ethnicity[]
-    preferredOccupations?: BotProfileUpdatepreferredOccupationsInput | string[]
-    preferredEducation?: BotProfileUpdatepreferredEducationInput | string[]
+    preferredEthnicities?: StringFieldUpdateOperationsInput | string
+    preferredOccupations?: StringFieldUpdateOperationsInput | string
+    preferredEducation?: StringFieldUpdateOperationsInput | string
     totalInteractions?: IntFieldUpdateOperationsInput | number
     successfulMatches?: IntFieldUpdateOperationsInput | number
     avgEngagementScore?: FloatFieldUpdateOperationsInput | number
@@ -66445,7 +65953,6 @@ export namespace Prisma {
 
   export type MatchReactionCreateManyMatchInputEnvelope = {
     data: MatchReactionCreateManyMatchInput | MatchReactionCreateManyMatchInput[]
-    skipDuplicates?: boolean
   }
 
   export type ChatRoomCreateWithoutMatchInput = {
@@ -67186,7 +66693,6 @@ export namespace Prisma {
 
   export type ChatRoomMemberCreateManyRoomInputEnvelope = {
     data: ChatRoomMemberCreateManyRoomInput | ChatRoomMemberCreateManyRoomInput[]
-    skipDuplicates?: boolean
   }
 
   export type MessageCreateWithoutRoomInput = {
@@ -67218,7 +66724,6 @@ export namespace Prisma {
 
   export type MessageCreateManyRoomInputEnvelope = {
     data: MessageCreateManyRoomInput | MessageCreateManyRoomInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConversationCreateWithoutChatRoomInput = {
@@ -68298,7 +67803,6 @@ export namespace Prisma {
 
   export type ConversationParticipantCreateManyConversationInputEnvelope = {
     data: ConversationParticipantCreateManyConversationInput | ConversationParticipantCreateManyConversationInput[]
-    skipDuplicates?: boolean
   }
 
   export type IMMessageCreateWithoutConversationInput = {
@@ -68312,7 +67816,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -68343,7 +67847,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -68368,7 +67872,6 @@ export namespace Prisma {
 
   export type IMMessageCreateManyConversationInputEnvelope = {
     data: IMMessageCreateManyConversationInput | IMMessageCreateManyConversationInput[]
-    skipDuplicates?: boolean
   }
 
   export type MessageReceiptCreateWithoutConversationInput = {
@@ -68398,7 +67901,6 @@ export namespace Prisma {
 
   export type MessageReceiptCreateManyConversationInputEnvelope = {
     data: MessageReceiptCreateManyConversationInput | MessageReceiptCreateManyConversationInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConsentRequestCreateWithoutConversationInput = {
@@ -68442,7 +67944,6 @@ export namespace Prisma {
 
   export type ConsentRequestCreateManyConversationInputEnvelope = {
     data: ConsentRequestCreateManyConversationInput | ConsentRequestCreateManyConversationInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConsentGrantCreateWithoutConversationInput = {
@@ -68480,7 +67981,6 @@ export namespace Prisma {
 
   export type ConsentGrantCreateManyConversationInputEnvelope = {
     data: ConsentGrantCreateManyConversationInput | ConsentGrantCreateManyConversationInput[]
-    skipDuplicates?: boolean
   }
 
   export type UserUpsertWithoutConversationsAInput = {
@@ -69307,7 +68807,6 @@ export namespace Prisma {
 
   export type MessageReceiptCreateManyMessageInputEnvelope = {
     data: MessageReceiptCreateManyMessageInput | MessageReceiptCreateManyMessageInput[]
-    skipDuplicates?: boolean
   }
 
   export type MessageReactionCreateWithoutMessageInput = {
@@ -69331,7 +68830,6 @@ export namespace Prisma {
 
   export type MessageReactionCreateManyMessageInputEnvelope = {
     data: MessageReactionCreateManyMessageInput | MessageReactionCreateManyMessageInput[]
-    skipDuplicates?: boolean
   }
 
   export type ConversationUpsertWithoutImMessagesInput = {
@@ -69539,7 +69037,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -69571,7 +69069,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -69765,7 +69263,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -69797,7 +69295,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -69987,7 +69485,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -70019,7 +69517,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -70158,7 +69656,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -70190,7 +69688,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -72902,7 +72400,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -72914,7 +72412,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -72949,7 +72447,7 @@ export namespace Prisma {
     bio?: string | null
     avatar?: string | null
     avatarType?: string | null
-    galleryPhotos?: ProfileCreategalleryPhotosInput | string[]
+    galleryPhotos?: string
     city?: string | null
     country?: string | null
     relationshipGoal?: $Enums.RelationshipGoal
@@ -72961,7 +72459,7 @@ export namespace Prisma {
     dealbreakers?: string | null
     lifePriorities?: string | null
     emotionalAvailability?: string | null
-    selectedTags?: ProfileCreateselectedTagsInput | string[]
+    selectedTags?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -73024,7 +72522,6 @@ export namespace Prisma {
 
   export type SincerityTransactionCreateManyWalletInputEnvelope = {
     data: SincerityTransactionCreateManyWalletInput | SincerityTransactionCreateManyWalletInput[]
-    skipDuplicates?: boolean
   }
 
   export type ProfileUpsertWithoutSincerityWalletInput = {
@@ -73048,7 +72545,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -73060,7 +72557,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -73095,7 +72592,7 @@ export namespace Prisma {
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: ProfileUpdategalleryPhotosInput | string[]
+    galleryPhotos?: StringFieldUpdateOperationsInput | string
     city?: NullableStringFieldUpdateOperationsInput | string | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
@@ -73107,7 +72604,7 @@ export namespace Prisma {
     dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: ProfileUpdateselectedTagsInput | string[]
+    selectedTags?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -73803,7 +73300,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -74523,7 +74020,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -74554,7 +74051,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -74584,7 +74081,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -75331,7 +74828,7 @@ export namespace Prisma {
     encryptionMode?: $Enums.EncryptionMode
     ephemeralPublicKey?: string | null
     boundaryVersion?: string | null
-    complianceTags?: IMMessageCreatecomplianceTagsInput | string[]
+    complianceTags?: string
     consentState?: $Enums.ConsentState
     mediaLevel?: $Enums.MediaAccessLevel
     ruleResult?: $Enums.RuleEngineResult
@@ -75432,7 +74929,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -75463,7 +74960,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult
@@ -75493,7 +74990,7 @@ export namespace Prisma {
     encryptionMode?: EnumEncryptionModeFieldUpdateOperationsInput | $Enums.EncryptionMode
     ephemeralPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
     boundaryVersion?: NullableStringFieldUpdateOperationsInput | string | null
-    complianceTags?: IMMessageUpdatecomplianceTagsInput | string[]
+    complianceTags?: StringFieldUpdateOperationsInput | string
     consentState?: EnumConsentStateFieldUpdateOperationsInput | $Enums.ConsentState
     mediaLevel?: EnumMediaAccessLevelFieldUpdateOperationsInput | $Enums.MediaAccessLevel
     ruleResult?: EnumRuleEngineResultFieldUpdateOperationsInput | $Enums.RuleEngineResult

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { success, badRequest, serverError } from '@/lib/api-response'
 import { hash } from 'bcryptjs'
+import { toJson } from '@/lib/json-helpers'
 
 /**
  * POST /api/admin/generate-test-users
@@ -178,7 +179,7 @@ export async function POST(request: NextRequest) {
               city: randomFrom(['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'San Francisco, CA', 'Seattle, WA', 'Austin, TX', 'Denver, CO', 'Miami, FL', 'Boston, MA', 'Portland, OR']),
               avatar,
               avatarType: avatar ? 'photo' : null,
-              selectedTags: userInterests,
+              selectedTags: toJson(userInterests),
               relationshipGoal: randomFrom(['MONOGAMY', 'ETHICAL_NON_MONOGAMY', 'CASUAL_DATING', 'POLYAMORY']),
               profileStatus: 'APPROVED',
               isApproved: true,

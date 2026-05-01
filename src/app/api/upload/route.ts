@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth/auth"
 import { success, badRequest, serverError } from "@/lib/api-response";
 import { fileTypeFromBuffer } from "file-type";
 import sharp from "sharp";
+import { pushJson } from "@/lib/json-helpers";
 
 // Allowed image MIME types for security
 const ALLOWED_MIME_TYPES = [
@@ -143,12 +144,15 @@ export async function POST(request: NextRequest) {
     // Append to gallery photos — ONLY if profile already exists
     if (type === "gallery") {
       try {
-        await db.profile.update({
-          where: { userId: user.id },
-          data: {
-            galleryPhotos: { push: dataUrl },
-          },
-        });
+        const existing = await db.profile.findUnique({ where: { userId: user.id }, select: { galleryPhotos: true } });
+        if (existing) {
+          await db.profile.update({
+            where: { userId: user.id },
+            data: {
+              galleryPhotos: pushJson(existing.galleryPhotos, dataUrl),
+            },
+          });
+        }
       } catch {
         console.log(`[Upload] Profile not found for user ${user.id}, skipping gallery update (onboarding mode)`);
       }
@@ -250,12 +254,15 @@ export async function PUT(request: NextRequest) {
 
     if (type === "gallery") {
       try {
-        await db.profile.update({
-          where: { userId: user.id },
-          data: {
-            galleryPhotos: { push: dataUrl },
-          },
-        });
+        const existing = await db.profile.findUnique({ where: { userId: user.id }, select: { galleryPhotos: true } });
+        if (existing) {
+          await db.profile.update({
+            where: { userId: user.id },
+            data: {
+              galleryPhotos: pushJson(existing.galleryPhotos, dataUrl),
+            },
+          });
+        }
       } catch (profileErr: unknown) {
         const msg = profileErr instanceof Error ? profileErr.message : String(profileErr);
         console.warn(`Profile not found for user ${user.id}, skipping gallery update: ${msg}`);

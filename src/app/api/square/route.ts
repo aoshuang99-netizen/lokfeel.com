@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { db } from '@/lib/db';
 import { calculateEnhancedMatchScore, EnhancedUserProfile } from '@/lib/matching/enhanced-engine';
+import { jsonArr } from '@/lib/json-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,8 +97,8 @@ function toEnhancedUserProfile(profile: any): EnhancedUserProfile {
     gender: profile.gender,
     city: profile.city,
     country: profile.country,
-    relationshipType: profile.relationshipType || profile.selectedTags?.find((t: string) => TAG_TO_RELATIONSHIP_TYPE[t]),
-    sexualOrientation: profile.sexualOrientation || profile.selectedTags?.find((t: string) => TAG_TO_ORIENTATION[t]),
+    relationshipType: profile.relationshipType || jsonArr(profile.selectedTags).find((t: string) => TAG_TO_RELATIONSHIP_TYPE[t]),
+    sexualOrientation: profile.sexualOrientation || jsonArr(profile.selectedTags).find((t: string) => TAG_TO_ORIENTATION[t]),
   };
 }
 
@@ -141,7 +142,7 @@ async function generateRecommendations(
   }
   
   // 用户偏好标签
-  const userTags = currentUserProfile.selectedTags || [];
+  const userTags = jsonArr(currentUserProfile.selectedTags);
   
   // 获取候选人
   const candidates = await db.profile.findMany({
@@ -186,7 +187,7 @@ async function generateRecommendations(
     }
     
     // 计算标签匹配分数
-    const candidateTags = candidate.selectedTags || [];
+    const candidateTags = jsonArr(candidate.selectedTags);
     const tagMatchScore = calculateTagMatchScore(userTags, candidateTags);
     
     // 综合分数 (匹配度 70% + 标签匹配 30%)
@@ -293,13 +294,13 @@ export async function GET(request: NextRequest) {
       tagMatchScore: profile.tagMatchScore,
       combinedScore: profile.combinedScore,
       profileCompletion: profile.completion,
-      tags: profile.selectedTags || [],
+      tags: jsonArr(profile.selectedTags),
       linkedInVerified: profile.linkedInVerified,
       verificationBadge: profile.verificationBadge,
       ...(profile.user.isBot && profile.botProfile ? {
         botType: profile.botProfile.botType,
         activityLevel: profile.botProfile.activityLevel,
-        interests: profile.botProfile.interests,
+        interests: jsonArr(profile.botProfile.interests),
       } : {}),
     });
     
@@ -339,7 +340,7 @@ export async function GET(request: NextRequest) {
           totalNewUsers,
         },
         userPreferences: {
-          selectedTags: currentUserProfile.selectedTags || [],
+          selectedTags: jsonArr(currentUserProfile.selectedTags),
           oppositeGender,
         },
       },

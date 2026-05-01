@@ -5,12 +5,18 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const result = await db.$queryRaw`
-      SELECT column_name, data_type, udt_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'Profile' AND column_name = 'galleryPhotos'
-    `
-    return NextResponse.json({ galleryPhotos: result })
+    // Test basic database connectivity by counting users
+    const userCount = await db.user.count()
+    const profileCount = await db.profile.count()
+    
+    return NextResponse.json({ 
+      status: 'connected',
+      engine: 'libsql',
+      stats: {
+        users: userCount,
+        profiles: profileCount,
+      }
+    })
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error)
     return NextResponse.json({ error: msg }, { status: 500 })

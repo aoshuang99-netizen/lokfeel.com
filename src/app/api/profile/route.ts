@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { toJson, jsonArr } from '@/lib/json-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,9 +73,16 @@ const PROFILE_WRITABLE_FIELDS = new Set([
 
 function filterProfileFields(data: Record<string, any>): Record<string, any> {
   const filtered: Record<string, any> = {}
+  // Fields that are JSON-serialized arrays in SQLite (were String[] in PostgreSQL)
+  const JSON_ARRAY_FIELDS = new Set(['selectedTags', 'galleryPhotos', 'interests', 'hobbies', 'musicGenres', 'movieGenres', 'preferredEthnicities', 'preferredOccupations', 'preferredEducation'])
   for (const key of Object.keys(data)) {
     if (PROFILE_WRITABLE_FIELDS.has(key)) {
-      filtered[key] = data[key]
+      // Serialize array fields to JSON strings for SQLite
+      if (JSON_ARRAY_FIELDS.has(key) && Array.isArray(data[key])) {
+        filtered[key] = toJson(data[key])
+      } else {
+        filtered[key] = data[key]
+      }
     }
   }
   return filtered

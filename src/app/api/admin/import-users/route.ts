@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { toJson } from "@/lib/json-helpers";
 
 const prisma = getDb();
 import { hash } from "bcryptjs";
@@ -166,10 +167,10 @@ async function createBotUser(
       activityLevel: 'LOW',
       ethnicity: 'CAUCASIAN',
       occupation: userData.profile.profession,
-      interests: userData.interests.slice(0, 10),
-      hobbies: userData.interests.slice(5, 15),
-      musicGenres: [],
-      movieGenres: [],
+      interests: toJson(userData.interests.slice(0, 10)),
+      hobbies: toJson(userData.interests.slice(5, 15)),
+      musicGenres: toJson([]),
+      movieGenres: toJson([]),
       onlinePattern: 'RANDOM',
       avatarStyle: userData.profile.avatarType || 'natural',
       isActive: true,

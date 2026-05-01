@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -67,11 +67,11 @@ model BotProfile {
   educationLevel String? // "High School", "Bachelor's", "Master's", "PhD"
   incomeRange    String? // "$30k-50k", "$50k-100k", etc.
 
-  // 兴趣与偏好
-  interests   String[] // ["hiking", "cooking", "photography"]
-  hobbies     String[] // ["gaming", "yoga", "reading"]
-  musicGenres String[] // ["rock", "jazz", "electronic"]
-  movieGenres String[] // ["thriller", "romance", "sci-fi"]
+  // 兴趣与偏好 (JSON arrays - SQLite compatible)
+  interests   String @default("[]") // JSON: ["hiking", "cooking", "photography"]
+  hobbies     String @default("[]") // JSON: ["gaming", "yoga", "reading"]
+  musicGenres String @default("[]") // JSON: ["rock", "jazz", "electronic"]
+  movieGenres String @default("[]") // JSON: ["thriller", "romance", "sci-fi"]
 
   // 行为模拟配置
   onlinePattern   OnlinePattern @default(EVENING)
@@ -79,12 +79,12 @@ model BotProfile {
   maxDailyMatches Int           @default(3) // 每日最大匹配数
 
   // 行为概率配置（JSON）
-  behaviorConfig String? @db.Text
+  behaviorConfig String?
 
-  // 匹配偏好（扩展 Profile 的 preferred* 字段）
-  preferredEthnicities Ethnicity[]
-  preferredOccupations String[]
-  preferredEducation   String[]
+  // 匹配偏好（扩展 Profile 的 preferred* 字段）(JSON arrays)
+  preferredEthnicities String @default("[]") // JSON: Ethnicity[]
+  preferredOccupations String @default("[]") // JSON: string[]
+  preferredEducation   String @default("[]") // JSON: string[]
 
   // 学习状态
   totalInteractions  Int   @default(0)
@@ -92,7 +92,7 @@ model BotProfile {
   avgEngagementScore Float @default(0) // 0-100
 
   // 学习数据（JSON）
-  learningData String? @db.Text
+  learningData String?
 
   // 头像配置
   avatarStyle  String? // "professional", "casual", "artistic"
@@ -130,7 +130,7 @@ model BotInteractionLog {
   engagementScore Int? // 0-100 参与度评分
 
   // 上下文
-  context String? @db.Text // JSON: {matchScore, matchReason, etc.}
+  context String? // JSON: {matchScore, matchReason, etc.}
 
   createdAt DateTime @default(now())
 
@@ -157,10 +157,10 @@ model BotLearningBatch {
   successRate       Float @default(0)
 
   // 更新的偏好配置
-  preferenceUpdates String? @db.Text // JSON array of changes
+  preferenceUpdates String? // JSON array of changes
 
   // 执行日志
-  executionLog String? @db.Text
+  executionLog String?
 
   createdAt   DateTime  @default(now())
   completedAt DateTime?
@@ -180,7 +180,7 @@ model BotLearningRecord {
   outcome         String // POSITIVE, NEUTRAL, NEGATIVE
 
   // 上下文数据
-  context Json? // 存储额外上下文
+  context String? // JSON string (SQLite compatible)
 
   // 处理状态
   processed Boolean @default(false)
@@ -256,7 +256,7 @@ model User {
   // Bot/Digital User Flags
   isBot     Boolean @default(false) // 标记是否为数字用户
   botType   String? // "simulation" | "training" | "seed"
-  botConfig String? @db.Text // 数字用户行为配置（JSON字符串存储）
+  botConfig String? // 数字用户行为配置（JSON字符串存储）
 
   // Email Verification
   verificationTokens VerificationToken[] @relation("UserVerificationTokens")
@@ -323,12 +323,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -379,12 +379,12 @@ model Profile {
   gender         Gender
   genderIdentity String? // Free text for non-binary identification
   sexuality      String // "Straight", "Bisexual", "Pansexual", "Queer", "Lesbian", "Gay", "Fluid", etc.
-  bio            String?  @db.Text
+  bio            String?
   avatar         String? // Upload URL
   avatarType     String? // "photo" | "cartoon"
-  galleryPhotos  String[] @default([]) // User photo album URLs
+  galleryPhotos  String  @default("[]") // JSON: string[] - User photo album URLs
   city           String?
-  country        String?  @default("US")
+  country        String? @default("US")
 
   // Relationship Blueprint (核心差异化数据)
   relationshipGoal      RelationshipGoal @default(LONG_TERM)
@@ -392,15 +392,15 @@ model Profile {
   communicationStyle    String? // "Direct", "Reflective", "Expressive", "Analytical"
   conflictResolution    String? // "Collaborative", "Compromising", "Accommodating", "Competing", "Avoiding"
   loveLanguage          String? // "Words of Affirmation", "Quality Time", "Physical Touch", "Acts of Service", "Gifts"
-  boundaries            String?          @db.Text // JSON array of boundary descriptions
-  dealbreakers          String?          @db.Text // JSON array
-  lifePriorities        String?          @db.Text // JSON array: "Career", "Family", "Adventure", "Stability", etc.
+  boundaries            String? // JSON array of boundary descriptions
+  dealbreakers          String? // JSON array
+  lifePriorities        String? // JSON array: "Career", "Family", "Adventure", "Stability", etc.
   emotionalAvailability String? // "Fully Available", "Building Trust", "Processing Past", "Needs Space"
 
   // ═══════════════════════════════════════════════════════════════
   // NEW: User Preference Tags for Matching (最多5个)
   // ═══════════════════════════════════════════════════════════════
-  selectedTags String[] @default([]) // 用户选择的标签，如 ["MONOGAMY", "KINK", "BISEXUAL"]
+  selectedTags String @default("[]") // JSON: string[] - 用户选择的标签
 
   // Preferences for matching
   preferredAgeMin   Int?
@@ -419,10 +419,10 @@ model Profile {
   isVerified     Boolean       @default(false)
 
   // Personality & Matching Data (for bot users)
-  personalityData String? @db.Text // 完整人格数据存储（JSON字符串）
+  personalityData String? // 完整人格数据存储（JSON字符串）
 
   // Admin notes
-  adminNotes String? @db.Text
+  adminNotes String?
 
   // Bot System Relation
   botProfile BotProfile?
@@ -466,8 +466,8 @@ model Match {
 
   // Matching Data
   matchScore       Float // 0-100 compatibility score
-  matchReason      String  @db.Text // AI-generated explanation of why they match
-  conflictWarnings String? @db.Text // JSON array of potential conflicts
+  matchReason      String // AI-generated explanation
+  conflictWarnings String? // JSON array of potential conflicts
 
   // Compatibility breakdown (denormalized)
   attachmentCompat    Float? // 0-100
@@ -490,14 +490,14 @@ model Match {
 
   // Admin
   reviewedBy  String?
-  reviewNotes String? @db.Text
+  reviewNotes String?
 
   // ═══════════════════════════════════════════════════════════════
   // PRODUCT OPTIMIZATION: Elite Power Features
   // ═══════════════════════════════════════════════════════════════
 
   // Pitch Message (申请信)
-  pitchMessage String? @db.Text // 50-200字申请信
+  pitchMessage String? // 50-200字申请信
   pitchTone    String? // "casual", "sincere", "playful", "direct"
   aiAssisted   Boolean @default(false) // 是否使用AI辅助
 
@@ -533,7 +533,7 @@ model MatchReaction {
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reaction MatchAction
-  feedback String?     @db.Text // Optional feedback on why
+  feedback String? // Optional feedback on why
 
   createdAt DateTime @default(now())
 
@@ -612,9 +612,9 @@ model Message {
   senderId String
   sender   User     @relation(fields: [senderId], references: [id])
 
-  content     String      @db.Text
+  content     String
   messageType MessageType @default(TEXT)
-  metadata    String?     @db.Text // JSON for rich content (images, links, etc.)
+  metadata    String? // JSON for rich content (images, links, etc.)
 
   isRead Boolean   @default(false)
   readAt DateTime?
@@ -627,10 +627,9 @@ model Message {
 
 // ═══════════════════════════════════════════════════════════════
 // IM MODULE — Next-Gen Chat Infrastructure
-// Based on im_protocol_v2.proto & Power Board Rule Engine Spec
 // ═══════════════════════════════════════════════════════════════
 
-// Conversation — logical session layer (maps 1:1 with ChatRoom for migration)
+// Conversation — logical session layer
 model Conversation {
   id String @id @default(cuid())
 
@@ -660,7 +659,7 @@ model Conversation {
   unreadCountB  Int       @default(0)
 
   // Per-user settings (JSON for flexibility)
-  settings String? @db.Text // JSON: { userA: {muted, pinned}, userB: {muted, pinned} }
+  settings String? // JSON: { userA: {muted, pinned}, userB: {muted, pinned} }
 
   // Vault
   vaultExpiresAt DateTime? // Vault expiry timestamp (null = no Vault)
@@ -711,7 +710,7 @@ model ConversationParticipant {
   @@index([userId, isPinned])
 }
 
-// IMMessage — next-gen message model with seq, encryption, consent
+// IMMessage — next-gen message model
 model IMMessage {
   id             String       @id @default(cuid())
   conversationId String
@@ -726,23 +725,23 @@ model IMMessage {
 
   // Content
   msgType  IMMessageType @default(TEXT)
-  payload  String        @db.Text // message content (plaintext or E2EE ciphertext)
-  metadata String?       @db.Text // JSON: media info, links, etc.
+  payload  String // message content (plaintext or E2EE ciphertext)
+  metadata String? // JSON: media info, links, etc.
 
   // Encryption
   encryptionMode     EncryptionMode @default(SERVER)
-  ephemeralPublicKey String?        @db.Text // for E2EE key exchange
+  ephemeralPublicKey String? // for E2EE key exchange
 
-  // Boundary & compliance (plaintext, for rule engine)
+  // Boundary & compliance
   boundaryVersion String? // current Power Board version
-  complianceTags  String[]         @default([]) // ["consent_granted", "media_level_2", "pace_ok"]
+  complianceTags  String           @default("[]") // JSON: string[] - ["consent_granted", "media_level_2", "pace_ok"]
   consentState    ConsentState     @default(CONSENT_NONE)
   mediaLevel      MediaAccessLevel @default(L0_TEXT)
   ruleResult      RuleEngineResult @default(PASS)
 
   // Reply
   replyToMsgId   String?
-  replyToPreview String? @db.Text // JSON: {msgId, senderId, previewText, mediaLevel}
+  replyToPreview String? // JSON: {msgId, senderId, previewText, mediaLevel}
 
   // Edit & Delete
   isEdited  Boolean   @default(false)
@@ -752,7 +751,7 @@ model IMMessage {
   deletedBy String? // who deleted (sender or admin)
 
   // Media metadata
-  mediaMetadata String? @db.Text // JSON: {mediaId, level, mimeType, sizeBytes, width, height, durationMs, thumbnailUrl, watermarkHash, isExpiring, expiresAt}
+  mediaMetadata String? // JSON: {mediaId, level, mimeType, sizeBytes, width, height, durationMs, thumbnailUrl, watermarkHash, isExpiring, expiresAt}
 
   // Delivery status
   status MessageDeliveryStatus @default(SENT)
@@ -805,7 +804,7 @@ model MessageReaction {
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Emoji character (👍 ❤️ 😂 😮 😢 🔥 etc.)
+  // Emoji character
   emoji String
 
   createdAt DateTime @default(now())
@@ -861,10 +860,10 @@ model ConsentRequest {
   consentType    ConsentRequestType @default(MEDIA)
   requestedLevel MediaAccessLevel   @default(L0_TEXT)
   contextMsgId   String? // message that triggered this request
-  reason         String?            @db.Text // user-visible reason
+  reason         String? // user-visible reason
 
   // Preview (encrypted)
-  previewPayload String? @db.Text // encrypted preview content
+  previewPayload String? // encrypted preview content
 
   // State
   state        ConsentState @default(CONSENT_PENDING)
@@ -931,22 +930,22 @@ model PowerBoardRule {
   isActive Boolean @default(true)
 
   // Pace Control (JSON)
-  paceConfig String @db.Text // JSON: {maxMessagesPerHour, maxMessagesPerDay, responseWindowHours, enforceCooldown, cooldownMinutes, showRemainingQuota}
+  paceConfig String // JSON: {maxMessagesPerHour, maxMessagesPerDay, responseWindowHours, enforceCooldown, cooldownMinutes, showRemainingQuota}
 
   // Media Policy (JSON)
-  mediaConfig String @db.Text // JSON: {defaultLevel, perUserOverride, requireConsentForUpgrade, autoBlurImages, watermarkAllMedia}
+  mediaConfig String // JSON: {defaultLevel, perUserOverride, requireConsentForUpgrade, autoBlurImages, watermarkAllMedia}
 
   // Content Filter (JSON)
-  filterConfig String @db.Text // JSON: {blockedKeywords, blockedPatterns, blockExplicitImages, autoFlagProfanity, blockUnsolicitedContact, sensitivityLevel}
+  filterConfig String // JSON: {blockedKeywords, blockedPatterns, blockExplicitImages, autoFlagProfanity, blockUnsolicitedContact, sensitivityLevel}
 
   // Auto Response (JSON)
-  autoResponse String? @db.Text // JSON: {enabled, messageTemplate, triggerAfterHours, onlyFirstMessage}
+  autoResponse String? // JSON: {enabled, messageTemplate, triggerAfterHours, onlyFirstMessage}
 
   // Privacy Settings (JSON)
-  privacyConfig String @db.Text // JSON: {preferredEncryption, allowScreenshotNotifications, autoExpireMessages, expireAfterDays, hideOnlineStatus, hideReadReceipts}
+  privacyConfig String // JSON: {preferredEncryption, allowScreenshotNotifications, autoExpireMessages, expireAfterDays, hideOnlineStatus, hideReadReceipts}
 
   // Notification Preferences (JSON)
-  notifConfig String? @db.Text // JSON: {pushEnabled, soundEnabled, previewEnabled, quietHoursEnabled, quietHoursStart, quietHoursEnd}
+  notifConfig String? // JSON: {pushEnabled, soundEnabled, previewEnabled, quietHoursEnabled, quietHoursStart, quietHoursEnd}
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -972,7 +971,7 @@ model AuditLog {
   targetId String? // who was affected
 
   // Details (JSON - varies by action type)
-  details String? @db.Text // JSON with full context
+  details String? // JSON with full context
 
   // Hash chain (tamper detection)
   prevHash  String? // hash of previous entry
@@ -980,7 +979,7 @@ model AuditLog {
 
   // Metadata
   ipAddress String?
-  userAgent String? @db.Text
+  userAgent String?
   deviceId  String?
 
   createdAt DateTime @default(now())
@@ -1003,8 +1002,8 @@ model Notification {
 
   type      NotificationType
   title     String
-  body      String           @db.Text
-  data      String?          @db.Text // JSON payload for deep links
+  body      String
+  data      String? // JSON payload for deep links
   actionUrl String?
 
   isRead Boolean   @default(false)
@@ -1060,7 +1059,7 @@ model Payment {
   status                PaymentStatus @default(PENDING)
 
   description String?
-  metadata    String? @db.Text // JSON
+  metadata    String? // JSON
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1080,10 +1079,10 @@ model AdminLog {
   action     String // "user.approve", "match.review", "system.config", etc.
   targetId   String? // ID of the target resource
   targetType String? // "User", "Match", "Profile", etc.
-  details    String? @db.Text // JSON with full context
+  details    String? // JSON with full context
 
   ipAddress String?
-  userAgent String? @db.Text
+  userAgent String?
 
   createdAt DateTime @default(now())
 
@@ -1098,11 +1097,11 @@ model AnalyticsEvent {
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   event      String // "page.view", "match.viewed", "message.sent", "profile.completed", etc.
-  properties String? @db.Text // JSON with event data
+  properties String? // JSON with event data
 
   sessionId String?
   ipAddress String?
-  userAgent String? @db.Text
+  userAgent String?
 
   createdAt DateTime @default(now())
 
@@ -1112,7 +1111,7 @@ model AnalyticsEvent {
 
 model SystemConfig {
   key         String   @id
-  value       String   @db.Text
+  value       String
   description String?
   updatedAt   DateTime @updatedAt
   updatedBy   String?
@@ -1136,14 +1135,14 @@ enum Gender {
 }
 
 enum RelationshipGoal {
-  // v3 onboarding standard values (migrated from LONG_TERM/DATING/FRIENDSHIP/NOT_SURE)
+  // v3 onboarding standard values
   MONOGAMY // One & Only — committed exclusive connection
   ETHICAL_NON_MONOGAMY // Open Hearts — multiple connections, honest boundaries
   POLYAMORY // Many Loves — multiple meaningful relationships
   CASUAL_DATING // Go With Flow — no labels, see where it goes
   FRIENDSHIP_FIRST // Friends First — connection before romance
   KINK_BDSM // Power Play — exploring dynamics & desires
-  // Legacy values (kept for backward compat, no longer used)
+  // Legacy values (kept for backward compat)
   LONG_TERM
   DATING
   FRIENDSHIP
@@ -1188,7 +1187,7 @@ enum MessageType {
   VOICE // Future: voice notes
 }
 
-// IM Module Message Types (extended from proto)
+// IM Module Message Types
 enum IMMessageType {
   TEXT
   IMAGE
@@ -1366,7 +1365,7 @@ model SincerityTransaction {
   message    String? // 附言
 
   // Metadata
-  metadata String? @db.Text // JSON for additional data
+  metadata String? // JSON for additional data
 
   createdAt DateTime @default(now())
 
@@ -1418,7 +1417,7 @@ model UserReport {
 
   // Report details
   reason      ReportReason
-  description String?      @db.Text
+  description String?
 
   // Context (optional)
   chatRoomId String?
@@ -1428,7 +1427,7 @@ model UserReport {
   status     ReportStatus @default(PENDING)
   reviewedBy String? // Admin user ID
   reviewedAt DateTime?
-  adminNotes String?      @db.Text
+  adminNotes String?
 
   // Resolution
   actionTaken String? // "WARNING", "BAN", "NONE", etc.
