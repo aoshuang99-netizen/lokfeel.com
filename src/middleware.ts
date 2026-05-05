@@ -20,7 +20,10 @@ import type { NextRequest } from 'next/server'
  */
 
 // Blocked country codes — mainland China
-const BLOCKED_COUNTRIES = ['CN']
+// DISABLED: Founder (Frank) is in China and needs access.
+// Re-enable when geo-restriction is required for production.
+// const BLOCKED_COUNTRIES = ['CN']
+const BLOCKED_COUNTRIES: string[] = []
 
 // Paths that should always be accessible (even from blocked regions)
 const ALLOWED_PATHS = [

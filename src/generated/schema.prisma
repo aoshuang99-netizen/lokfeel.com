@@ -296,7 +296,10 @@ model User {
   notifications Notification[]
 
   // Admin
-  adminLogs AdminLog[] @relation("AdminLogAuthor")
+  adminAudits AdminAudit[] @relation("AdminAuditActor")
+
+  // RBAC — 管理角色关联
+  adminRoles AdminUserRole[]
 
   // Analytics
   analyticsEvents AnalyticsEvent[]
@@ -305,6 +308,10 @@ model User {
   reportsMade     UserReport[] @relation("ReportsMade")
   reportsReceived UserReport[] @relation("ReportsReceived")
 
+  // Block List
+  blocksGiven    Block[] @relation("BlockerRelations")
+  blocksReceived Block[] @relation("BlockedRelations")
+
   // Credit Card Verification (age + identity proof, no charge)
   cardVerified   Boolean   @default(false)
   cardVerifiedAt DateTime?
@@ -312,9 +319,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Soft delete (v3.0)
+  deletedAt DateTime?
+
   @@index([email])
   @@index([role])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 model Account {
@@ -512,6 +523,9 @@ model Match {
   updatedAt DateTime  @updatedAt
   expiresAt DateTime? // Auto-expire after 7 days if not acted on
 
+  // Soft delete (v3.0)
+  deletedAt DateTime?
+
   @@unique([senderId, receiverId], map: "unique_match_pair")
   @@index([status])
   @@index([matchScore])
@@ -523,6 +537,7 @@ model Match {
   @@index([senderId, receiverId])
   @@index([isUnread])
   @@index([inboxPriority])
+  @@index([deletedAt])
 }
 
 model MatchReaction {
@@ -585,8 +600,12 @@ model ChatRoom {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Soft delete (v3.0)
+  deletedAt DateTime?
+
   @@index([vaultStatus])
   @@index([vaultExpiry])
+  @@index([deletedAt])
 }
 
 model ChatRoomMember {
@@ -677,6 +696,9 @@ model Conversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Soft delete (v3.0)
+  deletedAt DateTime?
+
   @@unique([userAId, userBId], map: "unique_conversation_pair")
   @@index([state])
   @@index([lastMessageAt])
@@ -684,6 +706,7 @@ model Conversation {
   @@index([userBId])
   @@index([controllingUserId])
   @@index([vaultExpiresAt])
+  @@index([deletedAt])
 }
 
 // ConversationParticipant — per-user conversation membership & state
@@ -1044,8 +1067,13 @@ model Subscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Soft delete (v3.0)
+  deletedAt DateTime?
+
   @@index([userId])
   @@index([status])
+  @@index([deletedAt])
+  @@index([userId, status])
 }
 
 model Payment {
@@ -1064,31 +1092,70 @@ model Payment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Soft delete (v3.0)
+  deletedAt DateTime?
+
   @@index([userId])
+  @@index([deletedAt])
+  @@index([createdAt, status])
 }
 
 // ═══════════════════════════════════════════════════════════════
 // ADMIN & ANALYTICS
 // ═══════════════════════════════════════════════════════════════
 
-model AdminLog {
-  id       String  @id @default(cuid())
-  authorId String?
-  author   User?   @relation("AdminLogAuthor", fields: [authorId], references: [id])
+// 统一管理审计日志 (v3.0: 合并 AdminLog + AdminRoleAudit)
+model AdminAudit {
+  id String @id @default(cuid())
 
-  action     String // "user.approve", "match.review", "system.config", etc.
-  targetId   String? // ID of the target resource
-  targetType String? // "User", "Match", "Profile", etc.
-  details    String? // JSON with full context
+  // 操作者
+  actorId String
+  actor   User   @relation("AdminAuditActor", fields: [actorId], references: [id])
 
+  // 分类
+  category AuditCategory // "user" | "match" | "payment" | "rbac" | "system" | ...
+
+  // 操作
+  action String // "create" | "update" | "delete" | "ban" | "grant_role" | ...
+
+  // 目标对象
+  targetType String? // "User" | "Match" | "Payment" | "AdminRole" | ...
+  targetId   String? // 目标记录 ID
+
+  // 变更内容
+  changes String? // JSON: { before: {...}, after: {...} }
+  details String? // 额外上下文
+
+  // 原因（RBAC 变更等需要理由的操作）
+  reason String?
+
+  // 元数据
   ipAddress String?
   userAgent String?
 
   createdAt DateTime @default(now())
 
-  @@index([authorId])
+  @@index([actorId])
+  @@index([category, createdAt])
   @@index([action])
+  @@index([targetType, targetId])
   @@index([createdAt])
+}
+
+// 审计分类枚举 (v3.0)
+enum AuditCategory {
+  USER
+  MATCH
+  CHAT
+  PAYMENT
+  CONTENT
+  BOT
+  AI_CREATIVE
+  AI_SUPPORT
+  VIP
+  ANALYTICS
+  SYSTEM
+  RBAC
 }
 
 model AnalyticsEvent {
@@ -1116,6 +1183,122 @@ model SystemConfig {
   updatedAt   DateTime @updatedAt
   updatedBy   String?
 }
+
+// ═══════════════════════════════════════════════════════════════
+// RBAC — Role-Based Access Control (管理后台权限系统)
+// ═══════════════════════════════════════════════════════════════
+
+// 管理员角色枚举
+enum AdminRole {
+  SUPER_ADMIN // 超级管理员：全部权限，可管理其他管理员和角色
+  ADMIN // 管理员：用户/匹配/内容/支付全管理
+  MODERATOR // 审核员：举报审核/内容审核/用户封禁
+  ANALYST // 分析师：只读数据分析，可导出
+  SUPPORT // 客服：用户查看+基础操作，举报处理
+  CREATIVE // 创意运营：AI推广图全管理
+  VIP_AGENT // VIP客服：VIP收件箱专属
+}
+
+// 权限分类
+enum PermissionCategory {
+  USER // 用户管理
+  MATCHING // 匹配管理
+  CHAT // 聊天管理
+  PAYMENT // 支付管理
+  CONTENT // 内容审核
+  AI_CREATIVE // AI推广图
+  AI_SUPPORT // AI客服
+  VIP // VIP管理
+  ANALYTICS // 数据分析
+  SYSTEM // 系统配置
+  RBAC // 权限管理
+  BOT // Bot系统
+}
+
+// 单个权限定义
+model AdminPermission {
+  id          String             @id @default(cuid())
+  code        String             @unique // "user.view", "user.ban", "payment.refund"
+  name        String // "查看用户", "封禁用户", "退款操作"
+  description String?
+  category    PermissionCategory
+
+  // 元数据
+  isActive    Boolean  @default(true)
+  isDangerous Boolean  @default(false) // 高危权限（如删除/退款）需二次确认
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  rolePermissions AdminRolePermission[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+// 自定义角色 — 管理员可在 UI 中动态创建（v3.0+）
+model CustomRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isSystem    Boolean  @default(false) // 系统角色不可删除
+  permissions String // JSON数组: '["user.view","user.ban",...]'（SQLite不支持原生数组）
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userRoles AdminUserRole[]
+
+  @@index([isSystem])
+}
+
+// 角色-权限关联（多对多）
+model AdminRolePermission {
+  id           String          @id @default(cuid())
+  role         AdminRole
+  permissionId String
+  permission   AdminPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  grantedAt DateTime @default(now())
+  grantedBy String? // 授权人ID
+
+  // 复合唯一约束
+  @@unique([role, permissionId])
+  @@index([role])
+}
+
+// 管理员-角色关联（多对多：一个管理员可有多个角色）
+model AdminUserRole {
+  id String @id @default(cuid())
+
+  // 关联到 User 表（复用现有 User 模型）
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role AdminRole
+
+  // 自定义角色扩展（v3.0+）：可选，叠加在系统角色之上
+  customRoleId String?
+  customRole   CustomRole? @relation(fields: [customRoleId], references: [id])
+
+  // 管理员扩展信息
+  department String? // "operations", "safety", "growth", "creative", "vip", "finance"
+  title      String? // "运营经理", "客服主管"
+  isActive   Boolean @default(true)
+
+  // 时间
+  grantedAt DateTime  @default(now())
+  grantedBy String? // 授权人ID
+  expiresAt DateTime? // 过期时间（可选，用于临时权限）
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, role])
+  @@index([userId])
+  @@index([role])
+}
+
+// AdminRoleAudit 已合并到 AdminAudit (v3.0)
 
 // ═══════════════════════════════════════════════════════════════
 // ENUMS
@@ -1383,6 +1566,25 @@ enum SincerityTier {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// SAFETY & MODERATION — User Block List
+// ═══════════════════════════════════════════════════════════════
+
+model Block {
+  id        String @id @default(cuid())
+  blockerId String // User who blocks
+  blocker   User   @relation("BlockerRelations", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String // User who is blocked
+  blocked   User   @relation("BlockedRelations", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  // Prevent duplicate blocks
+  @@unique([blockerId, blockedId], name: "unique_block_pair")
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SAFETY & MODERATION — User Reports
 // ═══════════════════════════════════════════════════════════════
 
@@ -1435,9 +1637,14 @@ model UserReport {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Soft delete (v3.0)
+  deletedAt DateTime?
+
   @@index([reporterId])
   @@index([reportedUserId])
   @@index([status])
   @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([deletedAt])
   @@index([reporterId, reportedUserId, createdAt])
 }

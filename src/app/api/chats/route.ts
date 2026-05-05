@@ -6,7 +6,10 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/chats
- * 获取用户的聊天列表
+ * Get user's chat list
+ * 
+ * Fix: Replaced prisma.message.groupBy() with individual count queries
+ * because Turso/libSQL has limited groupBy support which caused 500 errors.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +20,7 @@ export async function GET(req: NextRequest) {
 
     const userId = session.user.id;
 
-    // 获取用户的所有聊天室
+    // Get all chat rooms for the user
     const chatRooms = await prisma.chatRoom.findMany({
       where: {
         members: {
@@ -73,24 +76,35 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: "desc" },
     });
 
-    // 获取未读消息数
-    const unreadCounts = await prisma.message.groupBy({
-      by: ['roomId'],
-      where: {
-        senderId: { not: userId },
-        isRead: false,
-        roomId: { in: chatRooms.map(c => c.id) },
-      },
-      _count: {
-        id: true,
-      },
-    });
+    // Get unread counts — use individual count queries instead of groupBy
+    // (Turso/libSQL has limited groupBy support)
+    const unreadMap = new Map<string, number>();
+    
+    if (chatRooms.length > 0) {
+      const roomIds = chatRooms.map(c => c.id);
+      
+      // Use findMany + aggregate approach that works with Turso
+      for (const roomId of roomIds) {
+        try {
+          const count = await prisma.message.count({
+            where: {
+              roomId: roomId,
+              senderId: { not: userId },
+              isRead: false,
+            },
+          });
+          if (count > 0) {
+            unreadMap.set(roomId, count);
+          }
+        } catch {
+          // If count fails for a room, just skip it (unread = 0)
+        }
+      }
+    }
 
-    const unreadMap = new Map(unreadCounts.map(u => [u.roomId, u._count.id]));
-
-    // 格式化聊天列表
+    // Format chat list
     const formattedChats = chatRooms.map((room) => {
-      // 找到对方用户
+      // Find the other user
       const otherMember = room.members.find(m => m.userId !== userId);
       const otherUser = otherMember?.user;
       const lastMessage = room.messages[0];

@@ -28,6 +28,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // EMOJI LIST
@@ -556,7 +557,7 @@ export default function ChatRoomPage() {
           {/* Avatar with Online Status */}
           <div className="relative">
             <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
-              {roomInfo?.otherUser?.avatar ? (
+              {roomInfo?.otherUser?.avatar && !isBrokenAvatarUrl(roomInfo.otherUser.avatar) ? (
                 roomInfo.otherUser.avatar.startsWith("emoji:") ? (
                   <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                     <span
@@ -576,6 +577,7 @@ export default function ChatRoomPage() {
                     src={roomInfo.otherUser.avatar}
                     alt={roomInfo.otherUser.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; const p = e.currentTarget.parentElement; if (p) { const fb = document.createElement('div'); fb.className = 'w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-foreground font-bold'; fb.textContent = roomInfo?.otherUser?.name?.[0] || '?'; p.appendChild(fb); } }}
                   />
                 )
               ) : (
@@ -721,7 +723,7 @@ export default function ChatRoomPage() {
                   {/* Avatar (only show for first message in group) */}
                   {!fromMe && showAvatar && (
                     <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 relative">
-                      {roomInfo?.otherUser?.avatar ? (
+                      {roomInfo?.otherUser?.avatar && !isBrokenAvatarUrl(roomInfo.otherUser.avatar) ? (
                         roomInfo.otherUser.avatar.startsWith("emoji:") ? (
                           <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                             <span
@@ -741,6 +743,7 @@ export default function ChatRoomPage() {
                             src={roomInfo.otherUser.avatar}
                             alt={roomInfo.otherUser.name}
                             className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; const p = e.currentTarget.parentElement; if (p) { const fb = document.createElement('div'); fb.className = 'w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground text-xs font-bold'; fb.textContent = roomInfo?.otherUser?.name?.[0] || '?'; p.appendChild(fb); } }}
                           />
                         )
                       ) : (
@@ -789,7 +792,7 @@ export default function ChatRoomPage() {
               className="flex items-center gap-2.5 px-4 py-2"
             >
               <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 relative">
-                {roomInfo?.otherUser?.avatar ? (
+                {roomInfo?.otherUser?.avatar && !isBrokenAvatarUrl(roomInfo.otherUser.avatar) ? (
                   roomInfo.otherUser.avatar.startsWith("emoji:") ? (
                     <div className="w-full h-full bg-gradient-to-br from-amber-500/80 to-rose-500/80 flex items-center justify-center">
                       <span className="select-none leading-none" style={{ fontSize: 'clamp(0.9rem, 180%, 1.8rem)', lineHeight: '1' }}>
@@ -797,7 +800,7 @@ export default function ChatRoomPage() {
                       </span>
                     </div>
                   ) : (
-                    <img src={roomInfo.otherUser.avatar} alt={roomInfo.otherUser.name} className="w-full h-full object-cover" />
+                    <img src={roomInfo.otherUser.avatar} alt={roomInfo.otherUser.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   )
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-amber-500/80 to-rose-500/80 flex items-center justify-center text-foreground text-xs font-bold">

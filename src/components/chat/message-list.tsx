@@ -5,6 +5,7 @@ import { Sparkles, Bot, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { MessageBubble, MessageBubbleProps } from "./message-bubble";
 import type { IMMessagePayload } from "@/lib/im/types";
+import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
 
 // ============================================================================
 // Types
@@ -151,6 +152,9 @@ interface TypingIndicatorProps {
 }
 
 function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
+  // Skip broken CDN URLs
+  const safeAvatar = avatar && !isBrokenAvatarUrl(avatar) ? avatar : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
@@ -161,8 +165,8 @@ function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
     >
       {/* Avatar */}
       <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10">
-        {avatar ? (
-          avatar.startsWith("emoji:") ? (
+        {safeAvatar ? (
+          safeAvatar.startsWith("emoji:") ? (
             <div className={`w-full h-full flex items-center justify-center ${
               isBot 
                 ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
@@ -180,11 +184,11 @@ function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
                   verticalAlign: 'middle',
                 }}
               >
-                {avatar.split(":")[1]}
+                {safeAvatar.split(":")[1]}
               </span>
             </div>
           ) : (
-            <img src={avatar} alt={name || "User"} className="w-full h-full object-cover" />
+            <img src={safeAvatar} alt={name || "User"} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           )
         ) : (
           <div className={`w-full h-full flex items-center justify-center text-foreground text-xs font-bold ${

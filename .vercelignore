@@ -1,0 +1,12 @@
+# Deploy tasks directory - contains duplicated file paths that conflict with Vercel
+deploy-tasks/
+
+# Build outputs
+.next/
+node_modules/
+out/
+
+# Development files
+*.log
+.DS_Store
+coverage/

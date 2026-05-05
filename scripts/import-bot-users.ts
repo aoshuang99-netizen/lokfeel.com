@@ -12,12 +12,12 @@ import 'dotenv/config'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require('../src/generated/index.js')
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { PrismaPg } = require('@prisma/adapter-pg')
+const { PrismaLibSql } = require('@prisma/adapter-libsql')
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaLibSql({ url: process.env.DATABASE_URL!, authToken: process.env.TURSO_AUTH_TOKEN! })
 const prisma = new PrismaClient({ adapter })
 
 // Types based on JSON structure

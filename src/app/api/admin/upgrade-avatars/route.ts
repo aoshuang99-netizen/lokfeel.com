@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
       total: botUsers.length,
       results: results.slice(0, 20),
       message: `${mode === 'url' ? 'URL' : 'HD'} upgrade: ${upgraded}/${botUsers.length} avatars`,
-    }, 200)
+    })
 
   } catch (error) {
     console.error('Upgrade avatars error:', error)

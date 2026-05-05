@@ -4,6 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { User, Bot, Lock, Sparkles } from "lucide-react";
+import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
 
 // ============================================================================
 // Types
@@ -73,11 +74,13 @@ function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
   // Detect avatar type: emoji format, photo URL, or none
   const isEmoji = avatar?.startsWith("emoji:");
   const emojiChar = isEmoji ? avatar!.split(":")[1] : null;
+  // Skip broken CDN URLs immediately — show fallback instead of broken image
+  const safeAvatar = avatar && !isBrokenAvatarUrl(avatar) ? avatar : null;
 
   return (
     <div className="relative flex-shrink-0">
       <div className="w-12 h-12 rounded-full overflow-hidden bg-white/[0.04] flex items-center justify-center ring-1 ring-white/[0.06]">
-        {avatar ? (
+        {safeAvatar ? (
           isEmoji ? (
             <div className={`w-full h-full flex items-center justify-center ${
               isBot
@@ -98,9 +101,10 @@ function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
             </div>
           ) : (
             <img
-              src={avatar}
+              src={safeAvatar}
               alt={name}
               className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; const fb = e.currentTarget.nextElementSibling as HTMLElement; if (fb) fb.style.display = 'flex'; }}
             />
           )
         ) : (

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@/generated";
 import path from "path";
+import { createSoftDeleteExtension } from "./prisma-soft-delete";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -53,10 +54,13 @@ function createPrismaClient(): PrismaClient {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new (PrismaClient as any)({
+  const baseClient = new (PrismaClient as any)({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   }) as PrismaClient;
+
+  // Apply soft delete extension
+  return baseClient.$extends(createSoftDeleteExtension()) as PrismaClient;
 }
 
 // Lazy singleton — only instantiated when first accessed at runtime

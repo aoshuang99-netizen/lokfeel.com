@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Heart, X, Mail, Gift, Clock, Filter, Check, Loader2, Sparkles, Shield } from "lucide-react";
 import { useApiGet, useApiPost } from "@/hooks/use-api";
-import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl } from "@/lib/avatar-utils";
 
 type FilterType = "all" | "unread" | "verified" | "withGift" | "expiring";
 type SortType = "smart" | "score" | "recent" | "expiring";
@@ -319,7 +319,8 @@ export default function InboxPage() {
                   <div className="relative w-16 h-16 rounded-full overflow-hidden bg-background-tertiary">
                     {(() => {
                       const kind = getAvatarKind(item.otherUser.avatar);
-                      if (kind === 'none') {
+                      // Skip broken CDN URLs — show fallback immediately
+                      if (kind === 'none' || isBrokenAvatarUrl(item.otherUser.avatar)) {
                         return (
                           <div className="w-full h-full flex items-center justify-center">
                             <span className="text-2xl text-foreground-subtle">{item.otherUser.name[0]}</span>
@@ -336,6 +337,7 @@ export default function InboxPage() {
                           alt={item.otherUser.name}
                           className={getAvatarImgClasses(kind)}
                           style={kind === 'svg' ? { background: getAvatarBackground(kind, item.otherUser.avatar) } : undefined}
+                          onError={(e) => { e.currentTarget.style.display = 'none'; const p = e.currentTarget.parentElement; if (p) { const fb = document.createElement('div'); fb.className = 'w-full h-full flex items-center justify-center'; fb.innerHTML = '<span class="text-2xl text-foreground-subtle">' + (item.otherUser.name[0] || '?') + '</span>'; p.appendChild(fb); } }}
                         />
                       );
                     })()}

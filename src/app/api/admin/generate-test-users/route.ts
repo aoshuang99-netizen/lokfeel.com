@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
         withProfile: withProfile ? results.length : 0,
         withAvatar: withAvatar ? results.length : 0,
       },
-    }, 201)
+    })
   } catch (error) {
     console.error('Generate test users error:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'

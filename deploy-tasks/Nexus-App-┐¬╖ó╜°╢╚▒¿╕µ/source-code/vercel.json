@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx prisma generate && next build",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "TURSO_AUTH_TOKEN": "@turso_auth_token",
+    "AUTH_SECRET": "@auth_secret",
+    "NEXTAUTH_URL": "@nextauth_url",
+    "AUTH_URL": "@auth_url",
+    "NEXT_PUBLIC_APP_URL": "@app_url",
+    "NEXT_PUBLIC_APP_NAME": "Nexus"
+  },
+  "buildEnv": {
+    "DATABASE_URL": "@database_url",
+    "TURSO_AUTH_TOKEN": "@turso_auth_token",
+    "AUTH_SECRET": "@auth_secret"
+  }
+}

@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
       mimeType: "image/jpeg",
       width: finalWidth,
       height: finalHeight,
-    }, 201);
+    });
   } catch (error) {
     console.error("Upload POST error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -275,7 +275,7 @@ export async function PUT(request: NextRequest) {
       mimeType: "image/jpeg",
       width: finalWidth,
       height: finalHeight,
-    }, 201);
+    });
   } catch (error) {
     console.error("Upload PUT error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";

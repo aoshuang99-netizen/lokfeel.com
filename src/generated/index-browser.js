@@ -235,7 +235,8 @@ exports.Prisma.UserScalarFieldEnum = {
   cardVerified: 'cardVerified',
   cardVerifiedAt: 'cardVerifiedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.AccountScalarFieldEnum = {
@@ -344,7 +345,8 @@ exports.Prisma.MatchScalarFieldEnum = {
   inboxPriority: 'inboxPriority',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  expiresAt: 'expiresAt'
+  expiresAt: 'expiresAt',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.MatchReactionScalarFieldEnum = {
@@ -372,7 +374,8 @@ exports.Prisma.ChatRoomScalarFieldEnum = {
   screenshotCount: 'screenshotCount',
   lastScreenshotAt: 'lastScreenshotAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.ChatRoomMemberScalarFieldEnum = {
@@ -414,7 +417,8 @@ exports.Prisma.ConversationScalarFieldEnum = {
   vaultExpiresAt: 'vaultExpiresAt',
   cachedConsentState: 'cachedConsentState',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.ConversationParticipantScalarFieldEnum = {
@@ -585,7 +589,8 @@ exports.Prisma.SubscriptionScalarFieldEnum = {
   endsAt: 'endsAt',
   cancelledAt: 'cancelledAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.PaymentScalarFieldEnum = {
@@ -598,16 +603,20 @@ exports.Prisma.PaymentScalarFieldEnum = {
   description: 'description',
   metadata: 'metadata',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 };
 
-exports.Prisma.AdminLogScalarFieldEnum = {
+exports.Prisma.AdminAuditScalarFieldEnum = {
   id: 'id',
-  authorId: 'authorId',
+  actorId: 'actorId',
+  category: 'category',
   action: 'action',
-  targetId: 'targetId',
   targetType: 'targetType',
+  targetId: 'targetId',
+  changes: 'changes',
   details: 'details',
+  reason: 'reason',
   ipAddress: 'ipAddress',
   userAgent: 'userAgent',
   createdAt: 'createdAt'
@@ -630,6 +639,51 @@ exports.Prisma.SystemConfigScalarFieldEnum = {
   description: 'description',
   updatedAt: 'updatedAt',
   updatedBy: 'updatedBy'
+};
+
+exports.Prisma.AdminPermissionScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  description: 'description',
+  category: 'category',
+  isActive: 'isActive',
+  isDangerous: 'isDangerous',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CustomRoleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  isSystem: 'isSystem',
+  permissions: 'permissions',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AdminRolePermissionScalarFieldEnum = {
+  id: 'id',
+  role: 'role',
+  permissionId: 'permissionId',
+  grantedAt: 'grantedAt',
+  grantedBy: 'grantedBy'
+};
+
+exports.Prisma.AdminUserRoleScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  role: 'role',
+  customRoleId: 'customRoleId',
+  department: 'department',
+  title: 'title',
+  isActive: 'isActive',
+  grantedAt: 'grantedAt',
+  grantedBy: 'grantedBy',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SincerityWalletScalarFieldEnum = {
@@ -663,6 +717,13 @@ exports.Prisma.SincerityTransactionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.BlockScalarFieldEnum = {
+  id: 'id',
+  blockerId: 'blockerId',
+  blockedId: 'blockedId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.UserReportScalarFieldEnum = {
   id: 'id',
   reporterId: 'reporterId',
@@ -677,7 +738,8 @@ exports.Prisma.UserReportScalarFieldEnum = {
   adminNotes: 'adminNotes',
   actionTaken: 'actionTaken',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -904,6 +966,46 @@ exports.PaymentStatus = exports.$Enums.PaymentStatus = {
   REFUNDED: 'REFUNDED'
 };
 
+exports.AuditCategory = exports.$Enums.AuditCategory = {
+  USER: 'USER',
+  MATCH: 'MATCH',
+  CHAT: 'CHAT',
+  PAYMENT: 'PAYMENT',
+  CONTENT: 'CONTENT',
+  BOT: 'BOT',
+  AI_CREATIVE: 'AI_CREATIVE',
+  AI_SUPPORT: 'AI_SUPPORT',
+  VIP: 'VIP',
+  ANALYTICS: 'ANALYTICS',
+  SYSTEM: 'SYSTEM',
+  RBAC: 'RBAC'
+};
+
+exports.PermissionCategory = exports.$Enums.PermissionCategory = {
+  USER: 'USER',
+  MATCHING: 'MATCHING',
+  CHAT: 'CHAT',
+  PAYMENT: 'PAYMENT',
+  CONTENT: 'CONTENT',
+  AI_CREATIVE: 'AI_CREATIVE',
+  AI_SUPPORT: 'AI_SUPPORT',
+  VIP: 'VIP',
+  ANALYTICS: 'ANALYTICS',
+  SYSTEM: 'SYSTEM',
+  RBAC: 'RBAC',
+  BOT: 'BOT'
+};
+
+exports.AdminRole = exports.$Enums.AdminRole = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'ADMIN',
+  MODERATOR: 'MODERATOR',
+  ANALYST: 'ANALYST',
+  SUPPORT: 'SUPPORT',
+  CREATIVE: 'CREATIVE',
+  VIP_AGENT: 'VIP_AGENT'
+};
+
 exports.SincerityTier = exports.$Enums.SincerityTier = {
   BRONZE: 'BRONZE',
   SILVER: 'SILVER',
@@ -967,11 +1069,16 @@ exports.Prisma.ModelName = {
   Notification: 'Notification',
   Subscription: 'Subscription',
   Payment: 'Payment',
-  AdminLog: 'AdminLog',
+  AdminAudit: 'AdminAudit',
   AnalyticsEvent: 'AnalyticsEvent',
   SystemConfig: 'SystemConfig',
+  AdminPermission: 'AdminPermission',
+  CustomRole: 'CustomRole',
+  AdminRolePermission: 'AdminRolePermission',
+  AdminUserRole: 'AdminUserRole',
   SincerityWallet: 'SincerityWallet',
   SincerityTransaction: 'SincerityTransaction',
+  Block: 'Block',
   UserReport: 'UserReport'
 };
 

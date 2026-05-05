@@ -45,51 +45,61 @@ export default function LoginInnerClient({
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  // ─── Form Submit using signIn() ───
+  // ─── Form Submit: POST to NextAuth callback with full CSRF headers ───
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      const result = (await signIn("credentials", {
-        email: email.toLowerCase().trim(),
-        password,
-        redirect: false,
-        callbackUrl,
-      })) as { error?: string | null; url?: string | null; ok?: boolean; status?: number } | undefined;
+      // Step 1: Get CSRF token + cookie from NextAuth
+      const csrfRes = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfRes.json();
 
-      if (result?.error) {
-        switch (result.error) {
-          case "CredentialsSignin":
-            setError("Invalid email or password.");
-            break;
-          case "MissingCSRF":
-            setError("Security check failed. Please refresh and try again.");
-            break;
-          case "AccessDenied":
-            setError("Access denied. Your account may not have access.");
-            break;
-          default:
-            setError(`Sign in failed. Please try again.`);
+      if (!csrfToken) {
+        setError("Security check failed. Please refresh and try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 2: POST credentials with CSRF token + cookie
+      // Origin/Referer headers are required for NextAuth CSRF validation
+      const formData = new FormData();
+      formData.append("email", email.toLowerCase().trim());
+      formData.append("password", password);
+      formData.append("csrfToken", csrfToken);
+      formData.append("callbackUrl", callbackUrl || "/admin");
+
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        body: formData,
+        // credentials: 'include' sends cookies; Origin/Referer are automatic in browser
+      });
+
+      // Step 3: Check redirect location
+      const location = res.headers.get("location") || "";
+      const url = new URL(location, window.location.origin);
+
+      if (location.includes("error=")) {
+        const errorCode = url.searchParams.get("error");
+        if (errorCode === "CredentialsSignin") {
+          setError("Invalid email or password.");
+        } else if (errorCode === "MissingCSRF") {
+          setError("Security check failed. Please refresh and try again.");
+        } else {
+          setError("Sign in failed. Please try again.");
         }
         setIsLoading(false);
-      } else if (result?.ok || result?.url) {
-        // Sign in successful - use router for client-side navigation
-        // Small delay to ensure session cookie is set
-        await new Promise(resolve => setTimeout(resolve, 300));
-        window.location.href = callbackUrl || "/dashboard";
-      } else {
-        // Unexpected: no error but no success either
-        setError("Sign in failed. Please try again.");
-        setIsLoading(false);
+        return;
       }
+
+      // Step 4: Success — redirect to destination
+      window.location.href = location || callbackUrl || "/admin";
     } catch (err) {
       console.error("[Login] Error:", err);
       setError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
     }
-    // Note: don't setIsLoading(false) on success - page will redirect
   };
 
   // ─── OAuth handlers ───

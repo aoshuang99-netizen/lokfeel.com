@@ -6,6 +6,7 @@ import { Bot, Check, CheckCheck, Clock, Copy, Trash2, Flag, Reply, ChevronRight,
 import type { IMMessagePayload, MessageDeliveryStatus } from "@/lib/im/types";
 import { ReactionPicker, ReactionSummary, type ReactionSummaryDisplay } from "./reaction-picker";
 import { toast } from "sonner";
+import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
 
 // ============================================================================
 // Types
@@ -69,11 +70,13 @@ interface AvatarDisplayProps {
 function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps) {
   const sizeClasses = size === "sm" ? "w-8 h-8" : "w-10 h-10";
   const botBadgeSize = size === "sm" ? "-bottom-0.5 -right-0.5 w-4 h-4" : "-bottom-0.5 -right-0.5 w-5 h-5";
+  // Skip broken CDN URLs immediately
+  const safeAvatar = avatar && !isBrokenAvatarUrl(avatar) ? avatar : null;
 
   return (
     <div className={`relative ${sizeClasses} rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10`}>
-      {avatar ? (
-        avatar.startsWith("emoji:") ? (
+      {safeAvatar ? (
+        safeAvatar.startsWith("emoji:") ? (
           // High-quality emoji avatar — fills container responsively
           <div
             className={`w-full h-full flex items-center justify-center ${
@@ -94,14 +97,15 @@ function AvatarDisplay({ name, avatar, isBot, size = "sm" }: AvatarDisplayProps)
                 verticalAlign: 'middle',
               }}
             >
-              {avatar.split(":")[1]}
+              {safeAvatar.split(":")[1]}
             </span>
           </div>
         ) : (
           <img
-            src={avatar}
+            src={safeAvatar}
             alt={name}
             className="w-full h-full object-cover"
+            onError={(e) => { e.currentTarget.style.display = 'none'; const p = e.currentTarget.parentElement; if (p) { const fb = document.createElement('div'); fb.className = 'w-full h-full flex items-center justify-center text-foreground text-xs font-bold bg-gradient-to-br from-primary to-secondary'; fb.textContent = name?.[0] || '?'; p.appendChild(fb); } }}
           />
         )
       ) : (

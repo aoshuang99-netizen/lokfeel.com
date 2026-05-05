@@ -28,7 +28,12 @@ export default async function LoginPage({
   // If already logged in, redirect away
   const session = await auth();
   if (session?.user) {
-    redirect(params.callbackUrl || "/dashboard");
+    const role = (session.user as any)?.role;
+    // Admin users → /admin, Regular users → /dashboard
+    const destination = role === "ADMIN" || role === "SUPER_ADMIN"
+      ? "/admin"
+      : (params.callbackUrl || "/dashboard");
+    redirect(destination);
   }
 
   // Parse error from URL (NextAuth redirects back with ?error=xxx)
@@ -51,7 +56,7 @@ export default async function LoginPage({
 
   return (
     <LoginInnerClient
-      callbackUrl={params.callbackUrl || "/dashboard"}
+      callbackUrl={params.callbackUrl || "/admin"}
       errorMessage={errorMessage}
     />
   );

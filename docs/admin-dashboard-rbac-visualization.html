@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LokFeel RBAC 权限体系 — 可视化矩阵</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b27;
+    --bg3: #1e2535;
+    --border: #2a3447;
+    --text: #e8edf5;
+    --text2: #8b95a8;
+    --text3: #5a6577;
+    --c-red: #ef4444;
+    --c-orange: #f97316;
+    --c-amber: #f59e0b;
+    --c-green: #22c55e;
+    --c-emerald: #10b981;
+    --c-cyan: #06b6d4;
+    --c-blue: #3b82f6;
+    --c-indigo: #6366f1;
+    --c-violet: #8b5cf6;
+    --c-purple: #a855f7;
+    --c-pink: #ec4899;
+    --c-gray: #6b7280;
+    --c-yellow: #eab308;
+    --c-teal: #14b8a6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Navigation */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,17,23,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    height: 60px;
+  }
+  nav .logo {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  nav .logo span { color: var(--c-amber); }
+  nav .nav-links {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+  nav .nav-links a {
+    color: var(--text2);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  nav .nav-links a:hover, nav .nav-links a.active {
+    color: var(--text);
+    background: var(--bg3);
+  }
+  nav .nav-links a.active { color: var(--c-amber); }
+
+  /* Container */
+  .container { max-width: 1400px; margin: 0 auto; padding: 40px 32px 80px; }
+
+  /* Sections */
+  section { margin-bottom: 80px; }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-sub {
+    color: var(--text2);
+    margin-bottom: 32px;
+    font-size: 14px;
+  }
+  .section-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #1a1f35 0%, #0f1629 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 56px 48px;
+    margin-bottom: 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero p { color: var(--text2); font-size: 16px; max-width: 640px; margin-bottom: 32px; }
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat .num {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--c-amber);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .hero-stat .label { color: var(--text2); font-size: 13px; }
+
+  /* Role Cards */
+  .role-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .role-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .role-card:hover { border-color: #3a4560; transform: translateY(-2px); }
+  .role-card .role-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  .role-card .role-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .role-card .role-desc {
+    color: var(--text2);
+    font-size: 12px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .role-card .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(245,158,11,0.12);
+    color: var(--c-amber);
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+  .role-card .role-perm-count {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .role-card .role-perm-count span { color: var(--c-green); font-weight: 600; }
+
+  /* Permission Matrix Table */
+  .matrix-wrap {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .matrix-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .matrix-wrap thead tr:first-child { background: var(--bg3); }
+  .matrix-wrap th {
+    padding: 14px 16px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .matrix-wrap th:first-child {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: var(--bg3);
+    z-index: 2;
+    min-width: 240px;
+  }
+  .matrix-wrap th .role-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .matrix-wrap th .role-col .emoji { font-size: 20px; }
+  .matrix-wrap th .role-col .name { font-size: 12px; font-weight: 700; }
+  .matrix-wrap th .role-col .count { font-size: 10px; color: var(--text3); }
+
+  .matrix-wrap tbody tr {
+    border-bottom: 1px solid rgba(42,52,71,0.5);
+    transition: background 0.15s;
+  }
+  .matrix-wrap tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .matrix-wrap td {
+    padding: 10px 16px;
+    border-right: 1px solid rgba(42,52,71,0.3);
+  }
+  .matrix-wrap td:first-child {
+    position: sticky;
+    left: 0;
+    background: var(--bg2);
+    z-index: 1;
+  }
+  .matrix-wrap td:last-child { border-right: none; }
+  .matrix-wrap td:nth-child(2) { border-left: 1px solid var(--border); }
+
+  .perm-code {
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--c-cyan);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .perm-name {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .perm-cat {
+    font-size: 10px;
+    color: var(--text3);
+    display: inline-block;
+    margin-top: 3px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--bg3);
+  }
+
+  .cell {
+    text-align: center;
+    padding: 10px 8px;
+    width: 80px;
+  }
+  .cell .check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .cell .check.yes {
+    background: rgba(34,197,94,0.15);
+    color: var(--c-green);
+    border: 1px solid rgba(34,197,94,0.25);
+  }
+  .cell .check.warn {
+    background: rgba(245,158,11,0.15);
+    color: var(--c-amber);
+    border: 1px solid rgba(245,158,11,0.25);
+  }
+  .cell .check.no {
+    color: var(--text3);
+    font-size: 12px;
+  }
+  .cell .check.danger {
+    background: rgba(239,68,68,0.15);
+    color: var(--c-red);
+    border: 1px solid rgba(239,68,68,0.25);
+  }
+
+  .cat-row td {
+    background: var(--bg3);
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+  }
+  .cat-row td:first-child { text-align: left; }
+  .cat-row td:first-child { position: sticky; left: 0; background: var(--bg3); z-index: 1; }
+
+  /* Architecture Diagram */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 32px;
+  }
+  .arch-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .arch-box h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .arch-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .arch-node {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .arch-node:hover { border-color: #3a4560; }
+  .arch-node .node-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .arch-node .node-label { flex: 1; }
+  .arch-node .node-sub { font-size: 11px; color: var(--text3); }
+  .arch-node .node-arrow {
+    color: var(--text3);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .arch-node.highlight {
+    border-color: rgba(245,158,11,0.3);
+    background: rgba(245,158,11,0.05);
+  }
+
+  /* Data Flow SVG */
+  .flow-svg {
+    width: 100%;
+    border-radius: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    margin-top: 24px;
+  }
+
+  /* API Endpoint Cards */
+  .api-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .api-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 12px;
+    font-family: 'Fira Code', monospace;
+  }
+  .api-card .method {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 8px;
+    margin-bottom: 8px;
+  }
+  .api-card .method.get { background: rgba(59,130,246,0.15); color: var(--c-blue); }
+  .api-card .method.post { background: rgba(34,197,94,0.15); color: var(--c-green); }
+  .api-card .method.patch { background: rgba(245,158,11,0.15); color: var(--c-amber); }
+  .api-card .method.delete { background: rgba(239,68,68,0.15); color: var(--c-red); }
+  .api-card .path { color: var(--text); }
+  .api-card .desc { color: var(--text2); font-family: 'Inter', sans-serif; font-size: 11px; margin-top: 6px; }
+
+  /* Timeline */
+  .timeline {
+    margin-top: 32px;
+    position: relative;
+    padding-left: 32px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 28px;
+    padding: 20px 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 22px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--c-amber);
+    border: 3px solid var(--bg);
+  }
+  .timeline-item .week {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-amber);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .timeline-item h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .timeline-item ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .timeline-item ul li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .timeline-item ul li .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-green);
+    flex-shrink: 0;
+  }
+
+  /* Risk Matrix */
+  .risk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .risk-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    border-left: 4px solid var(--c-orange);
+  }
+  .risk-card.high { border-left-color: var(--c-red); }
+  .risk-card.medium { border-left-color: var(--c-amber); }
+  .risk-card.low { border-left-color: var(--c-green); }
+  .risk-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .risk-card p { font-size: 12px; color: var(--text2); margin-bottom: 12px; line-height: 1.5; }
+  .risk-card .mitigation {
+    font-size: 11px;
+    color: var(--text3);
+    padding: 8px 12px;
+    background: var(--bg3);
+    border-radius: 8px;
+    line-height: 1.5;
+  }
+  .risk-card .mitigation strong { color: var(--text2); }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding: 16px 20px;
+    background: var(--bg3);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--text2);
+    align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-item .dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 32px;
+    color: var(--text3);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 900px) {
+    .arch-grid { grid-template-columns: 1fr; }
+    .hero { padding: 32px 24px; }
+    .hero h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="logo">🛡️ <span>LokFeel</span> Admin RBAC</div>
+  <div class="nav-links">
+    <a href="#overview" class="active">总览</a>
+    <a href="#roles">角色定义</a>
+    <a href="#permissions">权限矩阵</a>
+    <a href="#architecture">架构设计</a>
+    <a href="#api">API 端点</a>
+    <a href="#timeline">实施路线</a>
+    <a href="#risks">风险评估</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero" id="overview">
+    <h1>🔐 RBAC 权限体系设计</h1>
+    <p>基于角色的精细化权限控制系统，支持 7 种管理员角色、45+ 项精细权限、高危操作保护、操作审计全程留痕。由超级管理员统一调配，全员覆盖。</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="num">7</div>
+        <div class="label">管理员角色</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">45+</div>
+        <div class="label">精细权限</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">12</div>
+        <div class="label">权限分类</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">4</div>
+        <div class="label">实施阶段</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">5周</div>
+        <div class="label">预计工期</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Roles -->
+  <section id="roles">
+    <div class="section-title">👥 角色定义 <span class="section-tag">7 Roles</span></div>
+    <div class="section-sub">每个角色对应明确的职能边界，由超级管理员（SUPER_ADMIN）统一创建和分配。</div>
+
+    <div class="role-cards">
+      <div class="role-card">
+        <div class="role-icon" style="background: rgba(239,68,68,0.15);">👑</div>
+        <div class="role-name">SUPER_ADMIN</div>
+        <div class="role-desc">超级管理员，全系统唯一最高权限，可管理其他管理员和角色定义</div>
+        <div class="role-badge">🔒 全权限</div>
+        <div class="role-perm-count">权限数: <span>全部</span></div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-icon" style="background: rgba(245,158,11,0.15);">⚙️</div>
+        <div class="role-name">ADMIN</div>
+        <div class="role-desc">管理员，覆盖用户/匹配/支付/AI工具全管理，无角色管理权限</div>
+        <div class="role-badge">🟠 通用管理</div>
+        <div class="role-perm-count">权限数: <span>约30项</span></div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-icon" style="background: rgba(239,68,68,0.12);">🛡️</div>
+        <div class="role-name">MODERATOR</div>
+        <div class="role-desc">审核员，专注举报处理、内容审核、用户封禁，适合安全运营</div>
+        <div class="role-badge">🟡 审核专精</div>
+        <div class="role-perm-count">权限数: <span>约9项</span></div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-icon" style="background: rgba(59,130,246,0.15);">📊</div>
+        <div class="role-name">ANALYST</div>
+        <div class="role-desc">分析师，只读数据分析，支持导出，适合管理层和增长团队</div>
+        <div class="role-badge">🔵 数据分析</div>
+        <div class="role-perm-count">权限数: <span>约8项</span></div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-icon" style="background: rgba(34,197,94,0.12);">💬</div>
+        <div class="role-name">SUPPORT</div>
+        <div class="role-desc">客服，用户查看 + 基础操作 + VIP消息处理，适合客服团队</div>
+        <div class="role-badge">🟢 客服</div>
+        <div class="role-perm-count">权限数: <span>约10项</span></div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-icon" style="background: rgba(168,85,247,0.15);">🎨</div>
+        <div class="role-name">CREATIVE</div>
+        <div class="role-desc">创意运营，AI推广图全生命周期管理，适合设计和增长运营</div>
+        <div class="role-badge">🟣 创意运营</div>
+        <div class="role-perm-count">权限数: <span>约6项</span></div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-icon" style="background: rgba(236,72,153,0.15);">👑</div>
+        <div class="role-name">VIP_AGENT</div>
+        <div class="role-desc">VIP客服，VIP收件箱专属，数据范围隔离，适合VIP服务团队</div>
+        <div class="role-badge">🟡 VIP专属</div>
+        <div class="role-perm-count">权限数: <span>约11项</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Permission Matrix -->
+  <section id="permissions">
+    <div class="section-title">📋 权限矩阵 <span class="section-tag">45+ 权限</span></div>
+    <div class="section-sub">✅=有权限 &nbsp; ⚠️=需二次确认 &nbsp; ✓=高危需二次确认 &nbsp; —=无权限</div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="dot yes">✓</div> 正常权限</div>
+      <div class="legend-item"><div class="dot warn">⚠️</div> 需二次确认</div>
+      <div class="legend-item"><div class="dot danger">✓✓</div> 高危操作</div>
+      <div class="legend-item"><div class="dot no">—</div> 无权限</div>
+    </div>
+
+    <div class="matrix-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>权限</th>
+            <th>🔴 SUPER_ADMIN</th>
+            <th>🟠 ADMIN</th>
+            <th>🟡 MODERATOR</th>
+            <th>🔵 ANALYST</th>
+            <th>🟢 SUPPORT</th>
+            <th>🟣 CREATIVE</th>
+            <th>🟡 VIP_AGENT</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- USER -->
+          <tr class="cat-row"><td colspan="8">👥 用户管理 USER</td></tr>
+          <tr>
+            <td>
+              <span class="perm-code">user.view</span>
+              <span class="perm-name">查看用户列表</span>
+              <span class="perm-cat">USER</span>
+            </td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="perm-code">user.view_detail</span>
+              <span class="perm-name">查看用户详情</span>
+              <span class="perm-cat">USER</span>
+            </td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="perm-code">user.edit</span>
+              <span class="perm-name">编辑用户资料</span>
+              <span class="perm-cat">USER</span>
+            </td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="perm-code">user.ban</span>
+              <span class="perm-name">封禁 / 解封用户</span>
+              <span class="perm-cat">USER ⚠️</span>
+            </td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="perm-code">user.delete</span>
+              <span class="perm-name">删除用户</span>
+              <span class="perm-cat">USER ⚠️⚠️</span>
+            </td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="perm-code">user.export</span>
+              <span class="perm-name">导出用户数据</span>
+              <span class="perm-cat">USER ⚠️</span>
+            </td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="perm-code">user.tracking</span>
+              <span class="perm-name">用户行为追踪</span>
+              <span class="perm-cat">USER</span>
+            </td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- MATCHING -->
+          <tr class="cat-row"><td colspan="8">❤️ 匹配管理 MATCHING</td></tr>
+          <tr>
+            <td><span class="perm-code">match.view</span><span class="perm-name">查看匹配列表</span><span class="perm-cat">MATCHING</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">match.manual</span><span class="perm-name">手动创建匹配</span><span class="perm-cat">MATCHING ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">match.engine</span><span class="perm-name">配置匹配引擎</span><span class="perm-cat">MATCHING ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- PAYMENT -->
+          <tr class="cat-row"><td colspan="8">💳 支付管理 PAYMENT</td></tr>
+          <tr>
+            <td><span class="perm-code">payment.view</span><span class="perm-name">查看支付数据</span><span class="perm-cat">PAYMENT</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">payment.refund</span><span class="perm-name">执行退款</span><span class="perm-cat">PAYMENT ⚠️⚠️</span></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">payment.subscription</span><span class="perm-name">管理订阅</span><span class="perm-cat">PAYMENT ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">payment.config</span><span class="perm-name">配置支付参数</span><span class="perm-cat">PAYMENT ⚠️⚠️</span></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- CONTENT -->
+          <tr class="cat-row"><td colspan="8">🔍 内容审核 CONTENT</td></tr>
+          <tr>
+            <td><span class="perm-code">content.report.view</span><span class="perm-name">查看举报列表</span><span class="perm-cat">CONTENT</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">content.report.action</span><span class="perm-name">处理举报</span><span class="perm-cat">CONTENT ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- BOT -->
+          <tr class="cat-row"><td colspan="8">🤖 Bot系统 BOT</td></tr>
+          <tr>
+            <td><span class="perm-code">bot.view</span><span class="perm-name">查看Bot列表</span><span class="perm-cat">BOT</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">bot.edit</span><span class="perm-name">编辑Bot配置</span><span class="perm-cat">BOT ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">bot.delete</span><span class="perm-name">删除Bot</span><span class="perm-cat">BOT ⚠️⚠️</span></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- AI_CREATIVE -->
+          <tr class="cat-row"><td colspan="8">🎨 AI推广图 AI_CREATIVE</td></tr>
+          <tr>
+            <td><span class="perm-code">ai_creative.view</span><span class="perm-name">查看推广图</span><span class="perm-cat">AI_CREATIVE</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">ai_creative.template</span><span class="perm-name">管理模板</span><span class="perm-cat">AI_CREATIVE ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">ai_creative.generate</span><span class="perm-name">触发生成任务</span><span class="perm-cat">AI_CREATIVE ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">ai_creative.abtest</span><span class="perm-name">管理A/B测试</span><span class="perm-cat">AI_CREATIVE</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- AI_SUPPORT -->
+          <tr class="cat-row"><td colspan="8">🤖 AI客服 AI_SUPPORT</td></tr>
+          <tr>
+            <td><span class="perm-code">ai_support.view</span><span class="perm-name">查看AI客服数据</span><span class="perm-cat">AI_SUPPORT</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">ai_support.template</span><span class="perm-name">管理响应模板</span><span class="perm-cat">AI_SUPPORT ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">ai_support.knowledge</span><span class="perm-name">管理知识库</span><span class="perm-cat">AI_SUPPORT ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- VIP -->
+          <tr class="cat-row"><td colspan="8">👑 VIP管理 VIP</td></tr>
+          <tr>
+            <td><span class="perm-code">vip.view</span><span class="perm-name">查看VIP收件箱</span><span class="perm-cat">VIP</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">vip.reply</span><span class="perm-name">回复VIP消息</span><span class="perm-cat">VIP ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">vip.grant</span><span class="perm-name">授予VIP资格</span><span class="perm-cat">VIP ⚠️⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">vip.revoke</span><span class="perm-name">取消VIP资格</span><span class="perm-cat">VIP ⚠️⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">vip.ticket</span><span class="perm-name">管理工单</span><span class="perm-cat">VIP ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">vip.performance</span><span class="perm-name">查看服务绩效</span><span class="perm-cat">VIP</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+          </tr>
+
+          <!-- ANALYTICS -->
+          <tr class="cat-row"><td colspan="8">📊 数据分析 ANALYTICS</td></tr>
+          <tr>
+            <td><span class="perm-code">analytics.view</span><span class="perm-name">查看分析数据</span><span class="perm-cat">ANALYTICS</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">analytics.export</span><span class="perm-name">导出分析报告</span><span class="perm-cat">ANALYTICS ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- SYSTEM -->
+          <tr class="cat-row"><td colspan="8">⚙️ 系统配置 SYSTEM</td></tr>
+          <tr>
+            <td><span class="perm-code">system.config.view</span><span class="perm-name">查看系统配置</span><span class="perm-cat">SYSTEM</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">system.config.edit</span><span class="perm-name">编辑系统配置</span><span class="perm-cat">SYSTEM ⚠️</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check warn">⚠️</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">system.audit</span><span class="perm-name">查看审计日志</span><span class="perm-cat">SYSTEM</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+          <!-- RBAC -->
+          <tr class="cat-row"><td colspan="8">🔐 权限管理 RBAC 🔒</td></tr>
+          <tr>
+            <td><span class="perm-code">rbac.role.view</span><span class="perm-name">查看角色列表</span><span class="perm-cat">RBAC</span></td>
+            <td class="cell"><div class="check yes">✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">rbac.role.create</span><span class="perm-name">创建角色</span><span class="perm-cat">RBAC ⚠️⚠️</span></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">rbac.user.assign</span><span class="perm-name">分配管理员角色</span><span class="perm-cat">RBAC ⚠️⚠️</span></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+          <tr>
+            <td><span class="perm-code">rbac.permission.edit</span><span class="perm-name">编辑权限定义</span><span class="perm-cat">RBAC ⚠️⚠️</span></td>
+            <td class="cell"><div class="check danger">✓✓</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+            <td class="cell"><div class="check no">—</div></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section id="architecture">
+    <div class="section-title">🏗️ 系统架构 <span class="section-tag">架构设计</span></div>
+    <div class="section-sub">分层权限检查：前端路由守卫 → API 中间件 → 数据库查询层，三层联动。</div>
+
+    <!-- Data Flow SVG -->
+    <svg class="flow-svg" viewBox="0 0 1400 340" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background grid -->
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e2535" stroke-width="0.5"/>
+        </pattern>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#161b27"/>
+          <stop offset="100%" stop-color="#0f1629"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <rect width="1400" height="340" fill="url(#bg)"/>
+      <rect width="1400" height="340" fill="url(#grid)"/>
+
+      <!-- Title -->
+      <text x="700" y="28" text-anchor="middle" fill="#5a6577" font-size="12" font-family="Inter">权限检查数据流 — Authorization Flow</text>
+
+      <!-- Layer 1: Client -->
+      <rect x="20" y="50" width="160" height="260" rx="12" fill="#1a2035" stroke="#2a3447" stroke-width="1"/>
+      <rect x="20" y="50" width="160" height="28" rx="12" fill="#1e2840"/>
+      <rect x="20" y="66" width="160" height="12" fill="#1e2840"/>
+      <text x="100" y="70" text-anchor="middle" fill="#e8edf5" font-size="11" font-weight="700" font-family="Inter">客户端 Client</text>
+      <!-- Nodes -->
+      <rect x="36" y="94" width="128" height="38" rx="8" fill="#1e2535" stroke="#3b82f6" stroke-width="1"/>
+      <text x="100" y="108" text-anchor="middle" fill="#60a5fa" font-size="10" font-family="Inter">AdminSidebar</text>
+      <text x="100" y="121" text-anchor="middle" fill="#3b82f6" font-size="9" font-family="Inter">路由守卫</text>
+
+      <rect x="36" y="142" width="128" height="38" rx="8" fill="#1e2535" stroke="#3b82f6" stroke-width="1"/>
+      <text x="100" y="156" text-anchor="middle" fill="#60a5fa" font-size="10" font-family="Inter">usePermission()</text>
+      <text x="100" y="169" text-anchor="middle" fill="#3b82f6" font-size="9" font-family="Inter">权限检查Hook</text>
+
+      <rect x="36" y="190" width="128" height="38" rx="8" fill="#1e2535" stroke="#3b82f6" stroke-width="1"/>
+      <text x="100" y="204" text-anchor="middle" fill="#60a5fa" font-size="10" font-family="Inter">DangerButton</text>
+      <text x="100" y="217" text-anchor="middle" fill="#3b82f6" font-size="9" font-family="Inter">二次确认弹窗</text>
+
+      <rect x="36" y="238" width="128" height="38" rx="8" fill="#1e2535" stroke="#3b82f6" stroke-width="1"/>
+      <text x="100" y="252" text-anchor="middle" fill="#60a5fa" font-size="10" font-family="Inter">API Request</text>
+      <text x="100" y="265" text-anchor="middle" fill="#3b82f6" font-size="9" font-family="Inter">携带Token</text>
+
+      <!-- Arrow 1-2 -->
+      <path d="M 182 160 L 224 160" stroke="#2a3447" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+      <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#3b82f6"/></marker></defs>
+
+      <!-- Layer 2: Middleware -->
+      <rect x="226" y="50" width="200" height="260" rx="12" fill="#1a2035" stroke="#2a3447" stroke-width="1"/>
+      <rect x="226" y="50" width="200" height="28" rx="12" fill="#1e2840"/>
+      <rect x="226" y="66" width="200" height="12" fill="#1e2840"/>
+      <text x="326" y="70" text-anchor="middle" fill="#e8edf5" font-size="11" font-weight="700" font-family="Inter">中间件层 Middleware</text>
+
+      <rect x="242" y="94" width="168" height="38" rx="8" fill="#1e2535" stroke="#f59e0b" stroke-width="1"/>
+      <text x="326" y="108" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="Inter">requireSession()</text>
+      <text x="326" y="121" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Inter">认证检查</text>
+
+      <rect x="242" y="142" width="168" height="38" rx="8" fill="#1e2535" stroke="#f59e0b" stroke-width="1"/>
+      <text x="326" y="156" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="Inter">getAdminProfile()</text>
+      <text x="326" y="169" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Inter">获取管理员角色</text>
+
+      <rect x="242" y="190" width="168" height="38" rx="8" fill="#1e2535" stroke="#ef4444" stroke-width="1"/>
+      <text x="326" y="204" text-anchor="middle" fill="#f87171" font-size="10" font-family="Inter">hasPermission()</text>
+      <text x="326" y="217" text-anchor="middle" fill="#ef4444" font-size="9" font-family="Inter">权限校验</text>
+
+      <rect x="242" y="238" width="168" height="38" rx="8" fill="#1e2535" stroke="#ef4444" stroke-width="1"/>
+      <text x="326" y="252" text-anchor="middle" fill="#f87171" font-size="10" font-family="Inter">AdminRoleAudit</text>
+      <text x="326" y="265" text-anchor="middle" fill="#ef4444" font-size="9" font-family="Inter">写入审计日志</text>
+
+      <!-- Arrow 2-3 -->
+      <path d="M 428 160 L 470 160" stroke="#2a3447" stroke-width="2" fill="none" marker-end="url(#arr2)"/>
+      <defs><marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#22c55e"/></marker></defs>
+
+      <!-- Layer 3: API Routes -->
+      <rect x="472" y="50" width="240" height="260" rx="12" fill="#1a2035" stroke="#2a3447" stroke-width="1"/>
+      <rect x="472" y="50" width="240" height="28" rx="12" fill="#1e2840"/>
+      <rect x="472" y="66" width="240" height="12" fill="#1e2840"/>
+      <text x="592" y="70" text-anchor="middle" fill="#e8edf5" font-size="11" font-weight="700" font-family="Inter">业务逻辑层 Business Logic</text>
+
+      <rect x="488" y="94" width="208" height="30" rx="7" fill="#1e2535" stroke="#22c55e" stroke-width="1"/>
+      <text x="592" y="113" text-anchor="middle" fill="#4ade80" font-size="10" font-family="Inter">GET /api/admin/users</text>
+
+      <rect x="488" y="132" width="208" height="30" rx="7" fill="#1e2535" stroke="#22c55e" stroke-width="1"/>
+      <text x="592" y="151" text-anchor="middle" fill="#4ade80" font-size="10" font-family="Inter">PATCH /api/admin/users/[id]</text>
+
+      <rect x="488" y="170" width="208" height="30" rx="7" fill="#1e2535" stroke="#22c55e" stroke-width="1"/>
+      <text x="592" y="189" text-anchor="middle" fill="#4ade80" font-size="10" font-family="Inter">POST /api/admin/rbac/users</text>
+
+      <rect x="488" y="208" width="208" height="30" rx="7" fill="#1e2535" stroke="#22c55e" stroke-width="1"/>
+      <text x="592" y="227" text-anchor="middle" fill="#4ade80" font-size="10" font-family="Inter">GET /api/admin/rbac/audit</text>
+
+      <rect x="488" y="246" width="208" height="30" rx="7" fill="#1e2535" stroke="#8b5cf6" stroke-width="1"/>
+      <text x="592" y="265" text-anchor="middle" fill="#a78bfa" font-size="10" font-family="Inter">AI Tools / VIP / Payment</text>
+
+      <!-- Arrow 3-4 -->
+      <path d="M 714 160 L 756 160" stroke="#2a3447" stroke-width="2" fill="none" marker-end="url(#arr3)"/>
+      <defs><marker id="arr3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#a855f7"/></marker></defs>
+
+      <!-- Layer 4: Database -->
+      <rect x="758" y="50" width="260" height="260" rx="12" fill="#1a2035" stroke="#2a3447" stroke-width="1"/>
+      <rect x="758" y="50" width="260" height="28" rx="12" fill="#1e2840"/>
+      <rect x="758" y="66" width="260" height="12" fill="#1e2840"/>
+      <text x="888" y="70" text-anchor="middle" fill="#e8edf5" font-size="11" font-weight="700" font-family="Inter">数据层 Database (Prisma)</text>
+
+      <rect x="774" y="94" width="112" height="70" rx="8" fill="#1e2535" stroke="#a855f7" stroke-width="1"/>
+      <text x="830" y="112" text-anchor="middle" fill="#c084fc" font-size="9" font-family="Inter">User</text>
+      <text x="830" y="126" text-anchor="middle" fill="#8b5cf6" font-size="8" font-family="Inter">role (UserRole)</text>
+      <text x="830" y="140" text-anchor="middle" fill="#8b5cf6" font-size="8" font-family="Inter">userId 关联</text>
+      <text x="830" y="154" text-anchor="middle" fill="#a855f7" font-size="8" font-family="Inter">AdminProfile</text>
+
+      <rect x="896" y="94" width="112" height="30" rx="8" fill="#1e2535" stroke="#a855f7" stroke-width="1"/>
+      <text x="952" y="113" text-anchor="middle" fill="#c084fc" font-size="9" font-family="Inter">AdminPermission</text>
+
+      <rect x="896" y="132" width="112" height="30" rx="8" fill="#1e2535" stroke="#a855f7" stroke-width="1"/>
+      <text x="952" y="151" text-anchor="middle" fill="#c084fc" font-size="9" font-family="Inter">AdminRolePermission</text>
+
+      <rect x="896" y="170" width="112" height="30" rx="8" fill="#1e2535" stroke="#a855f7" stroke-width="1"/>
+      <text x="952" y="189" text-anchor="middle" fill="#c084fc" font-size="9" font-family="Inter">AdminUserRole</text>
+
+      <rect x="774" y="208" width="112" height="30" rx="8" fill="#1e2535" stroke="#a855f7" stroke-width="1"/>
+      <text x="830" y="227" text-anchor="middle" fill="#c084fc" font-size="9" font-family="Inter">AdminRoleAudit</text>
+
+      <rect x="896" y="208" width="112" height="30" rx="8" fill="#1e2535" stroke="#ef4444" stroke-width="1"/>
+      <text x="952" y="227" text-anchor="middle" fill="#f87171" font-size="9" font-family="Inter">Business Tables</text>
+
+      <!-- Arrow 4-5 -->
+      <path d="M 1020 160 L 1062 160" stroke="#2a3447" stroke-width="2" fill="none" marker-end="url(#arr4)"/>
+      <defs><marker id="arr4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f59e0b"/></marker></defs>
+
+      <!-- Layer 5: External -->
+      <rect x="1064" y="50" width="180" height="260" rx="12" fill="#1a2035" stroke="#2a3447" stroke-width="1"/>
+      <rect x="1064" y="50" width="180" height="28" rx="12" fill="#1e2840"/>
+      <rect x="1064" y="66" width="180" height="12" fill="#1e2840"/>
+      <text x="1154" y="70" text-anchor="middle" fill="#e8edf5" font-size="11" font-weight="700" font-family="Inter">外部服务 External</text>
+
+      <rect x="1080" y="94" width="148" height="30" rx="8" fill="#1e2535" stroke="#f59e0b" stroke-width="1"/>
+      <text x="1154" y="113" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="Inter">📧 Email Alert</text>
+
+      <rect x="1080" y="132" width="148" height="30" rx="8" fill="#1e2535" stroke="#f59e0b" stroke-width="1"/>
+      <text x="1154" y="151" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="Inter">🔔 Admin Dashboard</text>
+
+      <rect x="1080" y="170" width="148" height="30" rx="8" fill="#1e2535" stroke="#f59e0b" stroke-width="1"/>
+      <text x="1154" y="189" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="Inter">💳 Stripe Webhook</text>
+
+      <rect x="1080" y="208" width="148" height="30" rx="8" fill="#1e2535" stroke="#f59e0b" stroke-width="1"/>
+      <text x="1154" y="227" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="Inter">🤖 AI Service</text>
+
+      <rect x="1080" y="246" width="148" height="30" rx="8" fill="#1e2535" stroke="#22c55e" stroke-width="1"/>
+      <text x="1154" y="265" text-anchor="middle" fill="#4ade80" font-size="10" font-family="Inter">🗄️ Backup Service</text>
+
+      <!-- Layer labels -->
+      <text x="100" y="330" text-anchor="middle" fill="#3b82f6" font-size="10" font-family="Inter">客户端</text>
+      <text x="326" y="330" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter">中间件</text>
+      <text x="592" y="330" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter">业务逻辑</text>
+      <text x="888" y="330" text-anchor="middle" fill="#a855f7" font-size="10" font-family="Inter">数据层</text>
+      <text x="1154" y="330" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter">外部服务</text>
+    </svg>
+
+    <!-- Architecture Summary -->
+    <div class="arch-grid">
+      <div class="arch-box">
+        <h3>🔑 权限检查流程</h3>
+        <div class="arch-flow">
+          <div class="arch-node">
+            <div class="node-icon" style="background: rgba(59,130,246,0.15);">1</div>
+            <div class="node-label">
+              <div>前端路由守卫</div>
+              <div class="node-sub">usePermission() Hook 检查 hasPermission(role, permission)</div>
+            </div>
+            <div class="node-arrow">→</div>
+          </div>
+          <div class="arch-node">
+            <div class="node-icon" style="background: rgba(245,158,11,0.15);">2</div>
+            <div class="node-label">
+              <div>Next.js API Middleware</div>
+              <div class="node-sub">requirePermission() 验证 session + 角色 + 权限</div>
+            </div>
+            <div class="node-arrow">→</div>
+          </div>
+          <div class="arch-node">
+            <div class="node-icon" style="background: rgba(34,197,94,0.12);">3</div>
+            <div class="node-label">
+              <div>Prisma 查询层</div>
+              <div class="node-sub">AdminUserRole → AdminRolePermission → AdminPermission</div>
+            </div>
+            <div class="node-arrow">→</div>
+          </div>
+          <div class="arch-node highlight">
+            <div class="node-icon" style="background: rgba(239,68,68,0.12);">4</div>
+            <div class="node-label">
+              <div>AdminRoleAudit 审计</div>
+              <div class="node-sub">所有变更写入审计日志，支持回溯</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-box">
+        <h3>📊 数据库模型关系</h3>
+        <div class="arch-flow">
+          <div class="arch-node">
+            <div class="node-icon" style="background: rgba(168,85,247,0.15);">A</div>
+            <div class="node-label">
+              <div>User（复用）</div>
+              <div class="node-sub">原有 UserRole: USER / ADMIN / SUPER_ADMIN</div>
+            </div>
+          </div>
+          <div class="arch-node">
+            <div class="node-icon" style="background: rgba(168,85,247,0.15);">B</div>
+            <div class="node-label">
+              <div>AdminUserRole（N:1→User）</div>
+              <div class="node-sub">管理员-角色关联，含 department / expiresAt</div>
+            </div>
+          </div>
+          <div class="arch-node">
+            <div class="node-icon" style="background: rgba(168,85,247,0.15);">C</div>
+            <div class="node-label">
+              <div>AdminRole（7个预定义）</div>
+              <div class="node-sub">SUPER_ADMIN / ADMIN / MODERATOR / ANALYST / SUPPORT / CREATIVE / VIP_AGENT</div>
+            </div>
+          </div>
+          <div class="arch-node">
+            <div class="node-icon" style="background: rgba(168,85,247,0.15);">D</div>
+            <div class="node-label">
+              <div>AdminPermission（45+条）</div>
+              <div class="node-sub">code / name / category / isDangerous</div>
+            </div>
+          </div>
+          <div class="arch-node">
+            <div class="node-icon" style="background: rgba(168,85,247,0.15);">E</div>
+            <div class="node-label">
+              <div>AdminRolePermission（N:N）</div>
+              <div class="node-sub">角色-权限关联，grantedBy / grantedAt</div>
+            </div>
+          </div>
+          <div class="arch-node highlight">
+            <div class="node-icon" style="background: rgba(239,68,68,0.12);">F</div>
+            <div class="node-label">
+              <div>AdminRoleAudit（审计）</div>
+              <div class="node-sub">actor / target / action / reason（必填）/ details(JSON)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- API Endpoints -->
+  <section id="api">
+    <div class="section-title">🔌 API 端点设计 <span class="section-tag">16 端点</span></div>
+    <div class="section-sub">所有端点前缀 `/api/admin/rbac/*`，需登录认证。</div>
+
+    <div class="api-grid">
+      <div class="api-card">
+        <div><span class="method get">GET</span><span class="path">/api/admin/rbac/permissions/me</span></div>
+        <div class="desc">获取当前管理员的权限列表（含角色和部门）</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method get">GET</span><span class="path">/api/admin/rbac/roles</span></div>
+        <div class="desc">获取所有角色列表</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method get">GET</span><span class="path">/api/admin/rbac/roles/:role</span></div>
+        <div class="desc">获取指定角色的完整权限列表</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method post">POST</span><span class="path">/api/admin/rbac/roles</span></div>
+        <div class="desc">创建新角色（含权限配置），需 rbac.role.create</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method patch">PATCH</span><span class="path">/api/admin/rbac/roles/:role</span></div>
+        <div class="desc">更新角色权限，需 rbac.role.edit</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method delete">delete</span><span class="path">/api/admin/rbac/roles/:role</span></div>
+        <div class="desc">删除自定义角色（预定义角色不可删除），需 rbac.role.delete</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method get">GET</span><span class="path">/api/admin/rbac/users</span></div>
+        <div class="desc">管理员列表，支持 role / department / status 筛选</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method post">POST</span><span class="path">/api/admin/rbac/users/:userId/roles</span></div>
+        <div class="desc">分配角色给管理员，需 rbac.user.assign</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method delete">delete</span><span class="path">/api/admin/rbac/users/:userId/roles/:role</span></div>
+        <div class="desc">撤销管理员角色，需 rbac.user.revoke，body 含 reason（必填）</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method get">GET</span><span class="path">/api/admin/rbac/permissions</span></div>
+        <div class="desc">权限定义列表，支持 category / active 筛选</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method post">POST</span><span class="path">/api/admin/rbac/permissions</span></div>
+        <div class="desc">创建新权限，需 rbac.permission.edit</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method patch">PATCH</span><span class="path">/api/admin/rbac/permissions/:id</span></div>
+        <div class="desc">更新权限定义，需 rbac.permission.edit</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method get">GET</span><span class="path">/api/admin/rbac/audit</span></div>
+        <div class="desc">审计日志，支持 actor / target / action / 时间范围筛选</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method get">GET</span><span class="path">/api/admin/rbac/users/:userId/history</span></div>
+        <div class="desc">获取指定管理员的角色变更历史</div>
+      </div>
+      <div class="api-card">
+        <div><span class="method patch">PATCH</span><span class="path">/api/admin/rbac/users/:userId/status</span></div>
+        <div class="desc">启用/停用管理员账号，需 rbac.user.assign</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  <section id="timeline">
+    <div class="section-title">📅 实施路线图 <span class="section-tag">5周</span></div>
+    <div class="section-sub">按优先级分阶段交付，每阶段结束有可演示版本。</div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="week">Week 1-2 · Phase 1</div>
+        <h3>RBAC 基础框架</h3>
+        <ul>
+          <li><span class="dot"></span>Prisma Schema 新增 4 个 RBAC 模型</li>
+          <li><span class="dot"></span>Migration + 初始化权限数据（45项 + 7角色）</li>
+          <li><span class="dot"></span>创建 SUPER_ADMIN 账号（Frank）</li>
+          <li><span class="dot"></span>权限检查中间件 `requirePermission()`</li>
+          <li><span class="dot"></span>前端 `hasPermission()` / `usePermission()` Hook</li>
+          <li><span class="dot"></span>角色列表页面（只读）</li>
+        </ul>
+      </div>
+
+      <div class="timeline-item">
+        <div class="week">Week 3 · Phase 2</div>
+        <h3>管理员管理 + 审计</h3>
+        <ul>
+          <li><span class="dot"></span>管理员列表页面（表格 + 筛选）</li>
+          <li><span class="dot"></span>角色分配 / 撤销功能</li>
+          <li><span class="dot"></span>AdminRoleAudit 审计日志记录</li>
+          <li><span class="dot"></span>审计日志查看页面</li>
+          <li><span class="dot"></span>批量分配角色（多选）</li>
+        </ul>
+      </div>
+
+      <div class="timeline-item">
+        <div class="week">Week 4 · Phase 3</div>
+        <h3>高危保护 + UI 优化</h3>
+        <ul>
+          <li><span class="dot"></span>二次确认弹窗组件（DangerButton）</li>
+          <li><span class="dot"></span>危险权限标记 + 高亮样式</li>
+          <li><span class="dot"></span>路由守卫（前端 + 后端双层）</li>
+          <li><span class="dot"></span>权限不足时的友好提示页面</li>
+          <li><span class="dot"></span>权限矩阵可视化页面（管理用）</li>
+        </ul>
+      </div>
+
+      <div class="timeline-item">
+        <div class="week">Week 5 · Phase 4</div>
+        <h3>数据隔离 + 临时权限</h3>
+        <ul>
+          <li><span class="dot"></span>部门级数据隔离（VIP客服只看VIP用户）</li>
+          <li><span class="dot"></span>临时权限功能（expiresAt）</li>
+          <li><span class="dot"></span>权限变更邮件通知</li>
+          <li><span class="dot"></span>RBAC 自定义角色管理（创建 / 编辑）</li>
+          <li><span class="dot"></span>E2E 测试覆盖权限边界</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Risks -->
+  <section id="risks">
+    <div class="section-title">⚠️ 风险评估 <span class="section-tag">5项</span></div>
+    <div class="section-sub">识别主要风险及缓解措施。</div>
+
+    <div class="risk-grid">
+      <div class="risk-card high">
+        <h4>🔴 超管账号丢失</h4>
+        <p>唯一超管账号丢失后，无法管理其他管理员。</p>
+        <div class="mitigation"><strong>缓解：</strong>至少保留 2 个超管账号；将第二个超管设为备用，存放在安全的密码管理器中。</div>
+      </div>
+      <div class="risk-card high">
+        <h4>🔴 权限越级访问</h4>
+        <p>低权限账号通过 API 直接调用高权限接口。</p>
+        <div class="mitigation"><strong>缓解：</strong>所有 API 端点强制经过 requirePermission() 中间件；审计日志实时记录所有拒绝事件。</div>
+      </div>
+      <div class="risk-card medium">
+        <h4>🟡 权限被误删</h4>
+        <p>AdminPermission 记录被物理删除，影响线上角色权限。</p>
+        <div class="mitigation"><strong>缓解：</strong>使用 isActive 软删除，不物理删除；所有变更需 reason 记录。</div>
+      </div>
+      <div class="risk-card medium">
+        <h4>🟡 权限与页面不匹配</h4>
+        <p>前端隐藏了按钮但 API 未鉴权，或相反。</p>
+        <div class="mitigation"><strong>缓解：</strong>前后端双重鉴权兜底；使用 usePermission() 统一管理可见性。</div>
+      </div>
+      <div class="risk-card low">
+        <h4>🟢 过度限制影响效率</h4>
+        <p>权限设置过细导致日常工作繁琐。</p>
+        <div class="mitigation"><strong>缓解：</strong>提供「复制角色」功能；ADMIN 角色作为默认权限集。</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  LokFeel Admin RBAC · 设计文档 v2.1 · 2026-05-02 · Scout 协调员<br>
+  文档路径: nexus-app/docs/admin-dashboard-rbac-spec.md
+</footer>
+
+<script>
+  // Smooth scroll for nav links
+  document.querySelectorAll('nav .nav-links a').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll('nav .nav-links a').forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Highlight current section on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav .nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop - 80;
+      if (window.scrollY >= sectionTop) {
+        current = section.getAttribute('id');
+      }
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

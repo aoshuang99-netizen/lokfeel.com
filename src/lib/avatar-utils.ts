@@ -72,3 +72,57 @@ export function getAvatarBackground(kind: AvatarKind, avatar: string | null | un
       return 'linear-gradient(135deg, rgba(232,160,56,0.15), rgba(200,80,80,0.15))';
   }
 }
+
+/**
+ * Known broken avatar CDN patterns — these always 403/404 and should be 
+ * replaced with fallback immediately (no broken image flash).
+ */
+const BROKEN_CDN_PATTERNS = [
+  'i.pravatar.cc',  // Cloudflare challenge → 403 since 2026-04
+];
+
+/**
+ * Check if an avatar URL is from a known-broken CDN.
+ * Returns true if the URL should be treated as unavailable.
+ */
+export function isBrokenAvatarUrl(avatar: string | null | undefined): boolean {
+  if (!avatar) return false;
+  return BROKEN_CDN_PATTERNS.some(pattern => avatar.includes(pattern));
+}
+
+/**
+ * Generate a deterministic DiceBear avatar URL as fallback.
+ * Uses the user's name/ID as seed for consistency.
+ */
+export function getFallbackAvatarUrl(seed: string): string {
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}`;
+}
+
+/**
+ * Handle image load error — hide broken image and show fallback.
+ * Usage: <img onError={handleAvatarError} />
+ */
+export function handleAvatarError(e: React.SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  img.style.display = 'none';
+  // Show parent's fallback by triggering re-render
+  const container = img.parentElement;
+  if (container) {
+    // Add a fallback initials badge
+    const fallback = document.createElement('div');
+    fallback.className = 'w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-foreground font-bold';
+    fallback.style.fontSize = 'clamp(0.7rem, 40%, 1.4rem)';
+    fallback.textContent = '?';
+    container.appendChild(fallback);
+  }
+}
+
+/**
+ * Get a safe avatar URL — if the original is from a broken CDN,
+ * return null so the caller can use a fallback immediately.
+ */
+export function getSafeAvatarUrl(avatar: string | null | undefined): string | null {
+  if (!avatar) return null;
+  if (isBrokenAvatarUrl(avatar)) return null;
+  return avatar;
+}
