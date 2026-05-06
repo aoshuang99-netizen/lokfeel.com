@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -11,14 +12,14 @@ const EXTENSION_COST = 25;
 
 /**
  * GET /api/chat/[id]/vault
- * 
+ *
  * 获取Vault状态和时间
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { id: roomId } = await params;
     const { user } = await requireAuth();
     const userId = user.id;
@@ -55,7 +56,7 @@ export async function GET(
     // 计算剩余时间
     let timeLeft = 0;
     let isExpired = false;
-    
+
     if (room.vaultExpiry) {
       timeLeft = Math.max(0, new Date(room.vaultExpiry).getTime() - Date.now());
       isExpired = timeLeft === 0;
@@ -87,29 +88,19 @@ export async function GET(
         revokeReason: room.revokeReason,
       }
     });
-
-  } catch (error: any) {
-    if (error.message === 'Unauthorized' || error.message === 'User not found') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('Vault status error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
  * POST /api/chat/[id]/vault/extend
- * 
+ *
  * 延长Vault时间
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { id: roomId } = await params;
     const { user } = await requireAuth();
     const userId = user.id;
@@ -215,29 +206,19 @@ export async function POST(
         timeLeftFormatted: formatTimeLeft(newExpiry.getTime() - Date.now()),
       }
     });
-
-  } catch (error: any) {
-    if (error.message === 'Unauthorized' || error.message === 'User not found') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('Vault extend error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
  * DELETE /api/chat/[id]/vault
- * 
+ *
  * 女性撤销聊天 (Revoke)
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { id: roomId } = await params;
     const { user } = await requireAuth();
     const userId = user.id;
@@ -303,7 +284,7 @@ export async function DELETE(
     // 软删除消息
     await db.message.updateMany({
       where: { roomId },
-      data: { 
+      data: {
         content: '[Message deleted]',
         metadata: JSON.stringify({ deleted: true, revokedAt: new Date() }),
       }
@@ -332,17 +313,7 @@ export async function DELETE(
         revokeReason: updatedRoom.revokeReason,
       }
     });
-
-  } catch (error: any) {
-    if (error.message === 'Unauthorized' || error.message === 'User not found') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('Vault revoke error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
@@ -350,10 +321,10 @@ export async function DELETE(
  */
 function formatTimeLeft(ms: number): string {
   if (ms <= 0) return 'Expired';
-  
+
   const hours = Math.floor(ms / (1000 * 60 * 60));
   const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   }

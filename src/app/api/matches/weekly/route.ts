@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth, requireAdminAuth } from "@/lib/auth";
-import { generateMatchesForUser, generateAllWeeklyMatches } from "@/lib/matching";
 import { handleApiError } from "@/lib/api-handler";
+import { generateMatchesForUser, generateAllWeeklyMatches } from "@/lib/matching";
 
 export const dynamic = "force-dynamic";
 

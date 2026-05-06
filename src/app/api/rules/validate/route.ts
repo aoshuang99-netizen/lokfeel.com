@@ -1,11 +1,12 @@
 /**
  * Power Board Lite 规则验证 API
- * 
+ *
  * POST /api/rules/validate - 预检消息是否符合规则
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { getRuleEngine } from '@/lib/rules/engine';
 import { validateValidateMessageRequest } from '@/lib/rules/schema';
 import {
@@ -23,7 +24,7 @@ export const dynamic = 'force-dynamic';
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const body = await request.json();
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // 获取频率状态
     const paceResult = await ruleEngine.checkRateLimit(senderId, receiverId);
-    
+
     // 构建发送者历史
     const senderHistory: SenderHistory = {
       messageCount: paceResult.hourlyCount,
@@ -100,18 +101,5 @@ export async function POST(request: NextRequest) {
       },
       { status: statusCode }
     );
-  } catch (error: any) {
-    if (error.message === 'Unauthorized' || error.message === 'User not found') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('Failed to validate message:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to validate message',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }

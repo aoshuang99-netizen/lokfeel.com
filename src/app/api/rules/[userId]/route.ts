@@ -1,15 +1,16 @@
 /**
  * Power Board Lite 规则 API - 用户特定规则管理
- * 
+ *
  * GET /api/rules/[userId] - 获取指定用户规则
  * PUT /api/rules/[userId] - 更新指定用户规则（仅女性用户可操作）
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { getRuleEngine } from '@/lib/rules/engine';
 import { validateUpdateRulesRequest } from '@/lib/rules/schema';
-import { PowerBoardRules, RuleChange } from '@/lib/rules/types';
+import { PowerBoardRules } from '@/lib/rules/types';
 import { convertFullToLiteRules } from '@/lib/rules/defaults';
 import { db } from '@/lib/db';
 
@@ -23,7 +24,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { userId } = await params;
 
@@ -54,20 +55,7 @@ export async function GET(
       success: true,
       data: rules,
     });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized' || error.message === 'User not found') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('Failed to get rules:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to get rules',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 // ============================================================================
@@ -78,7 +66,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { userId } = await params;
 
@@ -91,11 +79,11 @@ export async function PUT(
     }
 
     // 检查用户性别，仅女性可修改规则
-    const profile = await db.profile.findUnique({ 
+    const profile = await db.profile.findUnique({
       where: { userId: user.id },
       select: { gender: true }
     });
-    
+
     if (profile?.gender !== 'FEMALE') {
       return NextResponse.json(
         { success: false, error: 'Only female users can modify rules' },
@@ -162,18 +150,5 @@ export async function PUT(
         changes,
       },
     });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized' || error.message === 'User not found') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('Failed to update rules:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to update rules',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }

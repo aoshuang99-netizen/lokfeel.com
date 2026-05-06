@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { requireVerifiedUser, verificationErrorResponse } from '@/lib/auth/verification'
+import { handleApiError } from '@/lib/api-handler'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -92,7 +93,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
     const { id: roomId } = await params
 
@@ -195,13 +196,7 @@ export async function GET(
         createdAt: msg.createdAt,
       })),
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Get messages error:', error)
-    return NextResponse.json({ message: 'Failed to fetch messages' }, { status: 500 })
-  }
+  })
 }
 
 // POST /api/chat/[id]/messages — Send a message
@@ -209,7 +204,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     // Require verified user for sending messages
     let user
     try {
@@ -252,7 +247,7 @@ export async function POST(
       // Free (men): 2 messages per conversation
       const userWithSub = await db.user.findUnique({
         where: { id: user.id },
-        include: { 
+        include: {
           subscriptions: { where: { status: 'ACTIVE' }, take: 1 },
           profile: { select: { gender: true } },
         },
@@ -260,7 +255,7 @@ export async function POST(
       const hasActiveSub = userWithSub?.subscriptions && userWithSub.subscriptions.length > 0
       const isLadyFree = userWithSub?.subscriptions?.[0]?.plan === 'LADY_FREE'
       const isFemale = userWithSub?.profile?.gender === 'FEMALE'
-      
+
       // Skip limit for Lady Free and Premium users
       if (!hasActiveSub && !isFemale) {
         // Free male users: 2 messages per conversation
@@ -457,11 +452,5 @@ export async function POST(
         createdAt: imMessage.createdAt,
       },
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Send message error:', error)
-    return NextResponse.json({ message: 'Failed to send message' }, { status: 500 })
-  }
+  })
 }

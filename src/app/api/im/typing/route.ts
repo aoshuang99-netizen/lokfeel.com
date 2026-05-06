@@ -7,12 +7,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { pushToConversation } from '@/lib/im/websocket/pusher-bridge';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     // 1. Authenticate user
     const { user } = await requireAuth();
 
@@ -39,14 +40,5 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[IM Typing] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to send typing indicator' },
-      { status: 500 }
-    );
-  }
+  });
 }
