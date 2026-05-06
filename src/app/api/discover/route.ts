@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
+import { cache } from "@/lib/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -92,7 +93,9 @@ export async function GET(request: NextRequest) {
     // Map various gender preference formats to standard values
     // Note: preferredGender may be null for new users who haven't completed onboarding
     const preferredGender = profile.preferredGender?.toUpperCase() || null;
-    console.log('[Discover API] Raw preferredGender:', profile.preferredGender, 'Upper:', preferredGender);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Discover API] Raw preferredGender:', profile.preferredGender, 'Upper:', preferredGender);
+    }
     
     if (preferredGender && preferredGender !== "EVERYONE") {
       const genderMap: Record<string, string> = {
@@ -104,12 +107,7 @@ export async function GET(request: NextRequest) {
       const targetGender = genderMap[preferredGender];
       if (targetGender) {
         whereClause.profile.is.gender = targetGender;
-        console.log('[Discover API] Filtering by gender:', targetGender);
-      } else {
-        console.log('[Discover API] No gender filter applied, unknown preferredGender:', preferredGender);
       }
-    } else {
-      console.log('[Discover API] No gender filter applied (EVERYONE or empty)');
     }
 
     // Add age range filter (optional) - RELAXED
@@ -120,10 +118,11 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Debug logging
-    console.log('[Discover API] Current user:', userId, 'Profile:', profile.id);
-    console.log('[Discover API] Excluding IDs:', excludeIds.length, excludeIds.slice(0, 10));
-    console.log('[Discover API] Where clause:', JSON.stringify(whereClause, null, 2));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Discover API] Current user:', userId, 'Profile:', profile.id);
+      console.log('[Discover API] Excluding IDs:', excludeIds.length, excludeIds.slice(0, 10));
+      console.log('[Discover API] Where clause:', JSON.stringify(whereClause, null, 2));
+    }
 
     // Fetch potential matches
     const users = await prisma.user.findMany({

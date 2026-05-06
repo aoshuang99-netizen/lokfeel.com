@@ -1,46 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Buffer } from "buffer";
+import { getAdminSession } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
-  // Get cookie from request headers (most reliable method)
-  const cookieHeader = request.headers.get("cookie");
-  
-  if (!cookieHeader) {
-    return NextResponse.json({
-      success: false,
-      user: null,
-      debug: "No cookie header"
-    });
-  }
-
-  // Parse cookie header
-  const cookies = Object.fromEntries(
-    cookieHeader.split(";").map((c) => {
-      const [k, ...v] = c.trim().split("=");
-      return [k, decodeURIComponent(v.join("="))];
-    })
-  );
-
-  const adminSessionCookie = cookies["admin_session"];
-
-  if (!adminSessionCookie) {
-    return NextResponse.json({
-      success: false,
-      user: null,
-      debug: "No admin_session cookie"
-    });
-  }
-
   try {
-    const decoded = Buffer.from(adminSessionCookie, "base64").toString();
-    const session = JSON.parse(decoded);
+    const session = await getAdminSession(request);
 
-    // Check expiration
-    if (session.exp < Date.now()) {
+    if (!session) {
       return NextResponse.json({
         success: false,
         user: null,
-        debug: "Session expired"
       });
     }
 
@@ -55,7 +23,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       user: null,
-      debug: "Parse error"
     });
   }
 }

@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
   try {
     // 检查认证
     const adminKey = request.headers.get("x-admin-key");
-    const validAdminKey = process.env.ADMIN_API_KEY || "lokfeel-admin-2024";
+    const validAdminKey = process.env.ADMIN_API_KEY;
     
     if (adminKey !== validAdminKey) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { Buffer } from "buffer";
+import { createHmac, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 
 export interface AdminSession {
@@ -8,6 +9,70 @@ export interface AdminSession {
   email?: string;
   role: string;
   exp: number;
+}
+
+const ADMIN_SECRET = () => process.env.AUTH_SECRET || process.env.ADMIN_SECRET || "";
+
+/**
+ * Create HMAC-SHA256 signature for admin session cookie.
+ * Format: base64(payload).hex(signature)
+ */
+function signSession(payload: string): string {
+  const secret = ADMIN_SECRET();
+  if (!secret) {
+    throw new Error("AUTH_SECRET or ADMIN_SECRET must be set for admin session signing");
+  }
+  const signature = createHmac("sha256", secret).update(payload).digest("hex");
+  const encoded = Buffer.from(payload).toString("base64url");
+  return `${encoded}.${signature}`;
+}
+
+/**
+ * Verify and decode admin session cookie.
+ * Returns null if signature is invalid or session is expired.
+ */
+function verifySession(cookieValue: string): AdminSession | null {
+  try {
+    const secret = ADMIN_SECRET();
+    if (!secret) return null;
+
+    const dotIndex = cookieValue.lastIndexOf(".");
+    if (dotIndex === -1) return null;
+
+    const encoded = cookieValue.substring(0, dotIndex);
+    const providedSig = cookieValue.substring(dotIndex + 1);
+
+    // Verify signature using timing-safe comparison
+    const expectedSig = createHmac("sha256", secret)
+      .update(Buffer.from(encoded, "base64url").toString())
+      .digest("hex");
+
+    const expectedBuf = Buffer.from(expectedSig, "hex");
+    const providedBuf = Buffer.from(providedSig, "hex");
+
+    if (expectedBuf.length !== providedBuf.length) return null;
+    if (!timingSafeEqual(expectedBuf, providedBuf)) return null;
+
+    // Decode payload
+    const decoded = Buffer.from(encoded, "base64url").toString();
+    const session = JSON.parse(decoded);
+
+    // Check expiration
+    if (session.exp < Date.now()) {
+      return null;
+    }
+
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Create a signed admin session cookie value.
+ */
+export function createAdminSession(session: AdminSession): string {
+  return signSession(JSON.stringify(session));
 }
 
 /**
@@ -34,20 +99,7 @@ export async function getAdminSession(request?: NextRequest): Promise<AdminSessi
     return null;
   }
 
-  try {
-    // Decode base64 cookie
-    const decoded = Buffer.from(sessionCookieValue, "base64").toString();
-    const session = JSON.parse(decoded);
-
-    // Check expiration
-    if (session.exp < Date.now()) {
-      return null;
-    }
-
-    return session;
-  } catch {
-    return null;
-  }
+  return verifySession(sessionCookieValue);
 }
 
 export async function requireAdminSession(): Promise<AdminSession | null> {

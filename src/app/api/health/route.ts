@@ -3,13 +3,12 @@ import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-// GET /api/health — Health check endpoint
+// GET /api/health — Lightweight health check
 export async function GET() {
   try {
-    // Check database connection — use count() for Turso/libSQL compatibility
-    // (SQLite/Turso doesn't support $queryRaw)
     const start = Date.now()
-    await db.user.count()
+    // Use findFirst with select (no count scan) for faster Turso check
+    await db.user.findFirst({ select: { id: true } })
     const dbLatency = Date.now() - start
 
     return NextResponse.json({
@@ -27,7 +26,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       database: {
         connected: false,
-        error: errMsg || 'DATABASE_URL is not configured or database is unreachable',
+        error: errMsg || 'Database unreachable',
       },
     }, { status: 503 })
   }

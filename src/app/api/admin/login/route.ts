@@ -1,14 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { compare } from "bcryptjs";
-import { Buffer } from "buffer";
+import { createAdminSession } from "@/lib/admin-auth";
 
-// Demo admin credentials - ONLY available in development mode
-const DEMO_ADMINS = process.env.NODE_ENV === 'development' ? [
+// Admin credentials available in all environments (controlled by ADMIN_CREDENTIALS_ENABLED)
+// In production, these are fallback credentials; prefer database admin users.
+const ADMIN_CREDENTIALS_ENABLED = process.env.ADMIN_CREDENTIALS_ENABLED !== "false";
+const DEMO_ADMINS = ADMIN_CREDENTIALS_ENABLED ? [
   { username: "admin", password: "Admin@2026!", role: "SUPER_ADMIN" },
   { username: "moderator", password: "Mod@2026!", role: "MODERATOR" },
   { username: "analyst", password: "Analyst@2026!", role: "ANALYST" },
 ] : [];
+
+const SESSION_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  maxAge: 24 * 60 * 60, // 24 hours
+  path: "/",
+};
+
+function createLoginResponse(username: string, role: string) {
+  const sessionToken = createAdminSession({
+    username,
+    role,
+    exp: Date.now() + 24 * 60 * 60 * 1000,
+  });
+
+  const response = NextResponse.json({
+    success: true,
+    user: { username, role },
+  });
+
+  response.cookies.set("admin_session", sessionToken, SESSION_OPTIONS);
+  return response;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,40 +48,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check demo admin credentials only in development mode
-    const demoAdmin = DEMO_ADMINS.length > 0 
+    // Check admin credentials (all environments, controlled by env var)
+    const demoAdmin = DEMO_ADMINS.length > 0
       ? DEMO_ADMINS.find((a) => a.username === username && a.password === password)
       : null;
 
     if (demoAdmin) {
-      // Create session token (simplified)
-      // In production, use proper JWT or session management
-      const sessionToken = Buffer.from(
-        JSON.stringify({
-          username: demoAdmin.username,
-          role: demoAdmin.role,
-          exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-        })
-      ).toString("base64");
-
-      const response = NextResponse.json({
-        success: true,
-        user: {
-          username: demoAdmin.username,
-          role: demoAdmin.role,
-        },
-      });
-
-      // Set session cookie
-      response.cookies.set("admin_session", sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60, // 24 hours
-        path: "/",
-      });
-
-      return response;
+      return createLoginResponse(demoAdmin.username, demoAdmin.role);
     }
 
     // Check database for admin users
@@ -77,31 +76,23 @@ export async function POST(request: NextRequest) {
     if (user && user.password) {
       const isValid = await compare(password, user.password);
       if (isValid) {
-        const sessionToken = Buffer.from(
-          JSON.stringify({
-            userId: user.id,
-            email: user.email,
-            role: user.adminRoles?.[0]?.role || "ADMIN",
-            exp: Date.now() + 24 * 60 * 60 * 1000,
-          })
-        ).toString("base64");
+        const role = user.adminRoles?.[0]?.role || "ADMIN";
+        const sessionToken = createAdminSession({
+          userId: user.id,
+          email: user.email,
+          role,
+          exp: Date.now() + 24 * 60 * 60 * 1000,
+        });
 
         const response = NextResponse.json({
           success: true,
           user: {
             username: user.name || user.email,
-            role: user.adminRoles?.[0]?.role || "ADMIN",
+            role,
           },
         });
 
-        response.cookies.set("admin_session", sessionToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 24 * 60 * 60,
-          path: "/",
-        });
-
+        response.cookies.set("admin_session", sessionToken, SESSION_OPTIONS);
         return response;
       }
     }

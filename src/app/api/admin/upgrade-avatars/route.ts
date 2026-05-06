@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { success, serverError } from '@/lib/api-response'
+import { success, unauthorized, serverError } from '@/lib/api-response'
+import { requireAdminSession } from '@/lib/admin-auth'
 
 /**
  * POST /api/admin/upgrade-avatars
@@ -21,6 +22,12 @@ const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/
 
 export async function POST(request: NextRequest) {
   try {
+    // C4 FIX: Require admin authentication
+    const session = await requireAdminSession()
+    if (!session) {
+      return unauthorized('Admin session required')
+    }
+
     const body = await request.json()
     const mode = body.mode || 'url' // 'url' = fast URL swap, 'hd' = TPDNE data URL
     const batchSize = Math.min(body.batch || (mode === 'hd' ? 5 : 200), mode === 'hd' ? 10 : 500)

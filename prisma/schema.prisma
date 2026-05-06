@@ -460,6 +460,8 @@ model Profile {
   @@index([profileStatus])
   @@index([compatibilityScore])
   @@index([linkedInVerified])
+  @@index([gender, profileStatus])
+  @@index([isApproved])
 }
 
 // ═══════════════════════════════════════════════════════════════

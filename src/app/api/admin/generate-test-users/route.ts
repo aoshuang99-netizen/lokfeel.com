@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { success, badRequest, serverError } from '@/lib/api-response'
+import { success, badRequest, unauthorized, serverError } from '@/lib/api-response'
+import { requireAdminSession } from '@/lib/admin-auth'
 import { hash } from 'bcryptjs'
 import { toJson } from '@/lib/json-helpers'
 
@@ -119,6 +120,12 @@ function generateBio(gender: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // C4 FIX: Require admin authentication
+    const session = await requireAdminSession()
+    if (!session) {
+      return unauthorized('Admin session required')
+    }
+
     const body = await request.json()
     const count = Math.min(Math.max(body.count || 1, 1), 200)
     const type = body.type || 'new'
@@ -236,6 +243,12 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // C4 FIX: Require admin authentication
+    const session = await requireAdminSession()
+    if (!session) {
+      return unauthorized('Admin session required')
+    }
+
     const body = await request.json()
     const prefix = body.prefix || 'e2e-test'
 

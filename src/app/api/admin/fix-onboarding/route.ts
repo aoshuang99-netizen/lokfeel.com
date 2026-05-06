@@ -1,22 +1,29 @@
 /**
- * Fix Onboarding Step API
- * 
- * 修复数字用户的onboardingStep字段
+ * Fix Onboarding Step API (Admin Tool)
+ *
+ * One-time utility to fix user onboardingStep fields.
+ * Protected by RBAC + admin key dual auth.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { withPermission } from "@/lib/with-permission";
 
 const prisma = getDb();
 
 export const dynamic = "force-dynamic";
 
-const ADMIN_KEY = process.env.ADMIN_KEY || "lokfeel-admin-2024";
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
-export async function POST(req: NextRequest) {
+if (!ADMIN_KEY) {
+  console.warn("[FixOnboarding] ADMIN_KEY not set — admin key verification disabled");
+}
+
+export const POST = withPermission('user.edit', { dangerous: true })(async (req: NextRequest) => {
+  // Additional admin key verification for tool endpoints
   const adminKey = req.headers.get("x-admin-key");
   if (adminKey !== ADMIN_KEY) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Admin key required" }, { status: 403 });
   }
 
   try {
@@ -70,12 +77,12 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function GET(req: NextRequest) {
+export const GET = withPermission('user.view')(async (req: NextRequest) => {
   const adminKey = req.headers.get("x-admin-key");
   if (adminKey !== ADMIN_KEY) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Admin key required" }, { status: 403 });
   }
 
   try {
@@ -109,4 +116,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -117,7 +117,7 @@ export const authConfig = {
   ],
   session: {
     strategy: "jwt" as const,
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 7 days (reduced from 30 for security)
   },
   pages: {
     signIn: "/login",
@@ -165,7 +165,9 @@ export const authConfig = {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user, trigger, session }: any) {
-      console.log('[Auth Debug][JWT] trigger:', trigger, 'user:', user?.id, user?.email);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth Debug][JWT] trigger:', trigger, 'user:', user?.id, user?.email);
+      }
       if (user) {
         token.id = user.id;
         token.role = user.role || "USER";
@@ -184,7 +186,9 @@ export const authConfig = {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: any) {
-      console.log('[Auth Debug] session callback - token.id:', token.id, 'token.role:', token.role);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth Debug] session callback - token.id:', token.id, 'token.role:', token.role);
+      }
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
@@ -193,7 +197,9 @@ export const authConfig = {
         // Expose verification status to client
         ;(session.user as any).emailVerified = token.emailVerified;
       }
-      console.log('[Auth Debug] session result - session.user.id:', session.user?.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth Debug] session result - session.user.id:', session.user?.id);
+      }
       return session;
     },
   } as any,

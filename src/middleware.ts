@@ -2,51 +2,46 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 /**
- * MIDDLEWARE — Region Block + Security
- * 
+ * MIDDLEWARE — Region Block + Security + CORS
+ *
  * FEATURES:
  * 1. Block access from China (CN) mainland IP addresses
- *    - Uses Vercel Edge geolocation (request headers)
- *    - Redirects to /blocked page with friendly message
- * 
  * 2. Security headers on every response
- * 
+ * 3. CORS restrictions for API routes
+ *
  * WHY NO AUTH CHECK HERE:
  * NextAuth v5 beta uses JWE (encrypted) session tokens.
- * next-auth/jwt's getToken() CANNOT reliably decrypt JWE tokens
- * in Vercel's Edge Runtime (middleware).
  * Auth protection is at SERVER COMPONENT level using auth().
  * See: src/app/(dashboard)/layout.tsx
  */
 
 // Blocked country codes — mainland China
 // DISABLED: Founder (Frank) is in China and needs access.
-// Re-enable when geo-restriction is required for production.
-// const BLOCKED_COUNTRIES = ['CN']
 const BLOCKED_COUNTRIES: string[] = []
+
+// Allowed CORS origins
+const ALLOWED_ORIGINS = [
+  'https://app.lokfeel.com',
+  'https://lokfeel.com',
+  'https://admin.lokfeel.com',
+]
 
 // Paths that should always be accessible (even from blocked regions)
 const ALLOWED_PATHS = [
-  '/blocked',    // The blocked page itself
-  '/api/health', // Health check endpoint
-  '/_next/',     // Next.js static assets
-  '/favicon',    // Favicon
+  '/blocked',
+  '/api/health',
+  '/_next/',
+  '/favicon',
 ]
 
 function isAllowedPath(pathname: string): boolean {
   return ALLOWED_PATHS.some(allowed => pathname.startsWith(allowed))
 }
 
-/**
- * Get country code from Vercel Edge headers
- * Vercel injects x-vercel-ip-country header at edge
- */
 function getCountry(request: NextRequest): string {
-  // Vercel Edge provides geo info via x-vercel-ip-country header
   const vercelCountry = request.headers.get('x-vercel-ip-country')
   if (vercelCountry) return vercelCountry
 
-  // Fallback: check for Cloudflare header
   const cfCountry = request.headers.get('cf-ipcountry')
   if (cfCountry) return cfCountry
 
@@ -57,7 +52,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const country = getCountry(request)
 
-  // ─── 1. Region Block: China ───
+  // ─── 1. Region Block ───
   if (BLOCKED_COUNTRIES.includes(country) && !isAllowedPath(pathname)) {
     const blockedUrl = request.nextUrl.clone()
     blockedUrl.pathname = '/blocked'
@@ -65,10 +60,39 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(blockedUrl)
   }
 
-  // ─── 2. Pass through ───
-  const response = NextResponse.next()
+  // ─── 2. CORS for API routes ───
+  const response = pathname.startsWith('/api')
+    ? NextResponse.next()
+    : NextResponse.next()
 
-  // Add geo info to response headers for debugging (non-sensitive)
+  if (pathname.startsWith('/api')) {
+    const origin = request.headers.get('origin')
+    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+      // Block requests from unauthorized origins
+      return new NextResponse(
+        JSON.stringify({ error: 'Forbidden: CORS policy' }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    }
+    // Add CORS headers for allowed origins
+    if (origin) {
+      response.headers.set('Access-Control-Allow-Origin', origin)
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+      response.headers.set('Access-Control-Max-Age', '86400')
+      response.headers.set('Vary', 'Origin')
+    }
+
+    // Handle preflight
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, { status: 204, headers: response.headers })
+    }
+  }
+
+  // Add geo info to response headers (non-sensitive)
   if (country) {
     response.headers.set('x-geo-country', country)
   }

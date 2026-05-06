@@ -125,22 +125,24 @@ export async function POST(request: NextRequest) {
         emailSent = result.success
       }
 
-      // Log for debugging
-      console.log(`\n🔐 VERIFICATION CODE (${method.toUpperCase()})`)
-      console.log(`   To: ${identifier}`)
-      console.log(`   Code: ${verificationCode}`)
-      console.log(`   Email Sent: ${emailSent}`)
-      console.log(`   Expires: ${expiresAt.toISOString()}\n`)
+      // Log for debugging (dev only)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`\n🔐 VERIFICATION CODE (${method.toUpperCase()})`)
+        console.log(`   To: ${identifier}`)
+        console.log(`   Code: ${verificationCode}`)
+        console.log(`   Email Sent: ${emailSent}`)
+        console.log(`   Expires: ${expiresAt.toISOString()}\n`)
+      }
 
-      // Build response — ALWAYS include code so user can complete registration
+      // Build response — only include code in development
+      const isDev = process.env.NODE_ENV === 'development';
       const responseBody: Record<string, unknown> = {
         message: emailSent
           ? 'Verification code sent to your email'
           : 'Please use the verification code displayed below',
         method,
         maskedIdentifier: method === 'email' ? maskEmail(email!) : maskPhone(phone!),
-        devMode: true, // Always show code UI
-        code: verificationCode, // ALWAYS include code
+        ...(isDev ? { devMode: true, code: verificationCode } : {}),
       }
 
       return NextResponse.json(responseBody, { status: 200 })
@@ -287,22 +289,26 @@ export async function POST(request: NextRequest) {
       // Send welcome email (async)
       sendWelcomeEmail(email, name).catch(console.error)
 
-      // Generate a temporary auto-login token (valid for 5 minutes)
-      const autoLoginToken = generateMagicToken()
-      await db.verificationToken.create({
-        data: {
-          identifier: `auto-login:${user.id}`,
-          token: autoLoginToken,
-          expires: new Date(Date.now() + 5 * 60 * 1000),
-          userId: user.id,
-        },
-      })
+      // Generate a temporary auto-login token (valid for 5 minutes, dev only)
+      const isDev = process.env.NODE_ENV === 'development';
+      let autoLoginToken: string | undefined;
+      if (isDev) {
+        autoLoginToken = generateMagicToken()
+        await db.verificationToken.create({
+          data: {
+            identifier: `auto-login:${user.id}`,
+            token: autoLoginToken,
+            expires: new Date(Date.now() + 5 * 60 * 1000),
+            userId: user.id,
+          },
+        })
+      }
 
       return NextResponse.json(
-        { 
-          message: 'Account created successfully', 
+        {
+          message: 'Account created successfully',
           user,
-          autoLoginToken, // Frontend can use this to auto-login
+          ...(isDev ? { autoLoginToken } : {}),
           redirectTo: '/dashboard/onboarding'
         },
         { status: 201 }

@@ -1,60 +1,18 @@
 /**
- * 凭证测试端点 - 测试指定账号的登录
- * GET /api/test-credentials?email=xxx&password=yyy
+ * [DEPRECATED] 凭证测试端点 — 安全修复: 端点已禁用
+ * 修复 C1: 公开凭据测试 → 仅开发环境可用，生产环境404
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { verifyPassword } from "@/lib/auth/auth";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
-  const email = req.nextUrl.searchParams.get("email") || "user_admin";
-  const password = req.nextUrl.searchParams.get("password") || "admin123";
-
-  const results: Record<string, unknown> = {
-    email,
-    password: password.substring(0, 2) + "***",
-  };
-
-  try {
-    const user = await db.user.findUnique({
-      where: { email: email.toLowerCase() },
-      include: { profile: true },
-    });
-
-    if (!user) {
-      results.error = "User not found";
-      return NextResponse.json(results, { status: 404 });
-    }
-
-    results.user = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      hasPassword: !!(user as any).password,
-    };
-
-    if (!(user as any).password) {
-      results.error = "User has no password (OAuth-only account)";
-      return NextResponse.json(results, { status: 401 });
-    }
-
-    const isValid = await verifyPassword(password, (user as any).password);
-    results.passwordMatch = isValid;
-
-    if (!isValid) {
-      results.error = "Invalid password";
-      return NextResponse.json(results, { status: 401 });
-    }
-
-    // Login successful
-    results.success = true;
-    return NextResponse.json(results, { status: 200 });
-  } catch (e: any) {
-    results.error = e.message;
-    return NextResponse.json(results, { status: 500 });
+export async function GET() {
+  if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  return NextResponse.json(
+    { error: "This endpoint has been disabled for security reasons. Use the login API instead." },
+    { status: 403 }
+  );
 }
