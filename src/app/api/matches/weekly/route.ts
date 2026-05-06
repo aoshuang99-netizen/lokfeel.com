@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth, requireAdminAuth } from "@/lib/auth";
 import { generateMatchesForUser, generateAllWeeklyMatches } from "@/lib/matching";
+import { handleApiError } from "@/lib/api-handler";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/matches/weekly — Get current week's matches
 export async function GET() {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
 
     const now = new Date();
@@ -46,18 +47,12 @@ export async function GET() {
       matches,
       count: matches.length,
     });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    console.error("Error fetching weekly matches:", error);
-    return NextResponse.json({ message: "Failed to fetch weekly matches" }, { status: 500 });
-  }
+  });
 }
 
 // POST /api/matches/weekly — Trigger weekly match generation (admin only)
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     await requireAdminAuth();
 
     const { searchParams } = new URL(request.url);
@@ -73,14 +68,5 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ message: "Use ?scope=all for admin batch generation" }, { status: 400 });
-  } catch (error: any) {
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    if (error.message === "Forbidden: Admin access required") {
-      return NextResponse.json({ message: "Admin access required" }, { status: 403 });
-    }
-    console.error("Error generating weekly matches:", error);
-    return NextResponse.json({ message: "Failed to generate weekly matches" }, { status: 500 });
-  }
+  });
 }

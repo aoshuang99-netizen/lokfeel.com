@@ -3,19 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, serverError, badRequest } from "@/lib/api-response";
+import { handleApiError } from "@/lib/api-handler";
 import Stripe from "stripe";
 
 // ═══ POST /api/payments/confirm-verification ═══════════════════
 // Called after user completes Stripe SetupIntent (card verified).
 // Marks User.cardVerified = true.
 export async function POST(request: NextRequest) {
-  try {
-    let user;
-    try {
-      ({ user } = await requireAuth());
-    } catch {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  return handleApiError(async () => {
+    const { user } = await requireAuth();
 
     const body = await request.json();
     const { setupIntentId } = body;
@@ -63,8 +59,5 @@ export async function POST(request: NextRequest) {
       cardVerified: true,
       message: "Card verified successfully. You now have full access.",
     });
-  } catch (error) {
-    console.error("[ConfirmVerification] Error:", error);
-    return serverError("Failed to confirm card verification");
-  }
+  });
 }

@@ -3,16 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, badRequest, serverError } from "@/lib/api-response";
+import { handleApiError } from "@/lib/api-handler";
 import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
-  try {
-    let user;
-    try {
-      ({ user } = await requireAuth());
-    } catch {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  return handleApiError(async () => {
+    const { user } = await requireAuth();
 
     const subscription = await db.subscription.findFirst({
       where: { userId: user.id },
@@ -45,10 +41,7 @@ export async function POST(request: NextRequest) {
     });
 
     return success({ portalUrl: session.url });
-  } catch (error) {
-    console.error("[Portal] Error:", error);
-    return serverError("Failed to create portal session");
-  }
+  });
 }
 
 // ═══ Portal configuration (cached per process) ═══

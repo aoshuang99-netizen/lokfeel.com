@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/matches/[id]/pitch
- * 
+ *
  * 发送匹配申请信 (Pitch Message)
  * - 仅限男方发送
  * - 可选附赠诚意值
@@ -16,16 +17,16 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { id: matchId } = await params;
     const { user } = await requireAuth();
     const userId = user.id;
     const body = await request.json();
-    const { 
-      content, 
-      tone = 'sincere', 
+    const {
+      content,
+      tone = 'sincere',
       aiAssisted = false,
-      giftAmount = 0 
+      giftAmount = 0
     } = body;
 
     // 验证输入
@@ -160,26 +161,19 @@ export async function POST(
         inboxPriority: updatedMatch.inboxPriority,
       }
     });
-
-  } catch (error) {
-    console.error('Pitch message error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
  * GET /api/matches/[id]/pitch
- * 
+ *
  * 获取申请信详情
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { id: matchId } = await params;
     const { user } = await requireAuth();
     const userId = user.id;
@@ -219,14 +213,7 @@ export async function GET(
         isSender: match.senderId === userId,
       }
     });
-
-  } catch (error) {
-    console.error('Get pitch error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
@@ -240,22 +227,22 @@ function calculateInboxPriority(params: {
   expiresAt: Date | null;
 }): number {
   let score = 0;
-  
+
   // 匹配分数权重 (40%)
   score += params.matchScore * 0.4;
-  
+
   // 验证状态权重 (15%)
   if (params.hasVerification) {
     score += 15;
   }
-  
+
   // 诚意值权重 (25%)
   score += params.giftAmount * 0.25;
-  
+
   // 时效性权重 (10%) - 越新越优先
   const hoursSinceReceived = (Date.now() - new Date(params.createdAt).getTime()) / 3600000;
   score += Math.max(0, 10 - hoursSinceReceived * 0.3);
-  
+
   // 过期紧迫性 (10%) - 即将过期的优先
   if (params.expiresAt) {
     const hoursUntilExpiry = (new Date(params.expiresAt).getTime() - Date.now()) / 3600000;
@@ -263,6 +250,6 @@ function calculateInboxPriority(params: {
       score += 10;
     }
   }
-  
+
   return Math.round(score * 100) / 100;
 }

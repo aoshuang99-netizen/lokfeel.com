@@ -3,7 +3,8 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth"
-import { success, badRequest, serverError } from "@/lib/api-response";
+import { handleApiError } from "@/lib/api-handler";
+import { success, badRequest } from "@/lib/api-response";
 import { fileTypeFromBuffer } from "file-type";
 import sharp from "sharp";
 import { pushJson } from "@/lib/json-helpers";
@@ -11,7 +12,7 @@ import { pushJson } from "@/lib/json-helpers";
 // Allowed image MIME types for security
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
-  "image/png", 
+  "image/png",
   "image/webp",
 ] as const;
 
@@ -32,19 +33,19 @@ const JPEG_QUALITY = 82;
 async function validateImage(buffer: Buffer): Promise<{ width: number; height: number }> {
   const image = sharp(buffer);
   const metadata = await image.metadata();
-  
+
   if (!metadata.width || !metadata.height) {
     throw new Error("Unable to read image dimensions");
   }
-  
+
   if (metadata.width < MIN_WIDTH || metadata.height < MIN_HEIGHT) {
     throw new Error(`Image too small. Minimum: ${MIN_WIDTH}x${MIN_HEIGHT}px`);
   }
-  
+
   if (metadata.width > MAX_WIDTH || metadata.height > MAX_HEIGHT) {
     throw new Error(`Image too large. Maximum: ${MAX_WIDTH}x${MAX_HEIGHT}px`);
   }
-  
+
   return { width: metadata.width, height: metadata.height };
 }
 
@@ -57,7 +58,7 @@ const uploadSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const body = await request.json();
 
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // 🔐 Verify actual file content using file-type library
     const detectedType = await fileTypeFromBuffer(buffer);
-    
+
     if (!detectedType) {
       return badRequest("Unable to verify file type. Please upload a valid image.");
     }
@@ -165,16 +166,12 @@ export async function POST(request: NextRequest) {
       width: finalWidth,
       height: finalHeight,
     });
-  } catch (error) {
-    console.error("Upload POST error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return serverError(`Upload failed: ${message}`);
-  }
+  });
 }
 
 // Handle multipart form data upload
 export async function PUT(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const formData = await request.formData();
 
@@ -197,7 +194,7 @@ export async function PUT(request: NextRequest) {
 
     // 🔐 Verify actual file content
     const detectedType = await fileTypeFromBuffer(buffer);
-    
+
     if (!detectedType) {
       return badRequest("Unable to verify file type. Please upload a valid image.");
     }
@@ -276,9 +273,5 @@ export async function PUT(request: NextRequest) {
       width: finalWidth,
       height: finalHeight,
     });
-  } catch (error) {
-    console.error("Upload PUT error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return serverError(`Upload failed: ${message}`);
-  }
+  });
 }

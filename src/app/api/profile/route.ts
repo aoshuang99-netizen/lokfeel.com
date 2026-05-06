@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { toJson, jsonArr } from '@/lib/json-helpers'
+import { handleApiError } from '@/lib/api-handler'
+import { ApiError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/profile — Get current user's profile
 export async function GET() {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
 
     // Get full user data including emailVerified
@@ -30,25 +32,19 @@ export async function GET() {
 
     if (!profile) {
       // Return null profile — frontend should redirect to onboarding
-      return NextResponse.json({ 
-        profile: null, 
+      return NextResponse.json({
+        profile: null,
         user: fullUser,
-        emailVerified: fullUser?.emailVerified !== null 
+        emailVerified: fullUser?.emailVerified !== null
       })
     }
 
-    return NextResponse.json({ 
-      profile, 
+    return NextResponse.json({
+      profile,
       user: fullUser,
-      emailVerified: fullUser?.emailVerified !== null 
+      emailVerified: fullUser?.emailVerified !== null
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Get profile error:', error)
-    return NextResponse.json({ message: 'Failed to fetch profile' }, { status: 500 })
-  }
+  })
 }
 
 // Prisma Profile schema fields whitelist — only these can be written via API
@@ -90,7 +86,7 @@ function filterProfileFields(data: Record<string, any>): Record<string, any> {
 
 // PUT /api/profile — Update current user's profile
 export async function PUT(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
     const body = await request.json()
 
@@ -120,47 +116,38 @@ export async function PUT(request: NextRequest) {
       })
     }
 
-    // Upsert profile
-    const profile = await db.profile.upsert({
-      where: { userId: user.id },
-      update: profileData,
-      create: {
-        userId: user.id,
-        displayName: profileData.displayName || user.name || '',
-        age: profileData.age || 18,
-        gender: profileData.gender || 'OTHER',
-        sexuality: profileData.sexuality || 'Questioning',
-        bio: profileData.bio || '',
-        ...profileData,
-      },
-    })
+    // Upsert profile — handle Prisma-specific errors
+    try {
+      const profile = await db.profile.upsert({
+        where: { userId: user.id },
+        update: profileData,
+        create: {
+          userId: user.id,
+          displayName: profileData.displayName || user.name || '',
+          age: profileData.age || 18,
+          gender: profileData.gender || 'OTHER',
+          sexuality: profileData.sexuality || 'Questioning',
+          bio: profileData.bio || '',
+          ...profileData,
+        },
+      })
 
-    return NextResponse.json({ profile, message: 'Profile updated successfully' })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ profile, message: 'Profile updated successfully' })
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        return NextResponse.json({ message: 'A profile already exists for this user' }, { status: 409 })
+      }
+      if (error.code === 'P2025') {
+        return NextResponse.json({ message: 'Record not found' }, { status: 404 })
+      }
+      throw error // Re-throw for handleApiError
     }
-    // Log full error for debugging
-    console.error('[Profile PUT] Update error:', error.message || error.code || 'unknown', error)
-    
-    // Return specific error messages for known Prisma errors
-    if (error.code === 'P2002') {
-      return NextResponse.json({ message: 'A profile already exists for this user' }, { status: 409 })
-    }
-    if (error.code === 'P2025') {
-      return NextResponse.json({ message: 'Record not found' }, { status: 404 })
-    }
-    
-    return NextResponse.json({ 
-      message: 'Failed to update profile',
-      error: process.env.NODE_ENV === 'development' ? (error.message || 'Unknown error') : undefined
-    }, { status: 500 })
-  }
+  })
 }
 
 // POST /api/profile/submit — Submit profile for review
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
 
     const profile = await db.profile.update({
@@ -172,11 +159,5 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ profile, message: 'Profile submitted for review' })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Submit profile error:', error)
-    return NextResponse.json({ message: 'Failed to submit profile' }, { status: 500 })
-  }
+  })
 }

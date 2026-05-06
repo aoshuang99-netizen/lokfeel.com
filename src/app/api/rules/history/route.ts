@@ -1,11 +1,12 @@
 /**
  * Power Board Lite 规则变更历史 API
- * 
+ *
  * GET /api/rules/history - 获取当前用户规则变更历史
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { getRuleEngine } from '@/lib/rules/engine';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic';
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { searchParams } = new URL(request.url);
 
@@ -45,15 +46,5 @@ export async function GET(request: NextRequest) {
         total: history.length,
       },
     });
-  } catch (error) {
-    console.error('Failed to get rule history:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to get rule history',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }

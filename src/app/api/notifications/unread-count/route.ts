@@ -2,12 +2,11 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
-import { success, serverError } from "@/lib/api-response";
+import { handleApiError } from "@/lib/api-handler";
+import { success } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
-  try {
-    
-
+  return handleApiError(async () => {
     const { user } = await requireAuth();
 
     const unreadCount = await db.notification.count({
@@ -18,8 +17,5 @@ export async function GET(request: NextRequest) {
     });
 
     return success({ unreadCount });
-  } catch (error) {
-    console.error("Error fetching unread count:", error);
-    return serverError("Failed to fetch unread count");
-  }
+  });
 }

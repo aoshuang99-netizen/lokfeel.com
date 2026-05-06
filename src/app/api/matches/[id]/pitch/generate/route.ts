@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { db } from '@/lib/db';
 import { jsonArr } from '@/lib/json-helpers';
 
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/matches/[id]/pitch/generate
- * 
+ *
  * AI辅助生成Pitch Message
  * - 基于双方资料生成个性化申请信
  * - 提供3个不同风格的选项
@@ -16,7 +17,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { id: matchId } = await params;
     const { user } = await requireAuth();
     const userId = user.id;
@@ -121,7 +122,7 @@ export async function POST(
         {
           role: 'system',
           content: `You are a dating app conversation assistant. Help users write engaging, personalized pitch messages for their matches.
-          
+
 Rules:
 - Be genuine and specific, never generic
 - Reference shared interests or compatibility points
@@ -140,7 +141,7 @@ Rules:
     });
 
     const generatedContent = completion.choices[0]?.message?.content;
-    
+
     if (!generatedContent) {
       return NextResponse.json(
         { error: 'Failed to generate pitch' },
@@ -157,19 +158,7 @@ Rules:
       tone,
       aiGenerated: true,
     });
-
-  } catch (error) {
-    console.error('AI pitch generation error:', error);
-    
-    // 如果OpenAI调用失败，返回备用模板
-    return NextResponse.json({
-      success: true,
-      options: getFallbackOptions(),
-      tone: 'sincere',
-      aiGenerated: false,
-      fallback: true,
-    });
-  }
+  });
 }
 
 /**
@@ -235,12 +224,12 @@ Requirements:
  */
 function extractInterests(profile: any): string[] {
   const interests: string[] = [];
-  
+
   // 从BotProfile获取兴趣
   if (profile.botProfile?.interests) {
     interests.push(...jsonArr(profile.botProfile.interests));
   }
-  
+
   // 从personalityData解析
   if (profile.personalityData) {
     try {
@@ -252,7 +241,7 @@ function extractInterests(profile: any): string[] {
       // Ignore parse error
     }
   }
-  
+
   return [...new Set(interests)].slice(0, 5); // 去重并限制数量
 }
 
@@ -261,11 +250,11 @@ function extractInterests(profile: any): string[] {
  */
 function parseGeneratedOptions(content: string): Array<{ text: string; style: string }> {
   const options: Array<{ text: string; style: string }> = [];
-  
+
   // 尝试匹配 "Option X:" 格式
   const optionRegex = /Option\s*\d*[:：]\s*([^\n]+(?:\n(?!(Option|选项)\s*\d)[^\n]*)*)/gi;
   const matches = content.matchAll(optionRegex);
-  
+
   for (const match of matches) {
     const text = match[1].trim();
     if (text.length >= 20 && text.length <= 300) {
@@ -275,16 +264,16 @@ function parseGeneratedOptions(content: string): Array<{ text: string; style: st
       });
     }
   }
-  
+
   // 如果没有匹配到，尝试按行分割
   if (options.length === 0) {
-    const lines = content.split('\n').filter(line => 
-      line.trim().length >= 20 && 
+    const lines = content.split('\n').filter(line =>
+      line.trim().length >= 20 &&
       line.trim().length <= 300 &&
       !line.includes('Option') &&
       !line.includes('选项')
     );
-    
+
     for (const line of lines.slice(0, 3)) {
       options.push({
         text: line.trim(),
@@ -292,7 +281,7 @@ function parseGeneratedOptions(content: string): Array<{ text: string; style: st
       });
     }
   }
-  
+
   return options;
 }
 
@@ -301,7 +290,7 @@ function parseGeneratedOptions(content: string): Array<{ text: string; style: st
  */
 function detectStyle(text: string): string {
   const lower = text.toLowerCase();
-  
+
   if (lower.includes('?') && (lower.includes('what') || lower.includes('how') || lower.includes('why'))) {
     return 'inquisitive';
   }
@@ -311,7 +300,7 @@ function detectStyle(text: string): string {
   if (lower.includes('haha') || lower.includes('lol') || lower.includes('😄') || lower.includes('😊')) {
     return 'playful';
   }
-  
+
   return 'sincere';
 }
 

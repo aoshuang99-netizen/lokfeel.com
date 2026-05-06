@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, badRequest, serverError, forbidden } from "@/lib/api-response";
+import { handleApiError } from "@/lib/api-handler";
 import { createPingPongClient } from "@/lib/pingpong";
 
 // ═══ Checkout Schema ════════════════════════════════════════
@@ -32,17 +33,12 @@ const PLAN_CONFIG = {
 
 // ═══ POST /api/payments/pingpong/checkout ════════════════════
 export async function POST(request: NextRequest) {
-  try {
-    let user;
-    try {
-      ({ user } = await requireAuth());
-    } catch {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  return handleApiError(async () => {
+    const { user } = await requireAuth();
 
     const body = await request.json();
     const parseResult = checkoutSchema.safeParse(body);
-    
+
     if (!parseResult.success) {
       return NextResponse.json(
         { error: "Invalid request body", details: parseResult.error.issues },
@@ -90,7 +86,7 @@ export async function POST(request: NextRequest) {
     // ═══ Create PingPong Checkout Session ═══
     const pingpong = createPingPongClient();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.lokfeel.com";
-    
+
     // Generate unique merchant transaction ID
     const merchantTransactionId = `lokfeel_${user.id}_${Date.now()}`;
 
@@ -138,9 +134,5 @@ export async function POST(request: NextRequest) {
       console.error("[PingPong Checkout] API Error:", apiError);
       return serverError(`Payment gateway error: ${apiError.message}`);
     }
-
-  } catch (error) {
-    console.error("[PingPong Checkout] Error:", error);
-    return serverError("Failed to create checkout session");
-  }
+  });
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
+import { handleApiError } from '@/lib/api-handler'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +10,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
     const { id: roomId } = await params
 
@@ -54,9 +55,9 @@ export async function GET(
     }
 
     const otherParticipant = room.members[0]
-    
+
     // Check if other user is a bot — use isBot field from User model
-    const isBot = otherParticipant?.user.isBot === true || 
+    const isBot = otherParticipant?.user.isBot === true ||
                   otherParticipant?.user.profile?.avatarType === 'bot'
 
     return NextResponse.json({
@@ -64,10 +65,10 @@ export async function GET(
         id: room.id,
         otherUser: {
           id: otherParticipant?.user.id || 'unknown',
-          name: otherParticipant?.user.profile?.displayName || 
-                otherParticipant?.user.name || 
+          name: otherParticipant?.user.profile?.displayName ||
+                otherParticipant?.user.name ||
                 'Unknown User',
-          avatar: otherParticipant?.user.profile?.avatar || 
+          avatar: otherParticipant?.user.profile?.avatar ||
                   otherParticipant?.user.image ||
                   null,
           isOnline: isBot || Math.random() > 0.5, // Bots are always "online"
@@ -78,11 +79,5 @@ export async function GET(
         vaultExpiresAt: null,
       },
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Get room info error:', error)
-    return NextResponse.json({ message: 'Failed to fetch room info' }, { status: 500 })
-  }
+  })
 }

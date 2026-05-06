@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { getRuleEngine } from '@/lib/rules/engine';
 import { validateValidateMessageRequest } from '@/lib/rules/schema';
 import {
@@ -22,7 +23,7 @@ export const dynamic = 'force-dynamic';
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const body = await request.json();
 
@@ -97,17 +98,7 @@ export async function POST(request: NextRequest) {
       },
       { status: statusCode }
     );
-  } catch (error) {
-    console.error('Failed to check rules:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to check rules',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 // ============================================================================
@@ -115,7 +106,7 @@ export async function POST(request: NextRequest) {
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { searchParams } = new URL(request.url);
     const receiverId = searchParams.get('receiverId');
@@ -144,15 +135,5 @@ export async function GET(request: NextRequest) {
         resetAfterMs: paceResult.resetAfterMs,
       },
     });
-  } catch (error) {
-    console.error('Failed to check rate limit:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to check rate limit',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }

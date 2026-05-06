@@ -2,18 +2,14 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, serverError } from "@/lib/api-response";
+import { handleApiError } from "@/lib/api-handler";
 import { db } from "@/lib/db";
 
 // ═══ GET /api/payments/status ════════════════════════════════
 // Returns user's current subscription and payment status
 export async function GET(request: NextRequest) {
-  try {
-    let user;
-    try {
-      ({ user } = await requireAuth());
-    } catch {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  return handleApiError(async () => {
+    const { user } = await requireAuth();
 
     const [subscription, profile, recentPayments] = await Promise.all([
       db.subscription.findFirst({
@@ -70,8 +66,5 @@ export async function GET(request: NextRequest) {
         createdAt: p.createdAt,
       })),
     });
-  } catch (error) {
-    console.error("[PaymentStatus] Error:", error);
-    return serverError("Failed to get payment status");
-  }
+  });
 }

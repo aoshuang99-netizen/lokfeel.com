@@ -10,13 +10,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { handleApiError } from '@/lib/api-handler';
 import { authorizePusherSubscription } from '@/lib/im/websocket/pusher-bridge';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     // 1. Authenticate user
     const { user } = await requireAuth();
 
@@ -57,17 +57,5 @@ export async function POST(request: NextRequest) {
     // 5. Return Pusher auth signature
     // Pusher expects: { auth: "app_key:signature" }
     return NextResponse.json({ auth: authResponse });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    console.error('[Pusher Auth] Error:', error);
-    return NextResponse.json(
-      { error: 'Authorization failed' },
-      { status: 500 }
-    );
-  }
+  });
 }

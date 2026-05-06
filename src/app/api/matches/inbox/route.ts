@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/matches/inbox
- * 
+ *
  * 女性用户的智能收件箱
  * - 只返回接收到的匹配 (receiverId = current user)
  * - 按inboxPriority排序 (高优先级在前)
  * - 支持筛选: unread, verified, withGift, expiring
  */
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const userId = user.id;
 
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest) {
     // 如果需要筛选verified，在后端筛选
     let filteredMatches = matchesWithPriority;
     if (filter === 'verified') {
-      filteredMatches = matchesWithPriority.filter((m: any) => 
+      filteredMatches = matchesWithPriority.filter((m: any) =>
         m.sender.profile?.linkedInVerified
       );
     }
@@ -156,14 +157,7 @@ export async function GET(request: NextRequest) {
         hasMore: matches.length === limit,
       }
     });
-
-  } catch (error) {
-    console.error('Inbox API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
@@ -172,22 +166,22 @@ export async function GET(request: NextRequest) {
  */
 function calculateInboxPriority(match: any): number {
   let score = 0;
-  
+
   // 匹配分数权重 (40%)
   score += (match.matchScore || 0) * 0.4;
-  
+
   // 验证状态权重 (15%)
   if (match.sender?.profile?.linkedInVerified) {
     score += 15;
   }
-  
+
   // 诚意值权重 (20%)
   score += (match.giftAmount || 0) * 0.2;
-  
+
   // 时效性权重 (15%) - 越新越优先
   const hoursSinceReceived = (Date.now() - new Date(match.createdAt).getTime()) / 3600000;
   score += Math.max(0, 15 - hoursSinceReceived * 0.5);
-  
+
   // 过期紧迫性 (10%) - 即将过期的优先
   if (match.expiresAt) {
     const hoursUntilExpiry = (new Date(match.expiresAt).getTime() - Date.now()) / 3600000;
@@ -195,20 +189,20 @@ function calculateInboxPriority(match: any): number {
       score += 10;
     }
   }
-  
+
   return Math.round(score * 100) / 100;
 }
 
 /**
  * POST /api/matches/inbox/batch-action
- * 
+ *
  * 批量操作收件箱匹配
  * - accept: 接受多个匹配
  * - pass: 忽略多个匹配
  * - markRead: 标记为已读
  */
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const userId = user.id;
     const body = await request.json();
@@ -264,7 +258,7 @@ export async function POST(request: NextRequest) {
           // 更新匹配状态
           await db.match.update({
             where: { id: match.id },
-            data: { 
+            data: {
               status: 'ACCEPTED',
               isUnread: false,
             }
@@ -283,7 +277,7 @@ export async function POST(request: NextRequest) {
         for (const match of matches) {
           await db.match.update({
             where: { id: match.id },
-            data: { 
+            data: {
               status: 'REJECTED',
               isUnread: false,
             }
@@ -314,14 +308,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, results });
-
-  } catch (error) {
-    console.error('Batch action error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**

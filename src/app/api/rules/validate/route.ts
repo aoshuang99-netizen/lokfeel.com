@@ -100,7 +100,10 @@ export async function POST(request: NextRequest) {
       },
       { status: statusCode }
     );
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'User not found') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Failed to validate message:', error);
     return NextResponse.json(
       {

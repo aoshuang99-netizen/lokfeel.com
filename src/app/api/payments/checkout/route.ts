@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, badRequest, serverError, forbidden } from "@/lib/api-response";
+import { handleApiError } from "@/lib/api-handler";
 import Stripe from "stripe";
 
 // ═══ Checkout Schema ═══════════════════════════════════════════
@@ -30,13 +31,8 @@ const PLAN_CONFIG = {
 } as const;
 
 export async function POST(request: NextRequest) {
-  try {
-    let user;
-    try {
-      ({ user } = await requireAuth());
-    } catch {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  return handleApiError(async () => {
+    const { user } = await requireAuth();
 
     const body = await request.json();
 
@@ -145,8 +141,5 @@ export async function POST(request: NextRequest) {
     console.log(`[Checkout] Created session for user ${user.id}, plan: ${plan}, session: ${session.id}`);
 
     return success({ checkoutUrl: session.url, sessionId: session.id });
-  } catch (error) {
-    console.error("[Checkout] Error:", error);
-    return serverError("Failed to create checkout session");
-  }
+  });
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -20,13 +21,13 @@ const EARNING_CONFIG: Record<string, { points: number; once: boolean }> = {
 
 /**
  * POST /api/sincerity/earn
- * 
+ *
  * 赚取诚意值
  * - 完成任务获得积分
  * - 支持一次性任务和重复任务
  */
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const userId = user.id;
     const body = await request.json();
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
     if (source === 'DAILY_LOGIN') {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const todayTransaction = await db.sincerityTransaction.findFirst({
         where: {
           walletId: wallet.id,
@@ -150,14 +151,7 @@ export async function POST(request: NextRequest) {
         createdAt: transaction.createdAt,
       }
     });
-
-  } catch (error) {
-    console.error('Earn sincerity error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
@@ -186,17 +180,17 @@ function getTaskDescription(source: string): string {
     'CHAT_RATING_GOOD': 'Received positive chat rating',
     'LINKEDIN_VERIFIED': 'LinkedIn profile verified',
   };
-  
+
   return descriptions[source] || 'Task completed';
 }
 
 /**
  * GET /api/sincerity/earn/history
- * 
+ *
  * 获取赚取历史
  */
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const userId = user.id;
     const { searchParams } = new URL(request.url);
@@ -244,12 +238,5 @@ export async function GET(request: NextRequest) {
         hasMore: offset + limit < total,
       }
     });
-
-  } catch (error) {
-    console.error('Earn history error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }

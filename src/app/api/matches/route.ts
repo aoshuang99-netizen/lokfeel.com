@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
+import { handleApiError } from '@/lib/api-handler'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/matches — Get current user's matches
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
     const { searchParams } = new URL(request.url)
 
@@ -86,11 +87,5 @@ export async function GET(request: NextRequest) {
       matches: enrichedMatches,
       pagination: { total, limit, offset },
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Get matches error:', error)
-    return NextResponse.json({ message: 'Failed to fetch matches' }, { status: 500 })
-  }
+  })
 }

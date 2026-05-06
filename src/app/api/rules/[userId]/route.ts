@@ -54,7 +54,10 @@ export async function GET(
       success: true,
       data: rules,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'User not found') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Failed to get rules:', error);
     return NextResponse.json(
       {
@@ -159,7 +162,10 @@ export async function PUT(
         changes,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'User not found') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Failed to update rules:', error);
     return NextResponse.json(
       {

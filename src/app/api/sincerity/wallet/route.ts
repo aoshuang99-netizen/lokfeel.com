@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/sincerity/wallet
- * 
+ *
  * 获取用户诚意值钱包信息
  */
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const userId = user.id;
 
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     };
 
     const currentTier = tierThresholds[wallet.tier];
-    const progress = currentTier.nextMin 
+    const progress = currentTier.nextMin
       ? Math.min(100, ((wallet.totalEarned - currentTier.min) / (currentTier.nextMin - currentTier.min)) * 100)
       : 100;
 
@@ -84,17 +85,7 @@ export async function GET(request: NextRequest) {
       })),
       earningTasks,
     });
-
-  } catch (error: any) {
-    if (error?.message === 'Unauthorized' || error?.message === 'User not found') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('Wallet API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**

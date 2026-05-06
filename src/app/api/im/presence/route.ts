@@ -5,13 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { presenceManager } from '@/lib/im';
 
 export const dynamic = 'force-dynamic';
 
 // GET — Batch get presence status
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { searchParams } = new URL(request.url);
     const userIds = searchParams.get('userIds')?.split(',').filter(Boolean) || [];
@@ -34,18 +35,12 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ presences });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[IM Presence GET] Error:', error);
-    return NextResponse.json({ error: 'Failed to get presence' }, { status: 500 });
-  }
+  });
 }
 
 // POST — Update own presence
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { status, statusMessage } = await request.json();
 
@@ -76,11 +71,5 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[IM Presence POST] Error:', error);
-    return NextResponse.json({ error: 'Failed to update presence' }, { status: 500 });
-  }
+  });
 }

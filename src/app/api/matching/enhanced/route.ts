@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server'
 import { requireAuth, requireAdminAuth } from '@/lib/auth'
-import { 
-  generateEnhancedMatchesForUser, 
-  generateAllEnhancedWeeklyMatches 
+import {
+  generateEnhancedMatchesForUser,
+  generateAllEnhancedWeeklyMatches
 } from '@/lib/matching/index-enhanced'
 import { getMatchCompatibilityDetails } from '@/lib/matching/index-enhanced'
+import { handleApiError } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
 
 /**
  * GET /api/matching/enhanced
- * 
+ *
  * 生成增强版匹配或获取匹配详情
- * 
+ *
  * Query参数:
  * - action: 'generate' | 'details' | 'batch'
  * - scope: 'me' | 'all' (for generate)
@@ -20,7 +21,7 @@ export const dynamic = 'force-dynamic'
  * - limit: number (default: 5)
  */
 export async function GET(request: Request) {
-  try {
+  return handleApiError(async () => {
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'generate'
     const scope = searchParams.get('scope') // 'me' | 'all'
@@ -63,28 +64,16 @@ export async function GET(request: Request) {
         enhancedScore: (m as any).enhancedScore,
       })),
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    if (error.message === 'Forbidden: Admin access required') {
-      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
-    }
-    console.error('Enhanced matching error:', error)
-    return NextResponse.json(
-      { message: error.message || 'Failed to process enhanced matching' }, 
-      { status: 500 }
-    )
-  }
+  })
 }
 
 /**
  * POST /api/matching/enhanced
- * 
+ *
  * 手动触发匹配生成或测试匹配算法
  */
 export async function POST(request: Request) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
     const body = await request.json()
     const { action, targetUserId } = body
@@ -101,7 +90,7 @@ export async function POST(request: Request) {
 
       if (!profileA || !profileB) {
         return NextResponse.json(
-          { message: 'Profile not found' }, 
+          { message: 'Profile not found' },
           { status: 404 }
         )
       }
@@ -174,14 +163,5 @@ export async function POST(request: Request) {
       message: `${matches.length} enhanced matches generated`,
       matches,
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Enhanced matching POST error:', error)
-    return NextResponse.json(
-      { message: error.message || 'Failed to process request' }, 
-      { status: 500 }
-    )
-  }
+  })
 }

@@ -1,7 +1,7 @@
 /**
  * POST /api/im/consent — Request or respond to consent
  * GET /api/im/consent — Get consent status
- * 
+ *
  * Endpoints:
  * - POST (request): Request consent from another user
  * - POST (respond): Respond to a consent request
@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { db } from '@/lib/db';
 import { auditLogger, pushToUser } from '@/lib/im';
 import type { ConsentRequestType, MediaAccessLevel, ConsentState } from '@/lib/im';
@@ -18,7 +19,7 @@ export const dynamic = 'force-dynamic';
 
 // GET — Check consent status
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { searchParams } = new URL(request.url);
     const targetId = searchParams.get('targetId');
@@ -76,18 +77,12 @@ export async function GET(request: NextRequest) {
         expiresAt: pendingRequest.expiresAt.getTime(),
       } : null,
     });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[IM Consent GET] Error:', error);
-    return NextResponse.json({ error: 'Failed to check consent' }, { status: 500 });
-  }
+  });
 }
 
 // POST — Request or respond to consent
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const body = await request.json();
     const { action } = body; // "request" or "respond"
@@ -102,13 +97,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[IM Consent POST] Error:', error);
-    return NextResponse.json({ error: 'Failed to process consent' }, { status: 500 });
-  }
+  });
 }
 
 async function handleConsentRequest(

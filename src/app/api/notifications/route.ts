@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { handleApiError } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/notifications — Get current user's notifications
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
     const { searchParams } = new URL(request.url)
 
@@ -29,18 +30,12 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ notifications, unreadCount })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Get notifications error:', error)
-    return NextResponse.json({ message: 'Failed to fetch notifications' }, { status: 500 })
-  }
+  })
 }
 
 // PUT /api/notifications — Mark notifications as read
 export async function PUT(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
     const { ids, markAll } = await request.json()
 
@@ -57,11 +52,5 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json({ message: 'Notifications marked as read' })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Update notifications error:', error)
-    return NextResponse.json({ message: 'Failed to update notifications' }, { status: 500 })
-  }
+  })
 }

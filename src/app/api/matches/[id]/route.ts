@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { requireVerifiedUser, verificationErrorResponse } from '@/lib/auth/verification'
+import { handleApiError } from '@/lib/api-handler'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +11,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
     const { id } = await params
 
@@ -83,13 +84,7 @@ export async function GET(
       chatRoomId: match.chatRoom?.id || null,
       createdAt: match.createdAt,
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Get match detail error:', error)
-    return NextResponse.json({ message: 'Failed to fetch match' }, { status: 500 })
-  }
+  })
 }
 
 // POST /api/matches/[id]/react — React to a match (INTERESTED / PASS / MAYBE / BLOCK)
@@ -97,7 +92,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return handleApiError(async () => {
     // Require verified user for match reactions
     let user
     try {
@@ -216,11 +211,5 @@ export async function POST(
       reaction: matchReaction,
       message: `Reaction recorded: ${reaction}`,
     })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('React to match error:', error)
-    return NextResponse.json({ message: 'Failed to record reaction' }, { status: 500 })
-  }
+  })
 }

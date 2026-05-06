@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth"
+import { handleApiError } from "@/lib/api-handler";
 import { calculateMatchScore } from '@/lib/matching/engine';
 import { jsonArr } from '@/lib/json-helpers';
 
@@ -16,7 +17,7 @@ const WEEKLY_FREE_CONNECTIONS = {
 };
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { userId } = await params;
 
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // 计算匹配度
     let matchScore = null;
     let matchReason = '';
-    
+
     const currentUserData = {
       id: currentUserProfile.userId,
       attachmentStyle: currentUserProfile.attachmentStyle,
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // 获取当前用户的连接次数状态
     const now = new Date();
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
-    
+
     const weeklyConnections = await db.match.count({
       where: {
         senderId: user.id,
@@ -154,10 +155,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const hasActiveSubscription = !!subscription;
     const isMale = currentUserProfile.gender === 'MALE';
-    
+
     // 计算剩余连接次数
-    const weeklyLimit = isMale && !hasActiveSubscription 
-      ? WEEKLY_FREE_CONNECTIONS.MALE 
+    const weeklyLimit = isMale && !hasActiveSubscription
+      ? WEEKLY_FREE_CONNECTIONS.MALE
       : WEEKLY_FREE_CONNECTIONS.FEMALE;
     const remainingConnections = Math.max(0, weeklyLimit - weeklyConnections);
 
@@ -210,12 +211,5 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         subscriptionPlan: subscription?.plan,
       },
     });
-
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    return NextResponse.json(
-      { message: 'Failed to fetch profile' },
-      { status: 500 }
-    );
-  }
+  });
 }
