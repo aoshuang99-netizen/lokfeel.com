@@ -312,6 +312,9 @@ model User {
   blocksGiven    Block[]  @relation("BlockerRelations")
   blocksReceived Block[]  @relation("BlockedRelations")
 
+  // Sincerity
+  sincerityWallet SincerityWallet?
+
   // Credit Card Verification (age + identity proof, no charge)
   cardVerified     Boolean       @default(false)
   cardVerifiedAt   DateTime?
@@ -448,9 +451,6 @@ model Profile {
   industry        String?       // Industry sector
   linkedInVerified Boolean      @default(false)
   verificationBadge String?     // "VERIFIED", "ELITE", etc.
-  
-  // Sincerity System
-  sincerityWallet SincerityWallet?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1501,7 +1501,7 @@ enum SincerityTransactionType {
 model SincerityWallet {
   id          String   @id @default(cuid())
   userId      String   @unique
-  user        Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Balance
   balance     Int      @default(0)      // 当前余额

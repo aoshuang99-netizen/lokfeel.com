@@ -12773,6 +12773,7 @@ export namespace Prisma {
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
     blocksGiven?: boolean | User$blocksGivenArgs<ExtArgs>
     blocksReceived?: boolean | User$blocksReceivedArgs<ExtArgs>
+    sincerityWallet?: boolean | User$sincerityWalletArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -12864,6 +12865,7 @@ export namespace Prisma {
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
     blocksGiven?: boolean | User$blocksGivenArgs<ExtArgs>
     blocksReceived?: boolean | User$blocksReceivedArgs<ExtArgs>
+    sincerityWallet?: boolean | User$sincerityWalletArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -12904,6 +12906,7 @@ export namespace Prisma {
       reportsReceived: Prisma.$UserReportPayload<ExtArgs>[]
       blocksGiven: Prisma.$BlockPayload<ExtArgs>[]
       blocksReceived: Prisma.$BlockPayload<ExtArgs>[]
+      sincerityWallet: Prisma.$SincerityWalletPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -13347,6 +13350,7 @@ export namespace Prisma {
     reportsReceived<T extends User$reportsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     blocksGiven<T extends User$blocksGivenArgs<ExtArgs> = {}>(args?: Subset<T, User$blocksGivenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     blocksReceived<T extends User$blocksReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$blocksReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    sincerityWallet<T extends User$sincerityWalletArgs<ExtArgs> = {}>(args?: Subset<T, User$sincerityWalletArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14532,6 +14536,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: BlockScalarFieldEnum | BlockScalarFieldEnum[]
+  }
+
+  /**
+   * User.sincerityWallet
+   */
+  export type User$sincerityWalletArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SincerityWallet
+     */
+    select?: SincerityWalletSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SincerityWallet
+     */
+    omit?: SincerityWalletOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SincerityWalletInclude<ExtArgs> | null
+    where?: SincerityWalletWhereInput
   }
 
   /**
@@ -18486,7 +18509,6 @@ export namespace Prisma {
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     botProfile?: boolean | Profile$botProfileArgs<ExtArgs>
-    sincerityWallet?: boolean | Profile$sincerityWalletArgs<ExtArgs>
   }, ExtArgs["result"]["profile"]>
 
   export type ProfileSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -18630,7 +18652,6 @@ export namespace Prisma {
   export type ProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     botProfile?: boolean | Profile$botProfileArgs<ExtArgs>
-    sincerityWallet?: boolean | Profile$sincerityWalletArgs<ExtArgs>
   }
   export type ProfileIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -18644,7 +18665,6 @@ export namespace Prisma {
     objects: {
       user: Prisma.$UserPayload<ExtArgs>
       botProfile: Prisma.$BotProfilePayload<ExtArgs> | null
-      sincerityWallet: Prisma.$SincerityWalletPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -19085,7 +19105,6 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     botProfile<T extends Profile$botProfileArgs<ExtArgs> = {}>(args?: Subset<T, Profile$botProfileArgs<ExtArgs>>): Prisma__BotProfileClient<$Result.GetResult<Prisma.$BotProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    sincerityWallet<T extends Profile$sincerityWalletArgs<ExtArgs> = {}>(args?: Subset<T, Profile$sincerityWalletArgs<ExtArgs>>): Prisma__SincerityWalletClient<$Result.GetResult<Prisma.$SincerityWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -19572,25 +19591,6 @@ export namespace Prisma {
      */
     include?: BotProfileInclude<ExtArgs> | null
     where?: BotProfileWhereInput
-  }
-
-  /**
-   * Profile.sincerityWallet
-   */
-  export type Profile$sincerityWalletArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the SincerityWallet
-     */
-    select?: SincerityWalletSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the SincerityWallet
-     */
-    omit?: SincerityWalletOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: SincerityWalletInclude<ExtArgs> | null
-    where?: SincerityWalletWhereInput
   }
 
   /**
@@ -49367,7 +49367,7 @@ export namespace Prisma {
     lastSpentAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    user?: boolean | ProfileDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
     transactions?: boolean | SincerityWallet$transactionsArgs<ExtArgs>
     _count?: boolean | SincerityWalletCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["sincerityWallet"]>
@@ -49386,7 +49386,7 @@ export namespace Prisma {
     lastSpentAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    user?: boolean | ProfileDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["sincerityWallet"]>
 
   export type SincerityWalletSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -49403,7 +49403,7 @@ export namespace Prisma {
     lastSpentAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    user?: boolean | ProfileDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["sincerityWallet"]>
 
   export type SincerityWalletSelectScalar = {
@@ -49424,21 +49424,21 @@ export namespace Prisma {
 
   export type SincerityWalletOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "balance" | "totalEarned" | "totalSpent" | "totalGifted" | "totalReceived" | "tier" | "tierProgress" | "lastEarnedAt" | "lastSpentAt" | "createdAt" | "updatedAt", ExtArgs["result"]["sincerityWallet"]>
   export type SincerityWalletInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | ProfileDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
     transactions?: boolean | SincerityWallet$transactionsArgs<ExtArgs>
     _count?: boolean | SincerityWalletCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type SincerityWalletIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | ProfileDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type SincerityWalletIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | ProfileDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $SincerityWalletPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "SincerityWallet"
     objects: {
-      user: Prisma.$ProfilePayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
       transactions: Prisma.$SincerityTransactionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -49849,7 +49849,7 @@ export namespace Prisma {
    */
   export interface Prisma__SincerityWalletClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends ProfileDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProfileDefaultArgs<ExtArgs>>): Prisma__ProfileClient<$Result.GetResult<Prisma.$ProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     transactions<T extends SincerityWallet$transactionsArgs<ExtArgs> = {}>(args?: Subset<T, SincerityWallet$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SincerityTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -55477,6 +55477,7 @@ export namespace Prisma {
     reportsReceived?: UserReportListRelationFilter
     blocksGiven?: BlockListRelationFilter
     blocksReceived?: BlockListRelationFilter
+    sincerityWallet?: XOR<SincerityWalletNullableScalarRelationFilter, SincerityWalletWhereInput> | null
   }
 
   export type UserOrderByWithRelationInput = {
@@ -55527,6 +55528,7 @@ export namespace Prisma {
     reportsReceived?: UserReportOrderByRelationAggregateInput
     blocksGiven?: BlockOrderByRelationAggregateInput
     blocksReceived?: BlockOrderByRelationAggregateInput
+    sincerityWallet?: SincerityWalletOrderByWithRelationInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -55580,6 +55582,7 @@ export namespace Prisma {
     reportsReceived?: UserReportListRelationFilter
     blocksGiven?: BlockListRelationFilter
     blocksReceived?: BlockListRelationFilter
+    sincerityWallet?: XOR<SincerityWalletNullableScalarRelationFilter, SincerityWalletWhereInput> | null
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -55898,7 +55901,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Profile"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     botProfile?: XOR<BotProfileNullableScalarRelationFilter, BotProfileWhereInput> | null
-    sincerityWallet?: XOR<SincerityWalletNullableScalarRelationFilter, SincerityWalletWhereInput> | null
   }
 
   export type ProfileOrderByWithRelationInput = {
@@ -55946,7 +55948,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
     botProfile?: BotProfileOrderByWithRelationInput
-    sincerityWallet?: SincerityWalletOrderByWithRelationInput
   }
 
   export type ProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -55997,7 +55998,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Profile"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     botProfile?: XOR<BotProfileNullableScalarRelationFilter, BotProfileWhereInput> | null
-    sincerityWallet?: XOR<SincerityWalletNullableScalarRelationFilter, SincerityWalletWhereInput> | null
   }, "id" | "userId">
 
   export type ProfileOrderByWithAggregationInput = {
@@ -58429,7 +58429,7 @@ export namespace Prisma {
     lastSpentAt?: DateTimeNullableFilter<"SincerityWallet"> | Date | string | null
     createdAt?: DateTimeFilter<"SincerityWallet"> | Date | string
     updatedAt?: DateTimeFilter<"SincerityWallet"> | Date | string
-    user?: XOR<ProfileScalarRelationFilter, ProfileWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     transactions?: SincerityTransactionListRelationFilter
   }
 
@@ -58447,7 +58447,7 @@ export namespace Prisma {
     lastSpentAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    user?: ProfileOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
     transactions?: SincerityTransactionOrderByRelationAggregateInput
   }
 
@@ -58468,7 +58468,7 @@ export namespace Prisma {
     lastSpentAt?: DateTimeNullableFilter<"SincerityWallet"> | Date | string | null
     createdAt?: DateTimeFilter<"SincerityWallet"> | Date | string
     updatedAt?: DateTimeFilter<"SincerityWallet"> | Date | string
-    user?: XOR<ProfileScalarRelationFilter, ProfileWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
     transactions?: SincerityTransactionListRelationFilter
   }, "id" | "userId">
 
@@ -59541,6 +59541,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -59591,6 +59592,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -59641,6 +59643,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -59691,6 +59694,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -60033,7 +60037,6 @@ export namespace Prisma {
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutProfileInput
     botProfile?: BotProfileCreateNestedOneWithoutProfileInput
-    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type ProfileUncheckedCreateInput = {
@@ -60080,7 +60083,6 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     botProfile?: BotProfileUncheckedCreateNestedOneWithoutProfileInput
-    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type ProfileUpdateInput = {
@@ -60127,7 +60129,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutProfileNestedInput
     botProfile?: BotProfileUpdateOneWithoutProfileNestedInput
-    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type ProfileUncheckedUpdateInput = {
@@ -60174,7 +60175,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     botProfile?: BotProfileUncheckedUpdateOneWithoutProfileNestedInput
-    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ProfileCreateManyInput = {
@@ -62911,7 +62911,7 @@ export namespace Prisma {
     lastSpentAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: ProfileCreateNestedOneWithoutSincerityWalletInput
+    user: UserCreateNestedOneWithoutSincerityWalletInput
     transactions?: SincerityTransactionCreateNestedManyWithoutWalletInput
   }
 
@@ -62945,7 +62945,7 @@ export namespace Prisma {
     lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: ProfileUpdateOneRequiredWithoutSincerityWalletNestedInput
+    user?: UserUpdateOneRequiredWithoutSincerityWalletNestedInput
     transactions?: SincerityTransactionUpdateManyWithoutWalletNestedInput
   }
 
@@ -64112,6 +64112,11 @@ export namespace Prisma {
     none?: BlockWhereInput
   }
 
+  export type SincerityWalletNullableScalarRelationFilter = {
+    is?: SincerityWalletWhereInput | null
+    isNot?: SincerityWalletWhereInput | null
+  }
+
   export type AccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -64435,11 +64440,6 @@ export namespace Prisma {
   export type BotProfileNullableScalarRelationFilter = {
     is?: BotProfileWhereInput | null
     isNot?: BotProfileWhereInput | null
-  }
-
-  export type SincerityWalletNullableScalarRelationFilter = {
-    is?: SincerityWalletWhereInput | null
-    isNot?: SincerityWalletWhereInput | null
   }
 
   export type ProfileCountOrderByAggregateInput = {
@@ -66881,6 +66881,12 @@ export namespace Prisma {
     connect?: BlockWhereUniqueInput | BlockWhereUniqueInput[]
   }
 
+  export type SincerityWalletCreateNestedOneWithoutUserInput = {
+    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
+    connect?: SincerityWalletWhereUniqueInput
+  }
+
   export type AccountUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -67100,6 +67106,12 @@ export namespace Prisma {
     connectOrCreate?: BlockCreateOrConnectWithoutBlockedInput | BlockCreateOrConnectWithoutBlockedInput[]
     createMany?: BlockCreateManyBlockedInputEnvelope
     connect?: BlockWhereUniqueInput | BlockWhereUniqueInput[]
+  }
+
+  export type SincerityWalletUncheckedCreateNestedOneWithoutUserInput = {
+    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
+    connect?: SincerityWalletWhereUniqueInput
   }
 
   export type EnumUserRoleFieldUpdateOperationsInput = {
@@ -67542,6 +67554,16 @@ export namespace Prisma {
     deleteMany?: BlockScalarWhereInput | BlockScalarWhereInput[]
   }
 
+  export type SincerityWalletUpdateOneWithoutUserNestedInput = {
+    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
+    upsert?: SincerityWalletUpsertWithoutUserInput
+    disconnect?: SincerityWalletWhereInput | boolean
+    delete?: SincerityWalletWhereInput | boolean
+    connect?: SincerityWalletWhereUniqueInput
+    update?: XOR<XOR<SincerityWalletUpdateToOneWithWhereWithoutUserInput, SincerityWalletUpdateWithoutUserInput>, SincerityWalletUncheckedUpdateWithoutUserInput>
+  }
+
   export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -67978,6 +68000,16 @@ export namespace Prisma {
     deleteMany?: BlockScalarWhereInput | BlockScalarWhereInput[]
   }
 
+  export type SincerityWalletUncheckedUpdateOneWithoutUserNestedInput = {
+    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
+    upsert?: SincerityWalletUpsertWithoutUserInput
+    disconnect?: SincerityWalletWhereInput | boolean
+    delete?: SincerityWalletWhereInput | boolean
+    connect?: SincerityWalletWhereUniqueInput
+    update?: XOR<XOR<SincerityWalletUpdateToOneWithWhereWithoutUserInput, SincerityWalletUpdateWithoutUserInput>, SincerityWalletUncheckedUpdateWithoutUserInput>
+  }
+
   export type UserCreateNestedOneWithoutAccountsInput = {
     create?: XOR<UserCreateWithoutAccountsInput, UserUncheckedCreateWithoutAccountsInput>
     connectOrCreate?: UserCreateOrConnectWithoutAccountsInput
@@ -68034,22 +68066,10 @@ export namespace Prisma {
     connect?: BotProfileWhereUniqueInput
   }
 
-  export type SincerityWalletCreateNestedOneWithoutUserInput = {
-    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
-    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
-    connect?: SincerityWalletWhereUniqueInput
-  }
-
   export type BotProfileUncheckedCreateNestedOneWithoutProfileInput = {
     create?: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
     connectOrCreate?: BotProfileCreateOrConnectWithoutProfileInput
     connect?: BotProfileWhereUniqueInput
-  }
-
-  export type SincerityWalletUncheckedCreateNestedOneWithoutUserInput = {
-    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
-    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
-    connect?: SincerityWalletWhereUniqueInput
   }
 
   export type EnumGenderFieldUpdateOperationsInput = {
@@ -68082,16 +68102,6 @@ export namespace Prisma {
     update?: XOR<XOR<BotProfileUpdateToOneWithWhereWithoutProfileInput, BotProfileUpdateWithoutProfileInput>, BotProfileUncheckedUpdateWithoutProfileInput>
   }
 
-  export type SincerityWalletUpdateOneWithoutUserNestedInput = {
-    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
-    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
-    upsert?: SincerityWalletUpsertWithoutUserInput
-    disconnect?: SincerityWalletWhereInput | boolean
-    delete?: SincerityWalletWhereInput | boolean
-    connect?: SincerityWalletWhereUniqueInput
-    update?: XOR<XOR<SincerityWalletUpdateToOneWithWhereWithoutUserInput, SincerityWalletUpdateWithoutUserInput>, SincerityWalletUncheckedUpdateWithoutUserInput>
-  }
-
   export type BotProfileUncheckedUpdateOneWithoutProfileNestedInput = {
     create?: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
     connectOrCreate?: BotProfileCreateOrConnectWithoutProfileInput
@@ -68100,16 +68110,6 @@ export namespace Prisma {
     delete?: BotProfileWhereInput | boolean
     connect?: BotProfileWhereUniqueInput
     update?: XOR<XOR<BotProfileUpdateToOneWithWhereWithoutProfileInput, BotProfileUpdateWithoutProfileInput>, BotProfileUncheckedUpdateWithoutProfileInput>
-  }
-
-  export type SincerityWalletUncheckedUpdateOneWithoutUserNestedInput = {
-    create?: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
-    connectOrCreate?: SincerityWalletCreateOrConnectWithoutUserInput
-    upsert?: SincerityWalletUpsertWithoutUserInput
-    disconnect?: SincerityWalletWhereInput | boolean
-    delete?: SincerityWalletWhereInput | boolean
-    connect?: SincerityWalletWhereUniqueInput
-    update?: XOR<XOR<SincerityWalletUpdateToOneWithWhereWithoutUserInput, SincerityWalletUpdateWithoutUserInput>, SincerityWalletUncheckedUpdateWithoutUserInput>
   }
 
   export type UserCreateNestedOneWithoutSentMatchesInput = {
@@ -69316,10 +69316,10 @@ export namespace Prisma {
     update?: XOR<XOR<CustomRoleUpdateToOneWithWhereWithoutUserRolesInput, CustomRoleUpdateWithoutUserRolesInput>, CustomRoleUncheckedUpdateWithoutUserRolesInput>
   }
 
-  export type ProfileCreateNestedOneWithoutSincerityWalletInput = {
-    create?: XOR<ProfileCreateWithoutSincerityWalletInput, ProfileUncheckedCreateWithoutSincerityWalletInput>
-    connectOrCreate?: ProfileCreateOrConnectWithoutSincerityWalletInput
-    connect?: ProfileWhereUniqueInput
+  export type UserCreateNestedOneWithoutSincerityWalletInput = {
+    create?: XOR<UserCreateWithoutSincerityWalletInput, UserUncheckedCreateWithoutSincerityWalletInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSincerityWalletInput
+    connect?: UserWhereUniqueInput
   }
 
   export type SincerityTransactionCreateNestedManyWithoutWalletInput = {
@@ -69340,12 +69340,12 @@ export namespace Prisma {
     set?: $Enums.SincerityTier
   }
 
-  export type ProfileUpdateOneRequiredWithoutSincerityWalletNestedInput = {
-    create?: XOR<ProfileCreateWithoutSincerityWalletInput, ProfileUncheckedCreateWithoutSincerityWalletInput>
-    connectOrCreate?: ProfileCreateOrConnectWithoutSincerityWalletInput
-    upsert?: ProfileUpsertWithoutSincerityWalletInput
-    connect?: ProfileWhereUniqueInput
-    update?: XOR<XOR<ProfileUpdateToOneWithWhereWithoutSincerityWalletInput, ProfileUpdateWithoutSincerityWalletInput>, ProfileUncheckedUpdateWithoutSincerityWalletInput>
+  export type UserUpdateOneRequiredWithoutSincerityWalletNestedInput = {
+    create?: XOR<UserCreateWithoutSincerityWalletInput, UserUncheckedCreateWithoutSincerityWalletInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSincerityWalletInput
+    upsert?: UserUpsertWithoutSincerityWalletInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutSincerityWalletInput, UserUpdateWithoutSincerityWalletInput>, UserUncheckedUpdateWithoutSincerityWalletInput>
   }
 
   export type SincerityTransactionUpdateManyWithoutWalletNestedInput = {
@@ -70312,7 +70312,6 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutProfileInput
-    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type ProfileUncheckedCreateWithoutBotProfileInput = {
@@ -70358,7 +70357,6 @@ export namespace Prisma {
     verificationBadge?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type ProfileCreateOrConnectWithoutBotProfileInput = {
@@ -70420,7 +70418,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutProfileNestedInput
-    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type ProfileUncheckedUpdateWithoutBotProfileInput = {
@@ -70466,7 +70463,6 @@ export namespace Prisma {
     verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -70603,7 +70599,6 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     botProfile?: BotProfileCreateNestedOneWithoutProfileInput
-    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type ProfileUncheckedCreateWithoutUserInput = {
@@ -70649,7 +70644,6 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     botProfile?: BotProfileUncheckedCreateNestedOneWithoutProfileInput
-    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type ProfileCreateOrConnectWithoutUserInput = {
@@ -71765,6 +71759,43 @@ export namespace Prisma {
     data: BlockCreateManyBlockedInput | BlockCreateManyBlockedInput[]
   }
 
+  export type SincerityWalletCreateWithoutUserInput = {
+    id?: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    transactions?: SincerityTransactionCreateNestedManyWithoutWalletInput
+  }
+
+  export type SincerityWalletUncheckedCreateWithoutUserInput = {
+    id?: string
+    balance?: number
+    totalEarned?: number
+    totalSpent?: number
+    totalGifted?: number
+    totalReceived?: number
+    tier?: $Enums.SincerityTier
+    tierProgress?: number
+    lastEarnedAt?: Date | string | null
+    lastSpentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    transactions?: SincerityTransactionUncheckedCreateNestedManyWithoutWalletInput
+  }
+
+  export type SincerityWalletCreateOrConnectWithoutUserInput = {
+    where: SincerityWalletWhereUniqueInput
+    create: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+  }
+
   export type AccountUpsertWithWhereUniqueWithoutUserInput = {
     where: AccountWhereUniqueInput
     update: XOR<AccountUpdateWithoutUserInput, AccountUncheckedUpdateWithoutUserInput>
@@ -71911,7 +71942,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     botProfile?: BotProfileUpdateOneWithoutProfileNestedInput
-    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type ProfileUncheckedUpdateWithoutUserInput = {
@@ -71957,7 +71987,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     botProfile?: BotProfileUncheckedUpdateOneWithoutProfileNestedInput
-    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type MatchUpsertWithWhereUniqueWithoutSenderInput = {
@@ -72818,6 +72847,49 @@ export namespace Prisma {
     data: XOR<BlockUpdateManyMutationInput, BlockUncheckedUpdateManyWithoutBlockedInput>
   }
 
+  export type SincerityWalletUpsertWithoutUserInput = {
+    update: XOR<SincerityWalletUpdateWithoutUserInput, SincerityWalletUncheckedUpdateWithoutUserInput>
+    create: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
+    where?: SincerityWalletWhereInput
+  }
+
+  export type SincerityWalletUpdateToOneWithWhereWithoutUserInput = {
+    where?: SincerityWalletWhereInput
+    data: XOR<SincerityWalletUpdateWithoutUserInput, SincerityWalletUncheckedUpdateWithoutUserInput>
+  }
+
+  export type SincerityWalletUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    transactions?: SincerityTransactionUpdateManyWithoutWalletNestedInput
+  }
+
+  export type SincerityWalletUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    balance?: IntFieldUpdateOperationsInput | number
+    totalEarned?: IntFieldUpdateOperationsInput | number
+    totalSpent?: IntFieldUpdateOperationsInput | number
+    totalGifted?: IntFieldUpdateOperationsInput | number
+    totalReceived?: IntFieldUpdateOperationsInput | number
+    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
+    tierProgress?: FloatFieldUpdateOperationsInput | number
+    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    transactions?: SincerityTransactionUncheckedUpdateManyWithoutWalletNestedInput
+  }
+
   export type UserCreateWithoutAccountsInput = {
     id?: string
     name?: string | null
@@ -72865,6 +72937,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAccountsInput = {
@@ -72914,6 +72987,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAccountsInput = {
@@ -72979,6 +73053,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -73028,6 +73103,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutSessionsInput = {
@@ -73077,6 +73153,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSessionsInput = {
@@ -73126,6 +73203,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSessionsInput = {
@@ -73191,6 +73269,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -73240,6 +73319,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutVerificationTokensInput = {
@@ -73289,6 +73369,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutVerificationTokensInput = {
@@ -73338,6 +73419,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutVerificationTokensInput = {
@@ -73403,6 +73485,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerificationTokensInput = {
@@ -73452,6 +73535,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutProfileInput = {
@@ -73501,6 +73585,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutProfileInput = {
@@ -73550,6 +73635,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutProfileInput = {
@@ -73628,43 +73714,6 @@ export namespace Prisma {
     create: XOR<BotProfileCreateWithoutProfileInput, BotProfileUncheckedCreateWithoutProfileInput>
   }
 
-  export type SincerityWalletCreateWithoutUserInput = {
-    id?: string
-    balance?: number
-    totalEarned?: number
-    totalSpent?: number
-    totalGifted?: number
-    totalReceived?: number
-    tier?: $Enums.SincerityTier
-    tierProgress?: number
-    lastEarnedAt?: Date | string | null
-    lastSpentAt?: Date | string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    transactions?: SincerityTransactionCreateNestedManyWithoutWalletInput
-  }
-
-  export type SincerityWalletUncheckedCreateWithoutUserInput = {
-    id?: string
-    balance?: number
-    totalEarned?: number
-    totalSpent?: number
-    totalGifted?: number
-    totalReceived?: number
-    tier?: $Enums.SincerityTier
-    tierProgress?: number
-    lastEarnedAt?: Date | string | null
-    lastSpentAt?: Date | string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    transactions?: SincerityTransactionUncheckedCreateNestedManyWithoutWalletInput
-  }
-
-  export type SincerityWalletCreateOrConnectWithoutUserInput = {
-    where: SincerityWalletWhereUniqueInput
-    create: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
-  }
-
   export type UserUpsertWithoutProfileInput = {
     update: XOR<UserUpdateWithoutProfileInput, UserUncheckedUpdateWithoutProfileInput>
     create: XOR<UserCreateWithoutProfileInput, UserUncheckedCreateWithoutProfileInput>
@@ -73723,6 +73772,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutProfileInput = {
@@ -73772,6 +73822,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type BotProfileUpsertWithoutProfileInput = {
@@ -73851,49 +73902,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type SincerityWalletUpsertWithoutUserInput = {
-    update: XOR<SincerityWalletUpdateWithoutUserInput, SincerityWalletUncheckedUpdateWithoutUserInput>
-    create: XOR<SincerityWalletCreateWithoutUserInput, SincerityWalletUncheckedCreateWithoutUserInput>
-    where?: SincerityWalletWhereInput
-  }
-
-  export type SincerityWalletUpdateToOneWithWhereWithoutUserInput = {
-    where?: SincerityWalletWhereInput
-    data: XOR<SincerityWalletUpdateWithoutUserInput, SincerityWalletUncheckedUpdateWithoutUserInput>
-  }
-
-  export type SincerityWalletUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    balance?: IntFieldUpdateOperationsInput | number
-    totalEarned?: IntFieldUpdateOperationsInput | number
-    totalSpent?: IntFieldUpdateOperationsInput | number
-    totalGifted?: IntFieldUpdateOperationsInput | number
-    totalReceived?: IntFieldUpdateOperationsInput | number
-    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
-    tierProgress?: FloatFieldUpdateOperationsInput | number
-    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    transactions?: SincerityTransactionUpdateManyWithoutWalletNestedInput
-  }
-
-  export type SincerityWalletUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    balance?: IntFieldUpdateOperationsInput | number
-    totalEarned?: IntFieldUpdateOperationsInput | number
-    totalSpent?: IntFieldUpdateOperationsInput | number
-    totalGifted?: IntFieldUpdateOperationsInput | number
-    totalReceived?: IntFieldUpdateOperationsInput | number
-    tier?: EnumSincerityTierFieldUpdateOperationsInput | $Enums.SincerityTier
-    tierProgress?: FloatFieldUpdateOperationsInput | number
-    lastEarnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    transactions?: SincerityTransactionUncheckedUpdateManyWithoutWalletNestedInput
-  }
-
   export type UserCreateWithoutSentMatchesInput = {
     id?: string
     name?: string | null
@@ -73941,6 +73949,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSentMatchesInput = {
@@ -73990,6 +73999,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSentMatchesInput = {
@@ -74044,6 +74054,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReceivedMatchesInput = {
@@ -74093,6 +74104,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReceivedMatchesInput = {
@@ -74232,6 +74244,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSentMatchesInput = {
@@ -74281,6 +74294,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutReceivedMatchesInput = {
@@ -74341,6 +74355,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReceivedMatchesInput = {
@@ -74390,6 +74405,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type MatchReactionUpsertWithWhereUniqueWithoutMatchInput = {
@@ -74577,6 +74593,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMatchReactionsInput = {
@@ -74626,6 +74643,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMatchReactionsInput = {
@@ -74764,6 +74782,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchReactionsInput = {
@@ -74813,6 +74832,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type MatchCreateWithoutChatRoomInput = {
@@ -75259,6 +75279,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutChatRoomsInput = {
@@ -75308,6 +75329,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutChatRoomsInput = {
@@ -75428,6 +75450,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutChatRoomsInput = {
@@ -75477,6 +75500,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ChatRoomCreateWithoutMessagesInput = {
@@ -75575,6 +75599,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMessagesInput = {
@@ -75624,6 +75649,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMessagesInput = {
@@ -75744,6 +75770,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMessagesInput = {
@@ -75793,6 +75820,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutConversationsAInput = {
@@ -75842,6 +75870,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutConversationsAInput = {
@@ -75891,6 +75920,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutConversationsAInput = {
@@ -75945,6 +75975,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutConversationsBInput = {
@@ -75994,6 +76025,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutConversationsBInput = {
@@ -76317,6 +76349,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConversationsAInput = {
@@ -76366,6 +76399,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutConversationsBInput = {
@@ -76426,6 +76460,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConversationsBInput = {
@@ -76475,6 +76510,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ChatRoomUpsertWithoutConversationInput = {
@@ -76716,6 +76752,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutImParticipantsInput = {
@@ -76765,6 +76802,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutImParticipantsInput = {
@@ -76893,6 +76931,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutImParticipantsInput = {
@@ -76942,6 +76981,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ConversationCreateWithoutImMessagesInput = {
@@ -77048,6 +77088,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutImMessagesInput = {
@@ -77097,6 +77138,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutImMessagesInput = {
@@ -77277,6 +77319,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutImMessagesInput = {
@@ -77326,6 +77369,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type MessageReceiptUpsertWithWhereUniqueWithoutMessageInput = {
@@ -77529,6 +77573,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMessageReceiptsInput = {
@@ -77578,6 +77623,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMessageReceiptsInput = {
@@ -77777,6 +77823,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMessageReceiptsInput = {
@@ -77826,6 +77873,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type IMMessageCreateWithoutReactionsInput = {
@@ -77940,6 +77988,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMessageReactionsInput = {
@@ -77989,6 +78038,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMessageReactionsInput = {
@@ -78125,6 +78175,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMessageReactionsInput = {
@@ -78174,6 +78225,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutPresenceInput = {
@@ -78223,6 +78275,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPresenceInput = {
@@ -78272,6 +78325,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPresenceInput = {
@@ -78337,6 +78391,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPresenceInput = {
@@ -78386,6 +78441,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutConsentRequestsMadeInput = {
@@ -78435,6 +78491,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutConsentRequestsMadeInput = {
@@ -78484,6 +78541,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutConsentRequestsMadeInput = {
@@ -78538,6 +78596,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutConsentRequestsRecvInput = {
@@ -78587,6 +78646,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutConsentRequestsRecvInput = {
@@ -78709,6 +78769,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConsentRequestsMadeInput = {
@@ -78758,6 +78819,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutConsentRequestsRecvInput = {
@@ -78818,6 +78880,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConsentRequestsRecvInput = {
@@ -78867,6 +78930,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ConversationUpsertWithoutConsentRequestsInput = {
@@ -78979,6 +79043,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutConsentGrantsMadeInput = {
@@ -79028,6 +79093,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutConsentGrantsMadeInput = {
@@ -79082,6 +79148,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutConsentGrantsRecvInput = {
@@ -79131,6 +79198,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutConsentGrantsRecvInput = {
@@ -79253,6 +79321,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConsentGrantsMadeInput = {
@@ -79302,6 +79371,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutConsentGrantsRecvInput = {
@@ -79362,6 +79432,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConsentGrantsRecvInput = {
@@ -79411,6 +79482,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ConversationUpsertWithoutConsentGrantsInput = {
@@ -79523,6 +79595,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPowerBoardRuleInput = {
@@ -79572,6 +79645,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPowerBoardRuleInput = {
@@ -79637,6 +79711,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPowerBoardRuleInput = {
@@ -79686,6 +79761,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutAuditLogsInput = {
@@ -79735,6 +79811,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -79784,6 +79861,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -79849,6 +79927,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -79898,6 +79977,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutNotificationsInput = {
@@ -79947,6 +80027,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -79996,6 +80077,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -80061,6 +80143,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -80110,6 +80193,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutSubscriptionsInput = {
@@ -80159,6 +80243,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSubscriptionsInput = {
@@ -80208,6 +80293,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSubscriptionsInput = {
@@ -80273,6 +80359,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSubscriptionsInput = {
@@ -80322,6 +80409,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutPaymentsInput = {
@@ -80371,6 +80459,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPaymentsInput = {
@@ -80420,6 +80509,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPaymentsInput = {
@@ -80485,6 +80575,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPaymentsInput = {
@@ -80534,6 +80625,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutAdminAuditsInput = {
@@ -80583,6 +80675,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAdminAuditsInput = {
@@ -80632,6 +80725,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAdminAuditsInput = {
@@ -80697,6 +80791,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAdminAuditsInput = {
@@ -80746,6 +80841,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutAnalyticsEventsInput = {
@@ -80795,6 +80891,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAnalyticsEventsInput = {
@@ -80844,6 +80941,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAnalyticsEventsInput = {
@@ -80909,6 +81007,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAnalyticsEventsInput = {
@@ -80958,6 +81057,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type AdminRolePermissionCreateWithoutPermissionInput = {
@@ -81174,6 +81274,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAdminRolesInput = {
@@ -81223,6 +81324,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAdminRolesInput = {
@@ -81313,6 +81415,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAdminRolesInput = {
@@ -81362,6 +81465,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type CustomRoleUpsertWithoutUserRolesInput = {
@@ -81395,101 +81499,109 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ProfileCreateWithoutSincerityWalletInput = {
+  export type UserCreateWithoutSincerityWalletInput = {
     id?: string
-    displayName: string
-    age: number
-    gender: $Enums.Gender
-    genderIdentity?: string | null
-    sexuality: string
-    bio?: string | null
-    avatar?: string | null
-    avatarType?: string | null
-    galleryPhotos?: string
-    city?: string | null
-    country?: string | null
-    relationshipGoal?: $Enums.RelationshipGoal
-    attachmentStyle?: string | null
-    communicationStyle?: string | null
-    conflictResolution?: string | null
-    loveLanguage?: string | null
-    boundaries?: string | null
-    dealbreakers?: string | null
-    lifePriorities?: string | null
-    emotionalAvailability?: string | null
-    selectedTags?: string
-    preferredAgeMin?: number | null
-    preferredAgeMax?: number | null
-    preferredGender?: string | null
-    preferredDistance?: number | null
-    preferredLocation?: string | null
-    compatibilityScore?: number | null
-    profileStatus?: $Enums.ProfileStatus
-    onboardingStep?: number
-    isApproved?: boolean
-    isVerified?: boolean
-    personalityData?: string | null
-    adminNotes?: string | null
-    occupation?: string | null
-    company?: string | null
-    industry?: string | null
-    linkedInVerified?: boolean
-    verificationBadge?: string | null
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutProfileInput
-    botProfile?: BotProfileCreateNestedOneWithoutProfileInput
+    deletedAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    chatRooms?: ChatRoomMemberCreateNestedManyWithoutUserInput
+    messages?: MessageCreateNestedManyWithoutSenderInput
+    conversationsA?: ConversationCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
   }
 
-  export type ProfileUncheckedCreateWithoutSincerityWalletInput = {
+  export type UserUncheckedCreateWithoutSincerityWalletInput = {
     id?: string
-    userId: string
-    displayName: string
-    age: number
-    gender: $Enums.Gender
-    genderIdentity?: string | null
-    sexuality: string
-    bio?: string | null
-    avatar?: string | null
-    avatarType?: string | null
-    galleryPhotos?: string
-    city?: string | null
-    country?: string | null
-    relationshipGoal?: $Enums.RelationshipGoal
-    attachmentStyle?: string | null
-    communicationStyle?: string | null
-    conflictResolution?: string | null
-    loveLanguage?: string | null
-    boundaries?: string | null
-    dealbreakers?: string | null
-    lifePriorities?: string | null
-    emotionalAvailability?: string | null
-    selectedTags?: string
-    preferredAgeMin?: number | null
-    preferredAgeMax?: number | null
-    preferredGender?: string | null
-    preferredDistance?: number | null
-    preferredLocation?: string | null
-    compatibilityScore?: number | null
-    profileStatus?: $Enums.ProfileStatus
-    onboardingStep?: number
-    isApproved?: boolean
-    isVerified?: boolean
-    personalityData?: string | null
-    adminNotes?: string | null
-    occupation?: string | null
-    company?: string | null
-    industry?: string | null
-    linkedInVerified?: boolean
-    verificationBadge?: string | null
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    botProfile?: BotProfileUncheckedCreateNestedOneWithoutProfileInput
+    deletedAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    chatRooms?: ChatRoomMemberUncheckedCreateNestedManyWithoutUserInput
+    messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    conversationsA?: ConversationUncheckedCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationUncheckedCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageUncheckedCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptUncheckedCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionUncheckedCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleUncheckedCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestUncheckedCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestUncheckedCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantUncheckedCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantUncheckedCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
   }
 
-  export type ProfileCreateOrConnectWithoutSincerityWalletInput = {
-    where: ProfileWhereUniqueInput
-    create: XOR<ProfileCreateWithoutSincerityWalletInput, ProfileUncheckedCreateWithoutSincerityWalletInput>
+  export type UserCreateOrConnectWithoutSincerityWalletInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutSincerityWalletInput, UserUncheckedCreateWithoutSincerityWalletInput>
   }
 
   export type SincerityTransactionCreateWithoutWalletInput = {
@@ -81529,107 +81641,115 @@ export namespace Prisma {
     data: SincerityTransactionCreateManyWalletInput | SincerityTransactionCreateManyWalletInput[]
   }
 
-  export type ProfileUpsertWithoutSincerityWalletInput = {
-    update: XOR<ProfileUpdateWithoutSincerityWalletInput, ProfileUncheckedUpdateWithoutSincerityWalletInput>
-    create: XOR<ProfileCreateWithoutSincerityWalletInput, ProfileUncheckedCreateWithoutSincerityWalletInput>
-    where?: ProfileWhereInput
+  export type UserUpsertWithoutSincerityWalletInput = {
+    update: XOR<UserUpdateWithoutSincerityWalletInput, UserUncheckedUpdateWithoutSincerityWalletInput>
+    create: XOR<UserCreateWithoutSincerityWalletInput, UserUncheckedCreateWithoutSincerityWalletInput>
+    where?: UserWhereInput
   }
 
-  export type ProfileUpdateToOneWithWhereWithoutSincerityWalletInput = {
-    where?: ProfileWhereInput
-    data: XOR<ProfileUpdateWithoutSincerityWalletInput, ProfileUncheckedUpdateWithoutSincerityWalletInput>
+  export type UserUpdateToOneWithWhereWithoutSincerityWalletInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutSincerityWalletInput, UserUncheckedUpdateWithoutSincerityWalletInput>
   }
 
-  export type ProfileUpdateWithoutSincerityWalletInput = {
+  export type UserUpdateWithoutSincerityWalletInput = {
     id?: StringFieldUpdateOperationsInput | string
-    displayName?: StringFieldUpdateOperationsInput | string
-    age?: IntFieldUpdateOperationsInput | number
-    gender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-    genderIdentity?: NullableStringFieldUpdateOperationsInput | string | null
-    sexuality?: StringFieldUpdateOperationsInput | string
-    bio?: NullableStringFieldUpdateOperationsInput | string | null
-    avatar?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: StringFieldUpdateOperationsInput | string
-    city?: NullableStringFieldUpdateOperationsInput | string | null
-    country?: NullableStringFieldUpdateOperationsInput | string | null
-    relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
-    attachmentStyle?: NullableStringFieldUpdateOperationsInput | string | null
-    communicationStyle?: NullableStringFieldUpdateOperationsInput | string | null
-    conflictResolution?: NullableStringFieldUpdateOperationsInput | string | null
-    loveLanguage?: NullableStringFieldUpdateOperationsInput | string | null
-    boundaries?: NullableStringFieldUpdateOperationsInput | string | null
-    dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
-    lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
-    emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: StringFieldUpdateOperationsInput | string
-    preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
-    preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
-    preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
-    preferredDistance?: NullableIntFieldUpdateOperationsInput | number | null
-    preferredLocation?: NullableStringFieldUpdateOperationsInput | string | null
-    compatibilityScore?: NullableIntFieldUpdateOperationsInput | number | null
-    profileStatus?: EnumProfileStatusFieldUpdateOperationsInput | $Enums.ProfileStatus
-    onboardingStep?: IntFieldUpdateOperationsInput | number
-    isApproved?: BoolFieldUpdateOperationsInput | boolean
-    isVerified?: BoolFieldUpdateOperationsInput | boolean
-    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
-    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
-    occupation?: NullableStringFieldUpdateOperationsInput | string | null
-    company?: NullableStringFieldUpdateOperationsInput | string | null
-    industry?: NullableStringFieldUpdateOperationsInput | string | null
-    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
-    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutProfileNestedInput
-    botProfile?: BotProfileUpdateOneWithoutProfileNestedInput
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    chatRooms?: ChatRoomMemberUpdateManyWithoutUserNestedInput
+    messages?: MessageUpdateManyWithoutSenderNestedInput
+    conversationsA?: ConversationUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
   }
 
-  export type ProfileUncheckedUpdateWithoutSincerityWalletInput = {
+  export type UserUncheckedUpdateWithoutSincerityWalletInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
-    displayName?: StringFieldUpdateOperationsInput | string
-    age?: IntFieldUpdateOperationsInput | number
-    gender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
-    genderIdentity?: NullableStringFieldUpdateOperationsInput | string | null
-    sexuality?: StringFieldUpdateOperationsInput | string
-    bio?: NullableStringFieldUpdateOperationsInput | string | null
-    avatar?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarType?: NullableStringFieldUpdateOperationsInput | string | null
-    galleryPhotos?: StringFieldUpdateOperationsInput | string
-    city?: NullableStringFieldUpdateOperationsInput | string | null
-    country?: NullableStringFieldUpdateOperationsInput | string | null
-    relationshipGoal?: EnumRelationshipGoalFieldUpdateOperationsInput | $Enums.RelationshipGoal
-    attachmentStyle?: NullableStringFieldUpdateOperationsInput | string | null
-    communicationStyle?: NullableStringFieldUpdateOperationsInput | string | null
-    conflictResolution?: NullableStringFieldUpdateOperationsInput | string | null
-    loveLanguage?: NullableStringFieldUpdateOperationsInput | string | null
-    boundaries?: NullableStringFieldUpdateOperationsInput | string | null
-    dealbreakers?: NullableStringFieldUpdateOperationsInput | string | null
-    lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
-    emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
-    selectedTags?: StringFieldUpdateOperationsInput | string
-    preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
-    preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
-    preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
-    preferredDistance?: NullableIntFieldUpdateOperationsInput | number | null
-    preferredLocation?: NullableStringFieldUpdateOperationsInput | string | null
-    compatibilityScore?: NullableIntFieldUpdateOperationsInput | number | null
-    profileStatus?: EnumProfileStatusFieldUpdateOperationsInput | $Enums.ProfileStatus
-    onboardingStep?: IntFieldUpdateOperationsInput | number
-    isApproved?: BoolFieldUpdateOperationsInput | boolean
-    isVerified?: BoolFieldUpdateOperationsInput | boolean
-    personalityData?: NullableStringFieldUpdateOperationsInput | string | null
-    adminNotes?: NullableStringFieldUpdateOperationsInput | string | null
-    occupation?: NullableStringFieldUpdateOperationsInput | string | null
-    company?: NullableStringFieldUpdateOperationsInput | string | null
-    industry?: NullableStringFieldUpdateOperationsInput | string | null
-    linkedInVerified?: BoolFieldUpdateOperationsInput | boolean
-    verificationBadge?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    botProfile?: BotProfileUncheckedUpdateOneWithoutProfileNestedInput
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    chatRooms?: ChatRoomMemberUncheckedUpdateManyWithoutUserNestedInput
+    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    conversationsA?: ConversationUncheckedUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUncheckedUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUncheckedUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUncheckedUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUncheckedUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUncheckedUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUncheckedUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUncheckedUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUncheckedUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
   }
 
   export type SincerityTransactionUpsertWithWhereUniqueWithoutWalletInput = {
@@ -81679,7 +81799,7 @@ export namespace Prisma {
     lastSpentAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: ProfileCreateNestedOneWithoutSincerityWalletInput
+    user: UserCreateNestedOneWithoutSincerityWalletInput
   }
 
   export type SincerityWalletUncheckedCreateWithoutTransactionsInput = {
@@ -81727,7 +81847,7 @@ export namespace Prisma {
     lastSpentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: ProfileUpdateOneRequiredWithoutSincerityWalletNestedInput
+    user?: UserUpdateOneRequiredWithoutSincerityWalletNestedInput
   }
 
   export type SincerityWalletUncheckedUpdateWithoutTransactionsInput = {
@@ -81793,6 +81913,7 @@ export namespace Prisma {
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutBlocksGivenInput = {
@@ -81842,6 +81963,7 @@ export namespace Prisma {
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutBlocksGivenInput = {
@@ -81896,6 +82018,7 @@ export namespace Prisma {
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutBlocksReceivedInput = {
@@ -81945,6 +82068,7 @@ export namespace Prisma {
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutBlocksReceivedInput = {
@@ -82010,6 +82134,7 @@ export namespace Prisma {
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutBlocksGivenInput = {
@@ -82059,6 +82184,7 @@ export namespace Prisma {
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutBlocksReceivedInput = {
@@ -82119,6 +82245,7 @@ export namespace Prisma {
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutBlocksReceivedInput = {
@@ -82168,6 +82295,7 @@ export namespace Prisma {
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutReportsMadeInput = {
@@ -82217,6 +82345,7 @@ export namespace Prisma {
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReportsMadeInput = {
@@ -82266,6 +82395,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReportsMadeInput = {
@@ -82320,6 +82450,7 @@ export namespace Prisma {
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReportsReceivedInput = {
@@ -82369,6 +82500,7 @@ export namespace Prisma {
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
     blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReportsReceivedInput = {
@@ -82434,6 +82566,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReportsMadeInput = {
@@ -82483,6 +82616,7 @@ export namespace Prisma {
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutReportsReceivedInput = {
@@ -82543,6 +82677,7 @@ export namespace Prisma {
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReportsReceivedInput = {
@@ -82592,6 +82727,7 @@ export namespace Prisma {
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type AccountCreateManyUserInput = {

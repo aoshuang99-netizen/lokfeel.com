@@ -85,7 +85,10 @@ export async function GET(request: NextRequest) {
       earningTasks,
     });
 
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message === 'Unauthorized' || error?.message === 'User not found') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Wallet API Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

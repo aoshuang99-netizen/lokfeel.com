@@ -32,11 +32,11 @@ const SOFT_DELETE_MODELS = [
 ] as const;
 
 export async function POST(request: NextRequest) {
-  // Authenticate cron request
+  // Authenticate cron request (REQUIRED - not optional)
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

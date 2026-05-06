@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-// GET /api/geo/ip — Get user's approximate location from IP
-// Uses free ip-api.com (no key needed, 45 req/min)
+/**
+ * GET /api/geo/ip — Get user's approximate location from IP
+ * Requires authentication
+ */
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Get client IP from headers (Vercel sets these)
     const forwarded = request.headers.get('x-forwarded-for')
     const realIp = request.headers.get('x-real-ip')
@@ -31,7 +40,6 @@ export async function GET(request: NextRequest) {
     const geoData = await geoRes.json()
 
     if (geoData.status !== 'success' || geoData.countryCode !== 'US') {
-      // Return what we have, let frontend handle non-US
       return NextResponse.json({
         location: {
           country: geoData.countryCode || null,

@@ -2,12 +2,11 @@
  * Vercel Cron Job — Bot Engine Health & Status
  *
  * This endpoint provides an overview of the bot engine status.
- * Can be called manually to check system health.
- *
- * No schedule - call manually or via external monitoring
+ * ADMIN ONLY — Protected endpoint
  */
 
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +14,8 @@ export const dynamic = 'force-dynamic';
 // GET /api/cron/status
 export async function GET(request: Request) {
   try {
+    await requireAdminAuth();
+
     // Get bot count
     const botCount = await db.user.count({
       where: { isBot: true, role: 'USER' },
@@ -78,7 +79,10 @@ export async function GET(request: Request) {
       ],
     });
 
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') || error?.message?.includes('Admin')) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
     console.error('[Cron] Status error:', error);
     return NextResponse.json(
       {
