@@ -1,12 +1,13 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { success, unauthorized } from "@/lib/api-response";
 import { ALL_PERMISSION_CODES } from "@/lib/admin-permissions";
 import { ROLE_PERMISSIONS } from "@/lib/admin-roles";
 import { requireAuth } from "@/lib/auth/auth";
+import { handleApiError } from "@/lib/api-handler";
 
 export async function GET(req: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const userId = user.id;
     const db = getDb();
@@ -65,10 +66,5 @@ export async function GET(req: NextRequest) {
       roles,
       isSuperAdmin,
     });
-  } catch (error: any) {
-    if (error.message === "Unauthorized" || error.message === "User not found") {
-      return unauthorized();
-    }
-    throw error;
-  }
+  });
 }

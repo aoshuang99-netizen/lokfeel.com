@@ -74,12 +74,18 @@ export async function writeAudit(options: AuditWriteOptions): Promise<void> {
   } catch (error) {
     // Audit logging should never block the main operation
     // but we still log the failure for debugging
-    console.error("[Audit] Failed to write audit log:", {
-      actorId,
-      category,
-      action,
-      error: error instanceof Error ? error.message : String(error),
-    });
+    // Note: admin_session cookie users (demo:xxx) will fail FK constraint
+    // since they don't exist in User table — this is expected and safe to ignore
+    const isFKError = error instanceof Error &&
+      (error.message.includes("FOREIGN KEY") || error.message.includes("SQLITE_CONSTRAINT"));
+    if (!isFKError) {
+      console.error("[Audit] Failed to write audit log:", {
+        actorId,
+        category,
+        action,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }
 

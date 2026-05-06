@@ -239,48 +239,62 @@ export function withPermission(
   return (handler: HandlerFunction): Nextjs15RouteHandler => {
     return async (req: NextRequest, _context?: { params: Promise<any> }) => {
       // 1. Check authentication
-      // Priority: getToken() first (reads JWT directly, works in all contexts)
+      // IMPORTANT: For admin API routes (/api/admin/*), prioritize admin_session cookie
+      // over NextAuth JWT to avoid auth identity conflicts
 
       let userId: string | undefined;
       let userRole: string | undefined;
       let session: any = null;
-      
-      // Method 1: getToken() from next-auth/jwt — reads JWT from cookie, works everywhere
-      try {
-        // Try multiple cookie names: next-auth (v4), authjs (v5), and Secure variants
-        const cookieNames = [
-          "authjs.session-token",          // NextAuth v5 (Auth.js)
-          "__Secure-authjs.session-token", // NextAuth v5 Secure
-          "next-auth.session-token",       // NextAuth v4
-          "__Secure-next-auth.session-token", // NextAuth v4 Secure
-        ];
-        
-        let token = null;
-        for (const cookieName of cookieNames) {
-          const found = await getToken({ req, secret: process.env.AUTH_SECRET, cookieName });
-          if (found) {
-            token = found;
-            break;
-          }
+      const isAdminRoute = req.nextUrl.pathname.startsWith("/api/admin");
+
+      // Admin routes: check admin_session cookie FIRST
+      if (isAdminRoute) {
+        const adminSession = parseAdminSession(req);
+        if (adminSession) {
+          userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
+          userRole = adminSession.role;
+          session = { user: { id: userId, role: userRole, name: adminSession.username } };
         }
-        if (token) {
-          // next-auth/jwt stores the `id` from jwt() callback at token.id
-          userId = (token as any).id || (token as any).sub;
-          userRole = (token as any).role;
-          session = {
-            user: {
-              id: userId,
-              role: userRole,
-              name: (token as any).name,
-              email: (token as any).email,
-              image: (token as any).picture,
-            }
-          };
-        }
-      } catch {
-        // getToken() failed — continue to next auth method
       }
-      
+
+      // Method 1: getToken() from next-auth/jwt — reads JWT from cookie, works everywhere
+      if (!userId) {
+        try {
+          // Try multiple cookie names: next-auth (v4), authjs (v5), and Secure variants
+          const cookieNames = [
+            "authjs.session-token",          // NextAuth v5 (Auth.js)
+            "__Secure-authjs.session-token", // NextAuth v5 Secure
+            "next-auth.session-token",       // NextAuth v4
+            "__Secure-next-auth.session-token", // NextAuth v4 Secure
+          ];
+
+          let token = null;
+          for (const cookieName of cookieNames) {
+            const found = await getToken({ req, secret: process.env.AUTH_SECRET, cookieName });
+            if (found) {
+              token = found;
+              break;
+            }
+          }
+          if (token) {
+            // next-auth/jwt stores the `id` from jwt() callback at token.id
+            userId = (token as any).id || (token as any).sub;
+            userRole = (token as any).role;
+            session = {
+              user: {
+                id: userId,
+                role: userRole,
+                name: (token as any).name,
+                email: (token as any).email,
+                image: (token as any).picture,
+              }
+            };
+          }
+        } catch {
+          // getToken() failed — continue to next auth method
+        }
+      }
+
       // Method 2: auth() fallback — reads from session (may not have user.id in API routes)
       if (!userId) {
         try {
@@ -306,7 +320,7 @@ export function withPermission(
         }
       }
 
-      // Method 3: admin_session cookie (demo admin / 非 NextAuth 用户)
+      // Method 3: admin_session cookie (demo admin / 非 NextAuth users) — for non-admin routes
       if (!userId) {
         const adminSession = parseAdminSession(req);
         if (adminSession) {
@@ -324,6 +338,7 @@ export function withPermission(
       const hasAccess = await hasPermission(userId, permission, userRole);
 
       if (!hasAccess) {
+        console.error(`[RBAC] Access denied: ${req.method} ${req.nextUrl.pathname} | userId=${userId} | role=${userRole} | required=${permission}`);
         // Log the denied access attempt
         await writeAudit({
           actorId: userId,
@@ -354,7 +369,8 @@ export function withPermission(
       // 4. Execute handler
       try {
         return await handler(req, { userId, session, ..._context });
-      } catch {
+      } catch (handlerError) {
+        console.error(`[RBAC] Handler error: ${req.method} ${req.nextUrl.pathname}`, handlerError);
         return serverError("Internal server error");
       }
     };
@@ -370,10 +386,20 @@ export function withAnyPermission(
 ): (handler: HandlerFunction) => Nextjs15RouteHandler {
   return (handler: HandlerFunction): Nextjs15RouteHandler => {
     return async (req: NextRequest, _context?: { params: Promise<any> }) => {
-      // Auth check with getToken fallback
+      // Admin routes: check admin_session cookie FIRST
+      const isAdminRoute = req.nextUrl.pathname.startsWith("/api/admin");
       let session = await auth();
       let userId = (session?.user as any)?.id;
       let userRole = (session?.user as any)?.role;
+
+      if (isAdminRoute && !userId) {
+        const adminSession = parseAdminSession(req);
+        if (adminSession) {
+          userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
+          userRole = adminSession.role;
+          session = { user: { id: userId, role: userRole, name: adminSession.username } } as any;
+        }
+      }
 
       if (!userId) {
         try {
@@ -404,12 +430,14 @@ export function withAnyPermission(
       const hasAccess = await hasAnyPermission(userId, permissions, userRole);
 
       if (!hasAccess) {
+        console.error(`[RBAC] Access denied (anyOf): ${req.method} ${req.nextUrl.pathname} | userId=${userId} | required=${permissions.join(",")}`);
         return forbidden(`You do not have any of the required permissions: ${permissions.join(", ")}`);
       }
 
       try {
         return await handler(req, { userId, session, ..._context });
-      } catch {
+      } catch (handlerError) {
+        console.error(`[RBAC] Handler error: ${req.method} ${req.nextUrl.pathname}`, handlerError);
         return serverError("Internal server error");
       }
     };
@@ -421,10 +449,22 @@ export function withAnyPermission(
  */
 export function withAdmin(handler: HandlerFunction): Nextjs15RouteHandler {
   return async (req: NextRequest, _context?: { params: Promise<any> }) => {
+    // Admin routes: check admin_session cookie FIRST
+    const isAdminRoute = req.nextUrl.pathname.startsWith("/api/admin");
+
     // Auth check with getToken fallback
     let session = await auth();
     let userId = (session?.user as any)?.id;
     let userRole = (session?.user as any)?.role;
+
+    if (isAdminRoute && !userId) {
+      const adminSession = parseAdminSession(req);
+      if (adminSession) {
+        userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
+        userRole = adminSession.role;
+        session = { user: { id: userId, role: userRole, name: adminSession.username } } as any;
+      }
+    }
 
     if (!userId) {
       try {
@@ -455,7 +495,8 @@ export function withAdmin(handler: HandlerFunction): Nextjs15RouteHandler {
 
     try {
       return await handler(req, { userId, session, ..._context });
-    } catch {
+    } catch (handlerError) {
+      console.error(`[RBAC] Handler error: ${req.method} ${req.nextUrl.pathname}`, handlerError);
       return serverError("Internal server error");
     }
   };

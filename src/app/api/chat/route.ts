@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { handleApiError } from '@/lib/api-handler'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/chat — Get chat list (combines ChatRoom + IM Conversation)
 export async function GET() {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth()
 
     // ═══ 1. ChatRoom system (legacy) ═══
@@ -192,11 +193,5 @@ export async function GET() {
     const chats = allChats.map(({ _source, ...chat }) => chat)
 
     return NextResponse.json({ chats })
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Get chats error:', error)
-    return NextResponse.json({ message: 'Failed to fetch chats' }, { status: 500 })
-  }
+  })
 }

@@ -4,6 +4,7 @@ import { authConfig } from './config'
 import { db } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import { UserRole } from "@/generated/client"
+import { UnauthorizedError, ForbiddenError } from '@/lib/errors'
 
 // Create NextAuth handler
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
@@ -30,7 +31,7 @@ export async function requireAuth() {
   const session = await auth()
   
   if (!session?.user) {
-    throw new Error('Unauthorized')
+    throw new UnauthorizedError('Unauthorized')
   }
   
   const userId = (session.user as any).id
@@ -40,7 +41,7 @@ export async function requireAuth() {
   })
   
   if (!user) {
-    throw new Error('User not found')
+    throw new UnauthorizedError('User not found')
   }
   
   return { user, session }
@@ -53,7 +54,7 @@ export async function requireAdminAuth() {
   const { user, session } = await requireAuth()
   
   if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-    throw new Error('Forbidden: Admin access required')
+    throw new ForbiddenError('Forbidden: Admin access required')
   }
   
   return { user, session }

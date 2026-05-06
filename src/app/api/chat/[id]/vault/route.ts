@@ -88,7 +88,10 @@ export async function GET(
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'User not found') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Vault status error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -213,7 +216,10 @@ export async function POST(
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'User not found') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Vault extend error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -327,7 +333,10 @@ export async function DELETE(
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'User not found') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Vault revoke error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

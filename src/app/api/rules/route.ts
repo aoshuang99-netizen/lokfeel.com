@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-handler';
 import { getRuleEngine } from '@/lib/rules/engine';
 import { validateUpdateRulesRequest } from '@/lib/rules/schema';
 import { PowerBoardRules, UpdateRulesResponse, RuleChange } from '@/lib/rules/types';
@@ -18,7 +19,7 @@ export const dynamic = 'force-dynamic';
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format'); // 'lite' | 'full'
@@ -38,17 +39,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: rules,
     });
-  } catch (error) {
-    console.error('Failed to get rules:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to get rules',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 // ============================================================================
@@ -56,7 +47,7 @@ export async function GET(request: NextRequest) {
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  try {
+  return handleApiError(async () => {
     const { user } = await requireAuth();
 
     // TODO: 检查用户性别，仅女性可修改规则
@@ -149,15 +140,5 @@ export async function POST(request: NextRequest) {
     };
 
     return NextResponse.json(response);
-  } catch (error) {
-    console.error('Failed to update rules:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to update rules',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
