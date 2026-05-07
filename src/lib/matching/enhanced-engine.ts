@@ -746,6 +746,13 @@ export function findTopEnhancedMatches(
   botPrefs?: BotPreferenceVector,
   collectiveIntel?: CollectiveIntelligenceStore
 ): Array<{ profile: EnhancedUserProfile; score: EnhancedMatchScore }> {
+  // Normalize preferredGender for case-insensitive comparison
+  const normalizeGenderPref = (g: string | null | undefined, target: string | null | undefined): boolean => {
+    if (!g || g.toUpperCase() === 'ANY' || g.toUpperCase() === 'EVERYONE') return true;
+    if (!target) return true;
+    return g.toUpperCase() === target.toUpperCase();
+  };
+
   const scored = candidates
     .filter((candidate) => {
       // Skip self
@@ -755,10 +762,8 @@ export function findTopEnhancedMatches(
       if (user.preferredAgeMin && candidate.age < user.preferredAgeMin) return false
       if (user.preferredAgeMax && candidate.age > user.preferredAgeMax) return false
 
-      // 性别偏好过滤
-      if (user.preferredGender && user.preferredGender !== 'Any') {
-        if (user.preferredGender !== candidate.gender) return false
-      }
+      // 性别偏好过滤 (case-insensitive)
+      if (!normalizeGenderPref(user.preferredGender, candidate.gender)) return false
 
       return true
     })

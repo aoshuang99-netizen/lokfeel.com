@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
+import { ReportModal } from "@/components/chat/report-modal";
 
 // ══════════════════════════════════════
 // EMOJI LIST
@@ -132,14 +133,18 @@ export default function ChatRoomPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const hasInitialLoaded = useRef(false);
 
   // Stable reference that always enriches with current roomInfo
   const loadMessagesWithAvatar = useCallback(() => loadMessages(), [roomId, roomInfo?.otherUser?.avatar]);
 
   // Load room info and messages — load roomInfo first, then messages with avatar context
+  // Use ref to prevent circular re-triggering: loadRoomInfo updates roomInfo,
+  // which changes loadMessagesWithAvatar deps, which re-triggers this effect.
   useEffect(() => {
-    if (roomId) {
+    if (roomId && !hasInitialLoaded.current) {
       setLoading(true);
+      hasInitialLoaded.current = true; // Prevent re-entry on subsequent renders
       loadRoomInfo().then(() => {
         return loadMessagesWithAvatar();
       }).finally(() => {
@@ -1077,6 +1082,15 @@ export default function ChatRoomPage() {
           }}
         />
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        reportedUserId={roomInfo?.otherUser?.id || ""}
+        reportedUserName={roomInfo?.otherUser?.name || "User"}
+        chatRoomId={roomId}
+      />
     </div>
   );
 }

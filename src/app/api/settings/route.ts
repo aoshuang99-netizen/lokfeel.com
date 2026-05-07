@@ -270,7 +270,7 @@ export async function PUT(request: NextRequest) {
     if (dealbreakers !== undefined) profileUpdateData.dealbreakers = JSON.stringify(dealbreakers)
     if (preferredAgeMin !== undefined) profileUpdateData.preferredAgeMin = preferredAgeMin
     if (preferredAgeMax !== undefined) profileUpdateData.preferredAgeMax = preferredAgeMax
-    if (preferredGender !== undefined) profileUpdateData.preferredGender = preferredGender
+    if (preferredGender !== undefined) profileUpdateData.preferredGender = preferredGender.toUpperCase()
     if (preferredDistance !== undefined) profileUpdateData.preferredDistance = preferredDistance
     if (selectedTags !== undefined) profileUpdateData.selectedTags = toJson(selectedTags)
     if (occupation !== undefined) profileUpdateData.occupation = occupation

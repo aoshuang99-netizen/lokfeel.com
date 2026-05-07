@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "20");
+    const minOnboardingStep = parseInt(searchParams.get("minOnboardingStep") || "4");
 
     // Get current user's profile with preferences
     const currentUser = await prisma.user.findUnique({
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
       id: { notIn: excludeIds },
       profile: {
         is: {
-          onboardingStep: { gte: 4 },
+          onboardingStep: { gte: minOnboardingStep },
         },
       },
     };
@@ -166,7 +167,7 @@ export async function GET(request: NextRequest) {
         id: { notIn: fallbackExcludeIds },
         profile: {
           is: {
-            onboardingStep: { gte: 4 },
+            onboardingStep: { gte: Math.min(minOnboardingStep, 2) },
           },
         },
       };

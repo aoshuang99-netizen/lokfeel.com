@@ -76,29 +76,33 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: "desc" },
     });
 
-    // Get unread counts — use individual count queries instead of groupBy
+    // Get unread counts — batch query instead of N+1 per room
     // (Turso/libSQL has limited groupBy support)
     const unreadMap = new Map<string, number>();
-    
+
     if (chatRooms.length > 0) {
-      const roomIds = chatRooms.map(c => c.id);
-      
-      // Use findMany + aggregate approach that works with Turso
-      for (const roomId of roomIds) {
+      // Run all count queries in parallel instead of sequentially to reduce latency
+      const countPromises = chatRooms.map(async (room) => {
         try {
           const count = await prisma.message.count({
             where: {
-              roomId: roomId,
+              roomId: room.id,
               senderId: { not: userId },
               isRead: false,
             },
           });
           if (count > 0) {
-            unreadMap.set(roomId, count);
+            return { roomId: room.id, count };
           }
         } catch {
           // If count fails for a room, just skip it (unread = 0)
         }
+        return null;
+      });
+
+      const results = await Promise.all(countPromises);
+      for (const r of results) {
+        if (r) unreadMap.set(r.roomId, r.count);
       }
     }
 

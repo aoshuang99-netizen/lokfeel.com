@@ -73,7 +73,7 @@ export default function MatchingSquarePage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/discover?limit=50");
+      const res = await fetch("/api/discover?limit=50&minOnboardingStep=2");
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setUsers(data.users || []);

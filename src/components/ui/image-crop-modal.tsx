@@ -79,12 +79,14 @@ export function ImageCropModal({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent iOS Safari elastic scrolling during crop drag
     const touch = e.touches[0];
     setIsDragging(true);
     setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent iOS Safari elastic scrolling during crop drag
     if (!isDragging) return;
     const touch = e.touches[0];
     setPosition({

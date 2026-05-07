@@ -126,7 +126,7 @@ export async function PUT(request: NextRequest) {
 
     // Build update data
     const updateData: any = {};
-    if (preferredGender !== undefined) updateData.preferredGender = preferredGender;
+    if (preferredGender !== undefined) updateData.preferredGender = preferredGender.toUpperCase();
     if (preferredAgeMin !== undefined) updateData.preferredAgeMin = preferredAgeMin;
     if (preferredAgeMax !== undefined) updateData.preferredAgeMax = preferredAgeMax;
     if (preferredDistance !== undefined) updateData.preferredDistance = preferredDistance;

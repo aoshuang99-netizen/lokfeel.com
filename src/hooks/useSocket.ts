@@ -256,6 +256,7 @@ export function useChatRoomSocket(options: UseSocketOptions = {}): UseChatRoomSo
   const socketRef = useRef<Socket | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentConvRef = useRef<string | null>(null);
+  const loadedConvRef = useRef<string | null>(null);
   const eventHandlersRef = useRef<IMEventHandlers>({});
 
   // Initialize socket connection
@@ -276,6 +277,34 @@ export function useChatRoomSocket(options: UseSocketOptions = {}): UseChatRoomSo
     setError(socketError);
   }, [socketError]);
 
+  // Load historical messages from API when conversation changes (fixes messages disappearing on refresh)
+  // This populates messages before WebSocket delivers new ones
+  useEffect(() => {
+    const convId = conversationId;
+    if (!convId || convId === loadedConvRef.current) return;
+
+    loadedConvRef.current = convId;
+    setMessages([]); // Clear previous conversation's messages
+
+    // Fetch historical messages from REST API
+    fetch(`/api/im/messages/${convId}?limit=50`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        const msgs = data?.messages || [];
+        if (Array.isArray(msgs) && msgs.length > 0) {
+          // Sort by seq ascending (oldest first)
+          const sorted = [...msgs].sort((a: any, b: any) => (a.seq || 0) - (b.seq || 0));
+          setMessages(sorted);
+        }
+      })
+      .catch((err) => {
+        console.warn("[Socket] Failed to load message history:", err.message);
+      });
+  }, [conversationId]);
+
   // Subscribe to conversation events (IM API v2)
   const subscribeToConversation = useCallback((convId: string) => {
     if (!socketRef.current || !convId) return;
@@ -290,7 +319,13 @@ export function useChatRoomSocket(options: UseSocketOptions = {}): UseChatRoomSo
     // im:message — 新消息
     socketRef.current.on("im:message", (data: { message: IMMessagePayload }) => {
       console.log("[Socket] New message:", data.message);
-      setMessages((prev) => [...prev, data.message]);
+      setMessages((prev) => {
+        // Deduplicate: skip if message already exists (from initial history load)
+        if (prev.some((m) => m.msgId === data.message.msgId || m.id === data.message.id)) {
+          return prev;
+        }
+        return [...prev, data.message];
+      });
       eventHandlersRef.current.onMessage?.(data.message);
     });
     

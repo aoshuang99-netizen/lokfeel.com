@@ -676,11 +676,17 @@ export default function DashboardPage() {
               </div>
 
               {/* Step 3: Go to Discover */}
-              <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
-                isProfileLocked
-                  ? "border-card-border bg-background-tertiary opacity-50"
-                  : "border-green-500/30 bg-green-500/5"
-              }`}>
+              <div
+                className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
+                  isProfileLocked
+                    ? "border-card-border bg-background-tertiary opacity-50"
+                    : "border-green-500/30 bg-green-500/5 cursor-pointer hover:bg-green-500/10"
+                }`}
+                onClick={!isProfileLocked ? () => { window.location.href = "/dashboard/discover"; } : undefined}
+                role={!isProfileLocked ? "button" : undefined}
+                tabIndex={!isProfileLocked ? 0 : undefined}
+                onKeyDown={!isProfileLocked ? (e) => { if (e.key === 'Enter' || e.key === ' ') window.location.href = "/dashboard/discover"; } : undefined}
+              >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   isProfileLocked ? "bg-foreground-faint" : "bg-green-500"
                 }`}>
@@ -694,6 +700,11 @@ export default function DashboardPage() {
                     {isProfileLocked ? "Complete steps 1 & 2 first" : "Ready to go!"}
                   </p>
                 </div>
+                {!isProfileLocked && (
+                  <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
               </div>
             </div>
 

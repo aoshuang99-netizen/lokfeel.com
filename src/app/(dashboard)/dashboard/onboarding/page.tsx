@@ -370,6 +370,47 @@ function OnboardingV3Page() {
   const [isUploading, setIsUploading] = useState(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
 
+  // ══════════════════════════════════════
+  // PROGRESS SAVE: Persist each step to API
+  // ══════════════════════════════════════
+  const saveProgress = useCallback(async (stepIndex: number) => {
+    try {
+      const stepPayload: Record<string, any> = { onboardingStep: stepIndex + 1 };
+
+      // Include data relevant to completed steps
+      if (stepIndex >= 0 && data.relationshipDesire) {
+        stepPayload.relationshipGoal = data.relationshipDesire;
+      }
+      if (stepIndex >= 1 && data.sexualOrientation) {
+        stepPayload.sexuality = data.sexualOrientation;
+      }
+      if (stepIndex >= 2) {
+        if (data.attachmentStyle) stepPayload.attachmentStyle = data.attachmentStyle;
+        if (data.communicationStyle) stepPayload.communicationStyle = data.communicationStyle;
+        if (data.loveLanguage) stepPayload.loveLanguage = data.loveLanguage;
+      }
+      if (stepIndex >= 3 && data.avatarUrl) {
+        stepPayload.avatar = data.avatarType === "cartoon" && data.selectedCartoonId
+          ? `emoji:${CARTOON_AVATARS.find(c => c.id === data.selectedCartoonId)?.emoji}:${CARTOON_AVATARS.find(c => c.id === data.selectedCartoonId)?.color}`
+          : data.avatarUrl;
+        if (data.avatarType) stepPayload.avatarType = data.avatarType;
+      }
+
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(stepPayload),
+      });
+
+      if (res.ok) {
+        console.log(`[Onboarding] Progress saved: step ${stepIndex + 1}`);
+      }
+    } catch (e) {
+      // Silent fail — progress save is non-blocking
+      console.warn("[Onboarding] Progress save failed:", e);
+    }
+  }, [data]);
+
   const currentStep = STEPS[currentStepIndex];
   const progress = ((currentStepIndex) / (STEPS.length - 1)) * 100;
   const isLastStep = currentStepIndex === STEPS.length - 1;
@@ -408,6 +449,13 @@ function OnboardingV3Page() {
             avatarUrl: p.avatar || "",
             avatarType: p.avatarType || (p.avatar ? "photo" : ""),
           }));
+
+          // Restore step position from saved onboardingStep
+          // onboardingStep 1-4 maps to stepIndex 0-3; step 5+ means at result page
+          if (p.onboardingStep && p.onboardingStep > 0 && p.onboardingStep < 9) {
+            const restoredIndex = Math.min(p.onboardingStep - 1, STEPS.length - 1);
+            setCurrentStepIndex(restoredIndex);
+          }
         }
       } catch (e) {
         console.error("Check status error:", e);
@@ -420,6 +468,8 @@ function OnboardingV3Page() {
 
   const goNext = () => {
     if (isLastStep) return handleComplete();
+    // Save progress of current step before advancing
+    saveProgress(currentStepIndex);
     setCurrentStepIndex((prev) => Math.min(prev + 1, STEPS.length - 1));
   };
 
@@ -623,14 +673,14 @@ function OnboardingV3Page() {
         throw new Error(responseData.message || responseData.error || `Server error ${res.status}`);
       }
 
-      toast.success("🎉 Profile complete! Let's fill in your details.", {
-        description: "Redirecting to profile setup...",
+      toast.success("🎉 Onboarding complete! Let's find your matches.", {
+        description: "Redirecting to Discover...",
         duration: 3000,
       });
-      
+
       setTimeout(() => {
-        console.log("[Onboarding] Navigating to /dashboard/profile...");
-        window.location.href = "/dashboard/profile";
+        console.log("[Onboarding] Navigating to /dashboard/discover...");
+        window.location.href = "/dashboard/discover";
       }, 1200);
     } catch (error) {
       console.error("[Onboarding] Save error:", error);

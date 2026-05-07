@@ -58,7 +58,7 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
         const profile = data.profile;
 
         const onboardingStep = profile?.onboardingStep || 0;
-        const isOnboardingComplete = onboardingStep >= 8 || profile?.profileStatus === "ACTIVE";
+        const isOnboardingComplete = onboardingStep >= 9 || profile?.profileStatus === "ACTIVE";
 
         // Blueprint check
         const needsBlueprint = !profile?.attachmentStyle && !profile?.relationshipGoal;

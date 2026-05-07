@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MoreVertical, Phone, Video, Sparkles, MessageCircle, Shield, X } from "lucide-react";
+import { ArrowLeft, MoreVertical, Phone, Video, Sparkles, MessageCircle, Shield, X, Ban } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ConversationList } from "./conversation-list";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
+import { ReportModal } from "./report-modal";
 import type { ConversationListProps } from "./conversation-list";
 import type { MessageBubbleProps } from "./message-bubble";
 import { useChatRoomSocket } from "@/hooks/useSocket";
@@ -153,9 +154,11 @@ function EmptyConversation() {
 interface ChatHeaderProps {
   roomInfo?: RoomInfo;
   onBack?: () => void;
+  onReport?: () => void;
+  onBlock?: () => void;
 }
 
-function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
+function ChatHeader({ roomInfo, onBack, onReport, onBlock }: ChatHeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   
   const isBot = roomInfo?.otherUser?.isBot || false;
@@ -300,7 +303,19 @@ function ChatHeader({ roomInfo, onBack }: ChatHeaderProps) {
                   Search in Chat
                 </button>
                 <div className="h-px bg-white/[0.06]" />
-                <button className="w-full px-4 py-3 text-left text-sm text-red-400/80 hover:bg-red-500/[0.06] hover:text-red-400 transition-colors">
+                <button
+                  onClick={() => { setShowMenu(false); onReport?.(); }}
+                  className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-white/[0.04] hover:text-foreground/90 transition-colors flex items-center gap-3"
+                >
+                  <Shield className="w-4 h-4" />
+                  Report User
+                </button>
+                <div className="h-px bg-white/[0.06]" />
+                <button
+                  onClick={() => { setShowMenu(false); onBlock?.(); }}
+                  className="w-full px-4 py-3 text-left text-sm text-red-400/80 hover:bg-red-500/[0.06] hover:text-red-400 transition-colors flex items-center gap-3"
+                >
+                  <Ban className="w-4 h-4" />
                   Block User
                 </button>
               </motion.div>
@@ -380,6 +395,8 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [quotedMessage, setQuotedMessage] = useState<QuotedMessageState | null>(null);
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
   const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Socket connection (IM API v2 - 使用 conversationId)
@@ -605,14 +622,40 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
     []
   );
 
-  // Handle report message
+  // Handle report user
   const handleReport = useCallback(
-    (msgId: string, senderId: string) => {
-      // Open report modal or navigate to report page
-      toast.success("Report submitted. Thank you for your feedback.");
+    (_msgId: string, _senderId: string) => {
+      setShowReportModal(true);
     },
     []
   );
+
+  // Handle block user
+  const handleBlockUser = useCallback(async () => {
+    if (!roomInfo?.otherUser?.id) return;
+    const confirmed = window.confirm(
+      `Block ${roomInfo.otherUser.name}?\n\nThey won't be able to see or message you.`
+    );
+    if (!confirmed) return;
+    setIsBlocking(true);
+    try {
+      const res = await fetch(`/api/users/${roomInfo.otherUser.id}/block`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        toast.success(`${roomInfo.otherUser.name} has been blocked`);
+        setCurrentConvId(null);
+        setRoomInfo(null);
+        loadConversations();
+      } else {
+        toast.error("Failed to block user");
+      }
+    } catch {
+      toast.error("Failed to block user");
+    } finally {
+      setIsBlocking(false);
+    }
+  }, [roomInfo?.otherUser?.id, roomInfo?.otherUser?.name, loadConversations]);
 
   // Show conversation list on mobile when no room selected
   const showConversationList = isMobile && !currentConvId;
@@ -645,7 +688,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
         {currentConvId && roomInfo ? (
           <>
             {/* Chat Header */}
-            <ChatHeader roomInfo={roomInfo} onBack={handleBack} />
+            <ChatHeader roomInfo={roomInfo} onBack={handleBack} onReport={() => setShowReportModal(true)} onBlock={handleBlockUser} />
 
             {/* Vault Banner */}
             <VaultBanner expiresAt={roomInfo.vaultExpiresAt} />
@@ -691,6 +734,16 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
           <EmptyChat />
         )}
       </div>
+
+      {/* Report Modal */}
+      {roomInfo && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          reportedUserId={roomInfo.otherUser.id}
+          reportedUserName={roomInfo.otherUser.name}
+        />
+      )}
     </div>
   );
 }

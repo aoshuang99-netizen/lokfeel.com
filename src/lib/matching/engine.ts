@@ -307,9 +307,12 @@ function scoreLifestyle(userA: UserProfile, userB: UserProfile): number {
   if (userB.preferredAgeMin && userA.age < userB.preferredAgeMin) score -= 20;
   if (userB.preferredAgeMax && userA.age > userB.preferredAgeMax) score -= 20;
 
-  // Gender preference check
-  if (userA.preferredGender && userA.preferredGender !== userB.gender && userA.preferredGender !== 'Any') {
-    score -= 30;
+  // Gender preference check (case-insensitive)
+  if (userA.preferredGender) {
+    const pref = userA.preferredGender.toUpperCase();
+    if (pref !== 'ANY' && pref !== 'EVERYONE' && userB.gender && pref !== userB.gender.toUpperCase()) {
+      score -= 30;
+    }
   }
 
   // Same country bonus

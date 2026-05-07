@@ -85,19 +85,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const reaction = await addReaction(messageId, session.user.id, emoji);
+    try {
+      const reaction = await addReaction(messageId, session.user.id, emoji);
 
     return NextResponse.json({
       success: true,
       data: reaction,
     });
-  } catch (error) {
-    console.error('Error adding reaction:', error);
-    return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to add reaction' } },
-      { status: 500 }
-    );
-  }
+    } catch (error: any) {
+      // P2002 = unique constraint violation (user already reacted with this emoji)
+      if (error?.code === 'P2002') {
+        return NextResponse.json({
+          success: true,
+          data: { alreadyReacted: true, messageId, userId: session.user.id, emoji },
+        });
+      }
+      console.error('Error adding reaction:', error);
+      return NextResponse.json(
+        { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to add reaction' } },
+        { status: 500 }
+      );
+    }
 }
 
 // ============================================================================

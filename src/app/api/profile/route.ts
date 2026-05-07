@@ -81,6 +81,10 @@ function filterProfileFields(data: Record<string, any>): Record<string, any> {
       }
     }
   }
+  // Normalize preferredGender to uppercase for consistent matching
+  if (filtered.preferredGender) {
+    filtered.preferredGender = filtered.preferredGender.toUpperCase();
+  }
   return filtered
 }
 
