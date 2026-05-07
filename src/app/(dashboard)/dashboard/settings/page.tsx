@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { 
   User, 
   Bell, 
@@ -257,17 +258,18 @@ export default function SettingsPage() {
 
   const handleExportData = async () => {
     setShowExportDialog(false);
-    alert("Your data export has been initiated. You'll receive an email when it's ready.");
+    toast.success("Your data export has been initiated. You'll receive an email when it's ready.");
   };
 
   const handleDeleteAccount = async () => {
     try {
       const res = await fetch('/api/settings', { method: 'DELETE' });
       if (res.ok) {
+        toast.success("Account deleted successfully");
         window.location.href = '/';
       }
     } catch (err) {
-      alert('Failed to delete account');
+      toast.error('Failed to delete account');
     }
     setShowDeleteDialog(false);
   };

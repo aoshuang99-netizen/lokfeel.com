@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, Filter, Eye, Plus, X, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -113,8 +114,8 @@ export default function MatchesManagementPage() {
   }, [matches, selectedKeys]);
 
   const handleBatchCancel = async () => {
-    if (!confirm(`Are you sure you want to cancel ${selectedMatches.length} matches?`)) return;
-    alert(`Batch cancel ${selectedMatches.length} matches (API pending)`);
+    if (!confirm(`确定取消 ${selectedMatches.length} 个匹配项？`)) return;
+    toast.info(`批量取消功能开发中`);
   };
 
   if (error) {

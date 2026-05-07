@@ -36,7 +36,7 @@ export async function GET() {
       inviteCode,
       inviteCount: stats.count,
       inviteRewards: stats.rewards,
-      invites: [], // TODO: Add invite history when schema is ready
+      invites: [], // Invite history pending DB schema update
       rewards: {
         perInvite: 50, // Points per successful invite
         maxInvites: 10, // Max invites for rewards

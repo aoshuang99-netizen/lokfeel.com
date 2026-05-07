@@ -30,7 +30,7 @@ export async function GET(
 
     // 安全检查：只能获取自己的规则或管理员权限
     if (userId !== user.id) {
-      // TODO: 检查用户是否有管理员权限
+      // Only allow users to access their own rules
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 403 }

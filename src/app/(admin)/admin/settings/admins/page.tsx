@@ -329,7 +329,7 @@ export default function AdminsPage() {
                             disabled={isCurrentAdmin && role === "SUPER_ADMIN" || actionLoading === `${admin.userId}-${role}-revoke`}
                             className={`p-2 hover:bg-red-500/10 rounded-lg ${
                               isCurrentAdmin && role === "SUPER_ADMIN"
-                                ? "text-gray-400 cursor-not-allowed"
+                                ? "text-foreground-muted cursor-not-allowed"
                                 : "text-red-500"
                             }`}
                             title={isCurrentAdmin && role === "SUPER_ADMIN" ? "无法撤销自己的超级管理员角色" : `撤销 ${role}`}

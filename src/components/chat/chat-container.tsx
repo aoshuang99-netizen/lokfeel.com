@@ -268,16 +268,16 @@ function ChatHeader({ roomInfo, onBack, onReport, onBlock }: ChatHeaderProps) {
 
       {/* Header Actions */}
       <div className="flex items-center gap-0.5">
-        <button className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200" aria-label="Voice call">
+        <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors duration-200" aria-label="Voice call">
           <Phone className="w-[18px] h-[18px] text-foreground-subtle" />
         </button>
-        <button className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200" aria-label="Video call">
+        <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors duration-200" aria-label="Video call">
           <Video className="w-[18px] h-[18px] text-foreground-subtle" />
         </button>
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200"
+            className="p-2 rounded-full hover:bg-background-tertiary transition-colors duration-200"
             aria-label="More options"
           >
             <MoreVertical className="w-[18px] h-[18px] text-foreground-subtle" />
@@ -293,24 +293,24 @@ function ChatHeader({ roomInfo, onBack, onReport, onBlock }: ChatHeaderProps) {
                 transition={{ duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
                 className="absolute right-0 top-full mt-1 w-52 bg-background-secondary rounded-xl border border-card-border/[0.08] shadow-2xl z-50 overflow-hidden"
               >
-                <button className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-white/[0.04] hover:text-foreground/90 transition-colors flex items-center gap-3">
+                <button className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-background-tertiary hover:text-foreground/90 transition-colors flex items-center gap-3">
                   View Profile
                 </button>
-                <button className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-white/[0.04] hover:text-foreground/90 transition-colors flex items-center gap-3">
+                <button className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-background-tertiary hover:text-foreground/90 transition-colors flex items-center gap-3">
                   Mute Notifications
                 </button>
-                <button className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-white/[0.04] hover:text-foreground/90 transition-colors flex items-center gap-3">
+                <button className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-background-tertiary hover:text-foreground/90 transition-colors flex items-center gap-3">
                   Search in Chat
                 </button>
-                <div className="h-px bg-white/[0.06]" />
+                <div className="h-px bg-background-tertiary" />
                 <button
                   onClick={() => { setShowMenu(false); onReport?.(); }}
-                  className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-white/[0.04] hover:text-foreground/90 transition-colors flex items-center gap-3"
+                  className="w-full px-4 py-3 text-left text-sm text-foreground-muted hover:bg-background-tertiary hover:text-foreground/90 transition-colors flex items-center gap-3"
                 >
                   <Shield className="w-4 h-4" />
                   Report User
                 </button>
-                <div className="h-px bg-white/[0.06]" />
+                <div className="h-px bg-background-tertiary" />
                 <button
                   onClick={() => { setShowMenu(false); onBlock?.(); }}
                   className="w-full px-4 py-3 text-left text-sm text-red-400/80 hover:bg-red-500/[0.06] hover:text-red-400 transition-colors flex items-center gap-3"

@@ -36,9 +36,9 @@ function TypingIndicatorComponent({ name, isBot = false, className = "" }: Typin
 
       {/* Typing dots — pure CSS animation */}
       <div className="flex items-center gap-1">
-        <span className="w-2 h-2 bg-white/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite]" />
-        <span className="w-2 h-2 bg-white/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite_0.15s]" />
-        <span className="w-2 h-2 bg-white/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite_0.3s]" />
+        <span className="w-2 h-2 bg-foreground-muted/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite]" />
+        <span className="w-2 h-2 bg-foreground-muted/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite_0.15s]" />
+        <span className="w-2 h-2 bg-foreground-muted/40 rounded-full animate-[typing-dot_1.2s_ease-in-out_infinite_0.3s]" />
       </div>
 
       {/* Label */}

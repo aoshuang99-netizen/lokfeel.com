@@ -143,7 +143,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ reports });
     }
 
-    // TODO: Add admin check for viewing all reports
+    // Admin-only: viewing all reports is not yet implemented
     return NextResponse.json(
       { error: "Invalid request" },
       { status: 400 }

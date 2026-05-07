@@ -87,8 +87,7 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
   const handleReaction = async (reaction: "INTERESTED" | "PASS" | "MAYBE" | "BLOCK") => {
     // Show confirmation dialog for INTERESTED
     if (reaction === "INTERESTED") {
-      const confirmed = window.confirm(`Send interest to ${match?.otherUser.name}?\n\nThey will be notified and can choose to connect with you.`);
-      if (!confirmed) return;
+      // Directly send interest without confirmation
     }
     
     setIsReacting(true);

@@ -214,7 +214,7 @@ interface QuotedMessageProps {
 
 function QuotedMessage({ content, senderName, isFromMe }: QuotedMessageProps) {
   return (
-    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-white/[0.08]' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-amber-400/50' : 'border-card-border'}`}>
+    <div className={`mb-2 px-3 py-2 rounded-lg ${isFromMe ? 'bg-primary/10' : 'bg-black/20'} border-l-2 ${isFromMe ? 'border-amber-400/50' : 'border-card-border'}`}>
       <p className="text-[11px] text-foreground-subtle mb-0.5">
         {senderName ? `${senderName}` : 'Original message'}
       </p>
@@ -321,10 +321,10 @@ function MessageBubbleComponent({
     }
     if (isBot) {
       // Soft, warm AI message style - feels approachable, not robotic
-      return "bg-white/[0.07] text-foreground rounded-bl-sm rounded-2xl border border-card-border/[0.06] backdrop-blur-sm";
+      return "bg-primary/10 text-foreground rounded-bl-sm rounded-2xl border border-card-border/[0.06] backdrop-blur-sm";
     }
     // Other user messages - clean subtle style
-    return "bg-white/[0.08] text-foreground rounded-bl-sm rounded-2xl";
+    return "bg-primary/10 text-foreground rounded-bl-sm rounded-2xl";
   };
 
   // Handle long press / context menu

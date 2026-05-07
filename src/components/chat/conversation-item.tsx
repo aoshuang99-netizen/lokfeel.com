@@ -79,7 +79,7 @@ function Avatar({ name, avatar, isOnline, isBot }: AvatarProps) {
 
   return (
     <div className="relative flex-shrink-0">
-      <div className="w-12 h-12 rounded-full overflow-hidden bg-white/[0.04] flex items-center justify-center ring-1 ring-white/[0.06]">
+      <div className="w-12 h-12 rounded-full overflow-hidden bg-background-tertiary flex items-center justify-center ring-1 ring-white/[0.06]">
         {safeAvatar ? (
           isEmoji ? (
             <div className={`w-full h-full flex items-center justify-center ${
@@ -170,7 +170,7 @@ function ConversationItemComponent({
     <motion.div
       className={`
         flex items-center gap-3 p-3 transition-all duration-200 cursor-pointer
-        ${isSelected ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"}
+        ${isSelected ? "bg-background-tertiary" : "hover:bg-background-tertiary"}
         ${hasUnread ? "bg-amber-600/[0.03]" : ""}
       `}
     >

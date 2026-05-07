@@ -84,7 +84,7 @@ const CharacterCounter = ({ current, min, max }: { current: number; min: number;
             "h-full rounded-full transition-colors",
             isValid 
               ? isNearLimit 
-                ? "bg-gradient-to-r from-[#f59e0b] to-[#ef4444]" 
+                ? "bg-gradient-to-r from-[#4c1d95] to-[#8b5cf6]"
                 : "bg-gradient-to-r from-amber-600 to-rose-500"
               : "bg-white/30"
           )}
@@ -98,7 +98,7 @@ const CharacterCounter = ({ current, min, max }: { current: number; min: number;
           "text-xs font-medium tabular-nums transition-colors",
           isValid 
             ? isNearLimit 
-              ? "text-[#f59e0b]" 
+              ? "text-[#8b5cf6]"
               : "text-foreground-muted"
             : current < min 
               ? "text-foreground-subtle" 

@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   isActive
                     ? "bg-[#c06840]/20 text-[#c06840]"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
+                    : "text-white/60 hover:text-white hover:bg-background-tertiary"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -132,7 +132,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-background-tertiary hover:bg-white/10 transition-all"
             >
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#c06840] to-[#c87878] flex items-center justify-center text-white text-sm font-bold">
                 {session.username[0].toUpperCase()}

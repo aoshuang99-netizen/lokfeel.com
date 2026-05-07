@@ -18,9 +18,9 @@ const colors = {
   textSecondary: "rgba(255, 255, 255, 0.65)",
   input: "rgba(255, 255, 255, 0.05)",
   inputBorder: "rgba(255, 255, 255, 0.12)",
-  inputFocus: "rgba(59, 130, 246, 0.5)",
-  primary: "#3b82f6",
-  primaryHover: "#2563eb",
+  inputFocus: "rgba(76, 29, 149, 0.5)",
+  primary: "#4c1d95",
+  primaryHover: "#7c3aed",
   primaryText: "#ffffff",
   error: "#ef4444",
   errorBg: "rgba(239, 68, 68, 0.1)",
@@ -96,7 +96,7 @@ export default function AdminLoginPage({ error: initialError }: Props) {
           transform: "translateX(-50%)",
           width: "600px",
           height: "400px",
-          background: "radial-gradient(ellipse, rgba(59, 130, 246, 0.08) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse, rgba(76, 29, 149, 0.08) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
@@ -131,11 +131,11 @@ export default function AdminLoginPage({ error: initialError }: Props) {
                 width: "56px",
                 height: "56px",
                 borderRadius: "14px",
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                background: "linear-gradient(135deg, #4c1d95, #7c3aed)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 4px 20px rgba(59, 130, 246, 0.4)",
+                boxShadow: "0 4px 20px rgba(76, 29, 149, 0.4)",
               }}
             >
               <Shield size={28} color="white" />
@@ -308,7 +308,7 @@ export default function AdminLoginPage({ error: initialError }: Props) {
             style={{
               width: "100%",
               padding: "14px",
-              background: isLoading ? "rgba(59, 130, 246, 0.5)" : colors.primary,
+              background: isLoading ? "rgba(76, 29, 149, 0.5)" : colors.primary,
               border: "none",
               borderRadius: "10px",
               color: colors.primaryText,

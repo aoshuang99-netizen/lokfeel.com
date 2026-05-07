@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, Ban, CheckCircle, Eye, ShieldAlert, RefreshCw, ChevronLeft, ChevronRight, Clock, Loader2, Filter, Download, UserX, UserCheck } from "lucide-react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -144,12 +145,12 @@ export default function UsersPage() {
 
   // Batch operations
   const handleBatchBan = async () => {
-    if (!confirm(`Are you sure you want to ban ${selectedUsers.length} selected users?`)) return;
-    alert(`Batch ban ${selectedUsers.length} users (API pending)`);
+    if (!confirm(`确定封禁 ${selectedUsers.length} 个用户？`)) return;
+    toast.info(`批量封禁功能开发中`);
   };
 
   const handleBatchExport = () => {
-    alert(`Export ${selectedUsers.length} users (API pending)`);
+    toast.info(`导出功能开发中`);
   };
 
   const handleBanUser = async () => {

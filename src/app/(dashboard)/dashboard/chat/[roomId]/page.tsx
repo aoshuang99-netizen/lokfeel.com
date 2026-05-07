@@ -449,10 +449,6 @@ export default function ChatRoomPage() {
 
   const handleBlockUser = async () => {
     if (!roomInfo?.otherUser?.id) return;
-    const confirmed = window.confirm(
-      `Block ${roomInfo.otherUser.name}?\n\nThey won't be able to see or message you, and you won't see them.`
-    );
-    if (!confirmed) return;
     setIsBlocking(true);
     try {
       const res = await fetch(`/api/users/${roomInfo.otherUser.id}/block`, {

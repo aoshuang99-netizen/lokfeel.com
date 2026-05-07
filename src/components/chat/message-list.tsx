@@ -201,7 +201,7 @@ function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
         )}
       </div>
       {/* Typing dots + text */}
-      <div className="flex items-center gap-2 bg-white/[0.05] rounded-2xl px-4 py-2.5 border border-card-border/[0.06]">
+      <div className="flex items-center gap-2 bg-background-tertiary rounded-2xl px-4 py-2.5 border border-card-border/[0.06]">
         <div className="flex items-center gap-[3px]">
           <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1.4s" }} />
           <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1.4s" }} />

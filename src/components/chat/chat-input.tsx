@@ -177,7 +177,7 @@ export function ChatInput({
                 <button
                   key={idx}
                   onClick={() => handleQuickReply(reply)}
-                  className="px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-foreground-muted hover:text-foreground/90 text-[13px] transition-all duration-200 border border-card-border/[0.04] hover:border-card-border/[0.08]"
+                  className="px-3 py-1.5 rounded-full bg-background-tertiary hover:bg-background-tertiary text-foreground-muted hover:text-foreground/90 text-[13px] transition-all duration-200 border border-card-border/[0.04] hover:border-card-border/[0.08]"
                 >
                   {reply}
                 </button>
@@ -202,7 +202,7 @@ export function ChatInput({
                 <button
                   key={idx}
                   onClick={() => handleEmojiSelect(emoji)}
-                  className="w-8 h-8 flex items-center justify-center text-lg hover:bg-white/[0.06] rounded-lg transition-colors duration-150"
+                  className="w-8 h-8 flex items-center justify-center text-lg hover:bg-background-tertiary rounded-lg transition-colors duration-150"
                 >
                   {emoji}
                 </button>
@@ -219,7 +219,7 @@ export function ChatInput({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-2 px-3 py-2 rounded-lg bg-white/[0.04] border border-card-border/[0.06] flex items-center gap-2"
+            className="mb-2 px-3 py-2 rounded-lg bg-background-tertiary border border-card-border/[0.06] flex items-center gap-2"
           >
             <Reply className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" />
             <div className="flex-1 min-w-0">
@@ -232,7 +232,7 @@ export function ChatInput({
             </div>
             <button
               onClick={onCancelQuote}
-              className="p-1 rounded-full hover:bg-white/[0.06] text-foreground-subtle hover:text-foreground-muted transition-colors duration-200"
+              className="p-1 rounded-full hover:bg-background-tertiary text-foreground-subtle hover:text-foreground-muted transition-colors duration-200"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -241,7 +241,7 @@ export function ChatInput({
       </AnimatePresence>
 
       {/* 输入框 */}
-      <form onSubmit={handleSend} className="flex items-center gap-1.5 bg-white/[0.04] backdrop-blur-lg border border-card-border/[0.06] rounded-2xl px-2 py-1.5">
+      <form onSubmit={handleSend} className="flex items-center gap-1.5 bg-background-tertiary backdrop-blur-lg border border-card-border/[0.06] rounded-2xl px-2 py-1.5">
         {/* 快捷回复按钮 */}
         <button
           type="button"
@@ -250,7 +250,7 @@ export function ChatInput({
             setShowEmojiPicker(false);
           }}
           className={`p-2 rounded-xl transition-all duration-200 ${
-            showQuickReplies ? "bg-amber-500/15 text-amber-400" : "text-foreground-faint hover:text-foreground-muted hover:bg-white/[0.04]"
+            showQuickReplies ? "bg-amber-500/15 text-amber-400" : "text-foreground-faint hover:text-foreground-muted hover:bg-background-tertiary"
           }`}
           aria-label="Quick replies"
         >
@@ -265,7 +265,7 @@ export function ChatInput({
             setShowQuickReplies(false);
           }}
           className={`p-2 rounded-xl transition-all duration-200 ${
-            showEmojiPicker ? "bg-amber-500/15 text-amber-400" : "text-foreground-faint hover:text-foreground-muted hover:bg-white/[0.04]"
+            showEmojiPicker ? "bg-amber-500/15 text-amber-400" : "text-foreground-faint hover:text-foreground-muted hover:bg-background-tertiary"
           }`}
           aria-label="Emoji"
         >
@@ -277,7 +277,7 @@ export function ChatInput({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className={`p-2 rounded-xl transition-all duration-200 ${
-            isUploading ? "bg-accent-lime/15 text-accent-lime animate-pulse" : "text-foreground-faint hover:text-foreground-muted hover:bg-white/[0.04]"
+            isUploading ? "bg-accent-lime/15 text-accent-lime animate-pulse" : "text-foreground-faint hover:text-foreground-muted hover:bg-background-tertiary"
           }`}
           aria-label="Send image"
           disabled={isUploading || disabled}
@@ -317,7 +317,7 @@ export function ChatInput({
           className={`p-2.5 rounded-xl transition-all duration-200 ${
             message.trim() && !isSending && !disabled
               ? "bg-gradient-to-br from-amber-600 to-amber-500 text-foreground shadow-lg shadow-amber-600/20"
-              : "bg-white/[0.04] text-foreground-faint"
+              : "bg-background-tertiary text-foreground-faint"
           }`}
         >
           {isSending ? (

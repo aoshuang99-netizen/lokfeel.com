@@ -30,7 +30,7 @@ interface EmptyStateProps {
 function EmptyState({ hasSearch, searchQuery }: EmptyStateProps) {
   return (
     <div className="p-8 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-card-border/[0.06] flex items-center justify-center mx-auto mb-4">
+      <div className="w-14 h-14 rounded-2xl bg-background-tertiary border border-card-border/[0.06] flex items-center justify-center mx-auto mb-4">
         <MessageCircle className="w-6 h-6 text-foreground-faint" />
       </div>
       <p className="text-foreground-subtle text-sm">
@@ -62,7 +62,7 @@ function Header({ onNewChat }: HeaderProps) {
           {onNewChat && (
             <button
               onClick={onNewChat}
-              className="p-2 rounded-full hover:bg-white/[0.06] transition-colors duration-200"
+              className="p-2 rounded-full hover:bg-background-tertiary transition-colors duration-200"
               aria-label="New chat"
             >
               <MoreVertical className="w-[18px] h-[18px] text-foreground-subtle" />
@@ -94,7 +94,7 @@ function SearchBar({ value, onChange, placeholder = "Search conversations..." }:
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-white/[0.04] text-foreground placeholder:text-foreground-faint rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-white/10 focus:bg-white/[0.06] transition-all duration-200 border border-transparent focus:border-card-border/[0.06]"
+          className="w-full bg-background-tertiary text-foreground placeholder:text-foreground-faint rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-white/10 focus:bg-background-tertiary transition-all duration-200 border border-transparent focus:border-card-border/[0.06]"
         />
       </div>
     </div>

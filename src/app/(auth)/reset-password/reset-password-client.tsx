@@ -58,7 +58,7 @@ export default function ResetPasswordClient({ token, email }: Props) {
 
     if (score <= 2) return { label: "Weak", color: "#ef4444", width: "33%" };
     if (score <= 3) return { label: "Medium", color: "#f59e0b", width: "66%" };
-    return { label: "Strong", color: "#22c55e", width: "100%" };
+    return { label: "Strong", color: "#a3e635", width: "100%" };
   };
 
   const strength = getPasswordStrength(password);

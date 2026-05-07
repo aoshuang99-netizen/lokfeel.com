@@ -123,7 +123,7 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-error/15 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-gray-400" />
+              <Lock className="w-5 h-5 text-foreground-muted" />
             </div>
             <div>
               <div className="flex items-center gap-2">

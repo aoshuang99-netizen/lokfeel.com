@@ -63,11 +63,11 @@ interface SimulatedMatch {
 
 const DIMENSIONS = [
   { id: "attachment", name: "Attachment", icon: Shield, maxScore: 20, color: "#4c1d95", description: "Emotional bonding style" },
-  { id: "communication", name: "Communication", icon: MessageCircle, maxScore: 15, color: "#3b82f6", description: "How you express & listen" },
+  { id: "communication", name: "Communication", icon: MessageCircle, maxScore: 15, color: "#8b5cf6", description: "How you express & listen" },
   { id: "conflict", name: "Conflict", icon: Brain, maxScore: 15, color: "#f59e0b", description: "Disagreement handling" },
-  { id: "values", name: "Values", icon: Target, maxScore: 15, color: "#10b981", description: "Life priorities & love language" },
-  { id: "lifestyle", name: "Lifestyle", icon: Users, maxScore: 10, color: "#ec4899", description: "Daily habits & goals" },
-  { id: "relationship", name: "Relationship", icon: Heart, maxScore: 15, color: "#ef4444", description: "Relationship type match" },
+  { id: "values", name: "Values", icon: Target, maxScore: 15, color: "#a3e635", description: "Life priorities & love language" },
+  { id: "lifestyle", name: "Lifestyle", icon: Users, maxScore: 10, color: "#f472b6", description: "Daily habits & goals" },
+  { id: "relationship", name: "Relationship", icon: Heart, maxScore: 15, color: "#8b5cf6", description: "Relationship type match" },
   { id: "orientation", name: "Orientation", icon: Sparkles, maxScore: 10, color: "#06b6d4", description: "Sexual orientation align" },
 ];
 
@@ -278,11 +278,11 @@ export function RelationshipEnginePreview({
       
       const dimensions: MatchDimension[] = [
         { id: "attachment", name: "Attachment", icon: Shield, score: Math.round(attachmentScore * 0.20), maxScore: 20, description: "Emotional bonding", color: "#4c1d95" },
-        { id: "communication", name: "Communication", icon: MessageCircle, score: Math.round(communicationScore * 0.15), maxScore: 15, description: "Expression style", color: "#3b82f6" },
+        { id: "communication", name: "Communication", icon: MessageCircle, score: Math.round(communicationScore * 0.15), maxScore: 15, description: "Expression style", color: "#8b5cf6" },
         { id: "conflict", name: "Conflict", icon: Brain, score: Math.round(conflictScore * 0.15), maxScore: 15, description: "Disagreement handling", color: "#f59e0b" },
-        { id: "values", name: "Values", icon: Target, score: Math.round(valuesScore * 0.15), maxScore: 15, description: "Life priorities", color: "#10b981" },
-        { id: "lifestyle", name: "Lifestyle", icon: Users, score: Math.round(lifestyleScore * 0.10), maxScore: 10, description: "Daily habits", color: "#ec4899" },
-        { id: "relationship", name: "Relationship", icon: Heart, score: Math.round(relationshipScore * 0.15), maxScore: 15, description: "Relationship type", color: "#ef4444" },
+        { id: "values", name: "Values", icon: Target, score: Math.round(valuesScore * 0.15), maxScore: 15, description: "Life priorities", color: "#a3e635" },
+        { id: "lifestyle", name: "Lifestyle", icon: Users, score: Math.round(lifestyleScore * 0.10), maxScore: 10, description: "Daily habits", color: "#f472b6" },
+        { id: "relationship", name: "Relationship", icon: Heart, score: Math.round(relationshipScore * 0.15), maxScore: 15, description: "Relationship type", color: "#8b5cf6" },
         { id: "orientation", name: "Orientation", icon: Sparkles, score: Math.round(orientationScore * 0.10), maxScore: 10, description: "Orientation align", color: "#06b6d4" },
       ];
       
@@ -387,7 +387,7 @@ export function RelationshipEnginePreview({
               <div 
                 className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
                 style={{ 
-                  background: currentMatch.compatibility === "high" ? "#10b981" : currentMatch.compatibility === "medium" ? "#f59e0b" : "#ef4444",
+                  background: currentMatch.compatibility === "high" ? "#a3e635" : currentMatch.compatibility === "medium" ? "#f59e0b" : "#ef4444",
                   color: "#000",
                 }}
               >
@@ -461,8 +461,8 @@ export function RelationshipEnginePreview({
             <div 
               className="px-2 py-0.5 rounded-full text-xs font-bold"
               style={{ 
-                background: match.compatibility === "high" ? "rgba(16,185,129,0.2)" : match.compatibility === "medium" ? "rgba(245,158,11,0.2)" : "rgba(239,68,68,0.2)",
-                color: match.compatibility === "high" ? "#10b981" : match.compatibility === "medium" ? "#f59e0b" : "#ef4444",
+                background: match.compatibility === "high" ? "rgba(163, 230, 53, 0.2)" : match.compatibility === "medium" ? "rgba(245,158,11,0.2)" : "rgba(239,68,68,0.2)",
+                color: match.compatibility === "high" ? "#a3e635" : match.compatibility === "medium" ? "#f59e0b" : "#ef4444",
               }}
             >
               {match.overallScore}%
