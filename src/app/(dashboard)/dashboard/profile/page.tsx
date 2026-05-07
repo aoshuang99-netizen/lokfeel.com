@@ -6,7 +6,7 @@ import { signOut } from "next-auth/react";
 import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2, Sparkles, AlertCircle, ImageIcon, Star } from "lucide-react";
 import { LoadingButton } from "@/components/shared/loading";
 import { LocationPicker } from "@/components/ui/location-picker";
-import { GENDER_OPTIONS, SEXUALITY_OPTIONS } from "@/constants";
+import { GENDER_OPTIONS, SEXUALITY_OPTIONS, DOM_SUB_ROLE_OPTIONS } from "@/constants";
 import { toast } from "sonner";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { AvatarLightbox } from "@/components/ui/avatar-lightbox";
@@ -435,6 +435,7 @@ export default function ProfilePage() {
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
 
   // Identity options
+  // Use shared constants — same source as Onboarding for data consistency
   const relationshipTypes = [
     { value: "MONOGAMY", label: "Monogamy", description: "Committed to one person exclusively" },
     { value: "ETHICAL_NON_MONOGAMY", label: "Ethical Non-Monogamy", description: "Open relationships with clear boundaries" },
@@ -442,19 +443,16 @@ export default function ProfilePage() {
     { value: "KINK_BDSM", label: "Kink / BDSM", description: "Power dynamics and alternative practices" },
     { value: "CASUAL_DATING", label: "Casual Dating", description: "No labels, see where it goes" },
     { value: "FRIENDSHIP_FIRST", label: "Friendship First", description: "Build connection before romance" },
+    { value: "LONG_TERM", label: "Long-term Relationship", description: "Looking for something lasting" },
+    { value: "DATING", label: "Dating", description: "Open to dating and seeing what happens" },
+    { value: "NOT_SURE", label: "Not Sure Yet", description: "Still figuring it out" },
   ];
 
-  const sexualOrientations = [
-    { value: "STRAIGHT", label: "Straight" },
-    { value: "GAY", label: "Gay" },
-    { value: "LESBIAN", label: "Lesbian" },
-    { value: "BISEXUAL", label: "Bisexual" },
-    { value: "PANSEXUAL", label: "Pansexual" },
-    { value: "QUEER", label: "Queer" },
-    { value: "ASEXUAL", label: "Asexual" },
-    { value: "DEMISEXUAL", label: "Demisexual" },
-    { value: "QUESTIONING", label: "Questioning" },
-  ];
+  // Use shared SEXUALITY_OPTIONS from constants (24 options, same as Onboarding)
+  const sexualOrientations = SEXUALITY_OPTIONS.map(opt => ({
+    value: opt.value,
+    label: opt.label,
+  }));
 
   if (isLoading) {
     return (

@@ -26,6 +26,7 @@ import {
   Bot,
   User,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
@@ -133,6 +134,8 @@ export default function ChatRoomPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [sendingImage, setSendingImage] = useState(false);
   const hasInitialLoaded = useRef(false);
 
   // Stable reference that always enriches with current roomInfo
@@ -936,10 +939,54 @@ export default function ChatRoomPage() {
             <Smile className="w-5 h-5" />
           </button>
 
-          {/* Attachment Button */}
-          <button className="p-2 rounded-full hover:bg-background-tertiary text-foreground-muted transition-colors">
-            <ImageIcon className="w-5 h-5" />
+          {/* Image Send Button */}
+          <button
+            onClick={() => imageInputRef.current?.click()}
+            disabled={sendingImage}
+            className="p-2 rounded-full hover:bg-background-tertiary text-foreground-muted transition-colors disabled:opacity-30"
+          >
+            {sendingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
           </button>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              if (!file.type.startsWith("image/")) {
+                toast.error("Please select an image file");
+                return;
+              }
+              if (file.size > 5 * 1024 * 1024) {
+                toast.error("Image must be under 5MB");
+                return;
+              }
+              setSendingImage(true);
+              try {
+                const formData = new FormData();
+                formData.append("file", file);
+                const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+                if (!uploadRes.ok) throw new Error("Upload failed");
+                const uploadData = await uploadRes.json();
+                const imageUrl = uploadData.url || uploadData.imageUrl;
+                if (imageUrl) {
+                  await fetch(`/api/chat/${roomId}/messages`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content: imageUrl, type: "IMAGE" }),
+                  });
+                  loadMessagesWithAvatar();
+                }
+              } catch {
+                toast.error("Failed to send image");
+              } finally {
+                setSendingImage(false);
+                e.target.value = "";
+              }
+            }}
+          />
 
           {/* Quick Replies Button */}
           <button

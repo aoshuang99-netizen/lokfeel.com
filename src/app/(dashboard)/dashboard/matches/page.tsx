@@ -30,15 +30,9 @@ interface MatchData {
   pagination: { total: number };
 }
 
-const STATUS_MAP: Record<string, TabType> = {
-  PENDING: "new",
-  ACCEPTED: "accepted",
-  REJECTED: "passed",
-  EXPIRED: "expired",
-};
-
 export default function MatchesPage() {
   const [activeTab, setActiveTab] = useState<TabType>("new");
+  const [showFilter, setShowFilter] = useState(false);
   const { data, isLoading, error, refetch } = useApiGet<MatchData>("/api/matches?limit=50");
   const { post, isLoading: isReacting } = useApiPost();
 
@@ -102,13 +96,38 @@ export default function MatchesPage() {
           <h1 className="text-2xl font-bold text-foreground">Your Matches</h1>
           <p className="text-foreground-muted">Discover curated connections based on your blueprint</p>
         </div>
-        <button className="btn-secondary flex items-center gap-2">
+        <button
+          onClick={() => setShowFilter(prev => !prev)}
+          className="btn-secondary flex items-center gap-2"
+        >
           <Filter className="w-4 h-4" />
           Filter
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* Filter Panel */}
+      {showFilter && (
+        <div className="mb-4 p-4 rounded-xl border border-card-border bg-card">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Filter Matches</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-foreground-muted mb-1 block">Search by name</label>
+              <input type="text" placeholder="Search..." className="w-full px-3 py-2 rounded-lg border border-card-border bg-background text-sm text-foreground" />
+            </div>
+            <div>
+              <label className="text-xs text-foreground-muted mb-1 block">Min Score</label>
+              <select className="w-full px-3 py-2 rounded-lg border border-card-border bg-background text-sm text-foreground">
+                <option>Any score</option>
+                <option>60%+</option>
+                <option>70%+</option>
+                <option>80%+</option>
+                <option>90%+</option>
+              </select>
+            </div>
+          </div>
+          <p className="text-xs text-foreground-muted mt-3">Full filtering coming soon.</p>
+        </div>
+      )}
       <div className="flex gap-2 overflow-x-auto pb-2">
         {tabs.map((tab) => (
           <button
@@ -226,7 +245,10 @@ export default function MatchesPage() {
           <h3 className="text-lg font-semibold text-foreground mb-2">No matches in this category</h3>
           <p className="text-foreground-muted">
             {activeTab === "new" && "Check back soon for new matches!"}
-            {activeTab === "accepted" && "Accept some matches to see them here"}
+            {activeTab === "new" && "No new matches yet. Keep exploring!"}
+            {activeTab === "accepted" && "No accepted matches yet"}
+            {activeTab === "passed" && "No passed matches yet"}
+            {activeTab === "expired" && "No expired matches"}
             {activeTab === "passed" && "Passed matches won't show up here"}
             {activeTab === "expired" && "No expired matches"}
           </p>

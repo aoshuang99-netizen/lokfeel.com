@@ -362,6 +362,7 @@ export default function DiscoverPage() {
   const router = useRouter();
   const [users, setUsers] = useState<DiscoverUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFilter, setShowFilter] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -494,7 +495,11 @@ export default function DiscoverPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors">
+          {/* Filter — toggle panel */}
+          <button
+            onClick={() => setShowFilter(prev => !prev)}
+            className={`p-2 rounded-full hover:bg-background-tertiary transition-colors ${showFilter ? 'bg-background-tertiary' : ''}`}
+          >
             <Filter className="w-4 h-4 text-foreground-muted" />
           </button>
           <button
@@ -515,6 +520,47 @@ export default function DiscoverPage() {
           transition={{ duration: 0.3 }}
         />
       </div>
+
+      {/* ── Filter Panel (Coming Soon) ── */}
+      <AnimatePresence>
+        {showFilter && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden border-b border-card-border"
+          >
+            <div className="px-5 py-4 bg-card">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Filters</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-foreground-muted mb-1 block">Age Range</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" placeholder="18" min="18" max="99"
+                      className="w-full px-3 py-2 rounded-lg border border-card-border bg-background text-sm text-foreground" />
+                    <span className="text-foreground-muted text-sm">-</span>
+                    <input type="number" placeholder="50" min="18" max="99"
+                      className="w-full px-3 py-2 rounded-lg border border-card-border bg-background text-sm text-foreground" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-foreground-muted mb-1 block">Distance</label>
+                  <select className="w-full px-3 py-2 rounded-lg border border-card-border bg-background text-sm text-foreground">
+                    <option>Any distance</option>
+                    <option>5 km</option>
+                    <option>25 km</option>
+                    <option>50 km</option>
+                    <option>100 km</option>
+                  </select>
+                </div>
+              </div>
+              <p className="text-xs text-foreground-muted mt-3">
+                More filters coming soon. Currently showing all available matches.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Card Stack ── */}
       <div className="flex-1 flex flex-col items-center justify-center p-5 min-h-[50vh]">
@@ -573,8 +619,23 @@ export default function DiscoverPage() {
             <X className="w-7 h-7" />
           </button>
 
-          {/* Super Like */}
+          {/* Super Like — send INTERESTED reaction */}
           <button
+            onClick={async () => {
+              if (currentIndex >= users.length) return;
+              const user = users[currentIndex];
+              try {
+                await fetch("/api/matches/react", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ targetUserId: user.id, reaction: "INTERESTED" }),
+                });
+                toast.success(`Super liked ${user.name}! ⭐`);
+                setCurrentIndex(prev => prev + 1);
+              } catch {
+                toast.error("Failed to super like");
+              }
+            }}
             disabled={currentIndex >= users.length}
             className="w-10 h-10 rounded-full border border-blue-500/40 hover:border-blue-500 hover:bg-blue-500/10 text-blue-500 flex items-center justify-center transition-all disabled:opacity-30"
             style={{ transitionTimingFunction: EASING }}

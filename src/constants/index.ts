@@ -635,7 +635,7 @@ export const DOM_SUB_ROLE_OPTIONS = [
   { value: 'LITTLE', label: 'Little', emoji: '🧒', group: 'Specialized', description: 'Age regression dynamic' },
   { value: 'MASTEX', label: 'Master/Mistress', emoji: '⛓️', group: 'Specialized', description: 'Total power exchange' },
   // Fallback
-  { value: 'PREFER_NOT_TO_SAY', label: 'Prefer not to say', emoji: '🤐', group: 'Other' },
+  { value: 'PREFER_NOT_TO_SAY', label: 'Prefer not to say', emoji: '🤐', group: 'Other', description: 'Not ready to label yet' },
 ] as const
 
 // ============================================================================

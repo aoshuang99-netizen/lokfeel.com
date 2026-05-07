@@ -17,82 +17,18 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { GENDER_OPTIONS, SEXUALITY_OPTIONS, DOM_SUB_ROLE_OPTIONS as ALL_DOM_SUB_ROLES } from "@/constants";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { AvatarLightbox } from "@/components/ui/avatar-lightbox";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 
-// ══════════════════════════════════════
-// SEXUAL ORIENTATION TAGS (Primary Filter)
-// ══════════════════════════════════════
-
-// ══════════════════════════════════════
-// GENDER IDENTITY OPTIONS (Phase B: 18 options)
-// ══════════════════════════════════════
-
-const GENDER_IDENTITY_OPTIONS = [
-  { value: "WOMAN", label: "Woman", emoji: "👩", group: "Core" },
-  { value: "MAN", label: "Man", emoji: "👨", group: "Core" },
-  { value: "NON_BINARY", label: "Non-binary", emoji: "🏳️‍🌈", group: "Core" },
-  { value: "TRANSGENDER_MAN", label: "Trans Man", emoji: "🧑", group: "Trans" },
-  { value: "TRANSGENDER_WOMAN", label: "Trans Woman", emoji: "👩", group: "Trans" },
-  { value: "GENDERQUEER", label: "Genderqueer", emoji: "🌈", group: "Non-binary" },
-  { value: "GENDERFLUID", label: "Genderfluid", emoji: "🌊", group: "Non-binary" },
-  { value: "AGENDER", label: "Agender", emoji: "⚪", group: "Non-binary" },
-  { value: "BIGENDER", label: "Bigender", emoji: "✨", group: "Non-binary" },
-  { value: "PANGENDER", label: "Pangender", emoji: "🌟", group: "Non-binary" },
-  { value: "TWO_SPIRIT", label: "Two-Spirit", emoji: "🪶", group: "Cultural" },
-  { value: "QUESTIONING", label: "Questioning", emoji: "❓", group: "Exploring" },
-  { value: "OTHER", label: "Other", emoji: "➕", group: "Other" },
-  { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say", emoji: "🤐", group: "Other" },
-];
-
-// ══════════════════════════════════════
-// SEXUAL ORIENTATION TAGS (Phase B: 24 options, grouped)
-// ══════════════════════════════════════
-
-const SEXUAL_ORIENTATION_TAGS = [
-  { value: "STRAIGHT", label: "Straight", emoji: "💕", color: "#FF6B9D", group: "Monosexual" },
-  { value: "GAY", label: "Gay", emoji: "🌈", color: "#FF8C42", group: "Monosexual" },
-  { value: "LESBIAN", label: "Lesbian", emoji: "💜", color: "#9B59B6", group: "Monosexual" },
-  { value: "BISEXUAL", label: "Bisexual", emoji: "💗", color: "#E91E63", group: "Multi-gender" },
-  { value: "PANSEXUAL", label: "Pansexual", emoji: "💛", color: "#FFD93D", group: "Multi-gender" },
-  { value: "POLYSEXUAL", label: "Polysexual", emoji: "💚", color: "#4CAF50", group: "Multi-gender" },
-  { value: "OMNISEXUAL", label: "Omnisexual", emoji: "🧡", color: "#FF9800", group: "Multi-gender" },
-  { value: "HETEROFLEXIBLE", label: "Heteroflexible", emoji: "🌈", color: "#64B5F6", group: "Multi-gender" },
-  { value: "ASEXUAL", label: "Asexual", emoji: "🤍", color: "#9E9E9E", group: "Ace Spectrum" },
-  { value: "DEMISEXUAL", label: "Demisexual", emoji: "💙", color: "#3F51B5", group: "Ace Spectrum" },
-  { value: "GRAYSEXUAL", label: "Graysexual", emoji: "🖤", color: "#795548", group: "Ace Spectrum" },
-  { value: "QUEER", label: "Queer", emoji: "🌟", color: "#00BCD4", group: "Identity" },
-  { value: "QUESTIONING", label: "Exploring", emoji: "🔮", color: "#673AB7", group: "Identity" },
-  { value: "SAPPIOSEXUAL", label: "Sapiosexual", emoji: "🧠", color: "#607D8B", group: "Attraction" },
-  { value: "AROMANTIC", label: "Aromantic", emoji: "🖤", color: "#424242", group: "Romantic" },
-  { value: "BIROMANTIC", label: "Biromantic", emoji: "💕", color: "#E91E63", group: "Romantic" },
-  { value: "OTHER", label: "Other", emoji: "➕", color: "#78909C", group: "Other" },
-  { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say", emoji: "🤐", color: "#B0BEC5", group: "Other" },
-];
-
-// ══════════════════════════════════════
-// DOM/SUB ROLE OPTIONS (Phase B: conditional on KINK_BDSM)
-// ══════════════════════════════════════
-
-const DOM_SUB_ROLE_OPTIONS = [
-  { value: "DOMINANT", label: "Dominant", emoji: "👑", desc: "Takes the lead" },
-  { value: "SUBMISSIVE", label: "Submissive", emoji: "🦋", desc: "Yields control" },
-  { value: "SWITCH", label: "Switch", emoji: "🔄", desc: "Flows between both" },
-  { value: "VANILLA", label: "Vanilla", emoji: "☕", desc: "Traditional" },
-  { value: "TOP", label: "Top", emoji: "⬆️", desc: "Active role" },
-  { value: "BOTTOM", label: "Bottom", emoji: "⬇️", desc: "Passive role" },
-  { value: "BRAT", label: "Brat", emoji: "😈", desc: "Playfully challenges" },
-  { value: "PRIMAL", label: "Primal", emoji: "🐺", desc: "Instinct-driven" },
-  { value: "RIGGER", label: "Rigger", emoji: "🪢", desc: "Bondage artist" },
-  { value: "ROPE_BUNNY", label: "Rope Bunny", emoji: "🐰", desc: "Enjoys being tied" },
-  { value: "SADIST", label: "Sadist", emoji: "⚔️", desc: "Gives sensation" },
-  { value: "MASOCHIST", label: "Masochist", emoji: "🔥", desc: "Receives sensation" },
-  { value: "DADDY_MOMMY", label: "Daddy/Mommy", emoji: "🧸", desc: "Caregiver" },
-  { value: "LITTLE", label: "Little", emoji: "🧒", desc: "Age regression" },
-  { value: "EXPLORING", label: "Exploring", emoji: "🔍", desc: "Curious beginner" },
-  { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say", emoji: "🤐", desc: "" },
-];
+// Use shared constants — Onboarding and Profile must reference the SAME source
+// Gender: 18 options from constants (same as Profile)
+const GENDER_IDENTITY_OPTIONS = GENDER_OPTIONS;
+// Sexuality: 24 options from constants (same as Profile)
+const SEXUAL_ORIENTATION_TAGS = SEXUALITY_OPTIONS;
+// Dom/Sub: 16 options from constants (no truncation)
+const DOM_SUB_ROLE_OPTIONS = ALL_DOM_SUB_ROLES;
 
 const KINK_EXPERIENCE_OPTIONS = [
   { value: "BEGINNER", label: "Beginner", emoji: "🌱", desc: "New to kink" },
@@ -202,7 +138,16 @@ const CARTOON_AVATARS = [
 // SIMPLIFIED STEPS (4 Steps + Result)
 // ══════════════════════════════════════
 
+const US_CITIES = [
+  "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia",
+  "San Antonio", "San Diego", "Dallas", "San Jose", "Austin", "Jacksonville",
+  "Fort Worth", "Columbus", "Charlotte", "San Francisco", "Indianapolis",
+  "Seattle", "Denver", "Washington DC", "Boston", "El Paso", "Nashville",
+  "Portland", "Las Vegas", "Memphis", "Louisville", "Baltimore", "Milwaukee", "Albuquerque",
+];
+
 const STEPS = [
+  { id: "basics", title: "Welcome", subtitle: "Let's get to know you" },
   { id: "desire", title: "Your Desire", subtitle: "What are you looking for?" },
   { id: "identity", title: "Your Identity", subtitle: "How do you love?" },
   { id: "traits", title: "Your Traits", subtitle: "What makes you, you?" },
@@ -416,6 +361,11 @@ function OnboardingV3Page() {
   const [userGender, setUserGender] = useState<"man" | "woman" | "other" | null>(null);
 
   const [data, setData] = useState({
+    // Step 0: Basics
+    displayName: "" as string,
+    birthDate: "" as string,
+    location: "" as string,
+    age: 0 as number,
     // Step 1: Desire
     relationshipDesire: "" as string,
     // Step 2: Identity
@@ -446,24 +396,32 @@ function OnboardingV3Page() {
     try {
       const stepPayload: Record<string, any> = { onboardingStep: stepIndex + 1 };
 
-      // Include data relevant to completed steps
-      if (stepIndex >= 0 && data.relationshipDesire) {
+      // Step 0: Basics — save displayName, age (computed), city
+      if (data.displayName) stepPayload.displayName = data.displayName.trim();
+      if (data.age > 0) stepPayload.age = data.age;
+      if (data.location) stepPayload.city = data.location;
+
+      // Step 1: Desire
+      if (stepIndex >= 1 && data.relationshipDesire) {
         stepPayload.relationshipGoal = data.relationshipDesire;
       }
-      if (stepIndex >= 1) {
+      // Step 2: Identity + Power Dynamics
+      if (stepIndex >= 2) {
         if (data.gender) stepPayload.gender = data.gender;
         if (data.sexualOrientation) stepPayload.sexuality = data.sexualOrientation;
       }
-      if (stepIndex >= 1) {
+      if (stepIndex >= 2) {
         if (data.domSubRole) stepPayload.domSubRole = data.domSubRole;
         if (data.kinkExperienceLevel) stepPayload.kinkExperienceLevel = data.kinkExperienceLevel;
       }
-      if (stepIndex >= 2) {
+      // Step 3: Traits
+      if (stepIndex >= 3) {
         if (data.attachmentStyle) stepPayload.attachmentStyle = data.attachmentStyle;
         if (data.communicationStyle) stepPayload.communicationStyle = data.communicationStyle;
         if (data.loveLanguage) stepPayload.loveLanguage = data.loveLanguage;
       }
-      if (stepIndex >= 3 && data.avatarUrl) {
+      // Step 4: Photo
+      if (stepIndex >= 4 && data.avatarUrl) {
         stepPayload.avatar = data.avatarType === "cartoon" && data.selectedCartoonId
           ? `emoji:${CARTOON_AVATARS.find(c => c.id === data.selectedCartoonId)?.emoji}:${CARTOON_AVATARS.find(c => c.id === data.selectedCartoonId)?.color}`
           : data.avatarUrl;
@@ -515,6 +473,10 @@ function OnboardingV3Page() {
           const p = profileData.profile;
           setData(prev => ({
             ...prev,
+            displayName: p.displayName || "",
+            birthDate: "",
+            location: p.city || "",
+            age: p.age || 0,
             relationshipDesire: p.relationshipGoal || p.relationshipType || "",
             gender: p.gender || "",
             sexualOrientation: p.sexuality || p.sexualOrientation || "",
@@ -528,7 +490,7 @@ function OnboardingV3Page() {
           }));
 
           // Restore step position from saved onboardingStep
-          // onboardingStep 1-4 maps to stepIndex 0-3; step 5+ means at result page
+          // onboardingStep 1-5 maps to stepIndex 0-4; step 6+ means at result page
           if (p.onboardingStep && p.onboardingStep > 0 && p.onboardingStep < 9) {
             const restoredIndex = Math.min(p.onboardingStep - 1, STEPS.length - 1);
             setCurrentStepIndex(restoredIndex);
@@ -556,6 +518,8 @@ function OnboardingV3Page() {
 
   const canProceed = (): boolean => {
     switch (currentStep.id) {
+      case "basics":
+        return !!data.displayName && data.displayName.trim().length >= 2;
       case "desire":
         return !!data.relationshipDesire;
       case "identity":
@@ -715,20 +679,27 @@ function OnboardingV3Page() {
 
       // Build profile data with proper field mappings
       const payload: Record<string, any> = {
-        // Map relationship desire to relationshipGoal
+        // Step 0: Basics
+        ...(data.displayName ? { displayName: data.displayName.trim() } : {}),
+        ...(data.age > 0 ? { age: data.age } : {}),
+        ...(data.location ? { city: data.location } : {}),
+        // Step 1: Map relationship desire to relationshipGoal
         relationshipGoal: data.relationshipDesire,
-        // Phase B: Gender identity
+        // Step 2: Phase B — Gender identity
         gender: data.gender || undefined,
         // Map sexual orientation to sexuality
         sexuality: data.sexualOrientation,
         // Phase B: Power dynamics (only if KINK_BDSM or role selected)
         ...(data.domSubRole ? { domSubRole: data.domSubRole } : {}),
         ...(data.kinkExperienceLevel ? { kinkExperienceLevel: data.kinkExperienceLevel } : {}),
+        // Step 3: Traits
         attachmentStyle: data.attachmentStyle,
         communicationStyle: data.communicationStyle,
         loveLanguage: data.loveLanguage,
+        // Step 4: Photo
         avatar: finalAvatarUrl,
         avatarType: data.avatarType,
+        // Mark onboarding complete
         onboardingStep: 9,
         profileStatus: "APPROVED",
       };
@@ -833,6 +804,118 @@ function OnboardingV3Page() {
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-md mx-auto"
           >
+            {/* ═══ STEP 0: BASICS ═══ */}
+            {currentStep.id === "basics" && (
+              <div className="py-4">
+                <div className="text-center mb-8">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4"
+                  >
+                    <Sparkles className="w-8 h-8 text-foreground" />
+                  </motion.div>
+                  <h1 className="text-2xl font-bold mb-2">
+                    Welcome to <span className="text-primary">LokFeel</span>
+                  </h1>
+                  <p className="text-sm text-foreground-muted">
+                    A few basics to get you started
+                  </p>
+                </div>
+
+                <div className="space-y-5">
+                  {/* Display Name */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <label className="block text-xs font-medium text-foreground-muted mb-1.5">
+                      Name or Nickname <span className="text-pink-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={data.displayName}
+                      onChange={(e) => setData(prev => ({ ...prev, displayName: e.target.value }))}
+                      placeholder="Your name or nickname"
+                      maxLength={30}
+                      className="w-full px-4 py-3 rounded-xl border-2 bg-background-tertiary text-foreground placeholder:text-foreground-tertiary focus:border-primary focus:outline-none transition-colors text-sm"
+                    />
+                    <p className="text-[10px] text-foreground-tertiary mt-1">2-30 characters. This is what others will see.</p>
+                  </motion.div>
+
+                  {/* Birth Date */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <label className="block text-xs font-medium text-foreground-muted mb-1.5">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      value={data.birthDate}
+                      onChange={(e) => {
+                        const bd = e.target.value;
+                        const age = bd ? new Date().getFullYear() - new Date(bd).getFullYear() : 0;
+                        setData(prev => ({ ...prev, birthDate: bd, age }));
+                      }}
+                      max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
+                      min={new Date(Date.now() - 100 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
+                      className="w-full px-4 py-3 rounded-xl border-2 bg-background-tertiary text-foreground focus:border-primary focus:outline-none transition-colors text-sm"
+                    />
+                    {data.age > 0 && (
+                      <p className="text-[10px] text-foreground-tertiary mt-1">You are {data.age} years old</p>
+                    )}
+                  </motion.div>
+
+                  {/* Location */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <label className="block text-xs font-medium text-foreground-muted mb-1.5">
+                      Your City
+                    </label>
+                    <input
+                      type="text"
+                      value={data.location}
+                      onChange={(e) => setData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="Your city"
+                      list="city-suggestions"
+                      className="w-full px-4 py-3 rounded-xl border-2 bg-background-tertiary text-foreground placeholder:text-foreground-tertiary focus:border-primary focus:outline-none transition-colors text-sm"
+                    />
+                    <datalist id="city-suggestions">
+                      {US_CITIES.map(city => (
+                        <option key={city} value={city} />
+                      ))}
+                    </datalist>
+                    <p className="text-[10px] text-foreground-tertiary mt-1">Used for finding matches near you</p>
+                  </motion.div>
+                </div>
+
+                {/* Continue Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-8"
+                >
+                  <button
+                    onClick={goNext}
+                    disabled={!canProceed()}
+                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-primary to-secondary text-foreground font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+                  >
+                    Continue
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              </div>
+            )}
+
             {/* ═══ STEP 1: DESIRE ═══ */}
             {currentStep.id === "desire" && (
               <div className="py-4">
@@ -902,7 +985,7 @@ function OnboardingV3Page() {
                         <p className="text-xs text-foreground-muted mb-3">Optional — skip if you prefer to explore later</p>
 
                         <div className="grid grid-cols-2 gap-2">
-                          {DOM_SUB_ROLE_OPTIONS.slice(0, 10).map((role) => (
+                          {DOM_SUB_ROLE_OPTIONS.map((role) => (
                             <button
                               key={role.value}
                               onClick={() => setData(prev => ({ ...prev, domSubRole: role.value }))}
@@ -916,7 +999,7 @@ function OnboardingV3Page() {
                                 <span className="text-base">{role.emoji}</span>
                                 <div>
                                   <span className="font-medium text-foreground text-xs block">{role.label}</span>
-                                  <span className="text-[10px] text-foreground-muted">{role.desc}</span>
+                                  <span className="text-[10px] text-foreground-muted">{role.description}</span>
                                 </div>
                               </div>
                             </button>
@@ -1346,7 +1429,7 @@ function OnboardingV3Page() {
                     <div className="mt-4 pt-4 border-t border-primary/10">
                       <div className="flex items-center gap-2 text-xs text-foreground-muted">
                         <span className="w-2 h-2 rounded-full bg-green-500" />
-                        <span>Based on 50,000+ user matching data analysis</span>
+                        <span>Analysis based on your relationship blueprint</span>
                       </div>
                     </div>
                   </div>

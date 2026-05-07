@@ -1,41 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useIMConversations, useIMMessages } from "@/hooks/useIM";
-import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import {
-  Send,
-  MessageCircle,
-  ChevronLeft,
-  Lock,
-  Flame,
-  Clock,
-  Bot,
-  User,
-  Sparkles,
-  Phone,
-  Video,
-  MoreVertical,
-  ArrowLeft,
-  ShieldAlert,
-  Ban,
-  Image as ImageIcon,
-  Mic,
-  Smile,
-  Zap,
-  X,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
-
-// Design tokens
-const EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+import { MessageCircle, Flame } from "lucide-react";
 
 // ══════════════════════════════════════
 // MAIN CHAT PAGE (Fallback when no room selected)
