@@ -2,7 +2,7 @@
 
 /**
  * LoginInnerClient — Client-side login UI
- * LIGHT THEME: White + Charcoal, professional clean style
+ * DATEASY DARK: Deep Purple + Lime, dark-first style
  */
 
 import { useState } from "react";
@@ -10,23 +10,23 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
-// ─── LIGHT THEME STYLE CONSTANTS ───────────────────────────────
+// ─── DATEASY DARK THEME STYLE CONSTANTS ───────────────────────────
 const colors = {
-  bg: "rgba(255,255,255,0.95)",
-  border: "rgba(0,0,0,0.08)",
-  text: "#1a1a2e",
-  textMuted: "rgba(0,0,0,0.45)",
-  textSecondary: "rgba(0,0,0,0.65)",
-  input: "#f8f8fc",
-  inputBorder: "rgba(0,0,0,0.12)",
-  inputFocus: "rgba(232, 160, 56, 0.5)",
-  inputPlaceholder: "rgba(0,0,0,0.3)",
-  primary: "#e8a038",
-  primaryBg: "#e8a038",
-  primaryText: "#fff",
-  error: "#dc2626",
-  errorBg: "rgba(239,68,68,0.08)",
-  errorBorder: "rgba(239,68,68,0.2)",
+  bg: "rgba(17, 17, 17, 0.95)",
+  border: "rgba(76, 29, 149, 0.15)",
+  text: "#ffffff",
+  textMuted: "rgba(255,255,255,0.45)",
+  textSecondary: "rgba(255,255,255,0.65)",
+  input: "rgba(26, 26, 26, 0.8)",
+  inputBorder: "rgba(85, 85, 85, 0.4)",
+  inputFocus: "rgba(76, 29, 149, 0.5)",
+  inputPlaceholder: "rgba(255,255,255,0.3)",
+  primary: "#a3e635",
+  primaryBg: "#a3e635",
+  primaryText: "#0a0a0a",
+  error: "#fb7185",
+  errorBg: "rgba(251,113,133,0.08)",
+  errorBorder: "rgba(251,113,133,0.2)",
 };
 
 interface Props {
@@ -136,7 +136,7 @@ export default function LoginInnerClient({
         backdropFilter: "blur(20px)",
         borderRadius: "24px",
         border: `1px solid ${colors.border}`,
-        boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
       }}
     >
       {/* Header */}
@@ -157,7 +157,7 @@ export default function LoginInnerClient({
               height: "48px",
               borderRadius: "12px",
               overflow: "hidden",
-              background: "linear-gradient(135deg, #e8a038, #c85050)",
+              background: "linear-gradient(135deg, #4c1d95, #8b5cf6)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -343,7 +343,7 @@ export default function LoginInnerClient({
           style={{
             width: "100%",
             padding: "14px",
-            background: isLoading ? "rgba(232,160,56,0.5)" : colors.primaryBg,
+            background: isLoading ? "rgba(163,230,53,0.5)" : colors.primaryBg,
             border: "none",
             borderRadius: "12px",
             color: colors.primaryText,
