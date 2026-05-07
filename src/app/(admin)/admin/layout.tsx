@@ -89,18 +89,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="min-h-screen bg-[#1a1614] flex">
+    <div className="min-h-screen bg-background-primary flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#12111e] border-r border-white/5 flex flex-col">
+      <aside className="w-64 bg-background-secondary border-r border-white/5 flex flex-col">
         {/* Logo */}
         <div className="p-6 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#c06840] to-[#c87878] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4c1d95] to-[#8b5cf6] flex items-center justify-center">
               <ShieldAlert className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-white font-bold">Admin Console</h1>
-              <p className="text-xs text-white/40">H后台管理系统</p>
+              <p className="text-xs text-white/40">后台管理系统</p>
             </div>
           </div>
         </div>

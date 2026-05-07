@@ -196,8 +196,8 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
           <polygon
             key={i}
             points={circlePoints}
-            fill={i % 2 === 0 ? "oklch(88% 0.02 55 / 0.5)" : "none"}
-            stroke="oklch(55% 0.04 40 / 0.35)"
+            fill={i % 2 === 0 ? "rgba(139, 92, 246, 0.1)" : "none"}
+            stroke="rgba(139, 92, 246, 0.2)"
             strokeWidth={1}
           />
         );
@@ -215,7 +215,7 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
             y1={center}
             x2={x2}
             y2={y2}
-            stroke="oklch(55% 0.04 40 / 0.3)"
+            stroke="rgba(139, 92, 246, 0.15)"
             strokeWidth={1}
           />
         );
@@ -224,8 +224,8 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
       {/* Data filled area */}
       <path
         d={pathData}
-        fill="oklch(68% 0.12 40 / 0.18)"
-        stroke="oklch(68% 0.14 40)"
+        fill="rgba(76, 29, 149, 0.18)"
+        stroke="#4c1d95"
         strokeWidth={2.5}
         strokeLinejoin="round"
       />
@@ -235,9 +235,9 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
         const { x, y } = getCoordinates(d.value, i);
         return (
           <g key={i}>
-            <circle cx={x} cy={y} r={7} fill="oklch(68% 0.12 40 / 0.15)" />
-            <circle cx={x} cy={y} r={4.5} fill="oklch(68% 0.14 40)" />
-            <circle cx={x} cy={y} r={2} fill="oklch(98% 0.005 55)" />
+            <circle cx={x} cy={y} r={7} fill="rgba(76, 29, 149, 0.15)" />
+            <circle cx={x} cy={y} r={4.5} fill="#4c1d95" />
+            <circle cx={x} cy={y} r={2} fill="#a3e635" />
           </g>
         );
       })}
@@ -255,7 +255,7 @@ function RadarChart({ data }: { data: { label: string; value: number }[] }) {
             y={y}
             textAnchor="middle"
             dominantBaseline="central"
-            fill="oklch(25% 0.03 40)"
+            fill="rgba(139, 92, 246, 0.3)"
             fontSize={12}
             fontWeight={700}
           >
@@ -1089,7 +1089,7 @@ function OnboardingV3Page() {
                         }}
                         className={`px-3 py-2 rounded-full border-2 transition-all flex items-center gap-1.5 ${
                           data.sexualOrientation === tag.value
-                            ? "border-white bg-white text-black"
+                            ? "border-accent-lime bg-accent-lime/20 text-accent-lime"
                             : "border-card-border bg-background-tertiary text-foreground hover:border-card-border/40"
                         }`}
                       >
@@ -1264,8 +1264,8 @@ function OnboardingV3Page() {
                         onClick={() => !isUploading && fileInputRef.current?.click()}
                         className="w-36 h-36 rounded-full overflow-hidden flex items-center justify-center border-4 transition-all cursor-pointer hover:scale-105 active:scale-95"
                         style={{
-                          borderColor: "oklch(70% 0.02 40 / 0.25)",
-                          background: "oklch(70% 0.02 40 / 0.06)",
+                          borderColor: "rgba(76, 29, 149, 0.25)",
+                          background: "rgba(76, 29, 149, 0.06)",
                         }}
                       >
                         <div className="flex flex-col items-center gap-2">
@@ -1299,8 +1299,8 @@ function OnboardingV3Page() {
                     disabled={isUploading}
                     className="flex flex-col items-center justify-center gap-2.5 p-5 rounded-2xl border-2 border-dashed transition-all hover:border-primary/30 active:scale-[0.97]"
                     style={{
-                      borderColor: "oklch(70% 0.02 40 / 0.2)",
-                      background: "oklch(70% 0.02 40 / 0.04)",
+                      borderColor: "rgba(76, 29, 149, 0.2)",
+                      background: "rgba(76, 29, 149, 0.04)",
                     }}
                   >
                     {isUploading ? (
@@ -1320,16 +1320,16 @@ function OnboardingV3Page() {
                     disabled={isUploading}
                     className="flex flex-col items-center justify-center gap-2.5 p-5 rounded-2xl border-2 border-dashed transition-all hover:border-emerald-500/30 active:scale-[0.97]"
                     style={{
-                      borderColor: data.avatarUrl ? "rgba(16,185,129,0.5)" : "oklch(70% 0.02 40 / 0.3)",
-                      background: data.avatarUrl ? "rgba(16,185,129,0.08)" : "oklch(70% 0.02 40 / 0.06)",
+                      borderColor: data.avatarUrl ? "rgba(16,185,129,0.5)" : "rgba(76, 29, 149, 0.3)",
+                      background: data.avatarUrl ? "rgba(16,185,129,0.08)" : "rgba(76, 29, 149, 0.06)",
                     }}
                   >
                     {isUploading ? (
                       <Loader2 className="w-6 h-6 animate-spin text-foreground-muted" />
                     ) : (
-                      <Upload className="w-6 h-6" style={{ color: data.avatarUrl ? "#10B981" : "oklch(45% 0.02 40)" }} />
+                      <Upload className="w-6 h-6" style={{ color: data.avatarUrl ? "#10B981" : "#888888" }} />
                     )}
-                    <span className="text-sm font-medium" style={{ color: data.avatarUrl ? "#10B981" : "oklch(45% 0.02 40)" }}>
+                    <span className="text-sm font-medium" style={{ color: data.avatarUrl ? "#10B981" : "#888888" }}>
                       {data.avatarUrl ? "Change Photo" : "From Gallery"}
                     </span>
                   </button>
@@ -1410,7 +1410,7 @@ function OnboardingV3Page() {
                   {/* AI Analysis — full width card */}
                   <div className="rounded-2xl p-6 border border-primary/20"
                     style={{
-                      background: "linear-gradient(135deg, oklch(68% 0.06 40 / 0.08) 0%, oklch(72% 0.06 20 / 0.06) 100%)",
+                      background: "linear-gradient(135deg, rgba(76, 29, 149, 0.08) 0%, rgba(139, 92, 246, 0.06) 100%)",
                     }}
                   >
                     <div className="flex items-center gap-2 mb-3.5">
@@ -1485,7 +1485,7 @@ function OnboardingV3Page() {
             <button
               onClick={goNext}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-8 py-2.5 rounded-xl text-sm font-medium bg-white text-black disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/90 transition-colors"
+              className="flex items-center gap-2 px-8 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-[#4c1d95] to-[#8b5cf6] text-white disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
             >
               {currentStepIndex === STEPS.length - 2 ? "See Results" : "Continue"}
               <ArrowRight className="w-4 h-4" />

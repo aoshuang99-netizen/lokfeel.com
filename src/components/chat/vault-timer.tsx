@@ -44,7 +44,7 @@ function getStatusBadge(status: string): { text: string; className: string } {
     case "EXTENDED":
       return { text: "Extended", className: "bg-blue-500/20 text-blue-400" };
     case "EXPIRED":
-      return { text: "Expired", className: "bg-gray-500/20 text-gray-400" };
+      return { text: "Expired", className: "bg-error/15 text-error" };
     case "REVOKED":
       return { text: "Ended", className: "bg-red-500/20 text-red-400" };
     default:
@@ -122,7 +122,7 @@ export function VaultTimer({ roomId, isFemale }: VaultTimerProps) {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-error/15 flex items-center justify-center">
               <Lock className="w-5 h-5 text-gray-400" />
             </div>
             <div>

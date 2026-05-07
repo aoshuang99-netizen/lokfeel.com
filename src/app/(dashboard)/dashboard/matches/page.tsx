@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Heart, X, MessageCircle, Filter, User, Loader2 } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
@@ -38,20 +38,20 @@ export default function MatchesPage() {
 
   const matches = data?.matches || [];
 
-  const filteredMatches = matches.filter((m) => {
+  const filteredMatches = useMemo(() => matches.filter((m) => {
     if (activeTab === "new") return m.status === "PENDING" && m.myReaction === null;
     if (activeTab === "accepted") return m.status === "ACCEPTED";
     if (activeTab === "passed") return m.myReaction === "PASS" || m.status === "REJECTED";
     if (activeTab === "expired") return m.status === "EXPIRED";
     return true;
-  });
+  }), [matches, activeTab]);
 
-  const tabs: { id: TabType; label: string; count: number }[] = [
+  const tabs: { id: TabType; label: string; count: number }[] = useMemo(() => [
     { id: "new", label: "New", count: matches.filter((m) => m.status === "PENDING" && m.myReaction === null).length },
     { id: "accepted", label: "Accepted", count: matches.filter((m) => m.status === "ACCEPTED").length },
     { id: "passed", label: "Passed", count: matches.filter((m) => m.myReaction === "PASS" || m.status === "REJECTED").length },
     { id: "expired", label: "Expired", count: matches.filter((m) => m.status === "EXPIRED").length },
-  ];
+  ], [matches]);
 
   const handleReact = async (matchId: string, reaction: string) => {
     const result = await post(`/api/matches/${matchId}`, { reaction });

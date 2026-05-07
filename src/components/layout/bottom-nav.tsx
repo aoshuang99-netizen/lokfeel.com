@@ -148,7 +148,7 @@ export default function BottomNav() {
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-          style={{ background: "rgba(20,10,5,0.5)", backdropFilter: "blur(4px)" }}
+          style={{ background: "rgba(10,10,10,0.7)", backdropFilter: "blur(4px)" }}
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div

@@ -327,7 +327,7 @@ export default function ActivityPage() {
                 className={`rounded-xl p-4 transition-colors ${
                   !activity.read
                     ? "bg-primary/5 border border-primary/20"
-                    : "bg-white/[0.03] border border-card-border"
+                    : "bg-background-tertiary border border-card-border"
                 }`}
               >
                 <div className="flex items-center gap-3">

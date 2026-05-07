@@ -37,6 +37,13 @@ interface EmojiButtonProps {
 }
 
 function EmojiButton({ emoji, isSelected, onClick, onHover }: EmojiButtonProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <motion.button
       whileHover={{ scale: 1.2 }}
@@ -44,6 +51,8 @@ function EmojiButton({ emoji, isSelected, onClick, onHover }: EmojiButtonProps) 
       onClick={onClick}
       onMouseEnter={onHover}
       onTouchStart={onHover}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
       className={`
         w-8 h-8 flex items-center justify-center rounded-full text-lg
         transition-all duration-150

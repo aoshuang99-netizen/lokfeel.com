@@ -25,25 +25,25 @@ export default function DashboardFooter() {
           <div className="flex items-center gap-4">
             <Link
               href="/privacy"
-              className="text-foreground-subtle hover:text-foreground-muted text-xs transition-colors"
+              className="text-foreground-subtle hover:text-accent-lime text-xs transition-colors"
             >
               Privacy
             </Link>
             <Link
               href="/terms"
-              className="text-foreground-subtle hover:text-foreground-muted text-xs transition-colors"
+              className="text-foreground-subtle hover:text-accent-lime text-xs transition-colors"
             >
               Terms
             </Link>
             <Link
               href="/cookies"
-              className="text-foreground-subtle hover:text-foreground-muted text-xs transition-colors"
+              className="text-foreground-subtle hover:text-accent-lime text-xs transition-colors"
             >
               Cookies
             </Link>
             <a
               href="mailto:support@lokfeel.com"
-              className="text-foreground-subtle hover:text-foreground-muted text-xs transition-colors"
+              className="text-foreground-subtle hover:text-accent-lime text-xs transition-colors"
             >
               Support
             </a>

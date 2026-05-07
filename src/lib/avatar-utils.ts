@@ -28,7 +28,7 @@ export function parseEmojiAvatar(avatar: string | null | undefined): { emoji: st
   const parts = avatar.split(':');
   return {
     emoji: parts[1] || '👤',
-    color: parts[2] || '#e8a038',
+    color: parts[2] || '#8b5cf6',
   };
 }
 
@@ -58,18 +58,18 @@ export function getAvatarImgClasses(kind: AvatarKind, _avatar?: string | null): 
 export function getAvatarBackground(kind: AvatarKind, avatar: string | null | undefined): string {
   switch (kind) {
     case 'svg':
-      return 'linear-gradient(135deg, #f0f0ff, #e8e8f8)';
+      return 'linear-gradient(135deg, #1a1a2e, #111122)';
     case 'emoji': {
       const parsed = parseEmojiAvatar(avatar || '');
       if (parsed) {
         return `linear-gradient(135deg, ${parsed.color}30, ${parsed.color}15)`;
       }
-      return 'linear-gradient(135deg, #f0f0ff, #e8e8f8)';
+      return 'linear-gradient(135deg, #1a1a2e, #111122)';
     }
     case 'photo':
       return '';
     default:
-      return 'linear-gradient(135deg, rgba(232,160,56,0.15), rgba(200,80,80,0.15))';
+      return 'linear-gradient(135deg, rgba(76,29,149,0.15), rgba(139,92,246,0.15))';
   }
 }
 

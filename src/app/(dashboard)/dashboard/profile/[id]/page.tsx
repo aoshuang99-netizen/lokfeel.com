@@ -312,7 +312,7 @@ export default function UserProfilePage() {
                   <button
                     key={idx}
                     onClick={() => setActivePhotoIndex(idx)}
-                    className={`w-2 h-2 rounded-full transition-colors ${idx === activePhotoIndex ? 'bg-white' : 'bg-white/40'}`}
+                    className={`w-2 h-2 rounded-full transition-colors ${idx === activePhotoIndex ? 'bg-accent-lime' : 'bg-foreground-muted/30'}`}
                   />
                 ))}
               </div>
@@ -343,8 +343,8 @@ export default function UserProfilePage() {
           {profile.matchScore && profile.matchScore > 0 && (
             <div className="absolute top-4 right-4">
               <div className={`px-4 py-2 rounded-full font-bold text-lg ${
-                profile.matchScore >= 80 ? 'bg-green-500/90 text-white' :
-                profile.matchScore >= 60 ? 'bg-yellow-500/90 text-white' :
+                profile.matchScore >= 80 ? 'bg-accent-lime/90 text-white' :
+                profile.matchScore >= 60 ? 'bg-amber-500/90 text-white' :
                 'bg-background-tertiary text-foreground backdrop-blur-sm'
               }`}>
                 {profile.matchScore}% Match

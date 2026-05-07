@@ -62,7 +62,7 @@ interface SimulatedMatch {
 // ═══════════════════════════════════════════════════════════════
 
 const DIMENSIONS = [
-  { id: "attachment", name: "Attachment", icon: Shield, maxScore: 20, color: "#e8a038", description: "Emotional bonding style" },
+  { id: "attachment", name: "Attachment", icon: Shield, maxScore: 20, color: "#4c1d95", description: "Emotional bonding style" },
   { id: "communication", name: "Communication", icon: MessageCircle, maxScore: 15, color: "#3b82f6", description: "How you express & listen" },
   { id: "conflict", name: "Conflict", icon: Brain, maxScore: 15, color: "#f59e0b", description: "Disagreement handling" },
   { id: "values", name: "Values", icon: Target, maxScore: 15, color: "#10b981", description: "Life priorities & love language" },
@@ -277,7 +277,7 @@ export function RelationshipEnginePreview({
       );
       
       const dimensions: MatchDimension[] = [
-        { id: "attachment", name: "Attachment", icon: Shield, score: Math.round(attachmentScore * 0.20), maxScore: 20, description: "Emotional bonding", color: "#e8a038" },
+        { id: "attachment", name: "Attachment", icon: Shield, score: Math.round(attachmentScore * 0.20), maxScore: 20, description: "Emotional bonding", color: "#4c1d95" },
         { id: "communication", name: "Communication", icon: MessageCircle, score: Math.round(communicationScore * 0.15), maxScore: 15, description: "Expression style", color: "#3b82f6" },
         { id: "conflict", name: "Conflict", icon: Brain, score: Math.round(conflictScore * 0.15), maxScore: 15, description: "Disagreement handling", color: "#f59e0b" },
         { id: "values", name: "Values", icon: Target, score: Math.round(valuesScore * 0.15), maxScore: 15, description: "Life priorities", color: "#10b981" },

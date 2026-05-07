@@ -196,9 +196,9 @@ export default function SubscriptionPage() {
       {/* ═══ Ladies Never Pay Banner ═══ */}
       {!isPremiumUser && (
         <div className="relative overflow-hidden rounded-2xl p-6 text-center"
-          style={{ background: "linear-gradient(135deg, oklch(68% .14 40), oklch(72% .12 20), oklch(75% .12 350))" }}>
+          style={{ background: "linear-gradient(135deg, #4c1d95, #8b5cf6, #c084fc)" }}>
           <div className="absolute inset-0 opacity-10"
-            style={{ backgroundImage: "radial-gradient(circle at 20% 80%, oklch(80% .15 350) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(75% .14 40) 0%, transparent 50%)" }} />
+            style={{ backgroundImage: "radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(76, 29, 149, 0.3) 0%, transparent 50%)" }} />
           <div className="relative">
             <Flower2 className="w-8 h-8 mx-auto mb-3 text-white" />
             <h2 className="text-xl font-bold text-white mb-1">Ladies Never Pay</h2>
@@ -346,7 +346,7 @@ export default function SubscriptionPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-secondary/5 rounded-2xl" />
           <div className="absolute top-3 right-3 z-10">
             <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full"
-              style={{ background: "linear-gradient(135deg, oklch(68% .14 40), oklch(72% .12 20))", color: "white" }}>
+              style={{ background: "linear-gradient(135deg, #4c1d95, #8b5cf6)", color: "white" }}>
               <Flower2 className="w-3 h-3" />
               Women Only
             </span>
@@ -458,7 +458,7 @@ export default function SubscriptionPage() {
               <tr className="border-b border-card-border">
                 <th className="text-left p-3 text-foreground-muted font-medium">Feature</th>
                 <th className="text-center p-3 text-foreground-muted font-medium">Free</th>
-                <th className="text-center p-3 font-medium" style={{ color: "oklch(68% .14 40)" }}>
+                <th className="text-center p-3 font-medium" style={{ color: "#8b5cf6" }}>
                   <span className="flex items-center justify-center gap-1"><Flower2 className="w-3.5 h-3.5" /> Lady Free</span>
                 </th>
                 <th className="text-center p-3 text-foreground-muted font-medium">Premium</th>

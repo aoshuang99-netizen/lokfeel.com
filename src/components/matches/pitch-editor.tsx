@@ -463,7 +463,7 @@ export function PitchEditor({ matchId, targetUser, onSuccess, onCancel }: PitchE
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="flex items-center gap-2 p-3 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] text-sm"
+                className="flex items-center gap-2 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-sm"
               >
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}

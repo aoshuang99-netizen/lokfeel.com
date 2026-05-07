@@ -32,19 +32,19 @@ import { CardVerificationWall } from "@/components/payment/CardVerificationWall"
 import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
-// DESIGN TOKENS — LokFeel v4 Warm Sand (OKLCH)
+// DESIGN TOKENS — Dateasy Dark (Purple + Lime)
 // ══════════════════════════════════════
 const COLORS = {
-  primary: "oklch(68% 0.14 40)",         // Terra Cotta
-  primaryLight: "oklch(72% 0.12 20)",    // Soft Coral
-  primaryDark: "oklch(62% 0.16 38)",     // Deep Terra Cotta
-  accent: "oklch(72% 0.12 20)",          // Soft Coral
-  accentLight: "oklch(82% 0.12 55)",     // Warm Rose Gold
-  pink: "oklch(70% 0.14 10)",            // Warm Pink
-  purple: "oklch(68% 0.14 40)",          // Terra Cotta (warm, not purple)
-  success: "oklch(72% 0.19 155)",
-  warning: "oklch(78% 0.16 75)",
-  error: "oklch(63% 0.22 25)",
+  primary: "#4c1d95",           // Deep Purple
+  primaryLight: "#8b5cf6",     // Violet
+  primaryDark: "#3b0764",       // Dark Purple
+  accent: "#a3e635",            // Lime CTA
+  accentLight: "#bef264",       // Light Lime
+  pink: "#f472b6",              // Pink accent
+  purple: "#4c1d95",            // Deep Purple
+  success: "#a3e635",
+  warning: "#fbbf24",
+  error: "#fb7185",
 };
 
 const EASING = "cubic-bezier(0.22, 1, 0.36, 1)"; // Nexus ease
@@ -139,8 +139,8 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
           <polygon
             key={i}
             points={circlePoints}
-            fill={i % 2 === 0 ? "oklch(88% 0.02 55 / 0.5)" : "none"}
-            stroke="oklch(55% 0.04 40 / 0.35)"
+            fill={i % 2 === 0 ? "rgba(139, 92, 246, 0.08)" : "none"}
+            stroke="rgba(139, 92, 246, 0.2)"
             strokeWidth={1}
           />
         );
@@ -158,7 +158,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             y1={center}
             x2={x2}
             y2={y2}
-            stroke="oklch(55% 0.04 40 / 0.3)"
+            stroke="rgba(139, 92, 246, 0.15)"
             strokeWidth={1}
           />
         );
@@ -167,7 +167,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
       {/* Data area glow */}
       <path
         d={pathData}
-        fill="oklch(68% 0.12 40 / 0.08)"
+        fill="rgba(76, 29, 149, 0.1)"
         stroke="none"
         filter="url(#glow)"
       />
@@ -190,7 +190,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             cy={y}
             r={4}
             fill={COLORS.primary}
-            stroke="oklch(98% 0.005 55)"
+            stroke="#1a1a1a"
             strokeWidth={1.5}
           />
         );
@@ -209,7 +209,7 @@ function RadarChart({ data, size = 200 }: { data: { label: string; value: number
             y={y}
             textAnchor="middle"
             dominantBaseline="middle"
-            fill="oklch(25% 0.03 40)"
+            fill="#aaaaaa"
             fontSize={11}
             fontWeight={700}
           >
@@ -255,7 +255,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
       className="flex-shrink-0 w-[260px] snap-start"
     >
       <Link href={`/dashboard/users/${user.id}`}>
-        <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-white border border-card-border hover:border-primary/30 transition-all duration-300 hover:shadow-lg"
+        <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-[#111111] border border-card-border hover:border-primary/30 transition-all duration-300 hover:shadow-lg"
           style={{ transitionTimingFunction: EASING, boxShadow: "var(--shadow-sm)" }}
         >
           {/* Avatar Area */}
@@ -586,7 +586,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[90] flex items-center justify-center"
-          style={{ background: "rgba(255, 250, 245, 0.94)", backdropFilter: "blur(10px)" }}
+          style={{ background: "rgba(10, 10, 10, 0.94)", backdropFilter: "blur(10px)" }}
         >
           <motion.div
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
@@ -612,11 +612,11 @@ export default function DashboardPage() {
               {/* Step 1: Onboarding */}
               <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
                 !needsOnboarding
-                  ? "border-green-500/30 bg-green-500/5"
+                  ? "border-[#a3e635]/30 bg-[#a3e635]/5"
                   : "border-primary/30 bg-primary/5"
               }`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  !needsOnboarding ? "bg-green-500" : "bg-primary"
+                  !needsOnboarding ? "bg-[#a3e635]" : "bg-primary"
                 }`}>
                   {!needsOnboarding ? (
                     <Check className="w-4 h-4 text-white" />
@@ -625,7 +625,7 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <div className="flex-1">
-                  <p className={`text-sm font-semibold ${!needsOnboarding ? "text-green-600" : "text-foreground"}`}>
+                  <p className={`text-sm font-semibold ${!needsOnboarding ? "text-[#a3e635]" : "text-foreground"}`}>
                     Relationship Blueprint
                   </p>
                   <p className="text-xs text-foreground-muted">
@@ -642,13 +642,13 @@ export default function DashboardPage() {
               {/* Step 2: Profile Info */}
               <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
                 !profileRequiredMissing
-                  ? "border-green-500/30 bg-green-500/5"
+                  ? "border-[#a3e635]/30 bg-[#a3e635]/5"
                   : needsOnboarding
                   ? "border-card-border bg-background-tertiary opacity-50"
                   : "border-primary/30 bg-primary/5"
               }`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  !profileRequiredMissing ? "bg-green-500" : needsOnboarding ? "bg-foreground-faint" : "bg-primary"
+                  !profileRequiredMissing ? "bg-[#a3e635]" : needsOnboarding ? "bg-foreground-faint" : "bg-primary"
                 }`}>
                   {!profileRequiredMissing ? (
                     <Check className="w-4 h-4 text-white" />
@@ -658,7 +658,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex-1">
                   <p className={`text-sm font-semibold ${
-                    !profileRequiredMissing ? "text-green-600" : needsOnboarding ? "text-foreground-subtle" : "text-foreground"
+                    !profileRequiredMissing ? "text-[#a3e635]" : needsOnboarding ? "text-foreground-subtle" : "text-foreground"
                   }`}>
                     Basic Info
                   </p>
@@ -679,8 +679,8 @@ export default function DashboardPage() {
               <div
                 className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
                   isProfileLocked
-                    ? "border-card-border bg-background-tertiary opacity-50"
-                    : "border-green-500/30 bg-green-500/5 cursor-pointer hover:bg-green-500/10"
+                    ? "border-[rgba(139,92,246,0.2)] bg-[#1a1a1a] opacity-50"
+                    : "border-[#a3e635]/30 bg-[#a3e635]/5 cursor-pointer hover:bg-[#a3e635]/10"
                 }`}
                 onClick={!isProfileLocked ? () => { window.location.href = "/dashboard/discover"; } : undefined}
                 role={!isProfileLocked ? "button" : undefined}
@@ -688,12 +688,12 @@ export default function DashboardPage() {
                 onKeyDown={!isProfileLocked ? (e) => { if (e.key === 'Enter' || e.key === ' ') window.location.href = "/dashboard/discover"; } : undefined}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  isProfileLocked ? "bg-foreground-faint" : "bg-green-500"
+                  isProfileLocked ? "bg-foreground-faint" : "bg-[#a3e635]"
                 }`}>
                   <span className={`text-xs font-bold ${isProfileLocked ? "text-foreground-subtle" : "text-white"}`}>3</span>
                 </div>
                 <div className="flex-1">
-                  <p className={`text-sm font-semibold ${isProfileLocked ? "text-foreground-subtle" : "text-green-600"}`}>
+                  <p className={`text-sm font-semibold ${isProfileLocked ? "text-foreground-subtle" : "text-[#a3e635]"}`}>
                     Start Matching
                   </p>
                   <p className="text-xs text-foreground-muted">
@@ -701,7 +701,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 {!isProfileLocked && (
-                  <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 text-[#a3e635]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 )}
@@ -805,7 +805,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.4 }}
             className="glass-card p-8 text-center"
           >
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#4c1d95]/30 to-[#8b5cf6]/20 flex items-center justify-center mx-auto mb-4">
               <Compass className="w-7 h-7 text-primary" />
             </div>
             <h3 className="text-base font-semibold text-foreground-muted mb-1">Finding your matches...</h3>

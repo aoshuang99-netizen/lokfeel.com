@@ -552,7 +552,7 @@ export default function ChatRoomPage() {
             {roomInfo?.otherUser?.isOnline ? (
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background-secondary" />
             ) : (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-background-secondary" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-foreground-muted/40 rounded-full border-2 border-background-secondary" />
             )}
 
           </div>
@@ -710,8 +710,9 @@ export default function ChatRoomPage() {
                         )
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground text-xs font-bold">
-                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 relative">
-                      <InlineAvatar avatar={roomInfo?.otherUser?.avatar} name={roomInfo?.otherUser?.name} emojiSize="clamp(0.9rem, 180%, 1.8rem)" />
+                          {roomInfo?.otherUser?.name?.[0] || "?"}
+                        </div>
+                      )}
                       {/* Bot indicator on avatar */}
                       {fromBot && (
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
@@ -719,6 +720,33 @@ export default function ChatRoomPage() {
                         </div>
                       )}
                     </div>
+                  )}
+                  {!fromMe && !showAvatar && <div className="w-8" />}
+
+                  {/* Message Bubble */}
+                  <div
+                    className={`px-4 py-2.5 rounded-2xl max-w-[75%] ${
+                      fromMe
+                        ? "bg-gradient-to-br from-purple-700/90 to-purple-600/90 text-foreground rounded-br-md"
+                        : fromBot
+                        ? "bg-purple-900/30 text-foreground rounded-bl-md border border-purple-500/10"
+                        : "bg-primary/10 text-foreground rounded-bl-md"
+                    }`}
+                  >
+
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">{msg.content}</p>
+                    <p className={`text-xs mt-1 ${fromMe ? "text-foreground-muted" : "text-foreground-muted"}`}>
+                      {formatTime(msg.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })
+        )}
+        {/* Bot typing indicator */}
+        <AnimatePresence>
+          {isBotTyping && (
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -728,21 +756,21 @@ export default function ChatRoomPage() {
               <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 relative">
                 {roomInfo?.otherUser?.avatar && !isBrokenAvatarUrl(roomInfo.otherUser.avatar) ? (
                   roomInfo.otherUser.avatar.startsWith("emoji:") ? (
-                    <div className="w-full h-full bg-gradient-to-br from-amber-500/80 to-rose-500/80 flex items-center justify-center">
-                      <span className="select-none leading-none" style={{ fontSize: 'clamp(0.9rem, 180%, 1.8rem)', lineHeight: '1' }}>
+                    <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                      <span className="select-none leading-none" style={{ fontSize: 'clamp(0.9rem, 180%, 1.8rem)' }}>
                         {roomInfo.otherUser.avatar.split(":")[1]}
                       </span>
                     </div>
                   ) : (
-                    <img src={roomInfo.otherUser.avatar} alt={roomInfo.otherUser.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    <img src={roomInfo.otherUser.avatar} alt="" className="w-full h-full object-cover" />
                   )
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-amber-500/80 to-rose-500/80 flex items-center justify-center text-foreground text-xs font-bold">
+                  <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground text-xs font-bold">
                     {roomInfo?.otherUser?.name?.[0] || "?"}
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 bg-white/[0.05] rounded-2xl px-4 py-2.5 border border-card-border/[0.06]">
+              <div className="flex items-center gap-2 bg-purple-900/30 rounded-2xl px-4 py-2.5 border border-purple-500/10">
                 <div className="flex items-center gap-[3px]">
                   <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1.4s" }} />
                   <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1.4s" }} />

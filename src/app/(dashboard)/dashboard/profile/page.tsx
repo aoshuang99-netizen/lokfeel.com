@@ -71,7 +71,6 @@ export default function ProfilePage() {
     
     // Step 2: Identity (NEW)
     relationshipType: "MONOGAMY",
-    sexualOrientation: "BISEXUAL",
     
     // Step 3: Relationship Blueprint
     relationshipGoal: "MONOGAMY",
@@ -116,7 +115,6 @@ export default function ProfilePage() {
             avatar: data.profile.avatar || null,
             // Identity fields
             relationshipType: data.profile.relationshipType || "MONOGAMY",
-            sexualOrientation: data.profile.sexualOrientation || "BISEXUAL",
             relationshipGoal: data.profile.relationshipGoal || "MONOGAMY",
             attachmentStyle: data.profile.attachmentStyle?.toLowerCase() || "secure",
             communicationStyle: data.profile.communicationStyle?.toLowerCase() || "direct",
@@ -748,8 +746,8 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Sexual Orientation</label>
               <select
-                value={formData.sexualOrientation}
-                onChange={(e) => handleChange("sexualOrientation", e.target.value)}
+                value={formData.sexuality}
+                onChange={(e) => handleChange("sexuality", e.target.value)}
                 className="input-feeld"
               >
                 {sexualOrientations.map((orientation) => (

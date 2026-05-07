@@ -131,13 +131,13 @@ export async function sendVerificationEmail(
           <td align="center" style="padding-bottom:30px;">
             <!-- Heart Icon PNG -->
             <img src="https://app.lokfeel.com/logo-icon.png" width="48" height="48" alt="LokFeel" style="display:block; margin:0 auto 12px; border:0;" />
-            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:28px; font-weight:700; color:#c94d7a; text-align:center;">LokFeel</div>
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:28px; font-weight:700; color:#a3e635; text-align:center;">LokFeel</div>
           </td>
         </tr>
       </table>
       
       <!-- Main Card -->
-      <table border="0" cellpadding="0" cellspacing="0" width="480" style="max-width:480px; width:100%; background-color:#1a1920; border:1px solid #2a2933; border-radius:16px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="480" style="max-width:480px; width:100%; background-color:#1a1a1a; border:1px solid rgba(76,29,149,0.2); border-radius:16px;">
         <tr>
           <td align="center" style="padding:40px 32px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
             
@@ -155,8 +155,8 @@ export async function sendVerificationEmail(
             <!-- Magic Link Button -->
             <table border="0" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
               <tr>
-                <td align="center" style="background-color:#ffffff; border-radius:50px;">
-                  <a href="${magicLink}" style="display:inline-block; padding:16px 32px; color:#000000; font-size:16px; font-weight:600; text-decoration:none; border-radius:50px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Verify Email & Continue</a>
+                <td align="center" style="background-color:#a3e635; border-radius:50px;">
+                  <a href="${magicLink}" style="display:inline-block; padding:16px 32px; color:#0a0a0a; font-size:16px; font-weight:600; text-decoration:none; border-radius:50px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Verify Email & Continue</a>
                 </td>
               </tr>
             </table>
@@ -172,10 +172,10 @@ export async function sendVerificationEmail(
             ` : ''}
             
             <!-- Verification Code Box -->
-            <table border="0" cellpadding="0" cellspacing="0" style="margin:20px auto; background-color:#2d1f2d; border:2px dashed #c94d7a; border-radius:12px;">
+            <table border="0" cellpadding="0" cellspacing="0" style="margin:20px auto; background-color:#1a0a2e; border:2px dashed #4c1d95; border-radius:12px;">
               <tr>
                 <td align="center" style="padding:24px 40px;">
-                  <span style="font-size:36px; font-weight:700; letter-spacing:8px; color:#c94d7a; font-family:'Courier New',monospace;">${code}</span>
+                  <span style="font-size:36px; font-weight:700; letter-spacing:8px; color:#a3e635; font-family:'Courier New',monospace;">${code}</span>
                 </td>
               </tr>
             </table>
@@ -301,13 +301,13 @@ export async function sendWelcomeEmail(
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-bottom:30px;">
     <tr>
       <td style="text-align:center;">
-        <div style="font-size:28px; font-weight:700; color:#c94d7a;">LokFeel</div>
+        <div style="font-size:28px; font-weight:700; color:#a3e635;">LokFeel</div>
       </td>
     </tr>
   </table>
 
   <!-- Main Content -->
-  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:480px; width:100%; background:#1a1920; border:1px solid rgba(255,255,255,0.1); border-radius:16px;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:480px; width:100%; background:#1a1a1a; border:1px solid rgba(76,29,149,0.3); border-radius:16px;">
     <tr>
       <td style="padding:40px 32px; text-align:center;">
         
@@ -326,7 +326,7 @@ export async function sendWelcomeEmail(
         <!-- CTA Button -->
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0;">
           <tr>
-            <td style="background:linear-gradient(135deg,#c94d7a,#818cf8); border-radius:12px; text-align:center;">
+            <td style="background:linear-gradient(135deg,#4c1d95,#8b5cf6); border-radius:12px; text-align:center;">
               <a href="${appUrl}/onboarding" style="display:inline-block; padding:16px 32px; color:#ffffff; font-size:16px; font-weight:600; text-decoration:none; border-radius:12px;">Complete Your Profile</a>
             </td>
           </tr>
@@ -372,58 +372,58 @@ export async function sendPasswordResetEmail(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reset Your Password - LokFeel</title>
 </head>
-<body style="margin:0; padding:40px 20px; background-color:#f8f8fc; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; text-align:center;">
+<body style="margin:0; padding:40px 20px; background-color:#0a0a0a; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; text-align:center;">
 
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-bottom:30px;">
     <tr>
       <td style="text-align:center;">
-        <div style="font-size:28px; font-weight:700; color:#e8a038;">LokFeel</div>
+        <div style="font-size:28px; font-weight:700; color:#a3e635;">LokFeel</div>
       </td>
     </tr>
   </table>
 
-  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:480px; width:100%; background:#ffffff; border:1px solid rgba(0,0,0,0.08); border-radius:16px;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:480px; width:100%; background:#111111; border:1px solid rgba(76,29,149,0.2); border-radius:16px;">
     <tr>
       <td style="padding:40px 32px; text-align:center;">
-        
-        <h1 style="margin:0 0 20px; font-size:24px; font-weight:600; color:#1a1a2e; line-height:1.3;">
+
+        <h1 style="margin:0 0 20px; font-size:24px; font-weight:600; color:#ffffff; line-height:1.3;">
           Reset Your Password
         </h1>
-        
-        <p style="margin:0 0 28px; font-size:16px; color:rgba(0,0,0,0.65); line-height:1.6;">
+
+        <p style="margin:0 0 28px; font-size:16px; color:rgba(255,255,255,0.65); line-height:1.6;">
           We received a request to reset the password for your LokFeel account${name ? `, ${name}` : ''}. Click the button below to create a new password.
         </p>
-        
+
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 0 28px;">
           <tr>
-            <td style="background-color:#e8a038; border-radius:12px; text-align:center;">
-              <a href="${resetUrl}" style="display:inline-block; padding:16px 32px; color:#ffffff; font-size:16px; font-weight:600; text-decoration:none; border-radius:12px;">Reset Password</a>
+            <td style="background-color:#a3e635; border-radius:12px; text-align:center;">
+              <a href="${resetUrl}" style="display:inline-block; padding:16px 32px; color:#0a0a0a; font-size:16px; font-weight:600; text-decoration:none; border-radius:12px;">Reset Password</a>
             </td>
           </tr>
         </table>
 
-        <p style="margin:0 0 20px; font-size:14px; color:rgba(0,0,0,0.45); line-height:1.6;">
+        <p style="margin:0 0 20px; font-size:14px; color:rgba(255,255,255,0.45); line-height:1.6;">
           If the button doesn't work, copy and paste this link into your browser:
         </p>
-        <p style="margin:0 0 28px; font-size:13px; color:#e8a038; word-break:break-all;">
+        <p style="margin:0 0 28px; font-size:13px; color:#a3e635; word-break:break-all;">
           ${resetUrl}
         </p>
-        
-        <p style="margin:20px 0 0; font-size:14px; color:rgba(0,0,0,0.45); text-align:center;">
+
+        <p style="margin:20px 0 0; font-size:14px; color:rgba(255,255,255,0.45); text-align:center;">
           This link will expire in 30 minutes.
         </p>
-        
-        <p style="margin:16px 0 0; font-size:13px; color:rgba(0,0,0,0.35); text-align:center;">
+
+        <p style="margin:16px 0 0; font-size:13px; color:rgba(255,255,255,0.35); text-align:center;">
           If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
         </p>
-        
+
       </td>
     </tr>
   </table>
 
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-top:30px;">
     <tr>
-      <td style="text-align:center; font-size:12px; color:rgba(0,0,0,0.35);">
+      <td style="text-align:center; font-size:12px; color:rgba(255,255,255,0.35);">
         <p style="margin:0;">LokFeel Inc. &bull; noreply@lokfeel.com</p>
       </td>
     </tr>

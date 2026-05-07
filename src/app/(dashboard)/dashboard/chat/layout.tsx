@@ -319,7 +319,7 @@ export default function ChatLayout({
                       {chat.otherUser.isOnline ? (
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
                       ) : (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-background" />
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-foreground-muted/40 rounded-full border-2 border-background" />
                       )}
                     </div>
 

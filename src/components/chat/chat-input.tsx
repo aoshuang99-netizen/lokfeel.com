@@ -7,6 +7,7 @@ import type { IMMessagePayload } from "@/lib/im/types";
 
 interface ChatInputProps {
   onSend: (message: string, quotedMsgId?: string) => void;
+  onImageSend?: (imageUrl: string) => void;
   onTyping?: (isTyping: boolean) => void;
   isSending?: boolean;
   disabled?: boolean;
@@ -38,10 +39,11 @@ const QUICK_REPLIES = [
   "What are you into?",
 ];
 
-export function ChatInput({ 
-  onSend, 
+export function ChatInput({
+  onSend,
+  onImageSend,
   onTyping,
-  isSending = false, 
+  isSending = false,
   disabled = false,
   quotedMessage,
   onCancelQuote,
@@ -49,7 +51,9 @@ export function ChatInput({
   const [message, setMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Focus input when quoted message changes
@@ -100,6 +104,50 @@ export function ChatInput({
   const handleEmojiSelect = (emoji: string) => {
     setMessage((prev) => prev + emoji);
     inputRef.current?.focus();
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || isUploading || disabled) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "image");
+
+      const res = await fetch("/api/upload", {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      const imageUrl = data.data?.url;
+
+      if (imageUrl && onImageSend) {
+        onImageSend(imageUrl);
+      }
+    } catch {
+      // Silently fail — don't disrupt UX
+    } finally {
+      setIsUploading(false);
+      // Reset file input so same file can be re-selected
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   const handleQuickReply = (reply: string) => {
@@ -223,6 +271,26 @@ export function ChatInput({
         >
           <Smile className="w-[18px] h-[18px]" />
         </button>
+
+        {/* 图片上传按钮 */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={`p-2 rounded-xl transition-all duration-200 ${
+            isUploading ? "bg-accent-lime/15 text-accent-lime animate-pulse" : "text-foreground-faint hover:text-foreground-muted hover:bg-white/[0.04]"
+          }`}
+          aria-label="Send image"
+          disabled={isUploading || disabled}
+        >
+          <Image className="w-[18px] h-[18px]" />
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleImageSelect}
+        />
 
         {/* 输入框 */}
         <input

@@ -51,7 +51,7 @@ const typeLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  draft: "bg-gray-500/10 text-gray-500",
+  draft: "bg-foreground-muted/10 text-foreground-muted",
   active: "bg-green-500/10 text-green-500",
   paused: "bg-yellow-500/10 text-yellow-500",
   expired: "bg-red-500/10 text-red-500",
@@ -227,7 +227,7 @@ export default function MarketingPage() {
         </div>
         <div className="glass-card p-4">
           <p className="text-foreground-muted text-sm">草稿</p>
-          <p className="text-2xl font-bold text-gray-500">{stats.draft}</p>
+          <p className="text-2xl font-bold text-foreground-muted">{stats.draft}</p>
         </div>
         <div className="glass-card p-4">
           <p className="text-foreground-muted text-sm">总使用次数</p>

@@ -14,7 +14,7 @@ export default function BlockedPage() {
             height="40"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="oklch(68% 0.14 40)"
+            stroke="#4c1d95"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"

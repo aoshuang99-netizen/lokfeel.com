@@ -127,7 +127,7 @@ export default function MatchingSquarePage() {
     if (score >= 90) return "from-green-400 to-emerald-500";
     if (score >= 80) return "from-pink-400 to-orange-500";
     if (score >= 70) return "from-yellow-400 to-orange-500";
-    return "from-gray-400 to-gray-500";
+    return "from-purple-500 to-violet-500";
   };
 
   if (loading) {
@@ -175,7 +175,7 @@ export default function MatchingSquarePage() {
                 onClick={() => setSelectedOrientation(tag.value)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
                   selectedOrientation === tag.value
-                    ? "bg-white text-black"
+                    ? "bg-accent-lime text-black"
                     : "bg-background-tertiary text-foreground-muted hover:bg-background-tertiary"
                 }`}
               >
@@ -289,7 +289,7 @@ export default function MatchingSquarePage() {
                         onClick={() => handleLike(user.id)}
                         className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center hover:scale-110 transition-transform"
                       >
-                        <Heart className="w-6 h-6 text-foreground" fill="white" />
+                        <Heart className="w-6 h-6 text-foreground" fill="currentColor" />
                       </button>
                     </div>
                   </div>

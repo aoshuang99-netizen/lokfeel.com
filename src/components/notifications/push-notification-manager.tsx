@@ -274,7 +274,7 @@ function ToggleItem({
         }`}
       >
         <motion.div
-          className="w-5 h-5 rounded-full bg-white absolute top-0.5"
+          className="w-5 h-5 rounded-full bg-accent-lime absolute top-0.5"
           animate={{ left: checked ? "26px" : "2px" }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
         />

@@ -111,7 +111,7 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
             <div
               className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
               style={{
-                background: "rgba(255, 250, 245, 0.92)",
+                background: "rgba(10, 10, 10, 0.92)",
                 backdropFilter: "blur(12px)",
               }}
             >
@@ -119,7 +119,7 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
                 className="glass-card p-8 max-w-md mx-4 text-center border-primary/30 shadow-lg animate-slideUp"
               >
                 <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-5">
-                  <AlertTriangle className="w-8 h-8 text-white" />
+                  <AlertTriangle className="w-8 h-8 text-amber-400" />
                 </div>
                 <h2 className="text-xl font-bold text-foreground mb-2 font-display">
                   Complete Your Setup First

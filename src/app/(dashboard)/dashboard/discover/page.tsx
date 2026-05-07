@@ -56,7 +56,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-1",
     name: "Sarah",
     age: 28,
-    avatar: null,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
     city: "New York",
     bio: "Coffee lover, hiking enthusiast, looking for meaningful connections",
     matchScore: 95,
@@ -68,7 +68,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-2",
     name: "Michael",
     age: 32,
-    avatar: null,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=michael",
     city: "Los Angeles",
     bio: "Creative soul, photographer, love exploring new places",
     matchScore: 88,
@@ -79,7 +79,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-3",
     name: "Emma",
     age: 26,
-    avatar: null,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma",
     city: "Chicago",
     bio: "Book worm, yoga practitioner, seeking genuine connections",
     matchScore: 92,
@@ -91,7 +91,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-4",
     name: "James",
     age: 30,
-    avatar: null,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=james",
     city: "San Francisco",
     bio: "Tech professional, foodie, enjoy meaningful conversations",
     matchScore: 85,
@@ -102,7 +102,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-5",
     name: "Olivia",
     age: 27,
-    avatar: null,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=olivia",
     city: "Miami",
     bio: "Dancer, beach lover, looking for someone authentic",
     matchScore: 90,
@@ -555,7 +555,7 @@ export default function DiscoverPage() {
                 </div>
               </div>
               <p className="text-xs text-foreground-muted mt-3">
-                More filters coming soon. Currently showing all available matches.
+                More filters and advanced matching coming soon.
               </p>
             </div>
           </motion.div>

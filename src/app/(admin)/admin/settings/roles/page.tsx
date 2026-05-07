@@ -181,7 +181,7 @@ export default function RolesPage() {
                     <Shield className="w-5 h-5 text-primary" />
                     <h3 className="font-semibold text-foreground">{role.name}</h3>
                     {role.isSystem ? (
-                      <span className="px-2 py-0.5 text-xs rounded border bg-gray-500/10 text-gray-500 border-gray-500/20">
+                      <span className="px-2 py-0.5 text-xs rounded border bg-foreground-muted/10 text-foreground-muted border-foreground-muted/20">
                         系统
                       </span>
                     ) : (

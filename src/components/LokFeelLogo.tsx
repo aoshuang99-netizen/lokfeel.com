@@ -33,20 +33,20 @@ export function LokFeelLogo({
         style={{ width: icon, height: icon }}
       >
         {/* Background glow */}
-        <div 
-          className={`absolute inset-0 rounded-xl bg-gradient-to-br from-rose-500/20 via-orange-500/20 to-amber-500/20 ${animated ? 'animate-pulse-slow' : ''}`}
+        <div
+          className={`absolute inset-0 rounded-xl bg-gradient-to-br from-purple-500/20 via-violet-500/20 to-lime-500/20 ${animated ? 'animate-pulse-slow' : ''}`}
         />
-        
+
         {/* Heartbeat ring */}
         {animated && (
-          <div className="absolute inset-0 rounded-xl border border-rose-400/30 animate-heartbeat-ring" />
+          <div className="absolute inset-0 rounded-xl border border-purple-400/30 animate-heartbeat-ring" />
         )}
-        
+
         {/* Main icon background */}
-        <div 
-          className="absolute inset-0 rounded-xl bg-gradient-to-br from-rose-500 via-orange-600 to-amber-500"
-          style={{ 
-            background: 'linear-gradient(135deg, #e8a038 0%, #c85050 50%, #e8a038 100%)' 
+        <div
+          className="absolute inset-0 rounded-xl bg-gradient-to-br from-purple-600 via-violet-600 to-purple-700"
+          style={{
+            background: 'linear-gradient(135deg, #4c1d95 0%, #8b5cf6 50%, #4c1d95 100%)'
           }}
         />
         
@@ -76,8 +76,8 @@ export function LokFeelLogo({
         {/* Sparkle accents */}
         {animated && (
           <>
-            <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-300 animate-sparkle" />
-            <div className="absolute -bottom-0.5 -left-0.5 w-1 h-1 rounded-full bg-rose-300 animate-sparkle-delayed" />
+            <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-lime-400 animate-sparkle" />
+            <div className="absolute -bottom-0.5 -left-0.5 w-1 h-1 rounded-full bg-purple-300 animate-sparkle-delayed" />
           </>
         )}
       </div>
@@ -85,7 +85,7 @@ export function LokFeelLogo({
       {/* Text */}
       {showText && (
         <span className={`font-bold tracking-tight ${text}`}>
-          <span className="bg-gradient-to-r from-rose-500 via-orange-600 to-amber-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-purple-400 via-violet-500 to-lime-400 bg-clip-text text-transparent">
             LokFeel
           </span>
         </span>
@@ -101,8 +101,8 @@ export function LokFeelLogo({
 export function LokFeelWordmark({ className = '' }: { className?: string }) {
   return (
     <span className={`font-bold tracking-tight ${className}`}>
-      <span className="text-rose-500">Lok</span>
-      <span className="text-orange-600">Feel</span>
+      <span className="text-purple-400">Lok</span>
+      <span className="text-lime-400">Feel</span>
     </span>
   )
 }
@@ -120,7 +120,7 @@ export function LokFeelAppIcon({ size = 64 }: { size?: number }) {
       <div 
         className="absolute inset-0"
         style={{ 
-          background: 'linear-gradient(135deg, #e8a038 0%, #c85050 50%, #f59e0b 100%)' 
+          background: 'linear-gradient(135deg, #4c1d95 0%, #8b5cf6 50%, #a3e635 100%)' 
         }}
       />
       

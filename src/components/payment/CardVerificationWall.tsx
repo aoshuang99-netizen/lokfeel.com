@@ -135,8 +135,8 @@ export function CardVerificationWall({
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
           style={{
-            background: "linear-gradient(135deg, oklch(68% .14 40), oklch(72% .12 20))",
-            boxShadow: "0 8px 24px oklch(68% .14 40 / 0.25)",
+            background: "linear-gradient(135deg, #4c1d95, #8b5cf6)",
+            boxShadow: "0 8px 24px rgba(76, 29, 149, 0.4)",
           }}
         >
           {step === "success" ? (
@@ -232,7 +232,7 @@ export function CardVerificationWall({
   if (variant === "modal") {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-        style={{ background: "rgba(255, 250, 245, 0.94)", backdropFilter: "blur(10px)" }}>
+        style={{ background: "rgba(10, 10, 10, 0.94)", backdropFilter: "blur(10px)" }}>
         <div className="glass-card p-8 max-w-md w-full border-primary/30 shadow-xl relative">
           {content}
         </div>

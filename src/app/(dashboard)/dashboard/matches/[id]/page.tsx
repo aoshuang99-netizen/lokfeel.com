@@ -108,7 +108,7 @@ export default function MatchDetailPage({ params }: MatchDetailPageProps) {
         toast.success(
           <div>
             <p className="font-medium">Interest sent! 💌</p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-foreground-muted">
               Waiting for {match?.otherUser.name} to respond...
               <br />
               <span className="text-xs">Typically responds within 24 hours</span>

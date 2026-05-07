@@ -52,7 +52,7 @@ const CATEGORY_CONFIG: Record<string, { icon: React.ComponentType<{ className?: 
   AI_SUPPORT:  { icon: HelpCircle,   color: "text-indigo-500", label: "AI Support" },
   VIP:         { icon: Crown,        color: "text-amber-500",  label: "VIP" },
   ANALYTICS:   { icon: BarChart3,    color: "text-teal-500",   label: "Analytics" },
-  SYSTEM:      { icon: Settings,     color: "text-gray-500",   label: "System" },
+  SYSTEM:      { icon: Settings,     color: "text-foreground-muted", label: "System" },
   RBAC:        { icon: Lock,         color: "text-red-500",    label: "RBAC" },
 };
 
