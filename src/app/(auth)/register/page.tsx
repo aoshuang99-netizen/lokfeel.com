@@ -11,23 +11,23 @@ import {
 } from "lucide-react";
 import { signIn } from "next-auth/react";
 
-// ─── LIGHT THEME STYLE CONSTANTS ───────────────────────────────
+// ─── DATEASY DARK THEME CONSTANTS ───────────────────────────────
 const colors = {
-  bg: "rgba(255,255,255,0.95)",
-  border: "rgba(0,0,0,0.08)",
-  text: "#1a1a2e",
-  textMuted: "rgba(0,0,0,0.45)",
-  textSecondary: "rgba(0,0,0,0.65)",
-  input: "#f8f8fc",
-  inputBorder: "rgba(0,0,0,0.12)",
-  inputFocus: "rgba(232, 160, 56, 0.5)",
-  inputPlaceholder: "rgba(0,0,0,0.3)",
-  primary: "#e8a038",
-  primaryBg: "#e8a038",
-  primaryText: "#fff",
-  error: "#dc2626",
-  errorBg: "rgba(239,68,68,0.08)",
-  errorBorder: "rgba(239,68,68,0.2)",
+  bg: "rgba(17, 17, 17, 0.95)",
+  border: "rgba(76, 29, 149, 0.15)",
+  text: "#ffffff",
+  textMuted: "rgba(255,255,255,0.45)",
+  textSecondary: "rgba(255,255,255,0.65)",
+  input: "rgba(26, 26, 26, 0.8)",
+  inputBorder: "rgba(85, 85, 85, 0.4)",
+  inputFocus: "rgba(76, 29, 149, 0.5)",
+  inputPlaceholder: "rgba(255,255,255,0.3)",
+  primary: "#a3e635",
+  primaryBg: "#a3e635",
+  primaryText: "#0a0a0a",
+  error: "#fb7185",
+  errorBg: "rgba(251,113,133,0.08)",
+  errorBorder: "rgba(251,113,133,0.2)",
 };
 
 // ─── Registration State Persistence ───
@@ -391,12 +391,12 @@ export default function RegisterPage() {
         backdropFilter: "blur(20px)",
         borderRadius: "24px",
         border: `1px solid ${colors.border}`,
-        boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
       }}>
         <div className="text-center mb-8">
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e8a038, #c85050)" }}>
+            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #4c1d95, #8b5cf6)" }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
@@ -413,7 +413,7 @@ export default function RegisterPage() {
           </p>
 
           {sentInfo.devMode && (
-            <div className="mt-3 p-2 rounded-lg text-center" style={{ background: "rgba(232,160,56,0.04)", border: `1px solid rgba(232,160,56,0.08)` }}>
+            <div className="mt-3 p-2 rounded-lg text-center" style={{ background: "rgba(76,29,149,0.08)", border: `1px solid rgba(76,29,149,0.12)` }}>
               <p style={{ color: colors.textMuted, fontSize: "11px" }}>
                 Dev mode: code sent — check server console for the 6-digit code
               </p>
@@ -460,7 +460,7 @@ export default function RegisterPage() {
           style={{
             width: "100%",
             padding: "14px",
-            background: isLoading ? "rgba(232,160,56,0.5)" : colors.primaryBg,
+            background: isLoading ? "rgba(163,230,53,0.5)" : colors.primaryBg,
             border: "none",
             borderRadius: "12px",
             color: colors.primaryText,
@@ -534,14 +534,14 @@ export default function RegisterPage() {
       backdropFilter: "blur(20px)",
       borderRadius: "24px",
       border: `1px solid ${colors.border}`,
-      boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
       maxHeight: "90vh",
       overflowY: "auto",
     }}>
       <div className="text-center mb-8">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e8a038, #c85050)" }}>
+          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #4c1d95, #8b5cf6)" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
@@ -675,7 +675,7 @@ export default function RegisterPage() {
           style={{
             width: "100%",
             padding: "14px",
-            background: isSendingCode ? "rgba(232,160,56,0.5)" : colors.primaryBg,
+            background: isSendingCode ? "rgba(163,230,53,0.5)" : colors.primaryBg,
             border: "none",
             borderRadius: "12px",
             color: colors.primaryText,
