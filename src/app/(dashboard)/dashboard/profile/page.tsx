@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2, Sparkles, AlertCircle, ImageIcon, Star } from "lucide-react";
 import { LoadingButton } from "@/components/shared/loading";
 import { LocationPicker } from "@/components/ui/location-picker";
+import { GENDER_OPTIONS, SEXUALITY_OPTIONS } from "@/constants";
 import { toast } from "sonner";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { AvatarLightbox } from "@/components/ui/avatar-lightbox";
@@ -685,10 +686,11 @@ export default function ProfilePage() {
                   onChange={(e) => handleChange("gender", e.target.value)}
                   className="input-feeld"
                 >
-                  <option value="woman">Woman</option>
-                  <option value="man">Man</option>
-                  <option value="non-binary">Non-binary</option>
-                  <option value="other">Other</option>
+                  {GENDER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value.toLowerCase()}>
+                      {opt.emoji} {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -700,11 +702,11 @@ export default function ProfilePage() {
                 onChange={(e) => handleChange("sexuality", e.target.value)}
                 className="input-feeld"
               >
-                <option value="straight">Straight</option>
-                <option value="gay">Gay</option>
-                <option value="bisexual">Bisexual</option>
-                <option value="pansexual">Pansexual</option>
-                <option value="queer">Queer</option>
+                {SEXUALITY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value.toLowerCase()}>
+                    {opt.emoji} {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
 
