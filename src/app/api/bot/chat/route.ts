@@ -3,9 +3,11 @@
  *
  * This endpoint triggers an AI response for a bot in a specific chat room.
  * Used by the chat UI to get immediate bot responses.
+ * ⚠️ Requires authentication
  */
 
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { generateResponse } from '@/lib/bot-engine/modules/chat';
 import { deserializeBotConfig } from '@/lib/bot-engine/config';
@@ -15,6 +17,9 @@ export const dynamic = 'force-dynamic';
 // POST /api/bot/chat
 export async function POST(request: Request) {
   try {
+    // Require authentication
+    const { user } = await requireAuth();
+
     const body = await request.json();
     const { roomId } = body;
 

@@ -1,10 +1,12 @@
 /**
  * Bot系统状态API
  * 用于监控数字用户系统的运行状态
+ * ⚠️ ADMIN ONLY — Protected endpoint
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { requireAdminAuth } from '@/lib/auth';
 
 const prisma = getDb();
 
@@ -12,6 +14,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    await requireAdminAuth();
     // 统计数字用户信息
     const [
       totalBots,
@@ -76,7 +79,10 @@ export async function GET(req: NextRequest) {
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') || error?.message?.includes('Admin')) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
     console.error('Bot状态API错误:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
