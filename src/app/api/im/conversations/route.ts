@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
         lastMessage: lastMessage
           ? {
               id: lastMessage.id,
-              content: lastMessage.payload.slice(0, 100),
+              content: lastMessage.payload?.slice?.(0, 100) || '',
               type: lastMessage.msgType,
               createdAt: lastMessage.createdAt,
               isFromMe: lastMessage.senderId === userId,

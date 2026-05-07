@@ -3,27 +3,59 @@ import "./globals.css";
 import AuthProvider from "@/components/providers/auth-provider";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://lokfeel.com"),
   title: {
     default: "LokFeel — Real Matches. Real Connection.",
     template: "%s | LokFeel",
   },
-  description: "Relationship structure matching engine. 5 curated matches per week with explanations of why you connect. Built for depth, not swiping.",
-  keywords: ["dating", "matching", "relationships", "lokfeel", "deep connection"],
+  description:
+    "LokFeel is a relationship structure matching engine built for depth, not swiping. Get 5 AI-curated matches per week with explanations of why you connect. Safe, private, and designed for meaningful relationships.",
+  keywords: [
+    "dating app",
+    "relationship matching",
+    "AI matchmaking",
+    "deep connection",
+    "intentional dating",
+    "relationship structure",
+    "lokfeel",
+    "alternative dating",
+    "kink-friendly dating",
+    "LGBTQ+ dating",
+    "meaningful relationships",
+    "curated matches",
+  ],
+  authors: [{ name: "LokFeel Team" }],
+  creator: "LokFeel",
+  publisher: "LokFeel",
   openGraph: {
     title: "LokFeel — Real Matches. Real Connection.",
-    description: "Relationship structure matching engine. Built for depth, not swiping.",
+    description:
+      "Relationship structure matching engine built for depth, not swiping. 5 AI-curated matches per week.",
     url: "https://lokfeel.com",
     siteName: "LokFeel",
     type: "website",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "LokFeel — Real Matches. Real Connection.",
-    description: "Relationship structure matching engine. Built for depth, not swiping.",
+    description:
+      "Relationship structure matching engine built for depth, not swiping.",
+    creator: "@lokfeel",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
 };
 

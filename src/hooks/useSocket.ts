@@ -321,7 +321,7 @@ export function useChatRoomSocket(options: UseSocketOptions = {}): UseChatRoomSo
       console.log("[Socket] New message:", data.message);
       setMessages((prev) => {
         // Deduplicate: skip if message already exists (from initial history load)
-        if (prev.some((m) => m.msgId === data.message.msgId || m.id === data.message.id)) {
+        if (prev.some((m) => m.msgId === data.message.msgId || (m as any).id === (data.message as any).id)) {
           return prev;
         }
         return [...prev, data.message];

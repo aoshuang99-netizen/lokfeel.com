@@ -11,6 +11,7 @@ import { getRuleEngine } from '@/lib/rules/engine';
 import { validateUpdateRulesRequest } from '@/lib/rules/schema';
 import { PowerBoardRules, UpdateRulesResponse, RuleChange } from '@/lib/rules/types';
 import { convertFullToLiteRules } from '@/lib/rules/defaults';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,14 +51,17 @@ export async function POST(request: NextRequest) {
   return handleApiError(async () => {
     const { user } = await requireAuth();
 
-    // TODO: 检查用户性别，仅女性可修改规则
-    // const profile = await db.profile.findUnique({ where: { userId: user.id } });
-    // if (profile?.gender !== 'female') {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Only female users can modify rules' },
-    //     { status: 403 }
-    //   );
-    // }
+    // Security: Only female users can modify rules (Red Wall pillar)
+    const profile = await db.profile.findUnique({
+      where: { userId: user.id },
+      select: { gender: true },
+    });
+    if (profile?.gender?.toUpperCase() !== 'FEMALE') {
+      return NextResponse.json(
+        { success: false, error: 'Only female users can modify rules' },
+        { status: 403 }
+      );
+    }
 
     const body = await request.json();
 

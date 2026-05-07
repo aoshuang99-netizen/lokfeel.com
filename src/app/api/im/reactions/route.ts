@@ -87,11 +87,10 @@ export async function POST(request: NextRequest) {
 
     try {
       const reaction = await addReaction(messageId, session.user.id, emoji);
-
-    return NextResponse.json({
-      success: true,
-      data: reaction,
-    });
+      return NextResponse.json({
+        success: true,
+        data: reaction,
+      });
     } catch (error: any) {
       // P2002 = unique constraint violation (user already reacted with this emoji)
       if (error?.code === 'P2002') {
@@ -106,6 +105,13 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+  } catch (error) {
+    console.error('Error in POST /api/im/reactions:', error);
+    return NextResponse.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Request processing error' } },
+      { status: 500 }
+    );
+  }
 }
 
 // ============================================================================
