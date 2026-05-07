@@ -348,8 +348,9 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('[API] Square error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { message: 'Failed to fetch recommendations' },
+      { message: 'Failed to fetch recommendations', error: message },
       { status: 500 }
     );
   }
