@@ -325,13 +325,66 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
 export const Gender: {
-  MALE: 'MALE',
-  FEMALE: 'FEMALE',
+  MAN: 'MAN',
+  WOMAN: 'WOMAN',
   NON_BINARY: 'NON_BINARY',
-  OTHER: 'OTHER'
+  TRANSGENDER_MAN: 'TRANSGENDER_MAN',
+  TRANSGENDER_WOMAN: 'TRANSGENDER_WOMAN',
+  GENDERQUEER: 'GENDERQUEER',
+  GENDERFLUID: 'GENDERFLUID',
+  AGENDER: 'AGENDER',
+  BIGENDER: 'BIGENDER',
+  PANGENDER: 'PANGENDER',
+  ANDROGYNE: 'ANDROGYNE',
+  DEMIGENDER: 'DEMIGENDER',
+  NEUTROIS: 'NEUTROIS',
+  TWO_SPIRIT: 'TWO_SPIRIT',
+  QUESTIONING: 'QUESTIONING',
+  GENDER_NONCONFORMING: 'GENDER_NONCONFORMING',
+  OTHER: 'OTHER',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY',
+  MALE: 'MALE',
+  FEMALE: 'FEMALE'
 };
 
 export type Gender = (typeof Gender)[keyof typeof Gender]
+
+
+export const DomSubRole: {
+  DOMINANT: 'DOMINANT',
+  SUBMISSIVE: 'SUBMISSIVE',
+  SWITCH: 'SWITCH',
+  TOP: 'TOP',
+  BOTTOM: 'BOTTOM',
+  BRAT: 'BRAT',
+  BRAT_TAMER: 'BRAT_TAMER',
+  PRIMAL: 'PRIMAL',
+  RIGGER: 'RIGGER',
+  ROPE_BUNNY: 'ROPE_BUNNY',
+  OWNER: 'OWNER',
+  PET: 'PET',
+  SADIST: 'SADIST',
+  MASOCHIST: 'MASOCHIST',
+  DADDY_MOMMY: 'DADDY_MOMMY',
+  LITTLE: 'LITTLE',
+  MASTEX: 'MASTEX',
+  VANILLA: 'VANILLA',
+  EXPLORING: 'EXPLORING',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
+};
+
+export type DomSubRole = (typeof DomSubRole)[keyof typeof DomSubRole]
+
+
+export const KinkExperienceLevel: {
+  BEGINNER: 'BEGINNER',
+  INTERMEDIATE: 'INTERMEDIATE',
+  EXPERIENCED: 'EXPERIENCED',
+  EXPERT: 'EXPERT',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
+};
+
+export type KinkExperienceLevel = (typeof KinkExperienceLevel)[keyof typeof KinkExperienceLevel]
 
 
 export const RelationshipGoal: {
@@ -641,6 +694,14 @@ export const UserRole: typeof $Enums.UserRole
 export type Gender = $Enums.Gender
 
 export const Gender: typeof $Enums.Gender
+
+export type DomSubRole = $Enums.DomSubRole
+
+export const DomSubRole: typeof $Enums.DomSubRole
+
+export type KinkExperienceLevel = $Enums.KinkExperienceLevel
+
+export const KinkExperienceLevel: typeof $Enums.KinkExperienceLevel
 
 export type RelationshipGoal = $Enums.RelationshipGoal
 
@@ -18047,6 +18108,11 @@ export namespace Prisma {
     lifePriorities: string | null
     emotionalAvailability: string | null
     selectedTags: string | null
+    domSubRole: $Enums.DomSubRole | null
+    preferredRole: $Enums.DomSubRole | null
+    kinkExperienceLevel: $Enums.KinkExperienceLevel | null
+    kinkInterests: string | null
+    hardLimits: string | null
     preferredAgeMin: number | null
     preferredAgeMax: number | null
     preferredGender: string | null
@@ -18092,6 +18158,11 @@ export namespace Prisma {
     lifePriorities: string | null
     emotionalAvailability: string | null
     selectedTags: string | null
+    domSubRole: $Enums.DomSubRole | null
+    preferredRole: $Enums.DomSubRole | null
+    kinkExperienceLevel: $Enums.KinkExperienceLevel | null
+    kinkInterests: string | null
+    hardLimits: string | null
     preferredAgeMin: number | null
     preferredAgeMax: number | null
     preferredGender: string | null
@@ -18137,6 +18208,11 @@ export namespace Prisma {
     lifePriorities: number
     emotionalAvailability: number
     selectedTags: number
+    domSubRole: number
+    preferredRole: number
+    kinkExperienceLevel: number
+    kinkInterests: number
+    hardLimits: number
     preferredAgeMin: number
     preferredAgeMax: number
     preferredGender: number
@@ -18202,6 +18278,11 @@ export namespace Prisma {
     lifePriorities?: true
     emotionalAvailability?: true
     selectedTags?: true
+    domSubRole?: true
+    preferredRole?: true
+    kinkExperienceLevel?: true
+    kinkInterests?: true
+    hardLimits?: true
     preferredAgeMin?: true
     preferredAgeMax?: true
     preferredGender?: true
@@ -18247,6 +18328,11 @@ export namespace Prisma {
     lifePriorities?: true
     emotionalAvailability?: true
     selectedTags?: true
+    domSubRole?: true
+    preferredRole?: true
+    kinkExperienceLevel?: true
+    kinkInterests?: true
+    hardLimits?: true
     preferredAgeMin?: true
     preferredAgeMax?: true
     preferredGender?: true
@@ -18292,6 +18378,11 @@ export namespace Prisma {
     lifePriorities?: true
     emotionalAvailability?: true
     selectedTags?: true
+    domSubRole?: true
+    preferredRole?: true
+    kinkExperienceLevel?: true
+    kinkInterests?: true
+    hardLimits?: true
     preferredAgeMin?: true
     preferredAgeMax?: true
     preferredGender?: true
@@ -18424,6 +18515,11 @@ export namespace Prisma {
     lifePriorities: string | null
     emotionalAvailability: string | null
     selectedTags: string
+    domSubRole: $Enums.DomSubRole | null
+    preferredRole: $Enums.DomSubRole | null
+    kinkExperienceLevel: $Enums.KinkExperienceLevel | null
+    kinkInterests: string
+    hardLimits: string
     preferredAgeMin: number | null
     preferredAgeMax: number | null
     preferredGender: string | null
@@ -18488,6 +18584,11 @@ export namespace Prisma {
     lifePriorities?: boolean
     emotionalAvailability?: boolean
     selectedTags?: boolean
+    domSubRole?: boolean
+    preferredRole?: boolean
+    kinkExperienceLevel?: boolean
+    kinkInterests?: boolean
+    hardLimits?: boolean
     preferredAgeMin?: boolean
     preferredAgeMax?: boolean
     preferredGender?: boolean
@@ -18535,6 +18636,11 @@ export namespace Prisma {
     lifePriorities?: boolean
     emotionalAvailability?: boolean
     selectedTags?: boolean
+    domSubRole?: boolean
+    preferredRole?: boolean
+    kinkExperienceLevel?: boolean
+    kinkInterests?: boolean
+    hardLimits?: boolean
     preferredAgeMin?: boolean
     preferredAgeMax?: boolean
     preferredGender?: boolean
@@ -18581,6 +18687,11 @@ export namespace Prisma {
     lifePriorities?: boolean
     emotionalAvailability?: boolean
     selectedTags?: boolean
+    domSubRole?: boolean
+    preferredRole?: boolean
+    kinkExperienceLevel?: boolean
+    kinkInterests?: boolean
+    hardLimits?: boolean
     preferredAgeMin?: boolean
     preferredAgeMax?: boolean
     preferredGender?: boolean
@@ -18627,6 +18738,11 @@ export namespace Prisma {
     lifePriorities?: boolean
     emotionalAvailability?: boolean
     selectedTags?: boolean
+    domSubRole?: boolean
+    preferredRole?: boolean
+    kinkExperienceLevel?: boolean
+    kinkInterests?: boolean
+    hardLimits?: boolean
     preferredAgeMin?: boolean
     preferredAgeMax?: boolean
     preferredGender?: boolean
@@ -18648,7 +18764,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "displayName" | "age" | "gender" | "genderIdentity" | "sexuality" | "bio" | "avatar" | "avatarType" | "galleryPhotos" | "city" | "country" | "relationshipGoal" | "attachmentStyle" | "communicationStyle" | "conflictResolution" | "loveLanguage" | "boundaries" | "dealbreakers" | "lifePriorities" | "emotionalAvailability" | "selectedTags" | "preferredAgeMin" | "preferredAgeMax" | "preferredGender" | "preferredDistance" | "preferredLocation" | "compatibilityScore" | "profileStatus" | "onboardingStep" | "isApproved" | "isVerified" | "personalityData" | "adminNotes" | "occupation" | "company" | "industry" | "linkedInVerified" | "verificationBadge" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
+  export type ProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "displayName" | "age" | "gender" | "genderIdentity" | "sexuality" | "bio" | "avatar" | "avatarType" | "galleryPhotos" | "city" | "country" | "relationshipGoal" | "attachmentStyle" | "communicationStyle" | "conflictResolution" | "loveLanguage" | "boundaries" | "dealbreakers" | "lifePriorities" | "emotionalAvailability" | "selectedTags" | "domSubRole" | "preferredRole" | "kinkExperienceLevel" | "kinkInterests" | "hardLimits" | "preferredAgeMin" | "preferredAgeMax" | "preferredGender" | "preferredDistance" | "preferredLocation" | "compatibilityScore" | "profileStatus" | "onboardingStep" | "isApproved" | "isVerified" | "personalityData" | "adminNotes" | "occupation" | "company" | "industry" | "linkedInVerified" | "verificationBadge" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
   export type ProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     botProfile?: boolean | Profile$botProfileArgs<ExtArgs>
@@ -18690,6 +18806,11 @@ export namespace Prisma {
       lifePriorities: string | null
       emotionalAvailability: string | null
       selectedTags: string
+      domSubRole: $Enums.DomSubRole | null
+      preferredRole: $Enums.DomSubRole | null
+      kinkExperienceLevel: $Enums.KinkExperienceLevel | null
+      kinkInterests: string
+      hardLimits: string
       preferredAgeMin: number | null
       preferredAgeMax: number | null
       preferredGender: string | null
@@ -19157,6 +19278,11 @@ export namespace Prisma {
     readonly lifePriorities: FieldRef<"Profile", 'String'>
     readonly emotionalAvailability: FieldRef<"Profile", 'String'>
     readonly selectedTags: FieldRef<"Profile", 'String'>
+    readonly domSubRole: FieldRef<"Profile", 'DomSubRole'>
+    readonly preferredRole: FieldRef<"Profile", 'DomSubRole'>
+    readonly kinkExperienceLevel: FieldRef<"Profile", 'KinkExperienceLevel'>
+    readonly kinkInterests: FieldRef<"Profile", 'String'>
+    readonly hardLimits: FieldRef<"Profile", 'String'>
     readonly preferredAgeMin: FieldRef<"Profile", 'Int'>
     readonly preferredAgeMax: FieldRef<"Profile", 'Int'>
     readonly preferredGender: FieldRef<"Profile", 'String'>
@@ -53997,6 +54123,11 @@ export namespace Prisma {
     lifePriorities: 'lifePriorities',
     emotionalAvailability: 'emotionalAvailability',
     selectedTags: 'selectedTags',
+    domSubRole: 'domSubRole',
+    preferredRole: 'preferredRole',
+    kinkExperienceLevel: 'kinkExperienceLevel',
+    kinkInterests: 'kinkInterests',
+    hardLimits: 'hardLimits',
     preferredAgeMin: 'preferredAgeMin',
     preferredAgeMax: 'preferredAgeMax',
     preferredGender: 'preferredGender',
@@ -54633,6 +54764,20 @@ export namespace Prisma {
    * Reference to a field of type 'RelationshipGoal'
    */
   export type EnumRelationshipGoalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RelationshipGoal'>
+    
+
+
+  /**
+   * Reference to a field of type 'DomSubRole'
+   */
+  export type EnumDomSubRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DomSubRole'>
+    
+
+
+  /**
+   * Reference to a field of type 'KinkExperienceLevel'
+   */
+  export type EnumKinkExperienceLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'KinkExperienceLevel'>
     
 
 
@@ -55880,6 +56025,11 @@ export namespace Prisma {
     lifePriorities?: StringNullableFilter<"Profile"> | string | null
     emotionalAvailability?: StringNullableFilter<"Profile"> | string | null
     selectedTags?: StringFilter<"Profile"> | string
+    domSubRole?: EnumDomSubRoleNullableFilter<"Profile"> | $Enums.DomSubRole | null
+    preferredRole?: EnumDomSubRoleNullableFilter<"Profile"> | $Enums.DomSubRole | null
+    kinkExperienceLevel?: EnumKinkExperienceLevelNullableFilter<"Profile"> | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFilter<"Profile"> | string
+    hardLimits?: StringFilter<"Profile"> | string
     preferredAgeMin?: IntNullableFilter<"Profile"> | number | null
     preferredAgeMax?: IntNullableFilter<"Profile"> | number | null
     preferredGender?: StringNullableFilter<"Profile"> | string | null
@@ -55927,6 +56077,11 @@ export namespace Prisma {
     lifePriorities?: SortOrderInput | SortOrder
     emotionalAvailability?: SortOrderInput | SortOrder
     selectedTags?: SortOrder
+    domSubRole?: SortOrderInput | SortOrder
+    preferredRole?: SortOrderInput | SortOrder
+    kinkExperienceLevel?: SortOrderInput | SortOrder
+    kinkInterests?: SortOrder
+    hardLimits?: SortOrder
     preferredAgeMin?: SortOrderInput | SortOrder
     preferredAgeMax?: SortOrderInput | SortOrder
     preferredGender?: SortOrderInput | SortOrder
@@ -55977,6 +56132,11 @@ export namespace Prisma {
     lifePriorities?: StringNullableFilter<"Profile"> | string | null
     emotionalAvailability?: StringNullableFilter<"Profile"> | string | null
     selectedTags?: StringFilter<"Profile"> | string
+    domSubRole?: EnumDomSubRoleNullableFilter<"Profile"> | $Enums.DomSubRole | null
+    preferredRole?: EnumDomSubRoleNullableFilter<"Profile"> | $Enums.DomSubRole | null
+    kinkExperienceLevel?: EnumKinkExperienceLevelNullableFilter<"Profile"> | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFilter<"Profile"> | string
+    hardLimits?: StringFilter<"Profile"> | string
     preferredAgeMin?: IntNullableFilter<"Profile"> | number | null
     preferredAgeMax?: IntNullableFilter<"Profile"> | number | null
     preferredGender?: StringNullableFilter<"Profile"> | string | null
@@ -56024,6 +56184,11 @@ export namespace Prisma {
     lifePriorities?: SortOrderInput | SortOrder
     emotionalAvailability?: SortOrderInput | SortOrder
     selectedTags?: SortOrder
+    domSubRole?: SortOrderInput | SortOrder
+    preferredRole?: SortOrderInput | SortOrder
+    kinkExperienceLevel?: SortOrderInput | SortOrder
+    kinkInterests?: SortOrder
+    hardLimits?: SortOrder
     preferredAgeMin?: SortOrderInput | SortOrder
     preferredAgeMax?: SortOrderInput | SortOrder
     preferredGender?: SortOrderInput | SortOrder
@@ -56077,6 +56242,11 @@ export namespace Prisma {
     lifePriorities?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     emotionalAvailability?: StringNullableWithAggregatesFilter<"Profile"> | string | null
     selectedTags?: StringWithAggregatesFilter<"Profile"> | string
+    domSubRole?: EnumDomSubRoleNullableWithAggregatesFilter<"Profile"> | $Enums.DomSubRole | null
+    preferredRole?: EnumDomSubRoleNullableWithAggregatesFilter<"Profile"> | $Enums.DomSubRole | null
+    kinkExperienceLevel?: EnumKinkExperienceLevelNullableWithAggregatesFilter<"Profile"> | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringWithAggregatesFilter<"Profile"> | string
+    hardLimits?: StringWithAggregatesFilter<"Profile"> | string
     preferredAgeMin?: IntNullableWithAggregatesFilter<"Profile"> | number | null
     preferredAgeMax?: IntNullableWithAggregatesFilter<"Profile"> | number | null
     preferredGender?: StringNullableWithAggregatesFilter<"Profile"> | string | null
@@ -60016,6 +60186,11 @@ export namespace Prisma {
     lifePriorities?: string | null
     emotionalAvailability?: string | null
     selectedTags?: string
+    domSubRole?: $Enums.DomSubRole | null
+    preferredRole?: $Enums.DomSubRole | null
+    kinkExperienceLevel?: $Enums.KinkExperienceLevel | null
+    kinkInterests?: string
+    hardLimits?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -60063,6 +60238,11 @@ export namespace Prisma {
     lifePriorities?: string | null
     emotionalAvailability?: string | null
     selectedTags?: string
+    domSubRole?: $Enums.DomSubRole | null
+    preferredRole?: $Enums.DomSubRole | null
+    kinkExperienceLevel?: $Enums.KinkExperienceLevel | null
+    kinkInterests?: string
+    hardLimits?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -60108,6 +60288,11 @@ export namespace Prisma {
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
     selectedTags?: StringFieldUpdateOperationsInput | string
+    domSubRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    preferredRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    kinkExperienceLevel?: NullableEnumKinkExperienceLevelFieldUpdateOperationsInput | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFieldUpdateOperationsInput | string
+    hardLimits?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -60155,6 +60340,11 @@ export namespace Prisma {
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
     selectedTags?: StringFieldUpdateOperationsInput | string
+    domSubRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    preferredRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    kinkExperienceLevel?: NullableEnumKinkExperienceLevelFieldUpdateOperationsInput | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFieldUpdateOperationsInput | string
+    hardLimits?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -60201,6 +60391,11 @@ export namespace Prisma {
     lifePriorities?: string | null
     emotionalAvailability?: string | null
     selectedTags?: string
+    domSubRole?: $Enums.DomSubRole | null
+    preferredRole?: $Enums.DomSubRole | null
+    kinkExperienceLevel?: $Enums.KinkExperienceLevel | null
+    kinkInterests?: string
+    hardLimits?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -60245,6 +60440,11 @@ export namespace Prisma {
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
     selectedTags?: StringFieldUpdateOperationsInput | string
+    domSubRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    preferredRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    kinkExperienceLevel?: NullableEnumKinkExperienceLevelFieldUpdateOperationsInput | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFieldUpdateOperationsInput | string
+    hardLimits?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -60290,6 +60490,11 @@ export namespace Prisma {
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
     selectedTags?: StringFieldUpdateOperationsInput | string
+    domSubRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    preferredRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    kinkExperienceLevel?: NullableEnumKinkExperienceLevelFieldUpdateOperationsInput | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFieldUpdateOperationsInput | string
+    hardLimits?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -64430,6 +64635,20 @@ export namespace Prisma {
     not?: NestedEnumRelationshipGoalFilter<$PrismaModel> | $Enums.RelationshipGoal
   }
 
+  export type EnumDomSubRoleNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.DomSubRole | EnumDomSubRoleFieldRefInput<$PrismaModel> | null
+    in?: $Enums.DomSubRole[] | null
+    notIn?: $Enums.DomSubRole[] | null
+    not?: NestedEnumDomSubRoleNullableFilter<$PrismaModel> | $Enums.DomSubRole | null
+  }
+
+  export type EnumKinkExperienceLevelNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.KinkExperienceLevel | EnumKinkExperienceLevelFieldRefInput<$PrismaModel> | null
+    in?: $Enums.KinkExperienceLevel[] | null
+    notIn?: $Enums.KinkExperienceLevel[] | null
+    not?: NestedEnumKinkExperienceLevelNullableFilter<$PrismaModel> | $Enums.KinkExperienceLevel | null
+  }
+
   export type EnumProfileStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ProfileStatus | EnumProfileStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ProfileStatus[]
@@ -64466,6 +64685,11 @@ export namespace Prisma {
     lifePriorities?: SortOrder
     emotionalAvailability?: SortOrder
     selectedTags?: SortOrder
+    domSubRole?: SortOrder
+    preferredRole?: SortOrder
+    kinkExperienceLevel?: SortOrder
+    kinkInterests?: SortOrder
+    hardLimits?: SortOrder
     preferredAgeMin?: SortOrder
     preferredAgeMax?: SortOrder
     preferredGender?: SortOrder
@@ -64520,6 +64744,11 @@ export namespace Prisma {
     lifePriorities?: SortOrder
     emotionalAvailability?: SortOrder
     selectedTags?: SortOrder
+    domSubRole?: SortOrder
+    preferredRole?: SortOrder
+    kinkExperienceLevel?: SortOrder
+    kinkInterests?: SortOrder
+    hardLimits?: SortOrder
     preferredAgeMin?: SortOrder
     preferredAgeMax?: SortOrder
     preferredGender?: SortOrder
@@ -64565,6 +64794,11 @@ export namespace Prisma {
     lifePriorities?: SortOrder
     emotionalAvailability?: SortOrder
     selectedTags?: SortOrder
+    domSubRole?: SortOrder
+    preferredRole?: SortOrder
+    kinkExperienceLevel?: SortOrder
+    kinkInterests?: SortOrder
+    hardLimits?: SortOrder
     preferredAgeMin?: SortOrder
     preferredAgeMax?: SortOrder
     preferredGender?: SortOrder
@@ -64613,6 +64847,26 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRelationshipGoalFilter<$PrismaModel>
     _max?: NestedEnumRelationshipGoalFilter<$PrismaModel>
+  }
+
+  export type EnumDomSubRoleNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.DomSubRole | EnumDomSubRoleFieldRefInput<$PrismaModel> | null
+    in?: $Enums.DomSubRole[] | null
+    notIn?: $Enums.DomSubRole[] | null
+    not?: NestedEnumDomSubRoleNullableWithAggregatesFilter<$PrismaModel> | $Enums.DomSubRole | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumDomSubRoleNullableFilter<$PrismaModel>
+    _max?: NestedEnumDomSubRoleNullableFilter<$PrismaModel>
+  }
+
+  export type EnumKinkExperienceLevelNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.KinkExperienceLevel | EnumKinkExperienceLevelFieldRefInput<$PrismaModel> | null
+    in?: $Enums.KinkExperienceLevel[] | null
+    notIn?: $Enums.KinkExperienceLevel[] | null
+    not?: NestedEnumKinkExperienceLevelNullableWithAggregatesFilter<$PrismaModel> | $Enums.KinkExperienceLevel | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumKinkExperienceLevelNullableFilter<$PrismaModel>
+    _max?: NestedEnumKinkExperienceLevelNullableFilter<$PrismaModel>
   }
 
   export type EnumProfileStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -68080,6 +68334,14 @@ export namespace Prisma {
     set?: $Enums.RelationshipGoal
   }
 
+  export type NullableEnumDomSubRoleFieldUpdateOperationsInput = {
+    set?: $Enums.DomSubRole | null
+  }
+
+  export type NullableEnumKinkExperienceLevelFieldUpdateOperationsInput = {
+    set?: $Enums.KinkExperienceLevel | null
+  }
+
   export type EnumProfileStatusFieldUpdateOperationsInput = {
     set?: $Enums.ProfileStatus
   }
@@ -69774,6 +70036,20 @@ export namespace Prisma {
     not?: NestedEnumRelationshipGoalFilter<$PrismaModel> | $Enums.RelationshipGoal
   }
 
+  export type NestedEnumDomSubRoleNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.DomSubRole | EnumDomSubRoleFieldRefInput<$PrismaModel> | null
+    in?: $Enums.DomSubRole[] | null
+    notIn?: $Enums.DomSubRole[] | null
+    not?: NestedEnumDomSubRoleNullableFilter<$PrismaModel> | $Enums.DomSubRole | null
+  }
+
+  export type NestedEnumKinkExperienceLevelNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.KinkExperienceLevel | EnumKinkExperienceLevelFieldRefInput<$PrismaModel> | null
+    in?: $Enums.KinkExperienceLevel[] | null
+    notIn?: $Enums.KinkExperienceLevel[] | null
+    not?: NestedEnumKinkExperienceLevelNullableFilter<$PrismaModel> | $Enums.KinkExperienceLevel | null
+  }
+
   export type NestedEnumProfileStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ProfileStatus | EnumProfileStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ProfileStatus[]
@@ -69799,6 +70075,26 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRelationshipGoalFilter<$PrismaModel>
     _max?: NestedEnumRelationshipGoalFilter<$PrismaModel>
+  }
+
+  export type NestedEnumDomSubRoleNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.DomSubRole | EnumDomSubRoleFieldRefInput<$PrismaModel> | null
+    in?: $Enums.DomSubRole[] | null
+    notIn?: $Enums.DomSubRole[] | null
+    not?: NestedEnumDomSubRoleNullableWithAggregatesFilter<$PrismaModel> | $Enums.DomSubRole | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumDomSubRoleNullableFilter<$PrismaModel>
+    _max?: NestedEnumDomSubRoleNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumKinkExperienceLevelNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.KinkExperienceLevel | EnumKinkExperienceLevelFieldRefInput<$PrismaModel> | null
+    in?: $Enums.KinkExperienceLevel[] | null
+    notIn?: $Enums.KinkExperienceLevel[] | null
+    not?: NestedEnumKinkExperienceLevelNullableWithAggregatesFilter<$PrismaModel> | $Enums.KinkExperienceLevel | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumKinkExperienceLevelNullableFilter<$PrismaModel>
+    _max?: NestedEnumKinkExperienceLevelNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumProfileStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -70292,6 +70588,11 @@ export namespace Prisma {
     lifePriorities?: string | null
     emotionalAvailability?: string | null
     selectedTags?: string
+    domSubRole?: $Enums.DomSubRole | null
+    preferredRole?: $Enums.DomSubRole | null
+    kinkExperienceLevel?: $Enums.KinkExperienceLevel | null
+    kinkInterests?: string
+    hardLimits?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -70338,6 +70639,11 @@ export namespace Prisma {
     lifePriorities?: string | null
     emotionalAvailability?: string | null
     selectedTags?: string
+    domSubRole?: $Enums.DomSubRole | null
+    preferredRole?: $Enums.DomSubRole | null
+    kinkExperienceLevel?: $Enums.KinkExperienceLevel | null
+    kinkInterests?: string
+    hardLimits?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -70398,6 +70704,11 @@ export namespace Prisma {
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
     selectedTags?: StringFieldUpdateOperationsInput | string
+    domSubRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    preferredRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    kinkExperienceLevel?: NullableEnumKinkExperienceLevelFieldUpdateOperationsInput | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFieldUpdateOperationsInput | string
+    hardLimits?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -70444,6 +70755,11 @@ export namespace Prisma {
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
     selectedTags?: StringFieldUpdateOperationsInput | string
+    domSubRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    preferredRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    kinkExperienceLevel?: NullableEnumKinkExperienceLevelFieldUpdateOperationsInput | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFieldUpdateOperationsInput | string
+    hardLimits?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -70579,6 +70895,11 @@ export namespace Prisma {
     lifePriorities?: string | null
     emotionalAvailability?: string | null
     selectedTags?: string
+    domSubRole?: $Enums.DomSubRole | null
+    preferredRole?: $Enums.DomSubRole | null
+    kinkExperienceLevel?: $Enums.KinkExperienceLevel | null
+    kinkInterests?: string
+    hardLimits?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -70624,6 +70945,11 @@ export namespace Prisma {
     lifePriorities?: string | null
     emotionalAvailability?: string | null
     selectedTags?: string
+    domSubRole?: $Enums.DomSubRole | null
+    preferredRole?: $Enums.DomSubRole | null
+    kinkExperienceLevel?: $Enums.KinkExperienceLevel | null
+    kinkInterests?: string
+    hardLimits?: string
     preferredAgeMin?: number | null
     preferredAgeMax?: number | null
     preferredGender?: string | null
@@ -71922,6 +72248,11 @@ export namespace Prisma {
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
     selectedTags?: StringFieldUpdateOperationsInput | string
+    domSubRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    preferredRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    kinkExperienceLevel?: NullableEnumKinkExperienceLevelFieldUpdateOperationsInput | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFieldUpdateOperationsInput | string
+    hardLimits?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71967,6 +72298,11 @@ export namespace Prisma {
     lifePriorities?: NullableStringFieldUpdateOperationsInput | string | null
     emotionalAvailability?: NullableStringFieldUpdateOperationsInput | string | null
     selectedTags?: StringFieldUpdateOperationsInput | string
+    domSubRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    preferredRole?: NullableEnumDomSubRoleFieldUpdateOperationsInput | $Enums.DomSubRole | null
+    kinkExperienceLevel?: NullableEnumKinkExperienceLevelFieldUpdateOperationsInput | $Enums.KinkExperienceLevel | null
+    kinkInterests?: StringFieldUpdateOperationsInput | string
+    hardLimits?: StringFieldUpdateOperationsInput | string
     preferredAgeMin?: NullableIntFieldUpdateOperationsInput | number | null
     preferredAgeMax?: NullableIntFieldUpdateOperationsInput | number | null
     preferredGender?: NullableStringFieldUpdateOperationsInput | string | null

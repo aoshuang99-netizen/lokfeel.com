@@ -31,6 +31,10 @@ export interface EnhancedUserProfile extends BaseUserProfile {
   relationshipType?: string | null  // "MONOGAMY", "ETHICAL_NON_MONOGAMY", "POLYAMORY", "KINK_BDSM", "CASUAL_DATING", "FRIENDSHIP_FIRST"
   // 新增：性取向
   sexualOrientation?: string | null // "STRAIGHT", "GAY", "LESBIAN", "BISEXUAL", "PANSEXUAL", "QUEER", "ASEXUAL", "DEMISEXUAL", "QUESTIONING"
+  // Phase B: Dom/Sub role
+  domSubRole?: string | null
+  // Phase B: Kink experience level
+  kinkExperienceLevel?: string | null
   // Power Board设置
   powerBoardSettings?: PowerBoardSettings | null
 }
@@ -66,6 +70,8 @@ export interface EnhancedMatchScore extends BaseMatchScore {
   // 新增维度分数
   relationshipType: number
   sexualOrientation: number
+  // Phase B: Dom/Sub role compatibility
+  domSubRoleCompat: number
   // Power Board兼容性
   powerBoardCompat: number
   // 学习系统调整
@@ -257,6 +263,89 @@ const SEXUAL_ORIENTATION_COMPAT: Record<string, Record<string, number>> = {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// PHASE B: DOM/SUB ROLE COMPATIBILITY MATRIX
+// ═══════════════════════════════════════════════════════════════
+
+const DOM_SUB_ROLE_COMPAT: Record<string, Record<string, number>> = {
+  'DOMINANT': {
+    'DOMINANT': 40,       // Clash of wills
+    'SUBMISSIVE': 95,     // Perfect complement
+    'SWITCH': 85,         // Good dynamic
+    'VANILLA': 50,        // Different wavelengths
+    'TOP': 60,            // Both active
+    'BOTTOM': 90,         // Natural complement
+    'BRAT': 80,           // Fun challenge for Dom
+    'BRAT_TAMER': 45,     // Two tammers
+    'PRIMAL': 75,         // Intense energy
+    'RIGGER': 85,         // Rigger + bottom works
+    'ROPE_BUNNY': 90,     // Natural pairing
+    'SADIST': 70,         // Overlap
+    'MASOCHIST': 85,      // Classic pairing
+    'DADDY_MOMMY': 75,    // Care + control
+    'LITTLE': 80,         // Care dynamic
+    'EXPLORING': 75,      // Can guide
+    'VANILLA_EXPLORING': 60,
+    'PREFER_NOT_TO_SAY': 70,
+  },
+  'SUBMISSIVE': {
+    'SUBMISSIVE': 35,
+    'DOMINANT': 95,
+    'SWITCH': 85,
+    'VANILLA': 50,
+    'TOP': 90,
+    'BOTTOM': 40,
+    'BRAT': 50,
+    'BRAT_TAMER': 80,
+    'PRIMAL': 70,
+    'RIGGER': 90,
+    'ROPE_BUNNY': 60,
+    'SADIST': 90,
+    'MASOCHIST': 70,
+    'DADDY_MOMMY': 85,
+    'LITTLE': 60,
+    'EXPLORING': 70,
+    'VANILLA_EXPLORING': 55,
+    'PREFER_NOT_TO_SAY': 70,
+  },
+  'SWITCH': {
+    'SWITCH': 90,         // Very flexible together
+    'DOMINANT': 85,
+    'SUBMISSIVE': 85,
+    'VANILLA': 60,
+    'TOP': 80,
+    'BOTTOM': 80,
+    'BRAT': 75,
+    'PRIMAL': 85,
+    'RIGGER': 80,
+    'ROPE_BUNNY': 80,
+    'EXPLORING': 85,
+    'PREFER_NOT_TO_SAY': 75,
+  },
+  'VANILLA': {
+    'VANILLA': 95,
+    'DOMINANT': 50,
+    'SUBMISSIVE': 50,
+    'SWITCH': 60,
+    'EXPLORING': 70,
+    'PREFER_NOT_TO_SAY': 85,
+  },
+  'EXPLORING': {
+    'EXPLORING': 90,
+    'SWITCH': 85,
+    'DOMINANT': 75,
+    'SUBMISSIVE': 75,
+    'VANILLA': 70,
+    'PREFER_NOT_TO_SAY': 75,
+  },
+  'PREFER_NOT_TO_SAY': {
+    'PREFER_NOT_TO_SAY': 80,
+    'VANILLA': 85,
+    'SWITCH': 75,
+    'EXPLORING': 75,
+  },
+}
+
+// ═══════════════════════════════════════════════════════════════
 // POWER BOARD COMPATIBILITY SCORING
 // ═══════════════════════════════════════════════════════════════
 
@@ -396,6 +485,30 @@ function scoreSexualOrientation(
   if (potentialMismatch) {
     score = Math.max(0, score - 40)
     warnings.push('Potential gender-orientation mismatch - verify compatibility')
+  }
+
+  return { score, warnings }
+}
+
+/**
+ * Phase B: Calculate Dom/Sub role compatibility
+ * Only applies when both users have selected a role
+ */
+function scoreDomSubRole(
+  roleA: string | null | undefined,
+  roleB: string | null | undefined
+): { score: number; warnings: string[] } {
+  const warnings: string[] = []
+
+  if (!roleA || !roleB) {
+    return { score: 70, warnings } // Neutral if not set
+  }
+
+  const score = DOM_SUB_ROLE_COMPAT[roleA]?.[roleB] ||
+                DOM_SUB_ROLE_COMPAT[roleB]?.[roleA] || 60
+
+  if (score < 40) {
+    warnings.push(`Role dynamics may clash: ${roleA} and ${roleB} typically need different partners`)
   }
 
   return { score, warnings }
@@ -566,6 +679,7 @@ function generateEnhancedMatchReason(
     lifestyle: number
     relationshipType: number
     sexualOrientation: number
+    domSubRole: number
     powerBoard: number
   }
 ): string {
@@ -662,6 +776,12 @@ export function calculateEnhancedMatchScore(
     userB.powerBoardSettings
   )
 
+  // Phase B: Dom/Sub role compatibility
+  const domSubScore = scoreDomSubRole(
+    userA.domSubRole,
+    userB.domSubRole
+  )
+
   // 3. 计算学习系统调整
   const learningAdjustments = calculateLearningAdjustments(
     userA,
@@ -671,18 +791,18 @@ export function calculateEnhancedMatchScore(
   )
 
   // 4. 加权计算总分（新权重分配）
-  const weightedBase = 
-    baseScore.attachment * 0.20 +      // 20% (from 25%)
-    baseScore.communication * 0.15 +    // 15% (from 20%)
-    baseScore.conflict * 0.15 +         // 15% (from 20%)
-    baseScore.values * 0.15 +           // 15% (from 20%)
-    baseScore.lifestyle * 0.10          // 10% (from 15%)
+  const weightedBase =
+    baseScore.attachment * 0.18 +      // 18% (from 20%)
+    baseScore.communication * 0.13 +    // 13% (from 15%)
+    baseScore.conflict * 0.13 +         // 13% (from 15%)
+    baseScore.values * 0.13 +           // 13% (from 15%)
+    baseScore.lifestyle * 0.08          // 8% (from 10%)
 
   const weightedNew =
-    relationshipTypeScore.score * 0.15 +    // 15% (NEW)
-    sexualOrientationScore.score * 0.10     // 10% (NEW)
-
-  // Power Board作为调整因子（±5%）
+    relationshipTypeScore.score * 0.12 +    // 12% (from 15%)
+    sexualOrientationScore.score * 0.08 +    // 8% (from 10%)
+    domSubScore.score * 0.08                 // 8% (NEW - Phase B)
+    // Power Board作为调整因子（±5%）
   const powerBoardAdjustment = (powerBoardScore.score - 50) / 1000 // -5% to +5%
 
   // 计算原始总分
@@ -702,6 +822,7 @@ export function calculateEnhancedMatchScore(
     ...baseScore.conflictWarnings,
     ...relationshipTypeScore.warnings,
     ...sexualOrientationScore.warnings,
+    ...domSubScore.warnings,
     ...powerBoardScore.warnings,
   ]
 
@@ -714,6 +835,7 @@ export function calculateEnhancedMatchScore(
     lifestyle: baseScore.lifestyle,
     relationshipType: relationshipTypeScore.score,
     sexualOrientation: sexualOrientationScore.score,
+    domSubRole: domSubScore.score,
     powerBoard: powerBoardScore.score,
   })
 
@@ -722,6 +844,7 @@ export function calculateEnhancedMatchScore(
     total: finalScore,
     relationshipType: relationshipTypeScore.score,
     sexualOrientation: sexualOrientationScore.score,
+    domSubRoleCompat: domSubScore.score,
     powerBoardCompat: powerBoardScore.score,
     learningAdjustments: {
       botPreferenceBoost: learningAdjustments.botPreferenceBoost,

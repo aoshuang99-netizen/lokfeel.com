@@ -415,6 +415,15 @@ model Profile {
   // NEW: User Preference Tags for Matching (最多5个)
   // ═══════════════════════════════════════════════════════════════
   selectedTags      String          @default("[]")  // JSON: string[] - 用户选择的标签
+
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE B: Kink & Power Dynamics Profile
+  // ═══════════════════════════════════════════════════════════════
+  domSubRole          DomSubRole?          // User's primary role identity
+  preferredRole       DomSubRole?          // Preferred role in a partner
+  kinkExperienceLevel KinkExperienceLevel?  // Experience level in kink dynamics
+  kinkInterests       String  @default("[]")  // JSON: string[] - selected kink categories
+  hardLimits          String  @default("[]")  // JSON: string[] - absolute boundaries
   
   // Preferences for matching
   preferredAgeMin    Int?
@@ -1312,11 +1321,72 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PHASE B: Expanded Identity & Relationship Enums
+// ═══════════════════════════════════════════════════════════════
+
 enum Gender {
+  // Core identities
+  MAN
+  WOMAN
+  NON_BINARY
+  // Trans identities
+  TRANSGENDER_MAN
+  TRANSGENDER_WOMAN
+  // Non-binary spectrum
+  GENDERQUEER
+  GENDERFLUID
+  AGENDER
+  BIGENDER
+  PANGENDER
+  ANDROGYNE
+  DEMIGENDER
+  NEUTROIS
+  TWO_SPIRIT
+  // Self-discovery
+  QUESTIONING
+  GENDER_NONCONFORMING
+  // Fallbacks
+  OTHER
+  PREFER_NOT_TO_SAY
+  // Legacy (backward compat)
   MALE
   FEMALE
-  NON_BINARY
-  OTHER
+}
+
+enum DomSubRole {
+  // Core power dynamics
+  DOMINANT
+  SUBMISSIVE
+  SWITCH
+  // Positional
+  TOP
+  BOTTOM
+  // Specialized dynamics
+  BRAT
+  BRAT_TAMER
+  PRIMAL
+  RIGGER
+  ROPE_BUNNY
+  OWNER
+  PET
+  SADIST
+  MASOCHIST
+  DADDY_MOMMY
+  LITTLE
+  MASTEX
+  // Vanilla & exploring
+  VANILLA
+  EXPLORING
+  PREFER_NOT_TO_SAY
+}
+
+enum KinkExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  EXPERIENCED
+  EXPERT
+  PREFER_NOT_TO_SAY
 }
 
 enum RelationshipGoal {

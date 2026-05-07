@@ -25,16 +25,81 @@ import { ErrorBoundary } from "@/components/shared/error-boundary";
 // SEXUAL ORIENTATION TAGS (Primary Filter)
 // ══════════════════════════════════════
 
+// ══════════════════════════════════════
+// GENDER IDENTITY OPTIONS (Phase B: 18 options)
+// ══════════════════════════════════════
+
+const GENDER_IDENTITY_OPTIONS = [
+  { value: "WOMAN", label: "Woman", emoji: "👩", group: "Core" },
+  { value: "MAN", label: "Man", emoji: "👨", group: "Core" },
+  { value: "NON_BINARY", label: "Non-binary", emoji: "🏳️‍🌈", group: "Core" },
+  { value: "TRANSGENDER_MAN", label: "Trans Man", emoji: "🧑", group: "Trans" },
+  { value: "TRANSGENDER_WOMAN", label: "Trans Woman", emoji: "👩", group: "Trans" },
+  { value: "GENDERQUEER", label: "Genderqueer", emoji: "🌈", group: "Non-binary" },
+  { value: "GENDERFLUID", label: "Genderfluid", emoji: "🌊", group: "Non-binary" },
+  { value: "AGENDER", label: "Agender", emoji: "⚪", group: "Non-binary" },
+  { value: "BIGENDER", label: "Bigender", emoji: "✨", group: "Non-binary" },
+  { value: "PANGENDER", label: "Pangender", emoji: "🌟", group: "Non-binary" },
+  { value: "TWO_SPIRIT", label: "Two-Spirit", emoji: "🪶", group: "Cultural" },
+  { value: "QUESTIONING", label: "Questioning", emoji: "❓", group: "Exploring" },
+  { value: "OTHER", label: "Other", emoji: "➕", group: "Other" },
+  { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say", emoji: "🤐", group: "Other" },
+];
+
+// ══════════════════════════════════════
+// SEXUAL ORIENTATION TAGS (Phase B: 24 options, grouped)
+// ══════════════════════════════════════
+
 const SEXUAL_ORIENTATION_TAGS = [
-  { value: "STRAIGHT", label: "Straight", emoji: "💕", color: "#FF6B9D" },
-  { value: "GAY", label: "Gay", emoji: "🌈", color: "#FF8C42" },
-  { value: "LESBIAN", label: "Lesbian", emoji: "💜", color: "#9B59B6" },
-  { value: "BISEXUAL", label: "Bisexual", emoji: "💗", color: "#E91E63" },
-  { value: "PANSEXUAL", label: "Pansexual", emoji: "💛", color: "#FFD93D" },
-  { value: "QUEER", label: "Queer", emoji: "🌟", color: "#00BCD4" },
-  { value: "ASEXUAL", label: "Asexual", emoji: "🤍", color: "#9E9E9E" },
-  { value: "DEMISEXUAL", label: "Demisexual", emoji: "💙", color: "#3F51B5" },
-  { value: "QUESTIONING", label: "Exploring", emoji: "🔮", color: "#673AB7" },
+  { value: "STRAIGHT", label: "Straight", emoji: "💕", color: "#FF6B9D", group: "Monosexual" },
+  { value: "GAY", label: "Gay", emoji: "🌈", color: "#FF8C42", group: "Monosexual" },
+  { value: "LESBIAN", label: "Lesbian", emoji: "💜", color: "#9B59B6", group: "Monosexual" },
+  { value: "BISEXUAL", label: "Bisexual", emoji: "💗", color: "#E91E63", group: "Multi-gender" },
+  { value: "PANSEXUAL", label: "Pansexual", emoji: "💛", color: "#FFD93D", group: "Multi-gender" },
+  { value: "POLYSEXUAL", label: "Polysexual", emoji: "💚", color: "#4CAF50", group: "Multi-gender" },
+  { value: "OMNISEXUAL", label: "Omnisexual", emoji: "🧡", color: "#FF9800", group: "Multi-gender" },
+  { value: "HETEROFLEXIBLE", label: "Heteroflexible", emoji: "🌈", color: "#64B5F6", group: "Multi-gender" },
+  { value: "ASEXUAL", label: "Asexual", emoji: "🤍", color: "#9E9E9E", group: "Ace Spectrum" },
+  { value: "DEMISEXUAL", label: "Demisexual", emoji: "💙", color: "#3F51B5", group: "Ace Spectrum" },
+  { value: "GRAYSEXUAL", label: "Graysexual", emoji: "🖤", color: "#795548", group: "Ace Spectrum" },
+  { value: "QUEER", label: "Queer", emoji: "🌟", color: "#00BCD4", group: "Identity" },
+  { value: "QUESTIONING", label: "Exploring", emoji: "🔮", color: "#673AB7", group: "Identity" },
+  { value: "SAPPIOSEXUAL", label: "Sapiosexual", emoji: "🧠", color: "#607D8B", group: "Attraction" },
+  { value: "AROMANTIC", label: "Aromantic", emoji: "🖤", color: "#424242", group: "Romantic" },
+  { value: "BIROMANTIC", label: "Biromantic", emoji: "💕", color: "#E91E63", group: "Romantic" },
+  { value: "OTHER", label: "Other", emoji: "➕", color: "#78909C", group: "Other" },
+  { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say", emoji: "🤐", color: "#B0BEC5", group: "Other" },
+];
+
+// ══════════════════════════════════════
+// DOM/SUB ROLE OPTIONS (Phase B: conditional on KINK_BDSM)
+// ══════════════════════════════════════
+
+const DOM_SUB_ROLE_OPTIONS = [
+  { value: "DOMINANT", label: "Dominant", emoji: "👑", desc: "Takes the lead" },
+  { value: "SUBMISSIVE", label: "Submissive", emoji: "🦋", desc: "Yields control" },
+  { value: "SWITCH", label: "Switch", emoji: "🔄", desc: "Flows between both" },
+  { value: "VANILLA", label: "Vanilla", emoji: "☕", desc: "Traditional" },
+  { value: "TOP", label: "Top", emoji: "⬆️", desc: "Active role" },
+  { value: "BOTTOM", label: "Bottom", emoji: "⬇️", desc: "Passive role" },
+  { value: "BRAT", label: "Brat", emoji: "😈", desc: "Playfully challenges" },
+  { value: "PRIMAL", label: "Primal", emoji: "🐺", desc: "Instinct-driven" },
+  { value: "RIGGER", label: "Rigger", emoji: "🪢", desc: "Bondage artist" },
+  { value: "ROPE_BUNNY", label: "Rope Bunny", emoji: "🐰", desc: "Enjoys being tied" },
+  { value: "SADIST", label: "Sadist", emoji: "⚔️", desc: "Gives sensation" },
+  { value: "MASOCHIST", label: "Masochist", emoji: "🔥", desc: "Receives sensation" },
+  { value: "DADDY_MOMMY", label: "Daddy/Mommy", emoji: "🧸", desc: "Caregiver" },
+  { value: "LITTLE", label: "Little", emoji: "🧒", desc: "Age regression" },
+  { value: "EXPLORING", label: "Exploring", emoji: "🔍", desc: "Curious beginner" },
+  { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say", emoji: "🤐", desc: "" },
+];
+
+const KINK_EXPERIENCE_OPTIONS = [
+  { value: "BEGINNER", label: "Beginner", emoji: "🌱", desc: "New to kink" },
+  { value: "INTERMEDIATE", label: "Intermediate", emoji: "🌿", desc: "Expanding skills" },
+  { value: "EXPERIENCED", label: "Experienced", emoji: "🌳", desc: "Well-versed" },
+  { value: "EXPERT", label: "Expert", emoji: "🏆", desc: "Deep mastery" },
+  { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say", emoji: "🤐", desc: "" },
 ];
 
 // ══════════════════════════════════════
@@ -354,7 +419,11 @@ function OnboardingV3Page() {
     // Step 1: Desire
     relationshipDesire: "" as string,
     // Step 2: Identity
+    gender: "" as string,
     sexualOrientation: "" as string,
+    // Step 2b: Power Dynamics (conditional on KINK_BDSM)
+    domSubRole: "" as string,
+    kinkExperienceLevel: "" as string,
     // Step 3: Traits
     attachmentStyle: "" as string,
     communicationStyle: "" as string,
@@ -381,8 +450,13 @@ function OnboardingV3Page() {
       if (stepIndex >= 0 && data.relationshipDesire) {
         stepPayload.relationshipGoal = data.relationshipDesire;
       }
-      if (stepIndex >= 1 && data.sexualOrientation) {
-        stepPayload.sexuality = data.sexualOrientation;
+      if (stepIndex >= 1) {
+        if (data.gender) stepPayload.gender = data.gender;
+        if (data.sexualOrientation) stepPayload.sexuality = data.sexualOrientation;
+      }
+      if (stepIndex >= 1) {
+        if (data.domSubRole) stepPayload.domSubRole = data.domSubRole;
+        if (data.kinkExperienceLevel) stepPayload.kinkExperienceLevel = data.kinkExperienceLevel;
       }
       if (stepIndex >= 2) {
         if (data.attachmentStyle) stepPayload.attachmentStyle = data.attachmentStyle;
@@ -442,7 +516,10 @@ function OnboardingV3Page() {
           setData(prev => ({
             ...prev,
             relationshipDesire: p.relationshipGoal || p.relationshipType || "",
+            gender: p.gender || "",
             sexualOrientation: p.sexuality || p.sexualOrientation || "",
+            domSubRole: p.domSubRole || "",
+            kinkExperienceLevel: p.kinkExperienceLevel || "",
             attachmentStyle: p.attachmentStyle || "",
             communicationStyle: p.communicationStyle || "",
             loveLanguage: p.loveLanguage || "",
@@ -637,11 +714,16 @@ function OnboardingV3Page() {
       }
 
       // Build profile data with proper field mappings
-      const payload = {
+      const payload: Record<string, any> = {
         // Map relationship desire to relationshipGoal
         relationshipGoal: data.relationshipDesire,
+        // Phase B: Gender identity
+        gender: data.gender || undefined,
         // Map sexual orientation to sexuality
         sexuality: data.sexualOrientation,
+        // Phase B: Power dynamics (only if KINK_BDSM or role selected)
+        ...(data.domSubRole ? { domSubRole: data.domSubRole } : {}),
+        ...(data.kinkExperienceLevel ? { kinkExperienceLevel: data.kinkExperienceLevel } : {}),
         attachmentStyle: data.attachmentStyle,
         communicationStyle: data.communicationStyle,
         loveLanguage: data.loveLanguage,
@@ -802,6 +884,72 @@ function OnboardingV3Page() {
                     </motion.button>
                   ))}
                 </div>
+
+                {/* Phase B: Kink Power Dynamics (conditional on KINK_BDSM) */}
+                <AnimatePresence>
+                  {data.relationshipDesire === "KINK_BDSM" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="mt-6 space-y-5"
+                    >
+                      <div className="border-t border-card-border pt-5">
+                        <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+                          <span>⛓️</span> Your Power Dynamic
+                        </h3>
+                        <p className="text-xs text-foreground-muted mb-3">Optional — skip if you prefer to explore later</p>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {DOM_SUB_ROLE_OPTIONS.slice(0, 10).map((role) => (
+                            <button
+                              key={role.value}
+                              onClick={() => setData(prev => ({ ...prev, domSubRole: role.value }))}
+                              className={`p-2.5 rounded-xl border text-left transition-all ${
+                                data.domSubRole === role.value
+                                  ? "border-purple-500 bg-purple-500/10"
+                                  : "border-card-border bg-background-tertiary hover:border-card-border"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-base">{role.emoji}</span>
+                                <div>
+                                  <span className="font-medium text-foreground text-xs block">{role.label}</span>
+                                  <span className="text-[10px] text-foreground-muted">{role.desc}</span>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="mt-4">
+                          <h4 className="text-xs font-medium text-foreground-muted mb-2">Experience Level</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {KINK_EXPERIENCE_OPTIONS.map((exp) => (
+                              <button
+                                key={exp.value}
+                                onClick={() => setData(prev => ({ ...prev, kinkExperienceLevel: exp.value }))}
+                                className={`px-3 py-1.5 rounded-full border text-xs transition-all flex items-center gap-1.5 ${
+                                  data.kinkExperienceLevel === exp.value
+                                    ? "border-purple-500 bg-purple-500/10 text-foreground"
+                                    : "border-card-border bg-background-tertiary text-foreground-muted"
+                                }`}
+                              >
+                                <span>{exp.emoji}</span>
+                                <span>{exp.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <p className="text-[10px] text-foreground-subtle mt-3 text-center">
+                          All interactions are consent-first. You can update preferences in Settings anytime.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
 
@@ -820,34 +968,62 @@ function OnboardingV3Page() {
                     How do you <span className="text-orange-400">identify</span>?
                   </h1>
                   <p className="text-sm text-foreground-muted">
-                    Select the tag that feels right for you.
+                    Your gender and who you're attracted to
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {SEXUAL_ORIENTATION_TAGS.map((tag, index) => (
-                    <motion.button
-                      key={tag.value}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.1 + index * 0.05 }}
-                      onClick={() => {
-                        setData((prev) => ({ ...prev, sexualOrientation: tag.value }));
-                        setTimeout(() => goNext(), 300);
-                      }}
-                      className={`px-4 py-3 rounded-full border-2 transition-all flex items-center gap-2 ${
-                        data.sexualOrientation === tag.value
-                          ? "border-white bg-white text-black"
-                          : "border-card-border bg-background-tertiary text-foreground hover:border-card-border/40"
-                      }`}
-                    >
-                      <span>{tag.emoji}</span>
-                      <span className="font-medium text-sm">{tag.label}</span>
-                    </motion.button>
-                  ))}
+                {/* Phase B: Gender Identity Selection */}
+                <div className="mb-5">
+                  <h3 className="text-xs font-medium text-foreground-muted mb-2 text-center">Your Gender</h3>
+                  <div className="flex flex-wrap gap-1.5 justify-center">
+                    {GENDER_IDENTITY_OPTIONS.map((opt) => (
+                      <motion.button
+                        key={opt.value}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.05 }}
+                        onClick={() => setData(prev => ({ ...prev, gender: opt.value }))}
+                        className={`px-2.5 py-1.5 rounded-full border text-[11px] transition-all flex items-center gap-1 ${
+                          data.gender === opt.value
+                            ? "border-orange-400 bg-orange-400/15 text-foreground"
+                            : "border-card-border/50 bg-transparent text-foreground-muted hover:border-card-border"
+                        }`}
+                      >
+                        <span className="text-xs">{opt.emoji}</span>
+                        <span>{opt.label}</span>
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
 
-                <p className="text-center text-xs text-foreground-subtle mt-6">
+                {/* Sexuality Selection (expanded Phase B) */}
+                <div className="border-t border-card-border/30 pt-4">
+                  <h3 className="text-xs font-medium text-foreground-muted mb-2 text-center">Your Sexuality</h3>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {SEXUAL_ORIENTATION_TAGS.map((tag, index) => (
+                      <motion.button
+                        key={tag.value}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 + index * 0.03 }}
+                        onClick={() => {
+                          setData((prev) => ({ ...prev, sexualOrientation: tag.value }));
+                          setTimeout(() => goNext(), 300);
+                        }}
+                        className={`px-3 py-2 rounded-full border-2 transition-all flex items-center gap-1.5 ${
+                          data.sexualOrientation === tag.value
+                            ? "border-white bg-white text-black"
+                            : "border-card-border bg-background-tertiary text-foreground hover:border-card-border/40"
+                        }`}
+                      >
+                        <span className="text-sm">{tag.emoji}</span>
+                        <span className="font-medium text-xs">{tag.label}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-center text-xs text-foreground-subtle mt-5">
                   This helps us show you people who match your orientation
                 </p>
               </div>

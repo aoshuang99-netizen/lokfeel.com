@@ -65,12 +65,14 @@ const PROFILE_WRITABLE_FIELDS = new Set([
   'occupation', 'company', 'industry', 'linkedInVerified', 'verificationBadge',
   // Personality data
   'personalityData', 'adminNotes',
+  // Phase B: Kink & Power Dynamics
+  'domSubRole', 'preferredRole', 'kinkExperienceLevel', 'kinkInterests', 'hardLimits',
 ])
 
 function filterProfileFields(data: Record<string, any>): Record<string, any> {
   const filtered: Record<string, any> = {}
   // Fields that are JSON-serialized arrays in SQLite (were String[] in PostgreSQL)
-  const JSON_ARRAY_FIELDS = new Set(['selectedTags', 'galleryPhotos', 'interests', 'hobbies', 'musicGenres', 'movieGenres', 'preferredEthnicities', 'preferredOccupations', 'preferredEducation'])
+  const JSON_ARRAY_FIELDS = new Set(['selectedTags', 'galleryPhotos', 'interests', 'hobbies', 'musicGenres', 'movieGenres', 'preferredEthnicities', 'preferredOccupations', 'preferredEducation', 'kinkInterests', 'hardLimits'])
   for (const key of Object.keys(data)) {
     if (PROFILE_WRITABLE_FIELDS.has(key)) {
       // Serialize array fields to JSON strings for SQLite
@@ -84,6 +86,10 @@ function filterProfileFields(data: Record<string, any>): Record<string, any> {
   // Normalize preferredGender to uppercase for consistent matching
   if (filtered.preferredGender) {
     filtered.preferredGender = filtered.preferredGender.toUpperCase();
+  }
+  // Normalize gender enum to uppercase (Phase B: expanded Gender enum)
+  if (filtered.gender && typeof filtered.gender === 'string') {
+    filtered.gender = filtered.gender.toUpperCase();
   }
   return filtered
 }

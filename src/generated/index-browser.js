@@ -298,6 +298,11 @@ exports.Prisma.ProfileScalarFieldEnum = {
   lifePriorities: 'lifePriorities',
   emotionalAvailability: 'emotionalAvailability',
   selectedTags: 'selectedTags',
+  domSubRole: 'domSubRole',
+  preferredRole: 'preferredRole',
+  kinkExperienceLevel: 'kinkExperienceLevel',
+  kinkInterests: 'kinkInterests',
+  hardLimits: 'hardLimits',
   preferredAgeMin: 'preferredAgeMin',
   preferredAgeMax: 'preferredAgeMax',
   preferredGender: 'preferredGender',
@@ -794,10 +799,26 @@ exports.UserRole = exports.$Enums.UserRole = {
 };
 
 exports.Gender = exports.$Enums.Gender = {
-  MALE: 'MALE',
-  FEMALE: 'FEMALE',
+  MAN: 'MAN',
+  WOMAN: 'WOMAN',
   NON_BINARY: 'NON_BINARY',
-  OTHER: 'OTHER'
+  TRANSGENDER_MAN: 'TRANSGENDER_MAN',
+  TRANSGENDER_WOMAN: 'TRANSGENDER_WOMAN',
+  GENDERQUEER: 'GENDERQUEER',
+  GENDERFLUID: 'GENDERFLUID',
+  AGENDER: 'AGENDER',
+  BIGENDER: 'BIGENDER',
+  PANGENDER: 'PANGENDER',
+  ANDROGYNE: 'ANDROGYNE',
+  DEMIGENDER: 'DEMIGENDER',
+  NEUTROIS: 'NEUTROIS',
+  TWO_SPIRIT: 'TWO_SPIRIT',
+  QUESTIONING: 'QUESTIONING',
+  GENDER_NONCONFORMING: 'GENDER_NONCONFORMING',
+  OTHER: 'OTHER',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY',
+  MALE: 'MALE',
+  FEMALE: 'FEMALE'
 };
 
 exports.RelationshipGoal = exports.$Enums.RelationshipGoal = {
@@ -811,6 +832,37 @@ exports.RelationshipGoal = exports.$Enums.RelationshipGoal = {
   DATING: 'DATING',
   FRIENDSHIP: 'FRIENDSHIP',
   NOT_SURE: 'NOT_SURE'
+};
+
+exports.DomSubRole = exports.$Enums.DomSubRole = {
+  DOMINANT: 'DOMINANT',
+  SUBMISSIVE: 'SUBMISSIVE',
+  SWITCH: 'SWITCH',
+  TOP: 'TOP',
+  BOTTOM: 'BOTTOM',
+  BRAT: 'BRAT',
+  BRAT_TAMER: 'BRAT_TAMER',
+  PRIMAL: 'PRIMAL',
+  RIGGER: 'RIGGER',
+  ROPE_BUNNY: 'ROPE_BUNNY',
+  OWNER: 'OWNER',
+  PET: 'PET',
+  SADIST: 'SADIST',
+  MASOCHIST: 'MASOCHIST',
+  DADDY_MOMMY: 'DADDY_MOMMY',
+  LITTLE: 'LITTLE',
+  MASTEX: 'MASTEX',
+  VANILLA: 'VANILLA',
+  EXPLORING: 'EXPLORING',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
+};
+
+exports.KinkExperienceLevel = exports.$Enums.KinkExperienceLevel = {
+  BEGINNER: 'BEGINNER',
+  INTERMEDIATE: 'INTERMEDIATE',
+  EXPERIENCED: 'EXPERIENCED',
+  EXPERT: 'EXPERT',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
 };
 
 exports.ProfileStatus = exports.$Enums.ProfileStatus = {

@@ -549,16 +549,24 @@ export const LOVE_LANGUAGES = [
 // ============================================================================
 
 export const GENDER_OPTIONS = [
-  { value: 'woman', label: 'Woman' },
-  { value: 'man', label: 'Man' },
-  { value: 'non_binary', label: 'Non-binary' },
-  { value: 'trans_woman', label: 'Trans Woman' },
-  { value: 'trans_man', label: 'Trans Man' },
-  { value: 'genderqueer', label: 'Genderqueer' },
-  { value: 'genderfluid', label: 'Genderfluid' },
-  { value: 'agender', label: 'Agender' },
-  { value: 'other', label: 'Other' },
-  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+  { value: 'WOMAN', label: 'Woman', emoji: '👩', group: 'Core' },
+  { value: 'MAN', label: 'Man', emoji: '👨', group: 'Core' },
+  { value: 'NON_BINARY', label: 'Non-binary', emoji: '🏳️‍🌈', group: 'Core' },
+  { value: 'TRANSGENDER_MAN', label: 'Trans Man', emoji: '🧑', group: 'Trans' },
+  { value: 'TRANSGENDER_WOMAN', label: 'Trans Woman', emoji: '👩', group: 'Trans' },
+  { value: 'GENDERQUEER', label: 'Genderqueer', emoji: '🌈', group: 'Non-binary Spectrum' },
+  { value: 'GENDERFLUID', label: 'Genderfluid', emoji: '🌊', group: 'Non-binary Spectrum' },
+  { value: 'AGENDER', label: 'Agender', emoji: '⚪', group: 'Non-binary Spectrum' },
+  { value: 'BIGENDER', label: 'Bigender', emoji: '✨', group: 'Non-binary Spectrum' },
+  { value: 'PANGENDER', label: 'Pangender', emoji: '🌟', group: 'Non-binary Spectrum' },
+  { value: 'ANDROGYNE', label: 'Androgyne', emoji: '💫', group: 'Non-binary Spectrum' },
+  { value: 'DEMIGENDER', label: 'Demigender', emoji: '⚫', group: 'Non-binary Spectrum' },
+  { value: 'NEUTROIS', label: 'Neutrois', emoji: '⚪', group: 'Non-binary Spectrum' },
+  { value: 'TWO_SPIRIT', label: 'Two-Spirit', emoji: '🪶', group: 'Cultural' },
+  { value: 'GENDER_NONCONFORMING', label: 'Gender Nonconforming', emoji: '🦋', group: 'Self-discovery' },
+  { value: 'QUESTIONING', label: 'Questioning', emoji: '❓', group: 'Self-discovery' },
+  { value: 'OTHER', label: 'Other', emoji: '➕', group: 'Other' },
+  { value: 'PREFER_NOT_TO_SAY', label: 'Prefer not to say', emoji: '🤐', group: 'Other' },
 ] as const
 
 // ============================================================================
@@ -566,20 +574,122 @@ export const GENDER_OPTIONS = [
 // ============================================================================
 
 export const SEXUALITY_OPTIONS = [
-  { value: 'straight', label: 'Straight' },
-  { value: 'gay', label: 'Gay' },
-  { value: 'lesbian', label: 'Lesbian' },
-  { value: 'bisexual', label: 'Bisexual' },
-  { value: 'pansexual', label: 'Pansexual' },
-  { value: 'queer', label: 'Queer' },
-  { value: 'asexual', label: 'Asexual' },
-  { value: 'demisexual', label: 'Demisexual' },
-  { value: 'questioning', label: 'Questioning' },
-  { value: 'other', label: 'Other' },
-  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+  // Monosexual
+  { value: 'STRAIGHT', label: 'Straight', emoji: '👫', group: 'Monosexual' },
+  { value: 'GAY', label: 'Gay', emoji: '👬', group: 'Monosexual' },
+  { value: 'LESBIAN', label: 'Lesbian', emoji: '👭', group: 'Monosexual' },
+  // Multi-gender attracted
+  { value: 'BISEXUAL', label: 'Bisexual', emoji: '💜', group: 'Multi-gender' },
+  { value: 'PANSEXUAL', label: 'Pansexual', emoji: '💛', group: 'Multi-gender' },
+  { value: 'POLYSEXUAL', label: 'Polysexual', emoji: '💚', group: 'Multi-gender' },
+  { value: 'OMNISEXUAL', label: 'Omnisexual', emoji: '🧡', group: 'Multi-gender' },
+  { value: 'HETEROFLEXIBLE', label: 'Heteroflexible', emoji: '🌈', group: 'Multi-gender' },
+  { value: 'HOMOFLEXIBLE', label: 'Homoflexible', emoji: '🌈', group: 'Multi-gender' },
+  // Asexual spectrum
+  { value: 'ASEXUAL', label: 'Asexual', emoji: '🖤', group: 'Ace Spectrum' },
+  { value: 'DEMISEXUAL', label: 'Demisexual', emoji: '🖤', group: 'Ace Spectrum' },
+  { value: 'GRAYSEXUAL', label: 'Graysexual', emoji: '🖤', group: 'Ace Spectrum' },
+  { value: 'RECIPROSEXUAL', label: 'Reciprosexual', emoji: '🖤', group: 'Ace Spectrum' },
+  // Identity-based
+  { value: 'QUEER', label: 'Queer', emoji: '🏳️‍🌈', group: 'Identity' },
+  { value: 'QUESTIONING', label: 'Questioning', emoji: '❓', group: 'Identity' },
+  // Attraction-specific
+  { value: 'SAPPIOSEXUAL', label: 'Sapiosexual', emoji: '🧠', group: 'Attraction' },
+  { value: 'ANDROSEXUAL', label: 'Androsexual', emoji: '💙', group: 'Attraction' },
+  { value: 'GYNESEXUAL', label: 'Gynesexual', emoji: '💖', group: 'Attraction' },
+  { value: 'SKOLIOSEXUAL', label: 'Skoliosexual', emoji: '💚', group: 'Attraction' },
+  // Romantic orientation
+  { value: 'BIROMANTIC', label: 'Biromantic', emoji: '💕', group: 'Romantic' },
+  { value: 'AROMANTIC', label: 'Aromantic', emoji: '🖤', group: 'Romantic' },
+  // Fallbacks
+  { value: 'OTHER', label: 'Other', emoji: '➕', group: 'Other' },
+  { value: 'PREFER_NOT_TO_SAY', label: 'Prefer not to say', emoji: '🤐', group: 'Other' },
 ] as const
 
 // ============================================================================
+// ============================================================================
+// Phase B: Dom/Sub Role Options
+// ============================================================================
+
+export const DOM_SUB_ROLE_OPTIONS = [
+  // Core dynamics
+  { value: 'DOMINANT', label: 'Dominant', emoji: '👑', group: 'Core', description: 'Takes the lead, provides structure' },
+  { value: 'SUBMISSIVE', label: 'Submissive', emoji: '🦋', group: 'Core', description: 'Yields control, follows guidance' },
+  { value: 'SWITCH', label: 'Switch', emoji: '🔄', group: 'Core', description: 'Flows between both roles' },
+  { value: 'VANILLA', label: 'Vanilla', emoji: ' vanilla', group: 'Core', description: 'Traditional dynamics' },
+  { value: 'EXPLORING', label: 'Exploring', emoji: '🔍', group: 'Core', description: 'Curious, open to discover' },
+  // Positional
+  { value: 'TOP', label: 'Top', emoji: '⬆️', group: 'Positional', description: 'Prefers giving/active role' },
+  { value: 'BOTTOM', label: 'Bottom', emoji: '⬇️', group: 'Positional', description: 'Prefers receiving/passive role' },
+  // Specialized
+  { value: 'BRAT', label: 'Brat', emoji: '😈', group: 'Specialized', description: 'Playfully challenges authority' },
+  { value: 'BRAT_TAMER', label: 'Brat Tamer', emoji: '😤', group: 'Specialized', description: 'Handles bratty energy with care' },
+  { value: 'PRIMAL', label: 'Primal', emoji: '🐺', group: 'Specialized', description: 'Instinct-driven, raw connection' },
+  { value: 'RIGGER', label: 'Rigger', emoji: '🪢', group: 'Specialized', description: 'Creates rope/bondage art' },
+  { value: 'ROPE_BUNNY', label: 'Rope Bunny', emoji: '🐰', group: 'Specialized', description: 'Enjoys being tied' },
+  { value: 'OWNER', label: 'Owner', emoji: '🔑', group: 'Specialized', description: 'Claims ownership dynamic' },
+  { value: 'PET', label: 'Pet', emoji: '🐱', group: 'Specialized', description: 'Pet/play dynamic' },
+  { value: 'SADIST', label: 'Sadist', emoji: '⚔️', group: 'Specialized', description: 'Inflicts consensual sensation' },
+  { value: 'MASOCHIST', label: 'Masochist', emoji: '🔥', group: 'Specialized', description: 'Receives consensual sensation' },
+  { value: 'DADDY_MOMMY', label: 'Daddy/Mommy', emoji: '🧸', group: 'Specialized', description: 'Caregiver dynamic' },
+  { value: 'LITTLE', label: 'Little', emoji: '🧒', group: 'Specialized', description: 'Age regression dynamic' },
+  { value: 'MASTEX', label: 'Master/Mistress', emoji: '⛓️', group: 'Specialized', description: 'Total power exchange' },
+  // Fallback
+  { value: 'PREFER_NOT_TO_SAY', label: 'Prefer not to say', emoji: '🤐', group: 'Other' },
+] as const
+
+// ============================================================================
+// Phase B: Kink Interest Categories
+// ============================================================================
+
+export const KINK_CATEGORIES = [
+  // Bondage & Restraint
+  { value: 'BONDAGE', label: 'Bondage & Restraint', emoji: '🪢', group: 'Bondage' },
+  { value: 'ROPE_PLAY', label: 'Rope Play (Shibari)', emoji: '🧵', group: 'Bondage' },
+  { value: 'SENSORY_RESTRAINT', label: 'Sensory Restraint', emoji: '🔒', group: 'Bondage' },
+  // Impact & Sensation
+  { value: 'IMPACT_PLAY', label: 'Impact Play', emoji: '👏', group: 'Sensation' },
+  { value: 'WAX_PLAY', label: 'Wax Play', emoji: '🕯️', group: 'Sensation' },
+  { value: 'TEMPERATURE_PLAY', label: 'Temperature Play', emoji: '🧊', group: 'Sensation' },
+  { value: 'ELECTRO_STIM', label: 'Electrostimulation', emoji: '⚡', group: 'Sensation' },
+  { value: 'SENSORY_DEPRIVATION', label: 'Sensory Deprivation', emoji: '🎭', group: 'Sensation' },
+  // Power Exchange
+  { value: 'TOTAL_POWER_EXCHANGE', label: 'Total Power Exchange (TPE)', emoji: '⛓️', group: 'Power Exchange' },
+  { value: 'CONSENSUAL_NON_CONSENT', label: 'Consensual Non-Consent', emoji: '🤫', group: 'Power Exchange' },
+  { value: 'PRAISE_KINK', label: 'Praise Kink', emoji: '✨', group: 'Power Exchange' },
+  { value: 'DEGRADATION', label: 'Degradation (Consensual)', emoji: '🖤', group: 'Power Exchange' },
+  { value: 'FINANCIAL_DOMINATION', label: 'Financial Domination', emoji: '💳', group: 'Power Exchange' },
+  // Roleplay
+  { value: 'PET_PLAY', label: 'Pet Play', emoji: '🐾', group: 'Roleplay' },
+  { value: 'AGE_PLAY', label: 'Age Play', emoji: '🧸', group: 'Roleplay' },
+  { value: 'MEDICAL_PLAY', label: 'Medical Play', emoji: '🩺', group: 'Roleplay' },
+  { value: 'TEACHER_STUDENT', label: 'Teacher/Student', emoji: '📚', group: 'Roleplay' },
+  { value: 'BOSS_EMPLOYEE', label: 'Boss/Employee', emoji: '💼', group: 'Roleplay' },
+  // Exhibitionism & Voyeurism
+  { value: 'EXHIBITIONISM', label: 'Exhibitionism', emoji: '👁️', group: 'Public' },
+  { value: 'VOYEURISM', label: 'Voyeurism', emoji: '🫣', group: 'Public' },
+  { value: 'PUBLIC_PLAY', label: 'Public Play', emoji: '🌆', group: 'Public' },
+  // Psychological
+  { value: 'MIND_CONTROL', label: 'Mind Control/Hypnosis', emoji: '🧠', group: 'Psychological' },
+  { value: 'BIMBIFICATION', label: 'Bimbofication', emoji: '💄', group: 'Psychological' },
+  { value: 'BRAINWASHING', label: 'Brainwashing Roleplay', emoji: '🌀', group: 'Psychological' },
+  // Fetish
+  { value: 'FOOT_FETISH', label: 'Foot Fetish', emoji: '🦶', group: 'Fetish' },
+  { value: 'LATEX_RUBBER', label: 'Latex & Rubber', emoji: '🤖', group: 'Fetish' },
+  { value: 'LEATHER', label: 'Leather', emoji: '🧥', group: 'Fetish' },
+  { value: 'HIGH_HEELS', label: 'High Heels', emoji: '👠', group: 'Fetish' },
+  { value: 'UNIFORMS', label: 'Uniforms', emoji: '👮', group: 'Fetish' },
+  { value: 'BODY_MODIFICATION', label: 'Body Modification', emoji: '💎', group: 'Fetish' },
+] as const
+
+export const KINK_EXPERIENCE_OPTIONS = [
+  { value: 'BEGINNER', label: 'Beginner', emoji: '🌱', description: 'New to kink, exploring basics' },
+  { value: 'INTERMEDIATE', label: 'Intermediate', emoji: '🌿', description: 'Some experience, expanding skills' },
+  { value: 'EXPERIENCED', label: 'Experienced', emoji: '🌳', description: 'Well-versed in dynamics' },
+  { value: 'EXPERT', label: 'Expert', emoji: '🏆', description: 'Deep knowledge & mastery' },
+  { value: 'PREFER_NOT_TO_SAY', label: 'Prefer not to say', emoji: '🤐' },
+] as const
+
 // Priority Options
 // ============================================================================
 
