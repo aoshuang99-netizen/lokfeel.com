@@ -766,3 +766,25 @@ export const EDUCATION_OPTIONS = [
   { value: 'trade', label: 'Trade School' },
   { value: 'other', label: 'Other' },
 ] as const
+
+// ============================================================================
+// Chat Quick Replies & AI Suggestions
+// ============================================================================
+
+export const QUICK_REPLIES = [
+  "Hey! How are you? 😊",
+  "That's interesting! Tell me more",
+  "I'd love to meet up sometime",
+  "What's your ideal date?",
+  "You have a great smile!",
+  "What are you looking for?",
+  "Want to grab coffee? ☕",
+  "Tell me about yourself",
+] as const
+
+export const AI_SUGGESTIONS = [
+  "Ask about their weekend plans",
+  "Compliment something specific in their profile",
+  "Share a fun fact about yourself",
+  "Ask what they're passionate about",
+] as const

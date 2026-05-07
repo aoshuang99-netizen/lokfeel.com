@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { ArrowLeft, ArrowRight, Check, Camera, User, Heart, MessageCircle, Target, Save, Loader2, Sparkles, AlertCircle, ImageIcon, Star } from "lucide-react";
 import { LoadingButton } from "@/components/shared/loading";
 import { LocationPicker } from "@/components/ui/location-picker";

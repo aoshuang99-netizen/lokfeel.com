@@ -279,36 +279,36 @@ function getRelationshipAnalysis(data: {
   communicationStyle: string;
   loveLanguage: string;
 }) {
-  // Relationship desire insights with data-backed observations
+  // Relationship desire insights with encouraging observations
   const desireInsights: Record<string, { trait: string; data: string; dynamic: string }> = {
     MONOGAMY: {
       trait: "Committed Connection",
-      data: "Users seeking exclusive relationships show 34% higher long-term satisfaction rates",
+      data: "Exclusive relationships tend to foster deep emotional security and shared growth",
       dynamic: "Your preference for depth over breadth suggests you value emotional security and shared growth"
     },
     ETHICAL_NON_MONOGAMY: {
       trait: "Transparent Intimacy",
-      data: "ENM practitioners report 28% more open communication about boundaries and needs",
+      data: "Open communication about boundaries is a hallmark of healthy ENM dynamics",
       dynamic: "Your approach prioritizes honesty and consent, creating space for multiple meaningful connections"
     },
     POLYAMORY: {
       trait: "Expansive Capacity",
-      data: "Polyamorous individuals demonstrate 41% larger emotional support networks on average",
+      data: "Nurturing multiple bonds reflects high emotional intelligence and intentionality",
       dynamic: "Your ability to nurture multiple bonds reflects high emotional intelligence and time management"
     },
     CASUAL_DATING: {
       trait: "Present-Focused",
-      data: "68% of casual daters report lower stress levels compared to those seeking immediate commitment",
+      data: "Keeping things light can reduce pressure and let connections develop naturally",
       dynamic: "Your flexibility allows organic connection without premature pressure or expectations"
     },
     FRIENDSHIP_FIRST: {
       trait: "Foundation Builder",
-      data: "Relationships starting as friendships show 40% lower dissolution rates",
+      data: "Relationships built on friendship often have the strongest foundations",
       dynamic: "Your patience in building trust first indicates maturity and long-term thinking"
     },
     KINK_BDSM: {
       trait: "Negotiated Intimacy",
-      data: "BDSM communities score highest on informed consent and boundary communication metrics",
+      data: "Kink communities are known for strong emphasis on consent and boundary communication",
       dynamic: "Your interest in power dynamics is paired with strong emphasis on safety and mutual respect"
     },
   };
@@ -357,8 +357,6 @@ function OnboardingV3Page() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const [userGender, setUserGender] = useState<"man" | "woman" | "other" | null>(null);
 
   const [data, setData] = useState({
     // Step 0: Basics
@@ -435,10 +433,12 @@ function OnboardingV3Page() {
       });
 
       if (res.ok) {
-        console.log(`[Onboarding] Progress saved: step ${stepIndex + 1}`);
+        const fields = Object.keys(stepPayload).filter(k => k !== 'onboardingStep');
+        console.log(`[Onboarding] Progress saved: step ${stepIndex + 1}, fields: ${fields.join(',')}`);
+      } else {
+        console.warn(`[Onboarding] Progress save failed: HTTP ${res.status}`);
       }
     } catch (e) {
-      // Silent fail — progress save is non-blocking
       console.warn("[Onboarding] Progress save failed:", e);
     }
   }, [data]);
@@ -446,7 +446,6 @@ function OnboardingV3Page() {
   const currentStep = STEPS[currentStepIndex];
   const progress = ((currentStepIndex) / (STEPS.length - 1)) * 100;
   const isLastStep = currentStepIndex === STEPS.length - 1;
-  const isMaleUser = userGender === "man";
 
   // Load user profile
   useEffect(() => {
@@ -463,11 +462,6 @@ function OnboardingV3Page() {
           return;
         }
 
-        if (profileData.profile?.gender) {
-          const g = profileData.profile.gender.toLowerCase();
-          setUserGender(g === "male" || g === "man" ? "man" : g === "female" || g === "woman" ? "woman" : "other");
-        }
-        
         // Pre-fill data if profile exists
         if (profileData.profile) {
           const p = profileData.profile;
@@ -945,9 +939,9 @@ function OnboardingV3Page() {
                       transition={{ delay: 0.2 + index * 0.08 }}
                       onClick={() => {
                         setData((prev) => ({ ...prev, relationshipDesire: desire.value }));
-                        setTimeout(() => goNext(), 300);
+                        setTimeout(() => goNext(), 150);
                       }}
-                      className={`relative p-4 rounded-2xl border-2 text-left transition-all group overflow-hidden ${
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                         data.relationshipDesire === desire.value
                           ? "border-pink-500 bg-pink-500/10"
                           : "border-card-border bg-background-tertiary hover:border-card-border"
@@ -1091,7 +1085,7 @@ function OnboardingV3Page() {
                         transition={{ delay: 0.1 + index * 0.03 }}
                         onClick={() => {
                           setData((prev) => ({ ...prev, sexualOrientation: tag.value }));
-                          setTimeout(() => goNext(), 300);
+                          setTimeout(() => goNext(), 150);
                         }}
                         className={`px-3 py-2 rounded-full border-2 transition-all flex items-center gap-1.5 ${
                           data.sexualOrientation === tag.value
@@ -1129,7 +1123,7 @@ function OnboardingV3Page() {
                           setData((prev) => ({ ...prev, attachmentStyle: trait.value }));
                           // Auto-advance when all 3 traits are selected
                           if (data.communicationStyle && data.loveLanguage) {
-                            setTimeout(() => goNext(), 350);
+                            setTimeout(() => goNext(), 150);
                           }
                         }}
                         className={`p-3 rounded-xl border text-left transition-all ${
@@ -1159,7 +1153,7 @@ function OnboardingV3Page() {
                           setData((prev) => ({ ...prev, communicationStyle: trait.value }));
                           // Auto-advance when all 3 traits are selected
                           if (data.attachmentStyle && data.loveLanguage) {
-                            setTimeout(() => goNext(), 350);
+                            setTimeout(() => goNext(), 150);
                           }
                         }}
                         className={`p-3 rounded-xl border text-left transition-all ${
@@ -1189,7 +1183,7 @@ function OnboardingV3Page() {
                           setData((prev) => ({ ...prev, loveLanguage: trait.value }));
                           // Auto-advance when all 3 traits are selected
                           if (data.attachmentStyle && data.communicationStyle) {
-                            setTimeout(() => goNext(), 350);
+                            setTimeout(() => goNext(), 150);
                           }
                         }}
                         className={`px-4 py-2 rounded-full border transition-all flex items-center gap-2 ${

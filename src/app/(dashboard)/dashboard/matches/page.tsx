@@ -244,13 +244,12 @@ export default function MatchesPage() {
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">No matches in this category</h3>
           <p className="text-foreground-muted">
-            {activeTab === "new" && "Check back soon for new matches!"}
             {activeTab === "new" && "No new matches yet. Keep exploring!"}
             {activeTab === "accepted" && "No accepted matches yet"}
             {activeTab === "passed" && "No passed matches yet"}
             {activeTab === "expired" && "No expired matches"}
             {activeTab === "passed" && "Passed matches won't show up here"}
-            {activeTab === "expired" && "No expired matches"}
+            {activeTab === "expired" && "Expired matches are cleared periodically"}
           </p>
         </div>
       )}

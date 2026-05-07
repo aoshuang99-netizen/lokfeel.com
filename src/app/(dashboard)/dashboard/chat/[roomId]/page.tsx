@@ -29,8 +29,9 @@ import {
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
-import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
+import { isBrokenAvatarUrl, getAvatarKind, parseEmojiAvatar, handleAvatarError } from "@/lib/avatar-utils";
 import { ReportModal } from "@/components/chat/report-modal";
+import { QUICK_REPLIES, AI_SUGGESTIONS } from "@/constants";
 
 // ══════════════════════════════════════
 // EMOJI LIST
@@ -41,32 +42,6 @@ const EMOJIS = [
   "😎", "🥳", "😏", "😌", "😢", "😭", "😤", "😡",
   "❤️", "💕", "💖", "💗", "💝", "💘", "🔥", "✨",
   "🌹", "🌸", "🌺", "🌻", "🌙", "⭐", "☀️", "🌈",
-];
-
-// ══════════════════════════════════════
-// QUICK REPLIES
-// ══════════════════════════════════════
-
-const QUICK_REPLIES = [
-  "Hey! How are you? 😊",
-  "That's interesting! Tell me more",
-  "I'd love to meet up sometime",
-  "What's your ideal date?",
-  "You have a great smile!",
-  "What are you looking for?",
-  "Want to grab coffee? ☕",
-  "Tell me about yourself",
-];
-
-// ══════════════════════════════════════
-// AI SUGGESTIONS
-// ══════════════════════════════════════
-
-const AI_SUGGESTIONS = [
-  "Ask about their weekend plans",
-  "Compliment something specific in their profile",
-  "Share a fun fact about yourself",
-  "Ask what they're passionate about",
 ];
 
 // ══════════════════════════════════════
@@ -109,6 +84,48 @@ interface UserLimits {
   currentChats: number;
   messagesSent: number;
   messagesRemaining: number;
+}
+
+/** Reusable inline avatar — replaces 4 duplicate avatar rendering blocks */
+function InlineAvatar({ avatar, name, className = "", emojiSize }: {
+  avatar: string | null | undefined;
+  name: string | undefined;
+  className?: string;
+  emojiSize?: string;
+}) {
+  const kind = getAvatarKind(avatar);
+  const parsed = parseEmojiAvatar(avatar);
+
+  if (kind === 'emoji' && parsed) {
+    return (
+      <div className={`w-full h-full bg-gradient-to-br from-amber-500/80 to-rose-500/80 flex items-center justify-center ${className}`}>
+        <span className="select-none leading-none" style={{ fontSize: emojiSize || 'clamp(0.9rem, 180%, 1.8rem)', lineHeight: '1' }}>
+          {parsed.emoji}
+        </span>
+      </div>
+    );
+  }
+
+  if (kind === 'photo' || kind === 'svg') {
+    const safeUrl = isBrokenAvatarUrl(avatar) ? null : avatar;
+    if (safeUrl) {
+      return (
+        <img
+          src={safeUrl}
+          alt={name || "User"}
+          className={`w-full h-full ${kind === 'svg' ? 'object-contain p-3' : 'object-cover'} ${className}`}
+          onError={handleAvatarError}
+        />
+      );
+    }
+  }
+
+  // Fallback: initials
+  return (
+    <div className={`w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground font-bold ${className}`}>
+      {name?.[0] || "?"}
+    </div>
+  );
 }
 
 export default function ChatRoomPage() {
@@ -430,42 +447,6 @@ export default function ChatRoomPage() {
     }
   };
 
-  const triggerAiResponse = async () => {
-    try {
-      console.log('[Chat] Triggering AI response for room:', roomId);
-      const res = await fetch(`/api/bot/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId }),
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        console.log('[Chat] AI response received:', data);
-        if (data.message) {
-          // Add AI message to chat
-          const aiMessage: Message = {
-            id: data.message.id,
-            content: data.message.content,
-            senderId: roomInfo?.otherUser?.id || "bot",
-            sender: {
-              id: roomInfo?.otherUser?.id || "bot",
-              name: roomInfo?.otherUser?.name || "Bot",
-              avatar: roomInfo?.otherUser?.avatar || null,
-              isBot: true,
-            },
-            createdAt: data.message.createdAt,
-          };
-          setMessages((prev) => [...prev, aiMessage]);
-        }
-      } else {
-        console.error('[Chat] AI response failed:', res.status);
-      }
-    } catch (e) {
-      console.error('[Chat] Failed to trigger AI response:', e);
-    }
-  };
-
   const handleBlockUser = async () => {
     if (!roomInfo?.otherUser?.id) return;
     const confirmed = window.confirm(
@@ -565,34 +546,7 @@ export default function ChatRoomPage() {
           {/* Avatar with Online Status */}
           <div className="relative">
             <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
-              {roomInfo?.otherUser?.avatar && !isBrokenAvatarUrl(roomInfo.otherUser.avatar) ? (
-                roomInfo.otherUser.avatar.startsWith("emoji:") ? (
-                  <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <span
-                      className="select-none leading-none"
-                      style={{
-                        fontSize: 'clamp(1rem, 200%, 2rem)',
-                        lineHeight: '1',
-                        textAlign: 'center',
-                        verticalAlign: 'middle',
-                      }}
-                    >
-                      {roomInfo.otherUser.avatar.split(":")[1]}
-                    </span>
-                  </div>
-                ) : (
-                  <img
-                    src={roomInfo.otherUser.avatar}
-                    alt={roomInfo.otherUser.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; const p = e.currentTarget.parentElement; if (p) { const fb = document.createElement('div'); fb.className = 'w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-foreground font-bold'; fb.textContent = roomInfo?.otherUser?.name?.[0] || '?'; p.appendChild(fb); } }}
-                  />
-                )
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground font-bold">
-                  {roomInfo?.otherUser?.name?.[0] || "?"}
-                </div>
-              )}
+              <InlineAvatar avatar={roomInfo?.otherUser?.avatar} name={roomInfo?.otherUser?.name} emojiSize="clamp(1rem, 200%, 2rem)" />
             </div>
             {/* Online Status */}
             {roomInfo?.otherUser?.isOnline ? (
@@ -756,9 +710,8 @@ export default function ChatRoomPage() {
                         )
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground text-xs font-bold">
-                          {roomInfo?.otherUser?.name?.[0] || "?"}
-                        </div>
-                      )}
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 relative">
+                      <InlineAvatar avatar={roomInfo?.otherUser?.avatar} name={roomInfo?.otherUser?.name} emojiSize="clamp(0.9rem, 180%, 1.8rem)" />
                       {/* Bot indicator on avatar */}
                       {fromBot && (
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
@@ -766,33 +719,6 @@ export default function ChatRoomPage() {
                         </div>
                       )}
                     </div>
-                  )}
-                  {!fromMe && !showAvatar && <div className="w-8" />}
-
-                  {/* Message Bubble */}
-                  <div
-                    className={`px-4 py-2.5 rounded-2xl max-w-[75%] ${
-                      fromMe
-                        ? "bg-gradient-to-br from-amber-600/90 to-amber-500/90 text-foreground rounded-br-md"
-                        : fromBot
-                        ? "bg-white/[0.07] text-foreground rounded-bl-md border border-card-border/[0.06]"
-                        : "bg-white/[0.08] text-foreground rounded-bl-md"
-                    }`}
-                  >
-
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">{msg.content}</p>
-                    <p className={`text-xs mt-1 ${fromMe ? "text-foreground-muted" : "text-foreground-muted"}`}>
-                      {formatTime(msg.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })
-        )}
-        {/* Bot typing indicator */}
-        <AnimatePresence>
-          {isBotTyping && (
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
