@@ -68,7 +68,7 @@ export default function LoginInnerClient({
       formData.append("email", email.toLowerCase().trim());
       formData.append("password", password);
       formData.append("csrfToken", csrfToken);
-      formData.append("callbackUrl", callbackUrl || "/admin");
+      formData.append("callbackUrl", callbackUrl || "/dashboard");
 
       const res = await fetch("/api/auth/callback/credentials", {
         method: "POST",
@@ -78,10 +78,10 @@ export default function LoginInnerClient({
 
       // Step 3: Check redirect location
       const location = res.headers.get("location") || "";
-      const url = new URL(location, window.location.origin);
+      let redirectUrl = location || callbackUrl || "/dashboard";
 
       if (location.includes("error=")) {
-        const errorCode = url.searchParams.get("error");
+        const errorCode = new URL(redirectUrl, window.location.origin).searchParams.get("error");
         if (errorCode === "CredentialsSignin") {
           setError("Invalid email or password.");
         } else if (errorCode === "MissingCSRF") {
@@ -94,7 +94,7 @@ export default function LoginInnerClient({
       }
 
       // Step 4: Success — redirect to destination
-      window.location.href = location || callbackUrl || "/admin";
+      window.location.href = redirectUrl;
     } catch (err) {
       console.error("[Login] Error:", err);
       setError("An unexpected error occurred. Please try again.");

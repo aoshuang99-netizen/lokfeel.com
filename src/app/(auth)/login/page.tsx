@@ -56,7 +56,7 @@ export default async function LoginPage({
 
   return (
     <LoginInnerClient
-      callbackUrl={params.callbackUrl || "/admin"}
+      callbackUrl={params.callbackUrl || "/dashboard"}
       errorMessage={errorMessage}
     />
   );
