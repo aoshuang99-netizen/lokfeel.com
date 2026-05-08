@@ -66,18 +66,40 @@ export async function POST(request: NextRequest) {
 
     const {
       uid: firebaseUid,
-      email,
+      email: firebaseEmail,
       email_verified,
       name: firebaseName,
       picture: firebasePicture,
       provider_data,
+      firebase,
     } = decoded;
 
+    // Resolve email with fallbacks
+    // Priority: decoded.email → provider_data[0].email → firebase.identities.email[0]
+    let email = firebaseEmail
+      || (Array.isArray(provider_data) && provider_data[0]?.email)
+      || (firebase?.identities as any)?.email?.[0]
+      || null;
+
     if (!email) {
+      // Log available fields for debugging (never log PII to client)
+      console.error(
+        "[Firebase Bridge] No email found in token.",
+        "uid:", firebaseUid,
+        "signInProvider:", firebase?.sign_in_provider,
+        "hasProviderData:", !!provider_data,
+        "providerCount:", Array.isArray(provider_data) ? provider_data.length : 0,
+        "identities:", firebase?.identities ? JSON.stringify(Object.keys(firebase.identities)) : "none",
+      );
       return NextResponse.json(
-        { error: "Firebase account has no email address" },
+        { error: "Firebase account has no email address. Please ensure your Google/X account has a verified email." },
         { status: 400 }
       );
+    }
+
+    if (!email_verified && !firebaseEmail) {
+      // Unverified email from fallback source — allow but warn
+      console.warn(`[Firebase Bridge] Using unverified email from provider_data for uid=${firebaseUid}`);
     }
 
     // Step 2: Find or create user
@@ -87,15 +109,17 @@ export async function POST(request: NextRequest) {
 
     // Determine the OAuth provider from Firebase
     const firebaseProvider = Array.isArray(provider_data) && provider_data.length > 0
-      ? provider_data[0].providerId // "google.com", "apple.com", etc.
-      : "firebase";
+      ? provider_data[0].providerId // "google.com", "twitter.com", "apple.com", etc.
+      : firebase?.sign_in_provider || "firebase";
 
     // Normalize provider name for Account model
     const accountProvider = firebaseProvider === "google.com"
       ? "firebase-google"
       : firebaseProvider === "apple.com"
         ? "firebase-apple"
-        : `firebase-${firebaseProvider}`;
+        : firebaseProvider === "twitter.com"
+          ? "firebase-twitter"
+          : `firebase-${firebaseProvider}`;
 
     // Use Prisma transaction for atomicity
     const user = await db.$transaction(async (tx) => {

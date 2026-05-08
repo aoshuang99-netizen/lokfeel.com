@@ -3,10 +3,12 @@
  *
  * Only initializes Firebase Auth module to keep bundle size minimal.
  * No Firestore, Analytics, Storage, etc.
+ *
+ * Supported providers: Google, Twitter/X
  */
 
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, TwitterAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,8 +23,11 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const firebaseAuth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
 
-// Scopes for user profile info
+// ─── Google Provider ───
+export const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope("email");
 googleProvider.addScope("profile");
+
+// ─── Twitter/X Provider ───
+export const twitterProvider = new TwitterAuthProvider();
