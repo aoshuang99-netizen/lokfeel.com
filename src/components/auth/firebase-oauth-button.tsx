@@ -90,11 +90,6 @@ const defaultLabels: Record<FirebaseProviderType, string> = {
   twitter: "Continue with X",
 };
 
-const nextAuthFallbackMap: Record<FirebaseProviderType, string> = {
-  google: "google",
-  twitter: "twitter",
-};
-
 export default function FirebaseOAuthButton({
   provider,
   callbackUrl = "/dashboard",
@@ -119,9 +114,8 @@ export default function FirebaseOAuthButton({
       await loadFirebase();
       const fbProvider = providers[provider];
       if (!firebaseAuth || !fbProvider) {
-        console.warn(`[FirebaseOAuthButton] SDK not available for ${provider}, falling back...`);
-        await signIn(nextAuthFallbackMap[provider], { callbackUrl });
-        return;
+        console.error(`[FirebaseOAuthButton] Firebase SDK not available for ${provider}`);
+        throw new Error(`${provider} sign-in is not configured. Please contact support.`);
       }
 
       // Step 2: Firebase popup sign-in
@@ -177,15 +171,23 @@ export default function FirebaseOAuthButton({
       }
     } catch (error: any) {
       console.error(`[FirebaseOAuthButton][${provider}] Error:`, error);
+      const errorCode = error?.code || "";
+      const errorMsg = error?.message || "";
 
-      // If Firebase popup fails (blocked, etc.), fallback to NextAuth provider
-      if (error?.code === "auth/popup-blocked" || error?.code === "auth/popup-closed-by-user") {
-        console.log(`[FirebaseOAuthButton][${provider}] Popup blocked/closed, falling back to NextAuth...`);
-        await signIn(nextAuthFallbackMap[provider], { callbackUrl });
-        return;
+      // Firebase domain blocked — most common issue
+      if (errorCode === "auth/unauthorized-domain" || errorMsg.includes("requests-from-referer") || errorMsg.includes("are-blocked")) {
+        onError?.("域名未授权：请在 Firebase Console → Authentication → Settings → Authorized domains 中添加 app.lokfeel.com");
+      } else if (errorCode === "auth/popup-blocked") {
+        onError?.("弹窗被浏览器拦截，请允许此网站的弹窗后重试");
+      } else if (errorCode === "auth/popup-closed-by-user") {
+        // User closed the popup — just stop loading, no error message
+      } else if (errorMsg.includes("client_id") || errorMsg.includes("invalid_request")) {
+        onError?.("OAuth 配置错误，请联系管理员");
+      } else {
+        // Sanitize: show code if available, otherwise generic message
+        const safeMsg = errorCode ? `[${errorCode}]` : "登录失败，请稍后重试";
+        onError?.(safeMsg);
       }
-
-      onError?.(error?.message || `${provider} sign-in failed`);
     } finally {
       setIsLoading(false);
     }
