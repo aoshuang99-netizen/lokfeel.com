@@ -212,14 +212,14 @@ export default function LoginInnerClient({
           {/* Google — Firebase-powered */}
           <GoogleButton
             callbackUrl={callbackUrl}
-            onError={(err) => setError(err)}
+            onError={(err: string) => setError(err)}
             disabled={isLoading}
           />
 
           {/* X (Twitter) — Firebase-powered */}
           <XButton
             callbackUrl={callbackUrl}
-            onError={(err) => setError(err)}
+            onError={(err: string) => setError(err)}
             disabled={isLoading}
           />
         </div>

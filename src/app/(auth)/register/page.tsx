@@ -615,13 +615,13 @@ export default function RegisterPage() {
           {/* Google — Firebase-powered */}
           <GoogleButton
             callbackUrl="/dashboard/onboarding"
-            onError={(err) => setError(err)}
+            onError={(err: string) => setError(err)}
             disabled={isLoading}
           />
           {/* X (Twitter) — Firebase-powered */}
           <XButton
             callbackUrl="/dashboard/onboarding"
-            onError={(err) => setError(err)}
+            onError={(err: string) => setError(err)}
             disabled={isLoading}
           />
         </div>
