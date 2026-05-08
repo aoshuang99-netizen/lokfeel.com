@@ -165,7 +165,7 @@ export default function UserProfilePage() {
       
       setShowConnectModal(false);
       toast.success('Connection request sent!');
-      router.push('/dashboard/matches');
+      router.push('/dashboard/connections');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send connection request');
       toast.error('Failed to send connection request');
@@ -239,8 +239,8 @@ export default function UserProfilePage() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Try Again
             </button>
-            <Link href="/dashboard/square" className="btn-secondary">
-              Back to Square
+            <Link href="/dashboard/explore" className="btn-secondary">
+              Back to Explore
             </Link>
           </div>
         </div>
@@ -258,7 +258,7 @@ export default function UserProfilePage() {
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-card-border">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/dashboard/square" className="flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors">
+            <Link href="/dashboard/explore" className="flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
               Back
             </Link>

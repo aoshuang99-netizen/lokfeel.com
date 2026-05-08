@@ -34,11 +34,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'i.pravatar.cc',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'xsgames.co',
         pathname: '/**',
       },
@@ -53,6 +48,80 @@ const nextConfig: NextConfig = {
     imageSizes: [32, 48, 64, 96, 128, 256, 384],
   },
   
+  // ─── Navigation Route Redirects ───
+  // Redirect old navigation routes to new optimized routes
+  async redirects() {
+    return [
+      // Home → Explore (primary navigation)
+      {
+        source: '/dashboard',
+        destination: '/dashboard/explore',
+        permanent: false,
+        has: [{ type: 'cookie', key: 'next-auth.session-token' }],
+      },
+      // Discover → Explore
+      {
+        source: '/dashboard/discover',
+        destination: '/dashboard/explore',
+        permanent: true,
+      },
+      // Activity → Notifications
+      {
+        source: '/dashboard/activity',
+        destination: '/dashboard/notifications',
+        permanent: true,
+      },
+      // Chat → Chats
+      {
+        source: '/dashboard/chat',
+        destination: '/dashboard/chats',
+        permanent: true,
+      },
+      // Chat/[roomId] → Chats/[roomId] (dynamic route redirect)
+      {
+        source: '/dashboard/chat/:path*',
+        destination: '/dashboard/chats/:path*',
+        permanent: true,
+      },
+      // Matches → Connections (consolidated)
+      {
+        source: '/dashboard/matches',
+        destination: '/dashboard/connections',
+        permanent: true,
+      },
+      // Matches/[id] → Connections
+      {
+        source: '/dashboard/matches/:path*',
+        destination: '/dashboard/connections',
+        permanent: true,
+      },
+      // Who-liked-me → Connections
+      {
+        source: '/dashboard/who-liked-me',
+        destination: '/dashboard/connections',
+        permanent: true,
+      },
+      // Inbox → Chats
+      {
+        source: '/dashboard/inbox',
+        destination: '/dashboard/chats',
+        permanent: true,
+      },
+      // Messages → Chats
+      {
+        source: '/dashboard/messages',
+        destination: '/dashboard/chats',
+        permanent: true,
+      },
+      // Square → Explore (replaced by swipe cards)
+      {
+        source: '/dashboard/square',
+        destination: '/dashboard/explore',
+        permanent: true,
+      },
+    ]
+  },
+
   // ─── Admin Domain Routing ───
   // admin.lokfeel.com → /admin/*
   // Deploy: Add CNAME record "admin.lokfeel.com" → your Vercel domain

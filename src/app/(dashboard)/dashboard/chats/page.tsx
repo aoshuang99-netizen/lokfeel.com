@@ -22,14 +22,14 @@ export default function ChatPage() {
         </p>
         <div className="flex gap-3 justify-center">
           <Link
-            href="/dashboard/matches"
-            className="btn-primary text-sm"
-          >
+          href="/dashboard/connections"
+          className="btn-primary text-sm"
+        >
             <Flame className="w-4 h-4 mr-2" />
             Find Matches
           </Link>
           <Link
-            href="/dashboard/discover"
+            href="/dashboard/explore"
             className="btn-secondary text-sm"
           >
             Browse

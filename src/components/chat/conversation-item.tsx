@@ -257,7 +257,7 @@ function ConversationItemComponent({
 
   return (
     <Link
-      href={`/dashboard/chat/${id}`}
+      href={`/dashboard/chats/${id}`}
       className="block border-b border-card-border"
     >
       {content}

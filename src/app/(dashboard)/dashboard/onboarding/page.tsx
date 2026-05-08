@@ -458,7 +458,7 @@ function OnboardingV3Page() {
         // If onboarding is complete (step >= 9 for v3), redirect to square
         if (profileData.profile?.onboardingStep >= 9) {
           console.log("[Onboarding] Already complete, redirecting...");
-          window.location.href = "/dashboard/square";
+          window.location.href = "/dashboard/explore";
           return;
         }
 
@@ -726,8 +726,8 @@ function OnboardingV3Page() {
       });
 
       setTimeout(() => {
-        console.log("[Onboarding] Navigating to /dashboard/discover...");
-        window.location.href = "/dashboard/discover";
+        console.log("[Onboarding] Navigating to /dashboard/explore...");
+        window.location.href = "/dashboard/explore";
       }, 1200);
     } catch (error) {
       console.error("[Onboarding] Save error:", error);

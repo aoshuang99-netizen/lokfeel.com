@@ -3,7 +3,7 @@
  * 用途：在生产数据库创建超级管理员账号（不包含演示数据）
  *
  * 用法：
- *   DATABASE_URL="..." npx tsx prisma/init-admin.ts
+ *   DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npx tsx prisma/init-admin.ts
  *   或设置 .env 后运行 npx tsx prisma/init-admin.ts
  */
 
@@ -11,9 +11,31 @@ import 'dotenv/config'
 import { hash } from 'bcryptjs'
 import { PrismaClient, UserRole } from '../src/generated'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { PrismaPg } = require('@prisma/adapter-pg')
+const { PrismaLibSql } = require('@prisma/adapter-libsql')
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+// Clean DATABASE_URL for libSQL compatibility
+function cleanLibsqlUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    // Remove unsupported PostgreSQL query parameters
+    const unsupportedParams = ['sslmode', 'ssl', 'channel_binding', 'connect_timeout', 'statement_timeout', 'application_name', 'options'];
+    for (const param of unsupportedParams) {
+      parsed.searchParams.delete(param);
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+const rawUrl = (process.env.DATABASE_URL || "").trim()
+const authToken = (process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN || "").trim()
+const url = cleanLibsqlUrl(rawUrl)
+
+const adapter = new PrismaLibSql({
+  url,
+  authToken: authToken || undefined,
+})
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const prisma = new (PrismaClient as any)({ adapter }) as PrismaClient
 

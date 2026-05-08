@@ -22,7 +22,7 @@ import {
   Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getFallbackAvatarUrl } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -219,12 +219,32 @@ function SwipeCard({
                 </div>
               );
             }
+            // Check for broken CDN URLs (e.g. pravatar.cc returns 403)
+            const safeAvatarUrl = isBrokenAvatarUrl(user.avatar) ? null : user.avatar;
+            if (!safeAvatarUrl) {
+              // Fallback to DiceBear SVG avatar
+              const fallbackUrl = getFallbackAvatarUrl(user.id || user.name);
+              return (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                  <img src={fallbackUrl} alt={user.name} className="w-32 h-32 object-contain p-2" />
+                </div>
+              );
+            }
             return (
               <img
-                src={user.avatar!}
+                src={safeAvatarUrl}
                 alt={user.name}
                 className={getAvatarImgClasses(kind)}
                 style={kind === 'svg' ? { background: getAvatarBackground(kind, user.avatar) } : undefined}
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  const fallbackUrl = getFallbackAvatarUrl(user.id || user.name);
+                  if (img.src !== fallbackUrl) {
+                    img.src = fallbackUrl;
+                  } else {
+                    img.style.display = 'none';
+                  }
+                }}
               />
             );
           })()}
@@ -423,7 +443,7 @@ export default function DiscoverPage() {
               description: "You can now start chatting",
               action: {
                 label: "Chat",
-                onClick: () => router.push("/dashboard/chat"),
+                onClick: () => router.push("/dashboard/chats"),
               },
             });
           }

@@ -17,6 +17,7 @@ const ALLOWED_ROUTES_WHEN_INCOMPLETE = [
   "/dashboard/onboarding",
   "/dashboard/profile",
   "/dashboard/settings",
+  "/dashboard/explore",
 ];
 
 function isAllowedWhenIncomplete(path: string): boolean {
@@ -89,13 +90,13 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
     if (profileCheck.complete) return;
     if (isAllowedWhenIncomplete(pathname)) return;
 
-    // User is incomplete and on a locked page → redirect to dashboard
-    router.replace("/dashboard");
+    // User is incomplete and on a locked page → redirect to explore
+    router.replace("/dashboard/explore");
   }, [profileCheck, pathname, router]);
 
   // Determine what to show
   const isLocked = !profileCheck.loading && !profileCheck.complete && !isAllowedWhenIncomplete(pathname);
-  const isDashboard = pathname === "/dashboard" || pathname === "/dashboard/";
+  const isDashboard = pathname === "/dashboard" || pathname === "/dashboard/" || pathname === "/dashboard/explore" || pathname === "/dashboard/explore/";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -128,10 +129,10 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
                   You need to finish your profile before accessing this feature.
                 </p>
                 <Link
-                  href="/dashboard"
+                  href="/dashboard/explore"
                   className="btn-primary w-full flex items-center justify-center gap-2"
                 >
-                  Go to Dashboard
+                  Go to Explore
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

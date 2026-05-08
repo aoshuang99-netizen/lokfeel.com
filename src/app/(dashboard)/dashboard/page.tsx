@@ -682,10 +682,10 @@ export default function DashboardPage() {
                     ? "border-[rgba(139,92,246,0.2)] bg-[#1a1a1a] opacity-50"
                     : "border-[#a3e635]/30 bg-[#a3e635]/5 cursor-pointer hover:bg-[#a3e635]/10"
                 }`}
-                onClick={!isProfileLocked ? () => { window.location.href = "/dashboard/discover"; } : undefined}
+                onClick={!isProfileLocked ? () => { window.location.href = "/dashboard/explore"; } : undefined}
                 role={!isProfileLocked ? "button" : undefined}
                 tabIndex={!isProfileLocked ? 0 : undefined}
-                onKeyDown={!isProfileLocked ? (e) => { if (e.key === 'Enter' || e.key === ' ') window.location.href = "/dashboard/discover"; } : undefined}
+                onKeyDown={!isProfileLocked ? (e) => { if (e.key === 'Enter' || e.key === ' ') window.location.href = "/dashboard/explore"; } : undefined}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   isProfileLocked ? "bg-foreground-faint" : "bg-[#a3e635]"
@@ -775,7 +775,7 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold text-foreground font-display">Today&apos;s Picks</h2>
           </div>
           <Link
-            href="/dashboard/discover"
+            href="/dashboard/explore"
             className="text-xs text-foreground-muted hover:text-primary transition-colors flex items-center gap-1"
           >
             View All <ChevronRight className="w-3 h-3" />
@@ -812,7 +812,7 @@ export default function DashboardPage() {
             <p className="text-foreground-muted text-sm mb-4">
               We&apos;re searching for people who match your blueprint.
             </p>
-            <Link href="/dashboard/discover" className="btn-primary text-sm">
+            <Link href="/dashboard/explore" className="btn-primary text-sm">
               <Search className="w-4 h-4 mr-2" />
               Browse Discover
             </Link>
@@ -890,7 +890,7 @@ export default function DashboardPage() {
                 title="New Matches"
                 subtitle={`${unreadMatches} pending review`}
                 count={unreadMatches}
-                href="/dashboard/activity"
+                href="/dashboard/notifications"
               />
               <ActivityItem
                 icon={MessageCircle}
@@ -898,14 +898,14 @@ export default function DashboardPage() {
                 title="Messages"
                 subtitle={`${unreadMessages} unread conversation${unreadMessages !== 1 ? "s" : ""}`}
                 count={unreadMessages}
-                href="/dashboard/chat"
+                href="/dashboard/chats"
               />
               <ActivityItem
                 icon={Eye}
                 iconBg="bg-blue-500/20 text-blue-400"
                 title="Profile Views"
                 subtitle="Check who viewed you"
-                href="/dashboard/activity"
+                href="/dashboard/notifications"
               />
               <ActivityItem
                 icon={Bell}
@@ -922,7 +922,7 @@ export default function DashboardPage() {
               <p className="text-xs text-foreground-subtle mb-3">Quick Actions</p>
               <div className="grid grid-cols-3 gap-2">
                 <Link
-                  href="/dashboard/discover"
+                  href="/dashboard/explore"
                   className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-foreground-faint hover:bg-primary/15 transition-colors group"
                 >
                   <Search className="w-4 h-4 text-foreground-muted group-hover:text-primary transition-colors" />

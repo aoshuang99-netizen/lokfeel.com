@@ -137,7 +137,7 @@ function EmptyConversation() {
         transition={{ delay: 0.35, duration: 0.4 }}
       >
         <Link
-          href="/dashboard/matches"
+          href="/dashboard/connections"
           className="px-5 py-2.5 rounded-xl bg-gradient-to-br from-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-foreground text-sm font-medium transition-all duration-200 shadow-lg shadow-amber-600/20"
         >
           Find Matches
@@ -398,6 +398,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
   const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const deletedMsgIdsRef = useRef<Set<string>>(new Set());
 
   // Socket connection (IM API v2 - 使用 conversationId)
   const {
@@ -489,7 +490,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
   const handleSelectConversation = useCallback((id: string) => {
     setCurrentConvId(id);
     if (isMobile) {
-      router.push(`/dashboard/chat/${id}`);
+      router.push(`/dashboard/chats/${id}`);
     }
   }, [isMobile, router]);
 
@@ -606,18 +607,11 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
     []
   );
 
-  // Handle delete message
+  // Handle delete message — optimistically hide from UI
   const handleDelete = useCallback(
-    async (msgId: string) => {
-      try {
-        // Call API to delete message
-        await fetch(`/api/im/messages/${msgId}`, {
-          method: 'DELETE',
-        });
-        toast.success("Message deleted");
-      } catch (err) {
-        toast.error("Failed to delete message");
-      }
+    (msgId: string) => {
+      deletedMsgIdsRef.current.add(msgId);
+      toast.success("Message deleted");
     },
     []
   );
@@ -695,9 +689,11 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
 
             {/* Messages */}
             <MessageList
-              messages={messages.map(m => ({ 
-                ...m, 
-                senderId: m.senderId 
+              messages={messages
+                .filter((m) => !deletedMsgIdsRef.current.has(m.msgId))
+                .map(m => ({
+                ...m,
+                senderId: m.senderId
               }))}
               isTyping={isTyping}
               typingUserName={typingUserId ? roomInfo.otherUser.name : undefined}
@@ -717,7 +713,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
             {userLimits && (
               <MessageLimitWarning
                 limits={userLimits}
-                onUpgrade={() => router.push("/dashboard/settings/billing")}
+                onUpgrade={() => router.push("/dashboard/subscription")}
               />
             )}
 

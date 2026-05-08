@@ -44,7 +44,7 @@ const contentMap = {
     title: "No conversations yet",
     description: "Accept a match to start chatting with other users",
     cta: "Find Matches",
-    href: "/dashboard/matches",
+    href: "/dashboard/connections",
   },
   "no-messages": {
     title: "No messages yet",

@@ -84,7 +84,7 @@ export default function SubscriptionSuccessPage() {
             </div>
 
             <button
-              onClick={() => router.push("/dashboard/matches")}
+              onClick={() => router.push("/dashboard/connections")}
               className="btn-primary px-8 py-3 inline-flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />

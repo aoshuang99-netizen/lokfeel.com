@@ -1,32 +1,28 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  Home,
-  Search,
-  MessageCircle,
+  Compass,
+  Heart,
+  MessageSquare,
   Bell,
   User,
-  LogOut,
 } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
-import { signOut } from "next-auth/react";
 
-// ══════════════════════════════════════
-// 5-ENTRY NAVIGATION — UX Redesign Spec
-// Home / Discover / Messages / Activity / Profile
-// ══════════════════════════════════════
+// ═════════════════════════════════════
+// REDESIGNED NAVIGATION — 5-ENTRY OPTIMIZED
+// Explore / Connections / Chats / Notifications / Profile
+// ═════════════════════════════════════
 
 const navItems = [
-  { name: "Home", href: "/dashboard", icon: Home, label: "Home" },
-  { name: "Discover", href: "/dashboard/discover", icon: Search, label: "Discover" },
-  { name: "Messages", href: "/dashboard/chat", icon: MessageCircle, label: "Messages", badgeKey: "unreadMessages" },
-  { name: "Activity", href: "/dashboard/activity", icon: Bell, label: "Activity", badgeKey: "unreadMatches" },
-  { name: "Profile", href: "/dashboard/profile", icon: User, label: "Profile" },
-  { name: "Logout", href: "#", icon: LogOut, label: "Logout", isLogout: true },
+  { name: "Explore", href: "/dashboard/explore", icon: Compass, label: "Explore", badgeKey: null },
+  { name: "Connections", href: "/dashboard/connections", icon: Heart, label: "Connections", badgeKey: "unreadLikes" },
+  { name: "Chats", href: "/dashboard/chats", icon: MessageSquare, label: "Chats", badgeKey: "unreadMessages" },
+  { name: "Notifications", href: "/dashboard/notifications", icon: Bell, label: "Notifications", badgeKey: "unreadNotifications" },
+  { name: "Profile", href: "/dashboard/profile", icon: User, label: "Profile", badgeKey: null },
 ];
 
 // Design tokens
@@ -37,29 +33,39 @@ interface UnreadData {
   totalChats?: number;
 }
 
-interface MatchesData {
-  matches: Array<{ myReaction: string | null }>;
+interface ConnectionsData {
+  likes: Array<{ id: string }>;
+}
+
+interface NotificationsData {
+  unreadCount: number;
 }
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Fetch unread message count
   const { data: unreadMessagesData } = useApiGet<UnreadData>("/api/chats/unread-count");
-  const { data: matchesData } = useApiGet<MatchesData>("/api/matches?status=PENDING&limit=10");
+  
+  // Fetch connections (likes + matches + pending) — use who-liked-me API
+  const { data: connectionsData } = useApiGet<ConnectionsData>("/api/who-liked-me?limit=50");
+  
+  // Fetch notifications unread count
+  const { data: notificationsData } = useApiGet<NotificationsData>("/api/notifications?unread=true");
 
   const unreadMessages = unreadMessagesData?.unreadCount || 0;
-  const unreadMatches = matchesData?.matches?.filter((m) => m.myReaction === null).length || 0;
+  const unreadLikes = connectionsData?.likes?.length || 0;
+  const unreadNotifications = notificationsData?.unreadCount || 0;
 
   const badgeMap: Record<string, number> = {
     unreadMessages,
-    unreadMatches,
+    unreadLikes,
+    unreadNotifications,
   };
 
   const isActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard" || pathname === "/dashboard/";
+    if (href === "/dashboard/explore") {
+      return pathname === "/dashboard/explore" || pathname === "/dashboard/explore/";
     }
     return pathname.startsWith(href);
   };
@@ -77,22 +83,7 @@ export default function BottomNav() {
             const Icon = item.icon;
             const badgeCount = item.badgeKey ? badgeMap[item.badgeKey] || 0 : 0;
 
-            const isLogoutItem = (item as any).isLogout;
-
-            return isLogoutItem ? (
-              <button
-                key={item.name}
-                onClick={() => setShowLogoutConfirm(true)}
-                className="relative flex flex-col items-center gap-0.5 px-2 py-1.5 min-w-[56px]"
-              >
-                <div className="relative p-1.5 rounded-xl text-foreground-subtle hover:text-red-500 transition-colors">
-                  <Icon className="w-5 h-5" strokeWidth={1.8} />
-                </div>
-                <span className="text-[9px] font-medium text-foreground-subtle">
-                  {item.label}
-                </span>
-              </button>
-            ) : (
+            return (
               <Link
                 key={item.name}
                 href={item.href}
@@ -143,39 +134,6 @@ export default function BottomNav() {
           })}
         </div>
       </div>
-
-      {/* ── Logout Confirmation Modal ── */}
-      {showLogoutConfirm && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-          style={{ background: "rgba(10,10,10,0.7)", backdropFilter: "blur(4px)" }}
-          onClick={() => setShowLogoutConfirm(false)}
-        >
-          <div
-            className="bg-background rounded-2xl p-6 max-w-xs w-full shadow-2xl border border-card-border"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-base font-bold text-foreground mb-2 font-display">Sign out?</h3>
-            <p className="text-sm text-foreground-muted mb-5">
-              Are you sure you want to leave LokFeel?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-foreground-faint text-foreground-muted hover:bg-foreground-subtle transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
-              >
-                Sign out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }

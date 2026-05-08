@@ -86,7 +86,7 @@ export function NoMessages() {
       description="Start a conversation with your matches to begin connecting."
       action={{
         label: "View Matches",
-        onClick: () => (window.location.href = "/dashboard/matches"),
+        onClick: () => (window.location.href = "/dashboard/connections"),
       }}
     />
   );

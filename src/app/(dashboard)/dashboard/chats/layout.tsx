@@ -175,7 +175,7 @@ export default function ChatLayout({
   );
 
   const currentRoomId = pathname?.split("/").pop();
-  const isChatListPage = pathname === "/dashboard/chat";
+  const isChatListPage = pathname === "/dashboard/chats";
 
   return (
     <div className="flex h-[calc(100vh-4rem)] -mx-4 -mt-6 bg-background">
@@ -279,7 +279,7 @@ export default function ChatLayout({
               </p>
               {activeTab === "all" && !searchQuery && (
                 <Link
-                  href="/dashboard/discover"
+                  href="/dashboard/explore"
                   className="inline-block mt-4 text-primary text-sm hover:underline"
                 >
                   Discover people →
@@ -290,7 +290,7 @@ export default function ChatLayout({
             <div className="divide-y divide-white/5">
               {filteredChats.map((chat) => (
                 <Link
-                    href={`/dashboard/chat/${chat.id}`}
+                    href={`/dashboard/chats/${chat.id}`}
                     className={`flex items-center gap-3 p-3 hover:bg-background-tertiary transition-colors ${
                       currentRoomId === chat.id ? "bg-background-tertiary" : ""
                     }`}

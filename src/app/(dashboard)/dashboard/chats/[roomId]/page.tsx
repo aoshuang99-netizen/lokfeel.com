@@ -457,7 +457,7 @@ export default function ChatRoomPage() {
       if (res.ok) {
         toast.success(`${roomInfo.otherUser.name} has been blocked`);
         setShowMoreMenu(false);
-        window.location.href = "/dashboard/chat";
+        window.location.href = "/dashboard/chats";
       } else {
         toast.error("Failed to block user");
       }
@@ -533,7 +533,7 @@ export default function ChatRoomPage() {
         <div className="flex items-center gap-3">
           {/* Back Button (Mobile) */}
           <Link
-            href="/dashboard/chat"
+            href="/dashboard/chats"
             className="md:hidden p-2 -ml-2 rounded-full hover:bg-background-tertiary"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
@@ -1055,7 +1055,7 @@ export default function ChatRoomPage() {
                   <button
                     onClick={() => {
                       setShowUpgradeModal(false);
-                      window.location.href = "/dashboard/settings/billing";
+                      window.location.href = "/dashboard/subscription";
                     }}
                     className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-foreground transition-colors"
                   >

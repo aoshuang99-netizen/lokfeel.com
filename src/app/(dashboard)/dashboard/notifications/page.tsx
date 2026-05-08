@@ -1,236 +1,455 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Heart, MessageCircle, Sparkles, Users, Bell, Check, CheckCheck, Loader2 } from "lucide-react";
-import { EmptyState } from "@/components/shared/empty-state";
-import { useApiGet } from "@/hooks/use-api";
+import { toast } from "sonner";
+import {
+  Heart,
+  User,
+  Clock,
+  Check,
+  X,
+  MessageCircle,
+  Sparkles,
+  Eye,
+  Zap,
+  Send,
+  Inbox,
+  Flame,
+  RefreshCw,
+  Bell,
+  ChevronRight,
+} from "lucide-react";
+import { Skeleton, EmptyState } from "@/components/ui";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getFallbackAvatarUrl } from "@/lib/avatar-utils";
 
-interface NotificationData {
-  notifications: Array<{
+// ══════════════════════════════════════
+// NOTIFICATIONS PAGE — Renamed & Optimized
+// From Activity → Notifications
+// ══════════════════════════════════════
+
+const EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+interface Notification {
+  id: string;
+  type: "like_received" | "match" | "view" | "message" | "request";
+  user: {
     id: string;
-    type: string;
-    title: string;
-    body: string;
-    actionUrl: string | null;
-    isRead: boolean;
-    createdAt: string;
-  }>;
-  unreadCount: number;
+    name: string;
+    age: number;
+    avatar: string | null;
+  };
+  timestamp: string;
+  read: boolean;
+  requestStatus?: "pending" | "accepted" | "declined";
+  matchScore?: number;
 }
 
-const iconMap: Record<string, any> = {
-  NEW_MATCH: Heart,
-  MATCH_ACCEPTED: Heart,
-  MATCH_REJECTED: Heart,
-  NEW_MESSAGE: MessageCircle,
-  SUBSCRIPTION_EXPIRED: Sparkles,
-  PROFILE_APPROVED: Users,
-  PROFILE_REJECTED: Users,
-  SYSTEM_ANNOUNCEMENT: Bell,
-  WEEKLY_DIGEST: Bell,
-};
+type FilterTab = "all" | "likes" | "matches" | "requests";
 
-const colorMap: Record<string, string> = {
-  NEW_MATCH: "text-primary bg-primary/20",
-  MATCH_ACCEPTED: "text-primary bg-primary/20",
-  MATCH_REJECTED: "text-foreground-subtle bg-background-tertiary",
-  NEW_MESSAGE: "text-secondary bg-secondary/20",
-  SUBSCRIPTION_EXPIRED: "text-warning bg-warning/20",
-  PROFILE_APPROVED: "text-success bg-success/20",
-  PROFILE_REJECTED: "text-error bg-error/20",
-  SYSTEM_ANNOUNCEMENT: "text-info bg-info/20",
-  WEEKLY_DIGEST: "text-info bg-info/20",
-};
+const TABS: { id: FilterTab; label: string; icon: any }[] = [
+  { id: "all", label: "All", icon: Inbox },
+  { id: "likes", label: "Likes", icon: Heart },
+  { id: "matches", label: "Matches", icon: Sparkles },
+  { id: "requests", label: "Requests", icon: Send },
+];
 
-function formatTimestamp(dateStr: string): string {
-  const date = new Date(dateStr);
+function getMatchScoreColor(score: number): string {
+  if (score >= 90) return "text-amber-400 bg-amber-500/15";
+  if (score >= 80) return "text-orange-400 bg-orange-500/15";
+  return "text-amber-400 bg-amber-600/15";
+}
+
+function formatTime(timestamp: string): string {
+  const date = new Date(timestamp);
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  const diff = now.getTime() - date.getTime();
+  if (diff < 60000) return "Just now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return `${Math.floor(diff / 86400000)}d ago`;
+}
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-  return date.toLocaleDateString();
+function getNotificationIcon(type: Notification["type"]) {
+  switch (type) {
+    case "like_received":
+    case "request":
+      return <Heart className="w-4 h-4 text-pink-400" fill="currentColor" />;
+    case "match":
+      return <Sparkles className="w-4 h-4 text-primary" />;
+    case "view":
+      return <Eye className="w-4 h-4 text-foreground-subtle" />;
+    case "message":
+      return <MessageCircle className="w-4 h-4 text-primary" />;
+    default:
+      return null;
+  }
+}
+
+function getNotificationText(notification: Notification): string {
+  switch (notification.type) {
+    case "like_received":
+      return "liked your profile";
+    case "request":
+      return "sent you a connection request";
+    case "match":
+      return "is now your match";
+    case "view":
+      return "viewed your profile";
+    case "message":
+      return "sent you a message";
+    default:
+      return "";
+  }
 }
 
 export default function NotificationsPage() {
-  const [filter, setFilter] = useState<"all" | "unread">("all");
-  const { data, isLoading, error, refetch } = useApiGet<NotificationData>(
-    `/api/notifications?filter=${filter}&limit=50`
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [userGender, setUserGender] = useState<"male" | "female" | null>(null);
+
+  useEffect(() => {
+    fetchNotifications();
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await fetch("/api/profile");
+      if (res.ok) {
+        const data = await res.json();
+        const gender = data.profile?.gender?.toLowerCase();
+        setUserGender(gender === "male" || gender === "man" ? "male" : "female");
+      }
+    } catch (e) {
+      console.error("Failed to fetch profile:", e);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/activity");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setNotifications(data.activities || []);
+    } catch (e) {
+      toast.error("Failed to load notifications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRequest = async (notificationId: string, action: "accept" | "decline") => {
+    try {
+      await fetch(`/api/requests/${notificationId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notificationId
+            ? { ...n, requestStatus: action === "accept" ? "accepted" : "declined" }
+            : n
+        )
+      );
+      toast.success(action === "accept" ? "Request accepted!" : "Request declined");
+    } catch (e) {
+      toast.error("Failed to process request");
+    }
+  };
+
+  const tabCounts = useMemo(
+    () => ({
+      all: notifications.length,
+      likes: notifications.filter((n) => n.type === "like_received").length,
+      matches: notifications.filter((n) => n.type === "match").length,
+      requests: notifications.filter((n) => n.type === "request").length,
+    }),
+    [notifications]
   );
 
-  const notifications = data?.notifications || [];
-  const unreadCount = data?.unreadCount || 0;
+  const filteredNotifications = useMemo(() => {
+    switch (activeTab) {
+      case "likes":
+        return notifications.filter((n) => n.type === "like_received" || n.type === "request");
+      case "matches":
+        return notifications.filter((n) => n.type === "match");
+      case "requests":
+        return notifications.filter((n) => n.type === "request");
+      default:
+        return notifications;
+    }
+  }, [notifications, activeTab]);
 
-  const handleMarkAsRead = async (ids: string[]) => {
-    await fetch("/api/notifications", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids }),
-    });
-    refetch();
-  };
-
-  const handleMarkAllAsRead = async () => {
-    await fetch("/api/notifications", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ markAll: true }),
-    });
-    refetch();
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        <span className="ml-3 text-foreground-muted">Loading notifications...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
-          <p className="text-foreground-muted">Stay updated on your matches</p>
-        </div>
-        <div className="glass-card p-12 text-center">
-          <Bell className="w-8 h-8 text-foreground-subtle mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">Service Unavailable</h3>
-          <p className="text-foreground-muted">{error}</p>
-        </div>
-      </div>
-    );
-  }
+  const stats = useMemo(
+    () => ({
+      likes: notifications.filter((n) => n.type === "like_received" || n.type === "request").length,
+      matches: notifications.filter((n) => n.type === "match").length,
+      unread: notifications.filter((n) => !n.read).length,
+    }),
+    [notifications]
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
-          <p className="text-foreground-muted">
-            {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "All caught up!"}
+          <h1 className="text-2xl font-bold text-foreground font-display">Notifications</h1>
+          <p className="text-foreground-muted text-sm mt-1">
+            {userGender === "female"
+              ? "Review and respond to connection requests"
+              : "Track your likes, matches, and views"}
           </p>
         </div>
-
-        {unreadCount > 0 && (
-          <button
-            onClick={handleMarkAllAsRead}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <CheckCheck className="w-4 h-4" />
-            Mark all as read
-          </button>
-        )}
-      </div>
-
-      {/* Filter */}
-      <div className="flex gap-2">
         <button
-          onClick={() => setFilter("all")}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-            filter === "all"
-              ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
-              : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
-          }`}
+          onClick={fetchNotifications}
+          className="p-2 rounded-xl hover:bg-background-tertiary transition-colors"
         >
-          All
-        </button>
-        <button
-          onClick={() => setFilter("unread")}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-            filter === "unread"
-              ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-foreground border border-primary/30"
-              : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
-          }`}
-        >
-          Unread
-          {unreadCount > 0 && (
-            <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-primary text-foreground">
-              {unreadCount}
-            </span>
-          )}
+          <RefreshCw className="w-4 h-4 text-foreground-muted" />
         </button>
       </div>
 
-      {/* Notifications List */}
-      {notifications.length > 0 ? (
-        <div className="space-y-2">
-          {notifications.map((notification) => {
-            const Icon = iconMap[notification.type] || Bell;
-            const colorClass = colorMap[notification.type] || "text-foreground bg-background-tertiary";
+      {/* Stats Cards */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass-card p-4 text-center"
+        >
+          <p className="text-xl font-bold text-foreground">{stats.likes}</p>
+          <p className="text-[11px] text-foreground-muted">New Likes</p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="glass-card p-4 text-center"
+        >
+          <p className="text-xl font-bold text-primary">{stats.matches}</p>
+          <p className="text-[11px] text-foreground-muted">Matches</p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass-card p-4 text-center"
+        >
+          <p className="text-xl font-bold text-foreground">{stats.unread}</p>
+          <p className="text-[11px] text-foreground-muted">Unread</p>
+        </motion.div>
+      </div>
 
-            const content = (
-              <div
-                className={`glass-card p-4 flex items-start gap-4 hover:bg-background-tertiary transition-all ${
-                  !notification.isRead ? "border-primary/30" : ""
-                }`}
-              >
-                {/* Icon */}
-                <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center flex-shrink-0`}>
-                  <Icon className="w-5 h-5" />
-                </div>
+      {/* Tab Filters */}
+      <div className="flex gap-1 mb-4 overflow-x-auto scrollbar-hide">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          const count = tabCounts[tab.id];
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className={`font-medium ${!notification.isRead ? "text-foreground" : "text-foreground"}`}>
-                        {notification.title}
-                      </h3>
-                      <p className="text-sm text-foreground-muted mt-0.5">{notification.body}</p>
-                    </div>
-                    {!notification.isRead && (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleMarkAsRead([notification.id]);
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-background-tertiary transition-colors text-foreground-subtle hover:text-foreground flex-shrink-0"
-                        title="Mark as read"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-xs text-foreground-subtle mt-2">{formatTimestamp(notification.createdAt)}</p>
-                </div>
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                isActive
+                  ? "bg-primary/20 text-primary"
+                  : "text-foreground-muted hover:text-foreground-muted hover:bg-background-tertiary"
+              }`}
+              style={{ transitionTimingFunction: EASING }}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {tab.label}
+              {count > 0 && (
+                <span
+                  className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center ${
+                    isActive ? "bg-primary text-foreground" : "bg-background-tertiary text-foreground-muted"
+                  }`}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-                {/* Unread Dot */}
-                {!notification.isRead && (
-                  <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
-                )}
-              </div>
-            );
-
-            return notification.actionUrl ? (
-              <Link key={notification.id} href={notification.actionUrl}>
-                {content}
-              </Link>
-            ) : (
-              <div key={notification.id}>{content}</div>
-            );
-          })}
+      {/* Notification List */}
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+          ))}
         </div>
-      ) : (
+      ) : filteredNotifications.length === 0 ? (
         <EmptyState
-          icon="bell"
-          title={filter === "unread" ? "No unread notifications" : "No notifications yet"}
-          description={
-            filter === "unread"
-              ? "You've read all your notifications"
-              : "We'll notify you when something important happens"
+          icon={Bell}
+          title="No notifications yet"
+          description="Start exploring to see likes, matches, and more here."
+          action={
+            <Link href="/dashboard/explore" className="btn-primary text-sm">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Explore People
+            </Link>
           }
         />
+      ) : (
+        <div className="space-y-2">
+          <AnimatePresence>
+            {filteredNotifications.map((notification, index) => (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ delay: index * 0.03, duration: 0.2 }}
+                className={`rounded-xl p-4 transition-colors ${
+                  !notification.read
+                    ? "bg-primary/5 border border-primary/20"
+                    : "bg-background-tertiary border border-card-border"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden">
+                      {(() => {
+                        const kind = getAvatarKind(notification.user.avatar);
+                        if (kind === 'none') return <User className="w-6 h-6 text-foreground-subtle" />;
+                        if (kind === 'emoji') {
+                          const parsed = parseEmojiAvatar(notification.user.avatar);
+                          return <span className="text-xl">{parsed?.emoji}</span>;
+                        }
+                        // Check for broken CDN URLs
+                        const safeUrl = isBrokenAvatarUrl(notification.user.avatar) ? null : notification.user.avatar;
+                        if (!safeUrl) {
+                          return <img src={getFallbackAvatarUrl(notification.user.id || notification.user.name)} alt={notification.user.name} className="w-8 h-8 object-contain p-0.5" />;
+                        }
+                        return (
+                          <img
+                            src={safeUrl}
+                            alt={notification.user.name}
+                            className={getAvatarImgClasses(kind)}
+                            style={kind === 'svg' ? { background: getAvatarBackground(kind, notification.user.avatar) } : undefined}
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              const fb = getFallbackAvatarUrl(notification.user.id || notification.user.name);
+                              if (img.src !== fb) img.src = fb;
+                              else img.style.display = 'none';
+                            }}
+                          />
+                        );
+                      })()}
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-background-secondary border border-card-border flex items-center justify-center">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-foreground truncate text-sm">
+                        {notification.user.name}, {notification.user.age}
+                      </h3>
+                      {notification.matchScore && (
+                        <span
+                          className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getMatchScoreColor(notification.matchScore)}`}
+                        >
+                          <Flame className="w-2.5 h-2.5" />
+                          {notification.matchScore}%
+                        </span>
+                      )}
+                      {!notification.read && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <p className="text-xs text-foreground-muted">{getNotificationText(notification)}</p>
+                    <p className="text-[10px] text-foreground-subtle mt-0.5 flex items-center gap-1">
+                      <Clock className="w-2.5 h-2.5" />
+                      {formatTime(notification.timestamp)}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {notification.type === "request" &&
+                    notification.requestStatus === "pending" &&
+                    userGender === "female" ? (
+                      <>
+                        <button
+                          onClick={() => handleRequest(notification.id, "decline")}
+                          className="p-2 rounded-full bg-background-tertiary hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRequest(notification.id, "accept")}
+                          className="p-2 rounded-full bg-gradient-to-r from-primary to-secondary text-foreground hover:opacity-90 transition-opacity"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : notification.type === "match" ? (
+                      <Link
+                        href={`/dashboard/chats/${notification.user.id}`}
+                        className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors"
+                      >
+                        Message
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/dashboard/connections"
+                        className="p-2 rounded-lg bg-background-tertiary hover:bg-background-tertiary text-foreground-subtle hover:text-foreground transition-colors"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                {notification.type === "request" && notification.requestStatus !== "pending" && (
+                  <div className="mt-3 pt-3 border-t border-card-border">
+                    <span
+                      className={`text-xs ${
+                        notification.requestStatus === "accepted"
+                          ? "text-green-400"
+                          : "text-foreground-subtle"
+                      }`}
+                    >
+                      {notification.requestStatus === "accepted" ? "✓ Accepted" : "✗ Declined"}
+                    </span>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Female Control Tip */}
+      {userGender === "female" && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-6 rounded-xl p-4 border border-primary/20 bg-primary/5"
+        >
+          <div className="flex items-start gap-3">
+            <Zap className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-foreground text-sm">You&apos;re in control</h4>
+              <p className="text-xs text-foreground-muted mt-1">
+                Only you can initiate conversations. Review connection requests and decide who can message you.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       )}
     </div>
   );
