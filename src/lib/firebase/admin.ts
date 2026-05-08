@@ -53,3 +53,18 @@ export async function verifyFirebaseToken(idToken: string): Promise<admin.auth.D
     return null;
   }
 }
+
+/**
+ * Get Firebase user record by UID.
+ * Returns null if Firebase Admin is not configured or user not found.
+ * Use this as fallback when DecodedIdToken lacks email.
+ */
+export async function getFirebaseUser(uid: string): Promise<admin.auth.UserRecord | null> {
+  try {
+    if (!admin.apps.length) return null;
+    return await admin.auth().getUser(uid);
+  } catch (error) {
+    console.error("[Firebase Admin] getUser failed:", error);
+    return null;
+  }
+}

@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { verifyFirebaseToken } from "@/lib/firebase/admin";
+import { verifyFirebaseToken, getFirebaseUser } from "@/lib/firebase/admin";
 
 // Simple rate limiter (in-memory, per-IP)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -68,38 +68,65 @@ export async function POST(request: NextRequest) {
       uid: firebaseUid,
       email: firebaseEmail,
       email_verified,
-      name: firebaseName,
-      picture: firebasePicture,
-      provider_data,
+      name: initialFirebaseName,
+      picture: initialFirebasePicture,
       firebase,
     } = decoded;
 
-    // Resolve email with fallbacks
-    // Priority: decoded.email → provider_data[0].email → firebase.identities.email[0]
-    let email = firebaseEmail
-      || (Array.isArray(provider_data) && provider_data[0]?.email)
-      || (firebase?.identities as any)?.email?.[0]
-      || null;
+    let firebaseName = initialFirebaseName;
+    let firebasePicture = initialFirebasePicture;
 
-    if (!email) {
-      // Log available fields for debugging (never log PII to client)
-      console.error(
-        "[Firebase Bridge] No email found in token.",
-        "uid:", firebaseUid,
-        "signInProvider:", firebase?.sign_in_provider,
-        "hasProviderData:", !!provider_data,
-        "providerCount:", Array.isArray(provider_data) ? provider_data.length : 0,
-        "identities:", firebase?.identities ? JSON.stringify(Object.keys(firebase.identities)) : "none",
-      );
-      return NextResponse.json(
-        { error: "Firebase account has no email address. Please ensure your Google/X account has a verified email." },
-        { status: 400 }
-      );
+    // ─── Email Resolution (3-level fallback) ───
+    // Level 1: decoded.email (standard, present for Google/Twitter sign-in)
+    // Level 2: firebase.identities["google.com"] or firebase.identities["twitter.com"]
+    // Level 3: admin.auth().getUser(uid).email (API call, guaranteed if user exists)
+    let email: string | null = firebaseEmail || null;
+
+    if (!email && firebase?.identities) {
+      // Level 2: Extract from Firebase identities
+      const identities = firebase.identities as Record<string, string[] | null>;
+      // Try known providers in order
+      for (const provider of ["google.com", "twitter.com", "apple.com", "email"]) {
+        const idents = identities[provider];
+        if (Array.isArray(idents) && idents.length > 0 && idents[0].includes("@")) {
+          email = idents[0];
+          break;
+        }
+      }
     }
 
-    if (!email_verified && !firebaseEmail) {
-      // Unverified email from fallback source — allow but warn
-      console.warn(`[Firebase Bridge] Using unverified email from provider_data for uid=${firebaseUid}`);
+    if (!email) {
+      // Level 3: Call Firebase Admin API to get user record
+      try {
+        const firebaseUser = await getFirebaseUser(firebaseUid);
+        if (firebaseUser?.email) {
+          email = firebaseUser.email;
+          // Also grab name/picture from user record if missing
+          if (!firebaseName && firebaseUser.displayName) {
+            firebaseName = firebaseUser.displayName;
+          }
+          if (!firebasePicture && firebaseUser.photoURL) {
+            firebasePicture = firebaseUser.photoURL;
+          }
+        }
+      } catch (getUserError) {
+        console.error("[Firebase Bridge] getUser fallback failed:", getUserError);
+      }
+    }
+
+    if (!email) {
+      // All fallbacks exhausted — log diagnostic info (no PII)
+      console.error(
+        "[Firebase Bridge] CRITICAL: No email found after all fallbacks.",
+        "uid:", firebaseUid,
+        "signInProvider:", firebase?.sign_in_provider,
+        "hasIdTokenEmail:", !!firebaseEmail,
+        "identityKeys:", firebase?.identities ? JSON.stringify(Object.keys(firebase.identities)) : "none",
+      );
+      return NextResponse.json(
+        { error: "Firebase account has no email address. Please ensure your account has a verified email and try again." },
+        { status: 400 }
+      );
     }
 
     // Step 2: Find or create user
@@ -107,10 +134,8 @@ export async function POST(request: NextRequest) {
     const displayName = firebaseName || email.split("@")[0];
     const avatar = firebasePicture || null;
 
-    // Determine the OAuth provider from Firebase
-    const firebaseProvider = Array.isArray(provider_data) && provider_data.length > 0
-      ? provider_data[0].providerId // "google.com", "twitter.com", "apple.com", etc.
-      : firebase?.sign_in_provider || "firebase";
+    // Determine the OAuth provider from Firebase sign_in_provider
+    const firebaseProvider = firebase?.sign_in_provider || "firebase";
 
     // Normalize provider name for Account model
     const accountProvider = firebaseProvider === "google.com"
