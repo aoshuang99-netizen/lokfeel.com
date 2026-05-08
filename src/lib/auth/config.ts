@@ -114,6 +114,75 @@ export const authConfig = {
         };
       },
     }),
+    // Firebase Bridge Credentials provider
+    // Accepts one-time sign-in tokens from /api/auth/firebase-bridge
+    Credentials({
+      id: "firebase-token",
+      name: "Firebase",
+      credentials: {
+        token: { label: "Token", type: "text" },
+        userId: { label: "User ID", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.token || !credentials?.userId) {
+          return null;
+        }
+
+        try {
+          const rawToken = credentials.token as string;
+          const userId = credentials.userId as string;
+
+          // Token format: "fb_{userId}_{uuid}_{timestamp}"
+          if (!rawToken.startsWith(`fb_${userId}_`)) {
+            return null;
+          }
+
+          // Look up the verification token (exact match — raw token stored directly)
+          const verification = await db.verificationToken.findUnique({
+            where: {
+              identifier_token: {
+                identifier: `firebase:${userId}`,
+                token: rawToken,
+              },
+            },
+          });
+
+          if (!verification) {
+            return null;
+          }
+
+          // Check expiration
+          if (verification.expires < new Date()) {
+            await db.verificationToken.delete({ where: { id: verification.id } });
+            return null;
+          }
+
+          // Verify user exists
+          const user = await db.user.findUnique({
+            where: { id: userId },
+            include: { profile: true },
+          });
+
+          if (!user) {
+            return null;
+          }
+
+          // Delete the one-time token (single use)
+          await db.verificationToken.delete({ where: { id: verification.id } });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name || user.profile?.displayName || "",
+            image: user.image || user.profile?.avatar || null,
+            role: user.role,
+            emailVerified: user.emailVerified,
+          };
+        } catch {
+          return null;
+        }
+      },
+    }),
   ],
   session: {
     strategy: "jwt" as const,
