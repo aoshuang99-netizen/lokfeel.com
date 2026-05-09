@@ -3,6 +3,10 @@ import { requireAuth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { handleApiError } from '@/lib/api-handler'
 
+// NOTE: This endpoint is the canonical chat list API.
+// /api/chats (ChatRoom-only) and /api/im/conversations (IM-only) are legacy.
+// Prefer this endpoint for new frontend code.
+
 export const dynamic = 'force-dynamic'
 
 // GET /api/chat — Get chat list (combines ChatRoom + IM Conversation)
@@ -52,6 +56,7 @@ export async function GET() {
         },
       },
       orderBy: { room: { lastMessageAt: 'desc' } },
+      take: 50,
     })
 
     const chatRoomChats = memberships
@@ -134,6 +139,7 @@ export async function GET() {
         },
       },
       orderBy: { lastMessageAt: 'desc' },
+      take: 50,
     })
 
     const imChats = imConversations.map((conv) => {

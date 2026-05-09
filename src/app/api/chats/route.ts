@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
 
+// DEPRECATED: Use /api/chat instead (merged ChatRoom + IM chat list)
+
 export const dynamic = "force-dynamic";
 
 /**
@@ -76,33 +78,23 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: "desc" },
     });
 
-    // Get unread counts — batch query instead of N+1 per room
-    // (Turso/libSQL has limited groupBy support)
+    // Batch unread count query — single query instead of N+1 per room
     const unreadMap = new Map<string, number>();
 
     if (chatRooms.length > 0) {
-      // Run all count queries in parallel instead of sequentially to reduce latency
-      const countPromises = chatRooms.map(async (room) => {
-        try {
-          const count = await prisma.message.count({
-            where: {
-              roomId: room.id,
-              senderId: { not: userId },
-              isRead: false,
-            },
-          });
-          if (count > 0) {
-            return { roomId: room.id, count };
-          }
-        } catch {
-          // If count fails for a room, just skip it (unread = 0)
-        }
-        return null;
+      const roomIds = chatRooms.map(r => r.id);
+      // Fetch all unread messages for all rooms in one query
+      const unreadMessages = await prisma.message.findMany({
+        where: {
+          roomId: { in: roomIds },
+          senderId: { not: userId },
+          isRead: false,
+        },
+        select: { roomId: true, id: true },
       });
-
-      const results = await Promise.all(countPromises);
-      for (const r of results) {
-        if (r) unreadMap.set(r.roomId, r.count);
+      // Count per room in JS (single query instead of N)
+      for (const msg of unreadMessages) {
+        unreadMap.set(msg.roomId, (unreadMap.get(msg.roomId) || 0) + 1);
       }
     }
 

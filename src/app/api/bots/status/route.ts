@@ -5,51 +5,22 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { db } from '@/lib/db';
 import { requireAdminAuth } from '@/lib/auth';
-
-const prisma = getDb();
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
     await requireAdminAuth();
+
     // 统计数字用户信息
-    const [
-      totalBots,
-      onlineBots,
-      activeToday,
-      totalMatches,
-      totalMessages
-    ] = await Promise.all([
+    const [totalBots, totalMatches, totalMessages] = await Promise.all([
       // 总Bot数
-      prisma.botProfile.count(),
-      
-      // 在线Bot数（简化逻辑：最近1小时有活动的）
-      prisma.botInteractionLog.groupBy({
-        by: ['botProfileId' as any],
-        where: {
-          createdAt: {
-            gte: new Date(Date.now() - 60 * 60 * 1000)
-          }
-        },
-        _count: true
-      }).then(logs => logs.length),
-      
-      // 今日活跃的Bot
-      prisma.botInteractionLog.groupBy({
-        by: ['botProfileId' as any],
-        where: {
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
-        },
-        _count: true
-      }).then(logs => logs.length),
-      
+      db.botProfile.count(),
+
       // Bot参与的匹配数
-      prisma.match.count({
+      db.match.count({
         where: {
           OR: [
             { sender: { email: { endsWith: '@lokfeel.bot' } } },
@@ -57,13 +28,32 @@ export async function GET(req: NextRequest) {
           ]
         }
       }),
-      
+
       // Bot发送的消息数
-      prisma.message.count({
+      db.message.count({
         where: {
           sender: { email: { endsWith: '@lokfeel.bot' } }
         }
       })
+    ]);
+
+    // Count distinct active bots — Turso-compatible (no groupBy)
+    // groupBy is unstable on Turso/libSQL, use distinct + findMany instead
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+
+    const [onlineBots, activeToday] = await Promise.all([
+      db.botInteractionLog.findMany({
+        where: { createdAt: { gte: oneHourAgo } },
+        select: { botUserId: true },
+        distinct: ['botUserId'],
+      }).then(logs => logs.length),
+
+      db.botInteractionLog.findMany({
+        where: { createdAt: { gte: startOfDay } },
+        select: { botUserId: true },
+        distinct: ['botUserId'],
+      }).then(logs => logs.length),
     ]);
 
     return NextResponse.json({

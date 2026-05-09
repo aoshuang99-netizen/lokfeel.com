@@ -48,40 +48,41 @@ export async function POST(req: NextRequest) {
 
     const receiverId = conversation.userAId === userId ? conversation.userBId : conversation.userAId;
 
-    // Get next sequence number
-    const lastMessage = await prisma.iMMessage.findFirst({
-      where: { conversationId },
-      orderBy: { seq: "desc" },
-      select: { seq: true },
-    });
-    const nextSeq = (lastMessage?.seq || 0) + 1;
+    // Atomic seq generation using interactive transaction (fixes TOCTOU race condition)
+    const message = await prisma.$transaction(async (tx) => {
+      const lastMessage = await tx.iMMessage.findFirst({
+        where: { conversationId },
+        orderBy: { seq: "desc" },
+        select: { seq: true },
+      });
+      const nextSeq = (lastMessage?.seq || 0) + 1;
 
-    // Create message
-    const message = await prisma.iMMessage.create({
-      data: {
-        conversationId,
-        senderId: userId,
-        receiverId,
-        seq: nextSeq,
-        msgType: type,
-        payload: content,
-        encryptionMode: "SERVER",
-        consentState: "CONSENT_NONE",
-        mediaLevel: "L0_TEXT",
-        ruleResult: "PASS",
-      },
-      include: {
-        sender: {
-          include: {
-            profile: {
-              select: {
-                displayName: true,
-                avatar: true,
+      return tx.iMMessage.create({
+        data: {
+          conversationId,
+          senderId: userId,
+          receiverId,
+          seq: nextSeq,
+          msgType: type,
+          payload: content,
+          encryptionMode: "SERVER",
+          consentState: "CONSENT_NONE",
+          mediaLevel: "L0_TEXT",
+          ruleResult: "PASS",
+        },
+        include: {
+          sender: {
+            include: {
+              profile: {
+                select: {
+                  displayName: true,
+                  avatar: true,
+                },
               },
             },
           },
         },
-      },
+      });
     });
 
     // Update conversation

@@ -1,17 +1,20 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import Discord from "next-auth/providers/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/auth";
 import { syncOAuthProfileToUser, OAuthProfileData } from "@/lib/auth/oauth-profile";
 
-// Clean env vars: strip surrounding whitespace AND surrounding quotes
+// Clean env vars: strip surrounding whitespace, surrounding quotes,
+// AND literal "\n"/"\r" strings that Vercel CLI sometimes injects
 // (.env.local often has AUTH_SECRET="value" with literal quotes that break JWT)
-function cleanEnvVar(key: string): string {
+export function cleanEnvVar(key: string): string {
   if (!process.env[key]) return "";
-  return process.env[key]!.replace(/^["']|["']$/g, "").trim();
+  return process.env[key]!
+    .replace(/^["']|["']$/g, "")       // strip surrounding quotes
+    .replace(/\\n|\\r/g, "")            // remove literal \n / \r injected by Vercel CLI
+    .trim();
 }
 
 // Trim env vars in case Vercel injected trailing newlines
@@ -19,6 +22,8 @@ if (process.env.AUTH_SECRET) process.env.AUTH_SECRET = cleanEnvVar("AUTH_SECRET"
 if (process.env.AUTH_URL) process.env.AUTH_URL = cleanEnvVar("AUTH_URL")
 if (process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = cleanEnvVar("NEXTAUTH_URL")
 if (process.env.DATABASE_URL) process.env.DATABASE_URL = cleanEnvVar("DATABASE_URL")
+if (process.env.GOOGLE_CLIENT_ID) process.env.GOOGLE_CLIENT_ID = cleanEnvVar("GOOGLE_CLIENT_ID")
+if (process.env.GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = cleanEnvVar("GOOGLE_CLIENT_SECRET")
 
 // Dev server fix: use localhost with dynamic port for local development
 const isDev = process.env.NODE_ENV !== "production";
@@ -79,8 +84,8 @@ export const authConfig = {
       },
     }),
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID || undefined,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || undefined,
       authorization: {
         params: {
           scope: 'openid email profile',
@@ -93,24 +98,6 @@ export const authConfig = {
           email: profile.email,
           image: profile.picture,
           emailVerified: profile.email_verified ? new Date() : null,
-        };
-      },
-    }),
-    Discord({
-      clientId: process.env.DISCORD_CLIENT_ID,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: 'identify email',
-        },
-      },
-      profile(profile) {
-        return {
-          id: profile.id,
-          name: profile.username || profile.global_name,
-          email: profile.email,
-          image: profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null,
-          emailVerified: profile.verified ? new Date() : null,
         };
       },
     }),
@@ -209,7 +196,7 @@ export const authConfig = {
           // Google specific
           locale: (profile as any).locale,
           verified: (profile as any).email_verified || (profile as any).verified,
-          // Discord specific
+          // Twitter/X specific
           occupation: undefined,
           company: undefined,
           industry: undefined,

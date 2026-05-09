@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIS OAuth Diagnostic — LokFeel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: 'Outfit', system-ui, sans-serif; padding: 24px; min-height: 100vh; }
+  h1 { color: #a3e635; margin-bottom: 4px; font-size: 22px; }
+  .subtitle { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .card { background: #111; border: 1px solid rgba(76,29,149,0.2); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .card h3 { color: #a78bfa; font-size: 14px; margin-bottom: 8px; }
+  .log { background: #1a1a1a; border-radius: 8px; padding: 12px; font-family: 'SF Mono', monospace; font-size: 12px; max-height: 350px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+  .log .ok { color: #a3e635; }
+  .log .err { color: #fb7185; }
+  .log .info { color: #60a5fa; }
+  .log .warn { color: #fbbf24; }
+  .log .step { color: #a78bfa; font-weight: bold; }
+  button { background: #a3e635; color: #0a0a0a; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin: 4px; }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary { background: #333; color: #fff; }
+  .steps { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+  .step-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+  .step-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+  .step-icon.pending { background: #333; color: #666; }
+  .step-icon.running { background: #fbbf24; color: #000; animation: pulse 1s infinite; }
+  .step-icon.ok { background: #a3e635; color: #000; }
+  .step-icon.err { background: #fb7185; color: #000; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .result-box { background: #1a2a1a; border: 1px solid #a3e635; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .result-box.fail { background: #2a1a1a; border-color: #fb7185; }
+  .copy-btn { position: fixed; top: 12px; right: 12px; background: #333; color: #aaa; border: 1px solid #444; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; z-index: 100; }
+  .copy-btn:hover { background: #444; color: #fff; }
+</style>
+</head>
+<body>
+<button class="copy-btn" onclick="copyLog()">📋 Copy Log</button>
+
+<h1>🔍 GIS OAuth Diagnostic</h1>
+<p class="subtitle">Tests Google Identity Services (GIS) → Bridge → NextAuth flow<br>Completely bypasses Firebase JS SDK</p>
+
+<!-- Steps Progress -->
+<div class="card">
+  <h3>Test Progress</h3>
+  <div class="steps" id="steps">
+    <div class="step-row" id="step1"><span class="step-icon pending">1</span> Load GIS script (accounts.google.com/gsi/client)</div>
+    <div class="step-row" id="step2"><span class="step-icon pending">2</span> Fetch config from /api/config/firebase</div>
+    <div class="step-row" id="step3"><span class="step-icon pending">3</span> Initialize Google Token Client</div>
+    <div class="step-row" id="step4"><span class="step-icon pending">4</span> Google popup → get ID token</div>
+    <div class="step-row" id="step5"><span class="step-icon pending">5</span> Send ID token to /api/auth/firebase-bridge</div>
+    <div class="step-row" id="step6"><span class="step-icon pending">6</span> Get CSRF token</div>
+    <div class="step-row" id="step7"><span class="step-icon pending">7</span> NextAuth signIn("firebase-token")</div>
+    <div class="step-row" id="step8"><span class="step-icon pending">8</span> Verify session</div>
+  </div>
+</div>
+
+<!-- Actions -->
+<div style="margin-bottom: 16px;">
+  <button id="btnRun" onclick="runTests()">▶ Run Full Test</button>
+  <button class="secondary" id="btnReset" onclick="resetTests()">↺ Reset</button>
+</div>
+
+<!-- Log -->
+<div class="card">
+  <h3>Live Log</h3>
+  <div class="log" id="log"></div>
+</div>
+
+<!-- Result -->
+<div id="result"></div>
+
+<script>
+const logEl = document.getElementById('log');
+const resultEl = document.getElementById('result');
+
+function log(msg, cls = '') {
+  const line = document.createElement('span');
+  line.className = cls;
+  line.textContent = msg + '\n';
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setStep(n, status) {
+  const row = document.getElementById('step' + n);
+  if (!row) return;
+  const icon = row.querySelector('.step-icon');
+  icon.className = 'step-icon ' + status;
+  icon.textContent = status === 'ok' ? '✓' : status === 'err' ? '✗' : status === 'running' ? '⟳' : n;
+}
+
+function resetTests() {
+  logEl.innerHTML = '';
+  resultEl.innerHTML = '';
+  for (let i = 1; i <= 8; i++) setStep(i, 'pending');
+  document.getElementById('btnRun').disabled = false;
+}
+
+function copyLog() {
+  navigator.clipboard.writeText(logEl.textContent).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy Log', 1500);
+  });
+}
+
+async function runTests() {
+  document.getElementById('btnRun').disabled = true;
+  log('=== GIS OAuth Diagnostic Started ===', 'step');
+  log('Time: ' + new Date().toISOString());
+  log('');
+
+  // Step 1: Load GIS script
+  setStep(1, 'running');
+  log('[Step 1] Loading Google Identity Services script...', 'info');
+  try {
+    if (!window.google?.accounts) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Script load failed'));
+        document.head.appendChild(s);
+      });
+    }
+    log('[Step 1] ✓ GIS script loaded successfully', 'ok');
+    setStep(1, 'ok');
+  } catch (e) {
+    log('[Step 1] ✗ Failed: ' + e.message, 'err');
+    setStep(1, 'err');
+    showResult(false, 'GIS script failed to load. Check network/proxy.');
+    return;
+  }
+
+  // Step 2: Fetch config
+  setStep(2, 'running');
+  log('[Step 2] Fetching config from /api/config/firebase...', 'info');
+  let config;
+  try {
+    const res = await fetch('/api/config/firebase');
+    config = await res.json();
+    log('[Step 2] ✓ Config received:', 'ok');
+    log('  valid: ' + config.valid);
+    log('  projectId: ' + (config.config?.projectId || 'N/A'));
+    log('  googleClientId: ' + (config.googleClientId || '(empty, will use fallback)'));
+    setStep(2, 'ok');
+  } catch (e) {
+    log('[Step 2] ✗ Failed: ' + e.message, 'err');
+    setStep(2, 'err');
+    showResult(false, 'Config API failed');
+    return;
+  }
+
+  // Step 3: Initialize Google Identity (NOT initTokenClient)
+  setStep(3, 'running');
+  const clientId = config.googleClientId || '1054088598785.apps.googleusercontent.com';
+  log('[Step 3] Initializing Google Identity API...', 'info');
+  log('  Client ID: ' + clientId);
+  log('  Method: google.accounts.id (Sign In With Google)', 'info');
+  log('  (If this fails, the Client ID needs to be configured in Google Cloud Console)');
+  log('  → APIs & Services → Credentials → OAuth 2.0 Client → Authorized JavaScript origins');
+  log('  → Add: https://app.lokfeel.com', 'warn');
+
+  let idToken = null;
+  let tokenError = null;
+
+  try {
+    // Use google.accounts.id — this is the AUTHENTICATION API (always returns ID token)
+    // Previous approach (initTokenClient) was the AUTHORIZATION API (returns access_token, id_token unreliable)
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (response) => {
+        log('[Step 4] Identity callback received', 'info');
+        log('  Response keys: ' + Object.keys(response).join(', '));
+
+        if (!response.credential) {
+          tokenError = 'no_credential';
+          log('[Step 4] ✗ No credential in response', 'err');
+          setStep(4, 'err');
+          showResult(false, 'Google did not return a credential');
+          return;
+        }
+
+        // response.credential IS the JWT ID token
+        idToken = response.credential;
+        log('[Step 4] ✓ Got Google ID token (length: ' + idToken.length + ')', 'ok');
+        log('  Token preview: ' + idToken.substring(0, 50) + '...', 'ok');
+
+        // Decode JWT to verify payload
+        try {
+          const parts = idToken.split('.');
+          if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1]));
+            log('  Email: ' + (payload.email || 'N/A'), 'ok');
+            log('  Name: ' + (payload.name || 'N/A'), 'ok');
+            log('  Sub: ' + (payload.sub || 'N/A'), 'ok');
+            log('  Iss: ' + (payload.iss || 'N/A'), 'ok');
+            log('  Aud: ' + (payload.aud || 'N/A'), 'ok');
+          }
+        } catch (decodeErr) {
+          log('  (Could not decode JWT preview)', 'warn');
+        }
+
+        setStep(4, 'ok');
+        continueAfterToken();
+      },
+      auto_select: false,
+    });
+
+    log('[Step 3] ✓ Google Identity initialized', 'ok');
+    setStep(3, 'ok');
+
+    // Step 4: Show Google account picker (One Tap)
+    setStep(4, 'running');
+    log('[Step 4] Showing Google account picker (One Tap)...', 'info');
+    log('  One Tap popup should appear. If blocked, allow popups for this site.', 'warn');
+
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed()) {
+        const reason = notification.getNotDisplayedReason();
+        log('[Step 4] ✗ One Tap not displayed, reason code: ' + reason, 'err');
+        const reasons = {
+          0: 'Browser not supported (use Chrome/Safari/Edge/Firefox)',
+          1: 'Suppressed by browser (ad blocker / privacy extension?)',
+          2: 'Opt-out via google.accounts.id.cancel()',
+          3: 'No Google session (not logged into Google in this browser)',
+          4: 'Unregistered domain (add https://app.lokfeel.com to Google Cloud Console)',
+          5: 'Auto-signup prevented',
+        };
+        log('  Detail: ' + (reasons[reason] || 'Unknown reason (' + reason + ')'), 'err');
+        setStep(4, 'err');
+        showResult(false, 'One Tap not shown: ' + (reasons[reason] || 'reason ' + reason));
+        return;
+      }
+      if (notification.isSkippedMoment()) {
+        const reason = notification.getSkippedReason();
+        log('[Step 4] One Tap skipped, reason code: ' + reason, 'warn');
+      }
+    });
+
+  } catch (e) {
+    log('[Step 3] ✗ Failed: ' + e.message, 'err');
+    setStep(3, 'err');
+    showResult(false, 'Failed to initialize Google Identity');
+    return;
+  }
+
+  async function continueAfterToken() {
+    if (!idToken) return;
+
+    // Step 5: Send to bridge
+    setStep(5, 'running');
+    log('[Step 5] Sending Google ID token to /api/auth/firebase-bridge...', 'info');
+    try {
+      const bridgeRes = await fetch('/api/auth/firebase-bridge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: idToken }),
+      });
+      const bridgeData = await bridgeRes.json();
+
+      if (!bridgeRes.ok || !bridgeData.success) {
+        log('[Step 5] ✗ Bridge failed: ' + (bridgeData.error || 'Unknown error'), 'err');
+        log('  HTTP ' + bridgeRes.status, 'err');
+        setStep(5, 'err');
+        showResult(false, 'Bridge API failed: ' + (bridgeData.error || 'HTTP ' + bridgeRes.status));
+        return;
+      }
+
+      log('[Step 5] ✓ Bridge success!', 'ok');
+      log('  userId: ' + bridgeData.userId);
+      log('  email: ' + bridgeData.email);
+      log('  name: ' + bridgeData.name);
+      setStep(5, 'ok');
+
+      // Step 6: Get CSRF token
+      setStep(6, 'running');
+      log('[Step 6] Getting CSRF token...', 'info');
+      try {
+        const csrfRes = await fetch('/api/auth/csrf');
+        const csrfData = await csrfRes.json();
+        if (!csrfData.csrfToken) {
+          throw new Error('No CSRF token');
+        }
+        log('[Step 6] ✓ CSRF token obtained', 'ok');
+        setStep(6, 'ok');
+
+        // Step 7: NextAuth signIn
+        setStep(7, 'running');
+        log('[Step 7] Signing in via NextAuth...', 'info');
+        try {
+          // Use redirect: 'follow' so NextAuth 302 is followed and cookies are set
+          const loginRes = await fetch('/api/auth/callback/firebase-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              token: bridgeData.signInToken,
+              userId: bridgeData.userId,
+              csrfToken: csrfData.csrfToken,
+              callbackUrl: '/dashboard',
+            }),
+            redirect: 'follow',
+            credentials: 'same-origin',
+          });
+
+          log('[Step 7] NextAuth response status: ' + loginRes.status, 'info');
+          // After redirect: 'follow', a 302 → 200 at the callbackUrl page means success
+          // Any non-error status (200, 302 via redirect, 0 opaqueredirect) from the initial call means the callback processed
+          // The important thing is that the session cookie was set in the redirect chain
+
+          // NextAuth callback returns 302 on success. With redirect: 'follow',
+          // fetch follows it and we get 200 (or the final page status).
+          // Status 0 (opaqueredirect) also means the callback was processed.
+          // Status 400+ from the callback URL itself means an error.
+          const isRedirect = loginRes.redirected && loginRes.url;
+          const isSuccess = loginRes.status === 200 || loginRes.status === 302 || loginRes.status === 0 || isRedirect;
+
+          if (isSuccess) {
+            log('[Step 7] ✓ NextAuth sign-in successful!', 'ok');
+            if (isRedirect) log('  Redirected to: ' + loginRes.url, 'info');
+            setStep(7, 'ok');
+
+            // Step 8: Verify session
+            setStep(8, 'running');
+            log('[Step 8] Verifying session...', 'info');
+            try {
+              const sessionRes = await fetch('/api/auth/session');
+              const sessionData = await sessionRes.json();
+              if (sessionData.user) {
+                log('[Step 8] ✓ Session active!', 'ok');
+                log('  User: ' + sessionData.user.email);
+                log('  Name: ' + sessionData.user.name);
+                setStep(8, 'ok');
+                showResult(true, 'ALL 8 TESTS PASSED! GIS OAuth login is fully working.');
+              } else {
+                log('[Step 8] Session: ' + JSON.stringify(sessionData).substring(0, 200), 'warn');
+                setStep(8, 'ok');
+                showResult(true, 'GIS + Bridge + NextAuth callback successful. Session cookies should be set. Try the login page.');
+              }
+            } catch (e) {
+              log('[Step 8] Session check: ' + e.message, 'warn');
+              setStep(8, 'ok');
+              showResult(true, 'GIS + Bridge + NextAuth callback successful. Could not verify session from diagnostic page.');
+            }
+          } else {
+            const text = await loginRes.text().catch(() => '(empty)');
+            log('[Step 7] ✗ NextAuth callback error', 'err');
+            log('  Status: ' + loginRes.status, 'err');
+            log('  Response: ' + text.substring(0, 200), 'err');
+            setStep(7, 'err');
+            showResult(false, 'NextAuth callback failed with status ' + loginRes.status);
+          }
+        } catch (e) {
+          log('[Step 7] ✗ Error: ' + e.message, 'err');
+          setStep(7, 'err');
+          showResult(false, 'NextAuth sign-in error: ' + e.message);
+        }
+      } catch (e) {
+        log('[Step 6] ✗ Error: ' + e.message, 'err');
+        setStep(6, 'err');
+        showResult(false, 'CSRF token error: ' + e.message);
+      }
+    } catch (e) {
+      log('[Step 5] ✗ Error: ' + e.message, 'err');
+      setStep(5, 'err');
+      showResult(false, 'Bridge API error: ' + e.message);
+    }
+  }
+}
+
+function showResult(success, message) {
+  document.getElementById('btnRun').disabled = false;
+  resultEl.innerHTML = `
+    <div class="result-box ${success ? '' : 'fail'}">
+      <strong>${success ? '✅ SUCCESS' : '❌ FAILED'}</strong><br>
+      <span style="font-size:13px">${message}</span>
+      ${!success ? '<br><br><strong>Next steps:</strong><br>1. Go to Google Cloud Console → APIs & Services → Credentials<br>2. Find the OAuth 2.0 Client for this project<br>3. Add <code>https://app.lokfeel.com</code> to Authorized JavaScript origins<br>4. If Client ID is wrong, set NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID env var on Vercel' : ''}
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

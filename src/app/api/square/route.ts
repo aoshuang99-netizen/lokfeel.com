@@ -144,7 +144,7 @@ async function generateRecommendations(
   // 用户偏好标签
   const userTags = jsonArr(currentUserProfile.selectedTags);
   
-  // 获取候选人
+  // Fetch candidates sorted by compatibilityScore (DB-level sort, avoids loading all into memory)
   const candidates = await db.profile.findMany({
     where: baseWhere,
     include: {
@@ -161,36 +161,37 @@ async function generateRecommendations(
       },
       botProfile: true,
     },
-    take: 100, // 获取更多用于排序
+    orderBy: { compatibilityScore: 'desc' },
+    take: limit + offset + 10, // Fetch enough for pagination after filtering
   });
-  
-  // 转换为EnhancedUserProfile并计算分数
-  const currentUserEnhanced = toEnhancedUserProfile(currentUserProfile);
-  
+
   const scoredCandidates = candidates.map(candidate => {
-    const candidateEnhanced = toEnhancedUserProfile(candidate);
-    const completion = calculateProfileCompletion(candidate);
-    
-    // 计算增强版匹配分数
-    let matchScore = null;
-    let matchReason = '';
-    try {
-      const score = calculateEnhancedMatchScore({
-        userA: currentUserEnhanced,
-        userB: candidateEnhanced,
-      });
-      matchScore = score.finalScore;
-      matchReason = score.reason;
-    } catch (e) {
-      // 如果计算失败，使用基础分数
-      matchScore = 50;
-    }
-    
-    // 计算标签匹配分数
     const candidateTags = jsonArr(candidate.selectedTags);
     const tagMatchScore = calculateTagMatchScore(userTags, candidateTags);
-    
-    // 综合分数 (匹配度 70% + 标签匹配 30%)
+    const completion = calculateProfileCompletion(candidate);
+
+    // Use cached compatibilityScore if available, fallback to JS calculation
+    let matchScore: number;
+    let matchReason = '';
+    if (candidate.compatibilityScore && candidate.compatibilityScore > 0) {
+      matchScore = candidate.compatibilityScore;
+      matchReason = 'Compatibility-based match';
+    } else {
+      try {
+        const currentUserEnhanced = toEnhancedUserProfile(currentUserProfile);
+        const candidateEnhanced = toEnhancedUserProfile(candidate);
+        const score = calculateEnhancedMatchScore({
+          userA: currentUserEnhanced,
+          userB: candidateEnhanced,
+        });
+        matchScore = score.finalScore;
+        matchReason = score.reason;
+      } catch {
+        matchScore = 50;
+      }
+    }
+
+    // Combined score (match 70% + tags 30%)
     const combinedScore = Math.round(matchScore * 0.7 + tagMatchScore * 0.3);
     
     return {

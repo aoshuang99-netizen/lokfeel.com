@@ -28,6 +28,21 @@ export async function GET() {
 
     const profile = await db.profile.findUnique({
       where: { userId: user.id },
+      select: {
+        id: true, userId: true, displayName: true, age: true, avatar: true, avatarType: true,
+        gender: true, genderIdentity: true, sexuality: true, bio: true,
+        city: true, country: true, occupation: true, company: true, industry: true,
+        relationshipGoal: true, attachmentStyle: true, communicationStyle: true,
+        conflictResolution: true, loveLanguage: true, lifePriorities: true,
+        boundaries: true, dealbreakers: true, emotionalAvailability: true,
+        preferredAgeMin: true, preferredAgeMax: true, preferredGender: true,
+        preferredDistance: true, preferredLocation: true, profileStatus: true,
+        onboardingStep: true, selectedTags: true, compatibilityScore: true,
+        linkedInVerified: true, verificationBadge: true, isVerified: true,
+        galleryPhotos: true, height: true, education: true,
+        domSubRole: true, preferredRole: true, kinkExperienceLevel: true,
+        createdAt: true, updatedAt: true,
+      },
     })
 
     if (!profile) {

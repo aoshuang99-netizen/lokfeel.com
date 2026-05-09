@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase OAuth 诊断工具</title>
+  <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-auth-compat.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #fff; font-family: 'SF Mono', 'Menlo', monospace; padding: 20px; font-size: 13px; }
+    h1 { font-size: 20px; margin-bottom: 16px; color: #a3e635; }
+    .step { background: #111; border: 1px solid rgba(76,29,149,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .step-title { font-weight: bold; margin-bottom: 8px; }
+    .status { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .status.pass { background: rgba(163,230,53,0.15); color: #a3e635; }
+    .status.fail { background: rgba(251,113,133,0.15); color: #fb7185; }
+    .status.pending { background: rgba(255,255,255,0.08); color: #888; }
+    .log { background: #1a1a1a; border-radius: 8px; padding: 12px; margin-top: 8px; white-space: pre-wrap; word-break: break-all; max-height: 250px; overflow-y: auto; font-size: 12px; color: #aaa; }
+    .err { color: #fb7185; }
+    .ok { color: #a3e635; }
+    .info { color: #60a5fa; }
+    button { background: #4c1d95; color: #fff; border: none; border-radius: 10px; padding: 12px 24px; font-size: 14px; font-weight: 600; cursor: pointer; margin: 4px; }
+    button:hover { background: #6d28d9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #final-result { font-size: 18px; font-weight: bold; text-align: center; padding: 20px; border-radius: 12px; margin-top: 20px; display: none; }
+    #final-result.pass { background: rgba(163,230,53,0.1); color: #a3e635; border: 1px solid rgba(163,230,53,0.3); }
+    #final-result.fail { background: rgba(251,113,133,0.1); color: #fb7185; border: 1px solid rgba(251,113,133,0.3); }
+  </style>
+</head>
+<body>
+  <h1>LokFeel Firebase OAuth 诊断</h1>
+  <p style="color:#888;margin-bottom:20px;">逐步测试: Firebase SDK → Google Popup → Bridge API → NextAuth 签到</p>
+
+  <div class="step">
+    <div class="step-title">Step 1: Firebase Client SDK</div>
+    <span id="s1-status" class="status pending">等待中</span>
+    <div id="s1-log" class="log"></div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">Step 2: Google OAuth Popup</div>
+    <span id="s2-status" class="status pending">等待中</span>
+    <div id="s2-log" class="log"></div>
+    <button id="btn-google" onclick="testGoogleLogin()">🔐 测试 Google 登录</button>
+  </div>
+
+  <div class="step">
+    <div class="step-title">Step 3: Bridge API</div>
+    <span id="s3-status" class="status pending">等待中</span>
+    <div id="s3-log" class="log"></div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">Step 4: NextAuth Sign-in</div>
+    <span id="s4-status" class="status pending">等待中</span>
+    <div id="s4-log" class="log"></div>
+  </div>
+
+  <div id="final-result"></div>
+
+  <script>
+    // Initialize Firebase with NEXT_PUBLIC values from Vercel env
+    var firebaseConfig = {
+      apiKey: document.querySelector('meta[name="firebase-api-key"]')?.content || "FROM_ENV",
+      authDomain: "FROM_ENV",
+      projectId: "FROM_ENV",
+      storageBucket: "FROM_ENV",
+      messagingSenderId: "FROM_ENV",
+      appId: "FROM_ENV"
+    };
+
+    var s1log = document.getElementById('s1-log');
+    var s1status = document.getElementById('s1-status');
+    var firebaseAuth, googleProvider;
+
+    // Step 1: Init Firebase
+    (function initFirebase() {
+      s1status.textContent = '检测中...';
+
+      // Try to get config from the page's own Firebase instance
+      // The actual config is injected via NEXT_PUBLIC_ env vars at build time
+      // For this diagnostic, we'll use the known values
+      firebaseConfig = {
+        apiKey: "AIzaSyBq2gPa1mVBakBDMiJ_UBhQjncATl6uWgE",
+        authDomain: "project-1700929385257882331.firebaseapp.com",
+        projectId: "project-1700929385257882331",
+        storageBucket: "project-1700929385257882331.firebasestorage.app",
+        messagingSenderId: "185541962106",
+        appId: "1:185541962106:web:e92ddce22fda2a1c6ecec3"
+      };
+
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        firebaseAuth = firebase.auth();
+        googleProvider = new firebase.auth.GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+
+        s1log.innerHTML += '<span class="ok">✅ Firebase Client SDK 初始化成功</span>\n';
+        s1log.innerHTML += 'Project: ' + firebaseConfig.projectId + '\n';
+        s1log.innerHTML += 'Auth Domain: ' + firebaseConfig.authDomain + '\n';
+        s1status.className = 'status pass';
+        s1status.textContent = '通过';
+      } catch(e) {
+        s1log.innerHTML += '<span class="err">❌ Firebase 初始化失败: ' + e.message + '</span>\n';
+        s1status.className = 'status fail';
+        s1status.textContent = '失败';
+      }
+    })();
+
+    function testGoogleLogin() {
+      if (!firebaseAuth || !googleProvider) {
+        alert('Firebase 未初始化');
+        return;
+      }
+
+      var btn = document.getElementById('btn-google');
+      var s2log = document.getElementById('s2-log');
+      var s2status = document.getElementById('s2-status');
+      var s3log = document.getElementById('s3-log');
+      var s3status = document.getElementById('s3-status');
+      var s4log = document.getElementById('s4-log');
+      var s4status = document.getElementById('s4-status');
+      var finalEl = document.getElementById('final-result');
+
+      // Reset steps 2-4
+      s2status.className = 'status pending'; s2status.textContent = '检测中...';
+      s3status.className = 'status pending'; s3status.textContent = '等待中';
+      s4status.className = 'status pending'; s4status.textContent = '等待中';
+      s3log.innerHTML = ''; s4log.innerHTML = '';
+      finalEl.style.display = 'none';
+      btn.disabled = true;
+
+      // Step 2: Google Popup
+      firebaseAuth.signInWithPopup(googleProvider)
+        .then(function(result) {
+          s2log.innerHTML += '<span class="ok">✅ Google 登录成功</span>\n';
+          s2log.innerHTML += 'UID: ' + result.user.uid + '\n';
+          s2log.innerHTML += 'Email: ' + result.user.email + '\n';
+          s2log.innerHTML += 'Name: ' + result.user.displayName + '\n';
+          s2status.className = 'status pass'; s2status.textContent = '通过';
+
+          // Step 3: Bridge API
+          s3status.className = 'status pending'; s3status.textContent = '检测中...';
+          return result.user.getIdToken().then(function(idToken) {
+            s3log.innerHTML += 'ID Token (前50): ' + idToken.substring(0, 50) + '...\n';
+
+            return fetch('/api/auth/firebase-bridge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken: idToken })
+            }).then(function(res) {
+              return res.json().then(function(data) {
+                s3log.innerHTML += 'HTTP Status: ' + (data.error ? '❌ ' : '') + '\n';
+                s3log.innerHTML += 'Response: ' + JSON.stringify(data, null, 2) + '\n';
+
+                if (!data.success) {
+                  s3log.innerHTML += '<span class="err">❌ Bridge API 失败: ' + data.error + '</span>\n';
+                  s3status.className = 'status fail'; s3status.textContent = '失败';
+                  showFinal(false, 'Bridge API 失败: ' + data.error);
+                  return null;
+                }
+
+                s3log.innerHTML += '<span class="ok">✅ Bridge API 成功</span>\n';
+                s3log.innerHTML += 'User ID: ' + data.userId + '\n';
+                s3status.className = 'status pass'; s3status.textContent = '通过';
+
+                return data;
+              });
+            });
+          });
+        })
+        .then(function(bridgeData) {
+          if (!bridgeData) return; // Step 3 failed
+
+          // Step 4: NextAuth sign-in
+          s4status.className = 'status pending'; s4status.textContent = '检测中...';
+
+          // Get CSRF token
+          return fetch('/api/auth/csrf')
+            .then(function(r) { return r.json(); })
+            .then(function(csrfData) {
+              s4log.innerHTML += 'CSRF Token: ' + (csrfData.csrfToken ? csrfData.csrfToken.substring(0, 20) + '...' : 'MISSING') + '\n';
+
+              if (!csrfData.csrfToken) {
+                s4log.innerHTML += '<span class="err">❌ CSRF Token 获取失败</span>\n';
+                s4status.className = 'status fail'; s4status.textContent = '失败';
+                showFinal(false, 'CSRF Token 缺失');
+                return;
+              }
+
+              // Submit to NextAuth
+              var formData = new FormData();
+              formData.append('token', bridgeData.signInToken);
+              formData.append('userId', bridgeData.userId);
+              formData.append('csrfToken', csrfData.csrfToken);
+              formData.append('callbackUrl', '/dashboard');
+
+              return fetch('/api/auth/callback/firebase-token', {
+                method: 'POST',
+                body: formData
+              }).then(function(res) {
+                var location = res.headers.get('location') || '';
+                s4log.innerHTML += 'HTTP Status: ' + res.status + '\n';
+                s4log.innerHTML += 'Location: ' + (location || '(none)') + '\n';
+
+                if (location.includes('error=')) {
+                  var errorParam = new URL(location, window.location.origin).searchParams.get('error');
+                  s4log.innerHTML += '<span class="err">❌ NextAuth 错误: ' + errorParam + '</span>\n';
+                  s4status.className = 'status fail'; s4status.textContent = '失败';
+                  showFinal(false, 'NextAuth 签到失败: ' + errorParam);
+                } else if (res.status === 302 || location || res.ok) {
+                  s4log.innerHTML += '<span class="ok">✅ NextAuth 签到成功</span>\n';
+                  s4status.className = 'status pass'; s4status.textContent = '通过';
+                  showFinal(true, '登录成功！3秒后跳转 Dashboard...');
+                  setTimeout(function() { window.location.href = '/dashboard'; }, 3000);
+                } else {
+                  s4log.innerHTML += '<span class="err">❌ 未知响应</span>\n';
+                  s4status.className = 'status fail'; s4status.textContent = '失败';
+                  showFinal(false, '未知响应');
+                }
+              });
+            });
+        })
+        .catch(function(e) {
+          var code = e.code || '';
+          var msg = e.message || String(e);
+          s2log.innerHTML += '<span class="err">❌ 错误: [' + code + '] ' + msg + '</span>\n';
+          s2status.className = 'status fail'; s2status.textContent = '失败';
+
+          if (code === 'auth/unauthorized-domain') {
+            s2log.innerHTML += '<span class="err">🔴 域名未授权！需在 Firebase Console → Authentication → Settings → Authorized domains 添加当前域名</span>\n';
+          }
+          showFinal(false, 'Google 登录失败: ' + code);
+        })
+        .finally(function() {
+          btn.disabled = false;
+        });
+    }
+
+    function showFinal(pass, msg) {
+      var el = document.getElementById('final-result');
+      el.style.display = 'block';
+      el.className = pass ? 'pass' : 'fail';
+      el.textContent = (pass ? '✅ ' : '🔴 ') + msg;
+    }
+  </script>
+</body>
+</html>

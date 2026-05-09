@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   return handleApiError(async () => {
     const { user } = await requireAuth();
 
-    const [subscription, profile, recentPayments] = await Promise.all([
+    const [subscription, profile, recentPayments, userRecord] = await Promise.all([
       db.subscription.findFirst({
         where: { userId: user.id },
         orderBy: { createdAt: "desc" },
@@ -25,13 +25,11 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: "desc" },
         take: 5,
       }),
+      db.user.findUnique({
+        where: { id: user.id },
+        select: { cardVerified: true },
+      }),
     ]);
-
-    // Get cardVerified status from User
-    const userRecord = await db.user.findUnique({
-      where: { id: user.id },
-      select: { cardVerified: true },
-    });
 
     const isFemale = profile?.gender === "FEMALE";
     const effectivePlan = subscription?.plan || (isFemale ? "LADY_FREE" : "FREE");

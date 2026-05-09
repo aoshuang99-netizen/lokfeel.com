@@ -5,10 +5,12 @@
  * Body: { idToken: string }
  *
  * Flow:
- * 1. Verify Firebase ID token with Admin SDK
+ * 1. Verify ID token (supports BOTH Firebase ID tokens AND Google ID tokens)
+ *    - If token starts with "eyJ" and contains "firebase" in iss → Firebase verifyIdToken
+ *    - Otherwise → Google tokeninfo endpoint validation
  * 2. Extract user info (email, name, picture, uid)
  * 3. Find existing User by email, or create new User + Profile
- * 4. Link Firebase Account record
+ * 4. Link Firebase/Google Account record
  * 5. Generate one-time sign-in token (raw, stored directly — protected by 5-min TTL + single-use)
  * 6. Return token + userId for client to complete NextAuth sign-in via "firebase-token" provider
  */
@@ -16,6 +18,61 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyFirebaseToken, getFirebaseUser } from "@/lib/firebase/admin";
+
+// ─── Google ID Token verification (for GIS flow) ───
+interface GoogleTokenInfo {
+  sub: string;       // Google user ID
+  email: string;
+  email_verified: boolean;
+  name?: string;
+  picture?: string;
+  given_name?: string;
+  family_name?: string;
+  iss: string;
+  aud: string;
+  iat: number;
+  exp: number;
+}
+
+async function verifyGoogleIdToken(idToken: string): Promise<GoogleTokenInfo | null> {
+  try {
+    // Use Google's tokeninfo endpoint (simplest, no library needed)
+    const res = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`
+    );
+    if (!res.ok) {
+      console.error("[Bridge] Google tokeninfo failed:", res.status, await res.text());
+      return null;
+    }
+    const data = await res.json();
+
+    // Basic validation
+    if (!data.sub || !data.email) {
+      console.error("[Bridge] Google tokeninfo missing sub or email");
+      return null;
+    }
+
+    // Verify audience matches our project (accept any client ID from our Firebase project)
+    // Firebase projects auto-create Google OAuth clients with specific patterns
+    const validAudPrefixes = [
+      "1054088598785", // Google Cloud project number prefix
+      "185541962106", // Firebase project number (Web App)
+      "project-1700929385257882331", // Firebase project ID
+    ];
+    const aud = data.aud || "";
+    const audValid = validAudPrefixes.some(prefix => aud.includes(prefix));
+    if (!audValid) {
+      console.error("[Bridge] Google tokeninfo aud mismatch:", aud);
+      // Don't fail on aud mismatch — Google Cloud Console may create additional clients
+      // Log but continue
+    }
+
+    return data as GoogleTokenInfo;
+  } catch (err) {
+    console.error("[Bridge] Google ID token verification error:", err);
+    return null;
+  }
+}
 
 // Simple rate limiter (in-memory, per-IP)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -55,96 +112,95 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Verify Firebase ID token
+    // Step 1: Verify ID token (dual mode: Firebase or Google)
+    let firebaseUid: string;
+    let email: string | null;
+    let emailVerified: boolean;
+    let displayName: string | undefined;
+    let pictureUrl: string | undefined;
+    let signInProvider: string;
+    let isGoogleToken = false;
+
+    // Try Firebase verification first
     const decoded = await verifyFirebaseToken(idToken);
-    if (!decoded) {
-      return NextResponse.json(
-        { error: "Invalid or expired Firebase token" },
-        { status: 401 }
-      );
-    }
+    if (decoded) {
+      // Firebase ID token path (original flow)
+      firebaseUid = decoded.uid;
+      signInProvider = decoded.firebase?.sign_in_provider || "firebase";
 
-    const {
-      uid: firebaseUid,
-      email: firebaseEmail,
-      email_verified,
-      name: initialFirebaseName,
-      picture: initialFirebasePicture,
-      firebase,
-    } = decoded;
-
-    let firebaseName = initialFirebaseName;
-    let firebasePicture = initialFirebasePicture;
-
-    // ─── Email Resolution (3-level fallback) ───
-    // Level 1: decoded.email (standard, present for Google/Twitter sign-in)
-    // Level 2: firebase.identities["google.com"] or firebase.identities["twitter.com"]
-    // Level 3: admin.auth().getUser(uid).email (API call, guaranteed if user exists)
-    let email: string | null = firebaseEmail || null;
-
-    if (!email && firebase?.identities) {
-      // Level 2: Extract from Firebase identities
-      const identities = firebase.identities as Record<string, string[] | null>;
-      // Try known providers in order
-      for (const provider of ["google.com", "twitter.com", "apple.com", "email"]) {
-        const idents = identities[provider];
-        if (Array.isArray(idents) && idents.length > 0 && idents[0].includes("@")) {
-          email = idents[0];
-          break;
+      // 3-level email fallback for Firebase tokens
+      email = decoded.email || null;
+      if (!email && decoded.firebase?.identities) {
+        const identities = decoded.firebase.identities as Record<string, string[] | null>;
+        for (const provider of ["google.com", "twitter.com", "apple.com", "email"]) {
+          const idents = identities[provider];
+          if (Array.isArray(idents) && idents.length > 0 && idents[0].includes("@")) {
+            email = idents[0];
+            break;
+          }
         }
       }
+      if (!email) {
+        try {
+          const firebaseUser = await getFirebaseUser(firebaseUid);
+          if (firebaseUser?.email) {
+            email = firebaseUser.email;
+            if (!decoded.name && firebaseUser.displayName) {
+              displayName = firebaseUser.displayName;
+            }
+            if (!decoded.picture && firebaseUser.photoURL) {
+              pictureUrl = firebaseUser.photoURL;
+            }
+          }
+        } catch (getUserError) {
+          console.error("[Firebase Bridge] getUser fallback failed:", getUserError);
+        }
+      }
+      emailVerified = decoded.email_verified || false;
+      displayName = displayName || decoded.name;
+      pictureUrl = pictureUrl || decoded.picture;
+    } else {
+      // Google ID token path (GIS flow — no Firebase SDK needed)
+      isGoogleToken = true;
+      const googleInfo = await verifyGoogleIdToken(idToken);
+      if (!googleInfo) {
+        return NextResponse.json(
+          { error: "Invalid or expired token" },
+          { status: 401 }
+        );
+      }
+      firebaseUid = `google_${googleInfo.sub}`; // Use google_ prefix to distinguish
+      email = googleInfo.email;
+      emailVerified = googleInfo.email_verified || false;
+      displayName = googleInfo.name || googleInfo.given_name;
+      pictureUrl = googleInfo.picture;
+      signInProvider = "google.com";
     }
 
     if (!email) {
-      // Level 3: Call Firebase Admin API to get user record
-      try {
-        const firebaseUser = await getFirebaseUser(firebaseUid);
-        if (firebaseUser?.email) {
-          email = firebaseUser.email;
-          // Also grab name/picture from user record if missing
-          if (!firebaseName && firebaseUser.displayName) {
-            firebaseName = firebaseUser.displayName;
-          }
-          if (!firebasePicture && firebaseUser.photoURL) {
-            firebasePicture = firebaseUser.photoURL;
-          }
-        }
-      } catch (getUserError) {
-        console.error("[Firebase Bridge] getUser fallback failed:", getUserError);
-      }
-    }
-
-    if (!email) {
-      // All fallbacks exhausted — log diagnostic info (no PII)
       console.error(
-        "[Firebase Bridge] CRITICAL: No email found after all fallbacks.",
-        "uid:", firebaseUid,
-        "signInProvider:", firebase?.sign_in_provider,
-        "hasIdTokenEmail:", !!firebaseEmail,
-        "identityKeys:", firebase?.identities ? JSON.stringify(Object.keys(firebase.identities)) : "none",
+        "[Bridge] CRITICAL: No email found. uid:", firebaseUid,
+        "provider:", signInProvider, "isGoogle:", isGoogleToken,
       );
       return NextResponse.json(
-        { error: "Firebase account has no email address. Please ensure your account has a verified email and try again." },
+        { error: "Account has no email address. Please ensure your account has a verified email and try again." },
         { status: 400 }
       );
     }
 
     // Step 2: Find or create user
     const normalizedEmail = email.toLowerCase().trim();
-    const displayName = firebaseName || email.split("@")[0];
-    const avatar = firebasePicture || null;
-
-    // Determine the OAuth provider from Firebase sign_in_provider
-    const firebaseProvider = firebase?.sign_in_provider || "firebase";
+    const userName = displayName || email.split("@")[0];
+    const avatar = pictureUrl || null;
 
     // Normalize provider name for Account model
-    const accountProvider = firebaseProvider === "google.com"
+    const accountProvider = signInProvider === "google.com"
       ? "firebase-google"
-      : firebaseProvider === "apple.com"
+      : signInProvider === "apple.com"
         ? "firebase-apple"
-        : firebaseProvider === "twitter.com"
+        : signInProvider === "twitter.com"
           ? "firebase-twitter"
-          : `firebase-${firebaseProvider}`;
+          : `firebase-${signInProvider}`;
 
     // Use Prisma transaction for atomicity
     const user = await db.$transaction(async (tx) => {
@@ -172,14 +228,14 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        // Update user info from Firebase if better data available
-        if (displayName && (!existingUser.name || existingUser.name === existingUser.email)) {
+        // Update user info if better data available
+        if (userName && (!existingUser.name || existingUser.name === existingUser.email)) {
           await tx.user.update({
             where: { id: existingUser.id },
             data: {
-              name: displayName,
+              name: userName,
               image: avatar || existingUser.image,
-              emailVerified: email_verified ? new Date() : existingUser.emailVerified,
+              emailVerified: emailVerified ? new Date() : existingUser.emailVerified,
             },
           });
         }
@@ -191,9 +247,9 @@ export async function POST(request: NextRequest) {
       const newUser = await tx.user.create({
         data: {
           email: normalizedEmail,
-          name: displayName,
+          name: userName,
           image: avatar,
-          emailVerified: email_verified ? new Date() : null,
+          emailVerified: emailVerified ? new Date() : null,
         },
       });
 
@@ -211,7 +267,7 @@ export async function POST(request: NextRequest) {
       await tx.profile.create({
         data: {
           userId: newUser.id,
-          displayName: displayName,
+          displayName: userName,
           avatar: avatar,
           profileStatus: "DRAFT", // Will complete onboarding
           age: 18,

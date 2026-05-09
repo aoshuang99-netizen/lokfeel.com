@@ -17,6 +17,9 @@ export async function GET(req: NextRequest) {
 
     const userId = session.user.id;
 
+    const { searchParams } = new URL(req.url);
+    const offset = parseInt(searchParams.get('offset') || '0');
+
     // 获取用户性别
     const profile = await prisma.profile.findUnique({
       where: { userId },
@@ -49,6 +52,7 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { createdAt: "desc" },
       take: 50,
+      skip: offset,
     });
 
     // 获取匹配记录
@@ -89,6 +93,7 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { updatedAt: "desc" },
       take: 50,
+      skip: offset,
     });
 
     // 构建活动列表

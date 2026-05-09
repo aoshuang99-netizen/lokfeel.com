@@ -56,17 +56,17 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest,
 
     // Revenue metrics (parallel)
     const planPrices: Record<string, number> = { PREMIUM_MONTHLY: 29.99, PREMIUM_YEARLY: 199.99 / 12 };
-    const [totalRevenue, monthRevenue, activeSubscriptions, planCounts] = await Promise.all([
+    // NOTE: Using individual counts instead of groupBy (Turso/libSQL incompatible)
+    const [totalRevenue, monthRevenue, activeSubscriptions, monthlyPlanCount, yearlyPlanCount] = await Promise.all([
       db.payment.aggregate({ where: { status: "SUCCEEDED" }, _sum: { amount: true } }),
       db.payment.aggregate({ where: { status: "SUCCEEDED", createdAt: { gte: monthStart, lte: monthEnd } }, _sum: { amount: true } }),
       db.subscription.count({ where: { status: "ACTIVE" } }),
-      db.subscription.groupBy({ by: ['plan'], where: { status: "ACTIVE" }, _count: { plan: true } }),
+      db.subscription.count({ where: { status: "ACTIVE", plan: "PREMIUM_MONTHLY" } }),
+      db.subscription.count({ where: { status: "ACTIVE", plan: "PREMIUM_YEARLY" } }),
     ]);
 
-    // Calculate MRR from grouped counts
-    const mrr = planCounts.reduce((sum, group) => {
-      return sum + (planPrices[group.plan] || 0) * group._count.plan;
-    }, 0);
+    // Calculate MRR from individual plan counts
+    const mrr = (monthlyPlanCount * planPrices.PREMIUM_MONTHLY) + (yearlyPlanCount * planPrices.PREMIUM_YEARLY);
 
     // Activity metrics (simplified to avoid timeout)
     const [messagesToday, chatCount, totalMessages] = await Promise.all([
@@ -74,8 +74,17 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest,
       db.chatRoom.count(),
       db.message.count(),
     ]);
-    const activeToday = await db.message.groupBy({ by: ["senderId"], where: { createdAt: { gte: startOfDay(now) } } });
-    const activeThisWeek = await db.message.groupBy({ by: ["senderId"], where: { createdAt: { gte: weekStart } } });
+    // NOTE: Using findMany+distinct instead of groupBy (Turso/libSQL incompatible)
+    const activeToday = await db.message.findMany({
+      where: { createdAt: { gte: startOfDay(now) } },
+      select: { senderId: true },
+      distinct: ['senderId'],
+    });
+    const activeThisWeek = await db.message.findMany({
+      where: { createdAt: { gte: weekStart } },
+      select: { senderId: true },
+      distinct: ['senderId'],
+    });
 
     const avgMessagesPerChat = chatCount > 0 ? totalMessages / chatCount : 0;
 

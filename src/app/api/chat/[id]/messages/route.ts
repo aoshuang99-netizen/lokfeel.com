@@ -249,12 +249,13 @@ export async function POST(
         where: { id: user.id },
         include: {
           subscriptions: { where: { status: 'ACTIVE' }, take: 1 },
-          profile: { select: { gender: true } },
+          profile: { select: { gender: true, cardVerified: true } },
         },
       })
       const hasActiveSub = userWithSub?.subscriptions && userWithSub.subscriptions.length > 0
       const isLadyFree = userWithSub?.subscriptions?.[0]?.plan === 'LADY_FREE'
       const isFemale = userWithSub?.profile?.gender === 'FEMALE'
+      const cardVerified = userWithSub?.cardVerified ?? false
 
       // Skip limit for Lady Free and Premium users
       if (!hasActiveSub && !isFemale) {
@@ -271,12 +272,8 @@ export async function POST(
       // Card verification check — all non-premium users must verify after 3 total messages
       const isPremiumPlan = hasActiveSub && (userWithSub?.subscriptions?.[0]?.plan === 'PREMIUM_MONTHLY' || userWithSub?.subscriptions?.[0]?.plan === 'PREMIUM_YEARLY')
       if (!isPremiumPlan) {
-        const userRecord = await db.user.findUnique({
-          where: { id: user.id },
-          select: { cardVerified: true },
-        })
         const totalMessages = await db.message.count({ where: { senderId: user.id } })
-        if (!userRecord?.cardVerified && totalMessages >= 3) {
+        if (!cardVerified && totalMessages >= 3) {
           return NextResponse.json(
             { message: 'Please verify your card to continue messaging. Identity verification only — no charges.', code: 'CARD_VERIFICATION_REQUIRED' },
             { status: 403 }
@@ -398,13 +395,8 @@ export async function POST(
       const category = categorizeMessage(content)
       const botResponse = getRandomResponse(category)
 
-      // Get next seq for bot reply
-      const lastBotMsg = await db.iMMessage.findFirst({
-        where: { conversationId: roomId },
-        orderBy: { seq: 'desc' },
-        select: { seq: true },
-      })
-      const botSeq = (lastBotMsg?.seq || 0) + 1
+      // Bot reply seq = user message seq + 1 (no re-query needed)
+      const botSeq = nextSeq + 1
 
       await db.iMMessage.create({
         data: {

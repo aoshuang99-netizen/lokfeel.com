@@ -180,7 +180,7 @@ const nextConfig: NextConfig = {
   compress: true,
   
   // Keep heavy server-only packages out of client bundle
-  serverExternalPackages: ['@prisma/client', '@prisma/adapter-libsql', '@libsql/client', 'libsql', 'bcryptjs', 'stripe'],
+  serverExternalPackages: ['@prisma/client', '@prisma/adapter-libsql', '@libsql/client', 'libsql', 'bcryptjs', 'stripe', 'firebase-admin'],
   
   // Logging
   logging: {

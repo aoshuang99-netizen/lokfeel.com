@@ -175,158 +175,147 @@ async function createMatchesForBots(
   botUsers: any[],
   existingMatchCount: number
 ) {
-  const results = [];
+  // H-03: Process all bots in parallel instead of sequential loop
+  const results = await Promise.all(
+    botUsers.map(async (botUser) => {
+      try {
+        const matchScore = calculateMatchScore(userProfile, botUser.profile);
+        const matchReason = generateMatchReason(userProfile, botUser.profile, matchScore);
 
-  for (const botUser of botUsers) {
-    try {
-      // Calculate match score
-      const matchScore = calculateMatchScore(userProfile, botUser.profile);
-      const matchReason = generateMatchReason(userProfile, botUser.profile, matchScore);
+        // Create match + conversation + chat room in a single transaction
+        const result = await prisma.$transaction(async (tx) => {
+          const match = await tx.match.create({
+            data: {
+              senderId: userId,
+              receiverId: botUser.id,
+              status: "ACCEPTED",
+              senderAction: "INTERESTED",
+              receiverAction: "INTERESTED",
+              matchScore,
+              matchReason,
+              isUnread: true,
+            },
+          });
 
-      // Create ACCEPTED match (skip PENDING - user sees them immediately)
-      const match = await prisma.match.create({
-        data: {
-          senderId: userId,
-          receiverId: botUser.id,
-          status: "ACCEPTED",
-          senderAction: "INTERESTED",
-          receiverAction: "INTERESTED",
+          // Check existing conversation
+          const existingConv = await tx.conversation.findFirst({
+            where: {
+              OR: [
+                { userAId: userId, userBId: botUser.id },
+                { userAId: botUser.id, userBId: userId },
+              ],
+            },
+          });
+
+          let conversationId: string;
+          if (!existingConv) {
+            const conv = await tx.conversation.create({
+              data: {
+                userAId: userId,
+                userBId: botUser.id,
+                initiatorId: botUser.id,
+                controllingUserId: userId,
+              },
+            });
+            conversationId = conv.id;
+          } else {
+            conversationId = existingConv.id;
+          }
+
+          // Check existing chat room
+          const existingChatRoom = await tx.chatRoom.findFirst({
+            where: { matchId: match.id },
+          });
+
+          let chatRoomId: string;
+          if (!existingChatRoom) {
+            const chatRoom = await tx.chatRoom.create({
+              data: { matchId: match.id, vaultExpiry: new Date(Date.now() + 48 * 60 * 60 * 1000) },
+            });
+            await tx.chatRoomMember.createMany({
+              data: [
+                { roomId: chatRoom.id, userId: userId },
+                { roomId: chatRoom.id, userId: botUser.id },
+              ],
+            });
+            chatRoomId = chatRoom.id;
+          } else {
+            chatRoomId = existingChatRoom.id;
+          }
+
+          return { matchId: match.id, conversationId, chatRoomId };
+        });
+
+        // Send welcome messages outside transaction (best effort)
+        const welcomeMessages = [
+          "Hey! I noticed we matched - your profile caught my eye!",
+          "Hi there! Great to connect with you! How's your day going?",
+          "Hey! I love that we matched! What brought you to LokFeel?",
+          "Hello! Great to meet you! We seem to have a lot in common!",
+          "Hi! Nice to match with you! What's your idea of a perfect weekend?",
+        ];
+        const welcomeMsg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+
+        // Get current max seq for IM message (atomic within transaction)
+        const lastMsg = await prisma.iMMessage.findFirst({
+          where: { conversationId: result.conversationId },
+          orderBy: { seq: 'desc' },
+          select: { seq: true },
+        });
+        const nextSeq = (lastMsg?.seq || 0) + 1;
+
+        // Batch welcome message writes in a single transaction
+        await prisma.$transaction([
+          prisma.iMMessage.create({
+            data: {
+              conversationId: result.conversationId,
+              senderId: botUser.id,
+              receiverId: userId,
+              seq: nextSeq,
+              msgType: "TEXT",
+              payload: welcomeMsg,
+              encryptionMode: "SERVER",
+              consentState: "CONSENT_NONE",
+              mediaLevel: "L0_TEXT",
+              ruleResult: "PASS",
+            },
+          }),
+          prisma.conversation.update({
+            where: { id: result.conversationId },
+            data: { lastMessageAt: new Date(), messageCount: { increment: 1 }, unreadCountA: { increment: 1 } },
+          }),
+          prisma.message.create({
+            data: { roomId: result.chatRoomId, senderId: botUser.id, content: welcomeMsg, messageType: "TEXT" },
+          }),
+          prisma.chatRoom.update({
+            where: { id: result.chatRoomId },
+            data: { lastMessageAt: new Date() },
+          }),
+        ]);
+
+        const botName = botUser.profile?.displayName || botUser.name || "Someone";
+        return {
+          botUserId: botUser.id, botName,
+          matchId: result.matchId,
+          conversationId: result.conversationId,
+          chatRoomId: result.chatRoomId,
           matchScore,
-          matchReason,
-          isUnread: true,
-        },
-      });
-
-      // Create conversation for this match
-      const existingConv = await prisma.conversation.findFirst({
-        where: {
-          OR: [
-            { userAId: userId, userBId: botUser.id },
-            { userAId: botUser.id, userBId: userId },
-          ],
-        },
-      });
-
-      let conversationId: string;
-
-      if (!existingConv) {
-        const conversation = await prisma.conversation.create({
-          data: {
-            userAId: userId,
-            userBId: botUser.id,
-            initiatorId: botUser.id, // Bot initiated
-            controllingUserId: userId, // User controls
-          },
-        });
-        conversationId = conversation.id;
-      } else {
-        conversationId = existingConv.id;
+        };
+      } catch (err) {
+        console.error(`[Auto-Match] Failed for bot ${botUser.id}:`, err);
+        return null;
       }
+    })
+  );
 
-      // Also create a ChatRoom (for legacy chat frontend compatibility)
-      const existingChatRoom = await prisma.chatRoom.findFirst({
-        where: { matchId: match.id },
-      });
-
-      let chatRoomId: string;
-
-      if (!existingChatRoom) {
-        const chatRoom = await prisma.chatRoom.create({
-          data: {
-            matchId: match.id,
-            vaultExpiry: new Date(Date.now() + 48 * 60 * 60 * 1000),
-          },
-        });
-
-        // Add both members to chat room
-        await prisma.chatRoomMember.createMany({
-          data: [
-            { roomId: chatRoom.id, userId: userId },
-            { roomId: chatRoom.id, userId: botUser.id },
-          ],
-        });
-
-        chatRoomId = chatRoom.id;
-      } else {
-        chatRoomId = existingChatRoom.id;
-      }
-
-      // Bot sends welcome message in BOTH systems
-      const welcomeMessages = [
-        `Hey! 👋 I noticed we matched — your profile caught my eye!`,
-        `Hi there! 😊 Great to connect with you! How's your day going?`,
-        `Hey! ✨ I love that we matched! What brought you to LokFeel?`,
-        `Hello! Great to meet you! I was checking out your profile and we seem to have a lot in common!`,
-        `Hi! 🌟 Nice to match with you! I'm curious, what's your idea of a perfect weekend?`,
-      ];
-
-      const welcomeMsg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
-      const botName = botUser.profile?.displayName || botUser.name || "Someone";
-
-      // 1. Create welcome message in IM system
-      await prisma.iMMessage.create({
-        data: {
-          conversationId,
-          senderId: botUser.id,
-          receiverId: userId,
-          seq: 1,
-          msgType: "TEXT",
-          payload: welcomeMsg,
-          encryptionMode: "SERVER",
-          consentState: "CONSENT_NONE",
-          mediaLevel: "L0_TEXT",
-          ruleResult: "PASS",
-        },
-      });
-
-      // Update IM conversation
-      await prisma.conversation.update({
-        where: { id: conversationId },
-        data: {
-          lastMessageAt: new Date(),
-          messageCount: 1,
-          unreadCountA: { increment: 1 }, // User has 1 unread from bot
-        },
-      });
-
-      // 2. Create welcome message in ChatRoom system (legacy)
-      await prisma.message.create({
-        data: {
-          roomId: chatRoomId,
-          senderId: botUser.id,
-          content: welcomeMsg,
-          messageType: "TEXT",
-        },
-      });
-
-      // Update chat room
-      await prisma.chatRoom.update({
-        where: { id: chatRoomId },
-        data: { lastMessageAt: new Date() },
-      });
-
-      results.push({
-        botUserId: botUser.id,
-        botName,
-        matchId: match.id,
-        conversationId,
-        chatRoomId,
-        matchScore,
-      });
-
-      console.log(`[Auto-Match] Created match ${match.id} + conversation ${conversationId} for user ${userId} with bot ${botUser.id} (${botName}), score: ${matchScore}`);
-
-    } catch (err) {
-      console.error(`[Auto-Match] Failed for bot ${botUser.id}:`, err);
-    }
-  }
+  const successResults = results.filter((r): r is NonNullable<typeof r> => r !== null);
 
   return NextResponse.json({
     success: true,
-    message: `Auto-matched with ${results.length} users`,
-    createdCount: results.length,
-    totalMatchCount: existingMatchCount + results.length,
-    matches: results,
+    message: `Auto-matched with ${successResults.length} users`,
+    createdCount: successResults.length,
+    totalMatchCount: existingMatchCount + successResults.length,
+    matches: successResults,
   });
 }
 

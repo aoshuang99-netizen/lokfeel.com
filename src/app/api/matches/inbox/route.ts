@@ -133,22 +133,20 @@ export async function GET(request: NextRequest) {
     }));
 
     // 获取统计信息
-    const stats = await db.match.groupBy({
-      by: ['status'],
-      where: { receiverId: userId },
-      _count: { id: true }
-    });
-
-    const unreadCount = await db.match.count({
-      where: { receiverId: userId, isUnread: true, status: 'PENDING' }
-    });
+    // NOTE: Using individual counts instead of groupBy (Turso/libSQL incompatible)
+    const [totalCount, pendingCount, acceptedCount, unreadCount] = await Promise.all([
+      db.match.count({ where: { receiverId: userId } }),
+      db.match.count({ where: { receiverId: userId, status: 'PENDING' } }),
+      db.match.count({ where: { receiverId: userId, status: 'ACCEPTED' } }),
+      db.match.count({ where: { receiverId: userId, isUnread: true, status: 'PENDING' } }),
+    ]);
 
     return NextResponse.json({
       matches: formattedMatches,
       stats: {
-        total: stats.reduce((sum: number, s: any) => sum + s._count.id, 0),
-        pending: stats.find((s: any) => s.status === 'PENDING')?._count.id || 0,
-        accepted: stats.find((s: any) => s.status === 'ACCEPTED')?._count.id || 0,
+        total: totalCount,
+        pending: pendingCount,
+        accepted: acceptedCount,
         unread: unreadCount,
       },
       pagination: {
@@ -239,57 +237,55 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'accept':
-        for (const match of matches) {
-          // 创建聊天室
-          const chatRoom = await db.chatRoom.create({
-            data: {
-              matchId: match.id,
-              vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24小时
-              vaultStatus: 'ACTIVE',
-              members: {
-                create: [
-                  { userId: match.senderId },
-                  { userId: match.receiverId },
-                ]
+        // Update all match statuses in one query (H-02: batch optimization)
+        await db.match.updateMany({
+          where: { id: { in: matchIds } },
+          data: { status: 'ACCEPTED', isUnread: false },
+        });
+
+        // Create chat rooms and process gifts in parallel
+        const acceptResults = await Promise.all(
+          matches.map(async (match) => {
+            const chatRoom = await db.chatRoom.create({
+              data: {
+                matchId: match.id,
+                vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                vaultStatus: 'ACTIVE',
+                members: {
+                  create: [
+                    { userId: match.senderId },
+                    { userId: match.receiverId },
+                  ]
+                }
               }
+            });
+
+            if (match.giftAmount > 0) {
+              await processGiftTransaction(match, userId);
             }
-          });
 
-          // 更新匹配状态
-          await db.match.update({
-            where: { id: match.id },
-            data: {
-              status: 'ACCEPTED',
-              isUnread: false,
-            }
-          });
-
-          // 处理诚意值礼物
-          if (match.giftAmount > 0) {
-            await processGiftTransaction(match, userId);
-          }
-
-          results.push({ matchId: match.id, status: 'accepted', chatRoomId: chatRoom.id });
-        }
+            return { matchId: match.id, status: 'accepted', chatRoomId: chatRoom.id };
+          })
+        );
+        results.push(...acceptResults);
         break;
 
       case 'pass':
-        for (const match of matches) {
-          await db.match.update({
-            where: { id: match.id },
-            data: {
-              status: 'REJECTED',
-              isUnread: false,
+        // Update all match statuses in one query (H-02: batch optimization)
+        await db.match.updateMany({
+          where: { id: { in: matchIds } },
+          data: { status: 'REJECTED', isUnread: false },
+        });
+
+        const passResults = await Promise.all(
+          matches.map(async (match) => {
+            if (match.giftAmount > 0) {
+              await refundGift(match);
             }
-          });
-
-          // 退还诚意值
-          if (match.giftAmount > 0) {
-            await refundGift(match);
-          }
-
-          results.push({ matchId: match.id, status: 'passed' });
-        }
+            return { matchId: match.id, status: 'passed' };
+          })
+        );
+        results.push(...passResults);
         break;
 
       case 'markRead':

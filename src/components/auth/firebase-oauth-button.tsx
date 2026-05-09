@@ -7,29 +7,15 @@
  * Uses Firebase Auth SDK to open a provider popup, then bridges
  * to NextAuth session via /api/auth/firebase-bridge.
  *
+ * Firebase config is fetched at RUNTIME from /api/config/firebase
+ * to bypass Vercel build-time env var injection issues.
+ *
  * DATEASY DARK theme: matches existing login/register page styling.
  */
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-
-// Lazy-load Firebase to avoid SSR issues
-let firebaseAuth: ReturnType<typeof import("firebase/auth").getAuth> | null = null;
-let providers: Record<string, any> = {};
-let firebaseLoaded = false;
-
-async function loadFirebase() {
-  if (firebaseLoaded) return;
-  firebaseLoaded = true;
-  try {
-    const mod = await import("@/lib/firebase/client");
-    firebaseAuth = mod.firebaseAuth;
-    providers = { google: mod.googleProvider, twitter: mod.twitterProvider };
-  } catch (error) {
-    console.error("[FirebaseOAuthButton] Failed to load Firebase:", error);
-    firebaseLoaded = false;
-  }
-}
+import type { Auth, GoogleAuthProvider, TwitterAuthProvider } from "firebase/auth";
 
 // DATEASY DARK theme constants
 const colors = {
@@ -43,18 +29,14 @@ const colors = {
 export type FirebaseProviderType = "google" | "twitter";
 
 interface FirebaseOAuthButtonProps {
-  /** Firebase auth provider: "google" or "twitter" */
   provider: FirebaseProviderType;
   callbackUrl?: string;
-  /** Button label text, e.g. "Continue with Google" */
   label?: string;
   className?: string;
   style?: React.CSSProperties;
   disabled?: boolean;
   fullWidth?: boolean;
-  /** Called after successful sign-in (before redirect) */
   onSuccess?: () => void;
-  /** Called on error */
   onError?: (error: string) => void;
 }
 
@@ -71,7 +53,6 @@ function GoogleIcon() {
   );
 }
 
-/** X (Twitter) logo — the new stylized X mark */
 function XIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -109,18 +90,36 @@ export default function FirebaseOAuthButton({
     if (isLoading || disabled) return;
     setIsLoading(true);
 
+    let bridgeRes: Response | null = null;
+    let bridgeData: any = null;
+
     try {
-      // Step 1: Load Firebase SDK
-      await loadFirebase();
-      const fbProvider = providers[provider];
-      if (!firebaseAuth || !fbProvider) {
-        console.error(`[FirebaseOAuthButton] Firebase SDK not available for ${provider}`);
-        throw new Error(`${provider} sign-in is not configured. Please contact support.`);
+      // Step 1: Load Firebase SDK with runtime config
+      const {
+        getFirebaseAuth,
+        getGoogleProvider,
+        getTwitterProvider,
+      } = await import("@/lib/firebase/client");
+
+      const auth: Auth | null = await getFirebaseAuth();
+      if (!auth) {
+        throw new Error("Firebase SDK 初始化失败。请检查网络连接后重试。");
+      }
+
+      let fbProvider: GoogleAuthProvider | TwitterAuthProvider | null = null;
+      if (provider === "google") {
+        fbProvider = await getGoogleProvider();
+      } else {
+        fbProvider = await getTwitterProvider();
+      }
+
+      if (!fbProvider) {
+        throw new Error(`${provider} 登录未配置`);
       }
 
       // Step 2: Firebase popup sign-in
       const { signInWithPopup } = await import("firebase/auth");
-      const result = await signInWithPopup(firebaseAuth, fbProvider);
+      const result = await signInWithPopup(auth, fbProvider);
 
       // Step 3: Get Firebase ID token
       const idToken = await result.user.getIdToken();
@@ -129,62 +128,76 @@ export default function FirebaseOAuthButton({
       }
 
       // Step 4: Bridge to NextAuth session
-      const bridgeRes = await fetch("/api/auth/firebase-bridge", {
+      bridgeRes = await fetch("/api/auth/firebase-bridge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
 
-      const bridgeData = await bridgeRes.json();
+      bridgeData = await bridgeRes.json();
 
       if (!bridgeRes.ok || !bridgeData.success) {
         throw new Error(bridgeData.error || "Bridge authentication failed");
       }
 
       // Step 5: Sign in via NextAuth "firebase-token" credentials provider
-      const loginRes = await fetch("/api/auth/callback/firebase-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          token: bridgeData.signInToken,
-          userId: bridgeData.userId,
-          callbackUrl,
-          csrfToken: document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute("content") || "",
-        }),
+      // Get CSRF token first
+      const csrfRes = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfRes.json();
+
+      if (!csrfToken) {
+        throw new Error("Failed to get CSRF token");
+      }
+
+      const loginRes = await signIn("firebase-token", {
+        token: bridgeData.signInToken,
+        userId: bridgeData.userId,
+        callbackUrl,
+        csrfToken,
+        redirect: false,
       });
 
       // Step 6: Handle redirect
-      if (loginRes.ok) {
-        const redirectUrl = loginRes.headers.get("Location") || callbackUrl;
+      if (loginRes?.ok) {
         onSuccess?.();
-        window.location.href = redirectUrl;
+        window.location.href = callbackUrl;
       } else {
-        // Fallback: try NextAuth's signIn client with "firebase-token" provider
-        await signIn("firebase-token", {
-          token: bridgeData.signInToken,
-          userId: bridgeData.userId,
-          callbackUrl,
-          redirect: true,
-        });
+        const loginError = loginRes?.error || "NextAuth sign-in failed";
+        console.error("[FirebaseOAuthButton] NextAuth signIn failed:", loginError);
+        throw new Error(loginError);
       }
     } catch (error: any) {
-      console.error(`[FirebaseOAuthButton][${provider}] Error:`, error);
+      console.error(`[FirebaseOAuthButton][${provider}] Error:`, {
+        code: error?.code,
+        message: error?.message,
+        name: error?.name,
+        customData: error?.customData,
+        stack: error?.stack?.split("\n")?.slice(0, 5),
+      });
       const errorCode = error?.code || "";
       const errorMsg = error?.message || "";
+      const customData = error?.customData;
 
-      // Firebase domain blocked — most common issue
       if (errorCode === "auth/unauthorized-domain" || errorMsg.includes("requests-from-referer") || errorMsg.includes("are-blocked")) {
         onError?.("域名未授权：请在 Firebase Console → Authentication → Settings → Authorized domains 中添加 app.lokfeel.com");
+      } else if (errorCode === "auth/invalid-credential" || errorCode === "auth/invalid-login-credentials") {
+        // OAuth credential rejected — typically means Google Cloud OAuth client misconfiguration
+        const hint = customData?.email
+          ? ` (账户: ${customData.email})`
+          : "";
+        onError?.(`OAuth认证失败${hint}。请检查 Google Cloud Console → Credentials 中 OAuth Client 的 Authorized JavaScript origins 是否包含 app.lokfeel.com`);
       } else if (errorCode === "auth/popup-blocked") {
         onError?.("弹窗被浏览器拦截，请允许此网站的弹窗后重试");
       } else if (errorCode === "auth/popup-closed-by-user") {
-        // User closed the popup — just stop loading, no error message
+        // User closed the popup — silently stop
       } else if (errorMsg.includes("client_id") || errorMsg.includes("invalid_request")) {
         onError?.("OAuth 配置错误，请联系管理员");
+      } else if (errorMsg.includes("Firebase SDK 初始化失败")) {
+        onError?.("Firebase 配置加载失败，请刷新页面重试");
+      } else if (bridgeRes && !bridgeRes.ok) {
+        // Bridge API error
+        onError?.(bridgeData?.error || "服务器认证失败");
       } else {
-        // Sanitize: show code if available, otherwise generic message
         const safeMsg = errorCode ? `[${errorCode}]` : "登录失败，请稍后重试";
         onError?.(safeMsg);
       }

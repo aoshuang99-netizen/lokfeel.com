@@ -58,11 +58,12 @@ export async function GET(request: NextRequest) {
     );
 
     // Get IDs of users already reacted to (via MatchReaction)
+    // H-04: Use select instead of include to reduce payload
     const existingReactions = await prisma.matchReaction.findMany({
       where: {
         userId: session.user.id,
       },
-      include: {
+      select: {
         match: {
           select: {
             senderId: true,

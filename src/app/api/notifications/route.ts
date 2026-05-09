@@ -23,6 +23,10 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: { createdAt: 'desc' },
       take: limit,
+      select: {
+        id: true, type: true, title: true, body: true,
+        data: true, actionUrl: true, isRead: true, readAt: true, createdAt: true,
+      },
     })
 
     const unreadCount = await db.notification.count({

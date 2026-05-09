@@ -19,7 +19,9 @@ const settingsSchema = z.object({
 });
 
 export const GET = withPermission('system.config.view')(async (request: NextRequest, { userId }) => {
-  const settings = await db.systemConfig.findMany();
+  const settings = await db.systemConfig.findMany({
+    select: { key: true, value: true, updatedAt: true },
+  });
 
   const settingsMap: Record<string, string> = {};
   for (const setting of settings) {

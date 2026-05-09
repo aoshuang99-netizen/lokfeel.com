@@ -12,22 +12,10 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 
-// Lazy-load Firebase to avoid SSR issues
-let firebaseAuth: ReturnType<typeof import("firebase/auth").getAuth> | null = null;
-let googleProvider: InstanceType<typeof import("firebase/auth").GoogleAuthProvider> | null = null;
-let firebaseLoaded = false;
-
+// Lazy-load Firebase to avoid SSR issues (DEPRECATED: use FirebaseOAuthButton instead)
 async function loadFirebase() {
-  if (firebaseLoaded) return;
-  firebaseLoaded = true;
-  try {
-    const { firebaseAuth: auth, googleProvider: provider } = await import("@/lib/firebase/client");
-    firebaseAuth = auth;
-    googleProvider = provider;
-  } catch (error) {
-    console.error("[GoogleOneTap] Failed to load Firebase:", error);
-    firebaseLoaded = false;
-  }
+  const { getFirebaseAuth, getGoogleProvider } = await import("@/lib/firebase/client");
+  return { auth: await getFirebaseAuth(), provider: await getGoogleProvider() };
 }
 
 // DATEASY DARK theme constants
@@ -69,19 +57,18 @@ export default function GoogleOneTap({
     setIsLoading(true);
 
     try {
-      // Step 1: Load Firebase SDK
-      await loadFirebase();
+      // Step 1: Load Firebase SDK with runtime config
+      const { auth: firebaseAuth, provider: googleProvider } = await loadFirebase();
       if (!firebaseAuth || !googleProvider) {
         const msg = "Firebase SDK not available. Falling back to NextAuth...";
         console.warn("[GoogleOneTap]", msg);
-        // Fallback to NextAuth Google provider
         await signIn("google", { callbackUrl });
         return;
       }
 
       // Step 2: Firebase Google Sign-In popup
-      const { signInWithPopup, getAuth, GoogleAuthProvider } = await import("firebase/auth");
-      const result = await signInWithPopup(firebaseAuth!, googleProvider!);
+      const { signInWithPopup } = await import("firebase/auth");
+      const result = await signInWithPopup(firebaseAuth, googleProvider);
 
       // Step 3: Get Firebase ID token
       const idToken = await result.user.getIdToken();

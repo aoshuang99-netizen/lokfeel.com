@@ -87,12 +87,19 @@ export const GET = withPermission('user.view')(async (req: NextRequest) => {
 
   try {
     // Count profiles by onboardingStep
-    const stepStats = await prisma.profile.groupBy({
-      by: ["onboardingStep"],
-      _count: {
-        id: true,
-      },
+    // NOTE: Using findMany+distinct instead of groupBy (Turso/libSQL incompatible)
+    const stepProfiles = await prisma.profile.findMany({
+      select: { onboardingStep: true },
+      distinct: ['onboardingStep'],
     });
+    const stepStats = await Promise.all(
+      stepProfiles.map(async (p: any) => {
+        const count = await prisma.profile.count({
+          where: { onboardingStep: p.onboardingStep },
+        });
+        return { onboardingStep: p.onboardingStep, _count: { id: count } };
+      })
+    );
 
     // Count profiles needing fix
     const needsFix = await prisma.profile.count({
