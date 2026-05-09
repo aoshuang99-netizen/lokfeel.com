@@ -39,7 +39,7 @@ export async function GET() {
         preferredDistance: true, preferredLocation: true, profileStatus: true,
         onboardingStep: true, selectedTags: true, compatibilityScore: true,
         linkedInVerified: true, verificationBadge: true, isVerified: true,
-        galleryPhotos: true, height: true, education: true,
+        galleryPhotos: true,
         domSubRole: true, preferredRole: true, kinkExperienceLevel: true,
         createdAt: true, updatedAt: true,
       },

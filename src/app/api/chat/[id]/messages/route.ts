@@ -245,17 +245,20 @@ export async function POST(
       // ═══ MESSAGE LIMIT CHECK — Plan-based ═══
       // Lady Free (women) & Premium: unlimited messages
       // Free (men): 2 messages per conversation
-      const userWithSub = await db.user.findUnique({
-        where: { id: user.id },
-        include: {
-          subscriptions: { where: { status: 'ACTIVE' }, take: 1 },
-          profile: { select: { gender: true, cardVerified: true } },
-        },
-      })
-      const hasActiveSub = userWithSub?.subscriptions && userWithSub.subscriptions.length > 0
-      const isLadyFree = userWithSub?.subscriptions?.[0]?.plan === 'LADY_FREE'
-      const isFemale = userWithSub?.profile?.gender === 'FEMALE'
-      const cardVerified = userWithSub?.profile?.cardVerified ?? false
+      const [userWithSub, userProfile] = await Promise.all([
+        db.user.findFirst({
+          where: { id: user.id },
+        }),
+        db.profile.findUnique({
+          where: { userId: user.id },
+          select: { gender: true },
+        }),
+      ])
+      const activeSubs = userWithSub ? await db.subscription.findMany({ where: { userId: user.id, status: 'ACTIVE' }, take: 1 }) : []
+      const hasActiveSub = activeSubs.length > 0
+      const isLadyFree = activeSubs[0]?.plan === 'LADY_FREE'
+      const isFemale = userProfile?.gender === 'FEMALE'
+      const cardVerified = userWithSub?.cardVerified ?? false
 
       // Skip limit for Lady Free and Premium users
       if (!hasActiveSub && !isFemale) {
@@ -270,7 +273,7 @@ export async function POST(
       }
 
       // Card verification check — all non-premium users must verify after 3 total messages
-      const isPremiumPlan = hasActiveSub && (userWithSub?.subscriptions?.[0]?.plan === 'PREMIUM_MONTHLY' || userWithSub?.subscriptions?.[0]?.plan === 'PREMIUM_YEARLY')
+      const isPremiumPlan = hasActiveSub && (activeSubs[0]?.plan === 'PREMIUM_MONTHLY' || activeSubs[0]?.plan === 'PREMIUM_YEARLY')
       if (!isPremiumPlan) {
         const totalMessages = await db.message.count({ where: { senderId: user.id } })
         if (!cardVerified && totalMessages >= 3) {
