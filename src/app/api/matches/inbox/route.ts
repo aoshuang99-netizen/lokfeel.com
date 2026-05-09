@@ -312,50 +312,50 @@ export async function POST(request: NextRequest) {
  */
 async function processGiftTransaction(match: any, receiverId: string) {
   try {
-    // 获取或创建女方的钱包
-    let wallet = await db.sincerityWallet.findUnique({
-      where: { userId: receiverId }
-    });
+    // H-06 fix: Wrap gift operations in a transaction
+    await db.$transaction(async (tx) => {
+      // Upsert wallet + update balance + create transaction record atomically
+      const existingWallet = await tx.sincerityWallet.findUnique({
+        where: { userId: receiverId }
+      });
 
-    if (!wallet) {
-      wallet = await db.sincerityWallet.create({
+      if (existingWallet) {
+        await tx.sincerityWallet.update({
+          where: { id: existingWallet.id },
+          data: {
+            balance: { increment: match.giftAmount },
+            totalEarned: { increment: match.giftAmount },
+            totalReceived: { increment: match.giftAmount },
+            lastEarnedAt: new Date(),
+          }
+        });
+      } else {
+        await tx.sincerityWallet.create({
+          data: {
+            userId: receiverId,
+            balance: match.giftAmount,
+            totalEarned: match.giftAmount,
+            totalReceived: match.giftAmount,
+            lastEarnedAt: new Date(),
+          }
+        });
+      }
+
+      await tx.sincerityTransaction.create({
         data: {
-          userId: receiverId,
-          balance: 0,
-          totalEarned: 0,
-          totalReceived: 0,
+          walletId: existingWallet?.id || `wallet-${receiverId}`,
+          type: 'RECEIVE_GIFT',
+          amount: match.giftAmount,
+          source: 'MATCH_GIFT',
+          matchId: match.id,
+          fromUserId: match.senderId,
+          toUserId: receiverId,
+          message: `Gift from ${match.sender.profile?.displayName || 'Anonymous'}`,
         }
       });
-    }
-
-    // 更新钱包余额
-    await db.sincerityWallet.update({
-      where: { id: wallet.id },
-      data: {
-        balance: { increment: match.giftAmount },
-        totalEarned: { increment: match.giftAmount },
-        totalReceived: { increment: match.giftAmount },
-        lastEarnedAt: new Date(),
-      }
     });
-
-    // 创建交易记录
-    await db.sincerityTransaction.create({
-      data: {
-        walletId: wallet.id,
-        type: 'RECEIVE_GIFT',
-        amount: match.giftAmount,
-        source: 'MATCH_GIFT',
-        matchId: match.id,
-        fromUserId: match.senderId,
-        toUserId: receiverId,
-        message: `Gift from ${match.sender.profile?.displayName || 'Anonymous'}`,
-      }
-    });
-
   } catch (error) {
     console.error('Gift transaction error:', error);
-    // 不抛出错误，避免影响主流程
   }
 }
 
@@ -364,43 +364,43 @@ async function processGiftTransaction(match: any, receiverId: string) {
  */
 async function refundGift(match: any) {
   try {
-    // 获取男方的钱包
-    let wallet = await db.sincerityWallet.findUnique({
-      where: { userId: match.senderId }
-    });
+    // H-06 fix: Wrap refund in a transaction
+    await db.$transaction(async (tx) => {
+      const existingWallet = await tx.sincerityWallet.findUnique({
+        where: { userId: match.senderId }
+      });
 
-    if (!wallet) {
-      wallet = await db.sincerityWallet.create({
+      if (existingWallet) {
+        await tx.sincerityWallet.update({
+          where: { id: existingWallet.id },
+          data: {
+            balance: { increment: match.giftAmount },
+            lastEarnedAt: new Date(),
+          }
+        });
+      } else {
+        await tx.sincerityWallet.create({
+          data: {
+            userId: match.senderId,
+            balance: match.giftAmount,
+            totalEarned: match.giftAmount,
+            lastEarnedAt: new Date(),
+          }
+        });
+      }
+
+      await tx.sincerityTransaction.create({
         data: {
-          userId: match.senderId,
-          balance: 0,
-          totalEarned: 0,
+          walletId: existingWallet?.id || `wallet-${match.senderId}`,
+          type: 'REFUND',
+          amount: match.giftAmount,
+          source: 'GIFT_REFUND',
+          matchId: match.id,
+          toUserId: match.senderId,
+          message: 'Gift refunded - match passed',
         }
       });
-    }
-
-    // 退还诚意值
-    await db.sincerityWallet.update({
-      where: { id: wallet.id },
-      data: {
-        balance: { increment: match.giftAmount },
-        lastEarnedAt: new Date(),
-      }
     });
-
-    // 创建退款记录
-    await db.sincerityTransaction.create({
-      data: {
-        walletId: wallet.id,
-        type: 'REFUND',
-        amount: match.giftAmount,
-        source: 'GIFT_REFUND',
-        matchId: match.id,
-        toUserId: match.senderId,
-        message: 'Gift refunded - match passed',
-      }
-    });
-
   } catch (error) {
     console.error('Gift refund error:', error);
   }

@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: { lastMessageAt: "desc" },
+      take: 50, // H-02: Add pagination limit
     });
 
     const formattedConversations = conversations.map((conv) => {

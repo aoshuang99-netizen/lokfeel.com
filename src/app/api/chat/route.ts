@@ -15,32 +15,30 @@ export async function GET() {
     const { user } = await requireAuth()
 
     // ═══ 1. ChatRoom system (legacy) ═══
+    // C-01 fix: Reduce nested include depth — load members+lastMessage separately
     const memberships = await db.chatRoomMember.findMany({
       where: { userId: user.id },
-      include: {
+      orderBy: { room: { lastMessageAt: 'desc' } },
+      take: 50,
+      select: {
+        id: true,
+        userId: true,
+        roomId: true,
+        lastReadAt: true,
         room: {
-          include: {
+          select: {
+            id: true,
+            matchId: true,
+            lastMessageAt: true,
+            vaultExpiry: true,
+            isArchived: true,
             match: {
-              include: {
-                sender: {
-                  select: { id: true, name: true, image: true, isBot: true, profile: { select: { displayName: true, age: true, avatar: true } } },
-                },
-                receiver: {
-                  select: { id: true, name: true, image: true, isBot: true, profile: { select: { displayName: true, age: true, avatar: true } } },
-                },
-              },
-            },
-            members: {
-              where: { userId: { not: user.id } },
-              include: {
-                user: {
-                  select: { id: true, name: true, image: true, isBot: true, profile: { select: { displayName: true, age: true, avatar: true } } },
-                },
-              },
+              select: { id: true, matchScore: true },
             },
             messages: {
               orderBy: { createdAt: 'desc' },
               take: 1,
+              select: { id: true, content: true, createdAt: true, senderId: true },
             },
             _count: {
               select: {
@@ -55,36 +53,47 @@ export async function GET() {
           },
         },
       },
-      orderBy: { room: { lastMessageAt: 'desc' } },
-      take: 50,
     })
+
+    // Batch load other members for all rooms (single query instead of nested include)
+    const roomIds = memberships.map(m => m.room.id)
+    const allMembers = roomIds.length > 0
+      ? await db.chatRoomMember.findMany({
+          where: {
+            roomId: { in: roomIds },
+            userId: { not: user.id },
+          },
+          select: {
+            roomId: true,
+            userId: true,
+            user: {
+              select: { id: true, name: true, image: true, isBot: true, profile: { select: { displayName: true, age: true, avatar: true } } },
+            },
+          },
+        })
+      : []
+    const membersByRoom = new Map(allMembers.map(m => [m.roomId, m]))
 
     const chatRoomChats = memberships
       .filter((m) => !m.room.isArchived)
       .map((m) => {
-        const otherMember = m.room.members[0]
+        const otherMember = membersByRoom.get(m.room.id)
         const lastMessage = m.room.messages[0]
         const unreadCount = m.room._count.messages
         const match = m.room.match
 
-        // Get match score from match record
-        let matchScore: number | undefined
-        if (match) {
-          matchScore = match.matchScore
-        }
-
         return {
           id: m.room.id,
           matchId: m.room.matchId,
-          matchScore,
-          otherUser: {
+          matchScore: match?.matchScore ?? undefined,
+          otherUser: otherMember ? {
             id: otherMember.user.id,
             name: otherMember.user.profile?.displayName || otherMember.user.name,
             age: otherMember.user.profile?.age,
             avatar: otherMember.user.profile?.avatar || otherMember.user.image,
             isOnline: false,
             isBot: otherMember.user.isBot,
-          },
+          } : { id: '', name: 'Unknown', age: 0, avatar: null, isOnline: false, isBot: false },
           lastMessage: lastMessage ? {
             content: lastMessage.content,
             timestamp: lastMessage.createdAt,

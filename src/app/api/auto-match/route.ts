@@ -256,17 +256,17 @@ async function createMatchesForBots(
         ];
         const welcomeMsg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
 
-        // Get current max seq for IM message (atomic within transaction)
-        const lastMsg = await prisma.iMMessage.findFirst({
-          where: { conversationId: result.conversationId },
-          orderBy: { seq: 'desc' },
-          select: { seq: true },
-        });
-        const nextSeq = (lastMsg?.seq || 0) + 1;
-
+        // H-05 fix: Welcome message seq generation inside transaction (atomic)
         // Batch welcome message writes in a single transaction
-        await prisma.$transaction([
-          prisma.iMMessage.create({
+        await prisma.$transaction(async (tx) => {
+          const lastMsg = await tx.iMMessage.findFirst({
+            where: { conversationId: result.conversationId },
+            orderBy: { seq: 'desc' },
+            select: { seq: true },
+          });
+          const nextSeq = (lastMsg?.seq || 0) + 1;
+
+          await tx.iMMessage.create({
             data: {
               conversationId: result.conversationId,
               senderId: botUser.id,
@@ -279,19 +279,19 @@ async function createMatchesForBots(
               mediaLevel: "L0_TEXT",
               ruleResult: "PASS",
             },
-          }),
-          prisma.conversation.update({
+          });
+          await tx.conversation.update({
             where: { id: result.conversationId },
             data: { lastMessageAt: new Date(), messageCount: { increment: 1 }, unreadCountA: { increment: 1 } },
-          }),
-          prisma.message.create({
+          });
+          await tx.message.create({
             data: { roomId: result.chatRoomId, senderId: botUser.id, content: welcomeMsg, messageType: "TEXT" },
-          }),
-          prisma.chatRoom.update({
+          });
+          await tx.chatRoom.update({
             where: { id: result.chatRoomId },
             data: { lastMessageAt: new Date() },
-          }),
-        ]);
+          });
+        });
 
         const botName = botUser.profile?.displayName || botUser.name || "Someone";
         return {

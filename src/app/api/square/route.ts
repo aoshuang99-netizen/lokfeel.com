@@ -144,10 +144,42 @@ async function generateRecommendations(
   // 用户偏好标签
   const userTags = jsonArr(currentUserProfile.selectedTags);
   
-  // Fetch candidates sorted by compatibilityScore (DB-level sort, avoids loading all into memory)
+  // C-05 fix: Use select instead of include to minimize data transfer
+  // Only load fields needed for display + scoring
   const candidates = await db.profile.findMany({
     where: baseWhere,
-    include: {
+    select: {
+      id: true,
+      userId: true,
+      displayName: true,
+      age: true,
+      avatar: true,
+      avatarType: true,
+      gender: true,
+      city: true,
+      country: true,
+      bio: true,
+      occupation: true,
+      company: true,
+      linkedInVerified: true,
+      verificationBadge: true,
+      compatibilityScore: true,
+      selectedTags: true,
+      profileStatus: true,
+      // Fields needed for JS fallback scoring (only used if compatibilityScore is null)
+      attachmentStyle: true,
+      communicationStyle: true,
+      conflictResolution: true,
+      loveLanguage: true,
+      lifePriorities: true,
+      relationshipGoal: true,
+      boundaries: true,
+      dealbreakers: true,
+      emotionalAvailability: true,
+      preferredAgeMin: true,
+      preferredAgeMax: true,
+      preferredGender: true,
+      preferredDistance: true,
       user: {
         select: {
           id: true,
@@ -159,10 +191,16 @@ async function generateRecommendations(
           },
         },
       },
-      botProfile: true,
+      botProfile: {
+        select: {
+          botType: true,
+          activityLevel: true,
+          interests: true,
+        },
+      },
     },
     orderBy: { compatibilityScore: 'desc' },
-    take: limit + offset + 10, // Fetch enough for pagination after filtering
+    take: limit + offset + 10,
   });
 
   const scoredCandidates = candidates.map(candidate => {

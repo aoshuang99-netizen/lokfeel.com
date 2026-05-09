@@ -95,10 +95,7 @@ export async function GET(request: NextRequest) {
     // Map various gender preference formats to standard values
     // Note: preferredGender may be null for new users who haven't completed onboarding
     const preferredGender = profile.preferredGender?.toUpperCase() || null;
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Discover API] Raw preferredGender:', profile.preferredGender, 'Upper:', preferredGender);
-    }
-    
+
     if (preferredGender && preferredGender !== "EVERYONE") {
       const genderMap: Record<string, string> = {
         'MALE': 'MALE',
@@ -118,12 +115,6 @@ export async function GET(request: NextRequest) {
         gte: profile.preferredAgeMin || 18,
         lte: profile.preferredAgeMax || 99,
       };
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Discover API] Current user:', userId, 'Profile:', profile.id);
-      console.log('[Discover API] Excluding IDs:', excludeIds.length, excludeIds.slice(0, 10));
-      console.log('[Discover API] Where clause:', JSON.stringify(whereClause, null, 2));
     }
 
     // Fetch potential matches
@@ -153,14 +144,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log('[Discover API] Found users (first pass):', users.length);
-
     // ═══ FALLBACK: If no users found, try with relaxed conditions ═══
     let finalUsers = users;
-    
+
     if (users.length === 0) {
-      console.log('[Discover API] No users found with strict filters, trying fallback...');
-      
       // Fallback: Only exclude current user and already matched users (allow reacted users)
       const fallbackExcludeIds = [...new Set([...matchedUserIds, session.user.id])];
       
@@ -174,8 +161,7 @@ export async function GET(request: NextRequest) {
       };
       
       // Remove gender filter in fallback
-      console.log('[Discover API] Fallback where clause:', JSON.stringify(fallbackWhereClause, null, 2));
-      
+
       const fallbackUsers = await prisma.user.findMany({
         where: fallbackWhereClause,
         include: {
@@ -199,8 +185,6 @@ export async function GET(request: NextRequest) {
         take: limit,
         orderBy: { createdAt: "desc" },
       });
-      
-      console.log('[Discover API] Found users (fallback):', fallbackUsers.length);
       finalUsers = fallbackUsers;
     }
 

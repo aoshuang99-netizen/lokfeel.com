@@ -5,10 +5,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { db } from "@/lib/db";
 import { toJson } from "@/lib/json-helpers";
 
-const prisma = getDb();
+// C-03 fix: Use lazy Proxy `db` instead of module-level `getDb()`
 import { hash } from "bcryptjs";
 
 export const dynamic = "force-dynamic";
@@ -99,7 +99,7 @@ async function createBotUser(
   const botId = `bot_${userData.id}`;
 
   // 1. Create User
-  await prisma.user.upsert({
+  await db.user.upsert({
     where: { id: userId },
     update: {},
     create: {
@@ -121,7 +121,7 @@ async function createBotUser(
   const avatarUrl = `emoji:${avatarEmoji}:${avatarColor}`;
 
   // 2. Create Profile
-  await prisma.profile.upsert({
+  await db.profile.upsert({
     where: { id: profileId },
     update: {},
     create: {
@@ -157,7 +157,7 @@ async function createBotUser(
   });
 
   // 3. Create BotProfile
-  await prisma.botProfile.upsert({
+  await db.botProfile.upsert({
     where: { id: botId },
     update: {},
     create: {
@@ -234,8 +234,8 @@ export async function POST(request: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
     // 获取最终统计
-    const totalUsers = await prisma.user.count();
-    const totalBots = await prisma.botProfile.count();
+    const totalUsers = await db.user.count();
+    const totalBots = await db.botProfile.count();
 
     return NextResponse.json({
       success: true,

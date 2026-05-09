@@ -6,10 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { db } from "@/lib/db";
 import { withPermission } from "@/lib/with-permission";
 
-const prisma = getDb();
+// C-03 fix: Use lazy Proxy `db` instead of module-level `getDb()` to avoid cold-start crash
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export const POST = withPermission('user.edit', { dangerous: true })(async (req:
 
   try {
     // Find profiles with low onboardingStep (lt 9 to catch step 8 users)
-    const profilesToFix = await prisma.profile.findMany({
+    const profilesToFix = await db.profile.findMany({
       where: {
         onboardingStep: {
           lt: 9,
@@ -53,7 +53,7 @@ export const POST = withPermission('user.edit', { dangerous: true })(async (req:
     }
 
     // Update profiles
-    const profileUpdate = await prisma.profile.updateMany({
+    const profileUpdate = await db.profile.updateMany({
       where: {
         id: { in: profilesToFix.map(p => p.id) },
       },
@@ -88,13 +88,13 @@ export const GET = withPermission('user.view')(async (req: NextRequest) => {
   try {
     // Count profiles by onboardingStep
     // NOTE: Using findMany+distinct instead of groupBy (Turso/libSQL incompatible)
-    const stepProfiles = await prisma.profile.findMany({
+    const stepProfiles = await db.profile.findMany({
       select: { onboardingStep: true },
       distinct: ['onboardingStep'],
     });
     const stepStats = await Promise.all(
       stepProfiles.map(async (p: any) => {
-        const count = await prisma.profile.count({
+        const count = await db.profile.count({
           where: { onboardingStep: p.onboardingStep },
         });
         return { onboardingStep: p.onboardingStep, _count: { id: count } };
@@ -102,14 +102,14 @@ export const GET = withPermission('user.view')(async (req: NextRequest) => {
     );
 
     // Count profiles needing fix
-    const needsFix = await prisma.profile.count({
+    const needsFix = await db.profile.count({
       where: {
         onboardingStep: { lt: 9 },
       },
     });
 
     // Total profiles
-    const totalProfiles = await prisma.profile.count();
+    const totalProfiles = await db.profile.count();
 
     return NextResponse.json({
       totalProfiles,

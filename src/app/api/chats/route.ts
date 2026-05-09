@@ -58,24 +58,10 @@ export async function GET(req: NextRequest) {
             messageType: true,
           },
         },
-        match: {
-          select: {
-            sender: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            receiver: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
+        // H-08: Removed unused match include (sender/receiver never used in response)
       },
       orderBy: { updatedAt: "desc" },
+      take: 50, // H-01: Add pagination limit
     });
 
     // Batch unread count query — single query instead of N+1 per room
