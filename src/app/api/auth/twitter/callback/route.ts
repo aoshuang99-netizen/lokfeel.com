@@ -215,56 +215,67 @@ export async function GET(request: NextRequest) {
     // Get callback URL from cookie
     const callbackUrl = request.cookies.get("twitter-callback-url")?.value || "/dashboard";
 
-    // Step 8: Return HTML page that auto-completes NextAuth sign-in
+    // Step 8: Return HTML that auto-signs in via NextAuth
+    // Uses a hidden form that POSTs to /api/auth/callback/firebase-token
+    // This approach is more reliable than fetch + CDN imports because:
+    // - Form submissions always send cookies (including CSRF)
+    // - No CDN dependencies that could be blocked
+    // - Works with strict CSP policies
+    const escapedCallback = callbackUrl.replace(/'/g, "\\'").replace(/"/g, '&quot;');
     const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Signing in...</title></head>
+<html><head><meta charset="utf-8"><title>Signing in...</title></head>
 <body>
+<noscript><p style="text-align:center;padding:40px;color:#aaa">JavaScript is required. Please enable it and refresh.</p></noscript>
+<div id="loading" style="text-align:center;padding:40px;color:#aaa;font-family:system-ui">Signing in with X...</div>
 <script>
-  (async function() {
-    try {
-      // Get CSRF token
-      const csrfRes = await fetch('/api/auth/csrf');
-      const { csrfToken } = await csrfRes.json();
-
-      // Sign in via NextAuth firebase-token credentials provider
-      const { signIn } = await import('https://cdn.jsdelivr.net/npm/next-auth@5.0.0-beta.30/dist/client/index.js');
-      // Fallback: use fetch directly
-      const res = await fetch('/api/auth/callback/firebase-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          csrfToken: csrfToken,
-          token: '${signInToken}',
-          userId: '${user.id}',
-          callbackUrl: '${callbackUrl}',
-        }),
-      });
-
-      if (res.ok || res.status === 302) {
-        const location = res.headers.get('location');
-        window.location.href = location || '${callbackUrl}';
-      } else {
-        window.location.href = '/login?error=' + encodeURIComponent('Session creation failed');
-      }
-    } catch(e) {
-      console.error('Sign-in error:', e);
-      window.location.href = '/login?error=' + encodeURIComponent('Sign-in failed');
-    }
-  })();
+(function() {
+  // Fetch CSRF token first (needed for NextAuth form POST)
+  fetch('/api/auth/csrf', { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.csrfToken) throw new Error('No CSRF token');
+      // Create and submit a hidden form
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/auth/callback/firebase-token';
+      form.style.display = 'none';
+      // CSRF token
+      var csrf = document.createElement('input');
+      csrf.type = 'hidden'; csrf.name = 'csrfToken'; csrf.value = data.csrfToken;
+      form.appendChild(csrf);
+      // Sign-in token
+      var token = document.createElement('input');
+      token.type = 'hidden'; token.name = 'token'; token.value = '${signInToken}';
+      form.appendChild(token);
+      // User ID
+      var userId = document.createElement('input');
+      userId.type = 'hidden'; userId.name = 'userId'; userId.value = '${user.id}';
+      form.appendChild(userId);
+      // Callback URL
+      var cb = document.createElement('input');
+      cb.type = 'hidden'; cb.name = 'callbackUrl'; cb.value = '${escapedCallback}';
+      form.appendChild(cb);
+      document.body.appendChild(form);
+      form.submit();
+    })
+    .catch(function(e) {
+      document.getElementById('loading').textContent = 'Sign-in error: ' + e.message;
+      setTimeout(function() { window.location.href = '/login?error=' + encodeURIComponent('Sign-in failed'); }, 2000);
+    });
+})();
 </script>
-<p style="text-align:center;padding:40px;color:#aaa;font-family:system-ui">Signing in with X...</p>
-</body>
-</html>`;
+</body></html>`;
 
-    // Clear OAuth cookies
+    // Clear OAuth cookies (but preserve session cookies for the form POST)
     const response = new NextResponse(html, {
       status: 200,
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
-    response.cookies.delete("twitter-pkce-verifier");
-    response.cookies.delete("twitter-oauth-state");
-    response.cookies.delete("twitter-callback-url");
+    // Set cookies to expire immediately rather than delete
+    // This ensures the form POST still works on the same page
+    response.cookies.set("twitter-pkce-verifier", "", { maxAge: 0, path: "/" });
+    response.cookies.set("twitter-oauth-state", "", { maxAge: 0, path: "/" });
+    response.cookies.set("twitter-callback-url", "", { maxAge: 0, path: "/" });
 
     return response;
   } catch (error) {
