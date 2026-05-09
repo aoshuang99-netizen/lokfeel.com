@@ -255,7 +255,7 @@ export async function POST(
       const hasActiveSub = userWithSub?.subscriptions && userWithSub.subscriptions.length > 0
       const isLadyFree = userWithSub?.subscriptions?.[0]?.plan === 'LADY_FREE'
       const isFemale = userWithSub?.profile?.gender === 'FEMALE'
-      const cardVerified = userWithSub?.cardVerified ?? false
+      const cardVerified = userWithSub?.profile?.cardVerified ?? false
 
       // Skip limit for Lady Free and Premium users
       if (!hasActiveSub && !isFemale) {
