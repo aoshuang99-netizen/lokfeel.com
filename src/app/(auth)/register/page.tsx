@@ -25,54 +25,12 @@ import {
   Lock,
 } from "lucide-react";
 import { signIn } from "next-auth/react";
-import dynamic from "next/dynamic";
 
-// Lazy-load Firebase OAuth buttons to avoid Firebase SDK in initial bundle
-const GoogleButton = dynamic(
-  () => import("@/components/auth/firebase-oauth-button").then((mod) => {
-    return function GoogleWrapped(props: any) {
-      return <mod.default {...props} provider="google" />;
-    };
-  }),
-  {
-    ssr: false,
-    loading: () => (
-      <button type="button" disabled style={{
-        padding: "13px 16px", background: "rgba(26, 26, 26, 0.9)",
-        border: "1px solid rgba(85, 85, 85, 0.3)", borderRadius: "12px",
-        color: "rgba(255,255,255,0.5)", fontSize: "14px", fontWeight: "500",
-        cursor: "not-allowed", display: "flex", alignItems: "center",
-        justifyContent: "center", gap: "8px", width: "100%",
-        fontFamily: "'Outfit', sans-serif",
-      }}>
-        Loading...
-      </button>
-    ),
-  }
-);
+// Use NextAuth Google OAuth redirect flow — most reliable, no JS SDK needed
+import GoogleSignInButton from "@/components/auth/google-sign-in-button";
 
-const XButton = dynamic(
-  () => import("@/components/auth/firebase-oauth-button").then((mod) => {
-    return function XWrapped(props: any) {
-      return <mod.default {...props} provider="twitter" />;
-    };
-  }),
-  {
-    ssr: false,
-    loading: () => (
-      <button type="button" disabled style={{
-        padding: "13px 16px", background: "rgba(26, 26, 26, 0.9)",
-        border: "1px solid rgba(85, 85, 85, 0.3)", borderRadius: "12px",
-        color: "rgba(255,255,255,0.5)", fontSize: "14px", fontWeight: "500",
-        cursor: "not-allowed", display: "flex", alignItems: "center",
-        justifyContent: "center", gap: "8px", width: "100%",
-        fontFamily: "'Outfit', sans-serif",
-      }}>
-        Loading...
-      </button>
-    ),
-  }
-);
+// X (Twitter) — Native OAuth 2.0 + PKCE redirect (bypasses Firebase)
+// Redirects to /api/auth/twitter/signin → Twitter authorize → callback → auto-sign-in
 
 // ─── DATEASY DARK THEME CONSTANTS ───────────────────────────────
 const colors = {
@@ -133,7 +91,7 @@ function clearRegState() {
   try { localStorage.removeItem(REG_STATE_KEY); } catch { /* ignore */ }
 }
 
-// ─── OAuth Providers (X/Twitter uses Firebase; Google uses Firebase too) ───
+// X (Twitter) — Native OAuth 2.0 + PKCE redirect (bypasses Firebase)
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -612,18 +570,41 @@ export default function RegisterPage() {
 
         {/* ─── SOCIAL LOGIN — PROMINENT, ABOVE FORM ─── */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "24px" }}>
-          {/* Google — Firebase-powered */}
-          <GoogleButton
+          {/* Google — GIS (Google Identity Services) with FedCM + account chooser */}
+          <GoogleSignInButton
             callbackUrl="/dashboard/onboarding"
-            onError={(err: string) => setError(err)}
             disabled={isLoading}
+            label="Continue with Google"
           />
-          {/* X (Twitter) — Firebase-powered */}
-          <XButton
-            callbackUrl="/dashboard/onboarding"
-            onError={(err: string) => setError(err)}
+          {/* X (Twitter) — Native OAuth 2.0 + PKCE redirect */}
+          <button
+            type="button"
+            onClick={() => { window.location.href = '/api/auth/twitter/signin?callbackUrl=/dashboard/onboarding'; }}
             disabled={isLoading}
-          />
+            style={{
+              padding: "13px 16px",
+              background: "rgba(26, 26, 26, 0.9)",
+              border: "1px solid rgba(85, 85, 85, 0.3)",
+              borderRadius: "12px",
+              color: isLoading ? "rgba(255,255,255,0.5)" : "#ffffff",
+              fontSize: "14px",
+              fontWeight: "500",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              opacity: isLoading ? 0.5 : 1,
+              transition: "all 0.2s",
+              fontFamily: "'Outfit', sans-serif",
+              width: "100%",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Continue with X
+          </button>
         </div>
 
         {/* Divider */}
