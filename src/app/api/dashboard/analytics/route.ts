@@ -31,14 +31,14 @@ export async function GET(req: Request) {
     // ═══ Matches This Week
     const matchesThisWeek = await prisma.match.count({
       where: {
-        OR: [{ userId1: userId }, { userId2: userId }],
+        OR: [{ senderId: userId }, { receiverId: userId }],
         createdAt: { gte: startDate },
       },
     });
 
     const matchesLastWeek = await prisma.match.count({
       where: {
-        OR: [{ userId1: userId }, { userId2: userId }],
+        OR: [{ senderId: userId }, { receiverId: userId }],
         createdAt: {
           gte: new Date(startDate.getTime() - 7 * 24 * 60 * 60 * 1000),
           lt: startDate,
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 
     const totalMatches = await prisma.match.count({
       where: {
-        OR: [{ userId1: userId }, { userId2: userId }],
+        OR: [{ senderId: userId }, { receiverId: userId }],
       },
     });
 
@@ -102,17 +102,19 @@ export async function GET(req: Request) {
     // ═══ Match Quality Distribution
     const allMatches = await prisma.match.findMany({
       where: {
-        OR: [{ userId1: userId }, { userId2: userId }],
+        OR: [{ senderId: userId }, { receiverId: userId }],
       },
       include: {
-        profile1: true,
-        profile2: true,
+        sender: { include: { profile: true } },
+        receiver: { include: { profile: true } },
       },
     });
 
     const matchScores = allMatches.map((m) => {
-      const otherProfile = m.userId1 === userId ? m.profile2 : m.profile1;
-      return calculateMatchScore(profile, otherProfile);
+      const otherProfile = m.senderId === userId
+        ? m.receiver?.profile
+        : m.sender?.profile;
+      return otherProfile ? calculateMatchScore(profile, otherProfile) : m.matchScore;
     });
 
     const distribution = [
@@ -138,7 +140,7 @@ export async function GET(req: Request) {
         return Promise.all([
           prisma.match.count({
             where: {
-              OR: [{ userId1: userId }, { userId2: userId }],
+              OR: [{ senderId: userId }, { receiverId: userId }],
               createdAt: { gte: dayStart, lte: dayEnd },
             },
           }),
