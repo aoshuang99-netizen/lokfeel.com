@@ -75,20 +75,20 @@ export async function GET(req: Request) {
     // ═══ Unread Messages
     const unreadMessages = await prisma.message.count({
       where: {
-        chatRoom: {
-          participants: {
+        room: {
+          members: {
             some: { userId },
           },
         },
         senderId: { not: userId },
-        readAt: null,
+        isRead: false,
       },
     });
 
     const messagesThisWeek = await prisma.message.count({
       where: {
-        chatRoom: {
-          participants: {
+        room: {
+          members: {
             some: { userId },
           },
         },
