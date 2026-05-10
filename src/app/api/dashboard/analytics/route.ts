@@ -19,8 +19,6 @@ export async function GET(req: Request) {
     const daysAgo = range === "7d" ? 7 : range === "30d" ? 30 : 90;
     const startDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
 
-    const userId = session.user.id;
-
     // Get current user's profile
     const profile = await prisma.profile.findUnique({
       where: { userId },
