@@ -621,7 +621,6 @@ export default function RegisterPage() {
             callbackUrl="/dashboard/onboarding"
             disabled={isLoading}
             label="Continue with Google"
-            fullWidth
           />
           {/* X (Twitter) — Native OAuth 2.0 + PKCE redirect */}
           <button

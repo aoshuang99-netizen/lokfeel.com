@@ -170,7 +170,6 @@ export default function LoginInnerClient({
             callbackUrl={callbackUrl}
             disabled={isLoading}
             label="Continue with Google"
-            fullWidth
           />
 
           {/* X (Twitter) — Native OAuth 2.0 + PKCE */}

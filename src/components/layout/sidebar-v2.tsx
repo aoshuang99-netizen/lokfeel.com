@@ -182,7 +182,16 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
         </Link>
 
         {/* Invite Button */}
-        <InviteButton collapsed={collapsed} onClick={() => setInviteOpen(true)} />
+        <button
+          onClick={() => setInviteOpen(true)}
+          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            collapsed ? "justify-center" : ""
+          } text-foreground-muted hover:text-foreground hover:bg-white/5`}
+          title="Invite Friends"
+        >
+          <Gift className="w-5 h-5" />
+          {!collapsed && <span>Invite Friends</span>}
+        </button>
       </nav>
 
       {/* 底部操作区 — 升级Premium（头像折叠已移到顶部 Logo 区域） */}
