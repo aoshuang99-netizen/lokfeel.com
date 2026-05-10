@@ -52,11 +52,11 @@ export async function GET(req: Request) {
       },
     });
 
-    // ═══ Profile Views (from bot interaction logs or notifications)
+    // ═══ Profile Views (approximate from NEW_MATCH notifications)
     const profileViews = await prisma.notification.count({
       where: {
         userId,
-        type: "PROFILE_VIEW",
+        type: "NEW_MATCH",
         createdAt: { gte: startDate },
       },
     });
@@ -64,7 +64,7 @@ export async function GET(req: Request) {
     const profileViewsLastWeek = await prisma.notification.count({
       where: {
         userId,
-        type: "PROFILE_VIEW",
+        type: "NEW_MATCH",
         createdAt: {
           gte: new Date(startDate.getTime() - 7 * 24 * 60 * 60 * 1000),
           lt: startDate,
