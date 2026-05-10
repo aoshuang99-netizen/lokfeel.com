@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import QuickSignupModal from "@/components/auth/quick-signup-modal";
 import QuickLoginModal from "@/components/auth/quick-login-modal";
+import Footer from "@/components/layout/footer";
 
 /**
  * LANDING PAGE — Cool Blue V2
@@ -425,19 +426,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FOOTER ────────────────────────────────── */}
-      <footer
-        className="px-6 sm:px-12 py-8 text-center text-[13px] text-white/40"
-        style={{ background: "rgba(8,8,20,0.95)" }}
-      >
-        <div className="max-w-[1100px] mx-auto flex flex-col sm:flex-row justify-between gap-4 items-center">
-          <p>&copy; 2026 LokFee!. Real Matches. Real Connection. No Swiping.</p>
-          <div className="flex gap-6">
-            <a href="/privacy" className="text-white/40 hover:text-white/70 text-[13px] no-underline transition-colors">Privacy</a>
-            <a href="/terms" className="text-white/40 hover:text-white/70 text-[13px] no-underline transition-colors">Terms</a>
-            <a href="/cookies" className="text-white/40 hover:text-white/70 text-[13px] no-underline transition-colors">Cookies</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Modals */}
       <QuickSignupModal
