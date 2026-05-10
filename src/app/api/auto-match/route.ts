@@ -250,7 +250,7 @@ async function createMatchesForBots(
         const welcomeMessages = [
           "Hey! I noticed we matched - your profile caught my eye!",
           "Hi there! Great to connect with you! How's your day going?",
-          "Hey! I love that we matched! What brought you to LokFeel?",
+          "Hey! I love that we matched! What brought you to LokFee!?",
           "Hello! Great to meet you! We seem to have a lot in common!",
           "Hi! Nice to match with you! What's your idea of a perfect weekend?",
         ];

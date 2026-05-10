@@ -15,7 +15,7 @@ export default function DashboardFooter() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <p className="text-foreground-subtle text-xs">
-              &copy; {new Date().getFullYear()} LokFeel Inc.
+              &copy; {new Date().getFullYear()} LokFee! Inc.
             </p>
             <span className="text-foreground-faint">·</span>
             <p className="text-foreground-subtle text-xs">

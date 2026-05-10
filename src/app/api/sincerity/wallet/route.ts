@@ -161,7 +161,7 @@ async function getEarningTasks(userId: string) {
     {
       id: 'invite_friend',
       title: 'Invite a Friend',
-      description: 'Share LokFeel with someone',
+      description: 'Share LokFee! with someone',
       points: 100,
       completed: false,
       action: '/invite',

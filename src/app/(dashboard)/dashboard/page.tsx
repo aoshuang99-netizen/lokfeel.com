@@ -600,7 +600,7 @@ export default function DashboardPage() {
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-xl font-bold text-foreground mb-1 font-display">
-                Welcome to LokFeel
+                Welcome to LokFee!
               </h2>
               <p className="text-sm text-foreground-muted">
                 Complete the steps below to unlock all features

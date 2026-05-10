@@ -11,8 +11,8 @@ interface ShareButtonProps {
 }
 
 const defaultShareData = {
-  title: "LokFeel - Meaningful Connections",
-  description: "I just joined LokFeel! Check it out!",
+  title: "LokFee! - Meaningful Connections",
+  description: "I just joined LokFee!! Check it out!",
 };
 
 export default function ShareButton({
@@ -77,7 +77,7 @@ export default function ShareButton({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="glass-card p-6 w-full max-w-md animate-slide-up">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-foreground">Share LokFeel</h3>
+              <h3 className="text-xl font-bold text-foreground">Share LokFee!</h3>
               <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-background-tertiary rounded-full">
                 <X className="w-5 h-5 text-foreground-muted" />
               </button>

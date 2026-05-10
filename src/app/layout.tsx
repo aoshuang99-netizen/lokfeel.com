@@ -5,11 +5,11 @@ import AuthProvider from "@/components/providers/auth-provider";
 export const metadata: Metadata = {
   metadataBase: new URL("https://lokfeel.com"),
   title: {
-    default: "LokFeel — Real Matches. Real Connection.",
-    template: "%s | LokFeel",
+    default: "LokFee! — Real Matches. Real Connection.",
+    template: "%s | LokFee!",
   },
   description:
-    "LokFeel is a relationship structure matching engine built for depth, not swiping. Get 5 AI-curated matches per week with explanations of why you connect. Safe, private, and designed for meaningful relationships.",
+    "LokFee! is a relationship structure matching engine built for depth, not swiping. Get 5 AI-curated matches per week with explanations of why you connect. Safe, private, and designed for meaningful relationships.",
   keywords: [
     "dating app",
     "relationship matching",
@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     "deep connection",
     "intentional dating",
     "relationship structure",
+    "lokfee",
     "lokfeel",
     "alternative dating",
     "kink-friendly dating",
@@ -24,21 +25,21 @@ export const metadata: Metadata = {
     "meaningful relationships",
     "curated matches",
   ],
-  authors: [{ name: "LokFeel Team" }],
-  creator: "LokFeel",
-  publisher: "LokFeel",
+  authors: [{ name: "LokFee! Team" }],
+  creator: "LokFee!",
+  publisher: "LokFee!",
   openGraph: {
-    title: "LokFeel — Real Matches. Real Connection.",
+    title: "LokFee! — Real Matches. Real Connection.",
     description:
       "Relationship structure matching engine built for depth, not swiping. 5 AI-curated matches per week.",
     url: "https://lokfeel.com",
-    siteName: "LokFeel",
+    siteName: "LokFee!",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LokFeel — Real Matches. Real Connection.",
+    title: "LokFee! — Real Matches. Real Connection.",
     description:
       "Relationship structure matching engine built for depth, not swiping.",
     creator: "@lokfeel",

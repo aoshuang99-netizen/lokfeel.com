@@ -86,7 +86,7 @@ export function LokFeelLogo({
       {showText && (
         <span className={`font-bold tracking-tight ${text}`}>
           <span className="bg-gradient-to-r from-purple-400 via-violet-500 to-lime-400 bg-clip-text text-transparent">
-            LokFeel
+            LokFee!
           </span>
         </span>
       )}
@@ -102,7 +102,7 @@ export function LokFeelWordmark({ className = '' }: { className?: string }) {
   return (
     <span className={`font-bold tracking-tight ${className}`}>
       <span className="text-purple-400">Lok</span>
-      <span className="text-lime-400">Feel</span>
+      <span className="text-lime-400">Fee!</span>
     </span>
   )
 }

@@ -65,7 +65,7 @@ async function getOrCreatePortalConfig(stripe: Stripe): Promise<string> {
     // Create new configuration
     const config = await stripe.billingPortal.configurations.create({
       business_profile: {
-        headline: "LokFeel Premium — Manage your subscription",
+        headline: "LokFee! Premium — Manage your subscription",
         privacy_policy_url: `${appUrl}/privacy`,
         terms_of_service_url: `${appUrl}/terms`,
       },

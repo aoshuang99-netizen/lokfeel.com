@@ -65,12 +65,12 @@ export function InvitePanel({ isOpen, onClose }: InvitePanelProps) {
     if (!data?.inviteCode) return;
     
     const inviteUrl = `${window.location.origin}/register?ref=${data.inviteCode}`;
-    const shareText = `Join me on LokFeel - a relationship-first dating app! Use my code: ${data.inviteCode}`;
+    const shareText = `Join me on LokFee! - a relationship-first dating app! Use my code: ${data.inviteCode}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join LokFeel",
+          title: "Join LokFee!",
           text: shareText,
           url: inviteUrl,
         });

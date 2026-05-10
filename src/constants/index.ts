@@ -3,8 +3,8 @@
 // ============================================================================
 
 export const APP_CONFIG = {
-  name: 'LokFeel',
-  company: 'LokFeel Inc.',
+  name: 'LokFee!',
+  company: 'LokFee! Inc.',
   tagline: 'Relationship Structure Matching',
   description: 'Find meaningful connections based on relationship compatibility',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
@@ -228,7 +228,7 @@ export const NOTIFICATION_TYPES = {
   },
   SYSTEM: {
     id: 'SYSTEM',
-    title: 'LokFeel Update',
+    title: 'LokFee! Update',
     priority: 'low',
     push: false,
     email: false,

@@ -26,7 +26,7 @@ export function ScreenshotWarning({ isOpen, onClose, onReport }: ScreenshotWarni
 
         <div className="space-y-3 mb-6">
           <p className="text-foreground">
-            Screenshots are not allowed on LokFeel to protect our community&apos;s privacy.
+            Screenshots are not allowed on LokFee! to protect our community&apos;s privacy.
           </p>
           <div className="p-3 rounded-lg bg-background-tertiary border border-card-border">
             <p className="text-sm text-foreground-muted">

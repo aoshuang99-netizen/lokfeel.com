@@ -176,7 +176,7 @@ function getTaskDescription(source: string): string {
     'FIRST_MATCH': 'Received first match',
     'MATCH_ACCEPTED': 'Match accepted by someone',
     'SEND_PITCH': 'Sent a pitch message',
-    'INVITE_FRIEND': 'Invited a friend to LokFeel',
+    'INVITE_FRIEND': 'Invited a friend to LokFee!',
     'CHAT_RATING_GOOD': 'Received positive chat rating',
     'LINKEDIN_VERIFIED': 'LinkedIn profile verified',
   };

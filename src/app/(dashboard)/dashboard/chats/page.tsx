@@ -15,7 +15,7 @@ export default function ChatPage() {
           <MessageCircle className="w-10 h-10 text-primary/60" />
         </div>
         <h3 className="text-xl font-semibold text-foreground mb-2">
-          LokFeel Messages
+          LokFee! Messages
         </h3>
         <p className="text-foreground-muted text-sm mb-6 max-w-xs mx-auto">
           Select a conversation from the list to start chatting, or browse your matches to find new connections.

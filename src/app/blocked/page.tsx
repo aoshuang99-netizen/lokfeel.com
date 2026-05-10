@@ -31,7 +31,7 @@ export default function BlockedPage() {
 
         {/* 说明 */}
         <p className="text-foreground-muted leading-relaxed">
-          We&apos;re sorry, but LokFeel is currently not available in your region.
+          We&apos;re sorry, but LokFee! is currently not available in your region.
           Our service is designed for specific markets and is not accessible from your location.
         </p>
 

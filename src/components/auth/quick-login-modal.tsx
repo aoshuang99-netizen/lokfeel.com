@@ -85,7 +85,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-500 flex items-center justify-center">
                 <Heart className="w-4 h-4 text-white" fill="white" />
               </div>
-              <span className="text-lg font-bold text-gradient">LokFeel</span>
+              <span className="text-lg font-bold text-gradient">LokFee!</span>
             </div>
 
             <h2 className="text-xl font-bold text-foreground mb-1 font-display text-center">Welcome Back</h2>

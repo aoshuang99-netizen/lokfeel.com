@@ -9,7 +9,7 @@ import Footer from "@/components/layout/footer";
 /**
  * LANDING PAGE — Cool Blue V2
  * Video background + responsive loading + seamless nav
- * Design: LokFeel V2 "Cool Blue" system
+ * Design: LokFee! V2 "Cool Blue" system
  */
 
 // ─── VIDEO BACKGROUND COMPONENT ───────────────────────────────
@@ -149,7 +149,7 @@ const stories = [
   },
   {
     names: "David & Chen",
-    quote: "Long distance. LokFeel brought us together.",
+    quote: "Long distance. LokFee! brought us together.",
     meta: "✓ Engaged 2025",
     img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=300&fit=crop",
   },
@@ -282,7 +282,7 @@ export default function LandingPage() {
               Real Couples, Real Love
             </h3>
             <h2 className="text-[clamp(24px,4vw,36px)] font-bold">
-              They Found Each Other on LokFeel
+              They Found Each Other on LokFee!
             </h2>
           </div>
 

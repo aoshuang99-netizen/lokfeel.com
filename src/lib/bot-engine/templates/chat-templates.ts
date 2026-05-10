@@ -17,7 +17,7 @@ export const GREETING_TEMPLATES = {
   casual: [
     'Hey there! 👋 How\'s your day going?',
     'Hi! I saw we matched — thought I\'d say hello.',
-    'Hey, nice to connect with you! What brings you to LokFeel?',
+    'Hey, nice to connect with you! What brings you to LokFee??',
     'Hello! 😊 I liked your profile. How are you?',
     'Hi there! Hope you\'re having a great day.',
     'Hey! I thought our match was interesting. Want to chat?',

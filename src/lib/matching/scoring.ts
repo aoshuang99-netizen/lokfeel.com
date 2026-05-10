@@ -514,7 +514,7 @@ export function generateMatchExplanation(
   
   // Add generic starters if needed
   if (conversationStarters.length < 2) {
-    conversationStarters.push('What brought you to LokFeel?')
+    conversationStarters.push('What brought you to LokFee!?')
     conversationStarters.push('What are you most passionate about right now?')
   }
   

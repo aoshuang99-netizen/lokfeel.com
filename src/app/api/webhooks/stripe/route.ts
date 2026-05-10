@@ -130,7 +130,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       amount: (session.amount_total || 0) / 100,
       currency: session.currency || "usd",
       status: "SUCCEEDED",
-      description: `LokFeel ${effectivePlan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium`,
+      description: `LokFee! ${effectivePlan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium`,
     },
   });
 
@@ -140,7 +140,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       userId,
       type: "SYSTEM_ANNOUNCEMENT",
       title: "Premium Activated! 🎉",
-      body: `Your LokFeel ${effectivePlan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium is now active. Enjoy unlimited matching!`,
+      body: `Your LokFee! ${effectivePlan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium is now active. Enjoy unlimited matching!`,
       data: JSON.stringify({ plan: effectivePlan }),
     },
   });
@@ -246,7 +246,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
       amount: (invoice.amount_paid || 0) / 100,
       currency: invoice.currency || "usd",
       status: "SUCCEEDED",
-      description: `LokFeel ${userSubscription.plan} renewal`,
+      description: `LokFee! ${userSubscription.plan} renewal`,
     },
   });
 
@@ -275,7 +275,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       amount: (invoice.amount_due || 0) / 100,
       currency: invoice.currency || "usd",
       status: "FAILED",
-      description: `LokFeel ${userSubscription.plan} payment failed`,
+      description: `LokFee! ${userSubscription.plan} payment failed`,
     },
   });
 

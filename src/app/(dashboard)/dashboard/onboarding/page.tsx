@@ -833,7 +833,7 @@ function OnboardingV3Page() {
                     <Sparkles className="w-8 h-8 text-foreground" />
                   </motion.div>
                   <h1 className="text-2xl font-bold mb-2">
-                    Welcome to <span className="text-primary">LokFeel</span>
+                    Welcome to <span className="text-primary">LokFee!</span>
                   </h1>
                   <p className="text-sm text-foreground-muted">
                     A few basics to get you started

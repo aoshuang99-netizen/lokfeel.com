@@ -16,14 +16,14 @@ const checkoutSchema = z.object({
 // ═══ Plan Config ════════════════════════════════════════
 const PLAN_CONFIG = {
   PREMIUM_MONTHLY: {
-    name: "LokFeel Premium Monthly",
+    name: "LokFee! Premium Monthly",
     description: "Full power for serious seekers — monthly billing",
     amount: 1999, // $19.99
     currency: "USD",
     interval: "month" as const,
   },
   PREMIUM_YEARLY: {
-    name: "LokFeel Premium Yearly",
+    name: "LokFee! Premium Yearly",
     description: "Full power for serious seekers — yearly billing (save 37%)",
     amount: 14999, // $149.99/year
     currency: "USD",
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
           amount: planConfig.amount / 100, // Convert cents to dollars
           currency: planConfig.currency,
           status: "PENDING",
-          description: `LokFeel Premium - ${planConfig.name}`,
+          description: `LokFee! Premium - ${planConfig.name}`,
           metadata: JSON.stringify({
             provider: "pingpong",
             merchantTransactionId,

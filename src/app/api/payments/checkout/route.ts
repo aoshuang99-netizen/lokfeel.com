@@ -15,14 +15,14 @@ const checkoutSchema = z.object({
 // ═══ Plan Config ═══════════════════════════════════════════════
 const PLAN_CONFIG = {
   PREMIUM_MONTHLY: {
-    name: "LokFeel Premium Monthly",
+    name: "LokFee! Premium Monthly",
     description: "Full power for serious seekers — monthly billing",
     amount: 1999, // $19.99
     interval: "month" as const,
     perks: { weeklyLimit: 5, canInitiateChat: true, canViewFullProfile: true },
   },
   PREMIUM_YEARLY: {
-    name: "LokFeel Premium Yearly",
+    name: "LokFee! Premium Yearly",
     description: "Full power for serious seekers — yearly billing (save 37%)",
     amount: 14999, // $149.99/year = $12.50/month
     interval: "year" as const,

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Shield, Lock, Eye, Users, Trash2, Mail, Globe, Scale } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - LokFeel",
-  description: "Learn how LokFeel protects your data and privacy while helping you find meaningful connections.",
+  title: "Privacy Policy - LokFee!",
+  description: "Learn how LokFee! protects your data and privacy while helping you find meaningful connections.",
 };
 
 export default function PrivacyPage() {
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Introduction</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              LokFeel ("we," "our," or "us") is operated by <strong>LokFeel Inc.</strong>, a company registered in the State of Delaware, USA. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
+              LokFee! ("we," "our," or "us") is operated by <strong>LokFee! Inc.</strong>, a company registered in the State of Delaware, USA. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
             </p>
             <p className="text-foreground leading-relaxed">
               We&apos;re committed to transparency and giving you control over your data. Dating apps shouldn&apos;t require you to sacrifice your privacy to find meaningful connections.
@@ -282,7 +282,7 @@ export default function PrivacyPage() {
               <p><strong>General Inquiries:</strong> <a href="mailto:hello@lokfeel.com" className="text-primary hover:underline">hello@lokfeel.com</a></p>
               <p><strong>Support:</strong> <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">support@lokfeel.com</a></p>
               <p className="text-foreground-muted text-sm mt-4">
-                LokFeel Inc.<br />
+                LokFee! Inc.<br />
                 Wilmington, Delaware, USA
               </p>
             </div>

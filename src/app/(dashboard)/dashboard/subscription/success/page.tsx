@@ -61,7 +61,7 @@ export default function SubscriptionSuccessPage() {
             </div>
 
             <p className="text-foreground-muted mb-8">
-              Your LokFeel Premium is now active. You have full access to all features — unlimited messages, 
+              Your LokFee! Premium is now active. You have full access to all features — unlimited messages, 
               priority matching, travel mode, and more.
             </p>
 

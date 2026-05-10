@@ -101,7 +101,7 @@ function AutoLoginContent() {
             </div>
           </div>
           <span className="text-2xl font-bold bg-gradient-to-r from-pink-400 via-orange-400 to-amber-400 bg-clip-text text-transparent">
-            LokFeel
+            LokFee!
           </span>
         </div>
 

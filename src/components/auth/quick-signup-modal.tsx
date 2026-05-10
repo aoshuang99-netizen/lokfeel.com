@@ -216,7 +216,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-500 flex items-center justify-center">
                 <Heart className="w-4 h-4 text-white" fill="white" />
               </div>
-              <span className="text-lg font-bold text-gradient">LokFeel</span>
+              <span className="text-lg font-bold text-gradient">LokFee!</span>
             </div>
 
             {/* Tab Switcher */}
@@ -484,7 +484,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
                     <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center mx-auto mb-4">
                       <Check className="w-8 h-8 text-white" />
                     </div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Welcome to LokFeel!</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Welcome to LokFee!!</h2>
                     <p className="text-sm text-foreground-muted">Redirecting you to dashboard...</p>
                   </motion.div>
                 )}

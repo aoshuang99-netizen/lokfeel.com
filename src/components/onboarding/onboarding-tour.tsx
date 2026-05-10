@@ -11,7 +11,7 @@ const TOUR_STEPS = [
     id: 1,
     icon: Radar,
     title: "Your Relationship Blueprint",
-    description: "Tell LokFeel your relationship style for more precise matching",
+    description: "Tell LokFee! your relationship style for more precise matching",
     targetSelector: "[data-tour='relationship-engine']",
     tooltipPosition: "right" as const,
     color: "from-[#4c1d95] to-[#8b5cf6]",

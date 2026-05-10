@@ -116,7 +116,7 @@ export default function AdminSidebar() {
             </div>
             {!isCollapsed && (
               <div className="flex flex-col">
-                <span className="text-[15px] font-bold tracking-tight leading-tight">LokFeel</span>
+                <span className="text-[15px] font-bold tracking-tight leading-tight">LokFee!</span>
                 <span className="text-[10px] text-foreground-subtle leading-tight font-medium tracking-wide">ADMIN PANEL</span>
               </div>
             )}
@@ -264,7 +264,7 @@ export default function AdminSidebar() {
               <Shield className="w-4.5 h-4.5 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[15px] font-bold tracking-tight leading-tight">LokFeel</span>
+              <span className="text-[15px] font-bold tracking-tight leading-tight">LokFee!</span>
               <span className="text-[10px] text-foreground-subtle leading-tight font-medium tracking-wide">ADMIN PANEL</span>
             </div>
           </div>

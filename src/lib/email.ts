@@ -44,7 +44,7 @@ async function sendEmailWithResend(
           'Authorization': `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: `"LokFeel" <${FROM_EMAIL}>`,
+          from: `"LokFee!" <${FROM_EMAIL}>`,
           to: [to],
           subject,
           html,
@@ -71,7 +71,7 @@ async function sendEmailWithResend(
   if (transporter) {
     try {
       await transporter.sendMail({
-        from: `"LokFeel" <${FROM_EMAIL}>`,
+        from: `"LokFee!" <${FROM_EMAIL}>`,
         to,
         subject,
         html,
@@ -118,7 +118,7 @@ export async function sendVerificationEmail(
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Verify Your Email - LokFeel</title>
+<title>Verify Your Email - LokFee!</title>
 </head>
 <body style="margin:0; padding:0; background-color:#0d0c11;">
 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#0d0c11;">
@@ -130,8 +130,8 @@ export async function sendVerificationEmail(
         <tr>
           <td align="center" style="padding-bottom:30px;">
             <!-- Heart Icon PNG -->
-            <img src="https://app.lokfeel.com/logo-icon.png" width="48" height="48" alt="LokFeel" style="display:block; margin:0 auto 12px; border:0;" />
-            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:28px; font-weight:700; color:#a3e635; text-align:center;">LokFeel</div>
+            <img src="https://app.lokfeel.com/logo-icon.png" width="48" height="48" alt="LokFee!" style="display:block; margin:0 auto 12px; border:0;" />
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:28px; font-weight:700; color:#a3e635; text-align:center;">LokFee!</div>
           </td>
         </tr>
       </table>
@@ -143,7 +143,7 @@ export async function sendVerificationEmail(
             
             <!-- Title -->
             <h1 style="margin:0 0 20px; font-size:24px; font-weight:600; color:#ffffff; line-height:1.3; text-align:center;">
-              Welcome to LokFeel${name ? ', ' + name : ''}!
+              Welcome to LokFee!${name ? ', ' + name : ''}!
             </h1>
             
             <!-- Description -->
@@ -187,7 +187,7 @@ export async function sendVerificationEmail(
             
             <!-- Ignore Note -->
             <p style="margin:16px 0 0; font-size:13px; color:#666666; text-align:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-              If you didn't create an account with LokFeel, you can safely ignore this email.
+              If you didn't create an account with LokFee!, you can safely ignore this email.
             </p>
             
           </td>
@@ -198,7 +198,7 @@ export async function sendVerificationEmail(
       <table border="0" cellpadding="0" cellspacing="0" width="480" style="max-width:480px; width:100%; margin-top:30px;">
         <tr>
           <td align="center" style="font-size:12px; color:#666666; line-height:1.6; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-            <p style="margin:0 0 4px;">LokFeel Inc. • hello@lokfeel.com</p>
+            <p style="margin:0 0 4px;">LokFee! Inc. • hello@lokfeel.com</p>
             <p style="margin:0;">Building deeper connections through relationship structure matching.</p>
           </td>
         </tr>
@@ -212,9 +212,9 @@ export async function sendVerificationEmail(
 
   const result = await sendEmailWithResend(
     email,
-    'Verify your email - LokFeel',
+    'Verify your email - LokFee!',
     htmlContent,
-    `Welcome to LokFeel! ${magicLink ? `Click to verify: ${magicLink} ` : ''}Your verification code is: ${code}. This code will expire in 10 minutes.`
+    `Welcome to LokFee!! ${magicLink ? `Click to verify: ${magicLink} ` : ''}Your verification code is: ${code}. This code will expire in 10 minutes.`
   );
 
   // Return actual result - let caller decide how to handle failure
@@ -249,7 +249,7 @@ export async function sendSMSVerification(
           body: new URLSearchParams({
             To: phone,
             From: fromNumber,
-            Body: `LokFeel verification code: ${code}. Valid for 10 minutes. Don't share this code.`,
+            Body: `LokFee! verification code: ${code}. Valid for 10 minutes. Don't share this code.`,
           }),
         }
       )
@@ -293,7 +293,7 @@ export async function sendWelcomeEmail(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>Welcome to LokFeel</title>
+<title>Welcome to LokFee!</title>
 </head>
 <body style="margin:0; padding:40px 20px; background:#0d0c11; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; text-align:center;">
   
@@ -301,7 +301,7 @@ export async function sendWelcomeEmail(
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-bottom:30px;">
     <tr>
       <td style="text-align:center;">
-        <div style="font-size:28px; font-weight:700; color:#a3e635;">LokFeel</div>
+        <div style="font-size:28px; font-weight:700; color:#a3e635;">LokFee!</div>
       </td>
     </tr>
   </table>
@@ -312,7 +312,7 @@ export async function sendWelcomeEmail(
       <td style="padding:40px 32px; text-align:center;">
         
         <h1 style="margin:0 0 20px; font-size:24px; font-weight:600; color:#ffffff; line-height:1.3;">
-          Welcome to LokFeel${name ? `, ${name}` : ''}!
+          Welcome to LokFee!${name ? `, ${name}` : ''}!
         </h1>
         
         <p style="margin:0 0 16px; font-size:16px; color:rgba(255,255,255,0.8); line-height:1.6;">
@@ -340,7 +340,7 @@ export async function sendWelcomeEmail(
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-top:30px;">
     <tr>
       <td style="text-align:center; font-size:12px; color:rgba(255,255,255,0.4);">
-        <p style="margin:0;">LokFeel Inc. • hello@lokfeel.com</p>
+        <p style="margin:0;">LokFee! Inc. • hello@lokfeel.com</p>
       </td>
     </tr>
   </table>
@@ -351,9 +351,9 @@ export async function sendWelcomeEmail(
 
   return sendEmailWithResend(
     email,
-    'Welcome to LokFeel - Start Your Journey',
+    'Welcome to LokFee! - Start Your Journey',
     htmlContent,
-    `Welcome to LokFeel! Your email has been verified. Complete your profile to start receiving matches: ${appUrl}/onboarding`
+    `Welcome to LokFee!! Your email has been verified. Complete your profile to start receiving matches: ${appUrl}/onboarding`
   );
 }
 
@@ -370,14 +370,14 @@ export async function sendPasswordResetEmail(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reset Your Password - LokFeel</title>
+<title>Reset Your Password - LokFee!</title>
 </head>
 <body style="margin:0; padding:40px 20px; background-color:#0a0a0a; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; text-align:center;">
 
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-bottom:30px;">
     <tr>
       <td style="text-align:center;">
-        <div style="font-size:28px; font-weight:700; color:#a3e635;">LokFeel</div>
+        <div style="font-size:28px; font-weight:700; color:#a3e635;">LokFee!</div>
       </td>
     </tr>
   </table>
@@ -391,7 +391,7 @@ export async function sendPasswordResetEmail(
         </h1>
 
         <p style="margin:0 0 28px; font-size:16px; color:rgba(255,255,255,0.65); line-height:1.6;">
-          We received a request to reset the password for your LokFeel account${name ? `, ${name}` : ''}. Click the button below to create a new password.
+          We received a request to reset the password for your LokFee! account${name ? `, ${name}` : ''}. Click the button below to create a new password.
         </p>
 
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 0 28px;">
@@ -424,7 +424,7 @@ export async function sendPasswordResetEmail(
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin-top:30px;">
     <tr>
       <td style="text-align:center; font-size:12px; color:rgba(255,255,255,0.35);">
-        <p style="margin:0;">LokFeel Inc. &bull; noreply@lokfeel.com</p>
+        <p style="margin:0;">LokFee! Inc. &bull; noreply@lokfeel.com</p>
       </td>
     </tr>
   </table>
@@ -434,8 +434,8 @@ export async function sendPasswordResetEmail(
 
   return sendEmailWithResend(
     email,
-    'Reset your password - LokFeel',
+    'Reset your password - LokFee!',
     htmlContent,
-    `Reset your LokFeel password by clicking this link: ${resetUrl}. This link expires in 30 minutes. If you didn't request this, ignore this email.`
+    `Reset your LokFee! password by clicking this link: ${resetUrl}. This link expires in 30 minutes. If you didn't request this, ignore this email.`
   );
 }

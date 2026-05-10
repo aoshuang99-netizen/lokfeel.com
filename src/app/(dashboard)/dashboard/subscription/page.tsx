@@ -277,7 +277,7 @@ export default function SubscriptionPage() {
               description={
                 isLadyFreeUser
                   ? "Your Lady Free plan is free forever! We just need to verify your identity with a card — no charges, ever."
-                  : "Verify your card to keep using LokFeel after your free matches. Identity verification only — no charges."
+                  : "Verify your card to keep using LokFee! after your free matches. Identity verification only — no charges."
               }
             />
           </div>

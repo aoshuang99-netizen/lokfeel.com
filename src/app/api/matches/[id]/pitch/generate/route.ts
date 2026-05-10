@@ -318,7 +318,7 @@ function getFallbackOptions(): Array<{ text: string; style: string }> {
       style: 'curious'
     },
     {
-      text: "Hello! I read your profile and really appreciated your perspective on relationships. What made you decide to try LokFeel?",
+      text: "Hello! I read your profile and really appreciated your perspective on relationships. What made you decide to try LokFee!?",
       style: 'thoughtful'
     }
   ];

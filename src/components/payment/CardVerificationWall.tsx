@@ -18,7 +18,7 @@ export function CardVerificationWall({
   onSuccess,
   variant = "modal",
   title = "Verify Your Identity",
-  description = "Add a credit card to continue using LokFeel. This is for identity verification only — you will NOT be charged.",
+  description = "Add a credit card to continue using LokFee!. This is for identity verification only — you will NOT be charged.",
 }: CardVerificationWallProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
