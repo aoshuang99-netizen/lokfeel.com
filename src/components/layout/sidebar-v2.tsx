@@ -91,7 +91,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
               LokFee!
             </motion.span>
           )}
-        </AnimatePrescence>
+        </AnimatePresence>
       </div>
 
       {/* 主导航 */}
@@ -130,7 +130,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
                 )}
               </div>
 
-              <AnimatePrescence>
+              <AnimatePresence>
                 {!collapsed && (
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
@@ -147,7 +147,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
                     )}
                   </motion.div>
                 )}
-              </AnimatePrescence>
+              </AnimatePresence>
             </Link>
           );
         })}
@@ -167,7 +167,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
           <div className="relative p-2 rounded-lg">
             <Settings className="w-4 h-4" />
           </div>
-          <AnimatePrescence>
+          <AnimatePresence>
             {!collapsed && (
               <motion.span
                 initial={{ opacity: 0, x: -10 }}
@@ -178,7 +178,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
                 Settings
               </motion.span>
             )}
-          </AnimatePrescence>
+          </AnimatePresence>
         </Link>
 
         {/* Invite Button */}
@@ -195,7 +195,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
           }`}
         >
           <Sparkles className="w-4 h-4 text-blue-400" />
-          <AnimatePrescence>
+          <AnimatePresence>
             {!collapsed && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
@@ -207,7 +207,7 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
                 <p className="text-xs text-foreground-muted">Unlock all features</p>
               </motion.div>
             )}
-          </AnimatePrescence>
+          </AnimatePresence>
         </Link>
       </div>
 
