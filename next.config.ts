@@ -17,6 +17,7 @@ const CSP_VALUE = [
 const nextConfig: NextConfig = {
   // Turbopack config (Next.js 16 default bundler)
   turbopack: {
+    root: __dirname,
     resolveAlias: {
       '@': path.resolve(__dirname, './src'),
     },
