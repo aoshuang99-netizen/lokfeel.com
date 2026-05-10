@@ -119,20 +119,6 @@ const CORE_TRAITS = {
   ],
 };
 
-// ══════════════════════════════════════
-// CARTOON AVATARS
-// ══════════════════════════════════════
-
-const CARTOON_AVATARS = [
-  { id: "cute-cat", emoji: "🐱", color: "#FFB6C1" },
-  { id: "dreamy-bunny", emoji: "🐰", color: "#DDA0DD" },
-  { id: "star-gazer", emoji: "⭐", color: "#87CEEB" },
-  { id: "moon-child", emoji: "🌙", color: "#E6E6FA" },
-  { id: "sunny-flower", emoji: "🌸", color: "#FFDAB9" },
-  { id: "ocean-wave", emoji: "🌊", color: "#B0E0E6" },
-  { id: "forest-fairy", emoji: "🧚", color: "#90EE90" },
-  { id: "fire-spark", emoji: "🔥", color: "#FFA07A" },
-];
 
 // ══════════════════════════════════════
 // SIMPLIFIED STEPS (4 Steps + Result)
@@ -378,8 +364,7 @@ function OnboardingV3Page() {
     loveLanguage: "" as string,
     // Step 4: Photo
     avatarUrl: "" as string | null,
-    avatarType: "" as "photo" | "cartoon",
-    selectedCartoonId: "" as string,
+    isAvatarSet: false as boolean,
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -420,10 +405,7 @@ function OnboardingV3Page() {
       }
       // Step 4: Photo
       if (stepIndex >= 4 && data.avatarUrl) {
-        stepPayload.avatar = data.avatarType === "cartoon" && data.selectedCartoonId
-          ? `emoji:${CARTOON_AVATARS.find(c => c.id === data.selectedCartoonId)?.emoji}:${CARTOON_AVATARS.find(c => c.id === data.selectedCartoonId)?.color}`
-          : data.avatarUrl;
-        if (data.avatarType) stepPayload.avatarType = data.avatarType;
+        stepPayload.avatar = data.avatarUrl;
       }
 
       const res = await fetch("/api/profile", {
@@ -480,7 +462,7 @@ function OnboardingV3Page() {
             communicationStyle: p.communicationStyle || "",
             loveLanguage: p.loveLanguage || "",
             avatarUrl: p.avatar || "",
-            avatarType: p.avatarType || (p.avatar ? "photo" : ""),
+            isAvatarSet: !!p.avatar,
           }));
 
           // Restore step position from saved onboardingStep
@@ -655,8 +637,7 @@ function OnboardingV3Page() {
       setData((prev) => ({
         ...prev,
         avatarUrl: croppedImage,
-        avatarType: "photo",
-        selectedCartoonId: "",
+        isAvatarSet: true,
       }));
       
       toast.success("Photo selected!", {
@@ -671,15 +652,6 @@ function OnboardingV3Page() {
     }
   };
 
-  const handleSelectCartoon = (cartoonId: string) => {
-    setData((prev) => ({
-      ...prev,
-      selectedCartoonId: cartoonId,
-      avatarType: "cartoon",
-      avatarUrl: null,
-    }));
-  };
-
   const handleComplete = async () => {
     if (saving) return; // Prevent double submission
     
@@ -688,10 +660,6 @@ function OnboardingV3Page() {
 
     try {
       let finalAvatarUrl = data.avatarUrl;
-      if (data.avatarType === "cartoon" && data.selectedCartoonId) {
-        const selected = CARTOON_AVATARS.find((c) => c.id === data.selectedCartoonId);
-        finalAvatarUrl = `emoji:${selected?.emoji}:${selected?.color}`;
-      }
 
       // Build profile data with proper field mappings
       const payload: Record<string, any> = {
@@ -714,7 +682,6 @@ function OnboardingV3Page() {
         loveLanguage: data.loveLanguage,
         // Step 4: Photo
         avatar: finalAvatarUrl,
-        avatarType: data.avatarType,
         // Mark onboarding complete
         onboardingStep: 9,
         profileStatus: "APPROVED",
@@ -769,7 +736,7 @@ function OnboardingV3Page() {
       { label: "Intimacy", value: attachmentScore },
       { label: "Communication", value: data.communicationStyle ? 85 : 50 },
       { label: "Affection", value: data.loveLanguage ? 80 : 50 },
-      { label: "Authenticity", value: data.avatarUrl || data.selectedCartoonId ? 90 : 50 },
+      { label: "Authenticity", value: data.avatarUrl ? 90 : 50 },
       { label: "Openness", value: data.sexualOrientation ? 85 : 50 },
     ];
   };

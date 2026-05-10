@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/components/ui";
 import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
+import { AnalyticsReport } from "@/components/dashboard/analytics-report";
 
 // ════════════════════════════════════
 // DESIGN TOKENS — Dateasy Dark (Purple + Lime)
@@ -394,6 +395,17 @@ export default function DashboardPage() {
           <p className="text-xs text-foreground-muted mt-0.5">Unlock premium</p>
         </Link>
       </section>
+
+      {/* ════════════════════════════════════
+          SECTION 4: ANALYTICS REPORT
+          ════════════════════════════════════ */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <AnalyticsReport />
+      </motion.section>
 
       {/* Onboarding CTA — 如果没有完成 */}
       {isProfileLocked && (
