@@ -222,13 +222,15 @@ export function SubscriptionCard({
   const currentLevel = getTierLevel(currentTier || SubscriptionTier.FREE);
   const canSelect = tierLevel > currentLevel;
 
+  const isPopular = 'popular' in config && config.popular;
+
   return (
     <Card
       className={`relative overflow-hidden ${
-        config.popular ? "border-primary/50 shadow-lg shadow-primary/20" : "border-white/5"
+        isPopular ? "border-primary/50 shadow-lg shadow-primary/20" : "border-white/5"
       }`}
     >
-      {config.popular && (
+      {isPopular && (
         <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">
           POPULAR
         </div>
@@ -262,7 +264,7 @@ export function SubscriptionCard({
           onClick={() => onSelect(tier)}
           disabled={!canSelect && !isCurrent}
           className={`w-full ${
-            config.popular
+            isPopular
               ? "btn-primary"
               : "btn-ghost border border-white/10 hover:border-primary/30"
           }`}
