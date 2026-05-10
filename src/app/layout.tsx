@@ -72,12 +72,23 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.cn" />
-        {/* Google Fonts — non-blocking <link> won't block CSS like @import does */}
-        {/* Uses rel="stylesheet" with display=swap: graceful fallback to system fonts if blocked */}
+        {/* Google Fonts — async non-blocking load */}
         <link
-          rel="stylesheet"
+          rel="preload"
+          as="style"
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.querySelectorAll('link[rel="preload"][as="style"]').forEach(function(l){l.onload=function(){this.onload=null;this.rel='stylesheet'}});`,
+          }}
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
+          />
+        </noscript>
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://i.pravatar.cc" />
       </head>
