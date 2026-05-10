@@ -54,7 +54,7 @@ export default function Footer() {
               <h4 className="text-[11px] font-bold tracking-widest text-white/40 uppercase mb-4">
                 {section.title}
               </h4>
-              <ul className="space-y-2.5 list-none p-0 m-0">
+              <ul className="space-y-2 list-none p-0 m-0">
                 {section.links.map((link) => (
                   <li key={link.href}>
                     {link.external ? (
