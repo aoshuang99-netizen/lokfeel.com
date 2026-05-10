@@ -147,7 +147,7 @@ export async function GET(req: Request) {
           prisma.notification.count({
             where: {
               userId,
-              type: "PROFILE_VIEW",
+              type: "NEW_MATCH",
               createdAt: { gte: dayStart, lte: dayEnd },
             },
           }),
