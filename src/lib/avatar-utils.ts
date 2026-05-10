@@ -91,11 +91,13 @@ export function isBrokenAvatarUrl(avatar: string | null | undefined): boolean {
 }
 
 /**
- * Generate a deterministic DiceBear avatar URL as fallback.
- * Uses the user's name/ID as seed for consistency.
+ * Generate a fallback avatar URL — 使用真实照片，不使用卡通
+ * 优先使用本地 bot-avatars，失败则显示默认背景
  */
-export function getFallbackAvatarUrl(seed: string): string {
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}`;
+export function getFallbackAvatarUrl(seed: string): string | null {
+  // 不再使用 DiceBear 卡通 SVG
+  // 返回 null，让调用方使用默认背景
+  return null;
 }
 
 /**
