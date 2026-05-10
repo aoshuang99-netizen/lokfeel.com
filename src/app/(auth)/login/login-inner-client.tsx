@@ -1,43 +1,18 @@
 "use client";
 
 /**
- * LoginInnerClient — Feeld-style login
- * DATEASY DARK: Social auth promoted above email form
- * Unified visual language with register page
+ * LoginInnerClient — Cool Blue V2 Glassmorphism
+ * Seamless visual transition from landing page (same video bg + overlay)
+ * Retains all OAuth functionality (Google GIS, X OAuth 2.0)
  */
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
-// Use NextAuth Google OAuth redirect flow — most reliable, no JS SDK needed
+// Use NextAuth Google OAuth redirect flow
 import GoogleSignInButton from "@/components/auth/google-sign-in-button";
-// X (Twitter) — Native OAuth 2.0 + PKCE redirect (bypasses Firebase)
-// Redirects to /api/auth/twitter/signin → Twitter authorize → callback → auto-sign-in
-
-// ─── DATEASY DARK THEME CONSTANTS ───────────────────────────────
-const colors = {
-  bg: "#0a0a0a",
-  cardBg: "#111111",
-  border: "rgba(76, 29, 149, 0.15)",
-  borderStrong: "rgba(76, 29, 149, 0.3)",
-  text: "#ffffff",
-  textMuted: "rgba(255,255,255,0.40)",
-  textSecondary: "rgba(255,255,255,0.65)",
-  input: "rgba(26, 26, 26, 0.8)",
-  inputBorder: "rgba(85, 85, 85, 0.3)",
-  inputFocus: "rgba(76, 29, 149, 0.5)",
-  inputPlaceholder: "rgba(255,255,255,0.25)",
-  primary: "#a3e635",
-  primaryBg: "#a3e635",
-  primaryText: "#0a0a0a",
-  purple: "#a78bfa",
-  purpleBg: "rgba(76, 29, 149, 0.08)",
-  error: "#fb7185",
-  errorBg: "rgba(251,113,133,0.08)",
-  errorBorder: "rgba(251,113,133,0.2)",
-};
 
 interface Props {
   callbackUrl: string;
@@ -116,74 +91,101 @@ export default function LoginInnerClient({
     }
   };
 
-  // ─── Focus styles ───
+  // ─── Cool Blue Glass Styles ───
+  const inputBaseStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "14px 18px",
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.15)",
+    borderRadius: "12px",
+    fontSize: "15px",
+    color: "#fff",
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    outline: "none",
+    transition: "all 0.2s",
+    boxSizing: "border-box",
+  };
+
   const inputFocusStyle: React.CSSProperties = {
-    borderColor: colors.inputFocus,
-    boxShadow: "0 0 0 3px rgba(76, 29, 149, 0.15)",
+    ...inputBaseStyle,
+    borderColor: "#3b82f6",
+    background: "rgba(59,130,246,0.1)",
+    boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
   };
 
   return (
-    <div style={{
-      maxWidth: "420px",
-      margin: "0 auto",
-      padding: "32px 24px",
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-    }}>
-      <div style={{
-        background: colors.cardBg,
-        borderRadius: "24px",
-        border: `1px solid ${colors.border}`,
-        boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
-        padding: "40px 32px",
-      }}>
+    <div style={{ width: "100%", maxWidth: "420px" }}>
+      {/* Glassmorphism Login Card */}
+      <div
+        style={{
+          background: "rgba(15,15,35,0.75)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderRadius: "24px",
+          border: "1px solid rgba(255,255,255,0.15)",
+          padding: "48px 40px",
+          boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)",
+        }}
+      >
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "20px" }}>
-            {/* Logo */}
-            <div style={{
-              width: "48px", height: "48px", borderRadius: "14px",
-              background: "linear-gradient(135deg, #4c1d95, #8b5cf6)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-            </div>
-            <span style={{ fontSize: "24px", fontWeight: "bold", color: colors.text, fontFamily: "'Outfit', sans-serif" }}>
-              LokFeel
-            </span>
-          </div>
-          <h1 style={{ fontSize: "22px", fontWeight: "700", color: colors.text, margin: "0 0 6px", fontFamily: "'Outfit', sans-serif" }}>
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          <Link
+            href="/"
+            style={{
+              fontSize: "28px",
+              fontWeight: "700",
+              color: "#fff",
+              textDecoration: "none",
+              display: "inline-block",
+              marginBottom: "16px",
+            }}
+          >
+            Lok<span style={{ color: "#60a5fa" }}>Feel</span>
+          </Link>
+          <h1
+            style={{
+              fontSize: "32px",
+              fontWeight: "700",
+              margin: "0 0 8px",
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
             Welcome Back
           </h1>
-          <p style={{ color: colors.textMuted, fontSize: "14px", margin: 0 }}>
-            Sign in to continue
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "15px", margin: 0 }}>
+            Log in to continue your journey to real connection
           </p>
         </div>
 
-        {/* ─── SOCIAL LOGIN — PROMINENT, ABOVE FORM ─── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "24px" }}>
-        {/* Google — GIS (Google Identity Services) with FedCM + account chooser */}
+        {/* ─── SOCIAL LOGIN — PROMINENT ─── */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "12px",
+            marginBottom: "24px",
+          }}
+        >
+          {/* Google — GIS with FedCM */}
           <GoogleSignInButton
             callbackUrl={callbackUrl}
             disabled={isLoading}
             label="Continue with Google"
           />
 
-          {/* X (Twitter) — Native OAuth 2.0 + PKCE redirect */}
+          {/* X (Twitter) — Native OAuth 2.0 + PKCE */}
           <button
             type="button"
-            onClick={() => { window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`; }}
+            onClick={() => {
+              window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+            }}
             disabled={isLoading}
             style={{
-              padding: "13px 16px",
-              background: "rgba(26, 26, 26, 0.9)",
-              border: "1px solid rgba(85, 85, 85, 0.3)",
-              borderRadius: "12px",
-              color: isLoading ? "rgba(255,255,255,0.5)" : "#ffffff",
+              padding: "12px",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: "10px",
+              color: isLoading ? "rgba(255,255,255,0.5)" : "#fff",
               fontSize: "14px",
               fontWeight: "500",
               cursor: isLoading ? "not-allowed" : "pointer",
@@ -193,91 +195,184 @@ export default function LoginInnerClient({
               gap: "8px",
               opacity: isLoading ? 0.5 : 1,
               transition: "all 0.2s",
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               width: "100%",
             }}
             onMouseEnter={(e) => {
-              if (!isLoading) e.currentTarget.style.borderColor = "rgba(76, 29, 149, 0.3)";
+              if (!isLoading) {
+                e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(85, 85, 85, 0.3)";
+              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
             Continue with X
           </button>
         </div>
 
         {/* Divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px", color: colors.textMuted, fontSize: "12px" }}>
-          <div style={{ flex: 1, height: "1px", background: colors.border }} />
-          or continue with email
-          <div style={{ flex: 1, height: "1px", background: colors.border }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            margin: "0 0 24px",
+            gap: "16px",
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              height: "1px",
+              background: "rgba(255,255,255,0.15)",
+            }}
+          />
+          <span
+            style={{
+              fontSize: "13px",
+              color: "rgba(255,255,255,0.5)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            or continue with email
+          </span>
+          <div
+            style={{
+              flex: 1,
+              height: "1px",
+              background: "rgba(255,255,255,0.15)",
+            }}
+          />
         </div>
 
         {/* Error */}
         {error && (
-          <div style={{ marginBottom: "20px", padding: "12px 16px", borderRadius: "12px", background: colors.errorBg, border: `1px solid ${colors.errorBorder}`, color: colors.error, fontSize: "14px" }}>
+          <div
+            style={{
+              marginBottom: "20px",
+              padding: "12px 16px",
+              borderRadius: "12px",
+              background: "rgba(251,113,133,0.08)",
+              border: "1px solid rgba(251,113,133,0.2)",
+              color: "#fb7185",
+              fontSize: "14px",
+            }}
+          >
             {error}
           </div>
         )}
 
         {/* LOGIN FORM */}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }} noValidate>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+          noValidate
+        >
           {/* Email */}
-          <div>
-            <label htmlFor="login-email" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
-              <Mail size={13} /> Email
+          <div className="form-group">
+            <label
+              htmlFor="login-email"
+              style={{
+                display: "block",
+                fontSize: "14px",
+                fontWeight: "500",
+                marginBottom: "8px",
+                color: "rgba(255,255,255,0.9)",
+              }}
+            >
+              Email or Phone
             </label>
             <input
-              id="login-email" name="email" type="email"
-              value={email} onChange={(e) => setEmail(e.target.value)}
-              required autoComplete="email" autoFocus disabled={isLoading}
-              placeholder="you@example.com"
-              style={{
-                width: "100%", padding: "14px 16px",
-                background: colors.input, border: `1px solid ${colors.inputBorder}`,
-                borderRadius: "12px", color: colors.text, fontSize: "15px",
-                outline: "none", boxSizing: "border-box",
-                opacity: isLoading ? 0.6 : 1, transition: "border-color 0.2s, box-shadow 0.2s",
-              }}
-              onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-              onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
+              id="login-email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              autoFocus
+              disabled={isLoading}
+              placeholder="Enter your email or phone"
+              style={inputBaseStyle}
+              onFocus={(e) =>
+                Object.assign(e.target.style, {
+                  borderColor: "#3b82f6",
+                  background: "rgba(59,130,246,0.1)",
+                  boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
+                })
+              }
+              onBlur={(e) =>
+                Object.assign(e.target.style, {
+                  borderColor: "rgba(255,255,255,0.15)",
+                  background: "rgba(255,255,255,0.08)",
+                  boxShadow: "none",
+                })
+              }
             />
           </div>
 
           {/* Password */}
-          <div>
-            <label htmlFor="login-password" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
-              <Lock size={13} /> Password
+          <div className="form-group">
+            <label
+              htmlFor="login-password"
+              style={{
+                display: "block",
+                fontSize: "14px",
+                fontWeight: "500",
+                marginBottom: "8px",
+                color: "rgba(255,255,255,0.9)",
+              }}
+            >
+              Password
             </label>
             <div style={{ position: "relative" }}>
               <input
-                id="login-password" name="password"
+                id="login-password"
+                name="password"
                 type={showPassword ? "text" : "password"}
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                required minLength={8} autoComplete="current-password" disabled={isLoading}
-                placeholder="Min 8 characters"
-                style={{
-                  width: "100%", padding: "14px 44px 14px 16px",
-                  background: colors.input, border: `1px solid ${colors.inputBorder}`,
-                  borderRadius: "12px", color: colors.text, fontSize: "15px",
-                  outline: "none", boxSizing: "border-box",
-                  opacity: isLoading ? 0.6 : 1, transition: "border-color 0.2s, box-shadow 0.2s",
-                }}
-                onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                autoComplete="current-password"
+                disabled={isLoading}
+                placeholder="Enter your password"
+                style={inputBaseStyle}
+                onFocus={(e) =>
+                  Object.assign(e.target.style, {
+                    borderColor: "#3b82f6",
+                    background: "rgba(59,130,246,0.1)",
+                    boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
+                  })
+                }
+                onBlur={(e) =>
+                  Object.assign(e.target.style, {
+                    borderColor: "rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.08)",
+                    boxShadow: "none",
+                  })
+                }
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1} disabled={isLoading}
+                tabIndex={-1}
+                disabled={isLoading}
                 style={{
-                  position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)",
-                  background: "none", border: "none", cursor: "pointer",
-                  color: colors.textMuted, padding: "4px",
+                  position: "absolute",
+                  right: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.5)",
+                  padding: "4px",
                 }}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -286,51 +381,129 @@ export default function LoginInnerClient({
           </div>
 
           {/* Remember Me + Forgot Password */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: colors.textSecondary, cursor: "pointer" }}>
-              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}
-                style={{ width: "16px", height: "16px", borderRadius: "4px", accentColor: colors.primary }} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "14px",
+                color: "rgba(255,255,255,0.8)",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  accentColor: "#3b82f6",
+                }}
+              />
               Remember me
             </label>
-            <Link href="/forgot-password"
-              style={{ fontSize: "13px", color: colors.purple, textDecoration: "none", fontWeight: "500" }}>
+            <Link
+              href="/forgot-password"
+              style={{
+                fontSize: "14px",
+                color: "#60a5fa",
+                textDecoration: "none",
+                fontWeight: "500",
+              }}
+            >
               Forgot password?
             </Link>
           </div>
 
           {/* Submit */}
           <button
-            type="submit" disabled={isLoading}
+            type="submit"
+            disabled={isLoading}
             style={{
-              width: "100%", padding: "14px",
-              background: isLoading ? "rgba(163,230,53,0.5)" : colors.primaryBg,
-              border: "none", borderRadius: "12px",
-              color: colors.primaryText, fontSize: "16px", fontWeight: "600",
+              width: "100%",
+              padding: "16px",
+              background: isLoading
+                ? "rgba(59,130,246,0.5)"
+                : "linear-gradient(135deg, #3b82f6, #6366f1)",
+              border: "none",
+              borderRadius: "12px",
+              color: "#fff",
+              fontSize: "16px",
+              fontWeight: "600",
               cursor: isLoading ? "not-allowed" : "pointer",
               opacity: isLoading ? 0.6 : 1,
-              transition: "opacity 0.2s, background 0.2s",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              fontFamily: "'Outfit', sans-serif",
-              boxShadow: isLoading ? "none" : "0 0 20px -5px rgba(163, 230, 53, 0.3)",
+              transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              fontFamily: "'Inter', sans-serif",
+              boxShadow: isLoading
+                ? "none"
+                : "0 4px 20px rgba(59,130,246,0.35)",
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 25px rgba(59,130,246,0.45)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 20px rgba(59,130,246,0.35)";
             }}
           >
             {isLoading ? (
-              <><Loader2 size={18} className="animate-spin" />Signing In...</>
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Signing In...
+              </>
             ) : (
-              <>Sign In →</>
+              "Log In"
             )}
           </button>
         </form>
 
-        {/* Register Link */}
-        <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px solid ${colors.border}`, textAlign: "center" }}>
-          <p style={{ color: colors.textMuted, fontSize: "14px" }}>
-            No account?{' '}
-            <Link href="/register" style={{ color: colors.primary, textDecoration: "none", fontWeight: "600" }}>
-              Create one
-            </Link>
-          </p>
-        </div>
+        {/* Create Account Button */}
+        <Link
+          href="/register"
+          style={{
+            display: "block",
+            width: "100%",
+            padding: "14px 16px",
+            background: "linear-gradient(135deg, #8b5cf6, #a855f7)",
+            border: "none",
+            borderRadius: "12px",
+            color: "#fff",
+            fontSize: "16px",
+            fontWeight: "600",
+            textAlign: "center",
+            textDecoration: "none",
+            fontFamily: "'Inter', sans-serif",
+            boxShadow: "0 4px 20px rgba(139,92,246,0.35)",
+            transition: "all 0.2s",
+            margin: "16px 0 0",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 6px 25px rgba(139,92,246,0.45)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 20px rgba(139,92,246,0.35)";
+          }}
+        >
+          Create Account
+        </Link>
       </div>
     </div>
   );

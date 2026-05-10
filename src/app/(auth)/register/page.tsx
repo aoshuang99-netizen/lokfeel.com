@@ -32,24 +32,24 @@ import GoogleSignInButton from "@/components/auth/google-sign-in-button";
 // X (Twitter) — Native OAuth 2.0 + PKCE redirect (bypasses Firebase)
 // Redirects to /api/auth/twitter/signin → Twitter authorize → callback → auto-sign-in
 
-// ─── DATEASY DARK THEME CONSTANTS ───────────────────────────────
+// ─── COOL BLUE V2 THEME CONSTANTS ─────────────────────────────
 const colors = {
-  bg: "#0a0a0a",
-  cardBg: "#111111",
-  border: "rgba(76, 29, 149, 0.15)",
-  borderStrong: "rgba(76, 29, 149, 0.3)",
+  bg: "transparent", // video bg from layout
+  cardBg: "rgba(15,15,35,0.75)",
+  border: "rgba(255,255,255,0.15)",
+  borderStrong: "rgba(96,165,250,0.5)",
   text: "#ffffff",
   textMuted: "rgba(255,255,255,0.40)",
   textSecondary: "rgba(255,255,255,0.65)",
-  input: "rgba(26, 26, 26, 0.8)",
-  inputBorder: "rgba(85, 85, 85, 0.3)",
-  inputFocus: "rgba(76, 29, 149, 0.5)",
-  inputPlaceholder: "rgba(255,255,255,0.25)",
-  primary: "#a3e635",
-  primaryBg: "#a3e635",
-  primaryText: "#0a0a0a",
-  purple: "#a78bfa",
-  purpleBg: "rgba(76, 29, 149, 0.08)",
+  input: "rgba(255,255,255,0.08)",
+  inputBorder: "rgba(255,255,255,0.15)",
+  inputFocus: "rgba(59,130,246,0.5)",
+  inputPlaceholder: "rgba(255,255,255,0.4)",
+  primary: "#3b82f6",
+  primaryBg: "#3b82f6",
+  primaryText: "#ffffff",
+  purple: "#60a5fa",
+  purpleBg: "rgba(59,130,246,0.1)",
   error: "#fb7185",
   errorBg: "rgba(251,113,133,0.08)",
   errorBorder: "rgba(251,113,133,0.2)",
@@ -111,6 +111,9 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [sentInfo, setSentInfo] = useState<{ maskedIdentifier?: string; devMode?: boolean; code?: string }>({});
+  const [dobYear, setDobYear] = useState("");
+  const [dobMonth, setDobMonth] = useState("");
+  const [dobDay, setDobDay] = useState("");
 
   // ─── Restore state on mount ───
   useEffect(() => {
@@ -129,6 +132,25 @@ export default function RegisterPage() {
       setFormData(prev => ({ ...prev, ...saved.formData }));
     }
   }, []);
+
+  // Auto-parse dob into dropdowns on mount
+  useEffect(() => {
+    if (formData.dob && formData.dob.includes("-")) {
+      const parts = formData.dob.split("-");
+      setDobYear(parts[0] || "");
+      setDobMonth(parts[1] || "");
+      setDobDay(parts[2] || "");
+    }
+  }, []);
+
+  const updateDob = useCallback(() => {
+    if (dobYear && dobMonth && dobDay) {
+      const dateStr = `${dobYear}-${dobMonth.padStart(2, "0")}-${dobDay.padStart(2, "0")}`;
+      setFormData((prev) => ({ ...prev, dob: dateStr }));
+    }
+  }, [dobYear, dobMonth, dobDay]);
+
+  useEffect(() => { updateDob(); }, [updateDob]);
 
   // Auto-save
   const saveState = useCallback(() => {
@@ -349,8 +371,30 @@ export default function RegisterPage() {
   });
 
   const inputFocusStyle: React.CSSProperties = {
-    borderColor: colors.inputFocus,
-    boxShadow: "0 0 0 3px rgba(76, 29, 149, 0.15)",
+    borderColor: "rgba(59,130,246,0.5)",
+    boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
+  };
+
+  const selectStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "13px 10px",
+    background: colors.input,
+    border: `1px solid ${colors.inputBorder}`,
+    borderRadius: "10px",
+    fontSize: "15px",
+    color: colors.text,
+    fontFamily: "'Inter', sans-serif",
+    appearance: "none",
+    WebkitAppearance: "none" as any,
+    cursor: "pointer",
+    textAlign: "center",
+    outline: "none",
+    transition: "border-color 0.2s, box-shadow 0.2s",
+  };
+
+  const selectFocusStyle: React.CSSProperties = {
+    borderColor: "rgba(59,130,246,0.5)",
+    boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
   };
 
   // ─── Progress Indicator (Feeld-style) ───
@@ -372,10 +416,12 @@ export default function RegisterPage() {
       }}>
         <div style={{
           background: colors.cardBg,
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
           borderRadius: "24px",
           border: `1px solid ${colors.border}`,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
-          padding: "40px 32px",
+          boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)",
+          padding: "48px 40px",
         }}>
           {/* Progress bar */}
           <div style={{ marginBottom: "32px" }}>
@@ -386,7 +432,7 @@ export default function RegisterPage() {
             <div style={{ height: "3px", background: "rgba(255,255,255,0.06)", borderRadius: "4px", overflow: "hidden" }}>
               <div style={{
                 height: "100%",
-                background: `linear-gradient(90deg, #4c1d95, ${colors.primary})`,
+                background: `linear-gradient(90deg, #3b82f6, #60a5fa)`,
                 borderRadius: "4px",
                 transition: "width 0.5s ease",
                 width: `${progressPercent}%`,
@@ -397,16 +443,18 @@ export default function RegisterPage() {
           <div className="text-center" style={{ marginBottom: "32px" }}>
             {/* Logo */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "24px" }}>
-              <div style={{
-                width: "48px", height: "48px", borderRadius: "14px",
-                background: "linear-gradient(135deg, #4c1d95, #8b5cf6)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </div>
-              <span style={{ fontSize: "24px", fontWeight: "bold", color: colors.text, fontFamily: "'Outfit', sans-serif" }}>LokFeel</span>
+              <Link
+                href="/"
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                  color: colors.text,
+                  textDecoration: "none",
+                  fontFamily: "'Inter', sans-serif",
+                }}
+              >
+                Lok<span style={{ color: "#60a5fa" }}>Feel</span>
+              </Link>
             </div>
 
             <h1 style={{ fontSize: "22px", fontWeight: "700", color: colors.text, marginBottom: "8px", fontFamily: "'Outfit', sans-serif" }}>
@@ -465,13 +513,13 @@ export default function RegisterPage() {
             disabled={isLoading}
             style={{
               width: "100%", padding: "14px",
-              background: isLoading ? "rgba(163,230,53,0.5)" : colors.primaryBg,
+              background: isLoading ? "rgba(59,130,246,0.5)" : "linear-gradient(135deg, #3b82f6, #6366f1)",
               border: "none", borderRadius: "12px",
-              color: colors.primaryText, fontSize: "16px", fontWeight: "600",
+              color: "#ffffff", fontSize: "16px", fontWeight: "600",
               cursor: isLoading ? "not-allowed" : "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              marginBottom: "12px", fontFamily: "'Outfit', sans-serif",
-              boxShadow: isLoading ? "none" : "0 0 20px -5px rgba(163, 230, 53, 0.3)",
+              marginBottom: "12px", fontFamily: "'Inter', sans-serif",
+              boxShadow: isLoading ? "none" : "0 4px 20px rgba(59,130,246,0.35)",
             }}
           >
             {isLoading ? (
@@ -583,8 +631,8 @@ export default function RegisterPage() {
             disabled={isLoading}
             style={{
               padding: "13px 16px",
-              background: "rgba(26, 26, 26, 0.9)",
-              border: "1px solid rgba(85, 85, 85, 0.3)",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.12)",
               borderRadius: "12px",
               color: isLoading ? "rgba(255,255,255,0.5)" : "#ffffff",
               fontSize: "14px",
@@ -596,7 +644,7 @@ export default function RegisterPage() {
               gap: "8px",
               opacity: isLoading ? 0.5 : 1,
               transition: "all 0.2s",
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               width: "100%",
             }}
           >
@@ -626,12 +674,12 @@ export default function RegisterPage() {
           {/* Name */}
           <div>
             <label htmlFor="reg-name" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
-              <User size={13} /> Full Name <span style={{ color: colors.error }}>*</span>
+              <User size={13} /> Name <span style={{ color: colors.error }}>*</span>
             </label>
             <input
               id="reg-name" name="name" type="text"
               value={formData.name} onChange={handleChange}
-              autoComplete="name" required placeholder="Your name"
+              autoComplete="name" required placeholder=" "
               style={inputStyle()}
               onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
               onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
@@ -644,35 +692,61 @@ export default function RegisterPage() {
               <Mail size={13} /> Email <span style={{ color: colors.error }}>*</span>
             </label>
             <div style={{ position: "relative" }}>
-              <input
-                id="reg-email" name="email" type="email"
-                value={formData.email} onChange={handleChange}
-                autoComplete="email" required placeholder="you@example.com"
-                style={inputStyle("14px 16px 14px 40px")}
-                onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
-              />
+            <input
+              id="reg-email" name="email" type="email"
+              value={formData.email} onChange={handleChange}
+              autoComplete="email" required placeholder=" "
+              style={inputStyle("14px 16px 14px 40px")}
+              onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
+              onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
+            />
               <Mail size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: colors.inputPlaceholder, pointerEvents: "none" }} />
             </div>
           </div>
 
-          {/* Date of Birth */}
+          {/* Date of Birth - 3 dropdowns */}
           <div>
-            <label htmlFor="reg-dob" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
+            <label htmlFor="dob-year" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
               <Calendar size={13} /> Date of Birth <span style={{ color: colors.error }}>*</span>
             </label>
-            <input
-              id="reg-dob" name="dob" type="date"
-              value={formData.dob} onChange={handleChange}
-              required
-              max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-              style={{
-                ...inputStyle(),
-                colorScheme: "dark",
-              }}
-              onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-              onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
-            />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+              <select
+                id="dob-year" required
+                value={dobYear} onChange={(e) => setDobYear(e.target.value)}
+                onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
+                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
+                style={selectStyle}
+              >
+                <option value="" disabled>Year</option>
+                {Array.from({ length: new Date().getFullYear() - 18 - 1920 + 1 }, (_, i) => new Date().getFullYear() - 18 - i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <select
+                id="dob-month" required
+                value={dobMonth} onChange={(e) => setDobMonth(e.target.value)}
+                onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
+                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
+                style={selectStyle}
+              >
+                <option value="" disabled>Month</option>
+                {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m, i) => (
+                  <option key={i + 1} value={(i + 1).toString().padStart(2, "0")}>{i + 1} - {m}</option>
+                ))}
+              </select>
+              <select
+                id="dob-day" required
+                value={dobDay} onChange={(e) => setDobDay(e.target.value)}
+                onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
+                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
+                style={selectStyle}
+              >
+                <option value="" disabled>Day</option>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                  <option key={day} value={day.toString().padStart(2, "0")}>{day}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Password — NO confirmPassword */}
@@ -683,7 +757,7 @@ export default function RegisterPage() {
             <input
               id="reg-password" name="password" type="password"
               value={formData.password} onChange={handleChange}
-              autoComplete="new-password" minLength={8} required placeholder="Min 8 characters"
+              autoComplete="new-password" minLength={8} required placeholder=" "
               style={inputStyle()}
               onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
               onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
@@ -715,13 +789,13 @@ export default function RegisterPage() {
             type="submit" disabled={isSendingCode}
             style={{
               width: "100%", padding: "14px",
-              background: isSendingCode ? "rgba(163,230,53,0.5)" : colors.primaryBg,
+              background: isSendingCode ? "rgba(59,130,246,0.5)" : "linear-gradient(135deg, #3b82f6, #6366f1)",
               border: "none", borderRadius: "12px",
-              color: colors.primaryText, fontSize: "16px", fontWeight: "600",
+              color: "#ffffff", fontSize: "16px", fontWeight: "600",
               cursor: isSendingCode ? "not-allowed" : "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              marginTop: "4px", fontFamily: "'Outfit', sans-serif",
-              boxShadow: isSendingCode ? "none" : "0 0 20px -5px rgba(163, 230, 53, 0.3)",
+              marginTop: "4px", fontFamily: "'Inter', sans-serif",
+              boxShadow: isSendingCode ? "none" : "0 4px 20px rgba(59,130,246,0.35)",
             }}
           >
             {isSendingCode ? (
