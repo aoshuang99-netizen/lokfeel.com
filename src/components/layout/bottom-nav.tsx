@@ -14,15 +14,15 @@ import { useApiGet } from "@/hooks/use-api";
 
 // ═════════════════════════════════════
 // REDESIGNED NAVIGATION — 5-ENTRY OPTIMIZED
-// Explore / Connections / Chats / Notifications / Profile
+// Profile / Explore / Connections / Chats / Notifications
 // ═════════════════════════════════════
 
 const navItems = [
+  { name: "Profile", href: "/dashboard/profile", icon: User, label: "Profile", badgeKey: null },
   { name: "Explore", href: "/dashboard/explore", icon: Compass, label: "Explore", badgeKey: null },
   { name: "Connections", href: "/dashboard/connections", icon: Heart, label: "Connections", badgeKey: "unreadLikes" },
   { name: "Chats", href: "/dashboard/chats", icon: MessageSquare, label: "Chats", badgeKey: "unreadMessages" },
   { name: "Notifications", href: "/dashboard/notifications", icon: Bell, label: "Notifications", badgeKey: "unreadNotifications" },
-  { name: "Profile", href: "/dashboard/profile", icon: User, label: "Profile", badgeKey: null },
 ];
 
 // Design tokens
@@ -72,11 +72,11 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      {/* Gradient background mask — uses design system background */}
+      {/* Gradient background mask */}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none" />
 
-      {/* Nav container — glass morphism aligned with design system */}
-      <div className="relative bg-background-secondary/90 backdrop-blur-xl border-t border-card-border">
+      {/* Nav container — Cool Blue glass morphism */}
+      <div className="relative bg-[#081020]/90 backdrop-blur-xl border-t border-blue-500/10">
         <div className="flex items-center justify-around py-1.5" style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}>
           {navItems.map((item) => {
             const active = isActive(item.href);
@@ -93,7 +93,7 @@ export default function BottomNav() {
                 {active && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className="absolute -top-1 w-8 h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full"
+                    className="absolute -top-1 w-8 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-400 rounded-full"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -102,7 +102,7 @@ export default function BottomNav() {
                 <div
                   className={`relative p-1.5 rounded-xl transition-all duration-200 ${
                     active
-                      ? "bg-primary/15 text-primary"
+                      ? "bg-blue-500/15 text-blue-400"
                       : "text-foreground-subtle hover:text-foreground-muted"
                   }`}
                   style={{ transitionTimingFunction: EASING }}
@@ -114,7 +114,7 @@ export default function BottomNav() {
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-primary rounded-full text-[9px] font-bold text-foreground flex items-center justify-center"
+                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-blue-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
                     >
                       {badgeCount > 99 ? "99+" : badgeCount}
                     </motion.span>

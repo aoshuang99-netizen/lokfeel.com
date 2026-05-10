@@ -4,6 +4,12 @@
  * LoginInnerClient — Cool Blue V2 Glassmorphism
  * Seamless visual transition from landing page (same video bg + overlay)
  * Retains all OAuth functionality (Google GIS, X OAuth 2.0)
+ *
+ * Fixes:
+ * - Brand: LokFee! (not LokFeel)
+ * - Social login: vertical stack (Google top, X bottom) for mobile
+ * - Removed duplicate content with Register page
+ * - PC layout optimized (440px card, better padding)
  */
 
 import { useState } from "react";
@@ -65,7 +71,7 @@ export default function LoginInnerClient({
         if (errorCode === "CredentialsSignin") {
           setError("Invalid email or password.");
         } else if (errorCode === "MissingCSRF") {
-          setError("Security check failed. Please refresh and try again.");
+          setError("Security verification failed. Please try again.");
         } else {
           setError("Sign in failed. Please try again.");
         }
@@ -114,37 +120,37 @@ export default function LoginInnerClient({
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "420px" }}>
+    <div style={{ width: "100%", maxWidth: "440px" }}>
       {/* Glassmorphism Login Card */}
       <div
         style={{
-          background: "rgba(15,15,35,0.75)",
+          background: "rgba(15,15,35,0.78)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           borderRadius: "24px",
-          border: "1px solid rgba(255,255,255,0.15)",
-          padding: "48px 40px",
+          border: "1px solid rgba(255,255,255,0.16)",
+          padding: "44px 40px",
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)",
         }}
       >
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        {/* Header — Brand: LokFee! */}
+        <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <Link
             href="/"
             style={{
-              fontSize: "28px",
+              fontSize: "26px",
               fontWeight: "700",
               color: "#fff",
               textDecoration: "none",
               display: "inline-block",
-              marginBottom: "16px",
+              marginBottom: "14px",
             }}
           >
-            Lok<span style={{ color: "#60a5fa" }}>Feel</span>
+            Lok<span style={{ color: "#60a5fa" }}>Fee!</span>
           </Link>
           <h1
             style={{
-              fontSize: "32px",
+              fontSize: "26px",
               fontWeight: "700",
               margin: "0 0 8px",
               fontFamily: "'Inter', sans-serif",
@@ -152,25 +158,19 @@ export default function LoginInnerClient({
           >
             Welcome Back
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "15px", margin: 0 }}>
-            Log in to continue your journey to real connection
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "14px", margin: 0 }}>
+            Log in to continue your journey
           </p>
         </div>
 
-        {/* ─── SOCIAL LOGIN — PROMINENT ─── */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "12px",
-            marginBottom: "24px",
-          }}
-        >
+        {/* ─── SOCIAL LOGIN — VERTICAL STACK (Google top, X bottom) ─── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {/* Google — GIS with FedCM */}
           <GoogleSignInButton
             callbackUrl={callbackUrl}
             disabled={isLoading}
             label="Continue with Google"
+            fullWidth
           />
 
           {/* X (Twitter) — Native OAuth 2.0 + PKCE */}
@@ -181,10 +181,10 @@ export default function LoginInnerClient({
             }}
             disabled={isLoading}
             style={{
-              padding: "12px",
+              padding: "13px 16px",
               background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.13)",
+              borderRadius: "12px",
               color: isLoading ? "rgba(255,255,255,0.5)" : "#fff",
               fontSize: "14px",
               fontWeight: "500",
@@ -200,13 +200,13 @@ export default function LoginInnerClient({
             }}
             onMouseEnter={(e) => {
               if (!isLoading) {
-                e.currentTarget.style.background = "rgba(255,255,255,0.12)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+                e.currentTarget.style.background = "rgba(255,255,255,0.13)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)";
               }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)";
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -221,8 +221,8 @@ export default function LoginInnerClient({
           style={{
             display: "flex",
             alignItems: "center",
-            margin: "0 0 24px",
-            gap: "16px",
+            margin: "0 0 20px",
+            gap: "14px",
           }}
         >
           <div
@@ -254,7 +254,7 @@ export default function LoginInnerClient({
         {error && (
           <div
             style={{
-              marginBottom: "20px",
+              marginBottom: "18px",
               padding: "12px 16px",
               borderRadius: "12px",
               background: "rgba(251,113,133,0.08)",
@@ -270,7 +270,7 @@ export default function LoginInnerClient({
         {/* LOGIN FORM */}
         <form
           onSubmit={handleSubmit}
-          style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+          style={{ display: "flex", flexDirection: "column", gap: "16px" }}
           noValidate
         >
           {/* Email */}
@@ -429,7 +429,7 @@ export default function LoginInnerClient({
             disabled={isLoading}
             style={{
               width: "100%",
-              padding: "16px",
+              padding: "15px",
               background: isLoading
                 ? "rgba(59,130,246,0.5)"
                 : "linear-gradient(135deg, #3b82f6, #6366f1)",
@@ -473,25 +473,25 @@ export default function LoginInnerClient({
           </button>
         </form>
 
-        {/* Create Account Button */}
+        {/* Create Account — simplified, no duplication with Register page */}
         <Link
           href="/register"
           style={{
             display: "block",
             width: "100%",
-            padding: "14px 16px",
+            padding: "13px 16px",
             background: "linear-gradient(135deg, #8b5cf6, #a855f7)",
             border: "none",
             borderRadius: "12px",
             color: "#fff",
-            fontSize: "16px",
+            fontSize: "15px",
             fontWeight: "600",
             textAlign: "center",
             textDecoration: "none",
             fontFamily: "'Inter', sans-serif",
             boxShadow: "0 4px 20px rgba(139,92,246,0.35)",
             transition: "all 0.2s",
-            margin: "16px 0 0",
+            margin: "14px 0 0",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-2px)";

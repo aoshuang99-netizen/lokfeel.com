@@ -1,299 +1,457 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import {
-  Heart,
-  Sparkles,
-  Users,
-  Shield,
-  ChevronRight,
-  Check,
-  ArrowRight,
-  Star,
-  Zap,
-} from "lucide-react";
+import QuickSignupModal from "@/components/auth/quick-signup-modal";
+import QuickLoginModal from "@/components/auth/quick-login-modal";
 
-// Mock user data for showcase
-const showcaseUsers = [
-  { id: 1, name: "Sarah", age: 29, traits: ["Emotionally intelligent", "Values depth"], gender: "woman", sexuality: "bisexual", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop" },
-  { id: 2, name: "James", age: 32, traits: ["Secure attachment", "Open communicator"], gender: "man", sexuality: "straight", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop" },
-  { id: 3, name: "Maya", age: 27, traits: ["Thoughtful", "Growth-minded"], gender: "woman", sexuality: "lesbian", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=500&fit=crop" },
-  { id: 4, name: "Alex", age: 30, traits: ["Emotionally available", "Curious mind"], gender: "non-binary", sexuality: "queer", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop" },
-  { id: 5, name: "Emma", age: 31, traits: ["Secure", "Authentic"], gender: "woman", sexuality: "bisexual", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=500&fit=crop" },
-  { id: 6, name: "Michael", age: 34, traits: ["Emotionally mature", "Good listener"], gender: "man", sexuality: "straight", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=500&fit=crop" },
-  { id: 7, name: "Priya", age: 28, traits: ["Deep thinker", "Compassionate"], gender: "woman", sexuality: "pansexual", image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=500&fit=crop" },
-  { id: 8, name: "David", age: 33, traits: ["Securely attached", "Adventurous"], gender: "man", sexuality: "straight", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=500&fit=crop" },
+/**
+ * LANDING PAGE — Cool Blue V2
+ * Video background + responsive loading + seamless nav
+ * Design: LokFeel V2 "Cool Blue" system
+ */
+
+// ─── VIDEO BACKGROUND COMPONENT ───────────────────────────────
+function VideoBackground() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleCanPlay = () => setIsLoaded(true);
+    video.addEventListener("canplay", handleCanPlay);
+    return () => video.removeEventListener("canplay", handleCanPlay);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-0 overflow-hidden">
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{
+          top: "50%",
+          left: "50%",
+          minWidth: "100%",
+          minHeight: "100%",
+          width: "auto",
+          height: "auto",
+          transform: "translate(-50%, -50%)",
+        }}
+      >
+        {/* Mobile: lightweight 720p */}
+        <source
+          src="/videos/background-mobile-720p.mp4"
+          type="video/mp4"
+          media="(max-width: 768px)"
+        />
+        {/* Modern browsers: WebM (smallest) */}
+        <source
+          src="/videos/background-desktop-1080p.webm"
+          type="video/webm"
+        />
+        {/* Fallback: MP4 1080p */}
+        <source
+          src="/videos/background-desktop-1080p.mp4"
+          type="video/mp4"
+        />
+      </video>
+
+      {/* Cool Blue overlay gradient */}
+      <div
+        className="absolute inset-0 transition-opacity duration-1000"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(59,130,246,0.4) 0%, rgba(99,102,241,0.25) 50%, rgba(0,0,0,0.1) 100%)",
+          opacity: isLoaded ? 1 : 0.7,
+        }}
+      />
+
+      {/* Dark base underneath for instant perceived load */}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-indigo-950 to-black" />
+      )}
+    </div>
+  );
+}
+
+// ─── NAVBAR ──────────────────────────────────────────────────
+function Navbar({ onSignupClick, onLoginClick }: any) {
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-100 flex justify-between items-center px-6 sm:px-12 py-4 sm:py-6">
+        <Link href="/" className="text-[28px] font-bold text-white no-underline">
+          Lok<span className="text-[#60a5fa]">Fee!</span>
+        </Link>
+      <div className="flex gap-4 sm:gap-8 items-center">
+        <a
+          href="#about"
+          className="text-white no-underline text-sm font-medium opacity-90 hover:opacity-100 transition-opacity max-sm:hidden"
+        >
+          About
+        </a>
+        <a
+          href="#stories"
+          className="text-white no-underline text-sm font-medium opacity-90 hover:opacity-100 transition-opacity max-sm:hidden"
+        >
+          Stories
+        </a>
+        <a
+          href="#safety"
+          className="text-white no-underline text-sm font-medium opacity-90 hover:opacity-100 transition-opacity max-sm:hidden"
+        >
+          Safety
+        </a>
+        <button
+          onClick={onLoginClick}
+          className="bg-transparent border-2 border-white/60 text-white px-5 py-2.5 rounded-full text-sm font-medium cursor-pointer hover:bg-white/10 transition-all"
+        >
+          Log In
+        </button>
+        <button
+          onClick={onSignupClick}
+          className="bg-[#3b82f6] text-white px-5 py-2.5 rounded-full text-sm font-semibold no-underline hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/25"
+        >
+          Sign Up
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+// ─── STATS DATA ──────────────────────────────────────────────
+const stats = [
+  { value: "500K+", label: "Active Members" },
+  { value: "92%", label: "Match Rate" },
+  { value: "120K", label: "Success Stories" },
+  { value: "4.8\u2605", label: "App Rating" },
 ];
 
-const testimonials = [
-  { name: "Jennifer K.", role: "Marketing Director", quote: "After years of swiping, I finally found someone who truly gets me. The match explanation was spot-on.", rating: 5 },
-  { name: "Rebecca S.", role: "Software Engineer", quote: "The relationship blueprint feature helped me understand what I was actually looking for. Game changer.", rating: 5 },
-  { name: "Amanda T.", role: "Therapist", quote: "As a therapist, I'm picky about dating apps. LokFeel is the first one that takes emotional compatibility seriously.", rating: 5 },
+// ─── STORY DATA ──────────────────────────────────────────────
+const stories = [
+  {
+    names: "Sarah & Michael",
+    quote: "Matched in 3 weeks. The compatibility report was accurate.",
+    meta: "✓ Married Spring 2025",
+    img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=300&fit=crop",
+  },
+  {
+    names: "James & Emma",
+    quote: "Finally, an app that focuses on who you are.",
+    meta: "✓ Together 18 months",
+    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+  },
+  {
+    names: "David & Chen",
+    quote: "Long distance. LokFeel brought us together.",
+    meta: "✓ Engaged 2025",
+    img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=300&fit=crop",
+  },
 ];
 
-const features = [
-  { icon: "target", title: "Relationship Structure Matching", description: "We match based on attachment styles, communication patterns, and relationship goals — not just interests." },
-  { icon: "sparkles", title: "Match Explanations", description: "Every match comes with a detailed breakdown of why you connect. No more guessing." },
-  { icon: "shield", title: "Conflict Pre-filtering", description: "We identify potential friction points before they become problems. Better matches, fewer surprises." },
-  { icon: "heart", title: "Female-Friendly Design", description: "Built by women, for women. Your safety and comfort are our top priorities." },
-];
-
+// ─── MAIN LANDING PAGE ───────────────────────────────────────
 export default function LandingPage() {
-  const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [signupOpen, setSignupOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (window.scrollY / totalHeight) * 100;
+      const totalHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+      const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0;
       setScrollProgress(progress);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleWaitlistSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setIsSubmitted(true);
-    }
-  };
-
   return (
-    <div className="relative">
-      {/* Scroll Progress */}
-      <div className="fixed top-0 left-0 h-0.5 bg-gradient-to-r from-primary to-secondary z-50" style={{ width: `${scrollProgress}%` }} />
+    <div className="relative min-h-screen text-white">
+      {/* Scroll Progress Bar */}
+      <div
+        className="fixed top-0 left-0 h-0.5 z-[9999] transition-[width] duration-150"
+        style={{
+          width: `${scrollProgress}%`,
+          background:
+            "linear-gradient(90deg, #3b82f6, #6366f1)",
+        }}
+      />
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-background" />
-          <div className="absolute inset-0 opacity-30 animate-ken-burns" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=1920&h=1080&fit=crop&q=80')", backgroundSize: "cover", backgroundPosition: "center" }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0d0c11] via-[#0d0c11]/80 to-[#0d0c11]/50" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0d0c11]/60 via-transparent to-[#0d0c11]/60" />
-        </div>
+      {/* Video Background */}
+      <VideoBackground />
 
-        <div className="glow-orb glow-orb-primary w-[600px] h-[600px] -top-20 -left-20 animate-breathe opacity-40" />
-        <div className="glow-orb glow-orb-secondary w-[500px] h-[500px] -bottom-20 -right-20 animate-breathe opacity-30" style={{ animationDelay: "2s" }} />
+      {/* Navbar */}
+      <Navbar onSignupClick={() => setSignupOpen(true)} onLoginClick={() => setLoginOpen(true)} />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center section-padding-lg">
-          <div className="animate-slide-up">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm text-foreground">Relationship Matching Reimagined</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              <span className="text-foreground">Real Matches.</span><br />
-              <span className="text-gradient">Real Connection.</span><br />
-              <span className="text-foreground-muted">No Swiping.</span>
-            </h1>
-
-            <p className="text-lg sm:text-xl text-foreground-muted max-w-2xl mx-auto mb-10">
-              Tired of endless swiping? LokFeel delivers 5 curated relationship matches per week with explanations of why you connect. Built for those who want quality over quantity.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/register" className="btn-primary text-lg px-8 py-4">
-                Join the Waitlist <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-              <Link href="/about" className="btn-secondary text-lg px-8 py-4">
-                Learn More
-              </Link>
-            </div>
-
-            <div className="mt-12 flex items-center justify-center gap-8 text-foreground-subtle text-sm">
-              <div className="flex items-center gap-2"><Users className="w-4 h-4" /><span>10,000+ waiting</span></div>
-              <div className="flex items-center gap-2"><Heart className="w-4 h-4 text-primary" /><span>500+ successful matches</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <ChevronRight className="w-6 h-6 text-foreground-subtle rotate-90" />
-        </div>
-      </section>
-
-      {/* User Showcase */}
-      <section className="relative py-20 lg:py-28 overflow-hidden">
-        <div className="glow-orb glow-orb-mixed w-[800px] h-[800px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Meet Your <span className="text-gradient">Matches</span></h2>
-            <p className="text-foreground-muted max-w-xl mx-auto">Our algorithm considers emotional compatibility, not just shared interests</p>
-          </div>
-
-          <div className="relative overflow-hidden">
-            <div className="flex gap-6" style={{ animation: "scroll-x 30s linear infinite" }}>
-              {[...showcaseUsers, ...showcaseUsers].map((user, idx) => (
-                <div key={`${user.id}-${idx}`} className="flex-shrink-0 w-64 glass-card overflow-hidden group hover:scale-105 transition-transform duration-300">
-                  <div className="relative h-80">
-                    <Image src={user.image} alt={user.name} fill className="object-cover" sizes="256px" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-foreground font-semibold">{user.name}, {user.age}</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-medium ${user.sexuality === 'straight' ? 'bg-secondary/30 text-secondary' : 'bg-primary/30 text-primary'}`}>{user.sexuality}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {user.traits.map((trait, i) => (
-                          <span key={i} className="text-xs text-foreground-muted bg-background-tertiary px-2 py-0.5 rounded">{trait}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* ─── HERO SECTION ─────────────────────────── */}
+      <section className="relative min-h-screen flex flex-col justify-center items-center text-center px-6 pt-24 sm:pt-28 pb-20">
+        <div className="max-w-[700px] animate-fade-in">
+          <h1 className="text-[clamp(44px,8vw,76px)] font-bold leading-[1.1] mb-6 text-white">
+            Find Real Love.
+            <br />
+            <span
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, #60a5fa, #818cf8)",
+              }}
+            >
+              No Swiping.
+            </span>
+          </h1>
+          <p
+            className="text-[clamp(18px,2.5vw,22px)] text-white/95 mb-10 inline-block px-7 py-3.5 rounded-xl"
+            style={{ background: "rgba(0,0,0,0.25)" }}
+          >
+            Relationship matching that connects you based on who you
+            truly are.
+          </p>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <button
+              onClick={() => setSignupOpen(true)}
+              className="text-white px-10 py-4 rounded-full text-base font-semibold no-underline hover:-translate-y-0.5 transition-transform"
+              style={{
+                background:
+                  "linear-gradient(135deg, #3b82f6, #6366f1)",
+                boxShadow: "0 4px 25px rgba(59,130,246,0.4)",
+              }}
+            >
+              Start Free Today
+            </button>
+            <a
+              href="#how-it-works"
+              className="text-white px-10 py-4 rounded-full text-base font-medium no-underline backdrop-blur-md hover:bg-white/20 transition-all"
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                border: "1px solid rgba(255,255,255,0.3)",
+              }}
+            >
+              How It Works
+            </a>
           </div>
         </div>
       </section>
 
-      {/* Why Section */}
-      <section className="relative py-20 lg:py-28 bg-background-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Why <span className="text-gradient">LokFeel</span>?</h2>
-            <p className="text-foreground-muted max-w-2xl mx-auto">Dating apps were designed for volume. We were designed for connection.</p>
+      {/* ─── STATS + STORIES ───────────────────────── */}
+      <section
+        id="stories"
+        className="relative px-6 sm:px-12 py-16 sm:py-20"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(15,15,35,0.95) 100%)",
+        }}
+      >
+        <div className="max-w-[1100px] mx-auto">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5 mb-14">
+            {stats.map((stat, idx) => (
+              <div
+                key={idx}
+                className="text-center p-5 sm:p-6 rounded-2xl backdrop-blur-md"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                }}
+              >
+                <div
+                  className="text-[clamp(32px,4vw,44px)] font-extrabold mb-2"
+                  style={{ color: "#60a5fa" }}
+                >
+                  {stat.value}
+                </div>
+                <div className="text-xs text-white/80 uppercase tracking-wider">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, idx) => (
-              <div key={idx} className="glass-card p-6 hover:scale-105 transition-transform duration-300">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
-                  {feature.icon === 'heart' && <Heart className="w-6 h-6 text-primary" />}
-                  {feature.icon === 'sparkles' && <Sparkles className="w-6 h-6 text-primary" />}
-                  {feature.icon === 'shield' && <Shield className="w-6 h-6 text-primary" />}
-                  {feature.icon === 'target' && <ChevronRight className="w-6 h-6 text-primary" />}
+          {/* Stories Section */}
+          <div className="text-center mb-10">
+            <h3
+              className="text-sm uppercase tracking-widest mb-3"
+              style={{ color: "#60a5fa" }}
+            >
+              Real Couples, Real Love
+            </h3>
+            <h2 className="text-[clamp(24px,4vw,36px)] font-bold">
+              They Found Each Other on LokFeel
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {stories.map((story, idx) => (
+              <div
+                key={idx}
+                className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor =
+                    "rgba(96,165,250,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor =
+                    "rgba(255,255,255,0.1)";
+                }}
+              >
+              <div
+                className="h-[130px] flex items-center justify-center text-[40px] overflow-hidden"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #3b82f6, #6366f1)",
+                }}
+              >
+                <img
+                  src={story.img}
+                  alt={story.names}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+                <div className="p-5">
+                  <h4 className="text-base font-semibold mb-1.5">
+                    {story.names}
+                  </h4>
+                  <p className="text-[13px] text-white/70 mb-2">
+                    &ldquo;{story.quote}&rdquo;
+                  </p>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: "#60a5fa" }}
+                  >
+                    {story.meta}
+                  </span>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-foreground-muted text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="relative py-20 lg:py-28">
-        <div className="glow-orb glow-orb-secondary w-[600px] h-[600px] top-1/2 right-0 translate-y-1/2 opacity-20" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">How It <span className="text-gradient">Works</span></h2>
-            <p className="text-foreground-muted max-w-xl mx-auto">Three simple steps to find meaningful connection</p>
+      {/* ─── HOW IT WORKS ──────────────────────────── */}
+      <section
+        id="how-it-works"
+        className="relative px-6 sm:px-12 py-16 sm:py-20"
+        style={{ background: "rgba(15,15,35,0.95)" }}
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <div className="text-center mb-12">
+            <h3
+              className="text-sm uppercase tracking-widest mb-3"
+              style={{ color: "#60a5fa" }}
+            >
+              How It Works
+            </h3>
+            <h2 className="text-[clamp(24px,4vw,36px)] font-bold">
+              Three Steps to Real Connection
+            </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
-              { step: "01", title: "Build Your Blueprint", description: "Complete your relationship blueprint — attachment style, communication needs, conflict resolution preferences." },
-              { step: "02", title: "Receive Curated Matches", description: "Our algorithm delivers 5 high-quality matches per week, not an endless stream of options." },
-              { step: "03", title: "Understand Your Connection", description: "Every match includes a detailed explanation of why you connect and potential areas to explore." },
+              {
+                step: "01",
+                title: "Build Your Blueprint",
+                desc: "Complete your relationship blueprint \u2014 attachment style, communication needs, and what truly matters to you.",
+              },
+              {
+                step: "02",
+                title: "Get Curated Matches",
+                desc: "Our algorithm delivers 5 high-quality matches per week with explanations of why you connect.",
+              },
+              {
+                step: "03",
+                title: "Start Meaningful Conversations",
+                desc: "Every match includes compatibility insights. Skip the small talk and dive into what matters.",
+              },
             ].map((item, idx) => (
-              <div key={idx} className="relative">
-                <div className="glass-card p-8 h-full">
-                  <span className="text-5xl font-bold text-gradient/20 mb-4 block">{item.step}</span>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">{item.title}</h3>
-                  <p className="text-foreground-muted">{item.description}</p>
-                </div>
-                {idx < 2 && <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2"><ChevronRight className="w-8 h-8 text-foreground-faint" /></div>}
+              <div
+                key={idx}
+                className="p-7 rounded-2xl"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                <span
+                  className="text-5xl font-bold block mb-4 opacity-20"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, #60a5fa, #818cf8)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  {item.step}
+                </span>
+                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
+                <p className="text-white/70">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Comparison */}
-      <section className="relative py-20 lg:py-28 bg-background-secondary/30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">The <span className="text-gradient">Difference</span></h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="glass-card p-8 opacity-60">
-              <h3 className="text-xl font-semibold text-foreground-subtle mb-6">Traditional Dating Apps</h3>
-              <ul className="space-y-4">
-                {["Endless swiping, decision fatigue", "Surface-level matching on photos", "No understanding of why you match", "High volume, low quality", "Game-playing and misrepresentation"].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-foreground-subtle">
-                    <span className="w-5 h-5 rounded-full bg-background-tertiary flex items-center justify-center flex-shrink-0 mt-0.5"><span className="w-2 h-2 rounded-full bg-background-tertiary" /></span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="glass-card p-8 border-primary/30">
-              <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2"><Heart className="w-5 h-5 text-primary" /> LokFeel</h3>
-              <ul className="space-y-4">
-                {["Curated weekly matches, no overwhelm", "Deep matching on relationship needs", "Full explanation of compatibility", "High quality, intentional connections", "Transparent and authentic experience"].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-foreground">
-                    <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5"><Check className="w-3 h-3 text-primary" /></span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
+      {/* ─── FINAL CTA ─────────────────────────────── */}
+      <section
+        className="relative px-6 sm:px-12 py-16 sm:py-20 text-center"
+        style={{ background: "rgba(10,10,25,0.95)" }}
+      >
+        <h2 className="text-[clamp(28px,4vw,40px)] font-bold mb-4">
+          Your story starts here
+        </h2>
+        <p className="text-lg text-white/70 mb-8 max-w-xl mx-auto">
+          Join half a million people who found meaningful connections
+        </p>
+        <button
+          onClick={() => setSignupOpen(true)}
+          className="inline-block text-white px-12 py-4.5 rounded-full text-base font-semibold no-underline hover:-translate-y-0.5 transition-transform"
+          style={{
+            background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+            padding: "18px 48px",
+          }}
+        >
+          Create Free Account &rarr;
+        </button>
       </section>
 
-      {/* Testimonials */}
-      <section className="relative py-20 lg:py-28">
-        <div className="glow-orb glow-orb-primary w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">What Our <span className="text-gradient">Members</span> Say</h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, idx) => (
-              <div key={idx} className="glass-card p-6">
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (<Star key={i} className="w-4 h-4 fill-primary text-primary" />))}
-                </div>
-                <p className="text-foreground mb-4 italic">"{testimonial.quote}"</p>
-                <div><p className="font-semibold text-foreground">{testimonial.name}</p><p className="text-sm text-foreground-subtle">{testimonial.role}</p></div>
-              </div>
-            ))}
+      {/* ─── FOOTER ────────────────────────────────── */}
+      <footer
+        className="px-6 sm:px-12 py-8 text-center text-[13px] text-white/40"
+        style={{ background: "rgba(8,8,20,0.95)" }}
+      >
+        <div className="max-w-[1100px] mx-auto flex flex-col sm:flex-row justify-between gap-4 items-center">
+          <p>&copy; 2026 LokFee!. Real Matches. Real Connection. No Swiping.</p>
+          <div className="flex gap-6">
+            <a href="/privacy" className="text-white/40 hover:text-white/70 text-[13px] no-underline transition-colors">Privacy</a>
+            <a href="/terms" className="text-white/40 hover:text-white/70 text-[13px] no-underline transition-colors">Terms</a>
+            <a href="/cookies" className="text-white/40 hover:text-white/70 text-[13px] no-underline transition-colors">Cookies</a>
           </div>
         </div>
-      </section>
+      </footer>
 
-      {/* Waitlist CTA */}
-      <section className="relative py-20 lg:py-28 bg-background-secondary/30">
-        <div className="glow-orb glow-orb-mixed w-[800px] h-[800px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30" />
-        
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <div className="glass-card p-10">
-            <Zap className="w-12 h-12 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Join the <span className="text-gradient">Waitlist</span></h2>
-            <p className="text-foreground-muted mb-8">Be among the first to experience relationship matching reimagined. We launch in early 2026.</p>
-
-            {!isSubmitted ? (
-              <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-3">
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" className="input-feeld flex-1" required />
-                <button type="submit" className="btn-primary whitespace-nowrap">Get Early Access</button>
-              </form>
-            ) : (
-              <div className="flex items-center justify-center gap-2 text-success"><Check className="w-5 h-5" /><span className="font-medium">You're on the list!</span></div>
-            )}
-            <p className="text-xs text-foreground-subtle mt-4">No spam, ever. Unsubscribe anytime.</p>
-          </div>
-        </div>
-      </section>
-
-      <style>{`
-        @keyframes scroll-x {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
+      {/* Modals */}
+      <QuickSignupModal
+        isOpen={signupOpen}
+        onClose={() => setSignupOpen(false)}
+      />
+      <QuickLoginModal
+        isOpen={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSwitchToSignup={() => {
+          setLoginOpen(false);
+          setSignupOpen(true);
+        }}
+      />
     </div>
   );
 }

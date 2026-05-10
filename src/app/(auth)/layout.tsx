@@ -4,25 +4,77 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Glow Orbs — subtle for light theme */}
-      <div className="glow-orb glow-orb-primary w-[600px] h-[600px] -top-48 -left-48 opacity-50" />
-      <div className="glow-orb glow-orb-secondary w-[500px] h-[500px] -bottom-48 -right-48 opacity-40" />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Video Background — identical to landing page */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            top: "50%",
+            left: "50%",
+            minWidth: "100%",
+            minHeight: "100%",
+            width: "auto",
+            height: "auto",
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          {/* Mobile: lightweight 720p */}
+          <source
+            src="/videos/background-mobile-720p.mp4"
+            type="video/mp4"
+            media="(max-width: 768px)"
+          />
+          {/* Modern browsers: WebM */}
+          <source
+            src="/videos/background-desktop-1080p.webm"
+            type="video/webm"
+          />
+          {/* Fallback: MP4 */}
+          <source
+            src="/videos/background-desktop-1080p.mp4"
+            type="video/mp4"
+          />
+        </video>
 
-      {/* Auth Card */}
-      <div className="w-full max-w-md relative z-10">
+        {/* Cool Blue overlay — identical to landing page */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(59,130,246,0.4) 0%, rgba(99,102,241,0.25) 50%, rgba(0,0,0,0.1) 100%)",
+          }}
+        />
+
+        {/* Dark base for instant perceived load */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-indigo-950 to-black -z-10" />
+      </div>
+
+      {/* Auth Content */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-6 pt-20 pb-20">
         {children}
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-foreground-subtle text-sm">
+      <div className="fixed bottom-0 left-0 right-0 z-20 px-6 sm:px-12 py-5 text-center backdrop-blur-md" style={{ background: "rgba(8,8,20,0.8)" }}>
+        <p className="text-white/40 text-[13px]">
           By continuing, you agree to our{" "}
-          <a href="/terms" className="text-foreground-muted hover:text-foreground transition-colors">
+          <a
+            href="/terms"
+            className="text-white/60 hover:text-white/90 no-underline transition-colors"
+          >
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="/privacy" className="text-foreground-muted hover:text-foreground transition-colors">
+          <a
+            href="/privacy"
+            className="text-white/60 hover:text-white/90 no-underline transition-colors"
+          >
             Privacy Policy
           </a>
         </p>

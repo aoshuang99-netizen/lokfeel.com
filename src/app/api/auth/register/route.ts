@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     const {
       name, email, password, gender, sexuality,
       phone, countryCode, verifyMethod, step, code,
+      displayName, dob,
     } = body
 
     const method = verifyMethod || 'email'
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
       let emailSent = false
 
       if (method === 'email') {
-        const result = await sendVerificationEmail(email!, verificationCode, name, magicToken)
+        const result = await sendVerificationEmail(email!, verificationCode, displayName || name, magicToken)
         emailSent = result.success
       } else if (method === 'sms') {
         const fullPhone = `${countryCode || '+1'}${phone}`.replace(/\s/g, '')
@@ -149,9 +150,11 @@ export async function POST(request: NextRequest) {
     }
 
     // ═══ STEP 2: Verify Code & Create Account ═══
-    if (step === 'verify-and-create') {
+    // Support both "verify" (modal) and "verify-and-create" (register page)
+    if (step === 'verify' || step === 'verify-and-create') {
       // Validate required fields
-      if (!name || !email || !password || !code) {
+      const userName = displayName || name
+      if (!userName || !email || !password || !code) {
         return NextResponse.json(
           { message: 'All fields are required including verification code' },
           { status: 400 }
@@ -245,16 +248,29 @@ export async function POST(request: NextRequest) {
       // Hash password & create user
       const hashedPassword = await hashPassword(password)
 
+      // Calculate age from DOB if provided
+      let age = 18
+      if (dob) {
+        const birthDate = new Date(dob)
+        const today = new Date()
+        age = today.getFullYear() - birthDate.getFullYear()
+        const monthDiff = today.getMonth() - birthDate.getMonth()
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--
+        }
+        age = Math.max(13, Math.min(120, age))
+      }
+
       const userData: Record<string, unknown> = {
         email: email.toLowerCase(),
-        name,
+        name: userName,
         password: hashedPassword,
         role: 'USER',
-        emailVerified: new Date(), // 所有新注册用户自动标记为已验证
+        emailVerified: new Date(),
         profile: {
           create: {
-            displayName: name,
-            age: 18,
+            displayName: userName,
+            age,
             gender: mapGender(gender),
             sexuality: sexuality || 'Questioning',
             bio: '',
@@ -287,7 +303,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Send welcome email (async)
-      sendWelcomeEmail(email, name).catch(console.error)
+      sendWelcomeEmail(email, userName).catch(console.error)
 
       // Generate a temporary auto-login token (valid for 5 minutes, dev only)
       const isDev = process.env.NODE_ENV === 'development';

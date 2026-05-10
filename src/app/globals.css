@@ -1,128 +1,135 @@
 @import "tailwindcss";
 
 /* ================================================
-   LOKFEEL — DATEASY DESIGN SYSTEM v5 — Dark Purple + Lime
-   Dark × Bold × Dateasy-Inspired
-   HEX color space · System font stack · Dark Glass
-   
-   Primary: Deep Purple #4c1d95
-   CTA: Lime #a3e635 · Accent: Pink #f472b6
-   Background: #0a0a0a (Dark-first, no light mode)
+   LOKFEEL — COOL BLUE DESIGN SYSTEM v6
+   Deep Blue Gradient × Modern × Cool-First
+   HEX color space · System font stack · Cool Glass
+
+   Primary: Cool Blue #3b82f6
+   Accent: Indigo #6366f1 · Light Blue #60a5fa
+   CTA: Cyan #22d3ee · Accent Pink: #f472b6
+   Background: #050a18 (Cool dark, no light mode)
    ================================================ */
 
-/* CSS Custom Properties — Dateasy Dark Color System */
+/* CSS Custom Properties — Cool Blue Color System */
 :root {
-  /* ─── Background: Deep dark (dark-first, always dark) ─── */
-  --background: #0a0a0a;
-  --background-secondary: #111111;
-  --background-tertiary: #1a1a1a;
-  
+  /* ─── Background: Deep cool dark (dark-first, always dark) ─── */
+  --background: #050a18;
+  --background-secondary: #0a1025;
+  --background-tertiary: #101a35;
+
   /* ─── Foreground: Light text on dark ─── */
   --foreground: #ffffff;
-  --foreground-muted: #aaaaaa;
-  --foreground-subtle: #888888;
-  --foreground-faint: #555555;
-  
-  /* ─── Primary: Deep Purple — bold brand identity ─── */
-  --primary: #4c1d95;
-  --primary-hover: #6d28d9;
-  --primary-muted: rgba(76, 29, 149, 0.15);
-  
-  /* ─── Secondary: Violet — gentle accent ─── */
-  --secondary: #8b5cf6;
-  --secondary-hover: #a78bfa;
-  --secondary-muted: rgba(139, 92, 246, 0.15);
-  
-  /* ─── CTA: Lime — primary actions, success energy ─── */
-  --cta: #a3e635;
-  --cta-hover: #bef264;
-  --cta-muted: rgba(163, 230, 53, 0.15);
-  
+  --foreground-muted: #a0aec0;
+  --foreground-subtle: #718096;
+  --foreground-faint: #4a5568;
+
+  /* ─── Primary: Cool Blue — trust, calm, professional ─── */
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-muted: rgba(59, 130, 246, 0.15);
+
+  /* ─── Secondary: Indigo — depth, wisdom ─── */
+  --secondary: #6366f1;
+  --secondary-hover: #818cf8;
+  --secondary-muted: rgba(99, 102, 241, 0.15);
+
+  /* ─── CTA: Cyan — primary actions, fresh energy ─── */
+  --cta: #22d3ee;
+  --cta-hover: #67e8f9;
+  --cta-muted: rgba(34, 211, 238, 0.15);
+
   /* ─── Accent: Pink — hearts, likes, romance ─── */
   --accent-pink: #f472b6;
   --accent-pink-hover: #ec4899;
   --accent-pink-muted: rgba(244, 114, 182, 0.15);
-  
-  /* ─── LokFeel Signature Gradient: Purple → Violet → Lime ─── */
-  --gradient-start: #4c1d95;
-  --gradient-mid: #8b5cf6;
-  --gradient-end: #a3e635;
-  
-  /* ─── Card: Dark glass cards ─── */
-  --card: rgba(26, 26, 26, 0.85);
-  --card-hover: rgba(34, 34, 34, 0.95);
-  --card-border: rgba(76, 29, 149, 0.2);
-  
+
+  /* ─── LokFeel Signature Gradient: Blue → Indigo → Cyan ─── */
+  --gradient-start: #3b82f6;
+  --gradient-mid: #6366f1;
+  --gradient-end: #22d3ee;
+
+  /* ─── Card: Cool dark glass cards ─── */
+  --card: rgba(16, 26, 53, 0.85);
+  --card-hover: rgba(20, 32, 65, 0.95);
+  --card-border: rgba(59, 130, 246, 0.15);
+
   /* ─── Semantic Colors ─── */
-  --success: #a3e635;
-  --success-muted: rgba(163, 230, 53, 0.15);
+  --success: #22d3ee;
+  --success-muted: rgba(34, 211, 238, 0.15);
   --warning: #fbbf24;
   --warning-muted: rgba(251, 191, 36, 0.15);
   --error: #fb7185;
   --error-muted: rgba(251, 113, 133, 0.15);
   --info: #60a5fa;
   --info-muted: rgba(96, 165, 250, 0.15);
-  
+
   /* ─── Input ─── */
-  --input-bg: rgba(26, 26, 26, 0.6);
-  --input-border: rgba(85, 85, 85, 0.4);
-  --input-border-focus: rgba(76, 29, 149, 0.5);
-  --input-placeholder: #555555;
-  
+  --input-bg: rgba(16, 26, 53, 0.6);
+  --input-border: rgba(59, 130, 246, 0.2);
+  --input-border-focus: rgba(59, 130, 246, 0.5);
+  --input-placeholder: #4a5568;
+
   /* ─── Glow & Atmosphere ─── */
-  --glow-primary: rgba(76, 29, 149, 0.25);
-  --glow-secondary: rgba(139, 92, 246, 0.2);
-  --glow-accent: rgba(163, 230, 53, 0.15);
-  
+  --glow-primary: rgba(59, 130, 246, 0.2);
+  --glow-secondary: rgba(99, 102, 241, 0.15);
+  --glow-accent: rgba(34, 211, 238, 0.1);
+
   /* ─── Shadows ─── */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 8px 32px rgba(76, 29, 149, 0.4);
-  
+  --shadow-glow: 0 8px 32px rgba(59, 130, 246, 0.3);
+
   /* ─── Radar Chart (Five-Dimension Card) ─── */
-  --radar-grid-fill: rgba(139, 92, 246, 0.06);
-  --radar-grid-stroke: rgba(139, 92, 246, 0.18);
-  --radar-axis-stroke: rgba(139, 92, 246, 0.12);
-  --radar-data-fill: rgba(76, 29, 149, 0.15);
-  --radar-data-stroke: #8b5cf6;
-  --radar-point-glow: rgba(139, 92, 246, 0.15);
-  --radar-glow-fill: rgba(76, 29, 149, 0.06);
-  
-  /* ─── Purple Scale ─── */
-  --purple-900: #1e0a3c;
-  --purple-800: #2e1065;
-  --purple-700: #3b0764;
-  --purple-600: #4c1d95;
-  --purple-500: #6d28d9;
-  --purple-400: #8b5cf6;
-  --purple-300: #a78bfa;
-  --purple-200: #c084fc;
-  --purple-100: #e9d5ff;
-  
-  /* ─── Lime Scale ─── */
-  --lime-500: #84cc16;
-  --lime-400: #a3e635;
-  --lime-300: #bef264;
-  
+  --radar-grid-fill: rgba(99, 102, 241, 0.06);
+  --radar-grid-stroke: rgba(99, 102, 241, 0.18);
+  --radar-axis-stroke: rgba(99, 102, 241, 0.12);
+  --radar-data-fill: rgba(59, 130, 246, 0.15);
+  --radar-data-stroke: #818cf8;
+  --radar-point-glow: rgba(99, 102, 241, 0.15);
+  --radar-glow-fill: rgba(59, 130, 246, 0.06);
+
+  /* ─── Blue Scale ─── */
+  --blue-950: #050a18;
+  --blue-900: #0a1628;
+  --blue-800: #0f2040;
+  --blue-700: #1a3560;
+  --blue-600: #3b82f6;
+  --blue-500: #60a5fa;
+  --blue-400: #93c5fd;
+  --blue-300: #bfdbfe;
+  --blue-200: #dbeafe;
+  --blue-100: #eff6ff;
+
+  /* ─── Indigo Scale ─── */
+  --indigo-600: #6366f1;
+  --indigo-500: #818cf8;
+  --indigo-400: #a5b4fc;
+
+  /* ─── Cyan Scale ─── */
+  --cyan-500: #22d3ee;
+  --cyan-400: #67e8f9;
+  --cyan-300: #a5f3fc;
+
   /* ─── Pink Scale ─── */
   --pink-500: #ec4899;
   --pink-400: #f472b6;
-  
-  /* ─── Dark Scale ─── */
-  --dark-900: #0a0a0a;
-  --dark-800: #111111;
-  --dark-700: #1a1a1a;
-  --dark-600: #222222;
-  --dark-500: #333333;
-  --dark-400: #555555;
-  --dark-300: #888888;
-  --dark-200: #aaaaaa;
+
+  /* ─── Cool Dark Scale ─── */
+  --dark-900: #050a18;
+  --dark-800: #0a1025;
+  --dark-700: #101a35;
+  --dark-600: #162040;
+  --dark-500: #2d3a5c;
+  --dark-400: #4a5568;
+  --dark-300: #718096;
+  --dark-200: #a0aec0;
   --dark-100: #ffffff;
 }
 
 /* ================================================
-   Tailwind v4 Theme Configuration — Dateasy Dark
+   Tailwind v4 Theme Configuration — Cool Blue Dark
    ================================================ */
 @theme inline {
   --color-background: var(--background);
@@ -176,27 +183,33 @@
   --color-input: var(--input-border);
   --color-ring: var(--primary);
 
-  /* ─── Dateasy Purple Scale ─── */
-  --color-purple-900: var(--purple-900);
-  --color-purple-800: var(--purple-800);
-  --color-purple-700: var(--purple-700);
-  --color-purple-600: var(--purple-600);
-  --color-purple-500: var(--purple-500);
-  --color-purple-400: var(--purple-400);
-  --color-purple-300: var(--purple-300);
-  --color-purple-200: var(--purple-200);
-  --color-purple-100: var(--purple-100);
+  /* ─── Cool Blue Scale ─── */
+  --color-blue-950: var(--blue-950);
+  --color-blue-900: var(--blue-900);
+  --color-blue-800: var(--blue-800);
+  --color-blue-700: var(--blue-700);
+  --color-blue-600: var(--blue-600);
+  --color-blue-500: var(--blue-500);
+  --color-blue-400: var(--blue-400);
+  --color-blue-300: var(--blue-300);
+  --color-blue-200: var(--blue-200);
+  --color-blue-100: var(--blue-100);
 
-  /* ─── Dateasy Lime Scale ─── */
-  --color-lime-500: var(--lime-500);
-  --color-lime-400: var(--lime-400);
-  --color-lime-300: var(--lime-300);
+  /* ─── Indigo Scale ─── */
+  --color-indigo-600: var(--indigo-600);
+  --color-indigo-500: var(--indigo-500);
+  --color-indigo-400: var(--indigo-400);
 
-  /* ─── Dateasy Pink Scale ─── */
+  /* ─── Cyan Scale ─── */
+  --color-cyan-500: var(--cyan-500);
+  --color-cyan-400: var(--cyan-400);
+  --color-cyan-300: var(--cyan-300);
+
+  /* ─── Pink Scale ─── */
   --color-pink-500: var(--pink-500);
   --color-pink-400: var(--pink-400);
 
-  /* ─── Dateasy Dark Scale ─── */
+  /* ─── Cool Dark Scale ─── */
   --color-dark-900: var(--dark-900);
   --color-dark-800: var(--dark-800);
   --color-dark-700: var(--dark-700);
@@ -207,7 +220,23 @@
   --color-dark-200: var(--dark-200);
   --color-dark-100: var(--dark-100);
 
-  /* ─── Typography: System font stack (Dateasy spec) ─── */
+  /* ─── Legacy Purple Scale (backward compat) ─── */
+  --color-purple-900: var(--blue-950);
+  --color-purple-800: var(--blue-900);
+  --color-purple-700: var(--blue-800);
+  --color-purple-600: var(--blue-600);
+  --color-purple-500: var(--indigo-600);
+  --color-purple-400: var(--indigo-500);
+  --color-purple-300: var(--indigo-400);
+  --color-purple-200: var(--blue-400);
+  --color-purple-100: var(--blue-300);
+
+  /* ─── Legacy Lime Scale → Cyan (backward compat) ─── */
+  --color-lime-500: var(--cyan-500);
+  --color-lime-400: var(--cyan-400);
+  --color-lime-300: var(--cyan-300);
+
+  /* ─── Typography: System font stack ─── */
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
 }
@@ -236,37 +265,37 @@ body {
 }
 
 /* ================================================
-   GLASS MORPHISM UTILITIES — Dateasy Dark Glass
+   GLASS MORPHISM UTILITIES — Cool Blue Glass
    ================================================ */
 
 .glass {
-  background: rgba(17, 17, 17, 0.7);
+  background: rgba(10, 16, 37, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(76, 29, 149, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .glass-strong {
-  background: rgba(17, 17, 17, 0.85);
+  background: rgba(10, 16, 37, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(76, 29, 149, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.15);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .glass-card {
-  background: rgba(26, 26, 26, 0.85);
+  background: rgba(16, 26, 53, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(76, 29, 149, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.12);
   border-radius: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .glass-card:hover {
-  background: rgba(34, 34, 34, 0.95);
-  border-color: rgba(76, 29, 149, 0.25);
+  background: rgba(20, 32, 65, 0.95);
+  border-color: rgba(59, 130, 246, 0.2);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
@@ -286,15 +315,15 @@ body {
 }
 
 .bg-gradient-brand {
-  background: linear-gradient(135deg, #4c1d95, #c084fc);
+  background: linear-gradient(135deg, #3b82f6, #818cf8);
 }
 
 .bg-gradient-lime {
-  background: linear-gradient(135deg, #a3e635, #84cc16);
+  background: linear-gradient(135deg, #22d3ee, #06b6d4);
 }
 
 .bg-gradient-purple-lime {
-  background: linear-gradient(135deg, #c084fc, #a3e635);
+  background: linear-gradient(135deg, #818cf8, #22d3ee);
 }
 
 .bg-gradient-radial {
@@ -355,13 +384,13 @@ body {
   animation: slide-down 0.6s ease-out forwards;
 }
 
-/* Pulse Glow — Dateasy: purple + lime glow */
+/* Pulse Glow — Cool Blue: blue + cyan glow */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(76, 29, 149, 0.2);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
   }
   50% {
-    box-shadow: 0 0 40px rgba(76, 29, 149, 0.35), 0 0 60px rgba(163, 230, 53, 0.15);
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), 0 0 60px rgba(34, 211, 238, 0.1);
   }
 }
 
@@ -383,7 +412,7 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(76, 29, 149, 0.08) 50%,
+    rgba(59, 130, 246, 0.06) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
@@ -495,7 +524,7 @@ body {
 }
 
 /* ================================================
-   ATMOSPHERE / GLOW ORBS — Dateasy Dark
+   ATMOSPHERE / GLOW ORBS — Cool Blue
    ================================================ */
 
 .glow-orb {
@@ -507,15 +536,15 @@ body {
 }
 
 .glow-orb-primary {
-  background: radial-gradient(circle, rgba(76, 29, 149, 0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
 }
 
 .glow-orb-secondary {
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
 }
 
 .glow-orb-mixed {
-  background: radial-gradient(circle, rgba(76, 29, 149, 0.12) 0%, rgba(163, 230, 53, 0.08) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(34, 211, 238, 0.06) 50%, transparent 70%);
 }
 
 /* ================================================
@@ -533,7 +562,7 @@ body {
 }
 
 /* ================================================
-   CUSTOM SCROLLBAR — Dateasy Dark
+   CUSTOM SCROLLBAR — Cool Blue
    ================================================ */
 
 ::-webkit-scrollbar {
@@ -546,22 +575,22 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(76, 29, 149, 0.2);
+  background: rgba(59, 130, 246, 0.15);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(76, 29, 149, 0.35);
+  background: rgba(59, 130, 246, 0.3);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(76, 29, 149, 0.2) var(--background);
+  scrollbar-color: rgba(59, 130, 246, 0.15) var(--background);
 }
 
 /* ================================================
-   FORM ELEMENTS - DATEASY DARK STYLE
+   FORM ELEMENTS - COOL BLUE STYLE
    ================================================ */
 
 .input-feeld {
@@ -613,20 +642,20 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #a3e635, #84cc16);
-  color: #0a0a0a;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: #ffffff;
   font-weight: 600;
   font-size: 0.95rem;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 8px 32px rgba(163, 230, 53, 0.3);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.25);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(163, 230, 53, 0.4);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.35);
 }
 
 .btn-primary:active {
@@ -646,18 +675,18 @@ body {
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   background: transparent;
-  color: #c084fc;
+  color: #60a5fa;
   font-weight: 500;
   font-size: 0.95rem;
   border-radius: 9999px;
-  border: 1px solid rgba(76, 29, 149, 0.4);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: rgba(76, 29, 149, 0.15);
-  border-color: rgba(76, 29, 149, 0.6);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 .btn-secondary:disabled {
@@ -738,7 +767,7 @@ body {
 
 .card-feeld:hover {
   background: var(--card-hover);
-  border-color: rgba(76, 29, 149, 0.25);
+  border-color: rgba(59, 130, 246, 0.2);
   transform: translateY(-2px);
 }
 
@@ -766,7 +795,7 @@ body {
 
 .badge-primary {
   background: var(--primary-muted);
-  color: var(--purple-300);
+  color: var(--blue-400);
 }
 
 .badge-secondary {
@@ -796,14 +825,14 @@ body {
 .progress-bar {
   width: 100%;
   height: 6px;
-  background: rgba(76, 29, 149, 0.15);
+  background: rgba(59, 130, 246, 0.1);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4c1d95, #a3e635);
+  background: linear-gradient(90deg, #3b82f6, #22d3ee);
   border-radius: 3px;
   transition: width 0.5s ease-out;
 }
@@ -814,7 +843,7 @@ body {
 }
 
 .circular-progress-bg {
-  stroke: rgba(76, 29, 149, 0.15);
+  stroke: rgba(59, 130, 246, 0.1);
   fill: none;
 }
 
@@ -858,9 +887,9 @@ body {
   border: 2px solid var(--background);
 }
 
-/* Story Ring — purple → lime gradient border */
+/* Story Ring — blue → cyan gradient border */
 .avatar-story-ring {
-  background: linear-gradient(135deg, #4c1d95, #a3e635);
+  background: linear-gradient(135deg, #3b82f6, #22d3ee);
   padding: 2px;
   border-radius: 9999px;
 }
@@ -962,8 +991,8 @@ body {
 }
 
 .match-score-high {
-  background: linear-gradient(135deg, rgba(163, 230, 53, 0.15), rgba(163, 230, 53, 0.08));
-  color: #a3e635;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(34, 211, 238, 0.08));
+  color: #22d3ee;
 }
 
 .match-score-medium {
@@ -1042,28 +1071,28 @@ body {
 .animate-typing-dot-2 { animation-delay: 0.15s; }
 .animate-typing-dot-3 { animation-delay: 0.3s; }
 
-/* Send button glow when active — Dateasy lime glow */
+/* Send button glow when active — Cool Blue glow */
 @keyframes send-glow {
-  0% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.4); }
-  70% { box-shadow: 0 0 0 8px rgba(163, 230, 53, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
 }
 
 .animate-send-glow {
   animation: send-glow 0.6s ease-out;
 }
 
-/* Chat input focus ring — Dateasy purple */
+/* Chat input focus ring — Cool Blue */
 .chat-input-focus {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .chat-input-focus:focus-within {
-  border-color: rgba(76, 29, 149, 0.4);
-  box-shadow: 0 0 0 3px rgba(76, 29, 149, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-/* Conversation item active indicator — Purple → Lime gradient */
+/* Conversation item active indicator — Blue → Cyan gradient */
 .conversation-active {
   position: relative;
 }
@@ -1076,7 +1105,7 @@ body {
   transform: translateY(-50%);
   width: 3px;
   height: 60%;
-  background: linear-gradient(180deg, #4c1d95, #a3e635);
+  background: linear-gradient(180deg, #3b82f6, #22d3ee);
   border-radius: 0 2px 2px 0;
 }
 
@@ -1160,7 +1189,7 @@ body {
 
 /* Story ring gradient */
 .story-ring {
-  background: linear-gradient(135deg, #4c1d95, #a3e635);
+  background: linear-gradient(135deg, #3b82f6, #22d3ee);
   padding: 2px;
   border-radius: 9999px;
 }
@@ -1172,7 +1201,7 @@ body {
 
 /* Match celebration overlay */
 .match-overlay {
-  background: radial-gradient(ellipse at center, rgba(76, 29, 149, 0.3) 0%, rgba(10, 10, 10, 0.95) 70%);
+  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.25) 0%, rgba(5, 10, 24, 0.95) 70%);
 }
 
 /* Premium/VIP amber badge style */
@@ -1201,10 +1230,10 @@ body {
   border-radius: 9999px;
 }
 
-/* New user lime badge */
+/* New user cyan badge */
 .badge-new {
-  background: rgba(163, 230, 53, 0.15);
-  color: #a3e635;
+  background: rgba(34, 211, 238, 0.15);
+  color: #22d3ee;
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.75rem;
@@ -1241,14 +1270,14 @@ body {
   transform: translateY(0) scale(0.98);
 }
 
-/* Purple glow button */
+/* Blue glow button (replaces Purple) */
 .btn-purple {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #4c1d95, #8b5cf6);
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
   color: white;
   font-weight: 600;
   font-size: 0.95rem;
@@ -1256,12 +1285,12 @@ body {
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 8px 32px rgba(76, 29, 149, 0.4);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
 }
 
 .btn-purple:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(76, 29, 149, 0.5);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
 }
 
 .btn-purple:active {

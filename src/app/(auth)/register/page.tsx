@@ -2,7 +2,7 @@
 
 /**
  * RegisterPage — Feeld-style single-page registration
- * DATEASY DARK: Unified with landing page
+ * DATRASY DARK: Unified with landing page
  *
  * Changes from original:
  * - Merged 2-step into 1 page with inline OTP
@@ -10,6 +10,9 @@
  * - Social login (Google/X) promoted ABOVE email form
  * - Feeld-style progress indicator
  * - DOB field added
+ * - Brand: LokFee! (not LokFeel)
+ * - Mobile: social login vertical stack (Google top, X bottom)
+ * - PC: optimized layout like a real app
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -35,8 +38,8 @@ import GoogleSignInButton from "@/components/auth/google-sign-in-button";
 // ─── COOL BLUE V2 THEME CONSTANTS ─────────────────────────────
 const colors = {
   bg: "transparent", // video bg from layout
-  cardBg: "rgba(15,15,35,0.75)",
-  border: "rgba(255,255,255,0.15)",
+  cardBg: "rgba(15,15,35,0.80)",
+  border: "rgba(255,255,255,0.18)",
   borderStrong: "rgba(96,165,250,0.5)",
   text: "#ffffff",
   textMuted: "rgba(255,255,255,0.40)",
@@ -56,7 +59,7 @@ const colors = {
 };
 
 // ─── Registration State Persistence ───
-const REG_STATE_KEY = 'lokfeel_register_state';
+const REG_STATE_KEY = 'lokfee_register_state';
 interface RegState {
   phase: string; // 'form' | 'verify'
   formData: Record<string, string | boolean>;
@@ -90,8 +93,6 @@ function clearRegState() {
   if (typeof window === 'undefined') return;
   try { localStorage.removeItem(REG_STATE_KEY); } catch { /* ignore */ }
 }
-
-// X (Twitter) — Native OAuth 2.0 + PKCE redirect (bypasses Firebase)
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -400,15 +401,15 @@ export default function RegisterPage() {
   // ─── Progress Indicator (Feeld-style) ───
   const progressPercent = phase === "form" ? 60 : 95;
 
-  // ══════════════════════════════════════
+  // ═════════════════════════════════════
   // VERIFY PHASE
-  // ══════════════════════════════════════
+  // ═════════════════════════════════════
   if (phase === "verify") {
     return (
       <div style={{
-        maxWidth: "420px",
+        maxWidth: "440px",
         margin: "0 auto",
-        padding: "32px 24px",
+        padding: "24px 16px",
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
@@ -421,10 +422,10 @@ export default function RegisterPage() {
           borderRadius: "24px",
           border: `1px solid ${colors.border}`,
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)",
-          padding: "48px 40px",
+          padding: "40px 36px",
         }}>
           {/* Progress bar */}
-          <div style={{ marginBottom: "32px" }}>
+          <div style={{ marginBottom: "28px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
               <span style={{ fontSize: "12px", color: colors.textMuted, fontWeight: "500" }}>Almost there</span>
               <span style={{ fontSize: "12px", color: colors.primary, fontWeight: "600" }}>{progressPercent}%</span>
@@ -440,23 +441,20 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="text-center" style={{ marginBottom: "32px" }}>
-            {/* Logo */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "24px" }}>
-              <Link
-                href="/"
-                style={{
-                  fontSize: "24px",
-                  fontWeight: "bold",
-                  color: colors.text,
-                  textDecoration: "none",
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              >
-                Lok<span style={{ color: "#60a5fa" }}>Feel</span>
-              </Link>
+          <div className="text-center" style={{ marginBottom: "28px" }}>
+            {/* Logo - Brand: LokFee! */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "20px" }}>
+              <div style={{
+                width: "44px", height: "44px", borderRadius: "12px",
+                background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </div>
+              <span style={{ fontSize: "22px", fontWeight: "bold", color: colors.text, fontFamily: "'Outfit', sans-serif" }}>Lok<span style={{ color: "#60a5fa" }}>Fee!</span></span>
             </div>
-
             <h1 style={{ fontSize: "22px", fontWeight: "700", color: colors.text, marginBottom: "8px", fontFamily: "'Outfit', sans-serif" }}>
               Verify Your Email
             </h1>
@@ -557,14 +555,14 @@ export default function RegisterPage() {
     );
   }
 
-  // ══════════════════════════════════════
+  // ═════════════════════════════════════
   // FORM PHASE — Feeld-style single page
-  // ══════════════════════════════════════
+  // ═════════════════════════════════════
   return (
     <div style={{
-      maxWidth: "420px",
+      maxWidth: "440px",
       margin: "0 auto",
-      padding: "32px 24px",
+      padding: "24px 16px",
       minHeight: "100vh",
       display: "flex",
       flexDirection: "column",
@@ -575,10 +573,10 @@ export default function RegisterPage() {
         borderRadius: "24px",
         border: `1px solid ${colors.border}`,
         boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
-        padding: "40px 32px",
+        padding: "40px 36px",
       }}>
         {/* Progress bar */}
-        <div style={{ marginBottom: "28px" }}>
+        <div style={{ marginBottom: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
             <span style={{ fontSize: "12px", color: colors.textMuted, fontWeight: "500" }}>Create your account</span>
             <span style={{ fontSize: "12px", color: colors.primary, fontWeight: "600" }}>{progressPercent}%</span>
@@ -594,40 +592,41 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "20px" }}>
+        {/* Header - Brand: LokFee! */}
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "16px" }}>
             <div style={{
-              width: "48px", height: "48px", borderRadius: "14px",
+              width: "44px", height: "44px", borderRadius: "12px",
               background: "linear-gradient(135deg, #4c1d95, #8b5cf6)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
             </div>
-            <span style={{ fontSize: "24px", fontWeight: "bold", color: colors.text, fontFamily: "'Outfit', sans-serif" }}>LokFeel</span>
+            <span style={{ fontSize: "22px", fontWeight: "bold", color: colors.text, fontFamily: "'Outfit', sans-serif" }}>Lok<span style={{ color: "#60a5fa" }}>Fee!</span></span>
           </div>
-          <h1 style={{ fontSize: "22px", fontWeight: "700", color: colors.text, marginBottom: "6px", fontFamily: "'Outfit', sans-serif" }}>
-            Join LokFeel
+          <h1 style={{ fontSize: "20px", fontWeight: "700", color: colors.text, marginBottom: "6px", fontFamily: "'Outfit', sans-serif" }}>
+            Join LokFee!
           </h1>
-          <p style={{ color: colors.textMuted, fontSize: "14px" }}>
+          <p style={{ color: colors.textMuted, fontSize: "13px" }}>
             Start your journey to meaningful connection
           </p>
         </div>
 
-        {/* ─── SOCIAL LOGIN — PROMINENT, ABOVE FORM ─── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "24px" }}>
+        {/* ─── SOCIAL LOGIN — VERTICAL STACK (Google top, X bottom) ─── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
           {/* Google — GIS (Google Identity Services) with FedCM + account chooser */}
           <GoogleSignInButton
             callbackUrl="/dashboard/onboarding"
             disabled={isLoading}
             label="Continue with Google"
+            fullWidth
           />
           {/* X (Twitter) — Native OAuth 2.0 + PKCE redirect */}
           <button
             type="button"
-            onClick={() => { window.location.href = '/api/auth/twitter/signin?callbackUrl=/dashboard/onboarding'; }}
+            onClick={() => { window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent("/dashboard/onboarding")}`; }}
             disabled={isLoading}
             style={{
               padding: "13px 16px",
@@ -647,6 +646,16 @@ export default function RegisterPage() {
               fontFamily: "'Inter', sans-serif",
               width: "100%",
             }}
+            onMouseEnter={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.background = "rgba(255,255,255,0.14)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+            }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -656,7 +665,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px", color: colors.textMuted, fontSize: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px", color: colors.textMuted, fontSize: "12px" }}>
           <div style={{ flex: 1, height: "1px", background: colors.border }} />
           or continue with email
           <div style={{ flex: 1, height: "1px", background: colors.border }} />
@@ -664,13 +673,13 @@ export default function RegisterPage() {
 
         {/* Error */}
         {error && (
-          <div style={{ marginBottom: "20px", padding: "12px 16px", borderRadius: "12px", background: colors.errorBg, border: `1px solid ${colors.errorBorder}`, color: colors.error, fontSize: "14px" }}>
+          <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "12px", background: colors.errorBg, border: `1px solid ${colors.errorBorder}`, color: colors.error, fontSize: "14px" }}>
             {error}
           </div>
         )}
 
         {/* ─── EMAIL FORM ─── */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSendCode(); }} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSendCode(); }} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {/* Name */}
           <div>
             <label htmlFor="reg-name" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
@@ -771,17 +780,17 @@ export default function RegisterPage() {
           {/* Terms */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", paddingTop: "4px" }}>
             <input
-              id="agreeToTerms" name="agreeToTerms" type="checkbox"
-              checked={formData.agreeToTerms} onChange={handleChange} required
-              style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: colors.primary, flexShrink: 0 }}
-            />
-            <label htmlFor="agreeToTerms" style={{ fontSize: "12px", color: colors.textMuted, lineHeight: "1.5" }}>
-              I agree to the{' '}
-              <Link href="/terms" style={{ color: colors.purple, textDecoration: "none", fontWeight: "500" }}>Terms</Link>
-              {' '}and{' '}
-              <Link href="/privacy" style={{ color: colors.purple, textDecoration: "none", fontWeight: "500" }}>Privacy Policy</Link>.
-              A verification code will be sent to your email.
-            </label>
+                id="agreeToTerms" name="agreeToTerms" type="checkbox"
+                checked={formData.agreeToTerms} onChange={handleChange} required
+                style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: colors.primary, flexShrink: 0 }}
+              />
+              <label htmlFor="agreeToTerms" style={{ fontSize: "12px", color: colors.textMuted, lineHeight: "1.5" }}>
+                I agree to the{' '}
+                <Link href="/terms" style={{ color: colors.purple, textDecoration: "none", fontWeight: "500" }}>Terms</Link>
+                {' '}and{' '}
+                <Link href="/privacy" style={{ color: colors.purple, textDecoration: "none", fontWeight: "500" }}>Privacy Policy</Link>.
+                A verification code will be sent to your email.
+              </label>
           </div>
 
           {/* Submit */}
@@ -806,9 +815,9 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        {/* Already have account */}
-        <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px solid ${colors.border}`, textAlign: "center" }}>
-          <p style={{ color: colors.textMuted, fontSize: "14px" }}>
+        {/* Already have account — simplified, no duplication with Login page */}
+        <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: `1px solid ${colors.border}`, textAlign: "center" }}>
+          <p style={{ color: colors.textMuted, fontSize: "13px" }}>
             Already have an account?{' '}
             <Link href="/login" style={{ color: colors.primary, fontWeight: "600", textDecoration: "none" }}>
               Sign in

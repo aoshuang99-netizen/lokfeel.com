@@ -485,10 +485,32 @@ function OnboardingV3Page() {
 
           // Restore step position from saved onboardingStep
           // onboardingStep 1-5 maps to stepIndex 0-4; step 6+ means at result page
+          let restoredIndex = 0;
           if (p.onboardingStep && p.onboardingStep > 0 && p.onboardingStep < 9) {
-            const restoredIndex = Math.min(p.onboardingStep - 1, STEPS.length - 1);
-            setCurrentStepIndex(restoredIndex);
+            restoredIndex = Math.min(p.onboardingStep - 1, STEPS.length - 1);
           }
+
+          // Smart skip: If profile was pre-filled from modal signup,
+          // skip steps that are already complete
+          const hasBasics = !!p.displayName && (p.age || 0) > 0;
+          const hasIdentity = !!p.gender && !!p.sexuality;
+          const hasAvatar = !!p.avatar;
+
+          if (hasBasics && restoredIndex === 0) {
+            restoredIndex = 1; // Skip basics → go to desire
+            // Persist the skip so returning user stays ahead
+            fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ onboardingStep: 2 }) }).catch(() => {});
+          }
+          if (hasIdentity && restoredIndex <= 2) {
+            restoredIndex = Math.max(restoredIndex, 3); // Skip identity → go to traits
+            fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ onboardingStep: 4 }) }).catch(() => {});
+          }
+          if (hasAvatar && restoredIndex <= 4) {
+            restoredIndex = Math.max(restoredIndex, 5); // Skip photo → go to result
+            fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ onboardingStep: 6 }) }).catch(() => {});
+          }
+
+          setCurrentStepIndex(restoredIndex);
         }
       } catch (e) {
         console.error("Check status error:", e);

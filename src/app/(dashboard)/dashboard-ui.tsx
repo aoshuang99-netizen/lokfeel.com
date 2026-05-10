@@ -99,7 +99,14 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
   const isDashboard = pathname === "/dashboard" || pathname === "/dashboard/" || pathname === "/dashboard/explore" || pathname === "/dashboard/explore/";
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      {/* Cool Blue gradient orbs — atmospheric depth */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-breathe" />
+        <div className="absolute top-1/2 -left-20 w-72 h-72 bg-secondary/5 rounded-full blur-[100px] animate-breathe" style={{ animationDelay: "2s" }} />
+        <div className="absolute -bottom-32 right-1/4 w-80 h-80 bg-cyan-500/3 rounded-full blur-[110px] animate-breathe" style={{ animationDelay: "4s" }} />
+      </div>
+
       {/* Desktop Sidebar */}
       <SidebarV2 onCollapseChange={setSidebarCollapsed} />
 
@@ -112,7 +119,7 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
             <div
               className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
               style={{
-                background: "rgba(10, 10, 10, 0.92)",
+                background: "rgba(5, 10, 24, 0.92)",
                 backdropFilter: "blur(12px)",
               }}
             >
