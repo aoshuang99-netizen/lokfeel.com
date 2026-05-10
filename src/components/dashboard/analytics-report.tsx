@@ -298,10 +298,7 @@ export function AnalyticsReport() {
             { date: "Fri", matches: 6, views: 89 },
             { date: "Sat", matches: 8, views: 124 },
             { date: "Sun", matches: 5, views: 97 },
-          ].map(item => ({
-            label: item.date,
-            value: item.matches,
-          })),
+          ],
           topTags: [
             { tag: "Coffee", count: 12 },
             { tag: "Hiking", count: 9 },
@@ -421,13 +418,13 @@ export function AnalyticsReport() {
           <CardContent>
             <div className="h-48">
               <MiniLineChart
-                data={data.activityTrend}
+                data={data.activityTrend.map(p => ({ label: p.date, value: p.matches }))}
                 height={180}
               />
             </div>
             <div className="flex justify-between mt-4 text-xs text-foreground-muted">
               {data.activityTrend.map((point) => (
-                <span key={point.label}>{point.label}</span>
+                <span key={point.date}>{point.date}</span>
               ))}
             </div>
           </CardContent>
