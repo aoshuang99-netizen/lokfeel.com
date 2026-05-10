@@ -248,8 +248,8 @@ function ConnectionCard({
               onError={(e) => {
                 const img = e.currentTarget;
                 const fallbackUrl = getFallbackAvatarUrl(user.id || user.name);
-                if (img.src !== fallbackUrl) {
-                  img.src = fallbackUrl;
+                if (img.src !== (fallbackUrl || '')) {
+                  img.src = fallbackUrl || '';
                 } else {
                   img.style.display = 'none';
                 }
@@ -257,7 +257,7 @@ function ConnectionCard({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <img src={getFallbackAvatarUrl(user.id || user.name)} alt={user.name} className="w-16 h-16 object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              <img src={getFallbackAvatarUrl(user.id || user.name)} alt={user.name} className="w-16 h-16 object-contain p-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             </div>
           )}
         </div>

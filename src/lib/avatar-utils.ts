@@ -91,13 +91,13 @@ export function isBrokenAvatarUrl(avatar: string | null | undefined): boolean {
 }
 
 /**
- * Generate a fallback avatar URL — 使用真实照片，不使用卡通
- * 优先使用本地 bot-avatars，失败则显示默认背景
+ * Generate a fallback avatar URL — 使用默认占位符
+ * 不再使用 DiceBear 卡通 SVG
  */
-export function getFallbackAvatarUrl(seed: string): string | null {
-  // 不再使用 DiceBear 卡通 SVG
-  // 返回 null，让调用方使用默认背景
-  return null;
+export function getFallbackAvatarUrl(seed: string): string {
+  // 返回一个透明的 1x1 像素 GIF (data URL)
+  // 调用方会显示默认背景
+  return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 }
 
 /**

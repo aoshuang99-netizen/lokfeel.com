@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
  * GET /api/users/[userId]
  * 
  * 获取用户详细信息（用于资料页展示）
- * 返回用户基本信息和完整 profile
  */
 export async function GET(
   request: NextRequest,
@@ -30,38 +29,7 @@ export async function GET(
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        profile: {
-          select: {
-            id: true,
-            displayName: true,
-            age: true,
-            avatar: true,
-            avatarType: true,
-            city: true,
-            bio: true,
-            relationshipGoal: true,
-            attachmentStyle: true,
-            communicationStyle: true,
-            loveLanguage: true,
-            conflictResolution: true,
-            emotionalAvailability: true,
-            interests: true,
-            selectedTags: true,
-            profileStatus: true,
-            onboardingStep: true,
-            gallery: true,
-            gender: true,
-            lookingFor: true,
-            education: true,
-            occupation: true,
-            height: true,
-            drinking: true,
-            smoking: true,
-            kids: true,
-            pets: true,
-            languages: true,
-          },
-        },
+        profile: true,
       },
     });
 
@@ -79,19 +47,17 @@ export async function GET(
       },
     });
 
-    // 检查当前用户是否已经有 reaction
+    // 检查当前用户是否已经有 reaction（用 findFirst 而不是 findUnique）
     const existingReaction = existingMatch
-      ? await prisma.matchReaction.findUnique({
+      ? await prisma.matchReaction.findFirst({
           where: {
-            userId_matchId: {
-              userId: session.user.id,
-              matchId: existingMatch.id,
-            },
+            userId: session.user.id,
+            matchId: existingMatch.id,
           },
         })
       : null;
 
-    // 构建响应
+    // 构建响应（处理 profile 可能为 null 的情况）
     const userDetail = {
       id: user.id,
       name: user.name,
@@ -99,7 +65,7 @@ export async function GET(
       image: user.image,
       isBot: user.isBot || false,
       createdAt: user.createdAt,
-      profile: user.profile,
+      profile: user.profile, // profile 可能为 null，前端需要处理
       matchStatus: existingMatch ? existingMatch.status : null,
       myReaction: existingReaction?.reaction || null,
       matchId: existingMatch?.id || null,
