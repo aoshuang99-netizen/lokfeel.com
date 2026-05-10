@@ -1,3 +1,5 @@
+import Footer from "@/components/layout/footer";
+
 export default function AuthLayout({
   children,
 }: {
@@ -61,24 +63,7 @@ export default function AuthLayout({
       </div>
 
       {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-6 sm:px-12 py-5 text-center backdrop-blur-md" style={{ background: "rgba(8,8,20,0.8)" }}>
-        <p className="text-white/40 text-[13px]">
-          By continuing, you agree to our{" "}
-          <a
-            href="/terms"
-            className="text-white/60 hover:text-white/90 no-underline transition-colors"
-          >
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a
-            href="/privacy"
-            className="text-white/60 hover:text-white/90 no-underline transition-colors"
-          >
-            Privacy Policy
-          </a>
-        </p>
-      </div>
+      <Footer />
     </div>
   );
 }
