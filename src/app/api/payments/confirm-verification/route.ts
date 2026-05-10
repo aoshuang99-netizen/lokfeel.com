@@ -53,7 +53,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log(`[ConfirmVerification] User ${user.id} card verified successfully`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[ConfirmVerification] User ${user.id} card verified successfully`);
+    }
 
     return success({
       cardVerified: true,

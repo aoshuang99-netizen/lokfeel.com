@@ -138,7 +138,9 @@ export async function POST(request: NextRequest) {
       billing_address_collection: "auto",
     });
 
-    console.log(`[Checkout] Created session for user ${user.id}, plan: ${plan}, session: ${session.id}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Checkout] Created session for user ${user.id}, plan: ${plan}, session: ${session.id}`);
+    }
 
     return success({ checkoutUrl: session.url, sessionId: session.id });
   });

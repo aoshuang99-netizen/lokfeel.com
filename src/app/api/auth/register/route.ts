@@ -417,7 +417,9 @@ export async function PUT(request: NextRequest) {
                           || (method === 'sms' && SMS_VERIFICATION_ENABLED && hasRealSmsService)
     const isDevMode = !requireRealSend
     if (!sendSuccess && isDevMode) {
-      console.log(`\n🔐 RESEND CODE (${method}) → ${identifier}: ${verificationCode}\n`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`\n🔐 RESEND CODE (${method}) → ${identifier}: ${verificationCode}\n`)
+      }
       sendSuccess = true
     }
 

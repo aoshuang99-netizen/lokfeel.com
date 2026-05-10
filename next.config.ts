@@ -1,6 +1,19 @@
 import type { NextConfig } from 'next'
 import path from 'path'
 
+const CSP_VALUE = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com",
+  "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com",
+  "font-src 'self' fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https://images.unsplash.com https://i.pravatar.cc https://randomuser.me https://api.dicebear.com https://thispersondoesnotexist.com https://xsgames.co",
+  "connect-src 'self' https://*.stripe.com https://api.twitter.com https://hooks.stripe.com",
+  "frame-src 'self' https://js.stripe.com",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join('; ')
+
 const nextConfig: NextConfig = {
   // Turbopack config (Next.js 16 default bundler)
   turbopack: {
@@ -151,6 +164,10 @@ const nextConfig: NextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           { key: 'X-XSS-Protection', value: '1; mode=block' },
+          {
+            key: 'Content-Security-Policy',
+            value: CSP_VALUE,
+          },
         ],
       },
       {

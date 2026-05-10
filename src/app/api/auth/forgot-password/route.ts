@@ -91,11 +91,13 @@ export async function POST(request: NextRequest) {
     // Dev mode: return token for testing
     const isDev = !process.env.RESEND_API_KEY || !process.env.RESEND_API_KEY.startsWith('re_')
     if (!result.success && isDev) {
-      console.log(`\n🔑 PASSWORD RESET LINK (dev mode)`)
-      console.log(`   Email: ${normalizedEmail}`)
-      console.log(`   Reset URL: ${resetUrl}`)
-      console.log(`   Token: ${resetToken}`)
-      console.log(`   Expires: ${expiresAt.toISOString()}\n`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`\n🔑 PASSWORD RESET LINK (dev mode)`)
+        console.log(`   Email: ${normalizedEmail}`)
+        console.log(`   Reset URL: ${resetUrl}`)
+        console.log(`   Token: ${resetToken}`)
+        console.log(`   Expires: ${expiresAt.toISOString()}\n`)
+      }
     }
 
     return NextResponse.json({

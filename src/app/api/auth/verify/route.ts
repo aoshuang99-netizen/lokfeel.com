@@ -66,7 +66,9 @@ export async function POST(request: NextRequest) {
 
     // Dev fallback
     if (!success && isDevMode) {
-      console.log(`\n🔐 VERIFY CODE (${method}) → ${identifier}: ${code}\n`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`\n🔐 VERIFY CODE (${method}) → ${identifier}: ${code}\n`)
+      }
       success = true
       devCode = code
     }

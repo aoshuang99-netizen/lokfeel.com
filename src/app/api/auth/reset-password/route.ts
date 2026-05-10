@@ -112,7 +112,9 @@ export async function POST(request: NextRequest) {
       data: { used: true },
     })
 
-    console.log(`[Reset Password] Password updated for user: ${normalizedEmail}`)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Reset Password] Password updated for user: ${normalizedEmail}`)
+    }
 
     return NextResponse.json({
       message: 'Password has been reset successfully. You can now sign in with your new password.',

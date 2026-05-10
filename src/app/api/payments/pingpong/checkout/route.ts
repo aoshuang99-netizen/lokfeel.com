@@ -102,7 +102,9 @@ export async function POST(request: NextRequest) {
         customerEmail: user.email || undefined,
       });
 
-      console.log(`[PingPong Checkout] Created session for user ${user.id}, plan: ${plan}, transaction: ${merchantTransactionId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[PingPong Checkout] Created session for user ${user.id}, plan: ${plan}, transaction: ${merchantTransactionId}`);
+      }
 
       // ═══ Save pending transaction to database ═══
       await db.payment.create({

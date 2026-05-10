@@ -74,7 +74,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log(`[VerifyCard] Created SetupIntent for user ${user.id}, customer: ${stripeCustomerId}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[VerifyCard] Created SetupIntent for user ${user.id}, customer: ${stripeCustomerId}`);
+    }
 
     return success({
       clientSecret: setupIntent.client_secret,
