@@ -31,7 +31,17 @@ const SOFT_DELETE_MODELS = [
   "Conversation",
 ] as const;
 
+// Vercel Cron sends GET requests by default
+export async function GET(request: NextRequest) {
+  return handleCleanup(request);
+}
+
+// Also support POST for manual triggers
 export async function POST(request: NextRequest) {
+  return handleCleanup(request);
+}
+
+async function handleCleanup(request: NextRequest) {
   // Authenticate cron request (REQUIRED - not optional)
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
