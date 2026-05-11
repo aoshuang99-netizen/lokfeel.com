@@ -186,11 +186,6 @@ export default function LoginInnerClient({
             }}
           >
             {error}
-            {error.includes("not properly configured") && (
-              <div style={{ marginTop: "8px", fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-                Admin: Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.local
-              </div>
-            )}
           </div>
         )}
 
