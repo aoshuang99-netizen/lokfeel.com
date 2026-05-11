@@ -1,6 +1,6 @@
 /**
  * Power Board Lite 规则引擎适配层
- * LokFeel IM 模块 - 适配 backend-architect 提供的核心服务
+ * LokFee! IM 模块 - 适配 backend-architect 提供的核心服务
  * 
  * 适配目标：
  * - 复用 src/lib/im/services/ 中的核心服务

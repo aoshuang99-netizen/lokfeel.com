@@ -1,5 +1,5 @@
 /**
- * LokFeel Admin — Unified Audit Logger
+ * LokFee! Admin — Unified Audit Logger
  *
  * Provides writeAudit() for recording all admin operations to AdminAudit table.
  * Used by withPermission middleware and can be called manually from any API route.

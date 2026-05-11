@@ -1,6 +1,6 @@
 /**
  * Power Board Lite 规则同步机制
- * LokFeel IM 模块边界控制系统
+ * LokFee! IM 模块边界控制系统
  * 
  * 核心功能：
  * - 规则版本管理

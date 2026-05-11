@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Behavior Logger
+ * LokFee! Bot Behavior Engine — Behavior Logger
  *
  * Centralized logging and monitoring for all bot behavior events.
  * Provides:

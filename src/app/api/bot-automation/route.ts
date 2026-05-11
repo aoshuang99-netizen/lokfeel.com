@@ -22,13 +22,19 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
-    // 检查认证：session 或 admin key
+    // ─── Auth: require admin session (NO hardcoded fallback key) ───
     const session = await auth();
-    const adminKey = request.headers.get("x-admin-key");
-    const validAdminKey = process.env.ADMIN_API_KEY || "lokfeel-admin-2024";
-    
-    if (!session?.user?.id && adminKey !== validAdminKey) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify admin role
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+    if (user?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 
     // 获取统计数据
@@ -78,13 +84,19 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // 检查认证：session 或 admin key
+    // ─── Auth: require admin session (NO hardcoded fallback key) ───
     const session = await auth();
-    const adminKey = request.headers.get("x-admin-key");
-    const validAdminKey = process.env.ADMIN_API_KEY || "lokfeel-admin-2024";
-    
-    if (!session?.user?.id && adminKey !== validAdminKey) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify admin role
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+    if (user?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 
     const body = await request.json();

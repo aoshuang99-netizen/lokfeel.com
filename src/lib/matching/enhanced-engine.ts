@@ -1,5 +1,5 @@
 /**
- * LokFeel Enhanced Matching Engine v2.0
+ * LokFee! Enhanced Matching Engine v2.0
  * 
  * 结合Chyrpe PRD核心概念与现有匹配引擎的增强版本
  * 

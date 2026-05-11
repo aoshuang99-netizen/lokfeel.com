@@ -1,6 +1,6 @@
 /**
  * Power Board Lite 规则验证 Schema (Zod)
- * LokFeel IM 模块边界控制系统
+ * LokFee! IM 模块边界控制系统
  */
 
 import { z } from 'zod';

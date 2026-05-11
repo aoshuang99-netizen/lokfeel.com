@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ApiError, formatErrorResponse } from "@/lib/errors";
 
 // ═════════════════════════════════
 // ANALYTICS API ROUTE
@@ -202,7 +203,8 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("[Analytics API] Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const { json, status } = formatErrorResponse(error);
+    return NextResponse.json(json, { status });
   }
 }
 

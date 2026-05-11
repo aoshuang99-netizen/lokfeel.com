@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Type Definitions
+ * LokFee! Bot Behavior Engine — Type Definitions
  *
  * Defines all interfaces and types for the behavior simulation system.
  * Bot users simulate realistic online presence, browsing, matching, and chat behaviors.

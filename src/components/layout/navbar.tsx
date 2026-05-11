@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
-import { LokFeelLogo } from "@/components/LokFeelLogo";
+import { LokFeeLogo } from "@/components/LokFeeLogo";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -38,7 +38,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="group">
-              <LokFeelLogo size="md" showText={true} animated={true} />
+              <LokFeeLogo size="md" showText={true} animated={true} />
             </Link>
 
             {/* Desktop Navigation */}

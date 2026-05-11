@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ================================================
-   LOKFEEL — COOL BLUE DESIGN SYSTEM v6
+   LOKFEE! — COOL BLUE DESIGN SYSTEM v6
    Deep Blue Gradient × Modern × Cool-First
    HEX color space · System font stack · Cool Glass
 
@@ -44,7 +44,7 @@
   --accent-pink-hover: #ec4899;
   --accent-pink-muted: rgba(244, 114, 182, 0.15);
 
-  /* ─── LokFeel Signature Gradient: Blue → Indigo → Cyan ─── */
+  /* ─── LokFee! Signature Gradient: Blue → Indigo → Cyan ─── */
   --gradient-start: #3b82f6;
   --gradient-mid: #6366f1;
   --gradient-end: #22d3ee;
@@ -1125,7 +1125,7 @@ body {
 }
 
 /* ================================================
-   LOKFEEL BRAND ANIMATIONS - Heartbeat & Pulse
+   LOKFEE! BRAND ANIMATIONS - Heartbeat & Pulse
    ================================================ */
 
 /* Gentle heartbeat pulse */
@@ -1268,6 +1268,149 @@ body {
 
 .btn-danger:active {
   transform: translateY(0) scale(0.98);
+}
+
+/* ================================================
+   AUTH CARD — Responsive Glass Card
+   Mobile-first: compact padding, scales up on desktop
+   ================================================ */
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(15, 15, 35, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 28px 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 480px) {
+  .auth-card {
+    padding: 36px 28px;
+    border-radius: 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .auth-card {
+    padding: 44px 40px;
+  }
+}
+
+/* Auth social button — touch-friendly 44px+ height */
+.auth-social-btn {
+  width: 100%;
+  padding: 13px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  min-height: 48px; /* Touch-friendly minimum */
+}
+
+.auth-social-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.auth-social-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Auth input — consistent styling with responsive padding */
+.auth-input {
+  width: 100%;
+  padding: 13px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  font-size: 16px; /* Prevents iOS zoom on focus */
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  min-height: 48px;
+}
+
+.auth-input:focus {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Auth CTA button — gradient primary */
+.auth-cta {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border: none;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35);
+  transition: all 0.2s ease;
+  min-height: 48px;
+}
+
+.auth-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(59, 130, 246, 0.45);
+}
+
+.auth-cta:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.auth-cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Auth divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 16px 0 20px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.auth-divider span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
 }
 
 /* Blue glow button (replaces Purple) */

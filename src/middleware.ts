@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 /**
- * MIDDLEWARE — Region Block + Security + CORS
+ * MIDDLEWARE — Region Block + Security + CORS + Debug Endpoint Protection
  *
  * FEATURES:
- * 1. Block access from China (CN) mainland IP addresses
+ * 1. Block access from China (CN) mainland IP addresses (disabled for dev)
  * 2. Security headers on every response
  * 3. CORS restrictions for API routes
+ * 4. Block debug/diagnostic endpoints from non-admin origins
  *
  * WHY NO AUTH CHECK HERE:
  * NextAuth v5 beta uses JWE (encrypted) session tokens.
@@ -32,6 +33,13 @@ const ALLOWED_PATHS = [
   '/api/health',
   '/_next/',
   '/favicon',
+]
+
+// Debug/diagnostic paths — block external access entirely (Vercel Cron bypasses middleware)
+const BLOCKED_DEBUG_PATHS = [
+  '/api/debug-auth',
+  '/api/db-check',
+  '/api/diagnostic/',
 ]
 
 function isAllowedPath(pathname: string): boolean {
@@ -60,7 +68,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(blockedUrl)
   }
 
-  // ─── 2. CORS for API routes ───
+  // ─── 2. Block debug/diagnostic endpoints from external access ───
+  const isDebugPath = BLOCKED_DEBUG_PATHS.some(p => pathname.startsWith(p))
+  if (isDebugPath) {
+    // Allow Vercel internal requests (cron) but block external browser/API access
+    const userAgent = request.headers.get('user-agent') || ''
+    const isVercelCron = request.headers.get('x-vercel-cron') === 'true'
+    // These endpoints have their own auth (requireAdminAuth), but we add
+    // an extra layer: reject requests with browser-like User-Agent
+    if (!isVercelCron && /mozilla|chrome|safari|firefox|edge/i.test(userAgent) && !pathname.startsWith('/api/health')) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Not Found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
+  // ─── 3. CORS for API routes ───
   const response = pathname.startsWith('/api')
     ? NextResponse.next()
     : NextResponse.next()
@@ -96,6 +120,13 @@ export async function middleware(request: NextRequest) {
   if (country) {
     response.headers.set('x-geo-country', country)
   }
+
+  // ─── 4. Security headers on all responses ───
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)')
 
   return response
 }

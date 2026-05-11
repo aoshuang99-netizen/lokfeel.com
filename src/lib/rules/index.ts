@@ -1,6 +1,6 @@
 /**
  * Power Board Lite 规则引擎入口
- * LokFeel IM 模块边界控制系统
+ * LokFee! IM 模块边界控制系统
  */
 
 // 类型导出

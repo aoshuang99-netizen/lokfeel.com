@@ -1,5 +1,5 @@
 /**
- * LokFeel IM Module — Main Entry Point
+ * LokFee! IM Module — Main Entry Point
  * 
  * Architecture:
  * - Redis (Upstash): Presence, pace control, caching, seq generator

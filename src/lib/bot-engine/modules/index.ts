@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Module Index
+ * LokFee! Bot Behavior Engine — Module Index
  *
  * Re-exports all modules for convenient access.
  */

@@ -1,5 +1,5 @@
 /**
- * LokFeel Admin — Server-Side Admin Guard
+ * LokFee! Admin — Server-Side Admin Guard
  *
  * Used in admin layout / page server components to enforce RBAC at the page level.
  * Throws a redirect to /admin/403 if the user lacks the required admin role.

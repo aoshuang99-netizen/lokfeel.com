@@ -1,5 +1,5 @@
 /**
- * LokFeel Matching Engine — Unified Export
+ * LokFee! Matching Engine — Unified Export
  * 
  * 导出所有匹配引擎功能（基础版 + 增强版）
  */

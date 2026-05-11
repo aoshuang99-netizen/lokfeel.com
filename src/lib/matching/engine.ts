@@ -1,5 +1,5 @@
 /**
- * LokFeel Relationship Structure Matching Engine
+ * LokFee! Relationship Structure Matching Engine
  * 
  * Core differentiation: Matches users based on relationship psychology dimensions,
  * NOT surface-level tags or swipe-based selection.

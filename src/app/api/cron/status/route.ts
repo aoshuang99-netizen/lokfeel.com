@@ -2,19 +2,25 @@
  * Vercel Cron Job — Bot Engine Health & Status
  *
  * This endpoint provides an overview of the bot engine status.
- * ADMIN ONLY — Protected endpoint
+ * CRON ONLY — Protected by CRON_SECRET (consistent with all other cron endpoints)
  */
 
 import { NextResponse } from 'next/server';
-import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/cron/status
 export async function GET(request: Request) {
+  // ─── Verify CRON_SECRET (same as all other cron endpoints) ───
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    await requireAdminAuth();
 
     // Get bot count
     const botCount = await db.user.count({

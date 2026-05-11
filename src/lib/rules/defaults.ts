@@ -1,6 +1,6 @@
 /**
  * Power Board Lite 默认规则配置
- * LokFeel IM 模块边界控制系统
+ * LokFee! IM 模块边界控制系统
  */
 
 import {

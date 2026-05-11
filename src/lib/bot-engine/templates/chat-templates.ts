@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Chat Templates
+ * LokFee! Bot Behavior Engine — Chat Templates
  *
  * Pre-built conversation templates for bot chat behavior.
  * Organized by message type and context for natural conversation flow.

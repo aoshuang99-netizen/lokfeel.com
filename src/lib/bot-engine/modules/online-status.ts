@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Online Status Module
+ * LokFee! Bot Behavior Engine — Online Status Module
  *
  * Simulates realistic online/offline patterns for bot users:
  * - Timezone-aware peak activity hours

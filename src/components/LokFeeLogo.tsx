@@ -1,21 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════
-   LOKFEEL BRAND LOGO
+   LOKFEE! BRAND LOGO
    Heart-fluttering, elegant, memorable brand mark
    ═══════════════════════════════════════════════════════════════ */
 
-interface LokFeelLogoProps {
+interface LokFeeLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   showText?: boolean
   animated?: boolean
   className?: string
 }
 
-export function LokFeelLogo({ 
+export function LokFeeLogo({ 
   size = 'md', 
   showText = true, 
   animated = true,
   className = '' 
-}: LokFeelLogoProps) {
+}: LokFeeLogoProps) {
   const sizes = {
     sm: { icon: 24, text: 'text-base', gap: 'gap-1.5' },
     md: { icon: 32, text: 'text-xl', gap: 'gap-2' },
@@ -95,10 +95,10 @@ export function LokFeelLogo({
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LOKFEEL WORDMARK
+   LOKFEE! WORDMARK
    For footer and subtle placements
    ═══════════════════════════════════════════════════════════════ */
-export function LokFeelWordmark({ className = '' }: { className?: string }) {
+export function LokFeeWordmark({ className = '' }: { className?: string }) {
   return (
     <span className={`font-bold tracking-tight ${className}`}>
       <span className="text-purple-400">Lok</span>
@@ -110,7 +110,7 @@ export function LokFeelWordmark({ className = '' }: { className?: string }) {
 /* ═══════════════════════════════════════════════════════════════
    APP ICON (for download badges)
    ═══════════════════════════════════════════════════════════════ */
-export function LokFeelAppIcon({ size = 64 }: { size?: number }) {
+export function LokFeeAppIcon({ size = 64 }: { size?: number }) {
   return (
     <div 
       className="relative rounded-2xl overflow-hidden shadow-2xl"
@@ -156,3 +156,11 @@ export function LokFeelAppIcon({ size = 64 }: { size?: number }) {
     </div>
   )
 }
+
+/* ─── Backward-compatible aliases (deprecated, use LokFee* names) ─── */
+/** @deprecated Use LokFeeLogo instead */
+export const LokFeelLogo = LokFeeLogo
+/** @deprecated Use LokFeeWordmark instead */
+export const LokFeelWordmark = LokFeeWordmark
+/** @deprecated Use LokFeeAppIcon instead */
+export const LokFeelAppIcon = LokFeeAppIcon

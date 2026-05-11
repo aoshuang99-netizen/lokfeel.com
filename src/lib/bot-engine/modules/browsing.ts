@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Browsing Simulation Module
+ * LokFee! Bot Behavior Engine — Browsing Simulation Module
  *
  * Simulates how bot users browse other user profiles:
  * - Profile viewing with realistic dwell times (normal distribution)

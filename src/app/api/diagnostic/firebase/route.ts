@@ -5,14 +5,24 @@
  *
  * Returns detailed Firebase configuration status for debugging.
  * Checks: Admin SDK, env vars, project config, OAuth readiness.
+ *
+ * SECURITY: Admin-only — requires authenticated admin session.
  */
 
 import { NextResponse } from "next/server";
 import { firebaseAdmin } from "@/lib/firebase/admin";
+import { requireAdminAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // ─── Admin Auth Gate ───
+  try {
+    await requireAdminAuth();
+  } catch {
+    return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+  }
+
   const results: Record<string, any> = {
     timestamp: new Date().toISOString(),
     checks: {},

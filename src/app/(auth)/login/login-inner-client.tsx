@@ -8,7 +8,8 @@
  * Fixes:
  * - Brand: LokFee! (not LokFeel)
  * - Social login: vertical stack (Google top, X bottom) for mobile
- * - Removed duplicate content with Register page
+ * - Responsive: CSS class-based auth-card for mobile-first padding
+ * - Touch-friendly: 48px min-height on all interactive elements
  * - PC layout optimized (440px card, better padding)
  */
 
@@ -91,48 +92,26 @@ export default function LoginInnerClient({
   const handleOAuth = async (provider: string) => {
     try {
       await signIn(provider as any, { callbackUrl });
-    } catch (err) {
+    } catch (err: any) {
       console.error(`[OAuth] ${provider} failed:`, err);
-      window.location.href = `/api/auth/signin/${provider}`;
+      
+      // Check if it's a configuration error
+      const errorMessage = err?.message || "";
+      if (errorMessage.includes("Configuration") || errorMessage.includes("OAuth")) {
+        setError(`${provider === "google" ? "Google" : "X"} login is not properly configured. Please contact support.`);
+      } else {
+        setError(`Failed to sign in with ${provider}. Please try again.`);
+      }
     }
   };
 
   // ─── Cool Blue Glass Styles ───
-  const inputBaseStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "14px 18px",
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    borderRadius: "12px",
-    fontSize: "15px",
-    color: "#fff",
-    fontFamily: "'Inter', -apple-system, sans-serif",
-    outline: "none",
-    transition: "all 0.2s",
-    boxSizing: "border-box",
-  };
-
-  const inputFocusStyle: React.CSSProperties = {
-    ...inputBaseStyle,
-    borderColor: "#3b82f6",
-    background: "rgba(59,130,246,0.1)",
-    boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
-  };
+  // Using CSS classes for responsive behavior; keep minimal inline styles for dynamic states
 
   return (
     <div style={{ width: "100%", maxWidth: "440px" }}>
-      {/* Glassmorphism Login Card */}
-      <div
-        style={{
-          background: "rgba(15,15,35,0.78)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderRadius: "24px",
-          border: "1px solid rgba(255,255,255,0.16)",
-          padding: "44px 40px",
-          boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)",
-        }}
-      >
+      {/* Glassmorphism Login Card — responsive padding via auth-card class */}
+      <div className="auth-card">
         {/* Header — Brand: LokFee! */}
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <Link
@@ -179,34 +158,7 @@ export default function LoginInnerClient({
               window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
             }}
             disabled={isLoading}
-            style={{
-              padding: "13px 16px",
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.13)",
-              borderRadius: "12px",
-              color: isLoading ? "rgba(255,255,255,0.5)" : "#fff",
-              fontSize: "14px",
-              fontWeight: "500",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              opacity: isLoading ? 0.5 : 1,
-              transition: "all 0.2s",
-              fontFamily: "'Inter', sans-serif",
-              width: "100%",
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.background = "rgba(255,255,255,0.13)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)";
-            }}
+            className="auth-social-btn"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -216,37 +168,8 @@ export default function LoginInnerClient({
         </div>
 
         {/* Divider */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            margin: "0 0 20px",
-            gap: "14px",
-          }}
-        >
-          <div
-            style={{
-              flex: 1,
-              height: "1px",
-              background: "rgba(255,255,255,0.15)",
-            }}
-          />
-          <span
-            style={{
-              fontSize: "13px",
-              color: "rgba(255,255,255,0.5)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            or continue with email
-          </span>
-          <div
-            style={{
-              flex: 1,
-              height: "1px",
-              background: "rgba(255,255,255,0.15)",
-            }}
-          />
+        <div className="auth-divider">
+          <span>or continue with email</span>
         </div>
 
         {/* Error */}
@@ -263,6 +186,11 @@ export default function LoginInnerClient({
             }}
           >
             {error}
+            {error.includes("not properly configured") && (
+              <div style={{ marginTop: "8px", fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
+                Admin: Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.local
+              </div>
+            )}
           </div>
         )}
 
@@ -297,21 +225,7 @@ export default function LoginInnerClient({
               autoFocus
               disabled={isLoading}
               placeholder="Enter your email or phone"
-              style={inputBaseStyle}
-              onFocus={(e) =>
-                Object.assign(e.target.style, {
-                  borderColor: "#3b82f6",
-                  background: "rgba(59,130,246,0.1)",
-                  boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
-                })
-              }
-              onBlur={(e) =>
-                Object.assign(e.target.style, {
-                  borderColor: "rgba(255,255,255,0.15)",
-                  background: "rgba(255,255,255,0.08)",
-                  boxShadow: "none",
-                })
-              }
+              className="auth-input"
             />
           </div>
 
@@ -341,21 +255,7 @@ export default function LoginInnerClient({
                 autoComplete="current-password"
                 disabled={isLoading}
                 placeholder="Enter your password"
-                style={inputBaseStyle}
-                onFocus={(e) =>
-                  Object.assign(e.target.style, {
-                    borderColor: "#3b82f6",
-                    background: "rgba(59,130,246,0.1)",
-                    boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
-                  })
-                }
-                onBlur={(e) =>
-                  Object.assign(e.target.style, {
-                    borderColor: "rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.08)",
-                    boxShadow: "none",
-                  })
-                }
+                className="auth-input"
               />
               <button
                 type="button"
@@ -426,40 +326,7 @@ export default function LoginInnerClient({
           <button
             type="submit"
             disabled={isLoading}
-            style={{
-              width: "100%",
-              padding: "15px",
-              background: isLoading
-                ? "rgba(59,130,246,0.5)"
-                : "linear-gradient(135deg, #3b82f6, #6366f1)",
-              border: "none",
-              borderRadius: "12px",
-              color: "#fff",
-              fontSize: "16px",
-              fontWeight: "600",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              opacity: isLoading ? 0.6 : 1,
-              transition: "all 0.2s",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              fontFamily: "'Inter', sans-serif",
-              boxShadow: isLoading
-                ? "none"
-                : "0 4px 20px rgba(59,130,246,0.35)",
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 25px rgba(59,130,246,0.45)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 20px rgba(59,130,246,0.35)";
-            }}
+            className="auth-cta"
           >
             {isLoading ? (
               <>
@@ -475,30 +342,12 @@ export default function LoginInnerClient({
         {/* Create Account — simplified, no duplication with Register page */}
         <Link
           href="/register"
+          className="auth-cta"
           style={{
-            display: "block",
-            width: "100%",
-            padding: "13px 16px",
             background: "linear-gradient(135deg, #8b5cf6, #a855f7)",
-            border: "none",
-            borderRadius: "12px",
-            color: "#fff",
-            fontSize: "15px",
-            fontWeight: "600",
-            textAlign: "center",
-            textDecoration: "none",
-            fontFamily: "'Inter', sans-serif",
             boxShadow: "0 4px 20px rgba(139,92,246,0.35)",
-            transition: "all 0.2s",
-            margin: "14px 0 0",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow = "0 6px 25px rgba(139,92,246,0.45)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 4px 20px rgba(139,92,246,0.35)";
+            textDecoration: "none",
+            marginTop: "14px",
           }}
         >
           Create Account

@@ -1,5 +1,5 @@
 /**
- * LokFeel Enhanced Matching Engine — API Integration v2.0
+ * LokFee! Enhanced Matching Engine — API Integration v2.0
  * 
  * 集成Chyrpe PRD核心概念的API层
  */

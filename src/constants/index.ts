@@ -13,8 +13,8 @@ export const APP_CONFIG = {
   privacyEmail: 'privacy@lokfeel.com',
   legalEmail: 'legal@lokfeel.com',
   social: {
-    twitter: '@lokfeel',
-    instagram: '@lokfeel',
+    twitter: '@lokfee',
+    instagram: '@lokfee',
   },
   features: {
     enableRealTimeChat: true,

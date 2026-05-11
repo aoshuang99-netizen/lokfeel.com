@@ -1,5 +1,5 @@
 /**
- * LokFeel Admin RBAC — 61 Permission Codes
+ * LokFee! Admin RBAC — 61 Permission Codes
  *
  * Permission format: {module}.{action}
  * Modules: user | match | chat | payment | content | bot |

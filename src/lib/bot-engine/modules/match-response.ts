@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Match Response Module
+ * LokFee! Bot Behavior Engine — Match Response Module
  *
  * Simulates how bot users respond to match suggestions:
  * - Score-based accept/reject decision making

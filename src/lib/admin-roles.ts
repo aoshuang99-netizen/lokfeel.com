@@ -1,5 +1,5 @@
 /**
- * LokFeel Admin RBAC — Role-Permission Matrix
+ * LokFee! Admin RBAC — Role-Permission Matrix
  *
  * Defines which permissions each of the 7 roles has.
  * SUPER_ADMIN has all permissions (hardcoded in middleware).

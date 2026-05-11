@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Core Scheduler
+ * LokFee! Bot Behavior Engine — Core Scheduler
  *
  * The main orchestrator that coordinates all bot behavior modules.
  * Runs on a tick-based loop, managing online states, browsing sessions,

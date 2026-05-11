@@ -398,7 +398,7 @@ export class AutomatedTestRunner {
   generateReport(): string {
     const report: string[] = [];
     
-    report.push("# LokFeel 自动化测试报告\n");
+    report.push("# LokFee! 自动化测试报告\n");
     report.push(`生成时间: ${new Date().toLocaleString()}\n`);
     report.push(`测试环境: ${TEST_CONFIG.baseUrl}\n\n`);
     

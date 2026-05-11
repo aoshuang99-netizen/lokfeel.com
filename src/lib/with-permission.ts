@@ -1,5 +1,5 @@
 /**
- * LokFeel Admin — Permission Middleware
+ * LokFee! Admin — Permission Middleware
  *
  * withPermission() — Higher-order function for Next.js Route Handlers
  * Checks RBAC permissions before allowing API access.

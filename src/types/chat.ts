@@ -1,5 +1,5 @@
 /**
- * LokFeel IM Chat Module Type Definitions
+ * LokFee! IM Chat Module Type Definitions
  * 
  * This file contains all the type definitions for the chat/IM system,
  * aligned with IM API v2 specification.

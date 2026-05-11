@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Utility Functions
+ * LokFee! Bot Behavior Engine — Utility Functions
  *
  * Seeded random number generator and probability distribution utilities
  * for deterministic, repeatable bot behavior simulation.

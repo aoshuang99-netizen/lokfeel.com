@@ -49,8 +49,24 @@ export default async function LoginPage({
       case "AccessDenied":
         errorMessage = "Access denied. Your account may not have access.";
         break;
+      case "Configuration":
+        errorMessage = "Authentication service error. Please try again or use email/password.";
+        break;
+      case "OAuthSignin":
+      case "OAuthCallback":
+      case "OAuthCreateAccount":
+      case "OAuthAccountNotLinked":
+        errorMessage = "Social login failed. Please try again or use email/password.";
+        break;
       default:
-        errorMessage = `Sign in failed. Please try again.`;
+        // Support custom error messages from our Twitter/Google OAuth handlers
+        // (they pass human-readable error strings directly)
+        if (params.error.length > 20) {
+          // Likely a custom error message, not a NextAuth error code
+          errorMessage = decodeURIComponent(params.error);
+        } else {
+          errorMessage = "Sign in failed. Please try again.";
+        }
     }
   }
 

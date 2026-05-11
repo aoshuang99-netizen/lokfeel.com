@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Prisma Database Adapter
+ * LokFee! Bot Behavior Engine — Prisma Database Adapter
  *
  * Concrete implementation of BotEngineDbAdapter using Prisma ORM.
  * Bridges the behavior engine with the existing Nexus database schema.

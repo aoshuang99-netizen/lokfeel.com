@@ -30,11 +30,25 @@ export async function GET(request: NextRequest) {
     const providerId = signinMatch[1];
 
     if (providerId === "google") {
+      // Check if Google OAuth is configured
+      const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+      
+      if (!clientId || !clientSecret) {
+        console.error('[Auth] Google OAuth not configured. Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
+        return NextResponse.redirect(new URL('/login?error=OAuthNotConfigured&provider=google', request.url));
+      }
+      
       return handleGoogleOAuthRedirect(request);
     }
 
+    if (providerId === "twitter" || providerId === "x") {
+      // Twitter OAuth is handled by /api/auth/twitter/signin
+      return NextResponse.redirect(new URL('/api/auth/twitter/signin', request.url));
+    }
+
     // For other providers, let NextAuth handle (may or may not work)
-    console.warn(`[Auth] signin/${providerId} — only Google is handled by custom logic`);
+    console.warn(`[Auth] signin/${providerId} — only Google and Twitter are handled by custom logic`);
   }
 
   // Delegate all other requests to NextAuth

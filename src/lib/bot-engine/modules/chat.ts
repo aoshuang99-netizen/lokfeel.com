@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Chat Behavior Module
+ * LokFee! Bot Behavior Engine — Chat Behavior Module
  *
  * Simulates natural chat behavior for bot users:
  * - Conversation initiation based on personality and match quality

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * LokFeel Admin — Frontend Permission Hooks
+ * LokFee! Admin — Frontend Permission Hooks
  *
  * usePermission() — Check if current user has a specific permission
  * usePermissions() — Get all permissions for current user

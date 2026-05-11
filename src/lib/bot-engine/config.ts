@@ -1,5 +1,5 @@
 /**
- * LokFeel Bot Behavior Engine — Configuration & Personality Presets
+ * LokFee! Bot Behavior Engine — Configuration & Personality Presets
  *
  * Provides default behavior configurations for each personality type,
  * factory functions for creating bot configs, and global engine defaults.
