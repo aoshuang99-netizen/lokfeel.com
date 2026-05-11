@@ -85,9 +85,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // ─── 3. CORS for API routes ───
-  const response = pathname.startsWith('/api')
-    ? NextResponse.next()
-    : NextResponse.next()
+  const response = NextResponse.next()
 
   if (pathname.startsWith('/api')) {
     const origin = request.headers.get('origin')
