@@ -77,12 +77,6 @@ export async function GET(request: Request) {
       pending: {
         matches: pendingMatches,
       },
-      cronEndpoints: [
-        { path: '/api/cron/bot-tick', schedule: 'Every minute', purpose: 'Process tick' },
-        { path: '/api/cron/bot-online', schedule: 'Every 15 min', purpose: 'Online status' },
-        { path: '/api/cron/bot-match', schedule: 'Every hour', purpose: 'Match responses' },
-        { path: '/api/cron/bot-chat', schedule: 'Every 5 min', purpose: 'Chat responses' },
-      ],
     });
 
   } catch (error: any) {

@@ -25,13 +25,28 @@ function getIdentifier(verifyMethod: string, email?: string, phone?: string): st
   return verifyMethod === 'sms' ? (phone || '').trim() : (email || '').trim().toLowerCase()
 }
 
-// Gender mapping helper
+// Gender mapping helper — maps frontend values to DB enum constants (uppercase)
 function mapGender(gender: string): string {
   const genderMap: Record<string, string> = {
-    'man': 'MALE', 'woman': 'FEMALE', 'male': 'MALE', 'female': 'FEMALE',
+    'man': 'MAN', 'woman': 'WOMAN', 'male': 'MAN', 'female': 'WOMAN',
     'non-binary': 'NON_BINARY', 'nonbinary': 'NON_BINARY', 'other': 'OTHER',
+    'trans man': 'TRANSGENDER_MAN', 'trans woman': 'TRANSGENDER_WOMAN',
+    'genderqueer': 'GENDERQUEER', 'genderfluid': 'GENDERFLUID',
+    'agender': 'AGENDER', 'questioning': 'QUESTIONING',
+    'prefer not to say': 'PREFER_NOT_TO_SAY',
   }
   return genderMap[(gender || '').toLowerCase()] || 'OTHER'
+}
+
+// Sexuality mapping helper — maps frontend values to DB enum constants (uppercase)
+function mapSexuality(sexuality: string): string {
+  const sexualityMap: Record<string, string> = {
+    'straight': 'STRAIGHT', 'gay': 'GAY', 'lesbian': 'LESBIAN',
+    'bisexual': 'BISEXUAL', 'pansexual': 'PANSEXUAL', 'queer': 'QUEER',
+    'questioning': 'QUESTIONING', 'asexual': 'ASEXUAL', 'demisexual': 'DEMISEXUAL',
+    'other': 'OTHER', 'prefer not to say': 'PREFER_NOT_TO_SAY',
+  }
+  return sexualityMap[(sexuality || '').toLowerCase()] || 'QUESTIONING'
 }
 
 // ─── POST: Send Code / Verify & Create ────────────────────
@@ -272,7 +287,7 @@ export async function POST(request: NextRequest) {
             displayName: userName,
             age,
             gender: mapGender(gender),
-            sexuality: sexuality || 'Questioning',
+            sexuality: mapSexuality(sexuality),
             bio: '',
           },
         },
@@ -285,7 +300,7 @@ export async function POST(request: NextRequest) {
 
       // ═══ LADY FREE: Auto-assign premium-level plan for female users ═══
       const mappedGender = mapGender(gender)
-      const isFemale = mappedGender === 'FEMALE'
+      const isFemale = mappedGender === 'WOMAN' || mappedGender === 'TRANSGENDER_WOMAN'
       if (isFemale) {
         await db.subscription.create({
           data: {

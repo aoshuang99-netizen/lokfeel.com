@@ -13,6 +13,7 @@ import { auth } from '@/lib/auth/auth';
 import { db } from '@/lib/db';
 import { calculateEnhancedMatchScore, EnhancedUserProfile } from '@/lib/matching/enhanced-engine';
 import { jsonArr } from '@/lib/json-helpers';
+import { isMaleGender, isFemaleGender, getOppositeGenders } from '@/lib/gender-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -134,10 +135,10 @@ async function generateRecommendations(
   
   // 异性筛选
   if (oppositeGender && currentUserProfile.gender) {
-    if (currentUserProfile.gender === 'MALE') {
-      baseWhere.gender = 'FEMALE';
-    } else if (currentUserProfile.gender === 'FEMALE') {
-      baseWhere.gender = 'MALE';
+    if (isMaleGender(currentUserProfile.gender)) {
+      baseWhere.gender = { in: getOppositeGenders(currentUserProfile.gender) };
+    } else if (isFemaleGender(currentUserProfile.gender)) {
+      baseWhere.gender = { in: getOppositeGenders(currentUserProfile.gender) };
     }
   }
   

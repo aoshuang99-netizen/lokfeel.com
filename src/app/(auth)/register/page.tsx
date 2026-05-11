@@ -772,9 +772,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Hidden gender/sexuality defaults */}
-          <input type="hidden" name="gender" value="woman" />
-          <input type="hidden" name="sexuality" value="straight" />
+          {/* Gender/sexuality set via formData state (handleSendCode/handleVerifyAndCreate) */}
 
           {/* Terms */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", paddingTop: "4px" }}>

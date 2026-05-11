@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { db } from '@/lib/db';
 import { calculateMatchScore } from '@/lib/matching/engine';
+import { isFemaleGender } from '@/lib/gender-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查连接次数限制 — Plan-based logic
-    const isFemale = currentUserProfile.gender === 'FEMALE';
+    const isFemale = isFemaleGender(currentUserProfile.gender);
     
     // 检查是否有活跃订阅
     const subscription = await db.subscription.findFirst({

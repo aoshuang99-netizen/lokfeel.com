@@ -12,6 +12,7 @@ import { validateUpdateRulesRequest } from '@/lib/rules/schema';
 import { PowerBoardRules, UpdateRulesResponse, RuleChange } from '@/lib/rules/types';
 import { convertFullToLiteRules } from '@/lib/rules/defaults';
 import { db } from '@/lib/db';
+import { isFemaleGender } from '@/lib/gender-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       where: { userId: user.id },
       select: { gender: true },
     });
-    if (profile?.gender?.toUpperCase() !== 'FEMALE') {
+    if (!isFemaleGender(profile?.gender)) {
       return NextResponse.json(
         { success: false, error: 'Only female users can modify rules' },
         { status: 403 }

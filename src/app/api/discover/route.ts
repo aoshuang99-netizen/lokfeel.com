@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
 import { cache } from "@/lib/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { isMaleGender, isFemaleGender } from "@/lib/gender-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -98,10 +99,10 @@ export async function GET(request: NextRequest) {
 
     if (preferredGender && preferredGender !== "EVERYONE") {
       const genderMap: Record<string, string> = {
-        'MALE': 'MALE',
-        'MAN': 'MALE',
-        'FEMALE': 'FEMALE',
-        'WOMAN': 'FEMALE',
+        'MALE': 'MAN',
+        'MAN': 'MAN',
+        'FEMALE': 'WOMAN',
+        'WOMAN': 'WOMAN',
       };
       const targetGender = genderMap[preferredGender];
       if (targetGender) {

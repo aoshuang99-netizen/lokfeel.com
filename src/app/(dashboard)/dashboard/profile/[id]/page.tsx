@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Skeleton, LoadingScreen, InlineError } from "@/components/ui";
 import { toast } from "sonner";
+import { isMaleGender, isFemaleGender } from "@/lib/gender-utils";
 
 // LinkedIn icon component
 function LinkedinIcon({ className }: { className?: string }) {
@@ -131,7 +132,7 @@ export default function UserProfilePage() {
     if (!profile || !currentUser) return;
     
     if (currentUser.remainingConnections <= 0) {
-      if (currentUser.gender === 'MALE') {
+      if (isMaleGender(currentUser.gender)) {
         router.push('/dashboard/subscription');
         return;
       }
@@ -176,11 +177,11 @@ export default function UserProfilePage() {
 
   const getAvatarUrl = (user: UserProfile) => {
     if (user.avatar && !imageError) return user.avatar;
-    
-    if (user.gender === 'FEMALE') {
+
+    if (isFemaleGender(user.gender)) {
       return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}&gender=female&style=realistic`;
     }
-    
+
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}`;
   };
 
@@ -249,7 +250,7 @@ export default function UserProfilePage() {
   }
 
   const photos = profile.photos || [getAvatarUrl(profile)];
-  const isMale = currentUser?.gender === 'MALE';
+  const isMale = isMaleGender(currentUser?.gender);
   const canConnect = currentUser && currentUser.remainingConnections > 0;
 
   return (

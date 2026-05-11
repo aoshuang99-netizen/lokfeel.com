@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth'
 import { requireVerifiedUser, verificationErrorResponse } from '@/lib/auth/verification'
 import { handleApiError } from '@/lib/api-handler'
 import { db } from '@/lib/db'
+import { isMaleGender } from '@/lib/gender-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -110,7 +111,7 @@ export async function POST(
     const userProfile = await db.profile.findUnique({ where: { userId: user.id } })
     if (userProfile) {
       const gender = userProfile.gender?.toUpperCase()
-      if ((gender === 'MALE') && (!userProfile.avatar || userProfile.avatarType === 'cartoon')) {
+      if ((isMaleGender(gender)) && (!userProfile.avatar || userProfile.avatarType === 'cartoon')) {
         return NextResponse.json(
           { message: 'Please upload a real profile photo before reacting to matches. This helps build trust.', code: 'AVATAR_REQUIRED' },
           { status: 403 }

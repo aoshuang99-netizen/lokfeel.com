@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/auth/auth"
 import { handleApiError } from "@/lib/api-handler";
 import { calculateMatchScore } from '@/lib/matching/engine';
 import { jsonArr } from '@/lib/json-helpers';
+import { isMaleGender } from '@/lib/gender-utils';
 
 interface RouteParams {
   params: Promise<{ userId: string }>;
@@ -154,7 +155,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     const hasActiveSubscription = !!subscription;
-    const isMale = currentUserProfile.gender === 'MALE';
+    const isMale = isMaleGender(currentUserProfile.gender);
 
     // 计算剩余连接次数
     const weeklyLimit = isMale && !hasActiveSubscription

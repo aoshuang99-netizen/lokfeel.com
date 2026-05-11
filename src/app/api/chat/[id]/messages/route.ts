@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth'
 import { requireVerifiedUser, verificationErrorResponse } from '@/lib/auth/verification'
 import { handleApiError } from '@/lib/api-handler'
 import { db } from '@/lib/db'
+import { isMaleGender, isFemaleGender } from '@/lib/gender-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -221,7 +222,7 @@ export async function POST(
     const userProfile = await db.profile.findUnique({ where: { userId: user.id } })
     if (userProfile) {
       const gender = userProfile.gender?.toUpperCase()
-      if ((gender === 'MALE') && (!userProfile.avatar || userProfile.avatarType === 'cartoon')) {
+      if ((isMaleGender(gender)) && (!userProfile.avatar || userProfile.avatarType === 'cartoon')) {
         return NextResponse.json(
           { message: 'Please upload a real profile photo before sending messages. This helps build trust.', code: 'AVATAR_REQUIRED' },
           { status: 403 }
@@ -257,7 +258,7 @@ export async function POST(
       const activeSubs = userWithSub ? await db.subscription.findMany({ where: { userId: user.id, status: 'ACTIVE' }, take: 1 }) : []
       const hasActiveSub = activeSubs.length > 0
       const isLadyFree = activeSubs[0]?.plan === 'LADY_FREE'
-      const isFemale = userProfile?.gender === 'FEMALE'
+      const isFemale = isFemaleGender(userProfile?.gender)
       const cardVerified = userWithSub?.cardVerified ?? false
 
       // Skip limit for Lady Free and Premium users
