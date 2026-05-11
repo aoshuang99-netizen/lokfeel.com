@@ -48,9 +48,14 @@ function createPrismaClient(): PrismaClient {
   const url = cleanLibsqlUrl(rawUrl);
 
   // PrismaLibSql accepts the same config as @libsql/client createClient()
+  // Connection pool optimization: increase concurrency for Turso
   const adapter = new PrismaLibSql({
     url,
     authToken: authToken || undefined,
+    // Turso connection pool settings
+    ...(url.includes('turso.io') ? {
+      concurrency: 10,  // Allow up to 10 concurrent requests per connection
+    } : {}),
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next'
 import path from 'path'
+import { withSentryConfig } from '@sentry/nextjs'
 
 const CSP_VALUE = [
   "default-src 'self'",
@@ -208,4 +209,7 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+// Sentry wrapper
+export default withSentryConfig(nextConfig, {
+  silent: !process.env.CI,
+})

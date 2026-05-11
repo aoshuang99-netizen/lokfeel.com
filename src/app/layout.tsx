@@ -29,6 +29,7 @@ export const metadata: Metadata = {
   authors: [{ name: "LokFee! Team" }],
   creator: "LokFee!",
   publisher: "LokFee!",
+  manifest: "/manifest.json",
   openGraph: {
     title: "LokFee! — Real Matches. Real Connection.",
     description:
@@ -86,6 +87,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             }}
           />
         )}
+
+        {/* PWA Meta Tags */}
+        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="LokFee!" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+
+        {/* Service Worker Registration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').catch(function(err) {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+            `.trim(),
+          }}
+        />
 
         {/* Preconnect to external domains for faster resource loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

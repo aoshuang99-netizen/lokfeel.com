@@ -1,0 +1,29 @@
+<canvas id="c"></canvas>
+<script>
+const sizes = [72,96,128,144,152,192,384,512];
+const canvas = document.getElementById('c');
+sizes.forEach(size => {
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  // Dark purple background
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, size, size);
+  // Rounded rect
+  const r = size * 0.15;
+  ctx.beginPath();
+  ctx.roundRect(size*0.1, size*0.1, size*0.8, size*0.8, r);
+  ctx.fillStyle = '#1a0a2e';
+  ctx.fill();
+  // Heart emoji
+  ctx.font = `${size*0.5}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('💕', size/2, size/2);
+  // Save
+  const link = document.createElement('a');
+  link.download = `icon-${size}x${size}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+</script>
