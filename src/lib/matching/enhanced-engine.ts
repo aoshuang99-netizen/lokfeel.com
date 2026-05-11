@@ -21,6 +21,7 @@
  */
 
 import { calculateMatchScore as baseCalculateMatchScore, UserProfile as BaseUserProfile, MatchScore as BaseMatchScore } from './engine'
+import { isMaleGender, isFemaleGender } from '@/lib/gender-utils'
 
 // ═══════════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
@@ -532,13 +533,13 @@ function checkGenderOrientationMismatch(
     if (genderA === genderB) return true
   }
   
-  // Gay + 异性 = 不匹配
-  if (orientationA === 'GAY' && genderB === 'FEMALE') return true
-  if (orientationB === 'GAY' && genderA === 'FEMALE') return true
+  // Gay + female/woman gender = 不匹配
+  if (orientationA === 'GAY' && isFemaleGender(genderB)) return true
+  if (orientationB === 'GAY' && isFemaleGender(genderA)) return true
   
-  // Lesbian + 男性 = 不匹配
-  if (orientationA === 'LESBIAN' && genderB === 'MALE') return true
-  if (orientationB === 'LESBIAN' && genderA === 'MALE') return true
+  // Lesbian + male/man gender = 不匹配
+  if (orientationA === 'LESBIAN' && isMaleGender(genderB)) return true
+  if (orientationB === 'LESBIAN' && isMaleGender(genderA)) return true
   
   return false
 }

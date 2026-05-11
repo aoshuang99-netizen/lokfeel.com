@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import { fileTypeFromBuffer } from 'file-type';
 import { getDb } from '../db';
+import { isMaleGender } from '@/lib/gender-utils';
 
 const prisma = getDb();
 
@@ -197,7 +198,7 @@ export class BotAvatarGenerator {
             style: (bot.avatarStyle as AvatarStyle) || 'natural',
             ethnicity: this.mapEthnicity(bot.ethnicity),
             age: bot.profile.age,
-            gender: bot.profile.gender === 'MALE' ? 'male' : 'female',
+            gender: isMaleGender(bot.profile.gender) ? 'male' : 'female',
             mood: 'friendly'
           };
 
