@@ -3,15 +3,36 @@ import { getDb } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-const DB_TIMEOUT_MS = 100
+const DB_TIMEOUT_MS = 3000  // 3s timeout for Turso cold starts
 
-// GET /api/health — Lightweight health check
+// Cache DB check result for 30 seconds to reduce load
+let lastDbCheck: { connected: boolean; latency: number; timestamp: number } | null = null
+const CACHE_TTL_MS = 30000  // 30 seconds
+
+// GET /api/health — Lightweight health check with caching
 export async function GET() {
   const requestStart = Date.now()
 
   // Response headers for timing and caching
   const responseHeaders = new Headers()
   responseHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+
+  // Use cached DB result if fresh
+  if (lastDbCheck && Date.now() - lastDbCheck.timestamp < CACHE_TTL_MS) {
+    const totalLatency = Date.now() - requestStart
+    responseHeaders.set('X-Response-Time', `${totalLatency}ms`)
+    responseHeaders.set('X-DB-Cache', 'hit')
+
+    return NextResponse.json({
+      status: lastDbCheck.connected ? 'ok' : 'degraded',
+      timestamp: new Date().toISOString(),
+      database: {
+        connected: lastDbCheck.connected,
+        latencyMs: lastDbCheck.latency,
+        cached: true,
+      },
+    }, { headers: responseHeaders })
+  }
 
   let dbConnected = false
   let dbLatency = 0
@@ -31,10 +52,14 @@ export async function GET() {
 
       dbConnected = true
       dbLatency = Date.now() - dbStart
+
+      // Cache successful result
+      lastDbCheck = { connected: true, latency: dbLatency, timestamp: Date.now() }
     } catch (rawError) {
       clearTimeout(timeoutId)
       if (rawError instanceof Error && rawError.name === 'AbortError') {
         dbError = `Database check timed out after ${DB_TIMEOUT_MS}ms`
+        lastDbCheck = { connected: false, latency: DB_TIMEOUT_MS, timestamp: Date.now() }
       } else {
         throw rawError
       }
@@ -56,6 +81,7 @@ export async function GET() {
 
   const totalLatency = Date.now() - requestStart
   responseHeaders.set('X-Response-Time', `${totalLatency}ms`)
+  responseHeaders.set('X-DB-Cache', 'miss')
 
   return NextResponse.json({
     status: dbConnected ? 'ok' : 'degraded',
