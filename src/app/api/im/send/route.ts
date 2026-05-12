@@ -4,13 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { handleBotReply } from "@/lib/im/bot-reply";
 
 // Pusher is optional - gracefully degrade if not configured
-let pusherServer: any = null;
-try {
-  const mod = require("@/lib/pusher");
-  pusherServer = mod.pusherServer;
-} catch {
-  console.warn("[IM Send] Pusher not available, messages will be stored in DB only");
-}
+import { getPusherServer } from "@/lib/pusher";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     const receiverId = conversation.userAId === userId ? conversation.userBId : conversation.userAId;
 
-    // Atomic seq generation using interactive transaction (fixes TOCTOU race condition)
+    // Atomic transaction: create message + update conversation (prevents data inconsistency)
     const message = await prisma.$transaction(async (tx) => {
       const lastMessage = await tx.iMMessage.findFirst({
         where: { conversationId },
@@ -57,7 +51,7 @@ export async function POST(req: NextRequest) {
       });
       const nextSeq = (lastMessage?.seq || 0) + 1;
 
-      return tx.iMMessage.create({
+      const msg = await tx.iMMessage.create({
         data: {
           conversationId,
           senderId: userId,
@@ -83,21 +77,25 @@ export async function POST(req: NextRequest) {
           },
         },
       });
-    });
 
-    // Update conversation
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: {
-        lastMessageAt: new Date(),
-        messageCount: { increment: 1 },
-        unreadCountA: conversation.userAId === receiverId ? { increment: 1 } : undefined,
-        unreadCountB: conversation.userBId === receiverId ? { increment: 1 } : undefined,
-      },
+      // Update conversation INSIDE the transaction (was previously outside — caused P0-2 data inconsistency)
+      await tx.conversation.update({
+        where: { id: conversationId },
+        data: {
+          lastMessageAt: new Date(),
+          messageCount: { increment: 1 },
+          // Increment unread count for the receiver
+          ...(conversation.userAId === receiverId && { unreadCountA: { increment: 1 } }),
+          ...(conversation.userBId === receiverId && { unreadCountB: { increment: 1 } }),
+        },
+      });
+
+      return msg;
     });
 
     // Send real-time notification via Pusher (IM v2 format)
     // Pusher is optional - if not configured, polling will handle message delivery
+    const pusherServer = getPusherServer();
     if (pusherServer) {
       try {
         const messagePayload = {

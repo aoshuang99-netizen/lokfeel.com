@@ -12,6 +12,7 @@ interface Message {
   content: string;
   type: string;
   createdAt: string;
+  seq?: number;
   sender: {
     id: string;
     name: string;
@@ -41,9 +42,9 @@ export function useIMConversations() {
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchConversations = useCallback(async () => {
+  const fetchConversations = useCallback(async (isInitial = false) => {
     try {
-      setIsLoading(true);
+      if (isInitial) setIsLoading(true);
       const res = await fetch("/api/im/conversations");
       if (!res.ok) throw new Error("Failed to fetch conversations");
       const data = await res.json();
@@ -52,16 +53,16 @@ export function useIMConversations() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
-      setIsLoading(false);
+      if (isInitial) setIsLoading(false);
     }
   }, []);
 
   // Initial fetch + polling for real-time updates
   useEffect(() => {
-    fetchConversations();
+    fetchConversations(true); // isInitial = true → shows loading spinner
 
     if (ENABLE_POLLING) {
-      pollRef.current = setInterval(fetchConversations, POLL_INTERVAL * 3); // Poll conversations every 15s
+      pollRef.current = setInterval(() => fetchConversations(false), POLL_INTERVAL * 3); // Poll conversations every 15s, no loading spinner
     }
 
     return () => {
@@ -82,7 +83,7 @@ export function useIMMessages(conversationId: string | null) {
   const pusherRef = useRef<any>(null);
   const channelRef = useRef<any>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
-  const lastMessageIdRef = useRef<string | null>(null);
+  const lastSeqRef = useRef<number>(0); // P2-3: Track last seq for seq-based polling
   const isPusherConnectedRef = useRef(false);
 
   // Fetch messages
@@ -103,9 +104,10 @@ export function useIMMessages(conversationId: string | null) {
 
         if (reset) {
           setMessages(data.messages);
-          // Track latest message ID for polling
+          // Track latest message seq for polling
           if (data.messages.length > 0) {
-            lastMessageIdRef.current = data.messages[data.messages.length - 1].id;
+            const lastMsg = data.messages[data.messages.length - 1];
+            lastSeqRef.current = lastMsg.seq || 0;
           }
         } else {
           setMessages((prev) => [...data.messages, ...prev]);
@@ -123,13 +125,16 @@ export function useIMMessages(conversationId: string | null) {
   );
 
   // Poll for new messages (fallback when Pusher is not available)
+  // P2-3: Uses afterSeq instead of after (ID-based) for reliable ordering
   const pollForNewMessages = useCallback(async () => {
     if (!conversationId) return;
 
     try {
       const url = new URL(`/api/im/messages/${conversationId}`, window.location.origin);
       url.searchParams.set("limit", "10");
-      url.searchParams.set("after", lastMessageIdRef.current || "");
+      if (lastSeqRef.current > 0) {
+        url.searchParams.set("afterSeq", String(lastSeqRef.current));
+      }
 
       const res = await fetch(url);
       if (!res.ok) return;
@@ -143,7 +148,7 @@ export function useIMMessages(conversationId: string | null) {
           const existingIds = new Set(prev.map(m => m.id));
           const unique = newMessages.filter((m: Message) => !existingIds.has(m.id));
           if (unique.length > 0) {
-            lastMessageIdRef.current = unique[unique.length - 1].id;
+            lastSeqRef.current = unique[unique.length - 1].seq || lastSeqRef.current;
             return [...prev, ...unique];
           }
           return prev;
@@ -181,7 +186,7 @@ export function useIMMessages(conversationId: string | null) {
             createdAt: new Date(message.timestamp || message.createdAt).toISOString(),
             sender: message.sender || { id: message.senderId, name: "Unknown" },
           };
-          lastMessageIdRef.current = newMsg.id;
+          lastSeqRef.current = newMsg.seq || lastSeqRef.current;
           setMessages((prev) => [...prev, newMsg]);
         });
 
@@ -245,7 +250,7 @@ export function useIMMessages(conversationId: string | null) {
           sender: data.message.sender,
           isFromMe: true,
         };
-        lastMessageIdRef.current = sentMsg.id;
+        lastSeqRef.current = sentMsg.seq || lastSeqRef.current;
         setMessages((prev) => {
           const existingIds = new Set(prev.map(m => m.id));
           if (!existingIds.has(sentMsg.id)) {

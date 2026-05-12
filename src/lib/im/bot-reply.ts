@@ -10,13 +10,7 @@
 import { prisma } from "@/lib/prisma";
 
 // Pusher is optional - only push if available
-let pusherServer: any = null;
-try {
-  const mod = require("@/lib/pusher");
-  pusherServer = mod.pusherServer;
-} catch {
-  console.warn("[Bot Reply] Pusher not available, bot replies will be stored in DB only");
-}
+import { getPusherServer } from "@/lib/pusher";
 
 // Bot response templates by category
 const BOT_RESPONSES: Record<string, string[]> = {
@@ -207,18 +201,33 @@ export async function sendBotReply(
       },
     });
 
-    // Update conversation
+    // Update conversation — increment unread count for the HUMAN user (the bot's reply recipient)
+    // Previously hardcoded unreadCountA — P0-3 bug: human could be userA or userB
+    const conv = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!conv) {
+      console.error(`[Bot Reply] Conversation ${conversationId} not found, skipping update`);
+      return;
+    }
+
+    // senderId is the human user who sent the original message (receiver of bot's reply)
+    const isHumanUserA = conv.userAId === senderId;
+
     await prisma.conversation.update({
       where: { id: conversationId },
       data: {
         lastMessageAt: new Date(),
         messageCount: { increment: 1 },
-        // Increment the real sender's unread count (they received the bot's reply)
-        unreadCountA: { increment: 1 },
+        // Increment the REAL user's unread count (they received the bot's reply)
+        ...(isHumanUserA ? { unreadCountA: { increment: 1 } } : { unreadCountB: { increment: 1 } }),
       },
     });
 
     // Send real-time notification (if Pusher is available)
+    const pusherServer = getPusherServer();
     try {
       if (pusherServer) {
         const messagePayload = {

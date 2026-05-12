@@ -389,6 +389,17 @@ export async function createMessage(
 ): Promise<IMMessagePayload> {
   // Use transaction to atomically increment seq and create message
   const result = await db.$transaction(async (tx) => {
+    // Get conversation first (needed for userA/B IDs to determine unreadCount)
+    // This replaces the previous N+1 pattern of 2 extra findUnique queries
+    const conversation = await tx.conversation.findUnique({
+      where: { id: conversationId },
+      select: { userAId: true, userBId: true },
+    });
+
+    if (!conversation) {
+      throw new Error('Conversation not found');
+    }
+
     // Get current max seq for this conversation
     const lastMessage = await tx.iMMessage.findFirst({
       where: { conversationId },
@@ -425,19 +436,15 @@ export async function createMessage(
       },
     });
 
-    // Update conversation metadata
+    // Update conversation metadata (inside same transaction — no data inconsistency risk)
     await tx.conversation.update({
       where: { id: conversationId },
       data: {
         lastMessageAt: new Date(),
         messageCount: { increment: 1 },
-        // Increment unread count for the receiver
-        unreadCountB: receiverId === (await tx.conversation.findUnique({ where: { id: conversationId }, select: { userBId: true } }))?.userBId
-          ? { increment: 1 }
-          : undefined,
-        unreadCountA: receiverId === (await tx.conversation.findUnique({ where: { id: conversationId }, select: { userAId: true } }))?.userAId
-          ? { increment: 1 }
-          : undefined,
+        // Increment unread count for the receiver only — using spread to avoid undefined fields
+        ...(conversation.userAId === receiverId && { unreadCountA: { increment: 1 } }),
+        ...(conversation.userBId === receiverId && { unreadCountB: { increment: 1 } }),
       },
     });
 

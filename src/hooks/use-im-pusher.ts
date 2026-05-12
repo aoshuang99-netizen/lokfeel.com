@@ -286,7 +286,35 @@ export function useIMConversation(
       // Bind to message events
       channel.bind(IM_EVENTS.MESSAGE, (data: { message: IMMessagePayload }) => {
         console.log("[IM Conversation] New message:", data.message);
-        setMessages((prev) => [...prev, data.message]);
+        setMessages((prev) => {
+          // P1-2: Deduplicate by message ID or clientMsgId
+          // Prevents duplicate messages when optimistic update and Pusher push overlap
+          const incomingMsgId = data.message.msgId;
+          const incomingClientMsgId = data.message.clientMsgId;
+
+          // Check if message already exists (by server ID)
+          const existingByMsgId = prev.find(m => m.msgId === incomingMsgId);
+          if (existingByMsgId) {
+            // Update existing message with server data (e.g., replace optimistic temp)
+            return prev.map(m =>
+              m.msgId === incomingMsgId ? data.message : m
+            );
+          }
+
+          // Check if message already exists (by clientMsgId — optimistic update match)
+          if (incomingClientMsgId) {
+            const existingByClientId = prev.find(m => m.clientMsgId === incomingClientMsgId);
+            if (existingByClientId) {
+              // Replace optimistic message with real server message
+              return prev.map(m =>
+                m.clientMsgId === incomingClientMsgId ? data.message : m
+              );
+            }
+          }
+
+          // Truly new message — append
+          return [...prev, data.message];
+        });
         handlersRef.current.onMessage?.(data.message);
       });
 

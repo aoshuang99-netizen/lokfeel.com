@@ -34,7 +34,7 @@ export async function GET(
 
     const { searchParams } = new URL(req.url);
     const cursor = searchParams.get("cursor");
-    const after = searchParams.get("after"); // For polling: get messages after this ID
+    const afterSeq = searchParams.get("afterSeq"); // P2-3: Seq-based polling (replaces 'after' param)
     const limit = parseInt(searchParams.get("limit") || "50");
 
     // Build where clause
@@ -43,14 +43,12 @@ export async function GET(
       isDeleted: false,
     };
 
-    // If "after" is provided, only get messages newer than that ID
-    if (after) {
-      const afterMsg = await prisma.iMMessage.findUnique({
-        where: { id: after },
-        select: { createdAt: true },
-      });
-      if (afterMsg) {
-        where.createdAt = { gt: afterMsg.createdAt };
+    // If "afterSeq" is provided, only get messages with seq > afterSeq
+    // This replaces the old "after" param which used createdAt comparison (could miss same-ms messages)
+    if (afterSeq) {
+      const parsedSeq = parseInt(afterSeq);
+      if (!isNaN(parsedSeq)) {
+        where.seq = { gt: parsedSeq };
       }
     }
 
@@ -59,7 +57,7 @@ export async function GET(
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
-      orderBy: { createdAt: "desc" },
+      orderBy: { seq: "desc" }, // P1-1: Fixed — was createdAt, now seq for strict ordering
       include: {
         sender: {
           include: {

@@ -1,13 +1,46 @@
 import PusherServer from "pusher";
 
-// Server-side Pusher instance
-export const pusherServer = new PusherServer({
-  appId: process.env.PUSHER_APP_ID || "",
-  key: process.env.PUSHER_KEY || "",
-  secret: process.env.PUSHER_SECRET || "",
-  cluster: process.env.PUSHER_CLUSTER || "us3",
-  useTLS: true,
-});
+// Server-side Pusher instance — lazy singleton to prevent crashes when env vars are missing
+// P1-4 fix: was eager module-level instantiation that crashed if PUSHER_APP_ID was empty
+let _pusherServer: PusherServer | null = null;
+
+export function getPusherServer(): PusherServer | null {
+  if (_pusherServer) return _pusherServer;
+
+  const appId = process.env.PUSHER_APP_ID;
+  const key = process.env.PUSHER_KEY;
+  const secret = process.env.PUSHER_SECRET;
+
+  if (!appId || !key || !secret) {
+    console.warn("[Pusher] Not configured (missing PUSHER_APP_ID/KEY/SECRET), real-time events disabled");
+    return null;
+  }
+
+  _pusherServer = new PusherServer({
+    appId,
+    key,
+    secret,
+    cluster: process.env.PUSHER_CLUSTER || "us3",
+    useTLS: true,
+  });
+
+  return _pusherServer;
+}
+
+// Backward-compatible export: consumers that do `import { pusherServer }` still work
+// but will get null if not configured (instead of crashing)
+export const pusherServer = typeof PusherServer !== 'undefined'
+  ? new Proxy({} as PusherServer, {
+      get(_target, prop) {
+        const instance = getPusherServer();
+        if (!instance) {
+          console.warn(`[Pusher] Attempted to access .${String(prop)} but Pusher is not configured`);
+          return undefined;
+        }
+        return (instance as any)[prop];
+      }
+    })
+  : null;
 
 // Client-side Pusher instance - lazy import to avoid SSR issues
 export const getPusherClient = () => {

@@ -78,25 +78,28 @@ export default function GoogleSignInButton({
     setError(null);
 
     try {
-      // Step 1: Get CSRF token
+      // Step 1: Get CSRF token (must NOT set Content-Type on GET — some ad blockers reject it)
       const csrfRes = await fetch("/api/auth/csrf", {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
       });
 
       if (!csrfRes.ok) {
-        throw new Error(`CSRF request failed (${csrfRes.status})`);
+        throw new Error(`Security token request failed (${csrfRes.status}). Please disable ad blockers and try again.`);
       }
 
-      const { csrfToken } = await csrfRes.json();
+      const csrfData = await csrfRes.json();
+      const { csrfToken } = csrfData;
 
       if (!csrfToken) {
         throw new Error("Failed to get security token. Please refresh the page.");
       }
 
       // Step 2: POST to NextAuth signin endpoint
+      // X-Auth-Return-Redirect: 1 makes NextAuth return JSON {url} instead of redirecting
       const signInRes = await fetch("/api/auth/signin/google", {
         method: "POST",
+        credentials: "same-origin",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           "X-Auth-Return-Redirect": "1",
@@ -107,27 +110,53 @@ export default function GoogleSignInButton({
         }),
       });
 
-      const data = await signInRes.json();
+      // Check if response is JSON (X-Auth-Return-Redirect mode)
+      const contentType = signInRes.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await signInRes.json();
 
-      if (data.url) {
-        // Success — redirect to Google OAuth page
-        window.location.href = data.url;
-        // If user is already on Google's domain, ensure reload
-        if (data.url.includes("accounts.google.com")) {
-          // Navigation will happen via window.location.href above
+        if (data.url) {
+          // Success — redirect to Google OAuth page
+          // Verify it's actually a Google URL, not an error redirect
+          if (data.url.includes("accounts.google.com")) {
+            window.location.href = data.url;
+          } else if (data.url.includes("error=")) {
+            // NextAuth returned an error URL
+            const errorParam = new URL(data.url, window.location.origin).searchParams.get("error") || "";
+            const errorMsg = errorParam === "Configuration"
+              ? "Google login is not configured. Please contact support."
+              : errorParam === "MissingCSRF"
+              ? "Security verification failed. Please refresh the page and try again."
+              : errorParam === "AccessDenied"
+              ? "Access denied by Google. Please try again."
+              : `Login failed: ${errorParam}`;
+            setError(errorMsg);
+            onError?.(errorMsg);
+          } else {
+            // Unexpected URL — try navigating anyway
+            window.location.href = data.url;
+          }
+        } else if (data.error) {
+          const errorMsg = data.error === "Configuration"
+            ? "Google login is not configured. Please contact support."
+            : data.error === "AccessDenied"
+            ? "Access denied. Please try again."
+            : `Login failed: ${data.error}`;
+          setError(errorMsg);
+          onError?.(errorMsg);
+        } else {
+          setError("Unexpected response. Please try again.");
+          onError?.("Unexpected response from auth server");
         }
-      } else if (data.error) {
-        // NextAuth returned an error
-        const errorMsg = data.error === "Configuration"
-          ? "Google login is not configured. Please contact support."
-          : data.error === "AccessDenied"
-          ? "Access denied. Please try again."
-          : `Login failed: ${data.error}`;
-        setError(errorMsg);
-        onError?.(errorMsg);
       } else {
-        setError("Unexpected response. Please try again.");
-        onError?.("Unexpected response from auth server");
+        // Response is a redirect (302) — extract Location header
+        const redirectUrl = signInRes.headers.get("location") || "";
+        if (redirectUrl.includes("accounts.google.com")) {
+          window.location.href = redirectUrl;
+        } else {
+          setError("Authentication service error. Please try again.");
+          onError?.("Auth service returned unexpected redirect");
+        }
       }
     } catch (err: any) {
       const msg = err?.message || "Network error. Please check your connection and try again.";

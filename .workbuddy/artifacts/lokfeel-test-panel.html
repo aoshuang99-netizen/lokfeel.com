@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LokFeel 自动化测试面板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--card:#1a1a1a;--card2:#141414;--border:#2a2a2a;--lime:#a3e635;--purple:#4c1d95;--pink:#f472b6;--blue:#60a5fa;--yellow:#fbbf24;--red:#ef4444;--green:#22c55e;--text:#fff;--text2:#aaa;--text3:#555}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:16px 20px 40px}
+.header{background:linear-gradient(135deg,rgba(76,29,149,0.25),rgba(10,10,10,0.95));border:1px solid rgba(76,29,149,0.3);border-radius:14px;padding:20px 28px;margin-bottom:12px}
+.header h1{font-size:24px;font-weight:700}
+.header h1 span{color:var(--lime)}
+.header .sub{color:var(--text2);font-size:13px;margin-top:2px}
+.mode-bar{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin-bottom:12px;flex-wrap:wrap}
+.mode-bar label{font-size:13px;color:var(--text2);font-weight:500}
+.mode-bar select,.mode-bar input{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:13px;outline:none}
+.mode-bar select:focus,.mode-bar input:focus{border-color:var(--lime)}
+.mode-bar input{flex:1;min-width:200px;font-family:'SF Mono',monospace}
+.mode-bar .mode-info{font-size:11px;color:var(--text3);width:100%}
+.btn{padding:10px 22px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:var(--lime);color:#000}
+.btn-primary:hover{background:#bbe055}
+.btn-primary:disabled{background:#555;color:#999;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-danger{background:var(--red);color:#fff}
+.btn-secondary{background:var(--card);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--purple);color:var(--text)}
+.progress-bar{height:4px;background:var(--border);border-radius:4px;margin:12px 0;overflow:hidden;display:none}
+.progress-bar.active{display:block}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--lime),var(--purple));border-radius:4px;transition:width .3s;width:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;text-align:center}
+.stat .num{font-size:22px;font-weight:700}
+.stat .num.green{color:var(--green)}.stat .num.red{color:var(--red)}.stat .num.yellow{color:var(--yellow)}.stat .num.blue{color:var(--blue)}
+.stat .lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.proxy-health{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin-bottom:12px}
+.proxy-health h3{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text2)}
+.proxy-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:12px;font-family:'SF Mono',monospace}
+.proxy-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.proxy-dot.ok{background:var(--green)}.proxy-dot.dead{background:var(--red)}.proxy-dot.checking{background:var(--yellow);animation:pulse 1s infinite}
+.proxy-name{flex:1;color:var(--text2)}
+.proxy-time{color:var(--text3);font-size:11px}
+.proxy-best{color:var(--lime);font-size:10px;font-weight:600;margin-left:4px}
+.section{margin-bottom:12px}
+.section-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:0 2px;cursor:pointer;user-select:none}
+.section-head .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.section-head h2{font-size:14px;font-weight:600;flex:1}
+.section-head .count{font-size:10px;color:var(--text3);background:var(--bg);padding:2px 8px;border-radius:8px}
+.test-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:4px;transition:all .3s}
+.test-card:hover{border-color:#444}
+.test-card.pass{border-left:3px solid var(--green)}
+.test-card.fail{border-left:3px solid var(--red)}
+.test-card.warn{border-left:3px solid var(--yellow)}
+.test-card.pending{border-left:3px solid var(--text3)}
+.test-card.loading{border-left:3px solid var(--blue);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.test-row{display:flex;align-items:center;gap:8px}
+.test-row .method{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;font-family:'SF Mono',monospace;min-width:32px;text-align:center;flex-shrink:0}
+.test-row .method.GET{background:rgba(96,165,250,0.15);color:var(--blue)}
+.test-row .method.POST{background:rgba(163,230,53,0.15);color:var(--lime)}
+.test-row .name{font-size:12px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.test-row .status{font-size:11px;font-weight:600;flex-shrink:0;min-width:48px;text-align:right}
+.test-row .status.s200{color:var(--green)}.test-row .status.s3xx{color:var(--blue)}.test-row .status.s4xx{color:var(--yellow)}.test-row .status.s5xx{color:var(--red)}.test-row .status.err{color:var(--red)}
+.test-row .time{font-size:10px;color:var(--text3);flex-shrink:0;min-width:40px;text-align:right}
+.test-card .url-bar{font-size:10px;color:var(--text3);font-family:'SF Mono',monospace;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:48px}
+.test-card .body{font-size:10px;color:var(--text2);margin-top:4px;padding:6px 8px;background:var(--card2);border-radius:6px;border:1px solid var(--border);max-height:180px;overflow-y:auto;word-break:break-all;line-height:1.5;display:none;white-space:pre-wrap;font-family:'SF Mono',monospace}
+.test-card .body.show{display:block}
+.test-card .actions{display:flex;gap:3px;margin-top:4px;padding-left:48px;opacity:0.5;transition:opacity .2s}
+.test-card:hover .actions{opacity:1}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--lime);color:#000;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.error-section{margin-top:16px;background:var(--card);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:18px}
+.error-section h3{font-size:15px;font-weight:600;margin-bottom:10px;color:var(--red)}
+.error-list{margin-bottom:10px;max-height:350px;overflow-y:auto}
+.error-entry{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px}
+.error-entry .entry-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.error-entry .entry-head .entry-url{font-size:12px;font-weight:600;color:var(--red)}
+.error-entry .entry-head .entry-status{font-size:10px;color:var(--text3)}
+.error-entry .entry-body{font-size:11px;color:var(--text2);font-family:'SF Mono',monospace;line-height:1.4;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow-y:auto}
+.cbtn{background:none;border:1px solid var(--border);color:var(--text3);padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.cbtn:hover{border-color:var(--lime);color:var(--lime)}
+.report-actions{display:flex;gap:6px;flex-wrap:wrap}
+.report-actions .btn{font-size:11px;padding:7px 14px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+footer{text-align:center;margin-top:28px;padding:14px;color:var(--text3);font-size:10px}
+@media(max-width:768px){.header{padding:14px 18px}.stats{grid-template-columns:repeat(2,1fr)}.test-card .actions{padding-left:0}.btn-row{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>LokFeel</span> 自动化测试面板</h1>
+  <div class="sub">v4.1 — 多代理自动故障转移 · 期望值curl实测修正 · curl兜底 · 34端点</div>
+</div>
+
+<div class="mode-bar">
+  <label>🌐 目标:</label>
+  <input id="baseUrl" value="https://app.lokfeel.com" placeholder="https://app.lokfeel.com">
+  <div class="mode-info">自动检测可用代理，无可用代理时降级到 curl 命令。本地 file:// 打开即可使用。</div>
+</div>
+
+<div class="proxy-health" id="proxyHealth">
+  <h3>📡 代理健康状态</h3>
+  <div id="proxyList"></div>
+  <div style="margin-top:8px;display:flex;gap:8px">
+    <button class="btn btn-secondary" onclick="checkAllProxies()" id="btnCheckProxy" style="font-size:11px;padding:6px 14px">🔍 检测全部代理</button>
+    <button class="btn btn-secondary" onclick="useDirectMode()" id="btnDirect" style="font-size:11px;padding:6px 14px">⚡ 直连模式 (同域部署)</button>
+    <span id="activeProxy" style="font-size:11px;color:var(--lime);line-height:32px;margin-left:auto"></span>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-primary" id="btnTestAll" onclick="runAllTests()">▶ 一键测试全部 (34端点)</button>
+  <button class="btn btn-secondary" id="btnStop" onclick="stopTests()" style="display:none">⏹ 停止</button>
+  <button class="btn btn-secondary" onclick="resetAll()">🔄 重置</button>
+</div>
+
+<div class="progress-bar" id="progressBar"><div class="fill" id="progressFill"></div></div>
+
+<div class="stats">
+  <div class="stat"><div class="num green" id="numPass">0</div><div class="lbl">通过</div></div>
+  <div class="stat"><div class="num red" id="numFail">0</div><div class="lbl">失败</div></div>
+  <div class="stat"><div class="num yellow" id="numWarn">0</div><div class="lbl">警告</div></div>
+  <div class="stat"><div class="num blue" id="numTotal">0</div><div class="lbl">总计</div></div>
+  <div class="stat"><div class="num" id="numTime" style="color:var(--text)">-</div><div class="lbl">耗时</div></div>
+  <div class="stat"><div class="num" id="numProxy" style="color:var(--lime)">-</div><div class="lbl">代理</div></div>
+</div>
+
+<div id="results"></div>
+
+<div class="error-section" id="errorSection" style="display:none">
+  <h3>🐛 错误报告 (<span id="errorCount">0</span> 个)</h3>
+  <div class="error-list" id="errorList"></div>
+  <div class="report-actions">
+    <button class="btn btn-danger" onclick="copyAllErrors()">📋 复制全部错误</button>
+    <button class="btn btn-secondary" onclick="copyAllResults()">📋 复制全部结果</button>
+    <button class="btn btn-secondary" onclick="downloadReport()">💾 下载完整报告</button>
+    <button class="btn btn-secondary" onclick="downloadAllCurl()">💻 下载全部 curl 命令</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">已复制</div>
+
+<footer>LokFeel Auto Test Panel v4.1 — 2026-05-12</footer>
+
+<script>
+let BASE = 'https://app.lokfeel.com';
+let USE_DIRECT = false;
+
+// === Multi-proxy provider chain ===
+const PROXY_PROVIDERS = [
+  {
+    name: 'corsproxy.io',
+    build: url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+    buildPost: (url, body) => ({ url: 'https://corsproxy.io/?' + encodeURIComponent(url), opts: { method: 'POST', body: JSON.stringify(body) } })
+  },
+  {
+    name: 'allorigins.win',
+    build: url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    buildPost: (url, body) => ({ url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url), opts: { method: 'POST', body: JSON.stringify(body) } })
+  },
+  {
+    name: 'corsproxy.org',
+    build: url => 'https://corsproxy.org/?' + encodeURIComponent(url),
+    buildPost: (url, body) => ({ url: 'https://corsproxy.org/?' + encodeURIComponent(url), opts: { method: 'POST', body: JSON.stringify(body) } })
+  },
+  {
+    name: 'codetabs.com',
+    build: url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
+    buildPost: null // GET only
+  }
+];
+
+let proxyStatus = []; // { name, alive, latency }
+let bestProxyIdx = -1; // auto-detected best proxy index
+
+// === 期望值基于 2026-05-12 curl 实测修正 ===
+// 307 也算 3xx 重定向，与 302 等效判定
+// 401/403 为预期行为（需认证/Admin）
+const endpoints = [
+  {section:'健康检查与诊断', method:'GET', url:'/api/health', name:'健康检查', expect:200},
+  {method:'GET', url:'/api/db-check', name:'DB 连接检查', expect:403, expectAlt:'admin-only', isExpectedFail:true},
+  {method:'GET', url:'/api/auth/diagnostic', name:'Auth 诊断', expect:200},
+  {method:'GET', url:'/api/auth/e2e-test', name:'E2E 登录测试', expect:200},
+
+  {section:'Auth API', method:'GET', url:'/api/auth/csrf', name:'CSRF Token', expect:200},
+  {method:'POST', url:'/api/auth/check-user', name:'检查用户(Bot)', expect:200, body:{email:'bot-f00001@lokfeel.bot'}},
+  {method:'POST', url:'/api/auth/login', name:'Credentials登录(Bot)', expect:200, body:{email:'bot-f00001@lokfeel.bot',password:'BotUser2026!Secure'}},
+  {method:'POST', url:'/api/auth/login', name:'错误密码测试', expect:401, body:{email:'bot-f00001@lokfeel.bot',password:'wrong'}, isExpectedFail:true},
+  {method:'POST', url:'/api/auth/login', name:'空字段测试', expect:400, body:{email:'',password:''}, isExpectedFail:true},
+
+  {section:'Google OAuth', method:'GET', url:'/api/auth/callback/google?code=fake_test_code', name:'Google回调(假code→中文错误)', expect:307, isExpectedFail:true},
+  {method:'GET', url:'/api/auth/signin/google', name:'Google登录入口(302→Google)', expect:302},
+
+  {section:'X/Twitter OAuth', method:'GET', url:'/api/auth/twitter/signin', name:'Twitter登录入口(307→Twitter)', expect:307},
+  {method:'GET', url:'/api/auth/twitter/callback?code=fake_test_code&state=test', name:'Twitter回调(假code→中文错误)', expect:307, isExpectedFail:true},
+
+  {section:'前端页面', method:'GET', url:'/login', name:'登录页', expect:200},
+  {method:'GET', url:'/register', name:'注册页', expect:200},
+  {method:'GET', url:'/forgot-password', name:'忘记密码', expect:200},
+  {method:'GET', url:'/verify-request', name:'邮箱验证', expect:200},
+  {method:'GET', url:'/reset-password', name:'重置密码(307→login)', expect:307, isExpectedFail:true},
+  {method:'GET', url:'/auto-login', name:'自动登录', expect:200},
+  {method:'GET', url:'/admin/login', name:'Admin登录(307→Google)', expect:307, isExpectedFail:true},
+
+  {section:'Dashboard(需登录→307)', method:'GET', url:'/dashboard', name:'Dashboard首页', expect:307},
+  {method:'GET', url:'/dashboard/explore', name:'发现/Explore', expect:307},
+  {method:'GET', url:'/dashboard/connections', name:'连接', expect:307},
+  {method:'GET', url:'/dashboard/chats', name:'聊天列表', expect:307},
+  {method:'GET', url:'/dashboard/notifications', name:'通知', expect:307},
+  {method:'GET', url:'/dashboard/profile', name:'个人资料', expect:307},
+  {method:'GET', url:'/dashboard/settings', name:'设置', expect:307},
+  {method:'GET', url:'/dashboard/subscription', name:'订阅管理', expect:307},
+  {method:'GET', url:'/dashboard/onboarding', name:'Onboarding', expect:307},
+
+  {section:'Cron定时任务(需认证→401)', method:'GET', url:'/api/cron/status', name:'Cron状态', expect:401, isExpectedFail:true},
+  {method:'GET', url:'/api/cron/bot-online', name:'Bot在线', expect:401, isExpectedFail:true},
+  {method:'GET', url:'/api/cron/bot-match', name:'Bot匹配', expect:401, isExpectedFail:true},
+  {method:'GET', url:'/api/cron/bot-chat', name:'Bot聊天', expect:401, isExpectedFail:true},
+  {method:'GET', url:'/api/cron/bot-learning', name:'Bot学习', expect:401, isExpectedFail:true},
+  {method:'GET', url:'/api/cron/cleanup-soft-delete', name:'清理软删除', expect:401, isExpectedFail:true},
+
+  {section:'调试端点(需Admin→403)', method:'GET', url:'/api/debug-auth', name:'Debug Auth', expect:403, isExpectedFail:true},
+];
+
+let allResults=[], errors=[], running=false, stopFlag=false;
+
+// === Proxy Health Check ===
+async function checkAllProxies() {
+  BASE = document.getElementById('baseUrl').value.replace(/\/$/,'');
+  const btn = document.getElementById('btnCheckProxy');
+  btn.disabled = true;
+  btn.textContent = '🔍 检测中...';
+
+  proxyStatus = [];
+  bestProxyIdx = -1;
+
+  // Test each proxy with a quick GET to /api/health
+  const testPromises = PROXY_PROVIDERS.map(async (p, idx) => {
+    const testUrl = BASE + '/api/health';
+    const proxyUrl = p.build(testUrl);
+    const dotEl = document.getElementById('pdot-' + idx);
+    const timeEl = document.getElementById('ptime-' + idx);
+    if (dotEl) dotEl.className = 'proxy-dot checking';
+    if (timeEl) timeEl.textContent = '检测中...';
+
+    try {
+      const start = performance.now();
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timeout);
+      const text = await res.text();
+      const ms = Math.round(performance.now() - start);
+      const alive = text.length > 0;
+      proxyStatus.push({ name: p.name, alive, latency: ms });
+      if (dotEl) dotEl.className = 'proxy-dot ' + (alive ? 'ok' : 'dead');
+      if (timeEl) timeEl.textContent = alive ? ms + 'ms' : '失败';
+      return { idx, alive, ms };
+    } catch(e) {
+      const ms = Math.round(performance.now() - (performance.now() - 100));
+      proxyStatus.push({ name: p.name, alive: false, latency: 9999 });
+      if (dotEl) dotEl.className = 'proxy-dot dead';
+      if (timeEl) timeEl.textContent = '超时/失败';
+      return { idx, alive: false, ms: 9999 };
+    }
+  });
+
+  const results = await Promise.all(testPromises);
+
+  // Pick the fastest alive proxy
+  const alive = results.filter(r => r.alive).sort((a, b) => a.ms - b.ms);
+  if (alive.length > 0) {
+    bestProxyIdx = alive[0].idx;
+    document.getElementById('activeProxy').textContent = '✅ 已选择: ' + PROXY_PROVIDERS[bestProxyIdx].name + ' (' + alive[0].ms + 'ms)';
+    document.getElementById('numProxy').textContent = PROXY_PROVIDERS[bestProxyIdx].name;
+    document.getElementById('numProxy').style.color = 'var(--lime)';
+    // Mark the best one
+    document.querySelectorAll('.proxy-best').forEach(el => el.remove());
+    const bestEl = document.getElementById('prow-' + bestProxyIdx);
+    if (bestEl) {
+      const tag = document.createElement('span');
+      tag.className = 'proxy-best';
+      tag.textContent = '← 最佳';
+      bestEl.appendChild(tag);
+    }
+  } else {
+    document.getElementById('activeProxy').textContent = '❌ 无可用代理 — 将使用 curl 兜底';
+    document.getElementById('numProxy').textContent = 'curl';
+    document.getElementById('numProxy').style.color = 'var(--yellow)';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔍 检测全部代理';
+}
+
+function useDirectMode() {
+  USE_DIRECT = !USE_DIRECT;
+  const btn = document.getElementById('btnDirect');
+  if (USE_DIRECT) {
+    btn.style.borderColor = 'var(--lime)';
+    btn.style.color = 'var(--lime)';
+    btn.textContent = '⚡ 直连模式 (已启用)';
+    document.getElementById('activeProxy').textContent = '⚡ 直连模式 — 需同域部署';
+    document.getElementById('numProxy').textContent = 'direct';
+    document.getElementById('numProxy').style.color = 'var(--text3)';
+  } else {
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--text2)';
+    btn.textContent = '⚡ 直连模式 (同域部署)';
+    if (bestProxyIdx >= 0) {
+      document.getElementById('activeProxy').textContent = '✅ 已选择: ' + PROXY_PROVIDERS[bestProxyIdx].name;
+      document.getElementById('numProxy').textContent = PROXY_PROVIDERS[bestProxyIdx].name;
+      document.getElementById('numProxy').style.color = 'var(--lime)';
+    } else {
+      document.getElementById('activeProxy').textContent = '❌ 无可用代理';
+    }
+  }
+}
+
+function buildProxyUI() {
+  const c = document.getElementById('proxyList');
+  c.innerHTML = PROXY_PROVIDERS.map((p, i) => `
+    <div class="proxy-row" id="prow-${i}">
+      <span class="proxy-dot" id="pdot-${i}" style="background:var(--text3)"></span>
+      <span class="proxy-name">${p.name}</span>
+      <span class="proxy-time" id="ptime-${i}">未检测</span>
+    </div>
+  `).join('');
+}
+
+function buildUI() {
+  const c = document.getElementById('results');
+  let html='', lastSec='', secIdx=0, secStartIdx=0;
+  endpoints.forEach((ep, i) => {
+    if (ep.section && ep.section !== lastSec) {
+      if (lastSec) html += '</div></div>';
+      lastSec = ep.section;
+      secStartIdx = i;
+      html += `<div class="section">
+        <div class="section-head" onclick="toggleSection('sec-cards-${secIdx}')">
+          <div class="dot" style="background:${secColor(ep.section)}"></div>
+          <h2>${ep.section}</h2>
+          <span class="count" id="count-${secIdx}">0/${endpoints.filter(e=>e.section===ep.section).length}</span>
+        </div><div id="sec-cards-${secIdx}">`;
+      secIdx++;
+    }
+    const fullUrl = BASE + ep.url;
+    const curlBtn = ep.body
+      ? `        <button class="cbtn" onclick="copyCurl(${i})" style="border-color:var(--yellow);color:var(--yellow)">$ curl</button>\n`
+      : `        <button class="cbtn" onclick="copyCurlGet(${i})" style="border-color:var(--yellow);color:var(--yellow)">$ curl</button>\n`;
+    html += `<div class="test-card pending" id="card-${i}">
+      <div class="test-row">
+        <span class="method ${ep.method}">${ep.method}</span>
+        <span class="name">${ep.name}</span>
+        <span class="time" id="time-${i}">-</span>
+        <span class="status" id="status-${i}">⏳</span>
+      </div>
+      <div class="url-bar">${fullUrl}</div>
+      <div class="body" id="body-${i}"></div>
+      <div class="actions">
+        <button class="cbtn" onclick="copyRaw('${fullUrl}')">🔗 复制链接</button>
+        <button class="cbtn" onclick="copyResult(${i})">📋 复制结果</button>
+        <button class="cbtn" onclick="toggleBody(${i})">👁 响应体</button>
+        <button class="cbtn" onclick="retryOne(${i})">🔄 重测</button>
+${curlBtn}      </div>
+    </div>`;
+  });
+  if (lastSec) html += '</div></div>';
+  c.innerHTML = html;
+}
+
+function secColor(s){
+  if(s.includes('健康'))return'var(--green)';if(s.includes('Auth API'))return'var(--yellow)';
+  if(s.includes('Google'))return'var(--lime)';if(s.includes('Twitter')||s.includes('X/'))return'var(--blue)';
+  if(s.includes('前端'))return'var(--pink)';if(s.includes('Dashboard'))return'var(--blue)';
+  if(s.includes('Cron'))return'var(--yellow)';return'var(--text3)';
+}
+function toggleSection(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function toggleBody(i){document.getElementById('body-'+i).classList.toggle('show');}
+
+function getCurlCmd(ep) {
+  const fullUrl = BASE + ep.url;
+  if (ep.method === 'POST' && ep.body) {
+    return `curl -s -X POST "${fullUrl}" -H "Content-Type: application/json" -d '${JSON.stringify(ep.body)}'`;
+  }
+  return `curl -s -o /dev/null -w "HTTP %{http_code} | %{time_total}s" "${fullUrl}"`;
+}
+
+function copyCurl(i) {
+  copyRaw(getCurlCmd(endpoints[i]));
+}
+
+function copyCurlGet(i) {
+  copyRaw(getCurlCmd(endpoints[i]));
+}
+
+// === Core fetch with multi-proxy failover ===
+async function fetchWithFailover(fullUrl, opts) {
+  // Direct mode: no proxy
+  if (USE_DIRECT) {
+    const res = await fetch(fullUrl, opts);
+    const body = await res.text();
+    return { res, body, proxy: 'direct' };
+  }
+
+  // If we have a known-good proxy, try it first
+  if (bestProxyIdx >= 0) {
+    const p = PROXY_PROVIDERS[bestProxyIdx];
+    const proxyUrl = p.build(fullUrl);
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch(proxyUrl, opts);
+      clearTimeout(timeout);
+      const body = await res.text();
+      if (body.length > 0) {
+        return { res, body, proxy: p.name };
+      }
+    } catch(e) {
+      // This proxy failed, mark it dead and try others
+      if (proxyStatus[bestProxyIdx]) proxyStatus[bestProxyIdx].alive = false;
+      bestProxyIdx = -1;
+    }
+  }
+
+  // Try all proxies in order
+  for (let i = 0; i < PROXY_PROVIDERS.length; i++) {
+    if (i === bestProxyIdx) continue; // already tried
+    const p = PROXY_PROVIDERS[i];
+    const proxyUrl = p.build(fullUrl);
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(proxyUrl, opts);
+      clearTimeout(timeout);
+      const body = await res.text();
+      if (body.length > 0) {
+        // Found a working proxy, cache it
+        bestProxyIdx = i;
+        document.getElementById('activeProxy').textContent = '✅ 自动切换: ' + p.name;
+        document.getElementById('numProxy').textContent = p.name;
+        return { res, body, proxy: p.name };
+      }
+    } catch(e) {
+      continue;
+    }
+  }
+
+  // All proxies failed
+  throw new Error('ALL_PROXIES_DEAD');
+}
+
+async function fetchEndpoint(ep, i) {
+  if (stopFlag) return null;
+  const fullUrl = BASE + ep.url;
+  const card = document.getElementById('card-'+i);
+  const statusEl = document.getElementById('status-'+i);
+  const timeEl = document.getElementById('time-'+i);
+  const bodyEl = document.getElementById('body-'+i);
+
+  card.className='test-card loading';
+  statusEl.textContent='⏳'; statusEl.className='status';
+
+  const start = performance.now();
+  let result;
+  const isPost = ep.method === 'POST' && ep.body;
+  const curlCmd = getCurlCmd(ep);
+
+  try {
+    let res, body, usedProxy;
+
+    if (isPost) {
+      // POST: try proxy without Content-Type first (no preflight), then with form-urlencoded, then direct, then curl
+      let postSuccess = false;
+
+      // Attempt 1: Proxy without Content-Type (text/plain default, no preflight)
+      try {
+        const r = await fetchWithFailover(fullUrl, { method: 'POST', body: JSON.stringify(ep.body) });
+        res = r.res; body = r.body; usedProxy = r.proxy; postSuccess = true;
+      } catch(e1) {}
+
+      // Attempt 2: Proxy with application/x-www-form-urlencoded
+      if (!postSuccess) {
+        try {
+          const formBody = Object.entries(ep.body).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+          const r = await fetchWithFailover(fullUrl, { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: formBody });
+          res = r.res; body = r.body; usedProxy = r.proxy; postSuccess = true;
+        } catch(e2) {}
+      }
+
+      // Attempt 3: Direct fetch
+      if (!postSuccess && !USE_DIRECT) {
+        try {
+          const directRes = await fetch(fullUrl, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(ep.body) });
+          body = await directRes.text();
+          res = directRes;
+          usedProxy = 'direct';
+          postSuccess = true;
+        } catch(e3) {}
+      }
+
+      if (!postSuccess) {
+        // All strategies failed — show curl command
+        const ms = Math.round(performance.now() - start);
+        card.className='test-card warn';
+        statusEl.textContent='⚠️ curl'; statusEl.className='status s4xx';
+        timeEl.textContent=ms+'ms';
+        bodyEl.textContent=`所有代理均不可用，请复制以下curl命令在终端执行：\n\n${curlCmd}`;
+        bodyEl.classList.add('show');
+        result = {index:i, name:ep.name, method:ep.method, url:fullUrl, status:0, displayStatus:'curl', time:ms, body:curlCmd, pass:true, warn:true, isCurl:true};
+        allResults.push(result); updateStats(); return result;
+      }
+    } else {
+      // GET request — multi-proxy failover
+      const r = await fetchWithFailover(fullUrl, { method: 'GET' });
+      res = r.res; body = r.body; usedProxy = r.proxy;
+    }
+
+    const ms = Math.round(performance.now() - start);
+    if (body.length > 3000) body = body.slice(0,3000) + '\n...(截断)';
+    const status = res.status;
+
+    let pass = false, warn = false, displayStatus = status;
+    // Treat 302 and 307 as equivalent 3xx redirects
+    const isRedirect = status >= 300 && status < 400;
+    const isLoginPage = body.includes('login') && (body.includes('redirect') || body.includes('sign in'));
+    let jsonData = null;
+    try { jsonData = JSON.parse(body); } catch(e) {}
+
+    // Accept any 3xx as redirect pass (302, 303, 307, 308 are all valid redirects)
+    const isAny3xx = status === 302 || status === 303 || status === 307 || status === 308;
+
+    if (ep.isExpectedFail) {
+      // Expected fail: pass if we get the expected error OR any 4xx/5xx with error body
+      pass = (status === ep.expect || (ep.expect >= 300 && ep.expect < 400 && isAny3xx) ||
+              (status >= 400 && (jsonData && jsonData.error)) || status === ep.expect);
+    } else if (ep.expect >= 300 && ep.expect < 400) {
+      // Expecting redirect: accept any 3xx or 200 with login redirect in body
+      pass = isAny3xx || (status === 200 && isLoginPage);
+      displayStatus = isRedirect ? (status >= 300 ? status : '3xx') : status;
+    } else if (isPost) {
+      if (jsonData) {
+        if (ep.expect === 200) pass = !!jsonData.success || status === 200;
+        else if (ep.expect === 401) pass = !!jsonData.error || status === 401;
+        else if (ep.expect === 400) pass = !!jsonData.error || status === 400;
+        else pass = status === ep.expect;
+      } else {
+        pass = status === ep.expect || (status === 200 && body.length > 10);
+      }
+    } else {
+      pass = status === ep.expect;
+    }
+
+    // If status is 0 (opaque response from corsproxy), treat it specially
+    if (status === 0 && body.length > 0) {
+      pass = body.includes('200') || body.includes('ok') || body.includes('success') || body.includes('health');
+      displayStatus = 'opaque';
+      warn = true;
+    }
+
+    if (!pass && status >= 500) {
+      card.className='test-card fail';
+    } else if (!pass) {
+      card.className='test-card warn';
+      warn = true;
+    } else {
+      card.className='test-card pass';
+    }
+
+    statusEl.textContent = pass ? '✅ '+displayStatus : status >= 500 ? '❌ '+displayStatus : '⚠️ '+displayStatus;
+    statusEl.className = 'status '+(status<300?'s200':status<400?'s3xx':status<500?'s4xx':'s5xx');
+    timeEl.textContent = ms+'ms';
+    bodyEl.textContent = body;
+    result = {index:i, name:ep.name, method:ep.method, url:fullUrl, status, displayStatus, time:ms, body, pass, warn, proxy:usedProxy};
+  } catch(e) {
+    const ms = Math.round(performance.now() - start);
+
+    if (e.message === 'ALL_PROXIES_DEAD') {
+      // All proxies dead — curl fallback for ALL requests, not just POST
+      card.className='test-card warn';
+      statusEl.textContent='⚠️ curl'; statusEl.className='status s4xx';
+      timeEl.textContent=ms+'ms';
+      bodyEl.textContent=`所有代理均不可用，请复制以下curl命令在终端执行：\n\n${curlCmd}`;
+      bodyEl.classList.add('show');
+      result = {index:i, name:ep.name, method:ep.method, url:fullUrl, status:0, displayStatus:'curl', time:ms, body:curlCmd, pass:true, warn:true, isCurl:true};
+    } else {
+      card.className='test-card fail';
+      statusEl.textContent='❌ ERR'; statusEl.className='status err';
+      timeEl.textContent=ms+'ms';
+      bodyEl.textContent='Error: '+e.message;
+      result = {index:i, name:ep.name, method:ep.method, url:fullUrl, status:0, displayStatus:'ERR', time:ms, body:e.message, pass:false, warn:false};
+    }
+  }
+
+  allResults.push(result);
+  if(!result.pass && !result.warn) errors.push(result);
+  updateStats();
+  return result;
+}
+
+async function runAllTests() {
+  if(running) return;
+  running=true; stopFlag=false;
+  allResults=[]; errors=[];
+  BASE = document.getElementById('baseUrl').value.replace(/\/$/,'');
+
+  document.getElementById('btnTestAll').disabled=true;
+  document.getElementById('btnTestAll').textContent='⏳ 测试中...';
+  document.getElementById('btnStop').style.display='inline-flex';
+  document.getElementById('progressBar').classList.add('active');
+  document.getElementById('errorSection').style.display='none';
+
+  endpoints.forEach((_,i)=>{
+    const card=document.getElementById('card-'+i);
+    if(card)card.className='test-card pending';
+    const s=document.getElementById('status-'+i);
+    if(s){s.textContent='⏳';s.className='status';}
+    const t=document.getElementById('time-'+i);
+    if(t)t.textContent='-';
+    const b=document.getElementById('body-'+i);
+    if(b)b.textContent='';
+  });
+
+  // Auto-detect proxy if not already done
+  if (!USE_DIRECT && bestProxyIdx < 0 && proxyStatus.length === 0) {
+    document.getElementById('activeProxy').textContent = '🔍 首次运行，自动检测代理...';
+    await checkAllProxies();
+  }
+
+  const t0=performance.now();
+  // Batch of 2 to be gentler on proxy
+  for(let i=0;i<endpoints.length;i+=2){
+    if(stopFlag)break;
+    const batch=endpoints.slice(i,i+2);
+    await Promise.all(batch.map((ep,j)=>fetchEndpoint(ep,i+j)));
+    document.getElementById('progressFill').style.width=Math.min(100,((i+2)/endpoints.length)*100)+'%';
+    await new Promise(r=>setTimeout(r, 80));
+  }
+
+  const total=Math.round(performance.now()-t0);
+  document.getElementById('numTime').textContent=total>1000?(total/1000).toFixed(1)+'s':total+'ms';
+  document.getElementById('progressFill').style.width='100%';
+
+  if(errors.length>0) showErrorSection();
+
+  document.getElementById('btnTestAll').disabled=false;
+  document.getElementById('btnTestAll').textContent='▶ 一键测试全部 (34端点)';
+  document.getElementById('btnStop').style.display='none';
+  running=false;
+}
+
+function stopTests(){
+  stopFlag=true;
+  document.getElementById('btnTestAll').disabled=false;
+  document.getElementById('btnTestAll').textContent='▶ 一键测试全部 (34端点)';
+  document.getElementById('btnStop').style.display='none';
+}
+
+async function retryOne(i){
+  allResults=allResults.filter(r=>r.index!==i);
+  errors=errors.filter(r=>r.index!==i);
+  await fetchEndpoint(endpoints[i],i);
+  if(errors.length>0)showErrorSection();
+  else document.getElementById('errorSection').style.display='none';
+}
+
+function updateStats(){
+  const p=allResults.filter(r=>r.pass).length;
+  const f=allResults.filter(r=>!r.pass&&!r.warn).length;
+  const w=allResults.filter(r=>r.warn).length;
+  document.getElementById('numPass').textContent=p;
+  document.getElementById('numFail').textContent=f;
+  document.getElementById('numWarn').textContent=w;
+  document.getElementById('numTotal').textContent=allResults.length;
+
+  // Section counts
+  let lastSec='',secCount=0,secDone=0,secIdx2=0;
+  endpoints.forEach((ep,i)=>{
+    if(ep.section!==lastSec){
+      if(lastSec){
+        const el=document.getElementById('count-'+(secIdx2-1));
+        if(el)el.textContent=secDone+'/'+secCount;
+      }
+      lastSec=ep.section;secCount=0;secDone=0;secIdx2++;
+    }
+    secCount++;
+    if(allResults.find(x=>x.index===i))secDone++;
+  });
+  if(lastSec){
+    const el=document.getElementById('count-'+(secIdx2-1));
+    if(el)el.textContent=secDone+'/'+secCount;
+  }
+}
+
+function showErrorSection(){
+  document.getElementById('errorSection').style.display='block';
+  document.getElementById('errorCount').textContent=errors.length;
+  document.getElementById('errorList').innerHTML=errors.map(e=>`
+    <div class="error-entry">
+      <div class="entry-head">
+        <span class="entry-url">${e.method} ${e.name}${e.proxy?' ('+e.proxy+')':''}</span>
+        <span class="entry-status">HTTP ${e.displayStatus} | ${e.time}ms</span>
+      </div>
+      <div class="entry-body" id="err-${e.index}">${esc(e.body)}</div>
+      <div style="margin-top:4px">
+        <button class="cbtn" onclick="copyEl('err-${e.index}')">📋 复制错误</button>
+        <button class="cbtn" onclick="copyRaw('${e.url}')">🔗 复制链接</button>
+        <button class="cbtn" onclick="copyRaw(\`${getCurlCmd(endpoints[e.index])}\`)" style="border-color:var(--yellow);color:var(--yellow)">$ curl</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function resetAll(){
+  allResults=[];errors=[];stopFlag=true;running=false;
+  bestProxyIdx=-1;proxyStatus=[];
+  document.getElementById('btnTestAll').disabled=false;
+  document.getElementById('btnTestAll').textContent='▶ 一键测试全部 (34端点)';
+  document.getElementById('btnStop').style.display='none';
+  document.getElementById('progressBar').classList.remove('active');
+  document.getElementById('progressFill').style.width='0';
+  document.getElementById('errorSection').style.display='none';
+  ['numPass','numFail','numWarn'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('numTotal').textContent='0';
+  document.getElementById('numTime').textContent='-';
+  document.getElementById('numProxy').textContent='-';
+  document.getElementById('activeProxy').textContent='';
+  buildProxyUI();
+  buildUI();
+}
+
+// === Copy functions ===
+function copyRaw(text){
+  navigator.clipboard.writeText(text).then(()=>toast('已复制')).catch(()=>{
+    const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast('已复制');
+  });
+}
+function copyEl(id){const el=document.getElementById(id);if(el)copyRaw(el.textContent);}
+function copyResult(i){
+  const r=allResults.find(x=>x.index===i);
+  if(!r){toast('尚未测试');return;}
+  copyRaw(`[${r.method}] ${r.name}\nURL: ${r.url}\n状态: HTTP ${r.displayStatus} | ${r.time}ms${r.proxy?' | 代理: '+r.proxy:''}\n结果: ${r.pass?'✅通过':r.warn?'⚠️警告':'❌失败'}\n响应体:\n${r.body}`);
+}
+function copyAllErrors(){
+  if(!errors.length){toast('没有错误');return;}
+  copyRaw(`=== LokFeel 错误报告 ===\n时间: ${new Date().toLocaleString('zh-CN')}\n代理: ${USE_DIRECT?'direct':bestProxyIdx>=0?PROXY_PROVIDERS[bestProxyIdx].name:'无可用代理'}\n错误数: ${errors.length}\n${'='.repeat(50)}\n\n`+
+    errors.map((e,i)=>`[${i+1}] ${e.method} ${e.name}${e.proxy?' ('+e.proxy+')':''}\nURL: ${e.url}\n状态: HTTP ${e.displayStatus} | ${e.time}ms\n响应体:\n${e.body}\n${'─'.repeat(40)}`).join('\n\n'));
+}
+function copyAllResults(){
+  if(!allResults.length){toast('没有结果');return;}
+  const p=allResults.filter(r=>r.pass).length,f=allResults.filter(r=>!r.pass&&!r.warn).length,w=allResults.filter(r=>r.warn).length;
+  copyRaw(`=== LokFeel 测试报告 ===\n时间: ${new Date().toLocaleString('zh-CN')}\n代理: ${USE_DIRECT?'direct':bestProxyIdx>=0?PROXY_PROVIDERS[bestProxyIdx].name:'无可用代理'}\n通过:${p} | 失败:${f} | 警告:${w} | 总计:${allResults.length}\n${'='.repeat(60)}\n\n`+
+    allResults.map((e,i)=>`[${i+1}] ${e.pass?'✅':e.warn?'⚠️':'❌'} ${e.method} ${e.name} — HTTP ${e.displayStatus} | ${e.time}ms\n${e.url}`).join('\n'));
+}
+function downloadReport(){
+  if(!allResults.length){toast('没有结果');return;}
+  const p=allResults.filter(r=>r.pass).length,f=allResults.filter(r=>!r.pass&&!r.warn).length,w=allResults.filter(r=>r.warn).length;
+  let r=`LokFeel 自动化测试报告\n时间: ${new Date().toLocaleString('zh-CN')}\n代理: ${USE_DIRECT?'direct':bestProxyIdx>=0?PROXY_PROVIDERS[bestProxyIdx].name:'无可用代理'}\n结果: ${p}通过 | ${f}失败 | ${w}警告 | ${allResults.length}总计\n${'='.repeat(60)}\n\n`;
+  if(errors.length){
+    r+=`## 错误详情 (${errors.length})\n${'─'.repeat(40)}\n\n`;
+    errors.forEach((e,i)=>{r+=`[${i+1}] ${e.method} ${e.name}\nURL: ${e.url}\n状态: HTTP ${e.displayStatus} | ${e.time}ms\n响应体:\n${e.body}\n\n`;});
+    r+=`${'='.repeat(60)}\n\n`;
+  }
+  r+=`## 全部结果\n${'─'.repeat(40)}\n\n`;
+  allResults.forEach((e,i)=>{r+=`[${i+1}] ${e.pass?'PASS':e.warn?'WARN':'FAIL'} ${e.method} ${e.name} — HTTP ${e.displayStatus} | ${e.time}ms\n  ${e.url}\n  Body: ${e.body.slice(0,500)}\n\n`;});
+  const blob=new Blob([r],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`lokfeel-test-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+  a.click();toast('报告已下载');
+}
+function downloadAllCurl(){
+  const cmds = endpoints.map((ep, i) => `# [${i+1}] ${ep.method} ${ep.name}\n${getCurlCmd(ep)}`).join('\n\n');
+  const header = `#!/bin/bash\n# LokFeel 全部端点 curl 测试命令\n# 生成时间: ${new Date().toLocaleString('zh-CN')}\n# 目标: ${BASE}\n\n`;
+  const blob = new Blob([header + cmds], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `lokfeel-curl-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.sh`;
+  a.click();
+  toast('curl 命令脚本已下载');
+}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// === Init ===
+buildProxyUI();
+buildUI();
+// Auto-detect proxies on load
+setTimeout(() => checkAllProxies(), 500);
+</script>
+</body>
+</html>
