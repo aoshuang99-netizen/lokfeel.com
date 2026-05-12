@@ -29,11 +29,10 @@ import {
 } from "lucide-react";
 import { signIn } from "next-auth/react";
 
-// Use NextAuth Google OAuth redirect flow — most reliable, no JS SDK needed
+// Google OAuth — uses direct redirect to bypass NextAuth PKCE issue
 import GoogleSignInButton from "@/components/auth/google-sign-in-button";
 
-// X (Twitter) — Native OAuth 2.0 + PKCE redirect (bypasses Firebase)
-// Redirects to /api/auth/twitter/signin → Twitter authorize → callback → auto-sign-in
+// X (Twitter) — Native OAuth 2.0 + PKCE redirect
 
 // ─── COOL BLUE V2 THEME CONSTANTS ─────────────────────────────
 const colors = {
@@ -343,16 +342,6 @@ export default function RegisterPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleOAuthRegister = async (provider: "google" | "twitter") => {
-    setIsLoading(true);
-    try {
-      await signIn(provider, { callbackUrl: "/dashboard/onboarding" });
-    } catch {
-      setError("Failed to sign in. Please try again.");
       setIsLoading(false);
     }
   };

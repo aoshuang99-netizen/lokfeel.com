@@ -1,21 +1,25 @@
 "use client";
 
 /**
- * GoogleSignInButton v5 — NextAuth Google OAuth (Redirect-based)
+ * GoogleSignInButton v6 — Direct Redirect (bypasses NextAuth signIn PKCE issue)
  *
  * ARCHITECTURE:
- * - Uses NextAuth's built-in Google provider (signIn("google"))
- * - Standard OAuth 2.0 redirect flow — most reliable, no JS SDK needed
- * - No GIS script loading, no Firebase SDK, no FedCM, no prompt()
- * - Google's own login page handles account selection natively
+ * - Uses window.location.href to navigate to /api/auth/signin/google (GET)
+ * - This triggers our custom GET handler in [...nextauth]/route.ts
+ * - Custom handler redirects to Google WITHOUT PKCE (plain OAuth 2.0)
+ * - Callback at /api/auth/callback/google exchanges code for tokens (no PKCE needed)
+ * - Auto-submitting HTML form completes sign-in via firebase-token provider
  *
- * IMPORTANT: Do NOT pass `redirect: false` for OAuth providers!
- * OAuth MUST redirect to Google. With redirect: false, NextAuth can't
- * complete the OAuth flow and returns error=Configuration.
+ * WHY NOT signIn("google") from next-auth/react:
+ * NextAuth v5's POST handler adds PKCE (code_challenge_method=S256) automatically.
+ * Our custom callback handler doesn't send code_verifier in the token exchange,
+ * causing Google to reject it with "invalid_grant: Missing code verifier."
+ * Using direct GET navigation bypasses NextAuth's PKCE flow entirely.
+ *
+ * This is consistent with how the X/Twitter button works.
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { signIn } from "next-auth/react";
 
 // DATEASY DARK theme constants
 const colors = {
@@ -67,10 +71,10 @@ export default function GoogleSignInButton({
     if (isLoading || disabled) return;
     setIsLoading(true);
 
-    // NextAuth Google OAuth redirect flow
-    // This redirects to Google's login page — no JS SDK needed
-    // signIn() triggers browser navigation, so code after this won't execute
-    signIn("google", { callbackUrl });
+    // Direct navigation to our custom GET handler (bypasses NextAuth's PKCE POST flow)
+    // Our GET handler in [...nextauth]/route.ts constructs the Google OAuth URL
+    // without PKCE, which matches our custom callback handler's expectations.
+    window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`;
   }, [isLoading, disabled, callbackUrl]);
 
   return (

@@ -14,7 +14,6 @@
  */
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
@@ -85,23 +84,6 @@ export default function LoginInnerClient({
       console.error("[Login] Error:", err);
       setError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
-    }
-  };
-
-  // ─── OAuth handlers ───
-  const handleOAuth = async (provider: string) => {
-    try {
-      await signIn(provider as any, { callbackUrl });
-    } catch (err: any) {
-      console.error(`[OAuth] ${provider} failed:`, err);
-      
-      // Check if it's a configuration error
-      const errorMessage = err?.message || "";
-      if (errorMessage.includes("Configuration") || errorMessage.includes("OAuth")) {
-        setError(`${provider === "google" ? "Google" : "X"} login is not properly configured. Please contact support.`);
-      } else {
-        setError(`Failed to sign in with ${provider}. Please try again.`);
-      }
     }
   };
 
