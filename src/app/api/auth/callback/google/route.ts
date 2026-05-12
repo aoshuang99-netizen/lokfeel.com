@@ -290,46 +290,76 @@ export async function GET(request: NextRequest) {
 
     // Step 7: Return HTML that auto-signs in via NextAuth
     // Uses a hidden form that POSTs to /api/auth/callback/firebase-token
-    const escapedCallback = callbackUrl.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    const escapedCallback = callbackUrl.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    const escapedUserId = user.id.replace(/'/g, "\\'");
+    const escapedToken = signInToken.replace(/'/g, "\\'");
     const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Signing in...</title></head>
 <body>
 <noscript><p style="text-align:center;padding:40px;color:#aaa">JavaScript is required. Please enable it and refresh.</p></noscript>
-<div id="loading" style="text-align:center;padding:40px;color:#aaa;font-family:system-ui">Signing in with Google...</div>
+<div id="loading" style="text-align:center;padding:60px 20px;color:#aaa;font-family:system-ui">
+<div style="font-size:24px;margin-bottom:12px">&#9899;</div>
+<div>Signing in with Google...</div>
+<div id="detail" style="font-size:12px;margin-top:8px;opacity:0.6"></div>
+</div>
+<div id="error" style="display:none;text-align:center;padding:60px 20px;font-family:system-ui">
+<div style="font-size:24px;margin-bottom:12px;color:#f87171">&#9888;</div>
+<div id="error-msg" style="color:#f87171;margin-bottom:20px">Sign-in failed</div>
+<a href="/login" style="color:#60a5fa;text-decoration:underline">Return to login</a>
+</div>
 <script>
 (function() {
-  // Fetch CSRF token first (needed for NextAuth form POST)
+  var detail = document.getElementById('detail');
+  var startTime = Date.now();
+  var TIMEOUT = 15000;
+
+  function showStep(msg) { if (detail) detail.textContent = msg; }
+  function showError(msg) {
+    document.getElementById('loading').style.display = 'none';
+    var err = document.getElementById('error');
+    err.style.display = 'block';
+    document.getElementById('error-msg').textContent = msg;
+  }
+
+  // Timeout fallback
+  var timer = setTimeout(function() {
+    showError('Sign-in timed out. Please try again.');
+  }, TIMEOUT);
+
+  showStep('Fetching security token...');
   fetch('/api/auth/csrf', { credentials: 'include' })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+      showStep('Verifying credentials...');
+      if (!r.ok) throw new Error('CSRF fetch failed: ' + r.status);
+      return r.json();
+    })
     .then(function(data) {
-      if (!data.csrfToken) throw new Error('No CSRF token');
-      // Create and submit a hidden form
+      if (!data.csrfToken) throw new Error('No CSRF token received');
+      showStep('Completing sign-in...');
       var form = document.createElement('form');
       form.method = 'POST';
       form.action = '/api/auth/callback/firebase-token';
       form.style.display = 'none';
-      // CSRF token
       var csrf = document.createElement('input');
       csrf.type = 'hidden'; csrf.name = 'csrfToken'; csrf.value = data.csrfToken;
       form.appendChild(csrf);
-      // Sign-in token
       var token = document.createElement('input');
-      token.type = 'hidden'; token.name = 'token'; token.value = '${signInToken}';
+      token.type = 'hidden'; token.name = 'token'; token.value = '${escapedToken}';
       form.appendChild(token);
-      // User ID
       var userId = document.createElement('input');
-      userId.type = 'hidden'; userId.name = 'userId'; userId.value = '${user.id}';
+      userId.type = 'hidden'; userId.name = 'userId'; userId.value = '${escapedUserId}';
       form.appendChild(userId);
-      // Callback URL
       var cb = document.createElement('input');
       cb.type = 'hidden'; cb.name = 'callbackUrl'; cb.value = '${escapedCallback}';
       form.appendChild(cb);
       document.body.appendChild(form);
+      clearTimeout(timer);
       form.submit();
     })
     .catch(function(e) {
-      document.getElementById('loading').textContent = 'Sign-in error: ' + e.message;
-      setTimeout(function() { window.location.href = '/login?error=' + encodeURIComponent('Sign-in failed'); }, 2000);
+      clearTimeout(timer);
+      console.error('[Google OAuth] Auto-submit error:', e.message);
+      showError('Sign-in error: ' + e.message);
     });
 })();
 </script>

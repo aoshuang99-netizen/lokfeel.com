@@ -112,6 +112,7 @@ export const authConfig = {
       },
       async authorize(credentials) {
         if (!credentials?.token || !credentials?.userId) {
+          console.error("[firebase-token authorize] Missing token or userId");
           return null;
         }
 
@@ -121,41 +122,63 @@ export const authConfig = {
 
           // Token format: "fb_{userId}_{uuid}_{timestamp}"
           if (!rawToken.startsWith(`fb_${userId}_`)) {
+            console.error("[firebase-token authorize] Token format mismatch. Expected fb_" + userId.substring(0, 8) + "_, got:", rawToken.substring(0, 20));
             return null;
           }
 
           // Look up the verification token (exact match — raw token stored directly)
-          const verification = await db.verificationToken.findUnique({
-            where: {
-              identifier_token: {
-                identifier: `firebase:${userId}`,
-                token: rawToken,
+          let verification;
+          try {
+            verification = await db.verificationToken.findUnique({
+              where: {
+                identifier_token: {
+                  identifier: `firebase:${userId}`,
+                  token: rawToken,
+                },
               },
-            },
-          });
+            });
+          } catch (dbErr: any) {
+            console.error("[firebase-token authorize] DB lookup error:", dbErr.message);
+            return null;
+          }
 
           if (!verification) {
+            console.error("[firebase-token authorize] Verification token not found for user:", userId.substring(0, 8));
             return null;
           }
 
           // Check expiration
           if (verification.expires < new Date()) {
+            console.error("[firebase-token authorize] Token expired for user:", userId.substring(0, 8), "expired at:", verification.expires.toISOString());
             await db.verificationToken.delete({ where: { id: verification.id } });
             return null;
           }
 
           // Verify user exists
-          const user = await db.user.findUnique({
-            where: { id: userId },
-            include: { profile: true },
-          });
+          let user;
+          try {
+            user = await db.user.findUnique({
+              where: { id: userId },
+              include: { profile: true },
+            });
+          } catch (dbErr: any) {
+            console.error("[firebase-token authorize] User lookup error:", dbErr.message);
+            return null;
+          }
 
           if (!user) {
+            console.error("[firebase-token authorize] User not found:", userId.substring(0, 8));
             return null;
           }
 
           // Delete the one-time token (single use)
-          await db.verificationToken.delete({ where: { id: verification.id } });
+          try {
+            await db.verificationToken.delete({ where: { id: verification.id } });
+          } catch (dbErr: any) {
+            console.error("[firebase-token authorize] Token deletion error (non-fatal):", dbErr.message);
+          }
+
+          console.log("[firebase-token authorize] Success for user:", userId.substring(0, 8), user.email);
 
           return {
             id: user.id,
@@ -165,7 +188,8 @@ export const authConfig = {
             role: user.role,
             emailVerified: user.emailVerified,
           };
-        } catch {
+        } catch (err: any) {
+          console.error("[firebase-token authorize] Unexpected error:", err.message, err.stack);
           return null;
         }
       },
