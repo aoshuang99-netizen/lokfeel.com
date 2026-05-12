@@ -3,21 +3,14 @@
 /**
  * LoginInnerClient — Cool Blue V2 Glassmorphism
  * Seamless visual transition from landing page (same video bg + overlay)
- * Retains all OAuth functionality (Google GIS, X OAuth 2.0)
- *
- * Fixes:
- * - Brand: LokFee! (not LokFeel)
- * - Social login: vertical stack (Google top, X bottom) for mobile
- * - Responsive: CSS class-based auth-card for mobile-first padding
- * - Touch-friendly: 48px min-height on all interactive elements
- * - PC layout optimized (440px card, better padding)
+ * Retains all OAuth functionality (Google OAuth 2.0, X OAuth 2.0)
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
-// Use NextAuth Google OAuth redirect flow
+// Use manual POST-based Google OAuth (bypasses next-auth/react signIn issues)
 import GoogleSignInButton from "@/components/auth/google-sign-in-button";
 
 interface Props {
@@ -35,6 +28,20 @@ export default function LoginInnerClient({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [twitterError, setTwitterError] = useState<string | null>(null);
+
+  // ─── X (Twitter) OAuth — Manual navigation with error handling ───
+  const handleTwitterSignIn = useCallback(async () => {
+    setTwitterError(null);
+    setIsLoading(true);
+    try {
+      // Use GET redirect — Twitter has its own custom handler that works via GET
+      window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+    } catch (err: any) {
+      setTwitterError("Failed to connect to X. Please try again.");
+      setIsLoading(false);
+    }
+  }, [callbackUrl]);
 
   // ─── Form Submit ───
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,19 +141,32 @@ export default function LoginInnerClient({
           />
 
           {/* X (Twitter) — Native OAuth 2.0 + PKCE */}
-          <button
-            type="button"
-            onClick={() => {
-              window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-            }}
-            disabled={isLoading}
-            className="auth-social-btn"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-            Continue with X
-          </button>
+          <div style={{ width: "100%" }}>
+            <button
+              type="button"
+              onClick={handleTwitterSignIn}
+              disabled={isLoading}
+              className="auth-social-btn"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Continue with X
+            </button>
+            {twitterError && (
+              <div style={{
+                marginTop: "8px",
+                padding: "10px 14px",
+                borderRadius: "10px",
+                background: "rgba(251,113,133,0.1)",
+                border: "1px solid rgba(251,113,133,0.2)",
+                color: "#fb7185",
+                fontSize: "13px",
+              }}>
+                {twitterError}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Divider */}

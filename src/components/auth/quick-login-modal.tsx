@@ -3,7 +3,6 @@
 import React, { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, Heart, ArrowRight } from "lucide-react";
-import { signIn } from "next-auth/react";
 
 interface QuickLoginModalProps {
   isOpen: boolean;
@@ -26,27 +25,53 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
     setError("");
     setLoading(true);
 
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const csrfRes = await fetch("/api/auth/csrf", { headers: { "Content-Type": "application/json" } });
+      const { csrfToken } = await csrfRes.json();
+      if (!csrfToken) { setError("Security check failed"); setLoading(false); return; }
 
-    setLoading(false);
+      const formData = new URLSearchParams();
+      formData.append("email", email.toLowerCase().trim());
+      formData.append("password", password);
+      formData.append("csrfToken", csrfToken);
+      formData.append("callbackUrl", "/dashboard");
 
-    if (res?.error) {
-      setError("Invalid email or password");
-    } else {
-      window.location.href = "/dashboard";
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        body: formData,
+      });
+
+      const location = res.headers.get("location") || "";
+      if (location.includes("error=")) {
+        setError("Invalid email or password");
+      } else {
+        window.location.href = location || "/dashboard";
+      }
+    } catch (e: any) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/dashboard" });
+  const handleGoogleLogin = async () => {
+    try {
+      const csrfRes = await fetch("/api/auth/csrf", { headers: { "Content-Type": "application/json" } });
+      const { csrfToken } = await csrfRes.json();
+      if (!csrfToken) { setError("Security check failed"); return; }
+      const res = await fetch("/api/auth/signin/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Auth-Return-Redirect": "1" },
+        body: new URLSearchParams({ csrfToken, callbackUrl: "/dashboard" }),
+      });
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else { setError(data.error || "Google login failed"); }
+    } catch (e: any) { setError(e.message || "Network error"); }
   };
 
   const handleXLogin = () => {
-    window.location.href = "/api/auth/signin/twitter?callbackUrl=/dashboard";
+    window.location.href = "/api/auth/twitter/signin?callbackUrl=/dashboard";
   };
 
   if (!isOpen) return null;

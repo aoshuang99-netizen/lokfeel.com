@@ -3,7 +3,6 @@
 import React, { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Check, Mail, Lock, User as UserIcon, Cake, Heart, ArrowRight } from "lucide-react";
-import { signIn } from "next-auth/react";
 import { GENDER_OPTIONS, SEXUALITY_OPTIONS } from "@/constants";
 
 type Step = "email" | "social" | "basic" | "gender" | "verify" | "success";
@@ -173,12 +172,24 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
   };
 
   // Social login handlers
-  const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/dashboard" });
+  const handleGoogleLogin = async () => {
+    try {
+      const csrfRes = await fetch("/api/auth/csrf", { headers: { "Content-Type": "application/json" } });
+      const { csrfToken } = await csrfRes.json();
+      if (!csrfToken) { setError("Security check failed"); return; }
+      const res = await fetch("/api/auth/signin/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Auth-Return-Redirect": "1" },
+        body: new URLSearchParams({ csrfToken, callbackUrl: "/dashboard" }),
+      });
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else { setError(data.error || "Google login failed"); }
+    } catch (e: any) { setError(e.message || "Network error"); }
   };
 
   const handleXLogin = () => {
-    window.location.href = "/api/auth/signin/twitter?callbackUrl=/dashboard";
+    window.location.href = "/api/auth/twitter/signin?callbackUrl=/dashboard";
   };
 
   if (!isOpen) return null;

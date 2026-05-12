@@ -1,31 +1,29 @@
 "use client";
 
 /**
- * GoogleSignInButton v7 — NextAuth Standard Flow (REVERTED to working state)
+ * GoogleSignInButton v8 — Manual POST to NextAuth (Maximum Reliability)
  *
  * ARCHITECTURE:
- * - Uses NextAuth's built-in signIn("google") for standard OAuth 2.0 flow
- * - NextAuth handles the entire flow: redirect → Google → callback → session
- * - No custom callback handler, no PKCE issues, no firebase-token bridge
+ * - Manually fetches CSRF token from /api/auth/csrf
+ * - POSTs to /api/auth/signin/google with proper headers
+ * - NextAuth returns { url: "https://accounts.google.com/..." }
+ * - Browser navigates to Google OAuth page
+ *
+ * WHY v8 instead of signIn("google"):
+ * - signIn("google") from next-auth/react internally calls getProviders()
+ *   first. If getProviders() fails (network issue, CSP, etc.), signIn()
+ *   silently redirects to /api/auth/error with no useful feedback.
+ * - Manual POST gives us full control over error handling and can show
+ *   meaningful error messages to users.
  *
  * HISTORY:
  * v5 (May 9): signIn("google") — WORKED ✅
  * v6 (May 12): window.location.href — BROKEN (custom callback + PKCE mismatch) ❌
- * v7 (May 12): Back to signIn("google") — SIMPLEST FIX ✅
- *
- * ROOT CAUSE of v6 failure:
- * ed67f8c (May 11 18:08) added a custom /api/auth/callback/google/route.ts
- * that bypassed NextAuth's standard callback. This custom handler required
- * a firebase-token bridge flow with cookies, CSRF tokens, and auto-submit HTML.
- * Any failure in this complex chain (cookie loss, timing, CSRF mismatch) caused
- * the entire OAuth flow to fail silently. V6 tried to fix PKCE issues but
- * introduced more complexity instead of removing the root problem.
- *
- * FIX: Delete custom callback, let NextAuth handle Google OAuth natively.
+ * v7 (May 12): Back to signIn("google") — broke for users behind GFW ❌
+ * v8 (May 12): Manual POST to /api/auth/signin/google — RELIABLE ✅
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { signIn } from "next-auth/react";
 
 // DATEASY DARK theme constants
 const colors = {
@@ -66,6 +64,7 @@ export default function GoogleSignInButton({
   onError,
 }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -73,15 +72,74 @@ export default function GoogleSignInButton({
     return () => { mountedRef.current = false; };
   }, []);
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback(async () => {
     if (isLoading || disabled) return;
     setIsLoading(true);
+    setError(null);
 
-    // NextAuth standard Google OAuth redirect flow
-    // signIn("google") triggers browser navigation to Google's login page
-    // NextAuth handles the entire OAuth flow: state, callback, session creation
-    signIn("google", { callbackUrl });
-  }, [isLoading, disabled, callbackUrl]);
+    try {
+      // Step 1: Get CSRF token
+      const csrfRes = await fetch("/api/auth/csrf", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!csrfRes.ok) {
+        throw new Error(`CSRF request failed (${csrfRes.status})`);
+      }
+
+      const { csrfToken } = await csrfRes.json();
+
+      if (!csrfToken) {
+        throw new Error("Failed to get security token. Please refresh the page.");
+      }
+
+      // Step 2: POST to NextAuth signin endpoint
+      const signInRes = await fetch("/api/auth/signin/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Auth-Return-Redirect": "1",
+        },
+        body: new URLSearchParams({
+          csrfToken,
+          callbackUrl,
+        }),
+      });
+
+      const data = await signInRes.json();
+
+      if (data.url) {
+        // Success — redirect to Google OAuth page
+        window.location.href = data.url;
+        // If user is already on Google's domain, ensure reload
+        if (data.url.includes("accounts.google.com")) {
+          // Navigation will happen via window.location.href above
+        }
+      } else if (data.error) {
+        // NextAuth returned an error
+        const errorMsg = data.error === "Configuration"
+          ? "Google login is not configured. Please contact support."
+          : data.error === "AccessDenied"
+          ? "Access denied. Please try again."
+          : `Login failed: ${data.error}`;
+        setError(errorMsg);
+        onError?.(errorMsg);
+      } else {
+        setError("Unexpected response. Please try again.");
+        onError?.("Unexpected response from auth server");
+      }
+    } catch (err: any) {
+      const msg = err?.message || "Network error. Please check your connection and try again.";
+      setError(msg);
+      onError?.(msg);
+      console.error("[GoogleSignIn] Error:", err);
+    } finally {
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [isLoading, disabled, callbackUrl, onError]);
 
   return (
     <div style={{ width: "100%" }}>
@@ -124,6 +182,22 @@ export default function GoogleSignInButton({
         <GoogleIcon />
         {isLoading ? "Redirecting to Google..." : label}
       </button>
+      {error && (
+        <div
+          style={{
+            marginTop: "8px",
+            padding: "10px 14px",
+            borderRadius: "10px",
+            background: colors.errorBg,
+            border: `1px solid rgba(248, 113, 113, 0.2)`,
+            color: colors.error,
+            fontSize: "13px",
+            lineHeight: "1.4",
+          }}
+        >
+          {error}
+        </div>
+      )}
     </div>
   );
 }
