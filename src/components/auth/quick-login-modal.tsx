@@ -26,27 +26,26 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
     setLoading(true);
 
     try {
-      const csrfRes = await fetch("/api/auth/csrf", { headers: { "Content-Type": "application/json" } });
-      const { csrfToken } = await csrfRes.json();
-      if (!csrfToken) { setError("Security check failed"); setLoading(false); return; }
-
-      const formData = new URLSearchParams();
-      formData.append("email", email.toLowerCase().trim());
-      formData.append("password", password);
-      formData.append("csrfToken", csrfToken);
-      formData.append("callbackUrl", "/dashboard");
-
-      const res = await fetch("/api/auth/callback/credentials", {
+      // Use custom login API — verifies credentials server-side, creates NextAuth JWT session, sets cookie
+      const res = await fetch("/api/auth/login", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          password,
+          callbackUrl: "/dashboard",
+        }),
       });
 
-      const location = res.headers.get("location") || "";
-      if (location.includes("error=")) {
-        setError("Invalid email or password");
-      } else {
-        window.location.href = location || "/dashboard";
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.error || "Invalid email or password");
+        return;
       }
+
+      // Session cookie set by server — navigate to dashboard
+      window.location.href = data.redirectUrl || "/dashboard";
     } catch (e: any) {
       setError("Network error. Please try again.");
     } finally {

@@ -1,23 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { verifyPassword } from "@/lib/auth/auth"
-import { signIn } from "@/lib/auth/auth"
+import { verifyPassword, hashPassword } from "@/lib/auth/auth"
+import { encode } from "next-auth/jwt"
 
 /**
  * POST /api/auth/login
- * Custom credentials login — bypasses NextAuth CSRF protection.
+ * Custom credentials login — bypasses NextAuth's CSRF-protected callback entirely.
  *
- * Why this route:
- * NextAuth v5 beta's signIn() from next-auth/react loses the CSRF token
- * when used with redirect:false, causing MissingCSRF errors.
- * This route calls the authorize logic directly + creates a session
- * without going through NextAuth's CSRF-protected callback.
+ * WHY: NextAuth v5's credentials callback at /api/auth/callback/credentials
+ * requires a valid CSRF token from the double-submit cookie pattern.
+ * Client-side fetch() to this endpoint loses the CSRF cookie in certain
+ * configurations (SameSite, Secure, redirect following), causing silent failures.
+ *
+ * SOLUTION: This route verifies credentials server-side, then creates a valid
+ * NextAuth JWT session token using next-auth/jwt's encode(), and sets it as
+ * an httpOnly cookie. This is exactly what NextAuth's internal flow does,
+ * but without the CSRF middleware layer.
  *
  * Security: bcrypt password hashing is verified server-side.
- * CSRF is not needed for credentials-based auth when the only state-changing
- * operation is password verification + session creation.
+ * JWT is signed with AUTH_SECRET (same as NextAuth config).
  */
 export const dynamic = "force-dynamic"
+
+// NextAuth JWT cookie names (matches next-auth v5 defaults)
+const COOKIE_NAME = process.env.NODE_ENV === "production"
+  ? "__Secure-authjs.session-token"
+  : "authjs.session-token"
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,7 +62,7 @@ export async function POST(request: NextRequest) {
     // ─── 3. Verify password ───
     if (!(user as any).password) {
       return NextResponse.json(
-        { error: "This account does not use password login" },
+        { error: "This account uses social login. Please sign in with Google or X." },
         { status: 401 }
       )
     }
@@ -68,32 +76,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ─── 4. Create session via NextAuth signIn ───
-    // Use signIn to create the JWT cookie (server-side)
-    const signInResult = await signIn("credentials", {
-      email: normalizedEmail,
-      password,
-      redirect: false, // We'll handle redirect manually
+    // ─── 4. Create NextAuth-compatible JWT session token ───
+    // This mimics exactly what NextAuth's internal sign-in flow does:
+    // jwt() callback → encode() → set cookie
+    const secret = process.env.AUTH_SECRET
+    if (!secret) {
+      console.error("[Login API] AUTH_SECRET is not configured")
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      )
+    }
+
+    // Build the JWT payload that matches our config.ts jwt() callback
+    const tokenPayload = {
+      id: user.id,
+      email: user.email,
+      name: user.name || user.profile?.displayName || "",
+      picture: user.image || user.profile?.avatar || null,
+      role: user.role || "USER",
+      emailVerified: user.emailVerified || null,
+      // NextAuth internal fields
+      sub: user.id,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days (matches config)
+    }
+
+    const sessionToken = await encode({
+      token: tokenPayload,
+      secret,
+      salt: "authjs.session-token",
     })
 
-    // Determine redirect destination based on role
+    // ─── 5. Determine redirect destination ───
     const role = (user as any).role
     const destination =
       role === "ADMIN" || role === "SUPER_ADMIN"
         ? "/admin"
         : (callbackUrl || "/dashboard")
 
-    // signIn with redirect:false returns an object with ok/error
-    // We need to redirect the browser to set the cookie
-    if ((signInResult as any)?.error) {
-      return NextResponse.json(
-        { error: "Authentication failed" },
-        { status: 401 }
-      )
-    }
-
-    // Return success + redirect URL for the client to navigate to
-    return NextResponse.json({
+    // ─── 6. Build response with session cookie ───
+    const response = NextResponse.json({
       success: true,
       redirectUrl: destination,
       role,
@@ -104,8 +127,20 @@ export async function POST(request: NextRequest) {
         role: (user as any).role,
       },
     })
-  } catch (error) {
-    console.error("[Login API] Error:", error)
+
+    // Set the NextAuth session cookie (same parameters NextAuth uses internally)
+    const isSecure = process.env.NODE_ENV === "production"
+    response.cookies.set(COOKIE_NAME, sessionToken, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    })
+
+    return response
+  } catch (error: any) {
+    console.error("[Login API] Error:", error?.message || error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

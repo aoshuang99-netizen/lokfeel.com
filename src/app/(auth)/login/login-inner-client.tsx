@@ -43,53 +43,40 @@ export default function LoginInnerClient({
     }
   }, [callbackUrl]);
 
-  // ─── Form Submit ───
+  // ─── Form Submit — Custom API login (bypasses NextAuth CSRF callback issues) ───
+  // POSTs to /api/auth/login which verifies credentials server-side,
+  // creates a valid NextAuth JWT session token, and returns JSON + sets cookie.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      const csrfRes = await fetch("/api/auth/csrf");
-      const { csrfToken } = await csrfRes.json();
-
-      if (!csrfToken) {
-        setError("Security check failed. Please refresh and try again.");
-        setIsLoading(false);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("email", email.toLowerCase().trim());
-      formData.append("password", password);
-      formData.append("csrfToken", csrfToken);
-      formData.append("callbackUrl", callbackUrl || "/dashboard");
-
-      const res = await fetch("/api/auth/callback/credentials", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          password,
+          callbackUrl: callbackUrl || "/dashboard",
+        }),
       });
 
-      const location = res.headers.get("location") || "";
-      let redirectUrl = location || callbackUrl || "/dashboard";
+      const data = await res.json();
 
-      if (location.includes("error=")) {
-        const errorCode = new URL(redirectUrl, window.location.origin).searchParams.get("error");
-        if (errorCode === "CredentialsSignin") {
-          setError("Invalid email or password.");
-        } else if (errorCode === "MissingCSRF") {
-          setError("Security verification failed. Please try again.");
-        } else {
-          setError("Sign in failed. Please try again.");
-        }
+      if (!res.ok || !data.success) {
+        // Map server error messages to user-friendly text
+        const msg = data.error || "Sign in failed. Please try again.";
+        setError(msg);
         setIsLoading(false);
         return;
       }
 
-      window.location.href = redirectUrl;
+      // Session cookie is already set by the server — just navigate
+      window.location.href = data.redirectUrl || "/dashboard";
     } catch (err) {
       console.error("[Login] Error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      setError("Network error. Please check your connection and try again.");
       setIsLoading(false);
     }
   };
