@@ -3,6 +3,7 @@
 import React, { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Check, Mail, Lock, User as UserIcon, Cake, Heart, ArrowRight } from "lucide-react";
+import { signIn } from "next-auth/react";
 import { GENDER_OPTIONS, SEXUALITY_OPTIONS } from "@/constants";
 
 type Step = "email" | "social" | "basic" | "gender" | "verify" | "success";
@@ -173,7 +174,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
 
   // Social login handlers
   const handleGoogleLogin = () => {
-    window.location.href = "/api/auth/signin/google?callbackUrl=/dashboard";
+    signIn("google", { callbackUrl: "/dashboard" });
   };
 
   const handleXLogin = () => {

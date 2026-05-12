@@ -42,7 +42,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = "/api/auth/signin/google?callbackUrl=/dashboard";
+    signIn("google", { callbackUrl: "/dashboard" });
   };
 
   const handleXLogin = () => {
