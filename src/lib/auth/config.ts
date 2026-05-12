@@ -77,8 +77,9 @@ export const authConfig = {
             image: user.image || user.profile?.avatar || null,
             role: user.role,
           };
-        } catch {
+        } catch (err: any) {
           // Database not available (build time / no DATABASE_URL)
+          console.error("[credentials authorize] Error:", err?.message || err);
           return null;
         }
       },
