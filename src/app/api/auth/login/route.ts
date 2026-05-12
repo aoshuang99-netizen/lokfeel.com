@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { verifyPassword, hashPassword } from "@/lib/auth/auth"
+import { verifyPassword } from "@/lib/auth/auth"
 import { encode } from "next-auth/jwt"
 
 /**
@@ -89,6 +89,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the JWT payload that matches our config.ts jwt() callback
+    // NOTE: encode() automatically sets iat, exp, jti in the JWE headers,
+    // so we only need to include our custom fields here.
     const tokenPayload = {
       id: user.id,
       email: user.email,
@@ -96,16 +98,18 @@ export async function POST(request: NextRequest) {
       picture: user.image || user.profile?.avatar || null,
       role: user.role || "USER",
       emailVerified: user.emailVerified || null,
-      // NextAuth internal fields
       sub: user.id,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days (matches config)
     }
 
+    // CRITICAL: salt MUST match the cookie name exactly.
+    // NextAuth's getToken() uses cookieName as the salt for decryption.
+    // In production: "__Secure-authjs.session-token"
+    // In development: "authjs.session-token"
     const sessionToken = await encode({
       token: tokenPayload,
       secret,
-      salt: "authjs.session-token",
+      salt: COOKIE_NAME,
+      maxAge: 7 * 24 * 60 * 60, // 7 days (matches config.ts)
     })
 
     // ─── 5. Determine redirect destination ───
