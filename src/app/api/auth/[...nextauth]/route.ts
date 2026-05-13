@@ -53,6 +53,30 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // ─── Intercept Twitter/X POST signin ───
+  // When the client POSTs to /api/auth/signin/twitter (NextAuth convention),
+  // we redirect to our custom PKCE handler. NextAuth doesn't have a Twitter
+  // provider registered, so it would fail — we handle it ourselves.
+  const signinMatch = pathname.match(/^\/api\/auth\/signin\/(.+)$/);
+  if (signinMatch) {
+    const providerId = signinMatch[1];
+    if (providerId === "twitter" || providerId === "x") {
+      // Read callbackUrl from the form body
+      let callbackUrl = "/dashboard";
+      try {
+        const formData = await request.formData();
+        callbackUrl = (formData.get("callbackUrl") as string) || "/dashboard";
+      } catch {}
+
+      // Redirect to our custom Twitter PKCE signin endpoint
+      const twitterSigninUrl = new URL('/api/auth/twitter/signin', request.url);
+      twitterSigninUrl.searchParams.set('callbackUrl', callbackUrl);
+      return NextResponse.redirect(twitterSigninUrl);
+    }
+  }
+
   try {
     return await handlers.POST(request);
   } catch (err: any) {

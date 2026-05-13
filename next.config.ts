@@ -8,7 +8,7 @@ const CSP_VALUE = [
   "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com",
   "font-src 'self' fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://images.unsplash.com https://i.pravatar.cc https://randomuser.me https://api.dicebear.com https://thispersondoesnotexist.com https://xsgames.co https://lh3.googleusercontent.com https://pbs.twimg.com",
-  "connect-src 'self' https://*.stripe.com https://api.twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com",
+  "connect-src 'self' https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com",
   "frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com",
   "base-uri 'self'",
   "form-action 'self' https://accounts.google.com https://twitter.com",

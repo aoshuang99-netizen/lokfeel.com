@@ -272,52 +272,49 @@ function doGoogleLogin() {
 }
 
 // ═══ TWITTER OAUTH TEST ═══
+// Twitter uses a custom PKCE flow (GET /api/auth/twitter/signin → 307 redirect).
+// Browser fetch() cannot read cross-origin 307 Location headers (returns opaque redirect).
+// Solution: Use server-side test endpoint /api/auth/test-twitter which returns JSON.
 async function runTwitterTest() {
   const container = 'twitter-rows';
   document.getElementById(container).innerHTML = '';
   log('━━━ Twitter OAuth Flow Test ━━━', 'info');
-  
-  // Step 1: Check if Twitter env vars are configured
+
+  // Step 1: Use server-side test endpoint (returns JSON, no redirect issues)
   try {
-    addRow(container, 'info', 'Step 1: GET /api/auth/twitter/signin', 'Testing...');
-    const res = await fetch('/api/auth/twitter/signin?callbackUrl=/dashboard', {
+    addRow(container, 'info', 'Step 1: 检查 Twitter OAuth 配置', '调用 /api/auth/test-twitter...');
+    const res = await fetch('/api/auth/test-twitter', {
       method: 'GET',
       credentials: 'same-origin',
-      redirect: 'manual',
     });
-    
-    log(`Step 1: HTTP ${res.status}, type=${res.type}`, 'info');
-    
-    if (res.status === 307 || res.status === 302) {
-      const location = res.headers.get('location') || '';
-      if (location.includes('twitter.com/i/oauth2/authorize')) {
-        addRow(container, 'pass', 'Step 1: Twitter Redirect ✅', `307 → ${location.substring(0, 80)}...`);
-        addRow(container, 'pass', 'Step 2: PKCE + State ✅', `code_challenge_method=S256, state present`);
-        document.getElementById('twitter-login-btn').disabled = false;
-        document.getElementById('twitter-result').innerHTML = '<div class="success-box">✅ Twitter OAuth 流程正常！点击 "真实 X 登录" 按钮继续。</div>';
-        log('Twitter OAuth test PASS', 'ok');
-      } else if (location.includes('/login?error=')) {
-        addRow(container, 'fail', 'Step 1: Twitter Not Configured ❌', `Redirected to login with error: ${decodeURIComponent(location)}`);
-        document.getElementById('twitter-result').innerHTML = '<div class="error-box"><b>Twitter OAuth 未配置：</b><br>TWITTER_CLIENT_ID 或 TWITTER_CLIENT_SECRET 环境变量未设置。<br>请检查 Vercel Dashboard → Settings → Environment Variables。</div>';
-        log('Twitter OAuth FAIL: not configured', 'err');
-      } else {
-        addRow(container, 'warn', 'Step 1: Unexpected Redirect ⚠️', location.substring(0, 100));
-      }
-    } else if (res.status === 200) {
-      // Might be opaque redirect
-      const text = await res.text();
-      if (text.includes('未配置') || text.includes('not configured')) {
-        addRow(container, 'fail', 'Step 1: Twitter Not Configured ❌', text.substring(0, 100));
-      } else {
-        addRow(container, 'warn', 'Step 1: Got 200 (redirect opaque) ⚠️', 'Browser may handle this differently');
-        document.getElementById('twitter-login-btn').disabled = false;
-        document.getElementById('twitter-result').innerHTML = '<div class="success-box">⚠️ 无法通过 fetch 验证重定向（浏览器安全限制），但 Twitter OAuth 端点存在。点击按钮在浏览器中测试。</div>';
-      }
+
+    const data = await res.json();
+    log(`Twitter test response: ${JSON.stringify(data).substring(0, 200)}`, 'info');
+
+    if (data.status === 'fail') {
+      addRow(container, 'fail', 'Step 1: Twitter OAuth 未配置 ❌', data.error || '配置缺失');
+      addRow(container, 'fail', 'Step 2: 无法构建授权 URL ❌', data.detail || '');
+      document.getElementById('twitter-result').innerHTML = '<div class="error-box"><b>Twitter OAuth 未配置：</b><br>TWITTER_CLIENT_ID 或 TWITTER_CLIENT_SECRET 环境变量未设置。<br>请检查 Vercel Dashboard → Settings → Environment Variables。</div>';
+      log('Twitter OAuth FAIL: not configured', 'err');
+      return;
+    }
+
+    // Configuration valid
+    addRow(container, 'pass', 'Step 1: Twitter OAuth 配置 ✅', `Client ID: ${data.clientId}, Secret: 已设置`);
+
+    // Check authorization URL
+    if (data.authUrl && data.authUrl.includes('twitter.com/i/oauth2/authorize')) {
+      addRow(container, 'pass', 'Step 2: 授权 URL 构建 ✅', data.authUrl.substring(0, 80) + '...');
+      addRow(container, 'pass', 'Step 3: 回调地址 ✅', data.redirectUri);
+      document.getElementById('twitter-login-btn').disabled = false;
+      document.getElementById('twitter-result').innerHTML = '<div class="success-box">✅ Twitter OAuth 流程完全正常！点击 "真实 X 登录" 按钮继续。</div>';
+      log('Twitter OAuth test PASS — URL ready', 'ok');
     } else {
-      addRow(container, 'fail', `Step 1: HTTP ${res.status} ❌`, 'Unexpected status');
+      addRow(container, 'fail', 'Step 2: 授权 URL 无效 ❌', (data.authUrl || 'none').substring(0, 100));
+      log('Twitter OAuth FAIL: Invalid authorization URL', 'err');
     }
   } catch(e) {
-    addRow(container, 'fail', 'Step 1: Fetch Failed ❌', e.message);
+    addRow(container, 'fail', 'Step 1: 测试请求失败 ❌', e.message);
     log(`Twitter test FAIL: ${e.message}`, 'err');
   }
 }
