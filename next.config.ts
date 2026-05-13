@@ -4,14 +4,14 @@ import { withSentryConfig } from '@sentry/nextjs'
 
 const CSP_VALUE = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://accounts.google.com",
   "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com",
   "font-src 'self' fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://i.pravatar.cc https://randomuser.me https://api.dicebear.com https://thispersondoesnotexist.com https://xsgames.co",
-  "connect-src 'self' https://*.stripe.com https://api.twitter.com https://hooks.stripe.com",
-  "frame-src 'self' https://js.stripe.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://i.pravatar.cc https://randomuser.me https://api.dicebear.com https://thispersondoesnotexist.com https://xsgames.co https://lh3.googleusercontent.com https://pbs.twimg.com",
+  "connect-src 'self' https://*.stripe.com https://api.twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com",
+  "frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://accounts.google.com https://twitter.com",
   "object-src 'none'",
 ].join('; ')
 

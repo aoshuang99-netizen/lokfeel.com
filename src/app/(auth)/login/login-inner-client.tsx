@@ -101,7 +101,7 @@ export default function LoginInnerClient({
               marginBottom: "14px",
             }}
           >
-            Lok<span style={{ color: "#60a5fa" }}>Fee!</span>
+            Lok<span style={{ color: "#60a5fa" }}>Feel</span>
           </Link>
           <h1
             style={{
