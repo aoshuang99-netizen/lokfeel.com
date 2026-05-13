@@ -248,6 +248,9 @@
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
+  /* Huawei/Android fix: force GPU layer for smooth rendering */
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
 }
 
 body {
@@ -256,6 +259,12 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Huawei/Android fix: prevent text size adjust on orientation change */
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Prevent pull-to-refresh interfering with swipe cards */
+  overscroll-behavior-y: none;
 }
 
 /* Custom Selection */
@@ -1465,4 +1474,89 @@ body {
 
 .btn-pink:active {
   transform: translateY(0) scale(0.98);
+}
+
+/* ================================================
+   HUAWEI / ANDROID BROWSER COMPATIBILITY
+   Fixes for common rendering issues on Huawei/Android browsers
+   ================================================ */
+
+/* Fix: backdrop-filter may not work on older Huawei browsers — provide fallback background */
+@supports not ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  .glass,
+  .glass-card,
+  .glass-strong {
+    background: rgba(10, 16, 37, 0.95);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .auth-card {
+    background: rgba(15, 15, 35, 0.98);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Fix: Ensure images don't overflow containers on Android Webview */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix: Touch action for swipe cards — prevent browser navigation gestures */
+.swipe-card-area,
+[class*="SwipeCard"],
+[class*="swipe"] {
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Fix: Safe area padding for notched devices (Huawei, etc.) */
+@supports (padding: max(0px)) {
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+/* Fix: Force hardware acceleration for animated elements on older GPUs */
+.animate-breathe,
+.animate-pulse,
+.animate-float,
+.animate-pulse-glow,
+.animate-shimmer,
+.animate-pulse-slow,
+.animate-heartbeat {
+  will-change: transform, opacity;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Fix: Ensure blur orbs render correctly on Huawei browser */
+[style*="blur-"],
+.glow-orb,
+[class*="blur-"] {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Fix: Prevent Android WebView from adding blue highlight on tap */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix: Ensure scrollbar-hide works on Huawei/Android browsers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

@@ -22,7 +22,7 @@ import {
   Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getRealPhotoAvatarUrl, generateLocalAvatarDataUri } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -223,14 +223,15 @@ function SwipeCard({
                 className="w-full h-full object-cover"
                 loading="lazy"
                 decoding="async"
-                crossOrigin="anonymous"
                 onError={(e) => {
                   const img = e.currentTarget;
                   const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
                   if (img.src !== fallbackUrl) {
                     img.src = fallbackUrl;
                   } else {
-                    img.style.display = 'none';
+                    // All external URLs failed — use local SVG data-URI
+                    img.src = generateLocalAvatarDataUri(user.id || user.name);
+                    img.style.display = '';
                   }
                 }}
               />
@@ -238,9 +239,9 @@ function SwipeCard({
           })()}
         </div>
 
-        {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0c11] via-[#0d0c11]/60 to-transparent" />
-        <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[#0d0c11]/40 to-transparent" />
+        {/* Gradient Overlays — Cool Blue design system */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-background/40 to-transparent" />
 
         {/* Swipe Indicators */}
         <AnimatePresence>

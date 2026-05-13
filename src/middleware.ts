@@ -5,7 +5,8 @@ import type { NextRequest } from 'next/server'
  * MIDDLEWARE — Region Block + Security + CORS + Debug Endpoint Protection
  *
  * FEATURES:
- * 1. Block access from China (CN) mainland IP addresses (disabled for dev)
+ * 1. Block access from China (CN) mainland IP addresses on ALL pages
+ *    (home, login, register, admin, dashboard, explore, etc.)
  * 2. Security headers on every response
  * 3. CORS restrictions for API routes
  * 4. Block debug/diagnostic endpoints from non-admin origins
@@ -17,8 +18,8 @@ import type { NextRequest } from 'next/server'
  */
 
 // Blocked country codes — mainland China
-// DISABLED: Founder (Frank) is in China and needs access.
-const BLOCKED_COUNTRIES: string[] = []
+// ENABLED: Block all CN traffic from home, auth, admin, and dashboard pages.
+const BLOCKED_COUNTRIES: string[] = ['CN']
 
 // Allowed CORS origins
 const ALLOWED_ORIGINS = [

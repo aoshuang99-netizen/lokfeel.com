@@ -19,16 +19,17 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/components/ui";
-import { getAvatarKind, getAvatarBackground, parseEmojiAvatar, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarBackground, parseEmojiAvatar, getRealPhotoAvatarUrl, isUnsplashUrl, generateLocalAvatarDataUri } from "@/lib/avatar-utils";
 import { AnalyticsReport } from "@/components/dashboard/analytics-report";
 
 // ════════════════════════════════════
-// DESIGN TOKENS — Dateasy Dark (Purple + Lime)
+// DESIGN TOKENS — Cool Blue Design System
 // ════════════════════════════════════
 const COLORS = {
-  primary: "#4c1d95",
-  primaryLight: "#8b5cf6",
-  accent: "#a3e635",
+  primary: "#3b82f6",
+  primaryHover: "#60a5fa",
+  secondary: "#6366f1",
+  cta: "#22d3ee",
   pink: "#f472b6",
 };
 
@@ -62,7 +63,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
   const getMatchScoreColor = (score: number) => {
     if (score >= 90) return "from-amber-400 to-amber-600";
     if (score >= 80) return "from-primary to-pink-500";
-    return "from-primary/70 to-primaryLight/70";
+    return "from-primary/70 to-secondary/70";
   };
 
   return (
@@ -73,9 +74,9 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
       className="flex-shrink-0 w-[280px] snap-start"
     >
       <Link href={`/dashboard/users/${user.id}`}>
-        <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-[#111111] border border-white/5 hover:border-primary/30 transition-all duration-300">
+        <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-background-secondary border border-card-border hover:border-primary/30 transition-all duration-300">
           {/* Avatar Area — Real HD Photos */}
-          <div className="relative h-72 overflow-hidden bg-[#0a0a0a]">
+          <div className="relative h-72 overflow-hidden bg-background-tertiary">
             {(() => {
               const kind = getAvatarKind(user.avatar);
               if (kind === 'emoji') {
@@ -100,11 +101,16 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading={index < 3 ? "eager" : "lazy"}
                   decoding="async"
-                  crossOrigin="anonymous"
                   onError={(e) => {
                     const img = e.currentTarget as HTMLImageElement;
-                    // Fallback to real photo from curated pool
-                    img.src = getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+                    // Tier-1: Try different Unsplash photo from pool
+                    const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+                    if (img.src !== fallbackUrl) {
+                      img.src = fallbackUrl;
+                    } else {
+                      // Tier-2: All external URLs failed — use local SVG data-URI
+                      img.src = generateLocalAvatarDataUri(user.id || user.name);
+                    }
                   }}
                 />
               );
@@ -297,7 +303,7 @@ export default function DashboardPage() {
         transition={{ duration: 0.4 }}
       >
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1 font-display">
-          {getGreeting()}, <span className="text-primaryLight">{firstName}</span>
+          {getGreeting()}, <span className="text-primary-hover">{firstName}</span>
         </h1>
         <p className="text-foreground-muted text-sm">
           Discover people who match your relationship blueprint
@@ -310,8 +316,8 @@ export default function DashboardPage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center">
-              <Flame className="w-4 h-4 text-accent" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cta/30 to-cta/10 flex items-center justify-center">
+              <Flame className="w-4 h-4 text-cta" />
             </div>
             <h2 className="text-lg font-semibold text-foreground font-display">Today's Picks</h2>
             <span className="text-xs text-foreground-muted ml-2">
@@ -346,7 +352,7 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#111111] rounded-2xl p-8 text-center border border-white/5"
+            className="bg-background-secondary rounded-2xl p-8 text-center border border-card-border"
           >
             <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-7 h-7 text-primary" />
@@ -367,7 +373,7 @@ export default function DashboardPage() {
           SECTION 3: QUICK ACTIONS — 简化
           ════════════════════════════════════ */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Link href="/dashboard/chats" className="bg-[#111111] rounded-2xl p-4 border border-white/5 hover:border-primary/30 transition-all duration-300 group">
+        <Link href="/dashboard/chats" className="bg-background-secondary rounded-2xl p-4 border border-card-border hover:border-primary/30 transition-all duration-300 group">
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
             <MessageCircle className="w-5 h-5 text-primary" />
           </div>
@@ -375,7 +381,7 @@ export default function DashboardPage() {
           <p className="text-xs text-foreground-muted mt-0.5">Chat with matches</p>
         </Link>
 
-        <Link href="/dashboard/notifications" className="bg-[#111111] rounded-2xl p-4 border border-white/5 hover:border-pink-500/30 transition-all duration-300 group">
+        <Link href="/dashboard/notifications" className="bg-background-secondary rounded-2xl p-4 border border-card-border hover:border-pink-500/30 transition-all duration-300 group">
           <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
             <Heart className="w-5 h-5 text-pink-400" />
           </div>
@@ -383,7 +389,7 @@ export default function DashboardPage() {
           <p className="text-xs text-foreground-muted mt-0.5">View your matches</p>
         </Link>
 
-        <Link href="/dashboard/profile" className="bg-[#111111] rounded-2xl p-4 border border-white/5 hover:border-primary/30 transition-all duration-300 group">
+        <Link href="/dashboard/profile" className="bg-background-secondary rounded-2xl p-4 border border-card-border hover:border-primary/30 transition-all duration-300 group">
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
             <User className="w-5 h-5 text-primary" />
           </div>
@@ -391,9 +397,9 @@ export default function DashboardPage() {
           <p className="text-xs text-foreground-muted mt-0.5">Edit your info</p>
         </Link>
 
-        <Link href="/dashboard/subscription" className="bg-[#111111] rounded-2xl p-4 border border-white/5 hover:border-accent/30 transition-all duration-300 group">
-          <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-5 h-5 text-accent" />
+        <Link href="/dashboard/subscription" className="bg-background-secondary rounded-2xl p-4 border border-card-border hover:border-cta/30 transition-all duration-300 group">
+          <div className="w-10 h-10 rounded-xl bg-cta/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <Sparkles className="w-5 h-5 text-cta" />
           </div>
           <p className="text-sm font-medium text-foreground">Upgrade</p>
           <p className="text-xs text-foreground-muted mt-0.5">Unlock premium</p>
@@ -416,10 +422,10 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#111111] rounded-2xl p-6 border border-primary/30"
+          className="bg-background-secondary rounded-2xl p-6 border border-primary/30"
         >
           <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primaryLight flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1 text-center md:text-left">

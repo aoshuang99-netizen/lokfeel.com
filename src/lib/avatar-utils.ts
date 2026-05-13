@@ -12,6 +12,8 @@
 
 // ═══════════════════════════════════════════════════════════════
 // REAL PHOTO POOL — High-quality curated portrait URLs
+// NOTE: Unsplash URLs may be blocked in China/Huawei browsers.
+// We keep them as Tier-2 fallback but prioritize local fallbacks.
 // ═══════════════════════════════════════════════════════════════
 
 /** Female portrait pool — Unsplash high-quality portraits */
@@ -159,6 +161,15 @@ export function isBrokenAvatarUrl(avatar: string | null | undefined): boolean {
   return BROKEN_CDN_PATTERNS.some(pattern => avatar.includes(pattern));
 }
 
+/**
+ * Check if an avatar URL is from Unsplash (may be blocked in China/Huawei browsers).
+ * Used to determine if we should add a local fallback strategy.
+ */
+export function isUnsplashUrl(avatar: string | null | undefined): boolean {
+  if (!avatar) return false;
+  return avatar.includes('images.unsplash.com');
+}
+
 // ═══════════════════════════════════════════════════════════════
 // REAL PHOTO FALLBACK — Deterministic, gender-aware
 // ═══════════════════════════════════════════════════════════════
@@ -239,6 +250,7 @@ export function getSafeAvatarUrl(avatar: string | null | undefined): string | nu
 /**
  * Preload critical avatar images for instant display.
  * Call this when navigating to a page with user cards.
+ * NOTE: crossOrigin removed for Huawei/Android browser compatibility.
  */
 export function preloadAvatars(urls: string[]): void {
   if (typeof window === 'undefined') return;
@@ -248,19 +260,20 @@ export function preloadAvatars(urls: string[]): void {
     link.rel = 'preload';
     link.as = 'image';
     link.href = url;
-    link.crossOrigin = 'anonymous';
+    // No crossOrigin — avoids CORS issues on Huawei/Android browsers
     document.head.appendChild(link);
   });
 }
 
 /**
  * Preload a single avatar image.
+ * NOTE: crossOrigin removed for Huawei/Android browser compatibility.
  */
 export function preloadAvatar(url: string): void {
   if (typeof window === 'undefined') return;
 
   const img = new Image();
-  img.crossOrigin = 'anonymous';
+  // No crossOrigin — avoids CORS issues on Huawei/Android browsers
   img.src = url;
 }
 
@@ -303,21 +316,52 @@ export function getOptimalAvatarUrl(baseUrl: string, displayWidth: number): stri
 
 /**
  * Handle image load error — replace with real photo fallback.
- * Usage: <img onError={handleAvatarError} />
+ * If all external URLs fail, generate a local data-URI SVG placeholder.
+ * Usage: <img onError={(e) => handleAvatarError(e, userId, gender)} />
  */
 export function handleAvatarError(e: React.SyntheticEvent<HTMLImageElement>, seed?: string, gender?: string) {
   const img = e.currentTarget;
   const fallbackSeed = seed || img.alt || 'default';
 
-  // Try real photo fallback
+  // Try real photo fallback (only if not already the fallback URL)
   const fallbackUrl = getRealPhotoAvatarUrl(fallbackSeed, gender, 'preview');
 
-  if (img.src !== fallbackUrl) {
+  if (img.src !== fallbackUrl && !img.src.endsWith(encodeURIComponent(fallbackUrl))) {
     img.src = fallbackUrl;
   } else {
-    // If fallback also fails, hide image
-    img.style.display = 'none';
+    // All external URLs failed — use local SVG data-URI placeholder
+    // This works offline and in China/Huawei browsers where Unsplash is blocked
+    img.src = generateLocalAvatarDataUri(fallbackSeed);
+    img.style.display = '';
   }
+}
+
+/**
+ * Generate a local SVG data-URI avatar as final fallback.
+ * Works offline, no external requests, always renders.
+ * Uses Cool Blue design system colors.
+ */
+export function generateLocalAvatarDataUri(seed: string): string {
+  const hash = hashSeed(seed);
+  const initials = seed.slice(0, 2).toUpperCase();
+
+  // Cool Blue palette for deterministic background color
+  const bgColors = [
+    'rgba(59, 130, 246, 0.3)',  // primary
+    'rgba(99, 102, 241, 0.3)',  // secondary
+    'rgba(34, 211, 238, 0.3)',  // cta
+    'rgba(244, 114, 182, 0.3)', // pink
+  ];
+  const bgColor = bgColors[hash % bgColors.length];
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+    <rect width="600" height="800" fill="${bgColor}"/>
+    <circle cx="300" cy="320" r="120" fill="rgba(255,255,255,0.15)"/>
+    <ellipse cx="300" cy="600" rx="180" ry="200" fill="rgba(255,255,255,0.1)"/>
+    <text x="300" y="340" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-size="72" font-weight="600" fill="rgba(255,255,255,0.7)">${initials}</text>
+  </svg>`;
+
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 /**
