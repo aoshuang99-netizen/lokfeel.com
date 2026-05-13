@@ -19,7 +19,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
-import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -300,17 +300,25 @@ export default function ChatLayout({
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-background-tertiary flex items-center justify-center">
                         {(() => {
                           const kind = getAvatarKind(chat.otherUser.avatar);
-                          if (kind === 'none') return <User className="w-6 h-6 text-foreground-subtle" />;
                           if (kind === 'emoji') {
                             const parsed = parseEmojiAvatar(chat.otherUser.avatar);
                             return <span className="text-xl">{parsed?.emoji}</span>;
                           }
+                          const photoUrl = (kind === 'photo' && chat.otherUser.avatar)
+                            ? chat.otherUser.avatar
+                            : getRealPhotoAvatarUrl(chat.otherUser.id || chat.otherUser.name, undefined, 'thumb');
                           return (
                             <img
-                              src={chat.otherUser.avatar!}
+                              src={photoUrl}
                               alt={chat.otherUser.name}
-                              className={getAvatarImgClasses(kind)}
-                              style={kind === 'svg' ? { background: getAvatarBackground(kind, chat.otherUser.avatar) } : undefined}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              crossOrigin="anonymous"
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                img.src = getRealPhotoAvatarUrl(chat.otherUser.id || chat.otherUser.name, undefined, 'thumb');
+                              }}
                             />
                           );
                         })()}

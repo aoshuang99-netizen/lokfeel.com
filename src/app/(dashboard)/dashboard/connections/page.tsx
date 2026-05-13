@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Heart, Users, Clock, Eye, Loader2, MessageCircle, X } from "lucide-react";
 import { useApiGet, useApiPost } from "@/hooks/use-api";
-import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getFallbackAvatarUrl } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
 import Link from "next/link";
 
 // ══════════════════════════════════════
@@ -240,26 +240,39 @@ function ConnectionCard({
       {/* Avatar */}
       <div className="relative mb-3">
         <div className={`w-full aspect-square rounded-lg overflow-hidden ${getAvatarBackground(getAvatarKind(user.avatar), user.avatar)}`}>
-          {user.avatar && !isBrokenAvatarUrl(user.avatar) ? (
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const img = e.currentTarget;
-                const fallbackUrl = getFallbackAvatarUrl(user.id || user.name);
-                if (img.src !== (fallbackUrl || '')) {
-                  img.src = fallbackUrl || '';
-                } else {
-                  img.style.display = 'none';
-                }
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <img src={getFallbackAvatarUrl(user.id || user.name)} alt={user.name} className="w-16 h-16 object-contain p-1" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            </div>
-          )}
+          {(() => {
+            const kind = getAvatarKind(user.avatar);
+            if (kind === 'emoji') {
+              const parsed = parseEmojiAvatar(user.avatar);
+              return (
+                <div className="w-full h-full flex items-center justify-center" style={{ background: getAvatarBackground(kind, user.avatar) }}>
+                  <span className="text-4xl">{parsed?.emoji}</span>
+                </div>
+              );
+            }
+            const photoUrl = (kind === 'photo' && user.avatar && !isBrokenAvatarUrl(user.avatar))
+              ? user.avatar
+              : getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+            return (
+              <img
+                src={photoUrl}
+                alt={user.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+                  if (img.src !== fallbackUrl) {
+                    img.src = fallbackUrl;
+                  } else {
+                    img.style.display = 'none';
+                  }
+                }}
+              />
+            );
+          })()}
         </div>
         {/* Match Score Badge */}
         <div className={`absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${

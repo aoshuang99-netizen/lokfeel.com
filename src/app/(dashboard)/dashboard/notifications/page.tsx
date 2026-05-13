@@ -22,7 +22,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Skeleton, EmptyState } from "@/components/ui";
-import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getFallbackAvatarUrl } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // NOTIFICATIONS PAGE — Renamed & Optimized
@@ -320,25 +320,24 @@ export default function NotificationsPage() {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden">
                       {(() => {
                         const kind = getAvatarKind(notification.user.avatar);
-                        if (kind === 'none') return <User className="w-6 h-6 text-foreground-subtle" />;
                         if (kind === 'emoji') {
                           const parsed = parseEmojiAvatar(notification.user.avatar);
                           return <span className="text-xl">{parsed?.emoji}</span>;
                         }
-                        // Check for broken CDN URLs
-                        const safeUrl = isBrokenAvatarUrl(notification.user.avatar) ? null : notification.user.avatar;
-                        if (!safeUrl) {
-                          return <img src={getFallbackAvatarUrl(notification.user.id || notification.user.name)} alt={notification.user.name} className="w-8 h-8 object-contain p-0.5" />;
-                        }
+                        const photoUrl = (kind === 'photo' && notification.user.avatar && !isBrokenAvatarUrl(notification.user.avatar))
+                          ? notification.user.avatar
+                          : getRealPhotoAvatarUrl(notification.user.id || notification.user.name, undefined, 'thumb');
                         return (
                           <img
-                            src={safeUrl}
+                            src={photoUrl}
                             alt={notification.user.name}
-                            className={getAvatarImgClasses(kind)}
-                            style={kind === 'svg' ? { background: getAvatarBackground(kind, notification.user.avatar) } : undefined}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                            crossOrigin="anonymous"
                             onError={(e) => {
                               const img = e.currentTarget;
-                              const fb = getFallbackAvatarUrl(notification.user.id || notification.user.name);
+                              const fb = getRealPhotoAvatarUrl(notification.user.id || notification.user.name, undefined, 'thumb');
                               if (img.src !== fb) img.src = fb;
                               else img.style.display = 'none';
                             }}

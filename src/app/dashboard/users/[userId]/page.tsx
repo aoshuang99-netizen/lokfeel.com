@@ -16,13 +16,14 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { ZoomIn } from "lucide-react";
 import {
   getAvatarKind,
-  getAvatarImgClasses,
   getAvatarBackground,
   parseEmojiAvatar,
+  getRealPhotoAvatarUrl,
 } from "@/lib/avatar-utils";
 
 // ═════════════════════════════════════
@@ -75,22 +76,13 @@ interface UserProfile {
 }
 
 // ═════════════════════════════════════
-// AVATAR COMPONENT — 真实高清头像
+// AVATAR COMPONENT — Real HD Photo with Lightbox
 // ═════════════════════════════════════
 function UserAvatar({ user, size = 320 }: { user: UserProfile; size?: number }) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const avatar = user.profile?.avatar;
   const kind = getAvatarKind(avatar);
-
-  if (kind === 'none') {
-    return (
-      <div
-        className="rounded-3xl flex items-center justify-center bg-gradient-to-br from-primary/30 to-pink-500/20"
-        style={{ width: size, height: size }}
-      >
-        <User className="w-20 h-20 text-foreground-faint" />
-      </div>
-    );
-  }
 
   if (kind === 'emoji') {
     const parsed = parseEmojiAvatar(avatar);
@@ -108,18 +100,82 @@ function UserAvatar({ user, size = 320 }: { user: UserProfile; size?: number }) 
     );
   }
 
+  // Always use real photo
+  const photoUrl = (kind === 'photo' && avatar)
+    ? avatar
+    : getRealPhotoAvatarUrl(user.id || user.name || 'default', user.profile?.gender || undefined, 'preview');
+  const fullResUrl = photoUrl.replace(/w=\d+&h=\d+/, 'w=1200&h=1600');
+
   return (
-    <div className="rounded-3xl overflow-hidden" style={{ width: size, height: size }}>
-      <img
-        src={avatar!}
-        alt={user.profile?.displayName || user.name || "User"}
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          // 真实照片加载失败，不回退到卡通，显示默认
-          e.currentTarget.style.display = 'none';
-        }}
-      />
-    </div>
+    <>
+      <div
+        className="rounded-3xl overflow-hidden cursor-pointer relative"
+        style={{ width: size, height: size }}
+        onClick={() => setLightboxOpen(true)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setLightboxOpen(true); }}
+      >
+        {!loaded && (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/10 animate-pulse" />
+        )}
+        <img
+          src={photoUrl}
+          alt={user.profile?.displayName || user.name || "User"}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          crossOrigin="anonymous"
+          loading="eager"
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          onError={(e) => {
+            const img = e.currentTarget;
+            img.src = getRealPhotoAvatarUrl(user.id || user.name || 'default', user.profile?.gender || undefined, 'preview');
+          }}
+        />
+        {/* Zoom hint */}
+        <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+          <ZoomIn className="w-4 h-4 text-white" />
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightboxOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            style={{ background: "rgba(0,0,0,0.92)" }}
+            onClick={() => setLightboxOpen(false)}
+          >
+            <button
+              onClick={() => setLightboxOpen(false)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <motion.img
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              src={fullResUrl}
+              alt={user.profile?.displayName || user.name || "User"}
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+              draggable={false}
+              loading="eager"
+              decoding="async"
+              style={{ willChange: 'transform' }}
+            />
+            <p className="absolute bottom-6 text-white/30 text-xs">Tap anywhere to close</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

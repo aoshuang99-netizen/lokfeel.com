@@ -29,7 +29,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
-import { isBrokenAvatarUrl, getAvatarKind, parseEmojiAvatar, handleAvatarError } from "@/lib/avatar-utils";
+import { isBrokenAvatarUrl, getAvatarKind, parseEmojiAvatar, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
 import { ReportModal } from "@/components/chat/report-modal";
 import { QUICK_REPLIES, AI_SUGGESTIONS } from "@/constants";
 
@@ -106,19 +106,22 @@ function InlineAvatar({ avatar, name, className = "", emojiSize }: {
     );
   }
 
-  if (kind === 'photo' || kind === 'svg') {
-    const safeUrl = isBrokenAvatarUrl(avatar) ? null : avatar;
-    if (safeUrl) {
-      return (
-        <img
-          src={safeUrl}
-          alt={name || "User"}
-          className={`w-full h-full ${kind === 'svg' ? 'object-contain p-3' : 'object-cover'} ${className}`}
-          onError={handleAvatarError}
-        />
-      );
-    }
-  }
+  // Always use real photo: user photo or gender-aware fallback
+  const photoUrl = (kind === 'photo' && avatar && !isBrokenAvatarUrl(avatar))
+    ? avatar
+    : getRealPhotoAvatarUrl(name || 'default', undefined, 'thumb');
+  return (
+    <img
+      src={photoUrl}
+      alt={name || "User"}
+      className={`w-full h-full object-cover ${className}`}
+      crossOrigin="anonymous"
+      onError={(e) => {
+        const img = e.currentTarget;
+        img.src = getRealPhotoAvatarUrl(name || 'default', undefined, 'thumb');
+      }}
+    />
+  );
 
   // Fallback: initials
   return (

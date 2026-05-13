@@ -538,14 +538,9 @@ export default function ProfilePage() {
                       <img
                         src={formData.avatar}
                         alt="Avatar"
-                        className={(() => {
-                          const kind = formData.avatar?.includes('dicebear') || formData.avatar?.endsWith('.svg') ? 'svg' : 'photo';
-                          return kind === 'svg' ? 'w-full h-full object-contain p-2' : 'w-full h-full object-cover object-center';
-                        })()}
-                        style={(() => {
-                          const kind = formData.avatar?.includes('dicebear') || formData.avatar?.endsWith('.svg') ? 'svg' : 'photo';
-                          return kind === 'svg' ? { background: 'linear-gradient(135deg, #f0f0ff, #e8e8f8)' } : undefined;
-                        })()}
+                        className="w-full h-full object-cover object-center"
+                        loading="eager"
+                        decoding="async"
                       />
                     </div>
                   </AvatarLightbox>

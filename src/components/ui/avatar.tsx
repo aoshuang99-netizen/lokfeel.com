@@ -59,16 +59,19 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, src, alt, fallback, size = 'md', priority = false, ...props }, ref) => {
     const [error, setError] = React.useState(false)
     const config = sizeConfig[size]
-    
+
     const initials = fallback
       ?.split(' ')
       .map(n => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2) || '??'
-    
+
     const canOptimize = useNextImage(src)
-    
+
+    // Real photo fallback when image fails to load
+    const realPhotoFallback = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face'
+
     return (
       <div
         ref={ref}
@@ -97,7 +100,14 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
               src={src}
               alt={alt || 'Avatar'}
               className="h-full w-full object-cover"
-              onError={() => setError(true)}
+              onError={(e) => {
+                const img = e.currentTarget
+                if (img.src !== realPhotoFallback) {
+                  img.src = realPhotoFallback
+                } else {
+                  setError(true)
+                }
+              }}
               loading={priority ? 'eager' : 'lazy'}
               decoding="async"
             />

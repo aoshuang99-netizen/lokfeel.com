@@ -72,7 +72,16 @@ function UserListItem({ user, onLike, onPass }: {
                 src={user.avatar}
                 alt={user.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  const img = e.currentTarget as HTMLImageElement;
+                  // Fallback to gender-matched real photo
+                  const isFemale = user.name.match(/^(Sarah|Emma|Olivia|Mia|Chloe|Aria|Scarlett|Violet|Hazel|Ivy|Willow|Grace|Lily|Ella|Stella|Zoe|Nora|Riley|Maya|Aurora|Penelope|Layla|Lillian|Addison|Eleanor|Natalie|Savannah|Brooklyn|Leah|Zoey|Audrey|Claire|Bella|Lucy|Anna|Caroline|Ellie|Mila|Paisley|Hailey|Nova|Genesis|Emilia|Kennedy|Samantha|Kinsley|Naomi|Aaliyah|Elena|Ariana|Allison|Madeline|Alice|Sadie|Eva|Autumn|Quinn|Neveah|Piper|Ruby|Hannah|Aubrey|Isabelle|Athena|Camila|Luna)/i);
+                  img.src = isFemale
+                    ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face'
+                    : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face';
+                }}
               />
             ) : (
               <div className="text-6xl">👤</div>

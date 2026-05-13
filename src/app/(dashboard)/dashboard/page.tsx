@@ -19,7 +19,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/components/ui";
-import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarBackground, parseEmojiAvatar, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
 import { AnalyticsReport } from "@/components/dashboard/analytics-report";
 
 // ════════════════════════════════════
@@ -74,17 +74,10 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
     >
       <Link href={`/dashboard/users/${user.id}`}>
         <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-[#111111] border border-white/5 hover:border-primary/30 transition-all duration-300">
-          {/* Avatar Area — 更大更清晰 */}
+          {/* Avatar Area — Real HD Photos */}
           <div className="relative h-72 overflow-hidden bg-[#0a0a0a]">
             {(() => {
               const kind = getAvatarKind(user.avatar);
-              if (kind === 'none') {
-                return (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
-                    <div className="text-6xl">👤</div>
-                  </div>
-                );
-              }
               if (kind === 'emoji') {
                 const parsed = parseEmojiAvatar(user.avatar);
                 return (
@@ -96,12 +89,23 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
                   </div>
                 );
               }
+              // Use real photo: either user's photo or gender-aware fallback
+              const photoUrl = kind === 'photo' && user.avatar
+                ? user.avatar
+                : getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
               return (
                 <img
-                  src={user.avatar!}
+                  src={photoUrl}
                   alt={user.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  loading={index < 3 ? "eager" : "lazy"}
+                  decoding="async"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    // Fallback to real photo from curated pool
+                    img.src = getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+                  }}
                 />
               );
             })()}

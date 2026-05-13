@@ -58,7 +58,7 @@ export function AvatarLightbox({ src, alt = "Photo", children }: AvatarLightboxP
               <span>Full resolution</span>
             </div>
 
-            {/* Image */}
+            {/* Image — Full resolution with fast loading */}
             <motion.img
               key={src}
               initial={{ scale: 0.8, opacity: 0 }}
@@ -70,6 +70,9 @@ export function AvatarLightbox({ src, alt = "Photo", children }: AvatarLightboxP
               className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
               onClick={(e) => e.stopPropagation()}
               draggable={false}
+              loading="eager"
+              decoding="async"
+              style={{ willChange: 'transform' }}
             />
 
             {/* Tap anywhere to close hint */}

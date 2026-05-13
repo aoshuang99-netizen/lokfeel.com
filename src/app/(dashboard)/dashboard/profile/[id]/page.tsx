@@ -178,11 +178,26 @@ export default function UserProfilePage() {
   const getAvatarUrl = (user: UserProfile) => {
     if (user.avatar && !imageError) return user.avatar;
 
-    if (isFemaleGender(user.gender)) {
-      return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}&gender=female&style=realistic`;
-    }
+    // Fallback to real photos from Unsplash — gender-matched portraits
+    // Using deterministic photo selection based on user name for consistency
+    const femalePhotos = [
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop&crop=face',
+    ];
+    const malePhotos = [
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=800&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=600&h=800&fit=crop&crop=face',
+    ];
 
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}`;
+    const photos = isFemaleGender(user.gender) ? femalePhotos : malePhotos;
+    const index = user.displayName.length % photos.length;
+    return photos[index];
   };
 
   const getGenderLabel = (gender: string) => {
@@ -287,6 +302,8 @@ export default function UserProfilePage() {
             src={photos[activePhotoIndex]}
             alt={profile.displayName}
             className="w-full h-full object-cover"
+            loading="eager"
+            decoding="async"
             onError={() => setImageError(true)}
           />
           
@@ -600,6 +617,8 @@ export default function UserProfilePage() {
                   src={getAvatarUrl(profile)}
                   alt={profile.displayName}
                   className="w-16 h-16 rounded-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                   onError={() => setImageError(true)}
                 />
                 <div>

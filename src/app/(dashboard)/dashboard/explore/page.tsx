@@ -22,7 +22,7 @@ import {
   Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getFallbackAvatarUrl } from "@/lib/avatar-utils";
+import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -51,12 +51,14 @@ interface DiscoverUser {
 // DEMO USERS (fallback)
 // ══════════════════════════════════════
 
+// Real photo URLs — high-quality Unsplash portraits with gender-appropriate images
+// Format: https://images.unsplash.com/photo-{ID}?w=600&h=800&fit=crop&crop=face
 const DEMO_USERS: DiscoverUser[] = [
   {
     id: "demo-1",
     name: "Sarah",
     age: 28,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop&crop=face",
     city: "New York",
     bio: "Coffee lover, hiking enthusiast, looking for meaningful connections",
     matchScore: 95,
@@ -68,7 +70,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-2",
     name: "Michael",
     age: 32,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=michael",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop&crop=face",
     city: "Los Angeles",
     bio: "Creative soul, photographer, love exploring new places",
     matchScore: 88,
@@ -79,7 +81,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-3",
     name: "Emma",
     age: 26,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma",
+    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop&crop=face",
     city: "Chicago",
     bio: "Book worm, yoga practitioner, seeking genuine connections",
     matchScore: 92,
@@ -91,7 +93,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-4",
     name: "James",
     age: 30,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=james",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face",
     city: "San Francisco",
     bio: "Tech professional, foodie, enjoy meaningful conversations",
     matchScore: 85,
@@ -102,7 +104,7 @@ const DEMO_USERS: DiscoverUser[] = [
     id: "demo-5",
     name: "Olivia",
     age: 27,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=olivia",
+    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop&crop=face",
     city: "Miami",
     bio: "Dancer, beach lover, looking for someone authentic",
     matchScore: 90,
@@ -195,19 +197,10 @@ function SwipeCard({
       <div className="relative w-full h-full rounded-3xl overflow-hidden bg-background border border-card-border"
         style={{ transitionTimingFunction: EASING }}
       >
-        {/* Photo / Avatar Area (60%+ of card) */}
+        {/* Photo / Avatar Area — Real HD Photos */}
         <div className="absolute inset-0">
           {(() => {
             const kind = getAvatarKind(user.avatar);
-            if (kind === 'none') {
-              return (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-[#13121a] to-[#0d0c11] flex items-center justify-center">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
-                    <User className="w-16 h-16 text-foreground-faint" />
-                  </div>
-                </div>
-              );
-            }
             if (kind === 'emoji') {
               const parsed = parseEmojiAvatar(user.avatar);
               return (
@@ -219,26 +212,21 @@ function SwipeCard({
                 </div>
               );
             }
-            // Check for broken CDN URLs (e.g. pravatar.cc returns 403)
-            const safeAvatarUrl = isBrokenAvatarUrl(user.avatar) ? null : user.avatar;
-            if (!safeAvatarUrl) {
-              // Fallback to DiceBear SVG avatar
-              const fallbackUrl = getFallbackAvatarUrl(user.id || user.name);
-              return (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
-                  <img src={fallbackUrl} alt={user.name} className="w-32 h-32 object-contain p-2" />
-                </div>
-              );
-            }
+            // Always use real photo: user photo or gender-aware fallback
+            const photoUrl = (kind === 'photo' && user.avatar && !isBrokenAvatarUrl(user.avatar))
+              ? user.avatar
+              : getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
             return (
               <img
-                src={safeAvatarUrl}
+                src={photoUrl}
                 alt={user.name}
-                className={getAvatarImgClasses(kind)}
-                style={kind === 'svg' ? { background: getAvatarBackground(kind, user.avatar) } : undefined}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                crossOrigin="anonymous"
                 onError={(e) => {
                   const img = e.currentTarget;
-                  const fallbackUrl = getFallbackAvatarUrl(user.id || user.name);
+                  const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
                   if (img.src !== fallbackUrl) {
                     img.src = fallbackUrl;
                   } else {

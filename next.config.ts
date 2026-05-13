@@ -7,7 +7,7 @@ const CSP_VALUE = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://accounts.google.com",
   "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com",
   "font-src 'self' fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://i.pravatar.cc https://randomuser.me https://api.dicebear.com https://thispersondoesnotexist.com https://xsgames.co https://lh3.googleusercontent.com https://pbs.twimg.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com",
   "connect-src 'self' https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com",
   "frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com",
   "base-uri 'self'",
@@ -39,28 +39,34 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'api.dicebear.com',
+        hostname: 'picsum.photos',
         pathname: '/**',
       },
+      // Google OAuth avatars
       {
         protocol: 'https',
-        hostname: 'thispersondoesnotexist.com',
+        hostname: 'lh3.googleusercontent.com',
         pathname: '/**',
       },
+      // Twitter/X OAuth avatars
       {
         protocol: 'https',
-        hostname: 'xsgames.co',
+        hostname: 'pbs.twimg.com',
         pathname: '/**',
       },
     ],
     // Prefer AVIF (smallest) then WebP, fallback to original
     formats: ['image/avif', 'image/webp'],
-    // Cache optimized images for 60 minutes on CDN
-    minimumCacheTTL: 3600,
+    // Cache optimized images for 24 hours on CDN (longer = faster repeat visits)
+    minimumCacheTTL: 86400,
     // Device sizes for responsive srcset
-    deviceSizes: [640, 750, 828, 1080, 1200],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     // Image sizes for avatar/detail views
-    imageSizes: [32, 48, 64, 96, 128, 256, 384],
+    imageSizes: [32, 48, 64, 96, 128, 256, 384, 512, 768],
+    // Disable unoptimized images in production (always optimize)
+    unoptimized: false,
+    // Dangerously allow SVG (for emoji avatars if needed)
+    dangerouslyAllowSVG: false,
   },
   
   // ─── Navigation Route Redirects ───
@@ -185,11 +191,18 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
-      // Optimized images from next/image: cache 7 days
+      // Optimized images from next/image: cache 30 days with stale-while-revalidate
       {
         source: '/_next/image',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' },
+          { key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=604800' },
+        ],
+      },
+      // Avatar images (Unsplash): cache 7 days
+      {
+        source: '/avatars/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=604800, immutable' },
         ],
       },
     ]
