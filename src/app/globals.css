@@ -236,9 +236,9 @@
   --color-lime-400: var(--cyan-400);
   --color-lime-300: var(--cyan-300);
 
-  /* ─── Typography: System font stack ─── */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
+  /* ─── Typography: next/font self-hosted (Outfit + Sora) ─── */
+  --font-sans: var(--font-outfit), -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-display: var(--font-sora), -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
 }
 
 /* ================================================

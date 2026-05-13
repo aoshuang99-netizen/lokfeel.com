@@ -9,13 +9,16 @@ export default function AuthLayout({
     <div className="min-h-screen relative overflow-hidden">
       {/* Video Background — identical to landing page */}
       <div className="fixed inset-0 z-0 overflow-hidden">
+        {/* Dark base for instant perceived load — visible before video loads */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-indigo-950 to-black" />
+
         <video
           autoPlay
           muted
           loop
           playsInline
-          preload="auto"
-          className="absolute inset-0 w-full h-full object-cover"
+          preload="metadata"
+          className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-1000"
           style={{
             top: "50%",
             left: "50%",
@@ -24,6 +27,10 @@ export default function AuthLayout({
             width: "auto",
             height: "auto",
             transform: "translate(-50%, -50%)",
+          }}
+          onCanPlay={(e) => {
+            // Fade in video once ready — no blocking render
+            (e.target as HTMLVideoElement).style.opacity = "1";
           }}
         >
           {/* Mobile: lightweight 720p */}
@@ -52,9 +59,6 @@ export default function AuthLayout({
               "linear-gradient(135deg, rgba(59,130,246,0.4) 0%, rgba(99,102,241,0.25) 50%, rgba(0,0,0,0.1) 100%)",
           }}
         />
-
-        {/* Dark base for instant perceived load */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-indigo-950 to-black -z-10" />
       </div>
 
       {/* Auth Content */}

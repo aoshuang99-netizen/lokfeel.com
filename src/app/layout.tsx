@@ -1,15 +1,34 @@
 import type { Metadata } from "next";
+import { Outfit, Sora } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/auth-provider";
+
+// Self-hosted fonts via next/font — eliminates Google Fonts CDN dependency
+// Auto-optimizes: no CLS, no layout shift, no external request, works in China
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-outfit",
+  display: "swap",
+  preload: true,
+});
+
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-sora",
+  display: "swap",
+  preload: true,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://lokfeel.com"),
   title: {
-    default: "LokFee! — Real Matches. Real Connection.",
-    template: "%s | LokFee!",
+    default: "LokFeel — Real Matches. Real Connection.",
+    template: "%s | LokFeel",
   },
   description:
-    "LokFee! is a relationship structure matching engine built for depth, not swiping. Get 5 AI-curated matches per week with explanations of why you connect. Safe, private, and designed for meaningful relationships.",
+    "LokFeel is a relationship structure matching engine built for depth, not swiping. Get 5 AI-curated matches per week with explanations of why you connect. Safe, private, and designed for meaningful relationships.",
   keywords: [
     "dating app",
     "relationship matching",
@@ -17,34 +36,32 @@ export const metadata: Metadata = {
     "deep connection",
     "intentional dating",
     "relationship structure",
-    "lokfee",
     "lokfeel",
-    "lokfee",
     "alternative dating",
     "kink-friendly dating",
     "LGBTQ+ dating",
     "meaningful relationships",
     "curated matches",
   ],
-  authors: [{ name: "LokFee! Team" }],
-  creator: "LokFee!",
-  publisher: "LokFee!",
+  authors: [{ name: "LokFeel Team" }],
+  creator: "LokFeel",
+  publisher: "LokFeel",
   manifest: "/manifest.json",
   openGraph: {
-    title: "LokFee! — Real Matches. Real Connection.",
+    title: "LokFeel — Real Matches. Real Connection.",
     description:
       "Relationship structure matching engine built for depth, not swiping. 5 AI-curated matches per week.",
     url: "https://lokfeel.com",
-    siteName: "LokFee!",
+    siteName: "LokFeel",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LokFee! — Real Matches. Real Connection.",
+    title: "LokFeel — Real Matches. Real Connection.",
     description:
       "Relationship structure matching engine built for depth, not swiping.",
-    creator: "@lokfee",
+    creator: "@lokfeel",
   },
   robots: {
     index: true,
@@ -70,7 +87,7 @@ export default function RootLayout({
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID || '';
 
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="en" className={`h-full antialiased ${outfit.variable} ${sora.variable}`} suppressHydrationWarning>
       <head>
         {/* Google Tag Manager */}
         {gtmId && (
@@ -78,7 +95,7 @@ export default function RootLayout({
             id="gtm-script"
             dangerouslySetInnerHTML={{
               __html: `
-(function(w,d,s,l,i){ w[l]=w[l]||[];w[l].push({ 'gtm.start':
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
@@ -92,7 +109,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <meta name="theme-color" content="#0a0a0a" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="LokFee!" />
+        <meta name="apple-mobile-web-app-title" content="LokFeel" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
 
         {/* Service Worker Registration */}
@@ -110,29 +127,8 @@ if ('serviceWorker' in navigator) {
           }}
         />
 
-        {/* Preconnect to external domains for faster resource loading */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.googleapis.cn" />
-        {/* Google Fonts — async non-blocking load */}
-        <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `document.querySelectorAll('link[rel="preload"][as="style"]').forEach(function(l){l.onload=function(){this.onload=null;this.rel='stylesheet'}});`,
-          }}
-        />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
-          />
-        </noscript>
-        <link rel="preconnect" href="https://images.unsplash.com" />
-        <link rel="preconnect" href="https://i.pravatar.cc" />
+        {/* Preconnect only for GTM (fonts are now self-hosted via next/font) */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         {/* Google Tag Manager (noscript) */}
