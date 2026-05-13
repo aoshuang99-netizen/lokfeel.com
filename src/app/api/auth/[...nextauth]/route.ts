@@ -8,10 +8,12 @@ export const dynamic = 'force-dynamic'
  * NextAuth route handler with Google + Twitter custom flow support.
  *
  * Google OAuth: Custom PKCE flow —
- *   Signin: /api/auth/signin/google → /api/auth/google/signin (our own PKCE)
- *   Callback: /api/auth/callback/google → /api/auth/google/callback (our own verifier)
- *   WHY: NextAuth v5 stores code_verifier as JWE-encrypted cookie which our
+ *   Signin: /api/auth/signin/google → /api/auth/oauth/google/signin (our own PKCE)
+ *   Callback: /api/auth/callback/google → /api/auth/oauth/google/callback (our own verifier)
+ *   WHY: (1) NextAuth v5 stores code_verifier as JWE-encrypted cookie which our
  *   callback cannot decrypt. We generate our own PKCE with plain-text cookies.
+ *   (2) /api/auth/google/signin conflicts with [...nextauth] catch-all (404).
+ *   Using /api/auth/oauth/google/* avoids the conflict entirely.
  *
  * Twitter OAuth: Custom PKCE flow —
  *   Signin: /api/auth/signin/twitter → /api/auth/twitter/signin
@@ -26,9 +28,10 @@ export async function GET(request: NextRequest) {
 
   // ─── Intercept Google signin ───
   // Redirect to our custom PKCE handler instead of NextAuth's built-in
+  // Using /api/auth/oauth/google/signin to avoid [...nextauth] catch-all 404
   if (pathname.match(/^\/api\/auth\/signin\/google$/)) {
     const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/dashboard";
-    const customSigninUrl = new URL('/api/auth/google/signin', request.url);
+    const customSigninUrl = new URL('/api/auth/oauth/google/signin', request.url);
     customSigninUrl.searchParams.set('callbackUrl', callbackUrl);
     return NextResponse.redirect(customSigninUrl);
   }
@@ -36,7 +39,7 @@ export async function GET(request: NextRequest) {
   // ─── Intercept Google callback ───
   // Redirect to our custom callback handler
   if (pathname.match(/^\/api\/auth\/callback\/google$/)) {
-    const customCallbackUrl = new URL('/api/auth/google/callback', request.url);
+    const customCallbackUrl = new URL('/api/auth/oauth/google/callback', request.url);
     // Preserve query params (code, state, error, etc.)
     request.nextUrl.searchParams.forEach((value, key) => {
       customCallbackUrl.searchParams.set(key, value);
@@ -78,7 +81,7 @@ export async function POST(request: NextRequest) {
       callbackUrl = (formData.get("callbackUrl") as string) || "/dashboard";
     } catch {}
 
-    const customSigninUrl = new URL('/api/auth/google/signin', request.url);
+    const customSigninUrl = new URL('/api/auth/oauth/google/signin', request.url);
     customSigninUrl.searchParams.set('callbackUrl', callbackUrl);
     return NextResponse.redirect(customSigninUrl);
   }

@@ -217,7 +217,7 @@ async function runGoogleTest() {
 
 function doGoogleLogin() {
   log('Redirecting to Google OAuth (custom PKCE)...', 'ok');
-  window.location.href = '/api/auth/google/signin?callbackUrl=/dashboard';
+  window.location.href = '/api/auth/oauth/google/signin?callbackUrl=/dashboard';
 }
 
 // ═══ TWITTER OAUTH TEST ═══

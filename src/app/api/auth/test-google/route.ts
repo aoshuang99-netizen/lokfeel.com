@@ -7,7 +7,7 @@
  * can verify the setup works (bypassing browser fetch cross-origin
  * redirect limitations).
  *
- * Uses our custom PKCE flow (same as /api/auth/google/signin).
+ * Uses our custom PKCE flow (same as /api/auth/oauth/google/signin).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       redirectUri,
       clientId: config.clientId.substring(0, 20) + "...",
       pkceMethod: "S256 (custom, plain-text cookie)",
-      note: "This URL is for testing only. Use /api/auth/google/signin for actual login.",
+      note: "This URL is for testing only. Use /api/auth/oauth/google/signin for actual login.",
     });
   } catch (err: any) {
     return NextResponse.json({

@@ -1,25 +1,25 @@
 "use client";
 
 /**
- * GoogleSignInButton v9 — Custom PKCE Signin (Maximum Reliability)
+ * GoogleSignInButton v10 — Custom PKCE Signin (Route Conflict Fixed)
  *
  * ARCHITECTURE:
- * - Directly navigates to /api/auth/google/signin which generates our own PKCE
+ * - Directly navigates to /api/auth/oauth/google/signin which generates our own PKCE
  * - Our custom PKCE stores code_verifier as plain-text cookie (readable by callback)
  * - This bypasses NextAuth's JWE-encrypted PKCE which breaks the token exchange
  *
- * WHY v9 instead of v8 (POST to NextAuth):
- * - v8 POSTed to /api/auth/signin/google which used NextAuth's PKCE
- * - NextAuth v5 stores code_verifier as JWE-encrypted cookie
- * - Our custom callback cannot decrypt the JWE, so token exchange fails
- * - v9 uses our own /api/auth/google/signin with plain-text PKCE cookies
+ * WHY v10 (Route Fix):
+ * - v9 used /api/auth/google/signin but Next.js [...nextauth] catch-all route
+ *   takes priority, causing 404 on production. Moved to /api/auth/oauth/google/signin
+ *   to avoid the catch-all conflict entirely.
  *
  * HISTORY:
  * v5 (May 9): signIn("google") — WORKED ✅
  * v6 (May 12): window.location.href — BROKEN (custom callback + PKCE mismatch) ❌
  * v7 (May 12): Back to signIn("google") — broke for users behind GFW ❌
  * v8 (May 12): Manual POST to /api/auth/signin/google — JWE PKCE issue ❌
- * v9 (May 13): Direct navigation to /api/auth/google/signin — OWN PKCE ✅
+ * v9 (May 13): Direct navigation to /api/auth/google/signin — 404 due to catch-all ❌
+ * v10 (May 13): Direct navigation to /api/auth/oauth/google/signin — avoids catch-all ✅
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -78,8 +78,9 @@ export default function GoogleSignInButton({
 
     try {
       // Navigate directly to our custom Google signin endpoint
+      // Using /api/auth/oauth/google/signin to avoid [...nextauth] catch-all 404
       // This generates our own PKCE with plain-text code_verifier cookie
-      window.location.href = `/api/auth/google/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+      window.location.href = `/api/auth/oauth/google/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
     } catch (err: any) {
       const msg = err?.message || "Network error. Please check your connection and try again.";
       setError(msg);
