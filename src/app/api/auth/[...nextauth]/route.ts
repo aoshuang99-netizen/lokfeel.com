@@ -5,13 +5,18 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 /**
- * NextAuth route handler with Google + Twitter custom callback support.
+ * NextAuth route handler with Google + Twitter custom flow support.
  *
- * Google OAuth: Custom flow — /api/auth/callback/google → /api/auth/google/callback
- *   (NextAuth's built-in Google callback throws Configuration errors on Vercel cold starts)
+ * Google OAuth: Custom PKCE flow —
+ *   Signin: /api/auth/signin/google → /api/auth/google/signin (our own PKCE)
+ *   Callback: /api/auth/callback/google → /api/auth/google/callback (our own verifier)
+ *   WHY: NextAuth v5 stores code_verifier as JWE-encrypted cookie which our
+ *   callback cannot decrypt. We generate our own PKCE with plain-text cookies.
  *
- * Twitter OAuth: Custom flow at /api/auth/twitter/signin + /api/auth/twitter/callback
- *   (Fully custom PKCE implementation bypassing Firebase)
+ * Twitter OAuth: Custom PKCE flow —
+ *   Signin: /api/auth/signin/twitter → /api/auth/twitter/signin
+ *   Callback: /api/auth/twitter/callback (direct, no interception needed)
+ *   WHY: Fully custom PKCE implementation bypassing Firebase.
  *
  * All other NextAuth routes (CSRF, session, providers, etc.): Delegated to NextAuth handlers
  */
@@ -19,9 +24,17 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ─── Intercept Google signin ───
+  // Redirect to our custom PKCE handler instead of NextAuth's built-in
+  if (pathname.match(/^\/api\/auth\/signin\/google$/)) {
+    const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/dashboard";
+    const customSigninUrl = new URL('/api/auth/google/signin', request.url);
+    customSigninUrl.searchParams.set('callbackUrl', callbackUrl);
+    return NextResponse.redirect(customSigninUrl);
+  }
+
   // ─── Intercept Google callback ───
-  // NextAuth's built-in callback handler throws errors on Vercel.
-  // Redirect to our custom handler instead.
+  // Redirect to our custom callback handler
   if (pathname.match(/^\/api\/auth\/callback\/google$/)) {
     const customCallbackUrl = new URL('/api/auth/google/callback', request.url);
     // Preserve query params (code, state, error, etc.)
@@ -54,6 +67,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // ─── Intercept Google POST signin ───
+  // NextAuth's built-in Google signin generates JWE-encrypted PKCE cookies
+  // which our callback cannot decrypt. Redirect to our custom handler instead.
+  if (pathname.match(/^\/api\/auth\/signin\/google$/)) {
+    let callbackUrl = "/dashboard";
+    try {
+      const formData = await request.formData();
+      callbackUrl = (formData.get("callbackUrl") as string) || "/dashboard";
+    } catch {}
+
+    const customSigninUrl = new URL('/api/auth/google/signin', request.url);
+    customSigninUrl.searchParams.set('callbackUrl', callbackUrl);
+    return NextResponse.redirect(customSigninUrl);
+  }
 
   // ─── Intercept Twitter/X POST signin ───
   // When the client POSTs to /api/auth/signin/twitter (NextAuth convention),

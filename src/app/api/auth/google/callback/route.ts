@@ -4,23 +4,20 @@
  * GET /api/auth/google/callback?code=...&state=...
  *
  * WHY CUSTOM (instead of NextAuth built-in):
- * NextAuth v5 beta's built-in Google callback handler throws errors on
- * Vercel cold starts (Configuration/missing PKCE cookie), because:
- * 1. The __Secure-authjs.pkce.code_verifier cookie may not be forwarded
- *    correctly across Vercel's edge/serverless boundaries
- * 2. NextAuth's internal error handling redirects to /login?error=Configuration
- *    which is misleading — the config IS correct, the handler just fails
+ * NextAuth v5 stores PKCE code_verifier as a JWE-encrypted cookie, which
+ * cannot be used directly in the Google token exchange. Our custom signin
+ * endpoint (/api/auth/google/signin) generates its own PKCE and stores the
+ * code_verifier as a plain-text cookie ("google-pkce-verifier"), which this
+ * callback can read and use correctly.
  *
- * This custom callback mirrors the Twitter callback pattern:
- * 1. Read PKCE code_verifier from cookie (set during signin)
- * 2. Exchange code + code_verifier for Google tokens
- * 3. Decode id_token to get user profile
- * 4. Find or create user in database
- * 5. Create NextAuth JWT session token directly
- * 6. Redirect to dashboard with session cookie
- *
- * The [...nextauth] route handler intercepts /api/auth/callback/google
- * and redirects here.
+ * Flow:
+ * 1. Extract authorization code from query params
+ * 2. Read PKCE code_verifier from our custom cookie
+ * 3. Exchange code + code_verifier + client_secret for Google tokens
+ * 4. Decode id_token to get user profile
+ * 5. Find or create user in database
+ * 6. Create NextAuth JWT session token directly
+ * 7. Redirect to dashboard with session cookie
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -41,10 +38,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Step 1: Extract code and state from query params
+    // Step 1: Extract code from query params
     const { searchParams } = request.nextUrl;
     const code = searchParams.get("code");
-    const state = searchParams.get("state");
     const error = searchParams.get("error");
 
     if (error) {
@@ -62,15 +58,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Step 2: Read PKCE code_verifier from cookie
-    // NextAuth sets this cookie as __Secure-authjs.pkce.code_verifier
-    const codeVerifier = request.cookies.get("__Secure-authjs.pkce.code_verifier")?.value
-      || request.cookies.get("authjs.pkce.code_verifier")?.value;
+    // Step 2: Read PKCE code_verifier from our custom cookie
+    // Set by /api/auth/google/signin (plain-text, NOT JWE-encrypted like NextAuth's)
+    const codeVerifier = request.cookies.get("google-pkce-verifier")?.value;
 
     if (!codeVerifier) {
-      console.error("[Google OAuth Callback] Missing PKCE code_verifier cookie");
-      // Don't fail hard — try without PKCE (some flows don't use it)
-      console.warn("[Google OAuth Callback] Attempting token exchange without PKCE verifier...");
+      console.warn("[Google OAuth Callback] Missing google-pkce-verifier cookie — attempting without PKCE");
     }
 
     // Step 3: Exchange code for tokens
@@ -83,7 +76,7 @@ export async function GET(request: NextRequest) {
         clientSecret: config.clientSecret,
         redirectUri,
         code,
-        codeVerifier: codeVerifier || "", // May be empty if cookie was lost
+        codeVerifier: codeVerifier || undefined,
       });
     } catch (err: any) {
       console.error("[Google OAuth Callback] Token exchange error:", err.message);
@@ -245,7 +238,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Step 7: Redirect to dashboard with session cookie
-    const callbackUrl = request.cookies.get("__Secure-authjs.callback-url")?.value
+    const callbackUrl = request.cookies.get("google-callback-url")?.value
+      || request.cookies.get("__Secure-authjs.callback-url")?.value
       || request.cookies.get("authjs.callback-url")?.value
       || "/dashboard";
     const destination =
@@ -264,7 +258,9 @@ export async function GET(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60,
     });
 
-    // Clear OAuth cookies
+    // Clear OAuth cookies (both our custom ones and NextAuth's)
+    response.cookies.set("google-pkce-verifier", "", { maxAge: 0, path: "/" });
+    response.cookies.set("google-callback-url", "", { maxAge: 0, path: "/" });
     response.cookies.set("__Secure-authjs.pkce.code_verifier", "", { maxAge: 0, path: "/" });
     response.cookies.set("authjs.pkce.code_verifier", "", { maxAge: 0, path: "/" });
     response.cookies.set("__Secure-authjs.callback-url", "", { maxAge: 0, path: "/" });

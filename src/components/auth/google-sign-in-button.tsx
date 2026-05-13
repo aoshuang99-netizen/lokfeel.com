@@ -1,26 +1,25 @@
 "use client";
 
 /**
- * GoogleSignInButton v8 — Manual POST to NextAuth (Maximum Reliability)
+ * GoogleSignInButton v9 — Custom PKCE Signin (Maximum Reliability)
  *
  * ARCHITECTURE:
- * - Manually fetches CSRF token from /api/auth/csrf
- * - POSTs to /api/auth/signin/google with proper headers
- * - NextAuth returns { url: "https://accounts.google.com/..." }
- * - Browser navigates to Google OAuth page
+ * - Directly navigates to /api/auth/google/signin which generates our own PKCE
+ * - Our custom PKCE stores code_verifier as plain-text cookie (readable by callback)
+ * - This bypasses NextAuth's JWE-encrypted PKCE which breaks the token exchange
  *
- * WHY v8 instead of signIn("google"):
- * - signIn("google") from next-auth/react internally calls getProviders()
- *   first. If getProviders() fails (network issue, CSP, etc.), signIn()
- *   silently redirects to /api/auth/error with no useful feedback.
- * - Manual POST gives us full control over error handling and can show
- *   meaningful error messages to users.
+ * WHY v9 instead of v8 (POST to NextAuth):
+ * - v8 POSTed to /api/auth/signin/google which used NextAuth's PKCE
+ * - NextAuth v5 stores code_verifier as JWE-encrypted cookie
+ * - Our custom callback cannot decrypt the JWE, so token exchange fails
+ * - v9 uses our own /api/auth/google/signin with plain-text PKCE cookies
  *
  * HISTORY:
  * v5 (May 9): signIn("google") — WORKED ✅
  * v6 (May 12): window.location.href — BROKEN (custom callback + PKCE mismatch) ❌
  * v7 (May 12): Back to signIn("google") — broke for users behind GFW ❌
- * v8 (May 12): Manual POST to /api/auth/signin/google — RELIABLE ✅
+ * v8 (May 12): Manual POST to /api/auth/signin/google — JWE PKCE issue ❌
+ * v9 (May 13): Direct navigation to /api/auth/google/signin — OWN PKCE ✅
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -78,86 +77,9 @@ export default function GoogleSignInButton({
     setError(null);
 
     try {
-      // Step 1: Get CSRF token (must NOT set Content-Type on GET — some ad blockers reject it)
-      const csrfRes = await fetch("/api/auth/csrf", {
-        method: "GET",
-        credentials: "same-origin",
-      });
-
-      if (!csrfRes.ok) {
-        throw new Error(`Security token request failed (${csrfRes.status}). Please disable ad blockers and try again.`);
-      }
-
-      const csrfData = await csrfRes.json();
-      const { csrfToken } = csrfData;
-
-      if (!csrfToken) {
-        throw new Error("Failed to get security token. Please refresh the page.");
-      }
-
-      // Step 2: POST to NextAuth signin endpoint
-      // X-Auth-Return-Redirect: 1 makes NextAuth return JSON {url} instead of redirecting
-      const signInRes = await fetch("/api/auth/signin/google", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-Auth-Return-Redirect": "1",
-        },
-        body: new URLSearchParams({
-          csrfToken,
-          callbackUrl,
-        }),
-      });
-
-      // Check if response is JSON (X-Auth-Return-Redirect mode)
-      const contentType = signInRes.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        const data = await signInRes.json();
-
-        if (data.url) {
-          // Success — redirect to Google OAuth page
-          // Verify it's actually a Google URL, not an error redirect
-          if (data.url.includes("accounts.google.com")) {
-            window.location.href = data.url;
-          } else if (data.url.includes("error=")) {
-            // NextAuth returned an error URL
-            const errorParam = new URL(data.url, window.location.origin).searchParams.get("error") || "";
-            const errorMsg = errorParam === "Configuration"
-              ? "Google login is not configured. Please contact support."
-              : errorParam === "MissingCSRF"
-              ? "Security verification failed. Please refresh the page and try again."
-              : errorParam === "AccessDenied"
-              ? "Access denied by Google. Please try again."
-              : `Login failed: ${errorParam}`;
-            setError(errorMsg);
-            onError?.(errorMsg);
-          } else {
-            // Unexpected URL — try navigating anyway
-            window.location.href = data.url;
-          }
-        } else if (data.error) {
-          const errorMsg = data.error === "Configuration"
-            ? "Google login is not configured. Please contact support."
-            : data.error === "AccessDenied"
-            ? "Access denied. Please try again."
-            : `Login failed: ${data.error}`;
-          setError(errorMsg);
-          onError?.(errorMsg);
-        } else {
-          setError("Unexpected response. Please try again.");
-          onError?.("Unexpected response from auth server");
-        }
-      } else {
-        // Response is a redirect (302) — extract Location header
-        const redirectUrl = signInRes.headers.get("location") || "";
-        if (redirectUrl.includes("accounts.google.com")) {
-          window.location.href = redirectUrl;
-        } else {
-          setError("Authentication service error. Please try again.");
-          onError?.("Auth service returned unexpected redirect");
-        }
-      }
+      // Navigate directly to our custom Google signin endpoint
+      // This generates our own PKCE with plain-text code_verifier cookie
+      window.location.href = `/api/auth/google/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
     } catch (err: any) {
       const msg = err?.message || "Network error. Please check your connection and try again.";
       setError(msg);

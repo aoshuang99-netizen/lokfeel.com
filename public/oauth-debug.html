@@ -183,92 +183,41 @@ async function runGoogleTest() {
   document.getElementById(container).innerHTML = '';
   log('━━━ Google OAuth Flow Test ━━━', 'info');
   
-  // Step 1: Get fresh CSRF token
-  let csrfToken;
+  // Step 1: Test Google OAuth configuration via server-side endpoint
   try {
-    addRow(container, 'info', 'Step 1: GET /api/auth/csrf', 'Fetching...');
-    const csrfRes = await fetch('/api/auth/csrf', { method: 'GET', credentials: 'same-origin' });
-    const csrfData = await csrfRes.json();
-    csrfToken = csrfData.csrfToken;
-    if (!csrfToken) throw new Error('No CSRF token');
-    addRow(container, 'pass', 'Step 1: CSRF Token ✅', `${csrfToken.substring(0, 20)}...`);
-    log(`Step 1 OK: CSRF = ${csrfToken.substring(0, 16)}...`, 'ok');
-  } catch(e) {
-    addRow(container, 'fail', 'Step 1: CSRF Token ❌', e.message);
-    log(`Step 1 FAIL: ${e.message}`, 'err');
-    return;
-  }
-  
-  // Step 2: POST to /api/auth/signin/google
-  try {
-    addRow(container, 'info', 'Step 2: POST /api/auth/signin/google', 'Sending...');
-    const postRes = await fetch('/api/auth/signin/google', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-Auth-Return-Redirect': '1',
-      },
-      body: new URLSearchParams({ csrfToken, callbackUrl: '/dashboard' }),
-    });
+    addRow(container, 'info', 'Step 1: GET /api/auth/test-google', 'Testing...');
+    const res = await fetch('/api/auth/test-google', { credentials: 'same-origin' });
+    const data = await res.json();
     
-    log(`Step 2: HTTP ${postRes.status}, Content-Type: ${postRes.headers.get('content-type')}`, 'info');
+    log(`Google test response: ${JSON.stringify(data).substring(0, 200)}`, 'info');
     
-    const ct = postRes.headers.get('content-type') || '';
-    if (!ct.includes('application/json')) {
-      const text = await postRes.text();
-      addRow(container, 'fail', 'Step 2: Response Not JSON ❌', `Status ${postRes.status}, body: ${text.substring(0, 200)}`);
-      log(`Step 2 FAIL: Non-JSON response`, 'err');
-      return;
-    }
-    
-    const data = await postRes.json();
-    log(`Step 2 response: ${JSON.stringify(data).substring(0, 200)}`, 'info');
-    
-    if (data.url) {
-      if (data.url.includes('accounts.google.com')) {
-        addRow(container, 'pass', 'Step 2: Google OAuth URL ✅', data.url.substring(0, 80) + '...');
-        _googleUrl = data.url;
-        
-        addRow(container, 'pass', 'Step 3: URL Validation ✅', `client_id=${new URL(data.url).searchParams.get('client_id')?.substring(0, 20)}...`);
-        addRow(container, 'pass', 'Step 4: Redirect URI ✅', new URL(data.url).searchParams.get('redirect_uri'));
-        
-        document.getElementById('google-login-btn').disabled = false;
-        document.getElementById('google-result').innerHTML = '<div class="success-box">✅ Google OAuth 流程完全正常！点击 "真实 Google 登录" 按钮继续。</div>';
-        log('Google OAuth test PASS — URL ready', 'ok');
-      } else if (data.url.includes('error=')) {
-        const errorParam = new URL(data.url, location.origin).searchParams.get('error') || '';
-        addRow(container, 'fail', 'Step 2: Error in URL ❌', `Error: ${errorParam}`);
-        
-        if (errorParam === 'MissingCSRF') {
-          addRow(container, 'fail', '诊断', 'NextAuth 找不到 CSRF cookie。可能是浏览器 SameSite/Secure cookie 限制或浏览器阻止了第三方 cookie。');
-          document.getElementById('google-result').innerHTML = '<div class="error-box"><b>MissingCSRF 错误原因：</b><br>1. 浏览器阻止了 Secure HttpOnly cookie（Safari ITP / Chrome 第三方 cookie 限制）<br>2. CSRF cookie 的 SameSite=Lax 在 POST 请求中未正确发送<br>3. Cookie domain 不匹配</div>';
-        } else if (errorParam === 'Configuration') {
-          addRow(container, 'fail', '诊断', 'GOOGLE_CLIENT_ID 或 GOOGLE_CLIENT_SECRET 未在 Vercel 环境变量中设置');
-          document.getElementById('google-result').innerHTML = '<div class="error-box"><b>Configuration 错误原因：</b><br>GOOGLE_CLIENT_ID 或 GOOGLE_CLIENT_SECRET 环境变量未设置或为空。<br>请检查 Vercel Dashboard → Settings → Environment Variables。</div>';
-        }
-        log(`Google OAuth test FAIL: ${errorParam}`, 'err');
-      } else {
-        addRow(container, 'warn', 'Step 2: Unexpected URL ⚠️', data.url.substring(0, 100));
-        log(`Google OAuth test WARN: unexpected URL`, 'warn');
-      }
-    } else if (data.error) {
-      addRow(container, 'fail', 'Step 2: Error ❌', data.error);
+    if (data.status === 'pass') {
+      addRow(container, 'pass', 'Step 1: Google OAuth Config ✅', data.detail);
+      addRow(container, 'pass', 'Step 2: Custom PKCE ✅', data.pkceMethod || 'S256');
+      addRow(container, 'pass', 'Step 3: Redirect URI ✅', data.redirectUri);
+      addRow(container, 'pass', 'Step 4: Authorization URL ✅', data.authUrl?.substring(0, 80) + '...');
+      
+      document.getElementById('google-login-btn').disabled = false;
+      document.getElementById('google-result').innerHTML = '<div class="success-box">✅ Google OAuth 流程正常（自定义 PKCE）！<br>点击 "真实 Google 登录" 按钮继续。</div>';
+      log('Google OAuth test PASS — URL ready', 'ok');
+    } else {
+      addRow(container, 'fail', 'Step 1: Google OAuth Config ❌', data.error || data.detail);
+      if (data.detail) addRow(container, 'fail', '诊断', data.detail);
+      document.getElementById('google-result').innerHTML = '<div class="error-box"><b>Google OAuth 配置错误：</b><br>' + (data.detail || data.error) + '</div>';
       log(`Google OAuth test FAIL: ${data.error}`, 'err');
     }
   } catch(e) {
-    addRow(container, 'fail', 'Step 2: POST Failed ❌', e.message);
+    addRow(container, 'fail', 'Step 1: Request Failed ❌', e.message);
+    log(`Step 1 FAIL: ${e.message}`, 'err');
+    return;
+  }
     log(`Step 2 FAIL: ${e.message}`, 'err');
   }
 }
 
 function doGoogleLogin() {
-  if (_googleUrl) {
-    log('Redirecting to Google OAuth...', 'ok');
-    window.location.href = _googleUrl;
-  } else {
-    log('No Google OAuth URL available. Run test first.', 'err');
-  }
+  log('Redirecting to Google OAuth (custom PKCE)...', 'ok');
+  window.location.href = '/api/auth/google/signin?callbackUrl=/dashboard';
 }
 
 // ═══ TWITTER OAUTH TEST ═══

@@ -2,23 +2,70 @@
  * Google OAuth 2.0 + PKCE Utilities
  *
  * Implements Google OAuth 2.0 with PKCE (Proof Key for Code Exchange).
- * This bypasses NextAuth's built-in Google callback handler which throws
- * Configuration errors on Vercel cold starts.
+ * This bypasses NextAuth's built-in Google signin/callback handlers which
+ * fail on Vercel due to JWE-encrypted PKCE cookies.
  *
  * Flow:
- * 1. Authorization code comes from Google redirect (already handled by NextAuth signin)
- * 2. Exchange code + code_verifier for tokens (id_token + access_token)
- * 3. Decode id_token to get user profile (no API call needed)
- * 4. Find or create user in database
- * 5. Create NextAuth JWT session token directly (bypasses NextAuth callbacks)
+ * 1. /api/auth/google/signin generates our own PKCE + redirects to Google
+ * 2. Google redirects back with authorization code
+ * 3. Custom callback exchanges code + our code_verifier for tokens
+ * 4. Decode id_token to get user profile (no API call needed)
+ * 5. Find or create user in database
+ * 6. Create NextAuth JWT session token directly
  *
  * Env vars required (already configured in Vercel Production):
  * - GOOGLE_CLIENT_ID: OAuth 2.0 Client ID
  * - GOOGLE_CLIENT_SECRET: OAuth 2.0 Client Secret
  */
 
+import { createHash, randomBytes } from "crypto";
+
 // ─── Google OAuth 2.0 endpoints ───
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+
+// ─── PKCE helpers ───
+
+/**
+ * Generate a PKCE code verifier (43-128 chars, URL-safe)
+ */
+export function generateCodeVerifier(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+/**
+ * Generate PKCE code challenge (S256 = base64url(SHA256(code_verifier)))
+ */
+export function generateCodeChallenge(verifier: string): string {
+  return createHash("sha256").update(verifier).digest("base64url");
+}
+
+// ─── Authorization URL ───
+
+/**
+ * Build the Google OAuth 2.0 authorization URL with PKCE
+ */
+export function buildGoogleAuthorizationUrl(options: {
+  clientId: string;
+  redirectUri: string;
+  codeChallenge: string;
+  scopes?: string[];
+}): string {
+  const scopes = options.scopes || ["openid", "email", "profile"];
+
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: options.clientId,
+    redirect_uri: options.redirectUri,
+    scope: scopes.join(" "),
+    code_challenge: options.codeChallenge,
+    code_challenge_method: "S256",
+    access_type: "offline",
+    prompt: "consent",
+  });
+
+  return `${GOOGLE_AUTH_URL}?${params.toString()}`;
+}
 
 // ─── Token exchange ───
 
@@ -33,30 +80,36 @@ interface GoogleTokenResponse {
 
 /**
  * Exchange authorization code for tokens
- * Uses PKCE code_verifier from cookie
+ * Uses client_secret for confidential client auth (no PKCE needed)
+ * codeVerifier is optional — Google accepts confidential client auth without PKCE
  */
 export async function exchangeCodeForTokens(options: {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
   code: string;
-  codeVerifier: string;
+  codeVerifier?: string;
 }): Promise<GoogleTokenResponse> {
-  const params = new URLSearchParams({
+  const params: Record<string, string> = {
     grant_type: "authorization_code",
     code: options.code,
     redirect_uri: options.redirectUri,
-    code_verifier: options.codeVerifier,
     client_id: options.clientId,
     client_secret: options.clientSecret,
-  });
+  };
+
+  // Only include code_verifier if explicitly provided
+  // (For Google confidential clients, PKCE is not required when client_secret is present)
+  if (options.codeVerifier) {
+    params.code_verifier = options.codeVerifier;
+  }
 
   const response = await fetch(GOOGLE_TOKEN_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: params.toString(),
+    body: new URLSearchParams(params).toString(),
   });
 
   if (!response.ok) {
