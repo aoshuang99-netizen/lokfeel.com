@@ -12,13 +12,14 @@ export default function AuthLayout({
         {/* Dark base for instant perceived load — visible before video loads */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-indigo-950 to-black" />
 
+        {/* eslint-disable-next-line @next/next/no-page-custom-font -- using preload=metadata for performance */}
         <video
           autoPlay
           muted
           loop
           playsInline
           preload="metadata"
-          className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-1000"
+          className="absolute inset-0 w-full h-full object-cover"
           style={{
             top: "50%",
             left: "50%",
@@ -27,10 +28,6 @@ export default function AuthLayout({
             width: "auto",
             height: "auto",
             transform: "translate(-50%, -50%)",
-          }}
-          onCanPlay={(e) => {
-            // Fade in video once ready — no blocking render
-            (e.target as HTMLVideoElement).style.opacity = "1";
           }}
         >
           {/* Mobile: lightweight 720p */}
