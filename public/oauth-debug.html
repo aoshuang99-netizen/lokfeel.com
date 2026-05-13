@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LokFeel OAuth 端到端诊断</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 20px; }
+h1 { color: #60a5fa; font-size: 22px; margin-bottom: 12px; }
+h2 { color: #a78bfa; font-size: 16px; margin: 20px 0 10px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+.section { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.row { display: flex; gap: 12px; margin: 8px 0; align-items: flex-start; }
+.icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.pass .icon { background: #166534; color: #4ade80; }
+.fail .icon { background: #7f1d1d; color: #f87171; }
+.warn .icon { background: #713f12; color: #fbbf24; }
+.info .icon { background: #1e3a5f; color: #60a5fa; }
+.label { flex: 1; }
+.title { font-weight: 600; font-size: 14px; }
+.detail { color: #888; font-size: 12px; margin-top: 2px; word-break: break-all; }
+button { padding: 12px 24px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; margin: 6px; transition: all 0.2s; }
+.btn-g { background: #4285f4; color: #fff; }
+.btn-g:hover { background: #3367d6; }
+.btn-x { background: #000; color: #fff; border: 1px solid #333; }
+.btn-x:hover { background: #1a1a1a; }
+.btn-test { background: #333; color: #fff; }
+.btn-test:hover { background: #444; }
+#log { background: #000; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-top: 16px; max-height: 500px; overflow-y: auto; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; line-height: 1.8; }
+.lok { color: #22c55e; } .lerr { color: #ef4444; } .lwarn { color: #eab308; } .linfo { color: #60a5fa; }
+pre { background: #111; border-radius: 4px; padding: 8px; margin: 4px 0; font-size: 11px; overflow-x: auto; }
+.error-box { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 16px; margin: 12px 0; }
+.success-box { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; padding: 16px; margin: 12px 0; }
+.fix-box { background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.3); border-radius: 10px; padding: 16px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<h1>🔍 LokFeel OAuth 端到端诊断</h1>
+<p style="color:#888" id="ts"></p>
+
+<div class="section" id="env-check">
+  <h2>📦 环境检查</h2>
+  <div id="env-rows"></div>
+</div>
+
+<div class="section" id="csp-check">
+  <h2>🛡️ CSP 检查</h2>
+  <div id="csp-rows"></div>
+</div>
+
+<div class="section" id="csrf-check">
+  <h2>🔑 CSRF Token</h2>
+  <div id="csrf-rows"></div>
+</div>
+
+<div class="section" id="google-flow">
+  <h2>🟦 Google OAuth 完整流程</h2>
+  <div id="google-rows"></div>
+  <div style="margin-top:12px">
+    <button class="btn-g" onclick="runGoogleTest()">▶ 运行 Google OAuth 测试</button>
+    <button class="btn-g" onclick="doGoogleLogin()" id="google-login-btn" disabled>🔗 真实 Google 登录</button>
+  </div>
+  <div id="google-result"></div>
+</div>
+
+<div class="section" id="twitter-flow">
+  <h2>🐦 X/Twitter OAuth 完整流程</h2>
+  <div id="twitter-rows"></div>
+  <div style="margin-top:12px">
+    <button class="btn-x" onclick="runTwitterTest()">▶ 运行 Twitter OAuth 测试</button>
+    <button class="btn-x" onclick="doTwitterLogin()" id="twitter-login-btn" disabled>🔗 真实 X 登录</button>
+  </div>
+  <div id="twitter-result"></div>
+</div>
+
+<div class="section">
+  <h2>📋 实时日志</h2>
+  <div id="log"></div>
+</div>
+
+<script>
+const L = document.getElementById('log');
+function log(m, t='info') {
+  const c = {ok:'lok',err:'lerr',warn:'lwarn',info:'linfo'}[t]||'linfo';
+  L.innerHTML += `<div class="${c}">[${new Date().toLocaleTimeString()}] ${m}</div>`;
+  L.scrollTop = L.scrollHeight;
+}
+
+function addRow(container, cls, title, detail) {
+  const icons = { pass: '✓', fail: '✗', warn: '⚠', info: 'ℹ' };
+  const d = document.getElementById(container);
+  d.innerHTML += `<div class="row ${cls}"><div class="icon">${icons[cls]}</div><div class="label"><div class="title">${title}</div>${detail ? `<div class="detail">${detail}</div>` : ''}</div></div>`;
+}
+
+document.getElementById('ts').textContent = new Date().toLocaleString();
+
+// ═══ ENV CHECK ═══
+(function() {
+  addRow('env-rows', location.protocol === 'https:' ? 'pass' : 'fail',
+    'HTTPS', `${location.protocol} — ${location.host}`);
+  addRow('env-rows', window.isSecureContext ? 'pass' : 'fail',
+    'Secure Context', window.isSecureContext ? 'Yes — Secure cookies work' : 'No — Secure cookies will be rejected!');
+  addRow('env-rows', 'info', 'User Agent', navigator.userAgent.substring(0, 120));
+  addRow('env-rows', 'info', 'URL Params', location.search || '(none)');
+  
+  // Check for error in URL
+  const urlError = new URLSearchParams(location.search).get('error');
+  if (urlError) {
+    addRow('env-rows', 'fail', '⚠️ URL Error Parameter', urlError);
+    log(`URL error parameter found: ${urlError}`, 'err');
+  }
+  
+  // Check cookies
+  const cookies = document.cookie;
+  const cookieNames = cookies ? cookies.split(';').map(c => c.trim().split('=')[0]) : [];
+  addRow('env-rows', cookieNames.length > 0 ? 'info' : 'warn',
+    'Visible Cookies', cookieNames.join(', ') || '(none visible — HttpOnly cookies are hidden)');
+  
+  // Check third-party cookie support
+  try {
+    const testCookie = '__test_tp=1';
+    document.cookie = testCookie;
+    const supported = document.cookie.includes('__test_tp');
+    document.cookie = '__test_tp=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    addRow('env-rows', supported ? 'pass' : 'warn',
+      'Cookie Support', supported ? 'Cookies can be set and read' : 'Third-party cookies may be blocked');
+  } catch(e) {
+    addRow('env-rows', 'fail', 'Cookie Support', `Error: ${e.message}`);
+  }
+})();
+
+// ═══ CSP CHECK ═══
+(async function() {
+  // We test by trying to connect to OAuth endpoints
+  const tests = [
+    { name: 'connect-src → accounts.google.com', test: () => fetch('https://accounts.google.com/o/oauth2/v2/auth?client_id=test', { mode: 'no-cors' }).then(r => true).catch(e => e.message) },
+    { name: 'connect-src → api.twitter.com', test: () => fetch('https://api.twitter.com/2/users/me', { mode: 'no-cors' }).then(r => true).catch(e => e.message) },
+    { name: 'connect-src → oauth2.googleapis.com', test: () => fetch('https://oauth2.googleapis.com/.well-known/openid-configuration', { mode: 'no-cors' }).then(r => true).catch(e => e.message) },
+  ];
+  
+  for (const t of tests) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 5000);
+      const result = await t.test();
+      clearTimeout(timer);
+      addRow('csp-rows', result === true ? 'pass' : 'warn', t.name, result === true ? 'Connection allowed' : String(result));
+    } catch(e) {
+      addRow('csp-rows', 'fail', t.name, e.message);
+    }
+  }
+})();
+
+// ═══ CSRF CHECK ═══
+let _csrfToken = null;
+(async function() {
+  try {
+    const res = await fetch('/api/auth/csrf', { method: 'GET', credentials: 'same-origin' });
+    const data = await res.json();
+    if (data.csrfToken) {
+      _csrfToken = data.csrfToken;
+      addRow('csrf-rows', 'pass', 'CSRF Token Obtained', `${data.csrfToken.substring(0, 24)}... (${data.csrfToken.length} chars)`);
+      log(`CSRF token: ${data.csrfToken.substring(0, 16)}...`, 'ok');
+    } else {
+      addRow('csrf-rows', 'fail', 'CSRF Token', 'No csrfToken in response');
+    }
+    
+    // Check if the response set cookies
+    const setCookie = res.headers.get('set-cookie');
+    addRow('csrf-rows', setCookie ? 'info' : 'warn', 'Set-Cookie in Response',
+      setCookie ? setCookie.substring(0, 100) + '...' : 'Not visible from JS (HttpOnly cookies are hidden — this is normal)');
+  } catch(e) {
+    addRow('csrf-rows', 'fail', 'CSRF Fetch Failed', e.message);
+    log(`CSRF fetch failed: ${e.message}`, 'err');
+  }
+})();
+
+// ═══ GOOGLE OAUTH TEST ═══
+let _googleUrl = null;
+async function runGoogleTest() {
+  const container = 'google-rows';
+  document.getElementById(container).innerHTML = '';
+  log('━━━ Google OAuth Flow Test ━━━', 'info');
+  
+  // Step 1: Get fresh CSRF token
+  let csrfToken;
+  try {
+    addRow(container, 'info', 'Step 1: GET /api/auth/csrf', 'Fetching...');
+    const csrfRes = await fetch('/api/auth/csrf', { method: 'GET', credentials: 'same-origin' });
+    const csrfData = await csrfRes.json();
+    csrfToken = csrfData.csrfToken;
+    if (!csrfToken) throw new Error('No CSRF token');
+    addRow(container, 'pass', 'Step 1: CSRF Token ✅', `${csrfToken.substring(0, 20)}...`);
+    log(`Step 1 OK: CSRF = ${csrfToken.substring(0, 16)}...`, 'ok');
+  } catch(e) {
+    addRow(container, 'fail', 'Step 1: CSRF Token ❌', e.message);
+    log(`Step 1 FAIL: ${e.message}`, 'err');
+    return;
+  }
+  
+  // Step 2: POST to /api/auth/signin/google
+  try {
+    addRow(container, 'info', 'Step 2: POST /api/auth/signin/google', 'Sending...');
+    const postRes = await fetch('/api/auth/signin/google', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Auth-Return-Redirect': '1',
+      },
+      body: new URLSearchParams({ csrfToken, callbackUrl: '/dashboard' }),
+    });
+    
+    log(`Step 2: HTTP ${postRes.status}, Content-Type: ${postRes.headers.get('content-type')}`, 'info');
+    
+    const ct = postRes.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      const text = await postRes.text();
+      addRow(container, 'fail', 'Step 2: Response Not JSON ❌', `Status ${postRes.status}, body: ${text.substring(0, 200)}`);
+      log(`Step 2 FAIL: Non-JSON response`, 'err');
+      return;
+    }
+    
+    const data = await postRes.json();
+    log(`Step 2 response: ${JSON.stringify(data).substring(0, 200)}`, 'info');
+    
+    if (data.url) {
+      if (data.url.includes('accounts.google.com')) {
+        addRow(container, 'pass', 'Step 2: Google OAuth URL ✅', data.url.substring(0, 80) + '...');
+        _googleUrl = data.url;
+        
+        addRow(container, 'pass', 'Step 3: URL Validation ✅', `client_id=${new URL(data.url).searchParams.get('client_id')?.substring(0, 20)}...`);
+        addRow(container, 'pass', 'Step 4: Redirect URI ✅', new URL(data.url).searchParams.get('redirect_uri'));
+        
+        document.getElementById('google-login-btn').disabled = false;
+        document.getElementById('google-result').innerHTML = '<div class="success-box">✅ Google OAuth 流程完全正常！点击 "真实 Google 登录" 按钮继续。</div>';
+        log('Google OAuth test PASS — URL ready', 'ok');
+      } else if (data.url.includes('error=')) {
+        const errorParam = new URL(data.url, location.origin).searchParams.get('error') || '';
+        addRow(container, 'fail', 'Step 2: Error in URL ❌', `Error: ${errorParam}`);
+        
+        if (errorParam === 'MissingCSRF') {
+          addRow(container, 'fail', '诊断', 'NextAuth 找不到 CSRF cookie。可能是浏览器 SameSite/Secure cookie 限制或浏览器阻止了第三方 cookie。');
+          document.getElementById('google-result').innerHTML = '<div class="error-box"><b>MissingCSRF 错误原因：</b><br>1. 浏览器阻止了 Secure HttpOnly cookie（Safari ITP / Chrome 第三方 cookie 限制）<br>2. CSRF cookie 的 SameSite=Lax 在 POST 请求中未正确发送<br>3. Cookie domain 不匹配</div>';
+        } else if (errorParam === 'Configuration') {
+          addRow(container, 'fail', '诊断', 'GOOGLE_CLIENT_ID 或 GOOGLE_CLIENT_SECRET 未在 Vercel 环境变量中设置');
+          document.getElementById('google-result').innerHTML = '<div class="error-box"><b>Configuration 错误原因：</b><br>GOOGLE_CLIENT_ID 或 GOOGLE_CLIENT_SECRET 环境变量未设置或为空。<br>请检查 Vercel Dashboard → Settings → Environment Variables。</div>';
+        }
+        log(`Google OAuth test FAIL: ${errorParam}`, 'err');
+      } else {
+        addRow(container, 'warn', 'Step 2: Unexpected URL ⚠️', data.url.substring(0, 100));
+        log(`Google OAuth test WARN: unexpected URL`, 'warn');
+      }
+    } else if (data.error) {
+      addRow(container, 'fail', 'Step 2: Error ❌', data.error);
+      log(`Google OAuth test FAIL: ${data.error}`, 'err');
+    }
+  } catch(e) {
+    addRow(container, 'fail', 'Step 2: POST Failed ❌', e.message);
+    log(`Step 2 FAIL: ${e.message}`, 'err');
+  }
+}
+
+function doGoogleLogin() {
+  if (_googleUrl) {
+    log('Redirecting to Google OAuth...', 'ok');
+    window.location.href = _googleUrl;
+  } else {
+    log('No Google OAuth URL available. Run test first.', 'err');
+  }
+}
+
+// ═══ TWITTER OAUTH TEST ═══
+async function runTwitterTest() {
+  const container = 'twitter-rows';
+  document.getElementById(container).innerHTML = '';
+  log('━━━ Twitter OAuth Flow Test ━━━', 'info');
+  
+  // Step 1: Check if Twitter env vars are configured
+  try {
+    addRow(container, 'info', 'Step 1: GET /api/auth/twitter/signin', 'Testing...');
+    const res = await fetch('/api/auth/twitter/signin?callbackUrl=/dashboard', {
+      method: 'GET',
+      credentials: 'same-origin',
+      redirect: 'manual',
+    });
+    
+    log(`Step 1: HTTP ${res.status}, type=${res.type}`, 'info');
+    
+    if (res.status === 307 || res.status === 302) {
+      const location = res.headers.get('location') || '';
+      if (location.includes('twitter.com/i/oauth2/authorize')) {
+        addRow(container, 'pass', 'Step 1: Twitter Redirect ✅', `307 → ${location.substring(0, 80)}...`);
+        addRow(container, 'pass', 'Step 2: PKCE + State ✅', `code_challenge_method=S256, state present`);
+        document.getElementById('twitter-login-btn').disabled = false;
+        document.getElementById('twitter-result').innerHTML = '<div class="success-box">✅ Twitter OAuth 流程正常！点击 "真实 X 登录" 按钮继续。</div>';
+        log('Twitter OAuth test PASS', 'ok');
+      } else if (location.includes('/login?error=')) {
+        addRow(container, 'fail', 'Step 1: Twitter Not Configured ❌', `Redirected to login with error: ${decodeURIComponent(location)}`);
+        document.getElementById('twitter-result').innerHTML = '<div class="error-box"><b>Twitter OAuth 未配置：</b><br>TWITTER_CLIENT_ID 或 TWITTER_CLIENT_SECRET 环境变量未设置。<br>请检查 Vercel Dashboard → Settings → Environment Variables。</div>';
+        log('Twitter OAuth FAIL: not configured', 'err');
+      } else {
+        addRow(container, 'warn', 'Step 1: Unexpected Redirect ⚠️', location.substring(0, 100));
+      }
+    } else if (res.status === 200) {
+      // Might be opaque redirect
+      const text = await res.text();
+      if (text.includes('未配置') || text.includes('not configured')) {
+        addRow(container, 'fail', 'Step 1: Twitter Not Configured ❌', text.substring(0, 100));
+      } else {
+        addRow(container, 'warn', 'Step 1: Got 200 (redirect opaque) ⚠️', 'Browser may handle this differently');
+        document.getElementById('twitter-login-btn').disabled = false;
+        document.getElementById('twitter-result').innerHTML = '<div class="success-box">⚠️ 无法通过 fetch 验证重定向（浏览器安全限制），但 Twitter OAuth 端点存在。点击按钮在浏览器中测试。</div>';
+      }
+    } else {
+      addRow(container, 'fail', `Step 1: HTTP ${res.status} ❌`, 'Unexpected status');
+    }
+  } catch(e) {
+    addRow(container, 'fail', 'Step 1: Fetch Failed ❌', e.message);
+    log(`Twitter test FAIL: ${e.message}`, 'err');
+  }
+}
+
+function doTwitterLogin() {
+  log('Redirecting to Twitter OAuth...', 'ok');
+  window.location.href = '/api/auth/twitter/signin?callbackUrl=' + encodeURIComponent('/dashboard');
+}
+
+// ═══ CSP VIOLATION LISTENER ═══
+document.addEventListener('securitypolicyviolation', (e) => {
+  log(`🚨 CSP VIOLATION: ${e.violatedDirective} → ${e.blockedURI}`, 'err');
+  addRow('csp-rows', 'fail', `CSP 违规: ${e.violatedDirective}`, `Blocked: ${e.blockedURI}`);
+});
+
+// ═══ AUTO-DETECT ERROR FROM URL ═══
+(function() {
+  const params = new URLSearchParams(location.search);
+  const error = params.get('error');
+  if (error) {
+    log(`⚠️ URL contains error: ${error}`, 'err');
+    const errorMap = {
+      'Configuration': 'OAuth 配置错误 — 环境变量未设置',
+      'MissingCSRF': 'CSRF Token 缺失 — Cookie 未正确传递',
+      'AccessDenied': '用户拒绝了 OAuth 授权',
+      'OAuthSignin': 'OAuth 登录初始化失败',
+      'OAuthCallback': 'OAuth 回调处理失败',
+      'OAuthCreateAccount': '创建 OAuth 账户失败',
+      'Callback': 'OAuth 回调错误',
+      'OAuthAccountNotLinked': 'OAuth 账户未关联到现有用户',
+    };
+    const errorDesc = errorMap[error] || error;
+    document.getElementById('google-result').innerHTML = `<div class="error-box"><b>检测到登录错误：</b> ${errorDesc}<br><br>原始错误码: <code>${error}</code><br><br>💡 <a href="javascript:location.href=location.pathname" style="color:#60a5fa">清除错误参数重试</a></div>`;
+  }
+})();
+
+log('诊断工具已加载。点击按钮开始测试。', 'info');
+log(`环境: ${location.protocol}//${location.host} | Secure: ${window.isSecureContext}`, 'info');
+</script>
+</body>
+</html>

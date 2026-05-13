@@ -5,33 +5,50 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 /**
- * NextAuth route handler with Twitter redirect support.
+ * NextAuth route handler with Google + Twitter custom callback support.
  *
- * Google OAuth: handled entirely by NextAuth (signIn("google") → POST → Google → callback → session)
- * Twitter OAuth: custom flow at /api/auth/twitter/signin, intercepted here for redirect
+ * Google OAuth: Custom flow — /api/auth/callback/google → /api/auth/google/callback
+ *   (NextAuth's built-in Google callback throws Configuration errors on Vercel cold starts)
+ *
+ * Twitter OAuth: Custom flow at /api/auth/twitter/signin + /api/auth/twitter/callback
+ *   (Fully custom PKCE implementation bypassing Firebase)
+ *
+ * All other NextAuth routes (CSRF, session, providers, etc.): Delegated to NextAuth handlers
  */
 
 export async function GET(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if this is a /api/auth/signin/:provider request
-  const signinMatch = pathname.match(/^\/api\/auth\/signin\/(.+)$/);
+  // ─── Intercept Google callback ───
+  // NextAuth's built-in callback handler throws errors on Vercel.
+  // Redirect to our custom handler instead.
+  if (pathname.match(/^\/api\/auth\/callback\/google$/)) {
+    const customCallbackUrl = new URL('/api/auth/google/callback', request.url);
+    // Preserve query params (code, state, error, etc.)
+    request.nextUrl.searchParams.forEach((value, key) => {
+      customCallbackUrl.searchParams.set(key, value);
+    });
+    return NextResponse.redirect(customCallbackUrl);
+  }
 
+  // ─── Intercept Twitter/X signin ───
+  const signinMatch = pathname.match(/^\/api\/auth\/signin\/(.+)$/);
   if (signinMatch) {
     const providerId = signinMatch[1];
-
     if (providerId === "twitter" || providerId === "x") {
-      // Twitter OAuth is handled by our custom /api/auth/twitter/signin
       return NextResponse.redirect(new URL('/api/auth/twitter/signin', request.url));
     }
   }
 
-  // Delegate all other requests (including Google) to NextAuth
+  // ─── Delegate all other requests to NextAuth ───
   try {
     return await handlers.GET(request);
   } catch (err: any) {
-    console.error('[NextAuth] GET handler error:', err.message);
-    return NextResponse.redirect(new URL('/login?error=Configuration', request.url));
+    console.error('[NextAuth] GET handler error:', err.message, err.stack);
+    // Return the actual error message for debugging, not a generic "Configuration"
+    const errorUrl = new URL('/login', request.url);
+    errorUrl.searchParams.set("error", `NextAuth Error: ${err.message?.substring(0, 60) || 'Unknown'}`);
+    return NextResponse.redirect(errorUrl);
   }
 }
 
@@ -39,8 +56,10 @@ export async function POST(request: NextRequest) {
   try {
     return await handlers.POST(request);
   } catch (err: any) {
-    console.error('[NextAuth] POST handler error:', err.message);
-    return NextResponse.redirect(new URL('/login?error=Configuration', request.url));
+    console.error('[NextAuth] POST handler error:', err.message, err.stack);
+    const errorUrl = new URL('/login', request.url);
+    errorUrl.searchParams.set("error", `NextAuth Error: ${err.message?.substring(0, 60) || 'Unknown'}`);
+    return NextResponse.redirect(errorUrl);
   }
 }
 
