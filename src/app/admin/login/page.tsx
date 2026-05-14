@@ -60,11 +60,11 @@ export default function AdminLoginPage({ error: initialError }: Props) {
       if (data.success) {
         router.push("/admin");
       } else {
-        setError(data.error || "�û������������");
+        setError(data.error || "用户名或密码错误");
       }
     } catch (err) {
       console.error("[Admin Login] Error:", err);
-      setError("����ʧ�ܣ�������");
+      setError("登录失败，请重试");
     } finally {
       setIsLoading(false);
     }
@@ -160,7 +160,7 @@ export default function AdminLoginPage({ error: initialError }: Props) {
               margin: 0,
             }}
           >
-            ����Ա��¼ - ��ȫ���ʿ���ϵͳ
+            管理员登录 - 安全卫士系统
           </p>
         </div>
 
@@ -206,7 +206,7 @@ export default function AdminLoginPage({ error: initialError }: Props) {
               }}
             >
               <User size={12} />
-              ����Ա�˺�
+              管理员账号
             </label>
             <input
               type="text"
@@ -251,7 +251,7 @@ export default function AdminLoginPage({ error: initialError }: Props) {
               }}
             >
               <Lock size={12} />
-              ����
+              密码
             </label>
             <div style={{ position: "relative" }}>
               <input
@@ -338,12 +338,12 @@ export default function AdminLoginPage({ error: initialError }: Props) {
             {isLoading ? (
               <>
                 <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
-                ��¼��...
+                登录中...
               </>
             ) : (
               <>
                 <Shield size={18} />
-                ���������̨
+                登录后台
               </>
             )}
           </button>
@@ -365,7 +365,7 @@ export default function AdminLoginPage({ error: initialError }: Props) {
               margin: 0,
             }}
           >
-            ʹ�ù���Ա�˺ŵ�¼�Է��ʺ�̨ϵͳ
+            使用管理员账号登录以访问后台系统
           </p>
         </div>
       </div>
