@@ -2,11 +2,19 @@
  * Admin Layout — Server Component with Auth Guard
  *
  * Architecture:
- * - This is a SERVER COMPONENT → can use auth() to check session
- * - Redirects to /login if not authenticated
- * - Renders AdminUI (client component) with auth context
+ * - This is a SERVER COMPONENT → checks admin_session cookie via getAdminSession()
+ * - Falls back to NextAuth for database admin users
+ * - IMPORTANT: /admin/login is handled by middleware bypass — this layout
+ *   will NOT wrap /admin/login because the page is served from src/app/admin/login/
+ *   (outside the (admin) route group)
+ *
+ * For authenticated admin pages, this layout:
+ * 1. Verifies admin_session cookie
+ * 2. Falls back to NextAuth session
+ * 3. Renders the admin dashboard shell
  */
 import { auth } from "@/lib/auth/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 import AdminSidebar from "@/components/layout/admin-sidebar";
 import { CommandPalette } from "@/components/admin";
@@ -18,12 +26,28 @@ export default async function AdminLayout({
 }: {
   children: ReactNode;
 }) {
-  // Server-side auth check — redirects to login if not authenticated
-  const session = await auth();
+  // Server-side auth check — check admin_session cookie FIRST
+  const adminSession = await getAdminSession();
 
-  if (!session?.user) {
-    redirect("/login?callbackUrl=/admin");
+  // Fallback to NextAuth session (for database admin users logged in via OAuth/NextAuth)
+  let nextAuthSession = null;
+  if (!adminSession) {
+    try {
+      nextAuthSession = await auth();
+    } catch {
+      // auth() may fail in edge cases — continue with admin_session only
+    }
   }
+
+  if (!adminSession && !nextAuthSession?.user) {
+    // Redirect to admin login (NOT the main /login page)
+    redirect("/admin/login");
+  }
+
+  // Determine display info
+  const displayName = adminSession
+    ? (adminSession.username || adminSession.email || "Admin")
+    : (nextAuthSession?.user?.name || nextAuthSession?.user?.email || "Admin");
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,7 +66,7 @@ export default async function AdminLayout({
                 className="flex items-center gap-2 text-foreground-subtle hover:text-foreground-muted transition-colors group"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9-3-9" />
                 </svg>
                 <span className="text-[13px] font-medium hidden sm:inline">admin.lokfeel.com</span>
               </a>
@@ -71,7 +95,7 @@ export default async function AdminLayout({
                 className="flex items-center gap-2 p-1 rounded-xl hover:bg-background-tertiary/60 transition-all duration-200 ml-0.5"
               >
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-[11px] font-bold shadow-sm shadow-primary/20">
-                  {(session.user?.name?.[0] || session.user?.email?.[0] || "A").toUpperCase()}
+                  {(displayName?.[0] || "A").toUpperCase()}
                 </div>
               </a>
             </div>
