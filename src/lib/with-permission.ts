@@ -258,7 +258,10 @@ export function withPermission(
 
       // Admin routes: check admin_session cookie FIRST
       if (isAdminRoute) {
+        const cookieHeader = req.headers.get("cookie");
+        console.log(`[RBAC-DEBUG] ${req.method} ${req.nextUrl.pathname} | cookie present: ${!!cookieHeader} | admin_session in cookie: ${cookieHeader?.includes("admin_session")}`);
         const adminSession = parseAdminSession(req);
+        console.log(`[RBAC-DEBUG] parseAdminSession result:`, adminSession ? { username: adminSession.username, role: adminSession.role } : "null");
         if (adminSession) {
           userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
           userRole = adminSession.role;
