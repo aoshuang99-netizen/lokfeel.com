@@ -1,9 +1,11 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { success, badRequest, unauthorized, serverError } from '@/lib/api-response'
-import { requireAdminSession } from '@/lib/admin-auth'
+import { withPermission } from '@/lib/with-permission'
 import { hash } from 'bcryptjs'
 import { toJson } from '@/lib/json-helpers'
+
+export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/admin/generate-test-users
@@ -118,14 +120,8 @@ function generateBio(gender: string): string {
     .replace('{interest2}', interest2.toLowerCase())
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('user.create', { dangerous: true })(async (request: NextRequest) => {
   try {
-    // C4 FIX: Require admin authentication
-    const session = await requireAdminSession()
-    if (!session) {
-      return unauthorized('Admin session required')
-    }
-
     const body = await request.json()
     const count = Math.min(Math.max(body.count || 1, 1), 200)
     const type = body.type || 'new'
@@ -235,20 +231,14 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     return serverError(`Test user generation failed: ${message}`)
   }
-}
+});
 
 /**
  * DELETE /api/admin/generate-test-users
  * 清理所有测试用户
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withPermission('user.delete', { dangerous: true })(async (request: NextRequest) => {
   try {
-    // C4 FIX: Require admin authentication
-    const session = await requireAdminSession()
-    if (!session) {
-      return unauthorized('Admin session required')
-    }
-
     const body = await request.json()
     const prefix = body.prefix || 'e2e-test'
 
@@ -281,4 +271,4 @@ export async function DELETE(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     return serverError(`Test user cleanup failed: ${message}`)
   }
-}
+});

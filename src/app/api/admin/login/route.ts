@@ -3,9 +3,9 @@ import { db } from "@/lib/db";
 import { compare } from "bcryptjs";
 import { createAdminSession } from "@/lib/admin-auth";
 
-// Admin credentials available in all environments (controlled by ADMIN_CREDENTIALS_ENABLED)
-// In production, these are fallback credentials; prefer database admin users.
-const ADMIN_CREDENTIALS_ENABLED = process.env.ADMIN_CREDENTIALS_ENABLED !== "false";
+// Admin credentials disabled by default in production for security.
+// Enable explicitly with ADMIN_CREDENTIALS_ENABLED=true in Vercel env vars.
+const ADMIN_CREDENTIALS_ENABLED = process.env.ADMIN_CREDENTIALS_ENABLED === "true";
 const DEMO_ADMINS = ADMIN_CREDENTIALS_ENABLED ? [
   { username: "admin", password: "Admin@2026!", role: "SUPER_ADMIN" },
   { username: "moderator", password: "Mod@2026!", role: "MODERATOR" },

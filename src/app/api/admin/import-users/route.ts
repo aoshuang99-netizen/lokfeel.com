@@ -1,12 +1,13 @@
 /**
  * Admin Import Users API
- * 
+ *
  * 批量导入数字用户到数据库
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { toJson } from "@/lib/json-helpers";
+import { withPermission } from "@/lib/with-permission";
 
 // C-03 fix: Use lazy Proxy `db` instead of module-level `getDb()`
 import { hash } from "bcryptjs";
@@ -184,16 +185,8 @@ async function createBotUser(
  * POST /api/admin/import-users
  * 批量导入数字用户
  */
-export async function POST(request: NextRequest) {
+export const POST = withPermission("user.create", { dangerous: true })(async (request: NextRequest) => {
   try {
-    // 检查认证
-    const adminKey = request.headers.get("x-admin-key");
-    const validAdminKey = process.env.ADMIN_API_KEY;
-    
-    if (adminKey !== validAdminKey) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await request.json();
     const { users, batchSize = 100 } = body;
 
@@ -259,4 +252,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -1,31 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { withPermission } from "@/lib/with-permission";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
 // Initialize Stripe only if secret key is available
-const stripe = process.env.STRIPE_SECRET_KEY 
+const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
 // POST /api/admin/subscriptions/[id]/refund - Process refund for a subscription
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withPermission("payment.refund", { dangerous: true })(async (request: NextRequest, context: any) => {
   try {
-    const session = await auth();
-    
-    // Check admin permission
-    if (!session?.user || (session.user as any)?.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     if (!stripe) {
       return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
     }
 
-    const { id } = await params;
+    const { id } = await context.params;
     const body = await request.json();
     const { amount, reason, type } = body;
 
@@ -67,7 +57,7 @@ export async function POST(
 
     // Get the latest invoice
     const latestInvoice = stripeSubscription.latest_invoice as any;
-    
+
     if (!latestInvoice || !latestInvoice.payment_intent) {
       return NextResponse.json({ error: "No payment found to refund" }, { status: 400 });
     }
@@ -101,27 +91,7 @@ export async function POST(
       },
     });
 
-    // Log the refund action using AdminAudit model
-    await prisma.adminAudit.create({
-      data: {
-        actorId: (session.user as any)?.id || "",
-        category: "PAYMENT" as any,
-        action: "subscription.refund",
-        targetType: "Subscription",
-        targetId: id,
-        details: JSON.stringify({
-          refundId: refund.id,
-          amount: refundAmount / 100,
-          reason: reason || "requested_by_customer",
-          stripeSubscriptionId: subscription.stripeSubscriptionId,
-          userId: subscription.userId,
-          userEmail: subscription.user?.email,
-        }),
-        reason: reason || "Refund processed",
-        ipAddress: request.headers.get("x-forwarded-for") || undefined,
-        userAgent: request.headers.get("user-agent") || undefined,
-      },
-    });
+    // Note: Audit logging is handled by withPermission({ dangerous: true }) middleware
 
     return NextResponse.json({
       success: true,
@@ -137,4 +107,4 @@ export async function POST(
     console.error("Refund error:", error);
     return NextResponse.json({ error: "Failed to process refund" }, { status: 500 });
   }
-}
+});

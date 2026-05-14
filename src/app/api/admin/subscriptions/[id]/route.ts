@@ -1,27 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { withPermission } from "@/lib/with-permission";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
 // Initialize Stripe only if secret key is available
-const stripe = process.env.STRIPE_SECRET_KEY 
+const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
 // GET /api/admin/subscriptions/[id] - Get subscription details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withPermission("payment.view")(async (request: NextRequest, context: any) => {
   try {
-    const session = await auth();
-    
-    // Check admin permission
-    if (!session?.user || (session.user as any)?.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const { id } = await context.params;
 
     // Get subscription from database
     const subscription = await prisma.subscription.findUnique({
@@ -46,28 +36,18 @@ export async function GET(
     console.error("Get subscription error:", error);
     return NextResponse.json({ error: "Failed to get subscription" }, { status: 500 });
   }
-}
+});
 
-// POST /api/admin/subscriptions/[id]/refund - Process refund
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// POST /api/admin/subscriptions/[id] - Process refund
+export const POST = withPermission("payment.refund", { dangerous: true })(async (request: NextRequest, context: any) => {
   try {
-    const session = await auth();
-    
-    // Check admin permission
-    if (!session?.user || (session.user as any)?.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { id } = await context.params;
+    const body = await request.json();
+    const { amount, reason } = body;
 
     if (!stripe) {
       return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
     }
-
-    const { id } = await params;
-    const body = await request.json();
-    const { amount, reason } = body;
 
     // Get subscription from database
     const subscription = await prisma.subscription.findUnique({
@@ -93,14 +73,14 @@ export async function POST(
 
     // Get the latest invoice
     const latestInvoice = stripeSubscription.latest_invoice as any;
-    
+
     if (!latestInvoice || !latestInvoice.payment_intent) {
       return NextResponse.json({ error: "No payment found to refund" }, { status: 400 });
     }
 
     // Calculate refund amount (in cents)
-    const refundAmount = amount 
-      ? Math.round(amount * 100) 
+    const refundAmount = amount
+      ? Math.round(amount * 100)
       : latestInvoice.amount_paid;
 
     // Create refund in Stripe
@@ -119,26 +99,6 @@ export async function POST(
       },
     });
 
-    // Log the refund action using AdminAudit model
-    await prisma.adminAudit.create({
-      data: {
-        actorId: (session.user as any)?.id || "",
-        category: "PAYMENT" as any,
-        action: "subscription.refund",
-        targetType: "Subscription",
-        targetId: id,
-        details: JSON.stringify({
-          refundId: refund.id,
-          amount: refundAmount,
-          reason: reason || "requested_by_customer",
-          stripeSubscriptionId: subscription.stripeSubscriptionId,
-        }),
-        reason: reason || "Refund processed",
-        ipAddress: request.headers.get("x-forwarded-for") || undefined,
-        userAgent: request.headers.get("user-agent") || undefined,
-      },
-    });
-
     return NextResponse.json({
       success: true,
       refund: {
@@ -152,4 +112,4 @@ export async function POST(
     console.error("Refund error:", error);
     return NextResponse.json({ error: "Failed to process refund" }, { status: 500 });
   }
-}
+});

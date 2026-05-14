@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { success, unauthorized, serverError } from '@/lib/api-response'
-import { requireAdminSession } from '@/lib/admin-auth'
+import { withPermission } from '@/lib/with-permission'
+
+export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/admin/upgrade-avatars
@@ -20,14 +22,8 @@ const PRAVATAR_BASE = 'https://i.pravatar.cc'
 const TPDNE_URL = 'https://thispersondoesnotexist.com'
 const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission('user.edit')(async (request: NextRequest) => {
   try {
-    // C4 FIX: Require admin authentication
-    const session = await requireAdminSession()
-    if (!session) {
-      return unauthorized('Admin session required')
-    }
-
     const body = await request.json()
     const mode = body.mode || 'url' // 'url' = fast URL swap, 'hd' = TPDNE data URL
     const batchSize = Math.min(body.batch || (mode === 'hd' ? 5 : 200), mode === 'hd' ? 10 : 500)
@@ -194,4 +190,4 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     return serverError(`Avatar upgrade failed: ${message}`)
   }
-}
+});
