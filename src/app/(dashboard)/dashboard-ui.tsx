@@ -13,11 +13,18 @@ interface DashboardLayoutProps {
 }
 
 // Routes that are ALWAYS accessible even with incomplete profile
+// NOTE: Core user features (chats, connections, notifications) should always
+// be accessible — blocking them creates a dead-end experience where users
+// can't use the app at all. Only lock truly premium/advanced features.
 const ALLOWED_ROUTES_WHEN_INCOMPLETE = [
   "/dashboard/onboarding",
   "/dashboard/profile",
   "/dashboard/settings",
   "/dashboard/explore",
+  "/dashboard/chats",
+  "/dashboard/connections",
+  "/dashboard/notifications",
+  "/dashboard/subscription",
 ];
 
 function isAllowedWhenIncomplete(path: string): boolean {
@@ -59,16 +66,26 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
         const profile = data.profile;
 
         const onboardingStep = profile?.onboardingStep || 0;
-        const isOnboardingComplete = onboardingStep >= 9 || profile?.profileStatus === "ACTIVE";
+        // Onboarding is complete if step >= 9, or profileStatus is APPROVED/ACTIVE
+        // NOTE: Onboarding sets profileStatus to "APPROVED" (not "ACTIVE"),
+        // so we must check both values.
+        const isOnboardingComplete = onboardingStep >= 9
+          || profile?.profileStatus === "ACTIVE"
+          || profile?.profileStatus === "APPROVED";
 
-        // Blueprint check
-        const needsBlueprint = !profile?.attachmentStyle && !profile?.relationshipGoal;
+        // Blueprint check — only flag if onboarding is NOT complete
+        // Once onboarding finishes, these fields are guaranteed populated
+        const needsBlueprint = !isOnboardingComplete
+          && !profile?.attachmentStyle
+          && !profile?.relationshipGoal;
 
-        // Profile fields check
-        const needsProfile =
-          !profile?.avatar || !profile?.displayName || !profile?.age || !profile?.gender || !profile?.city;
+        // Profile fields check — only flag if onboarding is NOT complete
+        // Once onboarding finishes (step >= 9), the user has provided all
+        // required data. Don't re-lock them over optional fields like city.
+        const needsProfile = !isOnboardingComplete
+          && (!profile?.avatar || !profile?.displayName || !profile?.age || !profile?.gender);
 
-        const complete = isOnboardingComplete && !needsBlueprint && !needsProfile;
+        const complete = isOnboardingComplete;
 
         setProfileCheck({
           loading: false,
@@ -85,18 +102,27 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
   }, []);
 
   // Auto-redirect incomplete users away from locked pages
+  // Instead of forcing to explore, redirect to onboarding/profile
   useEffect(() => {
     if (profileCheck.loading) return;
     if (profileCheck.complete) return;
     if (isAllowedWhenIncomplete(pathname)) return;
 
-    // User is incomplete and on a locked page → redirect to explore
-    router.replace("/dashboard/explore");
+    // User is incomplete and on a locked page → redirect to profile completion
+    const target = profileCheck.needsProfile
+      ? "/dashboard/onboarding"
+      : "/dashboard/profile";
+    router.replace(target);
   }, [profileCheck, pathname, router]);
 
   // Determine what to show
   const isLocked = !profileCheck.loading && !profileCheck.complete && !isAllowedWhenIncomplete(pathname);
   const isDashboard = pathname === "/dashboard" || pathname === "/dashboard/" || pathname === "/dashboard/explore" || pathname === "/dashboard/explore/";
+
+  // Determine where to direct the user for profile completion
+  const completionTarget = profileCheck.needsProfile
+    ? "/dashboard/onboarding"
+    : "/dashboard/profile";
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
@@ -134,12 +160,13 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
                 </h2>
                 <p className="text-sm text-foreground-muted mb-6 leading-relaxed">
                   You need to finish your profile before accessing this feature.
+                  Complete your five-dimension card to unlock all features.
                 </p>
                 <Link
-                  href="/dashboard/explore"
+                  href={completionTarget}
                   className="btn-primary w-full flex items-center justify-center gap-2"
                 >
-                  Go to Explore
+                  Complete Profile
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
