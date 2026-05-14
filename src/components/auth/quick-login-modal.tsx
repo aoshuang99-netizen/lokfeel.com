@@ -3,6 +3,7 @@
 import React, { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, Heart, ArrowRight } from "lucide-react";
+import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 interface QuickLoginModalProps {
   isOpen: boolean;
@@ -37,7 +38,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
         }),
       });
 
-      const data = await res.json();
+      const data = await safeJsonParse<{ success?: boolean; error?: string; redirectUrl?: string }>(res);
 
       if (!res.ok || !data.success) {
         setError(data.error || "Invalid email or password");
@@ -47,7 +48,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
       // Session cookie set by server — navigate to dashboard
       window.location.href = data.redirectUrl || "/dashboard";
     } catch (e: any) {
-      setError("Network error. Please try again.");
+      setError(getAuthErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -56,17 +57,17 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
   const handleGoogleLogin = async () => {
     try {
       const csrfRes = await fetch("/api/auth/csrf", { headers: { "Content-Type": "application/json" } });
-      const { csrfToken } = await csrfRes.json();
+      const { csrfToken } = await safeJsonParse<{ csrfToken?: string }>(csrfRes);
       if (!csrfToken) { setError("Security check failed"); return; }
       const res = await fetch("/api/auth/signin/google", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Auth-Return-Redirect": "1" },
         body: new URLSearchParams({ csrfToken, callbackUrl: "/dashboard" }),
       });
-      const data = await res.json();
+      const data = await safeJsonParse<{ url?: string; error?: string }>(res);
       if (data.url) { window.location.href = data.url; }
       else { setError(data.error || "Google login failed"); }
-    } catch (e: any) { setError(e.message || "Network error"); }
+    } catch (e: any) { setError(getAuthErrorMessage(e)); }
   };
 
   const handleXLogin = () => {

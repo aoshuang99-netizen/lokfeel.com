@@ -7,6 +7,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Mail } from "lucide-react";
+import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 // ─── DATEASY DARK THEME CONSTANTS ───────────────────────
 const colors = {
@@ -52,7 +53,7 @@ export default function ForgotPasswordClient() {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const data = await safeJsonParse<{ message?: string; maskedEmail?: string; devResetUrl?: string }>(res);
 
       if (!res.ok) {
         setError(data.message || "Something went wrong");
@@ -68,7 +69,7 @@ export default function ForgotPasswordClient() {
       setStep("sent");
     } catch (err) {
       console.error("Forgot password error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      setError(getAuthErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

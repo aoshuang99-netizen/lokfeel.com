@@ -4,6 +4,7 @@ import React, { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Check, Mail, Lock, User as UserIcon, Cake, Heart, ArrowRight } from "lucide-react";
 import { GENDER_OPTIONS, SEXUALITY_OPTIONS } from "@/constants";
+import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 type Step = "email" | "social" | "basic" | "gender" | "verify" | "success";
 
@@ -87,7 +88,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
         sexuality,
       }),
     })
-      .then((res) => res.json())
+      .then((res) => safeJsonParse(res))
       .then((data) => {
         setLoading(false);
         if (data.error) {
@@ -96,9 +97,9 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
           setStep("verify");
         }
       })
-      .catch(() => {
+      .catch((err) => {
         setLoading(false);
-        setError("Something went wrong. Please try again.");
+        setError(getAuthErrorMessage(err));
       });
   };
 
@@ -123,7 +124,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
         sexuality,
       }),
     })
-      .then((res) => res.json())
+      .then((res) => safeJsonParse(res))
       .then((data) => {
         setLoading(false);
         if (data.error) {
@@ -135,9 +136,9 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
           }, 1500);
         }
       })
-      .catch(() => {
+      .catch((err) => {
         setLoading(false);
-        setError("Verification failed. Please try again.");
+        setError(getAuthErrorMessage(err));
       });
   };
 
@@ -158,16 +159,16 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
         sexuality,
       }),
     })
-      .then((res) => res.json())
+      .then((res) => safeJsonParse(res))
       .then((data) => {
         setLoading(false);
         if (data.error) {
           setError(data.error);
         }
       })
-      .catch(() => {
+      .catch((err) => {
         setLoading(false);
-        setError("Failed to resend code.");
+        setError(getAuthErrorMessage(err));
       });
   };
 
@@ -175,17 +176,17 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
   const handleGoogleLogin = async () => {
     try {
       const csrfRes = await fetch("/api/auth/csrf", { headers: { "Content-Type": "application/json" } });
-      const { csrfToken } = await csrfRes.json();
+      const { csrfToken } = await safeJsonParse<{ csrfToken?: string }>(csrfRes);
       if (!csrfToken) { setError("Security check failed"); return; }
       const res = await fetch("/api/auth/signin/google", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Auth-Return-Redirect": "1" },
         body: new URLSearchParams({ csrfToken, callbackUrl: "/dashboard" }),
       });
-      const data = await res.json();
+      const data = await safeJsonParse<{ url?: string; error?: string }>(res);
       if (data.url) { window.location.href = data.url; }
       else { setError(data.error || "Google login failed"); }
-    } catch (e: any) { setError(e.message || "Network error"); }
+    } catch (e: any) { setError(getAuthErrorMessage(e)); }
   };
 
   const handleXLogin = () => {

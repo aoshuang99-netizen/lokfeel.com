@@ -31,6 +31,7 @@ import { signIn } from "next-auth/react";
 
 // Google OAuth — uses direct redirect to bypass NextAuth PKCE issue
 import GoogleSignInButton from "@/components/auth/google-sign-in-button";
+import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 // X (Twitter) — Native OAuth 2.0 + PKCE redirect
 
@@ -220,7 +221,7 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await safeJsonParse(res);
       if (!res.ok) throw new Error(data.message || "Failed to send verification code");
 
       setSentInfo({
@@ -232,7 +233,7 @@ export default function RegisterPage() {
       setPhase("verify");
       startCountdown();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : getAuthErrorMessage(err));
     } finally {
       setIsSendingCode(false);
     }
@@ -249,12 +250,12 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, name: formData.name }),
       });
-      const data = await res.json();
+      const data = await safeJsonParse(res);
       if (!res.ok) throw new Error(data.message || "Failed to resend");
       if (data.devMode) setSentInfo(prev => ({ ...prev, code: data.code }));
       startCountdown();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : getAuthErrorMessage(err));
     } finally {
       setIsSendingCode(false);
     }
@@ -304,7 +305,7 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await safeJsonParse(res);
       if (!res.ok) throw new Error(data.message || "Registration failed");
 
       if (data.autoLoginToken) {
@@ -340,7 +341,7 @@ export default function RegisterPage() {
       clearRegState();
       router.push("/login?registered=true");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : getAuthErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

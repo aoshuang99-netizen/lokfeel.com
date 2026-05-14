@@ -62,11 +62,25 @@ export async function middleware(request: NextRequest) {
   const country = getCountry(request)
 
   // ─── 1. Region Block ───
-  if (BLOCKED_COUNTRIES.includes(country) && !isAllowedPath(pathname)) {
+  // Skip geo-block for API routes — they return JSON, not HTML.
+  // Redirecting API calls to /blocked (an HTML page) causes
+  // "Unexpected end of JSON input" on the client when fetch().json() runs.
+  // API routes have their own auth/permission checks.
+  const isApiRoute = pathname.startsWith('/api')
+
+  if (BLOCKED_COUNTRIES.includes(country) && !isAllowedPath(pathname) && !isApiRoute) {
     const blockedUrl = request.nextUrl.clone()
     blockedUrl.pathname = '/blocked'
     blockedUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(blockedUrl)
+  }
+
+  // For API routes from blocked regions, return a proper JSON error
+  if (BLOCKED_COUNTRIES.includes(country) && isApiRoute && !isAllowedPath(pathname)) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Service not available in your region', code: 'REGION_BLOCKED' }),
+      { status: 451, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 
   // ─── 2. Block debug/diagnostic endpoints from external access ───

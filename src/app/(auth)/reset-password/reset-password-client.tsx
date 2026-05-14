@@ -7,6 +7,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2, Lock, CheckCircle2 } from "lucide-react";
+import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 // ─── DATEASY DARK THEME CONSTANTS ───────────────────────
 const colors = {
@@ -87,7 +88,7 @@ export default function ResetPasswordClient({ token, email }: Props) {
         body: JSON.stringify({ token, email, password, confirmPassword }),
       });
 
-      const data = await res.json();
+      const data = await safeJsonParse<{ message?: string }>(res);
 
       if (!res.ok) {
         setError(data.message || "Failed to reset password");
@@ -98,7 +99,7 @@ export default function ResetPasswordClient({ token, email }: Props) {
       setStep("success");
     } catch (err) {
       console.error("Reset password error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      setError(getAuthErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

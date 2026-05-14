@@ -12,6 +12,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 // Use manual POST-based Google OAuth (bypasses next-auth/react signIn issues)
 import GoogleSignInButton from "@/components/auth/google-sign-in-button";
+import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 interface Props {
   callbackUrl: string;
@@ -62,7 +63,7 @@ export default function LoginInnerClient({
         }),
       });
 
-      const data = await res.json();
+      const data = await safeJsonParse<{ success?: boolean; error?: string; redirectUrl?: string }>(res);
 
       if (!res.ok || !data.success) {
         // Map server error messages to user-friendly text
@@ -76,7 +77,7 @@ export default function LoginInnerClient({
       window.location.href = data.redirectUrl || "/dashboard";
     } catch (err) {
       console.error("[Login] Error:", err);
-      setError("Network error. Please check your connection and try again.");
+      setError(getAuthErrorMessage(err));
       setIsLoading(false);
     }
   };

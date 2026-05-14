@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 function AutoLoginContent() {
   const searchParams = useSearchParams();
@@ -40,7 +41,7 @@ function AutoLoginContent() {
           return;
         }
 
-        const userData = await checkRes.json();
+        const userData = await safeJsonParse(checkRes);
 
         // User exists - we need to sign them in
         // Since we don't have the password, we'll use a special "magic-link" provider
@@ -72,7 +73,7 @@ function AutoLoginContent() {
       } catch (error) {
         console.error("Auto-login error:", error);
         setStatus("error");
-        setMessage("Something went wrong. Please log in manually.");
+        setMessage(getAuthErrorMessage(error));
         setTimeout(() => {
           router.push("/login");
         }, 2000);
