@@ -104,8 +104,13 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith('/api')) {
     const origin = request.headers.get('origin')
-    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
-      // Block requests from unauthorized origins
+    // Allow same-origin requests (Origin matches the request host)
+    // This ensures all Vercel deployment URLs work automatically
+    const requestHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+    const isSameOrigin = origin ? origin.endsWith(`://${requestHost}`) : true
+
+    if (origin && !ALLOWED_ORIGINS.includes(origin) && !isSameOrigin) {
+      // Block requests from unauthorized cross-origin sources
       return new NextResponse(
         JSON.stringify({ error: 'Forbidden: CORS policy' }),
         {
