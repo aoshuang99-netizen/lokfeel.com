@@ -13,6 +13,7 @@ import { forbidden, unauthorized, serverError } from "@/lib/api-response";
 import { ALL_PERMISSION_CODES, PERMISSIONS, type PermissionCode } from "@/lib/admin-permissions";
 import { ROLE_PERMISSIONS } from "@/lib/admin-roles";
 import { writeAudit } from "@/lib/admin-audit";
+import { getAdminSession } from "@/lib/admin-auth";
 
 // ============================================================================
 // Types
@@ -45,43 +46,13 @@ const CACHE_TTL = 60 * 1000; // 1 minute
 // admin_session Cookie 解析 — 支持 demo 管理员登录
 // ============================================================================
 
-interface AdminSessionData {
-  username: string;
-  role: string;
-  exp: number;
-}
-
 /**
  * 从 admin_session cookie 中解析出用户信息
- * Cookie format: base64url(payload).hmac_signature
+ * Uses getAdminSession() from admin-auth.ts for proper signature verification
  */
-function parseAdminSession(req: NextRequest): AdminSessionData | null {
-  const cookieHeader = req.headers.get("cookie");
-  if (!cookieHeader) return null;
-
-  const cookies = Object.fromEntries(
-    cookieHeader.split(";").map((c) => {
-      const [k, ...v] = c.trim().split("=");
-      return [k, decodeURIComponent(v.join("="))];
-    })
-  );
-
-  const adminSession = cookies["admin_session"];
-  if (!adminSession) return null;
-
+async function parseAdminSession(req: NextRequest) {
   try {
-    // Cookie format: base64url(payload).hmac_signature
-    // Extract just the payload (before the last dot)
-    const dotIndex = adminSession.lastIndexOf(".");
-    if (dotIndex === -1) return null;
-
-    const encodedPayload = adminSession.substring(0, dotIndex);
-    const data = JSON.parse(Buffer.from(encodedPayload, "base64url").toString()) as AdminSessionData;
-    if (!data.username && !data.email) return null;
-    if (!data.role) return null;
-    if (!data.exp) return null;
-    if (data.exp < Date.now()) return null; // 已过期
-    return data;
+    return await getAdminSession(req);
   } catch {
     return null;
   }
@@ -258,14 +229,11 @@ export function withPermission(
 
       // Admin routes: check admin_session cookie FIRST
       if (isAdminRoute) {
-        const cookieHeader = req.headers.get("cookie");
-        console.log(`[RBAC-DEBUG] ${req.method} ${req.nextUrl.pathname} | cookie present: ${!!cookieHeader} | admin_session in cookie: ${cookieHeader?.includes("admin_session")}`);
-        const adminSession = parseAdminSession(req);
-        console.log(`[RBAC-DEBUG] parseAdminSession result:`, adminSession ? { username: adminSession.username, role: adminSession.role } : "null");
+        const adminSession = await await parseAdminSession(req);
         if (adminSession) {
-          userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
+          userId = DEMO_ADMIN_SESSION_KEY + (adminSession.username || adminSession.email || "admin");
           userRole = adminSession.role;
-          session = { user: { id: userId, role: userRole, name: adminSession.username } };
+          session = { user: { id: userId, role: userRole, name: adminSession.username || adminSession.email } };
         }
       }
 
@@ -334,7 +302,7 @@ export function withPermission(
 
       // Method 3: admin_session cookie (demo admin / 非 NextAuth users) — for non-admin routes
       if (!userId) {
-        const adminSession = parseAdminSession(req);
+        const adminSession = await parseAdminSession(req);
         if (adminSession) {
           userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
           userRole = adminSession.role;
@@ -405,7 +373,7 @@ export function withAnyPermission(
       let userRole = (session?.user as any)?.role;
 
       if (isAdminRoute && !userId) {
-        const adminSession = parseAdminSession(req);
+        const adminSession = await parseAdminSession(req);
         if (adminSession) {
           userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
           userRole = adminSession.role;
@@ -428,7 +396,7 @@ export function withAnyPermission(
 
       // admin_session cookie fallback
       if (!userId) {
-        const adminSession = parseAdminSession(req);
+        const adminSession = await parseAdminSession(req);
         if (adminSession) {
           userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
           userRole = adminSession.role;
@@ -470,7 +438,7 @@ export function withAdmin(handler: HandlerFunction): Nextjs15RouteHandler {
     let userRole = (session?.user as any)?.role;
 
     if (isAdminRoute && !userId) {
-      const adminSession = parseAdminSession(req);
+      const adminSession = await parseAdminSession(req);
       if (adminSession) {
         userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
         userRole = adminSession.role;
@@ -493,7 +461,7 @@ export function withAdmin(handler: HandlerFunction): Nextjs15RouteHandler {
 
     // admin_session cookie fallback
     if (!userId) {
-      const adminSession = parseAdminSession(req);
+      const adminSession = await parseAdminSession(req);
       if (adminSession) {
         userId = DEMO_ADMIN_SESSION_KEY + adminSession.username;
         userRole = adminSession.role;
