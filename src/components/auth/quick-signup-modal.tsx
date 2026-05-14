@@ -88,7 +88,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
         sexuality,
       }),
     })
-      .then((res) => safeJsonParse(res))
+      .then((res) => safeJsonParse<{ error?: string; message?: string }>(res))
       .then((data) => {
         setLoading(false);
         if (data.error) {
@@ -124,7 +124,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
         sexuality,
       }),
     })
-      .then((res) => safeJsonParse(res))
+      .then((res) => safeJsonParse<{ error?: string; message?: string; autoLoginToken?: string }>(res))
       .then((data) => {
         setLoading(false);
         if (data.error) {
@@ -159,7 +159,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
         sexuality,
       }),
     })
-      .then((res) => safeJsonParse(res))
+      .then((res) => safeJsonParse<{ error?: string; message?: string }>(res))
       .then((data) => {
         setLoading(false);
         if (data.error) {

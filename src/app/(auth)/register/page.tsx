@@ -221,7 +221,7 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await safeJsonParse(res);
+      const data = await safeJsonParse<{ message?: string; maskedIdentifier?: string; devMode?: boolean; code?: string }>(res);
       if (!res.ok) throw new Error(data.message || "Failed to send verification code");
 
       setSentInfo({
@@ -250,7 +250,7 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, name: formData.name }),
       });
-      const data = await safeJsonParse(res);
+      const data = await safeJsonParse<{ message?: string; devMode?: boolean; code?: string }>(res);
       if (!res.ok) throw new Error(data.message || "Failed to resend");
       if (data.devMode) setSentInfo(prev => ({ ...prev, code: data.code }));
       startCountdown();
@@ -305,7 +305,7 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await safeJsonParse(res);
+      const data = await safeJsonParse<{ message?: string; autoLoginToken?: string; redirectTo?: string }>(res);
       if (!res.ok) throw new Error(data.message || "Registration failed");
 
       if (data.autoLoginToken) {
