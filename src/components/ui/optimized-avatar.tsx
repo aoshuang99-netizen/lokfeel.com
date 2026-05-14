@@ -32,6 +32,7 @@ interface OptimizedAvatarProps {
   alt?: string;
   seed?: string;
   gender?: string;
+  age?: number;
   size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   shape?: "circle" | "rounded" | "square";
   priority?: boolean;
@@ -174,6 +175,7 @@ export function OptimizedAvatar({
   alt = "User",
   seed,
   gender,
+  age,
   size = "md",
   shape = "circle",
   priority = false,
@@ -210,10 +212,10 @@ export function OptimizedAvatar({
         : undefined;
 
     return {
-      imageSrc: getRealPhotoAvatarUrl(fallbackSeed, normalizedGender, "preview"),
+      imageSrc: getRealPhotoAvatarUrl(fallbackSeed, normalizedGender, "preview", age),
       isFallback: true,
     };
-  }, [src, seed, alt, gender]);
+  }, [src, seed, alt, gender, age]);
 
   // Preload if priority
   useEffect(() => {
@@ -280,7 +282,7 @@ export function OptimizedAvatar({
             ref={imgRef}
             src={imageSrc}
             alt={alt}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
+            className={`w-full h-full object-cover object-top transition-opacity duration-300 ${
               loaded ? "opacity-100" : "opacity-0"
             }`}
             loading={priority ? "eager" : "lazy"}
@@ -328,16 +330,18 @@ interface CardAvatarProps {
   alt?: string;
   seed?: string;
   gender?: string;
+  age?: number;
   className?: string;
 }
 
-export function CardAvatar({ src, alt, seed, gender, className = "" }: CardAvatarProps) {
+export function CardAvatar({ src, alt, seed, gender, age, className = "" }: CardAvatarProps) {
   return (
     <OptimizedAvatar
       src={src}
       alt={alt}
       seed={seed}
       gender={gender}
+      age={age}
       size="full"
       shape="rounded"
       enableLightbox
@@ -355,6 +359,7 @@ interface ThumbnailAvatarProps {
   alt?: string;
   seed?: string;
   gender?: string;
+  age?: number;
   size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }
@@ -364,6 +369,7 @@ export function ThumbnailAvatar({
   alt,
   seed,
   gender,
+  age,
   size = "md",
   className = "",
 }: ThumbnailAvatarProps) {
@@ -373,6 +379,7 @@ export function ThumbnailAvatar({
       alt={alt}
       seed={seed}
       gender={gender}
+      age={age}
       size={size}
       shape="circle"
       className={className}

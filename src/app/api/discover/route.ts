@@ -198,6 +198,7 @@ export async function GET(request: NextRequest) {
         age: user.profile?.age || 25,
         avatar: user.profile?.avatar,
         avatarType: user.profile?.avatarType,
+        gender: user.profile?.gender,
         city: user.profile?.city,
         bio: user.profile?.bio,
         relationshipGoal: user.profile?.relationshipGoal,

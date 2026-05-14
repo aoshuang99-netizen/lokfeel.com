@@ -11,68 +11,116 @@
  */
 
 // ═══════════════════════════════════════════════════════════════
-// REAL PHOTO POOL — High-quality curated portrait URLs
-// NOTE: Unsplash URLs may be blocked in China/Huawei browsers.
-// We keep them as Tier-2 fallback but prioritize local fallbacks.
+// AGE-AWARE PHOTO POOLS
+// Photos categorized by approximate age range for better matching
 // ═══════════════════════════════════════════════════════════════
 
-/** Female portrait pool — Unsplash high-quality portraits */
-const FEMALE_PHOTOS = [
+type AgeRange = 'young' | 'mid' | 'mature';
+
+/** Female portrait pool — age-segmented for consistent look */
+const FEMALE_PHOTOS_YOUNG = [
+  // Ages ~18-25: youthful, fresh-faced portraits
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1463453091185-61582044d556?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1523264939339-c89f9dadde2e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1502323777036-f29e3972d82f?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1523264939339-c89f9dadde2e?w=600&h=800&fit=crop&crop=face',
 ];
 
-/** Male portrait pool — Unsplash high-quality portraits */
-const MALE_PHOTOS = [
+const FEMALE_PHOTOS_MID = [
+  // Ages ~26-35: professional, confident portraits
+  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1502323777036-f29e3972d82f?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?w=600&h=800&fit=crop&crop=face',
+];
+
+const FEMALE_PHOTOS_MATURE = [
+  // Ages ~36+: elegant, mature portraits
+  'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1463453091185-61582044d556?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=600&h=800&fit=crop&crop=face',
+];
+
+/** Male portrait pool — age-segmented for consistent look */
+const MALE_PHOTOS_YOUNG = [
+  // Ages ~18-25: youthful, clean-shaven portraits
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1502323777036-f29e3972d82f?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1523264939339-c89f9dadde2e?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?w=600&h=800&fit=crop&crop=face',
+];
+
+const MALE_PHOTOS_MID = [
+  // Ages ~26-35: professional, confident portraits
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1463453091185-61582044d556?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1502323777036-f29e3972d82f?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1523264939339-c89f9dadde2e?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=800&fit=crop&crop=face',
+];
+
+const MALE_PHOTOS_MATURE = [
+  // Ages ~36+: distinguished, mature portraits
+  'https://images.unsplash.com/photo-1463453091185-61582044d556?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&h=800&fit=crop&crop=face',
 ];
+
+/** Age-range lookup maps */
+const FEMALE_PHOTO_MAP: Record<AgeRange, string[]> = {
+  young: FEMALE_PHOTOS_YOUNG,
+  mid: FEMALE_PHOTOS_MID,
+  mature: FEMALE_PHOTOS_MATURE,
+};
+
+const MALE_PHOTO_MAP: Record<AgeRange, string[]> = {
+  young: MALE_PHOTOS_YOUNG,
+  mid: MALE_PHOTOS_MID,
+  mature: MALE_PHOTOS_MATURE,
+};
+
+/**
+ * Determine the age range bucket for photo selection.
+ * Ensures avatar photos match the displayed age on user cards.
+ */
+function getAgeRange(age?: number): AgeRange {
+  if (!age || age <= 0) return 'mid'; // Default to mid-range
+  if (age <= 25) return 'young';
+  if (age <= 35) return 'mid';
+  return 'mature';
+}
+
+/** @deprecated Use age-segmented pools instead. Kept for backward compatibility. */
+const FEMALE_PHOTOS = [...FEMALE_PHOTOS_YOUNG, ...FEMALE_PHOTOS_MID, ...FEMALE_PHOTOS_MATURE];
+
+/** @deprecated Use age-segmented pools instead. Kept for backward compatibility. */
+const MALE_PHOTOS = [...MALE_PHOTOS_YOUNG, ...MALE_PHOTOS_MID, ...MALE_PHOTOS_MATURE];
 
 /** Generic fallback pool — when gender is unknown */
 const ALL_PHOTOS = [...FEMALE_PHOTOS, ...MALE_PHOTOS];
@@ -188,28 +236,34 @@ function hashSeed(seed: string): number {
 }
 
 /**
- * Get a real photo avatar URL with gender awareness.
+ * Get a real photo avatar URL with gender and age awareness.
  * Uses curated Unsplash portrait pool for consistent, high-quality results.
+ * Age-aware: selects photos from age-appropriate pools to avoid mismatch
+ * between displayed age and photo appearance.
  *
  * @param seed - Deterministic seed (userId, name, etc.)
  * @param gender - 'female' | 'male' | undefined
  * @param size - 'thumb' | 'preview' | 'full' — controls resolution
+ * @param age - User's age for age-appropriate photo selection
  */
 export function getRealPhotoAvatarUrl(
   seed: string,
   gender?: 'female' | 'male' | string,
-  size: 'thumb' | 'preview' | 'full' = 'preview'
+  size: 'thumb' | 'preview' | 'full' = 'preview',
+  age?: number
 ): string {
   const hash = hashSeed(seed);
+  const ageRange = getAgeRange(age);
 
-  // Select pool based on gender
+  // Select pool based on gender AND age range
   let pool: string[];
   if (gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN') {
-    pool = FEMALE_PHOTOS;
+    pool = FEMALE_PHOTO_MAP[ageRange];
   } else if (gender === 'male' || gender === 'MALE' || gender === 'MAN') {
-    pool = MALE_PHOTOS;
+    pool = MALE_PHOTO_MAP[ageRange];
   } else {
-    pool = ALL_PHOTOS;
+    // Gender unknown — use mid-age pools combined
+    pool = [...FEMALE_PHOTO_MAP[ageRange], ...MALE_PHOTO_MAP[ageRange]];
   }
 
   const photoUrl = pool[hash % pool.length];
@@ -317,14 +371,14 @@ export function getOptimalAvatarUrl(baseUrl: string, displayWidth: number): stri
 /**
  * Handle image load error — replace with real photo fallback.
  * If all external URLs fail, generate a local data-URI SVG placeholder.
- * Usage: <img onError={(e) => handleAvatarError(e, userId, gender)} />
+ * Usage: <img onError={(e) => handleAvatarError(e, userId, gender, age)} />
  */
-export function handleAvatarError(e: React.SyntheticEvent<HTMLImageElement>, seed?: string, gender?: string) {
+export function handleAvatarError(e: React.SyntheticEvent<HTMLImageElement>, seed?: string, gender?: string, age?: number) {
   const img = e.currentTarget;
   const fallbackSeed = seed || img.alt || 'default';
 
   // Try real photo fallback (only if not already the fallback URL)
-  const fallbackUrl = getRealPhotoAvatarUrl(fallbackSeed, gender, 'preview');
+  const fallbackUrl = getRealPhotoAvatarUrl(fallbackSeed, gender, 'preview', age);
 
   if (img.src !== fallbackUrl && !img.src.endsWith(encodeURIComponent(fallbackUrl))) {
     img.src = fallbackUrl;

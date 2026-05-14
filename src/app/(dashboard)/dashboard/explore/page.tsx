@@ -39,6 +39,7 @@ interface DiscoverUser {
   age: number;
   avatar: string | null;
   avatarType?: string;
+  gender?: string;
   city?: string;
   bio?: string;
   matchScore: number;
@@ -215,17 +216,17 @@ function SwipeCard({
             // Always use real photo: user photo or gender-aware fallback
             const photoUrl = (kind === 'photo' && user.avatar && !isBrokenAvatarUrl(user.avatar))
               ? user.avatar
-              : getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+              : getRealPhotoAvatarUrl(user.id || user.name, user.gender, 'preview', user.age);
             return (
               <img
                 src={photoUrl}
                 alt={user.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
                 loading="lazy"
                 decoding="async"
                 onError={(e) => {
                   const img = e.currentTarget;
-                  const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+                  const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, user.gender, 'preview', user.age);
                   if (img.src !== fallbackUrl) {
                     img.src = fallbackUrl;
                   } else {

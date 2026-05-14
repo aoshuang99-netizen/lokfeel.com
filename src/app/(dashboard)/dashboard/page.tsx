@@ -49,6 +49,7 @@ interface DiscoverUser {
   age: number;
   avatar: string | null;
   avatarType?: string;
+  gender?: string;
   city?: string;
   bio?: string;
   matchScore: number;
@@ -75,8 +76,8 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
     >
       <Link href={`/dashboard/users/${user.id}`}>
         <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-background-secondary border border-card-border hover:border-primary/30 transition-all duration-300">
-          {/* Avatar Area — Real HD Photos */}
-          <div className="relative h-72 overflow-hidden bg-background-tertiary">
+          {/* Avatar Area — 3:4 portrait ratio for proper face display */}
+          <div className="relative aspect-[3/4] overflow-hidden bg-background-tertiary">
             {(() => {
               const kind = getAvatarKind(user.avatar);
               if (kind === 'emoji') {
@@ -90,21 +91,21 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
                   </div>
                 );
               }
-              // Use real photo: either user's photo or gender-aware fallback
+              // Use real photo: either user's photo or gender/age-aware fallback
               const photoUrl = kind === 'photo' && user.avatar
                 ? user.avatar
-                : getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+                : getRealPhotoAvatarUrl(user.id || user.name, user.gender, 'preview', user.age);
               return (
                 <img
                   src={photoUrl}
                   alt={user.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                   loading={index < 3 ? "eager" : "lazy"}
                   decoding="async"
                   onError={(e) => {
                     const img = e.currentTarget as HTMLImageElement;
                     // Tier-1: Try different Unsplash photo from pool
-                    const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, undefined, 'preview');
+                    const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, user.gender, 'preview', user.age);
                     if (img.src !== fallbackUrl) {
                       img.src = fallbackUrl;
                     } else {
@@ -335,7 +336,7 @@ export default function DashboardPage() {
         {discoverLoading ? (
           <div className="flex gap-4 overflow-hidden">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="w-[280px] flex-shrink-0 h-96 rounded-2xl bg-foreground-faint animate-pulse" />
+              <div key={i} className="w-[280px] flex-shrink-0 rounded-2xl bg-foreground-faint animate-pulse aspect-[3/4]" />
             ))}
           </div>
         ) : discoverUsers.length > 0 ? (
