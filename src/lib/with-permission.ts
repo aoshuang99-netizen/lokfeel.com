@@ -53,6 +53,7 @@ interface AdminSessionData {
 
 /**
  * 从 admin_session cookie 中解析出用户信息
+ * Cookie format: base64url(payload).hmac_signature
  */
 function parseAdminSession(req: NextRequest): AdminSessionData | null {
   const cookieHeader = req.headers.get("cookie");
@@ -69,8 +70,16 @@ function parseAdminSession(req: NextRequest): AdminSessionData | null {
   if (!adminSession) return null;
 
   try {
-    const data = JSON.parse(Buffer.from(adminSession, "base64").toString()) as AdminSessionData;
-    if (!data.username || !data.role || !data.exp) return null;
+    // Cookie format: base64url(payload).hmac_signature
+    // Extract just the payload (before the last dot)
+    const dotIndex = adminSession.lastIndexOf(".");
+    if (dotIndex === -1) return null;
+
+    const encodedPayload = adminSession.substring(0, dotIndex);
+    const data = JSON.parse(Buffer.from(encodedPayload, "base64url").toString()) as AdminSessionData;
+    if (!data.username && !data.email) return null;
+    if (!data.role) return null;
+    if (!data.exp) return null;
     if (data.exp < Date.now()) return null; // 已过期
     return data;
   } catch {
