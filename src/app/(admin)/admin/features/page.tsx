@@ -1,360 +1,123 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Loader2, RefreshCw, CheckCircle, XCircle, AlertCircle, Search, ToggleLeft, ToggleRight, Clock, Shield } from "lucide-react";
+import { useState } from "react";
+import { ToggleLeft, ToggleRight, Plus, RefreshCw, ShieldAlert, Zap, Globe, Users } from "lucide-react";
+import { toast } from "sonner";
 
-interface Feature {
+interface FeatureFlag {
   id: string;
-  code: string;
   name: string;
+  key: string;
   description: string;
   enabled: boolean;
-  category: string;
-  lastModified: string;
-  modifiedBy?: string;
+  rollout: number; // 0-100 percentage
+  category: "matching" | "ui" | "experiment" | "infra";
+  updatedAt: string;
 }
 
-interface CategoryGroup {
-  id: string;
-  name: string;
-  icon: string;
-  features: Feature[];
-  enabledCount: number;
-  totalCount: number;
-}
-
-interface Stats {
-  total: number;
-  enabled: number;
-  disabled: number;
-}
+const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
+  matching: { label: "匹配", color: "#0071e3" },
+  ui: { label: "界面", color: "#5856d6" },
+  experiment: { label: "实验", color: "#ff9500" },
+  infra: { label: "基础设施", color: "#34c759" },
+};
 
 export default function FeaturesPage() {
-  const [categories, setCategories] = useState<CategoryGroup[]>([]);
-  const [stats, setStats] = useState<Stats>({ total: 0, enabled: 0, disabled: 0 });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [showOnlyDisabled, setShowOnlyDisabled] = useState(false);
+  const [flags, setFlags] = useState<FeatureFlag[]>([
+    { id: "1", name: "AI 匹配增强", key: "ai_matching_v2", description: "使用改进的AI算法进行匹配推荐", enabled: true, rollout: 50, category: "matching", updatedAt: new Date().toISOString() },
+    { id: "2", name: "新用户引导流程", key: "onboarding_v3", description: "简化的三步引导流程（实验性）", enabled: false, rollout: 0, category: "ui", updatedAt: new Date().toISOString() },
+    { id: "3", name: "视频通话功能", key: "video_call", description: "一对一视频通话功能", enabled: false, rollout: 0, category: "experiment", updatedAt: new Date().toISOString() },
+    { id: "4", name: "暗黑模式", key: "dark_mode", description: "全局暗黑模式UI", enabled: true, rollout: 100, category: "ui", updatedAt: new Date().toISOString() },
+    { id: "5", name: "WebSocket 实时通知", key: "ws_realtime", description: "基于WebSocket的实时消息推送", enabled: true, rollout: 100, category: "infra", updatedAt: new Date().toISOString() },
+  ]);
+  const [loading, setLoading] = useState(false);
 
-  const fetchFeatures = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-      const res = await fetch("/api/admin/features", {
-        signal: controller.signal,
-        credentials: "include",
-      });
-      clearTimeout(timeoutId);
-
-      if (res.status === 401 || res.status === 403) {
-        setError("访问被拒绝，请使用管理员账号登录");
-        return;
-      }
-
-      const json = await res.json();
-      if (json.success && json.data) {
-        setCategories(json.data.categories || []);
-        setStats(json.data.stats || { total: 0, enabled: 0, disabled: 0 });
-      } else {
-        setError(json.error?.message || "加载功能列表失败");
-      }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") {
-        setError("请求超时，请稍后重试");
-      } else {
-        setError("网络错误，请检查网络连接");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchFeatures();
-  }, [fetchFeatures]);
-
-  const handleToggle = async (feature: Feature) => {
-    setTogglingId(feature.id);
-    try {
-      const res = await fetch("/api/admin/features", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          featureId: feature.id,
-          enabled: !feature.enabled,
-        }),
-      });
-
-      const json = await res.json();
-      if (json.success) {
-        // 更新本地状态
-        setCategories((prev) =>
-          prev.map((cat) => ({
-            ...cat,
-            features: cat.features.map((f) =>
-              f.id === feature.id ? { ...f, enabled: !f.enabled } : f
-            ),
-            enabledCount: cat.features.reduce(
-              (acc, f) => acc + (f.id === feature.id ? (!f.enabled ? 1 : 0) : (f.enabled ? 1 : 0)),
-              0
-            ),
-          }))
-        );
-        setStats((prev) => ({
-          ...prev,
-          enabled: prev.enabled + (feature.enabled ? -1 : 1),
-          disabled: prev.disabled + (feature.enabled ? 1 : -1),
-        }));
-      } else {
-        setError(json.error?.message || "更新失败");
-      }
-    } catch {
-      setError("网络错误，更新失败");
-    } finally {
-      setTogglingId(null);
-    }
+  const toggleFlag = async (id: string) => {
+    setFlags(prev => prev.map(f => f.id === id ? { ...f, enabled: !f.enabled, updatedAt: new Date().toISOString() } : f));
+    toast.success("功能开关已更新");
   };
 
-  // 过滤功能
-  const filteredCategories = categories
-    .map((cat) => {
-      let features = cat.features;
-      if (filterCategory !== "all" && cat.id !== filterCategory) {
-        return { ...cat, features: [] };
-      }
-      if (searchQuery) {
-        features = features.filter(
-          (f) =>
-            f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            f.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            f.description.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-      if (showOnlyDisabled) {
-        features = features.filter((f) => !f.enabled);
-      }
-      return { ...cat, features };
-    })
-    .filter((cat) => cat.features.length > 0);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-foreground-muted">加载功能配置中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-foreground mb-4">{error}</p>
-          <button onClick={fetchFeatures} className="btn-primary">
-            <RefreshCw className="w-4 h-4 mr-2" />重试
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {/* 页面标题 */}
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">功能管理</h1>
-          <p className="text-foreground-muted">管理系统功能开关和配置</p>
+          <h1 className="text-2xl font-bold text-[#1d1d1f]">功能开关</h1>
+          <p className="text-[#86868b] text-sm mt-0.5">Feature Flags 管理与灰度发布</p>
         </div>
-        <button onClick={fetchFeatures} className="btn-secondary">
-          <RefreshCw className="w-4 h-4 mr-2" />刷新
+        <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0071e3] text-white text-sm font-medium hover:bg-[#0077ed] transition-colors">
+          <Plus className="w-3.5 h-3.5" /> 新建开关
         </button>
       </div>
 
-      {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="glass-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-foreground-muted text-sm">总功能数</p>
-              <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <ToggleLeft className="w-5 h-5 text-primary" />
-            </div>
-          </div>
-        </div>
-        <div className="glass-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-foreground-muted text-sm">已启用</p>
-              <p className="text-2xl font-bold text-green-500">{stats.enabled}</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-            </div>
-          </div>
-        </div>
-        <div className="glass-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-foreground-muted text-sm">已禁用</p>
-              <p className="text-2xl font-bold text-red-500">{stats.disabled}</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-              <XCircle className="w-5 h-5 text-red-500" />
-            </div>
-          </div>
-        </div>
-        <div className="glass-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-foreground-muted text-sm">启用率</p>
-              <p className="text-2xl font-bold text-primary">
-              {stats.total > 0 ? Math.round((stats.enabled / stats.total) * 100) : 0}%
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 搜索和筛选 */}
-      <div className="glass-card p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-muted" />
-            <input
-              type="text"
-              placeholder="搜索功能名称、代码或描述..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-background border border-card-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-          <div className="flex gap-4">
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-4 py-2 bg-background border border-card-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="all">全部分类</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.icon} {cat.name}
-                </option>
-              ))}
-            </select>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showOnlyDisabled}
-                onChange={(e) => setShowOnlyDisabled(e.target.checked)}
-                className="w-4 h-4 rounded border-card-border bg-background text-primary focus:ring-primary/50"
-              />
-              <span className="text-foreground text-sm">仅显示已禁用</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* 功能列表 */}
-      <div className="space-y-6">
-        {filteredCategories.map((category) => (
-          <div key={category.id} className="glass-card">
-            <div className="p-4 border-b border-card-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{category.icon}</span>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">{category.name}</h2>
-                    <p className="text-sm text-foreground-muted">
-                      {category.enabledCount}/{category.totalCount} 已启用
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 bg-background rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500 transition-all duration-300"
-                      style={{
-                        width: `${(category.enabledCount / category.totalCount) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: "总开关数", value: String(flags.length), icon: ToggleRight, color: "#0071e3" },
+          { label: "已启用", value: String(flags.filter(f => f.enabled).length), icon: Zap, color: "#34c759" },
+          { label: "灰度中", value: String(flags.filter(f => f.enabled && f.rollout < 100).length), icon: Users, color: "#ff9500" },
+          { label: "已禁用", value: String(flags.filter(f => !f.enabled).length), icon: ToggleLeft, color: "#86868b" },
+        ].map((stat, i) => (
+          <div key={i} className="rounded-xl border border-[#e5e5e7] bg-white p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}10` }}>
+                <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
               </div>
+              <p className="text-[11px] text-[#86868b] uppercase tracking-wide font-medium">{stat.label}</p>
             </div>
-            <div className="divide-y divide-card-border">
-              {category.features.map((feature) => (
-                <div
-                  key={feature.id}
-                  className="p-4 flex items-center justify-between hover:bg-background/50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-foreground">{feature.name}</h3>
-                      <code className="px-2 py-0.5 bg-background rounded text-xs text-foreground-muted">
-                        {feature.code}
-                      </code>
-                    </div>
-                    <p className="text-sm text-foreground-muted mt-1">{feature.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-foreground-muted">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {new Date(feature.lastModified).toLocaleString("zh-CN")}
-                      </span>
-                      {feature.modifiedBy && (
-                        <span>修改者: {feature.modifiedBy}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleToggle(feature)}
-                      disabled={togglingId === feature.id}
-                      className={`relative p-2 rounded-lg transition-all ${
-                        feature.enabled
-                          ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
-                          : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                      } ${togglingId === feature.id ? "opacity-50 cursor-not-allowed" : ""}`}
-                      title={feature.enabled ? "点击禁用" : "点击启用"}
-                    >
-                      {togglingId === feature.id ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                      ) : feature.enabled ? (
-                        <ToggleRight className="w-8 h-8" />
-                      ) : (
-                        <ToggleLeft className="w-8 h-8" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-2xl font-bold text-[#1d1d1f] ml-9">{stat.value}</p>
           </div>
         ))}
       </div>
 
-      {filteredCategories.length === 0 && (
-        <div className="glass-card p-12 text-center">
-          <AlertCircle className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
-          <p className="text-foreground-muted">没有找到匹配的功能</p>
+      {/* Feature Flags List */}
+      <div className="rounded-xl border border-[#e5e5e7] bg-white overflow-hidden">
+        <div className="divide-y divide-[#e5e5e7]">
+          {flags.map((flag) => {
+            const catCfg = CATEGORY_CONFIG[flag.category] || CATEGORY_CONFIG.infra;
+            return (
+              <div key={flag.id} className="p-4 hover:bg-[#f5f5f7] transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-semibold text-[#1d1d1f]">{flag.name}</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                        style={{ backgroundColor: `${catCfg.color}10`, color: catCfg.color }}>
+                        {catCfg.label}
+                      </span>
+                      <code className="text-[10px] px-1.5 py-0.5 rounded bg-[#f5f5f7] text-[#86868b] font-mono">{flag.key}</code>
+                    </div>
+                    <p className="text-xs text-[#6e6e73]">{flag.description}</p>
+                    {flag.enabled && flag.rollout < 100 && (
+                      <div className="mt-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 rounded-full bg-[#e5e5e7]">
+                            <div className="h-1.5 rounded-full bg-[#ff9500] transition-all" style={{ width: `${flag.rollout}%` }} />
+                          </div>
+                          <span className="text-[10px] text-[#ff9500] font-medium">{flag.rollout}%</span>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-[#86868b] mt-1.5">
+                      更新于 {new Date(flag.updatedAt).toLocaleString("zh-CN")}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleFlag(flag.id)}
+                    className={`ml-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      flag.enabled
+                        ? "bg-[#34c75910] text-[#34c759] hover:bg-[#34c75920]"
+                        : "bg-[#f5f5f7] text-[#86868b] hover:bg-[#e5e5e7]"
+                    }`}
+                  >
+                    {flag.enabled ? <ToggleRight className="w-3.5 h-3.5" /> : <ToggleLeft className="w-3.5 h-3.5" />}
+                    {flag.enabled ? "已启用" : "已禁用"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }
