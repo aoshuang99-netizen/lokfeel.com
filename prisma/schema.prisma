@@ -1170,21 +1170,38 @@ enum AuditCategory {
 }
 
 model AnalyticsEvent {
-  id          String   @id @default(cuid())
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   
-  event       String   // "page.view", "match.viewed", "message.sent", "profile.completed", etc.
-  properties  String?  // JSON with event data
+  event         String                     // "user.registered", "swipe.right", "message.sent", etc.
+  eventCategory String   @default("")      // "user"|"match"|"chat"|"revenue"|"admin"
+  properties    String?                    // JSON with event data
   
-  sessionId   String?
-  ipAddress   String?
-  userAgent   String?
+  sessionId     String?
+  deviceId      String   @default("")      // device fingerprint
+  pagePath      String   @default("")      // page path
+  platform      String   @default("web")   // web|ios|android
+  appVersion    String   @default("")      // app version
+  
+  ipAddress     String?
+  country       String?                    // GeoIP country
+  city          String?                    // GeoIP city
+  
+  // UTM tracking
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmContent    String?
+  utmTerm       String?
   
   createdAt DateTime @default(now())
   
   @@index([userId, event, createdAt])
   @@index([event, createdAt])
+  @@index([eventCategory, createdAt])
+  @@index([sessionId])
+  @@index([createdAt])
 }
 
 model SystemConfig {
@@ -1719,4 +1736,34 @@ model UserReport {
   @@index([status, createdAt])
   @@index([deletedAt])
   @@index([reporterId, reportedUserId, createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANALYTICS TRACKING — Event Definition & Aggregation
+// ═══════════════════════════════════════════════════════════════
+
+model AnalyticsEventDef {
+  id          String   @id @default(cuid())
+  name        String   @unique               // e.g. "user.registered"
+  category    String                         // "user"|"match"|"chat"|"revenue"|"admin"
+  description String   @default("")
+  properties  String   @default("{}")        // JSON Schema
+  isActive    Boolean  @default(true)
+  sampleRate  Float    @default(1.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AnalyticsDailyAgg {
+  id          String   @id @default(cuid())
+  date        DateTime                     // aggregation date
+  eventName   String                       // event name
+  metricName  String                       // "count"|"unique_users"|"avg_value"
+  value       Float                        // metric value
+  dimensions  String   @default("{}")      // JSON dimensions
+  createdAt   DateTime @default(now())
+
+  @@unique([date, eventName, metricName, dimensions])
+  @@index([date])
+  @@index([date, eventName])
 }

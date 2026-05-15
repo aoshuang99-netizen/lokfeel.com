@@ -213,6 +213,16 @@ export type Block = $Result.DefaultSelection<Prisma.$BlockPayload>
  * 
  */
 export type UserReport = $Result.DefaultSelection<Prisma.$UserReportPayload>
+/**
+ * Model AnalyticsEventDef
+ * 
+ */
+export type AnalyticsEventDef = $Result.DefaultSelection<Prisma.$AnalyticsEventDefPayload>
+/**
+ * Model AnalyticsDailyAgg
+ * 
+ */
+export type AnalyticsDailyAgg = $Result.DefaultSelection<Prisma.$AnalyticsDailyAggPayload>
 
 /**
  * Enums
@@ -1319,6 +1329,26 @@ export class PrismaClient<
     * ```
     */
   get userReport(): Prisma.UserReportDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.analyticsEventDef`: Exposes CRUD operations for the **AnalyticsEventDef** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AnalyticsEventDefs
+    * const analyticsEventDefs = await prisma.analyticsEventDef.findMany()
+    * ```
+    */
+  get analyticsEventDef(): Prisma.AnalyticsEventDefDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.analyticsDailyAgg`: Exposes CRUD operations for the **AnalyticsDailyAgg** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AnalyticsDailyAggs
+    * const analyticsDailyAggs = await prisma.analyticsDailyAgg.findMany()
+    * ```
+    */
+  get analyticsDailyAgg(): Prisma.AnalyticsDailyAggDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1792,7 +1822,9 @@ export namespace Prisma {
     SincerityWallet: 'SincerityWallet',
     SincerityTransaction: 'SincerityTransaction',
     Block: 'Block',
-    UserReport: 'UserReport'
+    UserReport: 'UserReport',
+    AnalyticsEventDef: 'AnalyticsEventDef',
+    AnalyticsDailyAgg: 'AnalyticsDailyAgg'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1808,7 +1840,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "chatRoom" | "chatRoomMember" | "message" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport"
+      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "chatRoom" | "chatRoomMember" | "message" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -4772,6 +4804,154 @@ export namespace Prisma {
           }
         }
       }
+      AnalyticsEventDef: {
+        payload: Prisma.$AnalyticsEventDefPayload<ExtArgs>
+        fields: Prisma.AnalyticsEventDefFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AnalyticsEventDefFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AnalyticsEventDefFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>
+          }
+          findFirst: {
+            args: Prisma.AnalyticsEventDefFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AnalyticsEventDefFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>
+          }
+          findMany: {
+            args: Prisma.AnalyticsEventDefFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>[]
+          }
+          create: {
+            args: Prisma.AnalyticsEventDefCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>
+          }
+          createMany: {
+            args: Prisma.AnalyticsEventDefCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AnalyticsEventDefCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>[]
+          }
+          delete: {
+            args: Prisma.AnalyticsEventDefDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>
+          }
+          update: {
+            args: Prisma.AnalyticsEventDefUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>
+          }
+          deleteMany: {
+            args: Prisma.AnalyticsEventDefDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AnalyticsEventDefUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AnalyticsEventDefUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>[]
+          }
+          upsert: {
+            args: Prisma.AnalyticsEventDefUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsEventDefPayload>
+          }
+          aggregate: {
+            args: Prisma.AnalyticsEventDefAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAnalyticsEventDef>
+          }
+          groupBy: {
+            args: Prisma.AnalyticsEventDefGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AnalyticsEventDefGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AnalyticsEventDefCountArgs<ExtArgs>
+            result: $Utils.Optional<AnalyticsEventDefCountAggregateOutputType> | number
+          }
+        }
+      }
+      AnalyticsDailyAgg: {
+        payload: Prisma.$AnalyticsDailyAggPayload<ExtArgs>
+        fields: Prisma.AnalyticsDailyAggFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AnalyticsDailyAggFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AnalyticsDailyAggFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>
+          }
+          findFirst: {
+            args: Prisma.AnalyticsDailyAggFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AnalyticsDailyAggFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>
+          }
+          findMany: {
+            args: Prisma.AnalyticsDailyAggFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>[]
+          }
+          create: {
+            args: Prisma.AnalyticsDailyAggCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>
+          }
+          createMany: {
+            args: Prisma.AnalyticsDailyAggCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AnalyticsDailyAggCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>[]
+          }
+          delete: {
+            args: Prisma.AnalyticsDailyAggDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>
+          }
+          update: {
+            args: Prisma.AnalyticsDailyAggUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>
+          }
+          deleteMany: {
+            args: Prisma.AnalyticsDailyAggDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AnalyticsDailyAggUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AnalyticsDailyAggUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>[]
+          }
+          upsert: {
+            args: Prisma.AnalyticsDailyAggUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnalyticsDailyAggPayload>
+          }
+          aggregate: {
+            args: Prisma.AnalyticsDailyAggAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAnalyticsDailyAgg>
+          }
+          groupBy: {
+            args: Prisma.AnalyticsDailyAggGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AnalyticsDailyAggGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AnalyticsDailyAggCountArgs<ExtArgs>
+            result: $Utils.Optional<AnalyticsDailyAggCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -4920,6 +5100,8 @@ export namespace Prisma {
     sincerityTransaction?: SincerityTransactionOmit
     block?: BlockOmit
     userReport?: UserReportOmit
+    analyticsEventDef?: AnalyticsEventDefOmit
+    analyticsDailyAgg?: AnalyticsDailyAggOmit
   }
 
   /* Types for Logging */
@@ -42644,10 +42826,21 @@ export namespace Prisma {
     id: string | null
     userId: string | null
     event: string | null
+    eventCategory: string | null
     properties: string | null
     sessionId: string | null
+    deviceId: string | null
+    pagePath: string | null
+    platform: string | null
+    appVersion: string | null
     ipAddress: string | null
-    userAgent: string | null
+    country: string | null
+    city: string | null
+    utmSource: string | null
+    utmMedium: string | null
+    utmCampaign: string | null
+    utmContent: string | null
+    utmTerm: string | null
     createdAt: Date | null
   }
 
@@ -42655,10 +42848,21 @@ export namespace Prisma {
     id: string | null
     userId: string | null
     event: string | null
+    eventCategory: string | null
     properties: string | null
     sessionId: string | null
+    deviceId: string | null
+    pagePath: string | null
+    platform: string | null
+    appVersion: string | null
     ipAddress: string | null
-    userAgent: string | null
+    country: string | null
+    city: string | null
+    utmSource: string | null
+    utmMedium: string | null
+    utmCampaign: string | null
+    utmContent: string | null
+    utmTerm: string | null
     createdAt: Date | null
   }
 
@@ -42666,10 +42870,21 @@ export namespace Prisma {
     id: number
     userId: number
     event: number
+    eventCategory: number
     properties: number
     sessionId: number
+    deviceId: number
+    pagePath: number
+    platform: number
+    appVersion: number
     ipAddress: number
-    userAgent: number
+    country: number
+    city: number
+    utmSource: number
+    utmMedium: number
+    utmCampaign: number
+    utmContent: number
+    utmTerm: number
     createdAt: number
     _all: number
   }
@@ -42679,10 +42894,21 @@ export namespace Prisma {
     id?: true
     userId?: true
     event?: true
+    eventCategory?: true
     properties?: true
     sessionId?: true
+    deviceId?: true
+    pagePath?: true
+    platform?: true
+    appVersion?: true
     ipAddress?: true
-    userAgent?: true
+    country?: true
+    city?: true
+    utmSource?: true
+    utmMedium?: true
+    utmCampaign?: true
+    utmContent?: true
+    utmTerm?: true
     createdAt?: true
   }
 
@@ -42690,10 +42916,21 @@ export namespace Prisma {
     id?: true
     userId?: true
     event?: true
+    eventCategory?: true
     properties?: true
     sessionId?: true
+    deviceId?: true
+    pagePath?: true
+    platform?: true
+    appVersion?: true
     ipAddress?: true
-    userAgent?: true
+    country?: true
+    city?: true
+    utmSource?: true
+    utmMedium?: true
+    utmCampaign?: true
+    utmContent?: true
+    utmTerm?: true
     createdAt?: true
   }
 
@@ -42701,10 +42938,21 @@ export namespace Prisma {
     id?: true
     userId?: true
     event?: true
+    eventCategory?: true
     properties?: true
     sessionId?: true
+    deviceId?: true
+    pagePath?: true
+    platform?: true
+    appVersion?: true
     ipAddress?: true
-    userAgent?: true
+    country?: true
+    city?: true
+    utmSource?: true
+    utmMedium?: true
+    utmCampaign?: true
+    utmContent?: true
+    utmTerm?: true
     createdAt?: true
     _all?: true
   }
@@ -42785,10 +43033,21 @@ export namespace Prisma {
     id: string
     userId: string | null
     event: string
+    eventCategory: string
     properties: string | null
     sessionId: string | null
+    deviceId: string
+    pagePath: string
+    platform: string
+    appVersion: string
     ipAddress: string | null
-    userAgent: string | null
+    country: string | null
+    city: string | null
+    utmSource: string | null
+    utmMedium: string | null
+    utmCampaign: string | null
+    utmContent: string | null
+    utmTerm: string | null
     createdAt: Date
     _count: AnalyticsEventCountAggregateOutputType | null
     _min: AnalyticsEventMinAggregateOutputType | null
@@ -42813,10 +43072,21 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     event?: boolean
+    eventCategory?: boolean
     properties?: boolean
     sessionId?: boolean
+    deviceId?: boolean
+    pagePath?: boolean
+    platform?: boolean
+    appVersion?: boolean
     ipAddress?: boolean
-    userAgent?: boolean
+    country?: boolean
+    city?: boolean
+    utmSource?: boolean
+    utmMedium?: boolean
+    utmCampaign?: boolean
+    utmContent?: boolean
+    utmTerm?: boolean
     createdAt?: boolean
     user?: boolean | AnalyticsEvent$userArgs<ExtArgs>
   }, ExtArgs["result"]["analyticsEvent"]>
@@ -42825,10 +43095,21 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     event?: boolean
+    eventCategory?: boolean
     properties?: boolean
     sessionId?: boolean
+    deviceId?: boolean
+    pagePath?: boolean
+    platform?: boolean
+    appVersion?: boolean
     ipAddress?: boolean
-    userAgent?: boolean
+    country?: boolean
+    city?: boolean
+    utmSource?: boolean
+    utmMedium?: boolean
+    utmCampaign?: boolean
+    utmContent?: boolean
+    utmTerm?: boolean
     createdAt?: boolean
     user?: boolean | AnalyticsEvent$userArgs<ExtArgs>
   }, ExtArgs["result"]["analyticsEvent"]>
@@ -42837,10 +43118,21 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     event?: boolean
+    eventCategory?: boolean
     properties?: boolean
     sessionId?: boolean
+    deviceId?: boolean
+    pagePath?: boolean
+    platform?: boolean
+    appVersion?: boolean
     ipAddress?: boolean
-    userAgent?: boolean
+    country?: boolean
+    city?: boolean
+    utmSource?: boolean
+    utmMedium?: boolean
+    utmCampaign?: boolean
+    utmContent?: boolean
+    utmTerm?: boolean
     createdAt?: boolean
     user?: boolean | AnalyticsEvent$userArgs<ExtArgs>
   }, ExtArgs["result"]["analyticsEvent"]>
@@ -42849,14 +43141,25 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     event?: boolean
+    eventCategory?: boolean
     properties?: boolean
     sessionId?: boolean
+    deviceId?: boolean
+    pagePath?: boolean
+    platform?: boolean
+    appVersion?: boolean
     ipAddress?: boolean
-    userAgent?: boolean
+    country?: boolean
+    city?: boolean
+    utmSource?: boolean
+    utmMedium?: boolean
+    utmCampaign?: boolean
+    utmContent?: boolean
+    utmTerm?: boolean
     createdAt?: boolean
   }
 
-  export type AnalyticsEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "event" | "properties" | "sessionId" | "ipAddress" | "userAgent" | "createdAt", ExtArgs["result"]["analyticsEvent"]>
+  export type AnalyticsEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "event" | "eventCategory" | "properties" | "sessionId" | "deviceId" | "pagePath" | "platform" | "appVersion" | "ipAddress" | "country" | "city" | "utmSource" | "utmMedium" | "utmCampaign" | "utmContent" | "utmTerm" | "createdAt", ExtArgs["result"]["analyticsEvent"]>
   export type AnalyticsEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | AnalyticsEvent$userArgs<ExtArgs>
   }
@@ -42876,10 +43179,21 @@ export namespace Prisma {
       id: string
       userId: string | null
       event: string
+      eventCategory: string
       properties: string | null
       sessionId: string | null
+      deviceId: string
+      pagePath: string
+      platform: string
+      appVersion: string
       ipAddress: string | null
-      userAgent: string | null
+      country: string | null
+      city: string | null
+      utmSource: string | null
+      utmMedium: string | null
+      utmCampaign: string | null
+      utmContent: string | null
+      utmTerm: string | null
       createdAt: Date
     }, ExtArgs["result"]["analyticsEvent"]>
     composites: {}
@@ -43308,10 +43622,21 @@ export namespace Prisma {
     readonly id: FieldRef<"AnalyticsEvent", 'String'>
     readonly userId: FieldRef<"AnalyticsEvent", 'String'>
     readonly event: FieldRef<"AnalyticsEvent", 'String'>
+    readonly eventCategory: FieldRef<"AnalyticsEvent", 'String'>
     readonly properties: FieldRef<"AnalyticsEvent", 'String'>
     readonly sessionId: FieldRef<"AnalyticsEvent", 'String'>
+    readonly deviceId: FieldRef<"AnalyticsEvent", 'String'>
+    readonly pagePath: FieldRef<"AnalyticsEvent", 'String'>
+    readonly platform: FieldRef<"AnalyticsEvent", 'String'>
+    readonly appVersion: FieldRef<"AnalyticsEvent", 'String'>
     readonly ipAddress: FieldRef<"AnalyticsEvent", 'String'>
-    readonly userAgent: FieldRef<"AnalyticsEvent", 'String'>
+    readonly country: FieldRef<"AnalyticsEvent", 'String'>
+    readonly city: FieldRef<"AnalyticsEvent", 'String'>
+    readonly utmSource: FieldRef<"AnalyticsEvent", 'String'>
+    readonly utmMedium: FieldRef<"AnalyticsEvent", 'String'>
+    readonly utmCampaign: FieldRef<"AnalyticsEvent", 'String'>
+    readonly utmContent: FieldRef<"AnalyticsEvent", 'String'>
+    readonly utmTerm: FieldRef<"AnalyticsEvent", 'String'>
     readonly createdAt: FieldRef<"AnalyticsEvent", 'DateTime'>
   }
     
@@ -53902,6 +54227,2148 @@ export namespace Prisma {
 
 
   /**
+   * Model AnalyticsEventDef
+   */
+
+  export type AggregateAnalyticsEventDef = {
+    _count: AnalyticsEventDefCountAggregateOutputType | null
+    _avg: AnalyticsEventDefAvgAggregateOutputType | null
+    _sum: AnalyticsEventDefSumAggregateOutputType | null
+    _min: AnalyticsEventDefMinAggregateOutputType | null
+    _max: AnalyticsEventDefMaxAggregateOutputType | null
+  }
+
+  export type AnalyticsEventDefAvgAggregateOutputType = {
+    sampleRate: number | null
+  }
+
+  export type AnalyticsEventDefSumAggregateOutputType = {
+    sampleRate: number | null
+  }
+
+  export type AnalyticsEventDefMinAggregateOutputType = {
+    id: string | null
+    name: string | null
+    category: string | null
+    description: string | null
+    properties: string | null
+    isActive: boolean | null
+    sampleRate: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AnalyticsEventDefMaxAggregateOutputType = {
+    id: string | null
+    name: string | null
+    category: string | null
+    description: string | null
+    properties: string | null
+    isActive: boolean | null
+    sampleRate: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AnalyticsEventDefCountAggregateOutputType = {
+    id: number
+    name: number
+    category: number
+    description: number
+    properties: number
+    isActive: number
+    sampleRate: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AnalyticsEventDefAvgAggregateInputType = {
+    sampleRate?: true
+  }
+
+  export type AnalyticsEventDefSumAggregateInputType = {
+    sampleRate?: true
+  }
+
+  export type AnalyticsEventDefMinAggregateInputType = {
+    id?: true
+    name?: true
+    category?: true
+    description?: true
+    properties?: true
+    isActive?: true
+    sampleRate?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AnalyticsEventDefMaxAggregateInputType = {
+    id?: true
+    name?: true
+    category?: true
+    description?: true
+    properties?: true
+    isActive?: true
+    sampleRate?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AnalyticsEventDefCountAggregateInputType = {
+    id?: true
+    name?: true
+    category?: true
+    description?: true
+    properties?: true
+    isActive?: true
+    sampleRate?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AnalyticsEventDefAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AnalyticsEventDef to aggregate.
+     */
+    where?: AnalyticsEventDefWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnalyticsEventDefs to fetch.
+     */
+    orderBy?: AnalyticsEventDefOrderByWithRelationInput | AnalyticsEventDefOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AnalyticsEventDefWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnalyticsEventDefs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnalyticsEventDefs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AnalyticsEventDefs
+    **/
+    _count?: true | AnalyticsEventDefCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AnalyticsEventDefAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AnalyticsEventDefSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AnalyticsEventDefMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AnalyticsEventDefMaxAggregateInputType
+  }
+
+  export type GetAnalyticsEventDefAggregateType<T extends AnalyticsEventDefAggregateArgs> = {
+        [P in keyof T & keyof AggregateAnalyticsEventDef]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAnalyticsEventDef[P]>
+      : GetScalarType<T[P], AggregateAnalyticsEventDef[P]>
+  }
+
+
+
+
+  export type AnalyticsEventDefGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AnalyticsEventDefWhereInput
+    orderBy?: AnalyticsEventDefOrderByWithAggregationInput | AnalyticsEventDefOrderByWithAggregationInput[]
+    by: AnalyticsEventDefScalarFieldEnum[] | AnalyticsEventDefScalarFieldEnum
+    having?: AnalyticsEventDefScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AnalyticsEventDefCountAggregateInputType | true
+    _avg?: AnalyticsEventDefAvgAggregateInputType
+    _sum?: AnalyticsEventDefSumAggregateInputType
+    _min?: AnalyticsEventDefMinAggregateInputType
+    _max?: AnalyticsEventDefMaxAggregateInputType
+  }
+
+  export type AnalyticsEventDefGroupByOutputType = {
+    id: string
+    name: string
+    category: string
+    description: string
+    properties: string
+    isActive: boolean
+    sampleRate: number
+    createdAt: Date
+    updatedAt: Date
+    _count: AnalyticsEventDefCountAggregateOutputType | null
+    _avg: AnalyticsEventDefAvgAggregateOutputType | null
+    _sum: AnalyticsEventDefSumAggregateOutputType | null
+    _min: AnalyticsEventDefMinAggregateOutputType | null
+    _max: AnalyticsEventDefMaxAggregateOutputType | null
+  }
+
+  type GetAnalyticsEventDefGroupByPayload<T extends AnalyticsEventDefGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AnalyticsEventDefGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AnalyticsEventDefGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AnalyticsEventDefGroupByOutputType[P]>
+            : GetScalarType<T[P], AnalyticsEventDefGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AnalyticsEventDefSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    category?: boolean
+    description?: boolean
+    properties?: boolean
+    isActive?: boolean
+    sampleRate?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["analyticsEventDef"]>
+
+  export type AnalyticsEventDefSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    category?: boolean
+    description?: boolean
+    properties?: boolean
+    isActive?: boolean
+    sampleRate?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["analyticsEventDef"]>
+
+  export type AnalyticsEventDefSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    category?: boolean
+    description?: boolean
+    properties?: boolean
+    isActive?: boolean
+    sampleRate?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["analyticsEventDef"]>
+
+  export type AnalyticsEventDefSelectScalar = {
+    id?: boolean
+    name?: boolean
+    category?: boolean
+    description?: boolean
+    properties?: boolean
+    isActive?: boolean
+    sampleRate?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type AnalyticsEventDefOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "category" | "description" | "properties" | "isActive" | "sampleRate" | "createdAt" | "updatedAt", ExtArgs["result"]["analyticsEventDef"]>
+
+  export type $AnalyticsEventDefPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AnalyticsEventDef"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      name: string
+      category: string
+      description: string
+      properties: string
+      isActive: boolean
+      sampleRate: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["analyticsEventDef"]>
+    composites: {}
+  }
+
+  type AnalyticsEventDefGetPayload<S extends boolean | null | undefined | AnalyticsEventDefDefaultArgs> = $Result.GetResult<Prisma.$AnalyticsEventDefPayload, S>
+
+  type AnalyticsEventDefCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AnalyticsEventDefFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AnalyticsEventDefCountAggregateInputType | true
+    }
+
+  export interface AnalyticsEventDefDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AnalyticsEventDef'], meta: { name: 'AnalyticsEventDef' } }
+    /**
+     * Find zero or one AnalyticsEventDef that matches the filter.
+     * @param {AnalyticsEventDefFindUniqueArgs} args - Arguments to find a AnalyticsEventDef
+     * @example
+     * // Get one AnalyticsEventDef
+     * const analyticsEventDef = await prisma.analyticsEventDef.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AnalyticsEventDefFindUniqueArgs>(args: SelectSubset<T, AnalyticsEventDefFindUniqueArgs<ExtArgs>>): Prisma__AnalyticsEventDefClient<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AnalyticsEventDef that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AnalyticsEventDefFindUniqueOrThrowArgs} args - Arguments to find a AnalyticsEventDef
+     * @example
+     * // Get one AnalyticsEventDef
+     * const analyticsEventDef = await prisma.analyticsEventDef.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AnalyticsEventDefFindUniqueOrThrowArgs>(args: SelectSubset<T, AnalyticsEventDefFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AnalyticsEventDefClient<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AnalyticsEventDef that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsEventDefFindFirstArgs} args - Arguments to find a AnalyticsEventDef
+     * @example
+     * // Get one AnalyticsEventDef
+     * const analyticsEventDef = await prisma.analyticsEventDef.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AnalyticsEventDefFindFirstArgs>(args?: SelectSubset<T, AnalyticsEventDefFindFirstArgs<ExtArgs>>): Prisma__AnalyticsEventDefClient<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AnalyticsEventDef that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsEventDefFindFirstOrThrowArgs} args - Arguments to find a AnalyticsEventDef
+     * @example
+     * // Get one AnalyticsEventDef
+     * const analyticsEventDef = await prisma.analyticsEventDef.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AnalyticsEventDefFindFirstOrThrowArgs>(args?: SelectSubset<T, AnalyticsEventDefFindFirstOrThrowArgs<ExtArgs>>): Prisma__AnalyticsEventDefClient<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AnalyticsEventDefs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsEventDefFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AnalyticsEventDefs
+     * const analyticsEventDefs = await prisma.analyticsEventDef.findMany()
+     * 
+     * // Get first 10 AnalyticsEventDefs
+     * const analyticsEventDefs = await prisma.analyticsEventDef.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const analyticsEventDefWithIdOnly = await prisma.analyticsEventDef.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AnalyticsEventDefFindManyArgs>(args?: SelectSubset<T, AnalyticsEventDefFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AnalyticsEventDef.
+     * @param {AnalyticsEventDefCreateArgs} args - Arguments to create a AnalyticsEventDef.
+     * @example
+     * // Create one AnalyticsEventDef
+     * const AnalyticsEventDef = await prisma.analyticsEventDef.create({
+     *   data: {
+     *     // ... data to create a AnalyticsEventDef
+     *   }
+     * })
+     * 
+     */
+    create<T extends AnalyticsEventDefCreateArgs>(args: SelectSubset<T, AnalyticsEventDefCreateArgs<ExtArgs>>): Prisma__AnalyticsEventDefClient<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AnalyticsEventDefs.
+     * @param {AnalyticsEventDefCreateManyArgs} args - Arguments to create many AnalyticsEventDefs.
+     * @example
+     * // Create many AnalyticsEventDefs
+     * const analyticsEventDef = await prisma.analyticsEventDef.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AnalyticsEventDefCreateManyArgs>(args?: SelectSubset<T, AnalyticsEventDefCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AnalyticsEventDefs and returns the data saved in the database.
+     * @param {AnalyticsEventDefCreateManyAndReturnArgs} args - Arguments to create many AnalyticsEventDefs.
+     * @example
+     * // Create many AnalyticsEventDefs
+     * const analyticsEventDef = await prisma.analyticsEventDef.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AnalyticsEventDefs and only return the `id`
+     * const analyticsEventDefWithIdOnly = await prisma.analyticsEventDef.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AnalyticsEventDefCreateManyAndReturnArgs>(args?: SelectSubset<T, AnalyticsEventDefCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AnalyticsEventDef.
+     * @param {AnalyticsEventDefDeleteArgs} args - Arguments to delete one AnalyticsEventDef.
+     * @example
+     * // Delete one AnalyticsEventDef
+     * const AnalyticsEventDef = await prisma.analyticsEventDef.delete({
+     *   where: {
+     *     // ... filter to delete one AnalyticsEventDef
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AnalyticsEventDefDeleteArgs>(args: SelectSubset<T, AnalyticsEventDefDeleteArgs<ExtArgs>>): Prisma__AnalyticsEventDefClient<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AnalyticsEventDef.
+     * @param {AnalyticsEventDefUpdateArgs} args - Arguments to update one AnalyticsEventDef.
+     * @example
+     * // Update one AnalyticsEventDef
+     * const analyticsEventDef = await prisma.analyticsEventDef.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AnalyticsEventDefUpdateArgs>(args: SelectSubset<T, AnalyticsEventDefUpdateArgs<ExtArgs>>): Prisma__AnalyticsEventDefClient<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AnalyticsEventDefs.
+     * @param {AnalyticsEventDefDeleteManyArgs} args - Arguments to filter AnalyticsEventDefs to delete.
+     * @example
+     * // Delete a few AnalyticsEventDefs
+     * const { count } = await prisma.analyticsEventDef.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AnalyticsEventDefDeleteManyArgs>(args?: SelectSubset<T, AnalyticsEventDefDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AnalyticsEventDefs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsEventDefUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AnalyticsEventDefs
+     * const analyticsEventDef = await prisma.analyticsEventDef.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AnalyticsEventDefUpdateManyArgs>(args: SelectSubset<T, AnalyticsEventDefUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AnalyticsEventDefs and returns the data updated in the database.
+     * @param {AnalyticsEventDefUpdateManyAndReturnArgs} args - Arguments to update many AnalyticsEventDefs.
+     * @example
+     * // Update many AnalyticsEventDefs
+     * const analyticsEventDef = await prisma.analyticsEventDef.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AnalyticsEventDefs and only return the `id`
+     * const analyticsEventDefWithIdOnly = await prisma.analyticsEventDef.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AnalyticsEventDefUpdateManyAndReturnArgs>(args: SelectSubset<T, AnalyticsEventDefUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AnalyticsEventDef.
+     * @param {AnalyticsEventDefUpsertArgs} args - Arguments to update or create a AnalyticsEventDef.
+     * @example
+     * // Update or create a AnalyticsEventDef
+     * const analyticsEventDef = await prisma.analyticsEventDef.upsert({
+     *   create: {
+     *     // ... data to create a AnalyticsEventDef
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AnalyticsEventDef we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AnalyticsEventDefUpsertArgs>(args: SelectSubset<T, AnalyticsEventDefUpsertArgs<ExtArgs>>): Prisma__AnalyticsEventDefClient<$Result.GetResult<Prisma.$AnalyticsEventDefPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AnalyticsEventDefs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsEventDefCountArgs} args - Arguments to filter AnalyticsEventDefs to count.
+     * @example
+     * // Count the number of AnalyticsEventDefs
+     * const count = await prisma.analyticsEventDef.count({
+     *   where: {
+     *     // ... the filter for the AnalyticsEventDefs we want to count
+     *   }
+     * })
+    **/
+    count<T extends AnalyticsEventDefCountArgs>(
+      args?: Subset<T, AnalyticsEventDefCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AnalyticsEventDefCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AnalyticsEventDef.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsEventDefAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AnalyticsEventDefAggregateArgs>(args: Subset<T, AnalyticsEventDefAggregateArgs>): Prisma.PrismaPromise<GetAnalyticsEventDefAggregateType<T>>
+
+    /**
+     * Group by AnalyticsEventDef.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsEventDefGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AnalyticsEventDefGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AnalyticsEventDefGroupByArgs['orderBy'] }
+        : { orderBy?: AnalyticsEventDefGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AnalyticsEventDefGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAnalyticsEventDefGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AnalyticsEventDef model
+   */
+  readonly fields: AnalyticsEventDefFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AnalyticsEventDef.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AnalyticsEventDefClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AnalyticsEventDef model
+   */
+  interface AnalyticsEventDefFieldRefs {
+    readonly id: FieldRef<"AnalyticsEventDef", 'String'>
+    readonly name: FieldRef<"AnalyticsEventDef", 'String'>
+    readonly category: FieldRef<"AnalyticsEventDef", 'String'>
+    readonly description: FieldRef<"AnalyticsEventDef", 'String'>
+    readonly properties: FieldRef<"AnalyticsEventDef", 'String'>
+    readonly isActive: FieldRef<"AnalyticsEventDef", 'Boolean'>
+    readonly sampleRate: FieldRef<"AnalyticsEventDef", 'Float'>
+    readonly createdAt: FieldRef<"AnalyticsEventDef", 'DateTime'>
+    readonly updatedAt: FieldRef<"AnalyticsEventDef", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AnalyticsEventDef findUnique
+   */
+  export type AnalyticsEventDefFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsEventDef to fetch.
+     */
+    where: AnalyticsEventDefWhereUniqueInput
+  }
+
+  /**
+   * AnalyticsEventDef findUniqueOrThrow
+   */
+  export type AnalyticsEventDefFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsEventDef to fetch.
+     */
+    where: AnalyticsEventDefWhereUniqueInput
+  }
+
+  /**
+   * AnalyticsEventDef findFirst
+   */
+  export type AnalyticsEventDefFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsEventDef to fetch.
+     */
+    where?: AnalyticsEventDefWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnalyticsEventDefs to fetch.
+     */
+    orderBy?: AnalyticsEventDefOrderByWithRelationInput | AnalyticsEventDefOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AnalyticsEventDefs.
+     */
+    cursor?: AnalyticsEventDefWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnalyticsEventDefs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnalyticsEventDefs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AnalyticsEventDefs.
+     */
+    distinct?: AnalyticsEventDefScalarFieldEnum | AnalyticsEventDefScalarFieldEnum[]
+  }
+
+  /**
+   * AnalyticsEventDef findFirstOrThrow
+   */
+  export type AnalyticsEventDefFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsEventDef to fetch.
+     */
+    where?: AnalyticsEventDefWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnalyticsEventDefs to fetch.
+     */
+    orderBy?: AnalyticsEventDefOrderByWithRelationInput | AnalyticsEventDefOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AnalyticsEventDefs.
+     */
+    cursor?: AnalyticsEventDefWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnalyticsEventDefs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnalyticsEventDefs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AnalyticsEventDefs.
+     */
+    distinct?: AnalyticsEventDefScalarFieldEnum | AnalyticsEventDefScalarFieldEnum[]
+  }
+
+  /**
+   * AnalyticsEventDef findMany
+   */
+  export type AnalyticsEventDefFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsEventDefs to fetch.
+     */
+    where?: AnalyticsEventDefWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnalyticsEventDefs to fetch.
+     */
+    orderBy?: AnalyticsEventDefOrderByWithRelationInput | AnalyticsEventDefOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AnalyticsEventDefs.
+     */
+    cursor?: AnalyticsEventDefWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnalyticsEventDefs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnalyticsEventDefs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AnalyticsEventDefs.
+     */
+    distinct?: AnalyticsEventDefScalarFieldEnum | AnalyticsEventDefScalarFieldEnum[]
+  }
+
+  /**
+   * AnalyticsEventDef create
+   */
+  export type AnalyticsEventDefCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AnalyticsEventDef.
+     */
+    data: XOR<AnalyticsEventDefCreateInput, AnalyticsEventDefUncheckedCreateInput>
+  }
+
+  /**
+   * AnalyticsEventDef createMany
+   */
+  export type AnalyticsEventDefCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AnalyticsEventDefs.
+     */
+    data: AnalyticsEventDefCreateManyInput | AnalyticsEventDefCreateManyInput[]
+  }
+
+  /**
+   * AnalyticsEventDef createManyAndReturn
+   */
+  export type AnalyticsEventDefCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * The data used to create many AnalyticsEventDefs.
+     */
+    data: AnalyticsEventDefCreateManyInput | AnalyticsEventDefCreateManyInput[]
+  }
+
+  /**
+   * AnalyticsEventDef update
+   */
+  export type AnalyticsEventDefUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AnalyticsEventDef.
+     */
+    data: XOR<AnalyticsEventDefUpdateInput, AnalyticsEventDefUncheckedUpdateInput>
+    /**
+     * Choose, which AnalyticsEventDef to update.
+     */
+    where: AnalyticsEventDefWhereUniqueInput
+  }
+
+  /**
+   * AnalyticsEventDef updateMany
+   */
+  export type AnalyticsEventDefUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AnalyticsEventDefs.
+     */
+    data: XOR<AnalyticsEventDefUpdateManyMutationInput, AnalyticsEventDefUncheckedUpdateManyInput>
+    /**
+     * Filter which AnalyticsEventDefs to update
+     */
+    where?: AnalyticsEventDefWhereInput
+    /**
+     * Limit how many AnalyticsEventDefs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnalyticsEventDef updateManyAndReturn
+   */
+  export type AnalyticsEventDefUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * The data used to update AnalyticsEventDefs.
+     */
+    data: XOR<AnalyticsEventDefUpdateManyMutationInput, AnalyticsEventDefUncheckedUpdateManyInput>
+    /**
+     * Filter which AnalyticsEventDefs to update
+     */
+    where?: AnalyticsEventDefWhereInput
+    /**
+     * Limit how many AnalyticsEventDefs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnalyticsEventDef upsert
+   */
+  export type AnalyticsEventDefUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AnalyticsEventDef to update in case it exists.
+     */
+    where: AnalyticsEventDefWhereUniqueInput
+    /**
+     * In case the AnalyticsEventDef found by the `where` argument doesn't exist, create a new AnalyticsEventDef with this data.
+     */
+    create: XOR<AnalyticsEventDefCreateInput, AnalyticsEventDefUncheckedCreateInput>
+    /**
+     * In case the AnalyticsEventDef was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AnalyticsEventDefUpdateInput, AnalyticsEventDefUncheckedUpdateInput>
+  }
+
+  /**
+   * AnalyticsEventDef delete
+   */
+  export type AnalyticsEventDefDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+    /**
+     * Filter which AnalyticsEventDef to delete.
+     */
+    where: AnalyticsEventDefWhereUniqueInput
+  }
+
+  /**
+   * AnalyticsEventDef deleteMany
+   */
+  export type AnalyticsEventDefDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AnalyticsEventDefs to delete
+     */
+    where?: AnalyticsEventDefWhereInput
+    /**
+     * Limit how many AnalyticsEventDefs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnalyticsEventDef without action
+   */
+  export type AnalyticsEventDefDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsEventDef
+     */
+    select?: AnalyticsEventDefSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsEventDef
+     */
+    omit?: AnalyticsEventDefOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AnalyticsDailyAgg
+   */
+
+  export type AggregateAnalyticsDailyAgg = {
+    _count: AnalyticsDailyAggCountAggregateOutputType | null
+    _avg: AnalyticsDailyAggAvgAggregateOutputType | null
+    _sum: AnalyticsDailyAggSumAggregateOutputType | null
+    _min: AnalyticsDailyAggMinAggregateOutputType | null
+    _max: AnalyticsDailyAggMaxAggregateOutputType | null
+  }
+
+  export type AnalyticsDailyAggAvgAggregateOutputType = {
+    value: number | null
+  }
+
+  export type AnalyticsDailyAggSumAggregateOutputType = {
+    value: number | null
+  }
+
+  export type AnalyticsDailyAggMinAggregateOutputType = {
+    id: string | null
+    date: Date | null
+    eventName: string | null
+    metricName: string | null
+    value: number | null
+    dimensions: string | null
+    createdAt: Date | null
+  }
+
+  export type AnalyticsDailyAggMaxAggregateOutputType = {
+    id: string | null
+    date: Date | null
+    eventName: string | null
+    metricName: string | null
+    value: number | null
+    dimensions: string | null
+    createdAt: Date | null
+  }
+
+  export type AnalyticsDailyAggCountAggregateOutputType = {
+    id: number
+    date: number
+    eventName: number
+    metricName: number
+    value: number
+    dimensions: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AnalyticsDailyAggAvgAggregateInputType = {
+    value?: true
+  }
+
+  export type AnalyticsDailyAggSumAggregateInputType = {
+    value?: true
+  }
+
+  export type AnalyticsDailyAggMinAggregateInputType = {
+    id?: true
+    date?: true
+    eventName?: true
+    metricName?: true
+    value?: true
+    dimensions?: true
+    createdAt?: true
+  }
+
+  export type AnalyticsDailyAggMaxAggregateInputType = {
+    id?: true
+    date?: true
+    eventName?: true
+    metricName?: true
+    value?: true
+    dimensions?: true
+    createdAt?: true
+  }
+
+  export type AnalyticsDailyAggCountAggregateInputType = {
+    id?: true
+    date?: true
+    eventName?: true
+    metricName?: true
+    value?: true
+    dimensions?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AnalyticsDailyAggAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AnalyticsDailyAgg to aggregate.
+     */
+    where?: AnalyticsDailyAggWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnalyticsDailyAggs to fetch.
+     */
+    orderBy?: AnalyticsDailyAggOrderByWithRelationInput | AnalyticsDailyAggOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AnalyticsDailyAggWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnalyticsDailyAggs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnalyticsDailyAggs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AnalyticsDailyAggs
+    **/
+    _count?: true | AnalyticsDailyAggCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AnalyticsDailyAggAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AnalyticsDailyAggSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AnalyticsDailyAggMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AnalyticsDailyAggMaxAggregateInputType
+  }
+
+  export type GetAnalyticsDailyAggAggregateType<T extends AnalyticsDailyAggAggregateArgs> = {
+        [P in keyof T & keyof AggregateAnalyticsDailyAgg]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAnalyticsDailyAgg[P]>
+      : GetScalarType<T[P], AggregateAnalyticsDailyAgg[P]>
+  }
+
+
+
+
+  export type AnalyticsDailyAggGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AnalyticsDailyAggWhereInput
+    orderBy?: AnalyticsDailyAggOrderByWithAggregationInput | AnalyticsDailyAggOrderByWithAggregationInput[]
+    by: AnalyticsDailyAggScalarFieldEnum[] | AnalyticsDailyAggScalarFieldEnum
+    having?: AnalyticsDailyAggScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AnalyticsDailyAggCountAggregateInputType | true
+    _avg?: AnalyticsDailyAggAvgAggregateInputType
+    _sum?: AnalyticsDailyAggSumAggregateInputType
+    _min?: AnalyticsDailyAggMinAggregateInputType
+    _max?: AnalyticsDailyAggMaxAggregateInputType
+  }
+
+  export type AnalyticsDailyAggGroupByOutputType = {
+    id: string
+    date: Date
+    eventName: string
+    metricName: string
+    value: number
+    dimensions: string
+    createdAt: Date
+    _count: AnalyticsDailyAggCountAggregateOutputType | null
+    _avg: AnalyticsDailyAggAvgAggregateOutputType | null
+    _sum: AnalyticsDailyAggSumAggregateOutputType | null
+    _min: AnalyticsDailyAggMinAggregateOutputType | null
+    _max: AnalyticsDailyAggMaxAggregateOutputType | null
+  }
+
+  type GetAnalyticsDailyAggGroupByPayload<T extends AnalyticsDailyAggGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AnalyticsDailyAggGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AnalyticsDailyAggGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AnalyticsDailyAggGroupByOutputType[P]>
+            : GetScalarType<T[P], AnalyticsDailyAggGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AnalyticsDailyAggSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    date?: boolean
+    eventName?: boolean
+    metricName?: boolean
+    value?: boolean
+    dimensions?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["analyticsDailyAgg"]>
+
+  export type AnalyticsDailyAggSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    date?: boolean
+    eventName?: boolean
+    metricName?: boolean
+    value?: boolean
+    dimensions?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["analyticsDailyAgg"]>
+
+  export type AnalyticsDailyAggSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    date?: boolean
+    eventName?: boolean
+    metricName?: boolean
+    value?: boolean
+    dimensions?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["analyticsDailyAgg"]>
+
+  export type AnalyticsDailyAggSelectScalar = {
+    id?: boolean
+    date?: boolean
+    eventName?: boolean
+    metricName?: boolean
+    value?: boolean
+    dimensions?: boolean
+    createdAt?: boolean
+  }
+
+  export type AnalyticsDailyAggOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "date" | "eventName" | "metricName" | "value" | "dimensions" | "createdAt", ExtArgs["result"]["analyticsDailyAgg"]>
+
+  export type $AnalyticsDailyAggPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AnalyticsDailyAgg"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      date: Date
+      eventName: string
+      metricName: string
+      value: number
+      dimensions: string
+      createdAt: Date
+    }, ExtArgs["result"]["analyticsDailyAgg"]>
+    composites: {}
+  }
+
+  type AnalyticsDailyAggGetPayload<S extends boolean | null | undefined | AnalyticsDailyAggDefaultArgs> = $Result.GetResult<Prisma.$AnalyticsDailyAggPayload, S>
+
+  type AnalyticsDailyAggCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AnalyticsDailyAggFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AnalyticsDailyAggCountAggregateInputType | true
+    }
+
+  export interface AnalyticsDailyAggDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AnalyticsDailyAgg'], meta: { name: 'AnalyticsDailyAgg' } }
+    /**
+     * Find zero or one AnalyticsDailyAgg that matches the filter.
+     * @param {AnalyticsDailyAggFindUniqueArgs} args - Arguments to find a AnalyticsDailyAgg
+     * @example
+     * // Get one AnalyticsDailyAgg
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AnalyticsDailyAggFindUniqueArgs>(args: SelectSubset<T, AnalyticsDailyAggFindUniqueArgs<ExtArgs>>): Prisma__AnalyticsDailyAggClient<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AnalyticsDailyAgg that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AnalyticsDailyAggFindUniqueOrThrowArgs} args - Arguments to find a AnalyticsDailyAgg
+     * @example
+     * // Get one AnalyticsDailyAgg
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AnalyticsDailyAggFindUniqueOrThrowArgs>(args: SelectSubset<T, AnalyticsDailyAggFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AnalyticsDailyAggClient<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AnalyticsDailyAgg that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsDailyAggFindFirstArgs} args - Arguments to find a AnalyticsDailyAgg
+     * @example
+     * // Get one AnalyticsDailyAgg
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AnalyticsDailyAggFindFirstArgs>(args?: SelectSubset<T, AnalyticsDailyAggFindFirstArgs<ExtArgs>>): Prisma__AnalyticsDailyAggClient<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AnalyticsDailyAgg that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsDailyAggFindFirstOrThrowArgs} args - Arguments to find a AnalyticsDailyAgg
+     * @example
+     * // Get one AnalyticsDailyAgg
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AnalyticsDailyAggFindFirstOrThrowArgs>(args?: SelectSubset<T, AnalyticsDailyAggFindFirstOrThrowArgs<ExtArgs>>): Prisma__AnalyticsDailyAggClient<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AnalyticsDailyAggs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsDailyAggFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AnalyticsDailyAggs
+     * const analyticsDailyAggs = await prisma.analyticsDailyAgg.findMany()
+     * 
+     * // Get first 10 AnalyticsDailyAggs
+     * const analyticsDailyAggs = await prisma.analyticsDailyAgg.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const analyticsDailyAggWithIdOnly = await prisma.analyticsDailyAgg.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AnalyticsDailyAggFindManyArgs>(args?: SelectSubset<T, AnalyticsDailyAggFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AnalyticsDailyAgg.
+     * @param {AnalyticsDailyAggCreateArgs} args - Arguments to create a AnalyticsDailyAgg.
+     * @example
+     * // Create one AnalyticsDailyAgg
+     * const AnalyticsDailyAgg = await prisma.analyticsDailyAgg.create({
+     *   data: {
+     *     // ... data to create a AnalyticsDailyAgg
+     *   }
+     * })
+     * 
+     */
+    create<T extends AnalyticsDailyAggCreateArgs>(args: SelectSubset<T, AnalyticsDailyAggCreateArgs<ExtArgs>>): Prisma__AnalyticsDailyAggClient<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AnalyticsDailyAggs.
+     * @param {AnalyticsDailyAggCreateManyArgs} args - Arguments to create many AnalyticsDailyAggs.
+     * @example
+     * // Create many AnalyticsDailyAggs
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AnalyticsDailyAggCreateManyArgs>(args?: SelectSubset<T, AnalyticsDailyAggCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AnalyticsDailyAggs and returns the data saved in the database.
+     * @param {AnalyticsDailyAggCreateManyAndReturnArgs} args - Arguments to create many AnalyticsDailyAggs.
+     * @example
+     * // Create many AnalyticsDailyAggs
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AnalyticsDailyAggs and only return the `id`
+     * const analyticsDailyAggWithIdOnly = await prisma.analyticsDailyAgg.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AnalyticsDailyAggCreateManyAndReturnArgs>(args?: SelectSubset<T, AnalyticsDailyAggCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AnalyticsDailyAgg.
+     * @param {AnalyticsDailyAggDeleteArgs} args - Arguments to delete one AnalyticsDailyAgg.
+     * @example
+     * // Delete one AnalyticsDailyAgg
+     * const AnalyticsDailyAgg = await prisma.analyticsDailyAgg.delete({
+     *   where: {
+     *     // ... filter to delete one AnalyticsDailyAgg
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AnalyticsDailyAggDeleteArgs>(args: SelectSubset<T, AnalyticsDailyAggDeleteArgs<ExtArgs>>): Prisma__AnalyticsDailyAggClient<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AnalyticsDailyAgg.
+     * @param {AnalyticsDailyAggUpdateArgs} args - Arguments to update one AnalyticsDailyAgg.
+     * @example
+     * // Update one AnalyticsDailyAgg
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AnalyticsDailyAggUpdateArgs>(args: SelectSubset<T, AnalyticsDailyAggUpdateArgs<ExtArgs>>): Prisma__AnalyticsDailyAggClient<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AnalyticsDailyAggs.
+     * @param {AnalyticsDailyAggDeleteManyArgs} args - Arguments to filter AnalyticsDailyAggs to delete.
+     * @example
+     * // Delete a few AnalyticsDailyAggs
+     * const { count } = await prisma.analyticsDailyAgg.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AnalyticsDailyAggDeleteManyArgs>(args?: SelectSubset<T, AnalyticsDailyAggDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AnalyticsDailyAggs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsDailyAggUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AnalyticsDailyAggs
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AnalyticsDailyAggUpdateManyArgs>(args: SelectSubset<T, AnalyticsDailyAggUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AnalyticsDailyAggs and returns the data updated in the database.
+     * @param {AnalyticsDailyAggUpdateManyAndReturnArgs} args - Arguments to update many AnalyticsDailyAggs.
+     * @example
+     * // Update many AnalyticsDailyAggs
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AnalyticsDailyAggs and only return the `id`
+     * const analyticsDailyAggWithIdOnly = await prisma.analyticsDailyAgg.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AnalyticsDailyAggUpdateManyAndReturnArgs>(args: SelectSubset<T, AnalyticsDailyAggUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AnalyticsDailyAgg.
+     * @param {AnalyticsDailyAggUpsertArgs} args - Arguments to update or create a AnalyticsDailyAgg.
+     * @example
+     * // Update or create a AnalyticsDailyAgg
+     * const analyticsDailyAgg = await prisma.analyticsDailyAgg.upsert({
+     *   create: {
+     *     // ... data to create a AnalyticsDailyAgg
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AnalyticsDailyAgg we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AnalyticsDailyAggUpsertArgs>(args: SelectSubset<T, AnalyticsDailyAggUpsertArgs<ExtArgs>>): Prisma__AnalyticsDailyAggClient<$Result.GetResult<Prisma.$AnalyticsDailyAggPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AnalyticsDailyAggs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsDailyAggCountArgs} args - Arguments to filter AnalyticsDailyAggs to count.
+     * @example
+     * // Count the number of AnalyticsDailyAggs
+     * const count = await prisma.analyticsDailyAgg.count({
+     *   where: {
+     *     // ... the filter for the AnalyticsDailyAggs we want to count
+     *   }
+     * })
+    **/
+    count<T extends AnalyticsDailyAggCountArgs>(
+      args?: Subset<T, AnalyticsDailyAggCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AnalyticsDailyAggCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AnalyticsDailyAgg.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsDailyAggAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AnalyticsDailyAggAggregateArgs>(args: Subset<T, AnalyticsDailyAggAggregateArgs>): Prisma.PrismaPromise<GetAnalyticsDailyAggAggregateType<T>>
+
+    /**
+     * Group by AnalyticsDailyAgg.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnalyticsDailyAggGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AnalyticsDailyAggGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AnalyticsDailyAggGroupByArgs['orderBy'] }
+        : { orderBy?: AnalyticsDailyAggGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AnalyticsDailyAggGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAnalyticsDailyAggGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AnalyticsDailyAgg model
+   */
+  readonly fields: AnalyticsDailyAggFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AnalyticsDailyAgg.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AnalyticsDailyAggClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AnalyticsDailyAgg model
+   */
+  interface AnalyticsDailyAggFieldRefs {
+    readonly id: FieldRef<"AnalyticsDailyAgg", 'String'>
+    readonly date: FieldRef<"AnalyticsDailyAgg", 'DateTime'>
+    readonly eventName: FieldRef<"AnalyticsDailyAgg", 'String'>
+    readonly metricName: FieldRef<"AnalyticsDailyAgg", 'String'>
+    readonly value: FieldRef<"AnalyticsDailyAgg", 'Float'>
+    readonly dimensions: FieldRef<"AnalyticsDailyAgg", 'String'>
+    readonly createdAt: FieldRef<"AnalyticsDailyAgg", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AnalyticsDailyAgg findUnique
+   */
+  export type AnalyticsDailyAggFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsDailyAgg to fetch.
+     */
+    where: AnalyticsDailyAggWhereUniqueInput
+  }
+
+  /**
+   * AnalyticsDailyAgg findUniqueOrThrow
+   */
+  export type AnalyticsDailyAggFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsDailyAgg to fetch.
+     */
+    where: AnalyticsDailyAggWhereUniqueInput
+  }
+
+  /**
+   * AnalyticsDailyAgg findFirst
+   */
+  export type AnalyticsDailyAggFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsDailyAgg to fetch.
+     */
+    where?: AnalyticsDailyAggWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnalyticsDailyAggs to fetch.
+     */
+    orderBy?: AnalyticsDailyAggOrderByWithRelationInput | AnalyticsDailyAggOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AnalyticsDailyAggs.
+     */
+    cursor?: AnalyticsDailyAggWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnalyticsDailyAggs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnalyticsDailyAggs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AnalyticsDailyAggs.
+     */
+    distinct?: AnalyticsDailyAggScalarFieldEnum | AnalyticsDailyAggScalarFieldEnum[]
+  }
+
+  /**
+   * AnalyticsDailyAgg findFirstOrThrow
+   */
+  export type AnalyticsDailyAggFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsDailyAgg to fetch.
+     */
+    where?: AnalyticsDailyAggWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnalyticsDailyAggs to fetch.
+     */
+    orderBy?: AnalyticsDailyAggOrderByWithRelationInput | AnalyticsDailyAggOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AnalyticsDailyAggs.
+     */
+    cursor?: AnalyticsDailyAggWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnalyticsDailyAggs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnalyticsDailyAggs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AnalyticsDailyAggs.
+     */
+    distinct?: AnalyticsDailyAggScalarFieldEnum | AnalyticsDailyAggScalarFieldEnum[]
+  }
+
+  /**
+   * AnalyticsDailyAgg findMany
+   */
+  export type AnalyticsDailyAggFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * Filter, which AnalyticsDailyAggs to fetch.
+     */
+    where?: AnalyticsDailyAggWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnalyticsDailyAggs to fetch.
+     */
+    orderBy?: AnalyticsDailyAggOrderByWithRelationInput | AnalyticsDailyAggOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AnalyticsDailyAggs.
+     */
+    cursor?: AnalyticsDailyAggWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnalyticsDailyAggs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnalyticsDailyAggs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AnalyticsDailyAggs.
+     */
+    distinct?: AnalyticsDailyAggScalarFieldEnum | AnalyticsDailyAggScalarFieldEnum[]
+  }
+
+  /**
+   * AnalyticsDailyAgg create
+   */
+  export type AnalyticsDailyAggCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AnalyticsDailyAgg.
+     */
+    data: XOR<AnalyticsDailyAggCreateInput, AnalyticsDailyAggUncheckedCreateInput>
+  }
+
+  /**
+   * AnalyticsDailyAgg createMany
+   */
+  export type AnalyticsDailyAggCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AnalyticsDailyAggs.
+     */
+    data: AnalyticsDailyAggCreateManyInput | AnalyticsDailyAggCreateManyInput[]
+  }
+
+  /**
+   * AnalyticsDailyAgg createManyAndReturn
+   */
+  export type AnalyticsDailyAggCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * The data used to create many AnalyticsDailyAggs.
+     */
+    data: AnalyticsDailyAggCreateManyInput | AnalyticsDailyAggCreateManyInput[]
+  }
+
+  /**
+   * AnalyticsDailyAgg update
+   */
+  export type AnalyticsDailyAggUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AnalyticsDailyAgg.
+     */
+    data: XOR<AnalyticsDailyAggUpdateInput, AnalyticsDailyAggUncheckedUpdateInput>
+    /**
+     * Choose, which AnalyticsDailyAgg to update.
+     */
+    where: AnalyticsDailyAggWhereUniqueInput
+  }
+
+  /**
+   * AnalyticsDailyAgg updateMany
+   */
+  export type AnalyticsDailyAggUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AnalyticsDailyAggs.
+     */
+    data: XOR<AnalyticsDailyAggUpdateManyMutationInput, AnalyticsDailyAggUncheckedUpdateManyInput>
+    /**
+     * Filter which AnalyticsDailyAggs to update
+     */
+    where?: AnalyticsDailyAggWhereInput
+    /**
+     * Limit how many AnalyticsDailyAggs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnalyticsDailyAgg updateManyAndReturn
+   */
+  export type AnalyticsDailyAggUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * The data used to update AnalyticsDailyAggs.
+     */
+    data: XOR<AnalyticsDailyAggUpdateManyMutationInput, AnalyticsDailyAggUncheckedUpdateManyInput>
+    /**
+     * Filter which AnalyticsDailyAggs to update
+     */
+    where?: AnalyticsDailyAggWhereInput
+    /**
+     * Limit how many AnalyticsDailyAggs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnalyticsDailyAgg upsert
+   */
+  export type AnalyticsDailyAggUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AnalyticsDailyAgg to update in case it exists.
+     */
+    where: AnalyticsDailyAggWhereUniqueInput
+    /**
+     * In case the AnalyticsDailyAgg found by the `where` argument doesn't exist, create a new AnalyticsDailyAgg with this data.
+     */
+    create: XOR<AnalyticsDailyAggCreateInput, AnalyticsDailyAggUncheckedCreateInput>
+    /**
+     * In case the AnalyticsDailyAgg was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AnalyticsDailyAggUpdateInput, AnalyticsDailyAggUncheckedUpdateInput>
+  }
+
+  /**
+   * AnalyticsDailyAgg delete
+   */
+  export type AnalyticsDailyAggDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+    /**
+     * Filter which AnalyticsDailyAgg to delete.
+     */
+    where: AnalyticsDailyAggWhereUniqueInput
+  }
+
+  /**
+   * AnalyticsDailyAgg deleteMany
+   */
+  export type AnalyticsDailyAggDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AnalyticsDailyAggs to delete
+     */
+    where?: AnalyticsDailyAggWhereInput
+    /**
+     * Limit how many AnalyticsDailyAggs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnalyticsDailyAgg without action
+   */
+  export type AnalyticsDailyAggDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnalyticsDailyAgg
+     */
+    select?: AnalyticsDailyAggSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnalyticsDailyAgg
+     */
+    omit?: AnalyticsDailyAggOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -54516,10 +56983,21 @@ export namespace Prisma {
     id: 'id',
     userId: 'userId',
     event: 'event',
+    eventCategory: 'eventCategory',
     properties: 'properties',
     sessionId: 'sessionId',
+    deviceId: 'deviceId',
+    pagePath: 'pagePath',
+    platform: 'platform',
+    appVersion: 'appVersion',
     ipAddress: 'ipAddress',
-    userAgent: 'userAgent',
+    country: 'country',
+    city: 'city',
+    utmSource: 'utmSource',
+    utmMedium: 'utmMedium',
+    utmCampaign: 'utmCampaign',
+    utmContent: 'utmContent',
+    utmTerm: 'utmTerm',
     createdAt: 'createdAt'
   };
 
@@ -54660,6 +57138,34 @@ export namespace Prisma {
   };
 
   export type UserReportScalarFieldEnum = (typeof UserReportScalarFieldEnum)[keyof typeof UserReportScalarFieldEnum]
+
+
+  export const AnalyticsEventDefScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    category: 'category',
+    description: 'description',
+    properties: 'properties',
+    isActive: 'isActive',
+    sampleRate: 'sampleRate',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AnalyticsEventDefScalarFieldEnum = (typeof AnalyticsEventDefScalarFieldEnum)[keyof typeof AnalyticsEventDefScalarFieldEnum]
+
+
+  export const AnalyticsDailyAggScalarFieldEnum: {
+    id: 'id',
+    date: 'date',
+    eventName: 'eventName',
+    metricName: 'metricName',
+    value: 'value',
+    dimensions: 'dimensions',
+    createdAt: 'createdAt'
+  };
+
+  export type AnalyticsDailyAggScalarFieldEnum = (typeof AnalyticsDailyAggScalarFieldEnum)[keyof typeof AnalyticsDailyAggScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -58177,10 +60683,21 @@ export namespace Prisma {
     id?: StringFilter<"AnalyticsEvent"> | string
     userId?: StringNullableFilter<"AnalyticsEvent"> | string | null
     event?: StringFilter<"AnalyticsEvent"> | string
+    eventCategory?: StringFilter<"AnalyticsEvent"> | string
     properties?: StringNullableFilter<"AnalyticsEvent"> | string | null
     sessionId?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    deviceId?: StringFilter<"AnalyticsEvent"> | string
+    pagePath?: StringFilter<"AnalyticsEvent"> | string
+    platform?: StringFilter<"AnalyticsEvent"> | string
+    appVersion?: StringFilter<"AnalyticsEvent"> | string
     ipAddress?: StringNullableFilter<"AnalyticsEvent"> | string | null
-    userAgent?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    country?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    city?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmSource?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmMedium?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmCampaign?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmContent?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmTerm?: StringNullableFilter<"AnalyticsEvent"> | string | null
     createdAt?: DateTimeFilter<"AnalyticsEvent"> | Date | string
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }
@@ -58189,10 +60706,21 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrderInput | SortOrder
     event?: SortOrder
+    eventCategory?: SortOrder
     properties?: SortOrderInput | SortOrder
     sessionId?: SortOrderInput | SortOrder
+    deviceId?: SortOrder
+    pagePath?: SortOrder
+    platform?: SortOrder
+    appVersion?: SortOrder
     ipAddress?: SortOrderInput | SortOrder
-    userAgent?: SortOrderInput | SortOrder
+    country?: SortOrderInput | SortOrder
+    city?: SortOrderInput | SortOrder
+    utmSource?: SortOrderInput | SortOrder
+    utmMedium?: SortOrderInput | SortOrder
+    utmCampaign?: SortOrderInput | SortOrder
+    utmContent?: SortOrderInput | SortOrder
+    utmTerm?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
   }
@@ -58204,10 +60732,21 @@ export namespace Prisma {
     NOT?: AnalyticsEventWhereInput | AnalyticsEventWhereInput[]
     userId?: StringNullableFilter<"AnalyticsEvent"> | string | null
     event?: StringFilter<"AnalyticsEvent"> | string
+    eventCategory?: StringFilter<"AnalyticsEvent"> | string
     properties?: StringNullableFilter<"AnalyticsEvent"> | string | null
     sessionId?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    deviceId?: StringFilter<"AnalyticsEvent"> | string
+    pagePath?: StringFilter<"AnalyticsEvent"> | string
+    platform?: StringFilter<"AnalyticsEvent"> | string
+    appVersion?: StringFilter<"AnalyticsEvent"> | string
     ipAddress?: StringNullableFilter<"AnalyticsEvent"> | string | null
-    userAgent?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    country?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    city?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmSource?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmMedium?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmCampaign?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmContent?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmTerm?: StringNullableFilter<"AnalyticsEvent"> | string | null
     createdAt?: DateTimeFilter<"AnalyticsEvent"> | Date | string
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }, "id">
@@ -58216,10 +60755,21 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrderInput | SortOrder
     event?: SortOrder
+    eventCategory?: SortOrder
     properties?: SortOrderInput | SortOrder
     sessionId?: SortOrderInput | SortOrder
+    deviceId?: SortOrder
+    pagePath?: SortOrder
+    platform?: SortOrder
+    appVersion?: SortOrder
     ipAddress?: SortOrderInput | SortOrder
-    userAgent?: SortOrderInput | SortOrder
+    country?: SortOrderInput | SortOrder
+    city?: SortOrderInput | SortOrder
+    utmSource?: SortOrderInput | SortOrder
+    utmMedium?: SortOrderInput | SortOrder
+    utmCampaign?: SortOrderInput | SortOrder
+    utmContent?: SortOrderInput | SortOrder
+    utmTerm?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: AnalyticsEventCountOrderByAggregateInput
     _max?: AnalyticsEventMaxOrderByAggregateInput
@@ -58233,10 +60783,21 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"AnalyticsEvent"> | string
     userId?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
     event?: StringWithAggregatesFilter<"AnalyticsEvent"> | string
+    eventCategory?: StringWithAggregatesFilter<"AnalyticsEvent"> | string
     properties?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
     sessionId?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
+    deviceId?: StringWithAggregatesFilter<"AnalyticsEvent"> | string
+    pagePath?: StringWithAggregatesFilter<"AnalyticsEvent"> | string
+    platform?: StringWithAggregatesFilter<"AnalyticsEvent"> | string
+    appVersion?: StringWithAggregatesFilter<"AnalyticsEvent"> | string
     ipAddress?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
-    userAgent?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
+    country?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
+    city?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
+    utmSource?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
+    utmMedium?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
+    utmCampaign?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
+    utmContent?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
+    utmTerm?: StringNullableWithAggregatesFilter<"AnalyticsEvent"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"AnalyticsEvent"> | Date | string
   }
 
@@ -58934,6 +61495,145 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"UserReport"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"UserReport"> | Date | string
     deletedAt?: DateTimeNullableWithAggregatesFilter<"UserReport"> | Date | string | null
+  }
+
+  export type AnalyticsEventDefWhereInput = {
+    AND?: AnalyticsEventDefWhereInput | AnalyticsEventDefWhereInput[]
+    OR?: AnalyticsEventDefWhereInput[]
+    NOT?: AnalyticsEventDefWhereInput | AnalyticsEventDefWhereInput[]
+    id?: StringFilter<"AnalyticsEventDef"> | string
+    name?: StringFilter<"AnalyticsEventDef"> | string
+    category?: StringFilter<"AnalyticsEventDef"> | string
+    description?: StringFilter<"AnalyticsEventDef"> | string
+    properties?: StringFilter<"AnalyticsEventDef"> | string
+    isActive?: BoolFilter<"AnalyticsEventDef"> | boolean
+    sampleRate?: FloatFilter<"AnalyticsEventDef"> | number
+    createdAt?: DateTimeFilter<"AnalyticsEventDef"> | Date | string
+    updatedAt?: DateTimeFilter<"AnalyticsEventDef"> | Date | string
+  }
+
+  export type AnalyticsEventDefOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    description?: SortOrder
+    properties?: SortOrder
+    isActive?: SortOrder
+    sampleRate?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AnalyticsEventDefWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    name?: string
+    AND?: AnalyticsEventDefWhereInput | AnalyticsEventDefWhereInput[]
+    OR?: AnalyticsEventDefWhereInput[]
+    NOT?: AnalyticsEventDefWhereInput | AnalyticsEventDefWhereInput[]
+    category?: StringFilter<"AnalyticsEventDef"> | string
+    description?: StringFilter<"AnalyticsEventDef"> | string
+    properties?: StringFilter<"AnalyticsEventDef"> | string
+    isActive?: BoolFilter<"AnalyticsEventDef"> | boolean
+    sampleRate?: FloatFilter<"AnalyticsEventDef"> | number
+    createdAt?: DateTimeFilter<"AnalyticsEventDef"> | Date | string
+    updatedAt?: DateTimeFilter<"AnalyticsEventDef"> | Date | string
+  }, "id" | "name">
+
+  export type AnalyticsEventDefOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    description?: SortOrder
+    properties?: SortOrder
+    isActive?: SortOrder
+    sampleRate?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AnalyticsEventDefCountOrderByAggregateInput
+    _avg?: AnalyticsEventDefAvgOrderByAggregateInput
+    _max?: AnalyticsEventDefMaxOrderByAggregateInput
+    _min?: AnalyticsEventDefMinOrderByAggregateInput
+    _sum?: AnalyticsEventDefSumOrderByAggregateInput
+  }
+
+  export type AnalyticsEventDefScalarWhereWithAggregatesInput = {
+    AND?: AnalyticsEventDefScalarWhereWithAggregatesInput | AnalyticsEventDefScalarWhereWithAggregatesInput[]
+    OR?: AnalyticsEventDefScalarWhereWithAggregatesInput[]
+    NOT?: AnalyticsEventDefScalarWhereWithAggregatesInput | AnalyticsEventDefScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AnalyticsEventDef"> | string
+    name?: StringWithAggregatesFilter<"AnalyticsEventDef"> | string
+    category?: StringWithAggregatesFilter<"AnalyticsEventDef"> | string
+    description?: StringWithAggregatesFilter<"AnalyticsEventDef"> | string
+    properties?: StringWithAggregatesFilter<"AnalyticsEventDef"> | string
+    isActive?: BoolWithAggregatesFilter<"AnalyticsEventDef"> | boolean
+    sampleRate?: FloatWithAggregatesFilter<"AnalyticsEventDef"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"AnalyticsEventDef"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AnalyticsEventDef"> | Date | string
+  }
+
+  export type AnalyticsDailyAggWhereInput = {
+    AND?: AnalyticsDailyAggWhereInput | AnalyticsDailyAggWhereInput[]
+    OR?: AnalyticsDailyAggWhereInput[]
+    NOT?: AnalyticsDailyAggWhereInput | AnalyticsDailyAggWhereInput[]
+    id?: StringFilter<"AnalyticsDailyAgg"> | string
+    date?: DateTimeFilter<"AnalyticsDailyAgg"> | Date | string
+    eventName?: StringFilter<"AnalyticsDailyAgg"> | string
+    metricName?: StringFilter<"AnalyticsDailyAgg"> | string
+    value?: FloatFilter<"AnalyticsDailyAgg"> | number
+    dimensions?: StringFilter<"AnalyticsDailyAgg"> | string
+    createdAt?: DateTimeFilter<"AnalyticsDailyAgg"> | Date | string
+  }
+
+  export type AnalyticsDailyAggOrderByWithRelationInput = {
+    id?: SortOrder
+    date?: SortOrder
+    eventName?: SortOrder
+    metricName?: SortOrder
+    value?: SortOrder
+    dimensions?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AnalyticsDailyAggWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    date_eventName_metricName_dimensions?: AnalyticsDailyAggDateEventNameMetricNameDimensionsCompoundUniqueInput
+    AND?: AnalyticsDailyAggWhereInput | AnalyticsDailyAggWhereInput[]
+    OR?: AnalyticsDailyAggWhereInput[]
+    NOT?: AnalyticsDailyAggWhereInput | AnalyticsDailyAggWhereInput[]
+    date?: DateTimeFilter<"AnalyticsDailyAgg"> | Date | string
+    eventName?: StringFilter<"AnalyticsDailyAgg"> | string
+    metricName?: StringFilter<"AnalyticsDailyAgg"> | string
+    value?: FloatFilter<"AnalyticsDailyAgg"> | number
+    dimensions?: StringFilter<"AnalyticsDailyAgg"> | string
+    createdAt?: DateTimeFilter<"AnalyticsDailyAgg"> | Date | string
+  }, "id" | "date_eventName_metricName_dimensions">
+
+  export type AnalyticsDailyAggOrderByWithAggregationInput = {
+    id?: SortOrder
+    date?: SortOrder
+    eventName?: SortOrder
+    metricName?: SortOrder
+    value?: SortOrder
+    dimensions?: SortOrder
+    createdAt?: SortOrder
+    _count?: AnalyticsDailyAggCountOrderByAggregateInput
+    _avg?: AnalyticsDailyAggAvgOrderByAggregateInput
+    _max?: AnalyticsDailyAggMaxOrderByAggregateInput
+    _min?: AnalyticsDailyAggMinOrderByAggregateInput
+    _sum?: AnalyticsDailyAggSumOrderByAggregateInput
+  }
+
+  export type AnalyticsDailyAggScalarWhereWithAggregatesInput = {
+    AND?: AnalyticsDailyAggScalarWhereWithAggregatesInput | AnalyticsDailyAggScalarWhereWithAggregatesInput[]
+    OR?: AnalyticsDailyAggScalarWhereWithAggregatesInput[]
+    NOT?: AnalyticsDailyAggScalarWhereWithAggregatesInput | AnalyticsDailyAggScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AnalyticsDailyAgg"> | string
+    date?: DateTimeWithAggregatesFilter<"AnalyticsDailyAgg"> | Date | string
+    eventName?: StringWithAggregatesFilter<"AnalyticsDailyAgg"> | string
+    metricName?: StringWithAggregatesFilter<"AnalyticsDailyAgg"> | string
+    value?: FloatWithAggregatesFilter<"AnalyticsDailyAgg"> | number
+    dimensions?: StringWithAggregatesFilter<"AnalyticsDailyAgg"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"AnalyticsDailyAgg"> | Date | string
   }
 
   export type BotProfileCreateInput = {
@@ -62654,10 +65354,21 @@ export namespace Prisma {
   export type AnalyticsEventCreateInput = {
     id?: string
     event: string
+    eventCategory?: string
     properties?: string | null
     sessionId?: string | null
+    deviceId?: string
+    pagePath?: string
+    platform?: string
+    appVersion?: string
     ipAddress?: string | null
-    userAgent?: string | null
+    country?: string | null
+    city?: string | null
+    utmSource?: string | null
+    utmMedium?: string | null
+    utmCampaign?: string | null
+    utmContent?: string | null
+    utmTerm?: string | null
     createdAt?: Date | string
     user?: UserCreateNestedOneWithoutAnalyticsEventsInput
   }
@@ -62666,20 +65377,42 @@ export namespace Prisma {
     id?: string
     userId?: string | null
     event: string
+    eventCategory?: string
     properties?: string | null
     sessionId?: string | null
+    deviceId?: string
+    pagePath?: string
+    platform?: string
+    appVersion?: string
     ipAddress?: string | null
-    userAgent?: string | null
+    country?: string | null
+    city?: string | null
+    utmSource?: string | null
+    utmMedium?: string | null
+    utmCampaign?: string | null
+    utmContent?: string | null
+    utmTerm?: string | null
     createdAt?: Date | string
   }
 
   export type AnalyticsEventUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     event?: StringFieldUpdateOperationsInput | string
+    eventCategory?: StringFieldUpdateOperationsInput | string
     properties?: NullableStringFieldUpdateOperationsInput | string | null
     sessionId?: NullableStringFieldUpdateOperationsInput | string | null
+    deviceId?: StringFieldUpdateOperationsInput | string
+    pagePath?: StringFieldUpdateOperationsInput | string
+    platform?: StringFieldUpdateOperationsInput | string
+    appVersion?: StringFieldUpdateOperationsInput | string
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    utmSource?: NullableStringFieldUpdateOperationsInput | string | null
+    utmMedium?: NullableStringFieldUpdateOperationsInput | string | null
+    utmCampaign?: NullableStringFieldUpdateOperationsInput | string | null
+    utmContent?: NullableStringFieldUpdateOperationsInput | string | null
+    utmTerm?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneWithoutAnalyticsEventsNestedInput
   }
@@ -62688,10 +65421,21 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     event?: StringFieldUpdateOperationsInput | string
+    eventCategory?: StringFieldUpdateOperationsInput | string
     properties?: NullableStringFieldUpdateOperationsInput | string | null
     sessionId?: NullableStringFieldUpdateOperationsInput | string | null
+    deviceId?: StringFieldUpdateOperationsInput | string
+    pagePath?: StringFieldUpdateOperationsInput | string
+    platform?: StringFieldUpdateOperationsInput | string
+    appVersion?: StringFieldUpdateOperationsInput | string
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    utmSource?: NullableStringFieldUpdateOperationsInput | string | null
+    utmMedium?: NullableStringFieldUpdateOperationsInput | string | null
+    utmCampaign?: NullableStringFieldUpdateOperationsInput | string | null
+    utmContent?: NullableStringFieldUpdateOperationsInput | string | null
+    utmTerm?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -62699,20 +65443,42 @@ export namespace Prisma {
     id?: string
     userId?: string | null
     event: string
+    eventCategory?: string
     properties?: string | null
     sessionId?: string | null
+    deviceId?: string
+    pagePath?: string
+    platform?: string
+    appVersion?: string
     ipAddress?: string | null
-    userAgent?: string | null
+    country?: string | null
+    city?: string | null
+    utmSource?: string | null
+    utmMedium?: string | null
+    utmCampaign?: string | null
+    utmContent?: string | null
+    utmTerm?: string | null
     createdAt?: Date | string
   }
 
   export type AnalyticsEventUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     event?: StringFieldUpdateOperationsInput | string
+    eventCategory?: StringFieldUpdateOperationsInput | string
     properties?: NullableStringFieldUpdateOperationsInput | string | null
     sessionId?: NullableStringFieldUpdateOperationsInput | string | null
+    deviceId?: StringFieldUpdateOperationsInput | string
+    pagePath?: StringFieldUpdateOperationsInput | string
+    platform?: StringFieldUpdateOperationsInput | string
+    appVersion?: StringFieldUpdateOperationsInput | string
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    utmSource?: NullableStringFieldUpdateOperationsInput | string | null
+    utmMedium?: NullableStringFieldUpdateOperationsInput | string | null
+    utmCampaign?: NullableStringFieldUpdateOperationsInput | string | null
+    utmContent?: NullableStringFieldUpdateOperationsInput | string | null
+    utmTerm?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -62720,10 +65486,21 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     event?: StringFieldUpdateOperationsInput | string
+    eventCategory?: StringFieldUpdateOperationsInput | string
     properties?: NullableStringFieldUpdateOperationsInput | string | null
     sessionId?: NullableStringFieldUpdateOperationsInput | string | null
+    deviceId?: StringFieldUpdateOperationsInput | string
+    pagePath?: StringFieldUpdateOperationsInput | string
+    platform?: StringFieldUpdateOperationsInput | string
+    appVersion?: StringFieldUpdateOperationsInput | string
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    utmSource?: NullableStringFieldUpdateOperationsInput | string | null
+    utmMedium?: NullableStringFieldUpdateOperationsInput | string | null
+    utmCampaign?: NullableStringFieldUpdateOperationsInput | string | null
+    utmContent?: NullableStringFieldUpdateOperationsInput | string | null
+    utmTerm?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -63491,6 +66268,160 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AnalyticsEventDefCreateInput = {
+    id?: string
+    name: string
+    category: string
+    description?: string
+    properties?: string
+    isActive?: boolean
+    sampleRate?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AnalyticsEventDefUncheckedCreateInput = {
+    id?: string
+    name: string
+    category: string
+    description?: string
+    properties?: string
+    isActive?: boolean
+    sampleRate?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AnalyticsEventDefUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    properties?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sampleRate?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AnalyticsEventDefUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    properties?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sampleRate?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AnalyticsEventDefCreateManyInput = {
+    id?: string
+    name: string
+    category: string
+    description?: string
+    properties?: string
+    isActive?: boolean
+    sampleRate?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AnalyticsEventDefUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    properties?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sampleRate?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AnalyticsEventDefUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    properties?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sampleRate?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AnalyticsDailyAggCreateInput = {
+    id?: string
+    date: Date | string
+    eventName: string
+    metricName: string
+    value: number
+    dimensions?: string
+    createdAt?: Date | string
+  }
+
+  export type AnalyticsDailyAggUncheckedCreateInput = {
+    id?: string
+    date: Date | string
+    eventName: string
+    metricName: string
+    value: number
+    dimensions?: string
+    createdAt?: Date | string
+  }
+
+  export type AnalyticsDailyAggUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    eventName?: StringFieldUpdateOperationsInput | string
+    metricName?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    dimensions?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AnalyticsDailyAggUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    eventName?: StringFieldUpdateOperationsInput | string
+    metricName?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    dimensions?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AnalyticsDailyAggCreateManyInput = {
+    id?: string
+    date: Date | string
+    eventName: string
+    metricName: string
+    value: number
+    dimensions?: string
+    createdAt?: Date | string
+  }
+
+  export type AnalyticsDailyAggUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    eventName?: StringFieldUpdateOperationsInput | string
+    metricName?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    dimensions?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AnalyticsDailyAggUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    eventName?: StringFieldUpdateOperationsInput | string
+    metricName?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    dimensions?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -66306,10 +69237,21 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     event?: SortOrder
+    eventCategory?: SortOrder
     properties?: SortOrder
     sessionId?: SortOrder
+    deviceId?: SortOrder
+    pagePath?: SortOrder
+    platform?: SortOrder
+    appVersion?: SortOrder
     ipAddress?: SortOrder
-    userAgent?: SortOrder
+    country?: SortOrder
+    city?: SortOrder
+    utmSource?: SortOrder
+    utmMedium?: SortOrder
+    utmCampaign?: SortOrder
+    utmContent?: SortOrder
+    utmTerm?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -66317,10 +69259,21 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     event?: SortOrder
+    eventCategory?: SortOrder
     properties?: SortOrder
     sessionId?: SortOrder
+    deviceId?: SortOrder
+    pagePath?: SortOrder
+    platform?: SortOrder
+    appVersion?: SortOrder
     ipAddress?: SortOrder
-    userAgent?: SortOrder
+    country?: SortOrder
+    city?: SortOrder
+    utmSource?: SortOrder
+    utmMedium?: SortOrder
+    utmCampaign?: SortOrder
+    utmContent?: SortOrder
+    utmTerm?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -66328,10 +69281,21 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     event?: SortOrder
+    eventCategory?: SortOrder
     properties?: SortOrder
     sessionId?: SortOrder
+    deviceId?: SortOrder
+    pagePath?: SortOrder
+    platform?: SortOrder
+    appVersion?: SortOrder
     ipAddress?: SortOrder
-    userAgent?: SortOrder
+    country?: SortOrder
+    city?: SortOrder
+    utmSource?: SortOrder
+    utmMedium?: SortOrder
+    utmCampaign?: SortOrder
+    utmContent?: SortOrder
+    utmTerm?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -66838,6 +69802,95 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumReportStatusFilter<$PrismaModel>
     _max?: NestedEnumReportStatusFilter<$PrismaModel>
+  }
+
+  export type AnalyticsEventDefCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    description?: SortOrder
+    properties?: SortOrder
+    isActive?: SortOrder
+    sampleRate?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AnalyticsEventDefAvgOrderByAggregateInput = {
+    sampleRate?: SortOrder
+  }
+
+  export type AnalyticsEventDefMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    description?: SortOrder
+    properties?: SortOrder
+    isActive?: SortOrder
+    sampleRate?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AnalyticsEventDefMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    description?: SortOrder
+    properties?: SortOrder
+    isActive?: SortOrder
+    sampleRate?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AnalyticsEventDefSumOrderByAggregateInput = {
+    sampleRate?: SortOrder
+  }
+
+  export type AnalyticsDailyAggDateEventNameMetricNameDimensionsCompoundUniqueInput = {
+    date: Date | string
+    eventName: string
+    metricName: string
+    dimensions: string
+  }
+
+  export type AnalyticsDailyAggCountOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    eventName?: SortOrder
+    metricName?: SortOrder
+    value?: SortOrder
+    dimensions?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AnalyticsDailyAggAvgOrderByAggregateInput = {
+    value?: SortOrder
+  }
+
+  export type AnalyticsDailyAggMaxOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    eventName?: SortOrder
+    metricName?: SortOrder
+    value?: SortOrder
+    dimensions?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AnalyticsDailyAggMinOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    eventName?: SortOrder
+    metricName?: SortOrder
+    value?: SortOrder
+    dimensions?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AnalyticsDailyAggSumOrderByAggregateInput = {
+    value?: SortOrder
   }
 
   export type ProfileCreateNestedOneWithoutBotProfileInput = {
@@ -71931,20 +74984,42 @@ export namespace Prisma {
   export type AnalyticsEventCreateWithoutUserInput = {
     id?: string
     event: string
+    eventCategory?: string
     properties?: string | null
     sessionId?: string | null
+    deviceId?: string
+    pagePath?: string
+    platform?: string
+    appVersion?: string
     ipAddress?: string | null
-    userAgent?: string | null
+    country?: string | null
+    city?: string | null
+    utmSource?: string | null
+    utmMedium?: string | null
+    utmCampaign?: string | null
+    utmContent?: string | null
+    utmTerm?: string | null
     createdAt?: Date | string
   }
 
   export type AnalyticsEventUncheckedCreateWithoutUserInput = {
     id?: string
     event: string
+    eventCategory?: string
     properties?: string | null
     sessionId?: string | null
+    deviceId?: string
+    pagePath?: string
+    platform?: string
+    appVersion?: string
     ipAddress?: string | null
-    userAgent?: string | null
+    country?: string | null
+    city?: string | null
+    utmSource?: string | null
+    utmMedium?: string | null
+    utmCampaign?: string | null
+    utmContent?: string | null
+    utmTerm?: string | null
     createdAt?: Date | string
   }
 
@@ -73081,10 +76156,21 @@ export namespace Prisma {
     id?: StringFilter<"AnalyticsEvent"> | string
     userId?: StringNullableFilter<"AnalyticsEvent"> | string | null
     event?: StringFilter<"AnalyticsEvent"> | string
+    eventCategory?: StringFilter<"AnalyticsEvent"> | string
     properties?: StringNullableFilter<"AnalyticsEvent"> | string | null
     sessionId?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    deviceId?: StringFilter<"AnalyticsEvent"> | string
+    pagePath?: StringFilter<"AnalyticsEvent"> | string
+    platform?: StringFilter<"AnalyticsEvent"> | string
+    appVersion?: StringFilter<"AnalyticsEvent"> | string
     ipAddress?: StringNullableFilter<"AnalyticsEvent"> | string | null
-    userAgent?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    country?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    city?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmSource?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmMedium?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmCampaign?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmContent?: StringNullableFilter<"AnalyticsEvent"> | string | null
+    utmTerm?: StringNullableFilter<"AnalyticsEvent"> | string | null
     createdAt?: DateTimeFilter<"AnalyticsEvent"> | Date | string
   }
 
@@ -83433,10 +86519,21 @@ export namespace Prisma {
   export type AnalyticsEventCreateManyUserInput = {
     id?: string
     event: string
+    eventCategory?: string
     properties?: string | null
     sessionId?: string | null
+    deviceId?: string
+    pagePath?: string
+    platform?: string
+    appVersion?: string
     ipAddress?: string | null
-    userAgent?: string | null
+    country?: string | null
+    city?: string | null
+    utmSource?: string | null
+    utmMedium?: string | null
+    utmCampaign?: string | null
+    utmContent?: string | null
+    utmTerm?: string | null
     createdAt?: Date | string
   }
 
@@ -84613,30 +87710,63 @@ export namespace Prisma {
   export type AnalyticsEventUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     event?: StringFieldUpdateOperationsInput | string
+    eventCategory?: StringFieldUpdateOperationsInput | string
     properties?: NullableStringFieldUpdateOperationsInput | string | null
     sessionId?: NullableStringFieldUpdateOperationsInput | string | null
+    deviceId?: StringFieldUpdateOperationsInput | string
+    pagePath?: StringFieldUpdateOperationsInput | string
+    platform?: StringFieldUpdateOperationsInput | string
+    appVersion?: StringFieldUpdateOperationsInput | string
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    utmSource?: NullableStringFieldUpdateOperationsInput | string | null
+    utmMedium?: NullableStringFieldUpdateOperationsInput | string | null
+    utmCampaign?: NullableStringFieldUpdateOperationsInput | string | null
+    utmContent?: NullableStringFieldUpdateOperationsInput | string | null
+    utmTerm?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AnalyticsEventUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     event?: StringFieldUpdateOperationsInput | string
+    eventCategory?: StringFieldUpdateOperationsInput | string
     properties?: NullableStringFieldUpdateOperationsInput | string | null
     sessionId?: NullableStringFieldUpdateOperationsInput | string | null
+    deviceId?: StringFieldUpdateOperationsInput | string
+    pagePath?: StringFieldUpdateOperationsInput | string
+    platform?: StringFieldUpdateOperationsInput | string
+    appVersion?: StringFieldUpdateOperationsInput | string
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    utmSource?: NullableStringFieldUpdateOperationsInput | string | null
+    utmMedium?: NullableStringFieldUpdateOperationsInput | string | null
+    utmCampaign?: NullableStringFieldUpdateOperationsInput | string | null
+    utmContent?: NullableStringFieldUpdateOperationsInput | string | null
+    utmTerm?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AnalyticsEventUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     event?: StringFieldUpdateOperationsInput | string
+    eventCategory?: StringFieldUpdateOperationsInput | string
     properties?: NullableStringFieldUpdateOperationsInput | string | null
     sessionId?: NullableStringFieldUpdateOperationsInput | string | null
+    deviceId?: StringFieldUpdateOperationsInput | string
+    pagePath?: StringFieldUpdateOperationsInput | string
+    platform?: StringFieldUpdateOperationsInput | string
+    appVersion?: StringFieldUpdateOperationsInput | string
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    utmSource?: NullableStringFieldUpdateOperationsInput | string | null
+    utmMedium?: NullableStringFieldUpdateOperationsInput | string | null
+    utmCampaign?: NullableStringFieldUpdateOperationsInput | string | null
+    utmContent?: NullableStringFieldUpdateOperationsInput | string | null
+    utmTerm?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

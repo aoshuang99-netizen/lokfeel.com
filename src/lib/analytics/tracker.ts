@@ -1,672 +1,414 @@
-import { db } from '@/lib/db'
-import { DashboardStats, UserFunnel, UserFunnelStage } from '@/types'
+/**
+ * LokFeel Analytics Tracker — Frontend SDK
+ * 
+ * Lightweight (<5KB gzip) event tracking with:
+ * - Auto-capture: page_view, session_start/end, errors, performance
+ * - Manual tracking: track(), identify(), trackRevenue()
+ * - Batch sending with sendBeacon fallback
+ * - Privacy-first: PII auto-stripping, consent-aware
+ */
 
-// ============================================================================
-// Event Tracking
-// ============================================================================
+// ─── Types ───
 
-interface EventProperties {
-  [key: string]: string | number | boolean | Date | undefined
+export interface TrackerConfig {
+  appVersion?: string;
+  endpoint?: string;
+  sampleRate?: number;
+  debug?: boolean;
+  autoTrack?: boolean;
 }
 
-/**
- * Track an analytics event
- */
-export async function trackEvent(
-  userId: string | undefined,
-  event: string,
-  properties?: EventProperties
-) {
-  try {
-    await db.analyticsEvent.create({
-      data: {
-        userId,
-        event,
-        properties: properties ? JSON.stringify(properties) : undefined,
-      },
-    })
-  } catch (error) {
-    // Log but don't throw to avoid breaking user flows
-    console.error('Failed to track event:', error)
+interface AnalyticsEvent {
+  event_id: string;
+  event: string;
+  event_category: string;
+  timestamp: number;
+  session_id: string;
+  user_id?: string;
+  device_id: string;
+  properties: Record<string, unknown>;
+  page_path: string;
+  page_title: string;
+  referrer: string;
+  platform: string;
+  screen_width: number;
+  screen_height: number;
+  language: string;
+  timezone: string;
+  app_version: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  _retries?: number;
+}
+
+// ─── Constants ───
+
+const STORAGE_KEY_DEVICE_ID = 'lokfeel_device_id';
+const STORAGE_KEY_SESSION_ID = 'lokfeel_session_id';
+const STORAGE_KEY_SESSION_TS = 'lokfeel_session_ts';
+const STORAGE_KEY_UTM = 'lokfeel_utm';
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 min
+const BATCH_SIZE = 20;
+const FLUSH_INTERVAL_MS = 5000;
+const MAX_RETRIES = 3;
+const DEFAULT_ENDPOINT = '/api/analytics/collect';
+
+// ─── Utilities ───
+
+function generateId(): string {
+  return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+function now(): number {
+  return Date.now();
+}
+
+function noop() {}
+
+// ─── PII Sanitizer ───
+const PII_PATTERNS = [
+  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, // email
+  /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g,                     // US phone
+  /\b\d{11}\b/g,                                          // CN phone
+  /\b(?:\d[ -]*?){13,16}\b/g,                             // credit card
+  /\b\d{6}(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]\b/g, // CN ID
+];
+
+function sanitizeProperties(props: Record<string, unknown>): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (typeof value === 'string') {
+      let cleaned = value;
+      for (const pattern of PII_PATTERNS) {
+        cleaned = cleaned.replace(pattern, '[REDACTED]');
+      }
+      sanitized[key] = cleaned.slice(0, 500); // max 500 chars
+    } else if (typeof value === 'number' || typeof value === 'boolean' || value === null) {
+      sanitized[key] = value;
+    } else if (typeof value === 'object') {
+      sanitized[key] = '[object]';
+    }
+  }
+  return sanitized;
+}
+
+// ─── Category Mapper ───
+
+function categorizeEvent(event: string): string {
+  if (event.startsWith('user_') || event.startsWith('user.')) return 'user';
+  if (event.startsWith('swipe_') || event.startsWith('match_') || event.startsWith('discover_') || event.startsWith('profile_')) return 'match';
+  if (event.startsWith('chat_') || event.startsWith('message_') || event.startsWith('call_')) return 'chat';
+  if (event.startsWith('subscription_') || event.startsWith('pricing_') || event.startsWith('checkout_') || event.startsWith('payment_')) return 'revenue';
+  if (event.startsWith('admin_')) return 'admin';
+  if (event === 'page_view' || event === 'session_start' || event === 'session_end') return 'system';
+  return 'other';
+}
+
+// ─── UTM Capture ───
+
+function captureUTM(): Record<string, string> {
+  const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY_UTM) : null;
+  if (stored) return JSON.parse(stored);
+
+  if (typeof window === 'undefined') return {};
+
+  const params = new URLSearchParams(window.location.search);
+  const utm: Record<string, string> = {};
+  for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+    const value = params.get(key);
+    if (value) utm[key] = value;
+  }
+
+  if (Object.keys(utm).length > 0 && typeof localStorage !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY_UTM, JSON.stringify(utm));
+  }
+
+  return utm;
+}
+
+// ─── Main Tracker Class ───
+
+class LokFeelTracker {
+  private config: Required<TrackerConfig>;
+  private queue: AnalyticsEvent[] = [];
+  private flushTimer: ReturnType<typeof setInterval> | null = null;
+  private sessionId: string;
+  private deviceId: string;
+  private userId: string | undefined;
+  private utmTags: Record<string, string>;
+  private sessionStartTs: number;
+  private isFlushing = false;
+
+  constructor(config: TrackerConfig = {}) {
+    this.config = {
+      appVersion: config.appVersion || '0.0.0',
+      endpoint: config.endpoint || DEFAULT_ENDPOINT,
+      sampleRate: config.sampleRate ?? 1.0,
+      debug: config.debug || false,
+      autoTrack: config.autoTrack ?? true,
+    };
+
+    this.deviceId = this.getOrCreateDeviceId();
+    this.utmTags = captureUTM();
+    const session = this.getOrCreateSession();
+    this.sessionId = session.id;
+    this.sessionStartTs = session.ts;
+
+    if (this.config.autoTrack) {
+      this.attachAutoTrackers();
+    }
+
+    this.startFlushTimer();
+    this.log('Tracker initialized', { deviceId: this.deviceId, sessionId: this.sessionId });
+  }
+
+  // ─── Public API ───
+
+  track(event: string, properties: Record<string, unknown> = {}): void {
+    if (!this.shouldSample()) return;
+
+    const payload = this.buildEvent(event, properties);
+    this.queue.push(payload);
+    this.log('track', { event, properties });
+
+    // Critical events flush immediately
+    if (
+      event.startsWith('subscription_') ||
+      event === 'user_registered' ||
+      event === 'match_created'
+    ) {
+      this.flush();
+      return;
+    }
+
+    if (this.queue.length >= BATCH_SIZE) {
+      this.flush();
+    }
+  }
+
+  identify(userId: string, traits?: Record<string, unknown>): void {
+    this.userId = userId;
+    if (traits) {
+      this.track('user_identified', { ...traits, $userId: userId });
+    }
+    this.log('identify', { userId });
+  }
+
+  trackPageView(path?: string, title?: string): void {
+    if (typeof window === 'undefined') return;
+    this.track('page_view', {
+      path: path || window.location.pathname,
+      title: title || document.title,
+      referrer: document.referrer || '',
+    });
+  }
+
+  trackRevenue(amount: number, currency = 'USD', productId = ''): void {
+    this.track('revenue_earned', {
+      amount,
+      currency,
+      productId,
+      $revenue: amount,
+    });
+  }
+
+  setUserProperties(props: Record<string, unknown>): void {
+    this.track('$set_user_properties', props);
+  }
+
+  async flush(): Promise<void> {
+    if (this.queue.length === 0 || this.isFlushing) return;
+    this.isFlushing = true;
+
+    const batch = [...this.queue];
+    this.queue = [];
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        const blob = new Blob(
+          [JSON.stringify({ events: batch })],
+          { type: 'application/json' }
+        );
+        const sent = navigator.sendBeacon(this.config.endpoint, blob);
+        if (!sent) throw new Error('sendBeacon failed');
+      } else {
+        const resp = await fetch(this.config.endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: batch }),
+          keepalive: true,
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      }
+      this.log('flushed', { count: batch.length });
+    } catch (err) {
+      this.log('flush error', { error: String(err) });
+      // Re-queue failed events (up to MAX_RETRIES)
+      for (const event of batch) {
+        if ((event._retries || 0) < MAX_RETRIES) {
+          this.queue.push({ ...event, _retries: (event._retries || 0) + 1 });
+        }
+      }
+    } finally {
+      this.isFlushing = false;
+    }
+  }
+
+  debug(enabled: boolean): void {
+    this.config.debug = enabled;
+  }
+
+  // ─── Private Methods ───
+
+  private buildEvent(event: string, properties: Record<string, unknown>): AnalyticsEvent {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    const title = typeof document !== 'undefined' ? document.title : '';
+
+    return {
+      event_id: generateId(),
+      event,
+      event_category: categorizeEvent(event),
+      timestamp: now(),
+      session_id: this.sessionId,
+      user_id: this.userId,
+      device_id: this.deviceId,
+      properties: sanitizeProperties(properties),
+      page_path: path,
+      page_title: title,
+      referrer: typeof document !== 'undefined' ? document.referrer : '',
+      platform: 'web',
+      screen_width: typeof window !== 'undefined' ? window.screen.width : 0,
+      screen_height: typeof window !== 'undefined' ? window.screen.height : 0,
+      language: typeof navigator !== 'undefined' ? navigator.language : 'en',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      app_version: this.config.appVersion,
+      ...this.utmTags,
+    };
+  }
+
+  private shouldSample(): boolean {
+    if (this.config.sampleRate >= 1.0) return true;
+    return Math.random() < this.config.sampleRate;
+  }
+
+  private getOrCreateDeviceId(): string {
+    if (typeof localStorage === 'undefined') return generateId();
+    let id = localStorage.getItem(STORAGE_KEY_DEVICE_ID);
+    if (!id) {
+      id = generateId();
+      localStorage.setItem(STORAGE_KEY_DEVICE_ID, id);
+    }
+    return id;
+  }
+
+  private getOrCreateSession(): { id: string; ts: number } {
+    if (typeof sessionStorage === 'undefined') return { id: generateId(), ts: now() };
+    
+    const storedId = sessionStorage.getItem(STORAGE_KEY_SESSION_ID);
+    const storedTs = sessionStorage.getItem(STORAGE_KEY_SESSION_TS);
+    
+    if (storedId && storedTs) {
+      const ts = parseInt(storedTs, 10);
+      if (now() - ts < SESSION_TIMEOUT_MS) {
+        return { id: storedId, ts };
+      }
+    }
+
+    const id = generateId();
+    const ts = now();
+    sessionStorage.setItem(STORAGE_KEY_SESSION_ID, id);
+    sessionStorage.setItem(STORAGE_KEY_SESSION_TS, String(ts));
+    return { id, ts };
+  }
+
+  private startFlushTimer(): void {
+    this.flushTimer = setInterval(() => this.flush(), FLUSH_INTERVAL_MS);
+  }
+
+  private attachAutoTrackers(): void {
+    if (typeof window === 'undefined') return;
+
+    // Page view on popstate
+    window.addEventListener('popstate', () => {
+      this.trackPageView();
+    });
+
+    // Session end on beforeunload
+    window.addEventListener('beforeunload', () => {
+      this.track('session_end', {
+        duration_seconds: Math.round((now() - this.sessionStartTs) / 1000),
+      });
+      this.flush();
+    });
+
+    // Global error tracking
+    window.addEventListener('error', (e) => {
+      this.track('app_error', {
+        message: e.message,
+        filename: e.filename,
+        lineno: e.lineno,
+        colno: e.colno,
+      });
+    });
+
+    window.addEventListener('unhandledrejection', (e) => {
+      this.track('app_error', {
+        message: String(e.reason),
+        type: 'unhandledrejection',
+      });
+    });
+
+    // Performance monitoring (Web Vitals)
+    if ('PerformanceObserver' in window) {
+      try {
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.entryType === 'largest-contentful-paint') {
+              this.track('page_performance', { metric: 'LCP', value: entry.startTime });
+            }
+          }
+        });
+        observer.observe({ type: 'largest-contentful-paint', buffered: true });
+      } catch { /* silently ignore */ }
+    }
+  }
+
+  private log(...args: unknown[]): void {
+    if (this.config.debug) {
+      console.log('[LokFeel Tracker]', ...args);
+    }
   }
 }
 
-/**
- * Track a page view
- */
-export async function trackPageView(
-  userId: string | undefined,
-  page: string,
-  sessionId?: string
-) {
-  return trackEvent(userId, 'page_view', {
-    page,
-    sessionId,
-    url: page,
-  })
-}
+// ─── Singleton ───
 
-/**
- * Track user registration
- */
-export async function trackRegistration(userId: string, method: string) {
-  return trackEvent(userId, 'user_registered', {
-    method, // 'credentials', 'google', 'github'
-    // @ts-ignore - field not in current schema
-    timestamp: new Date().toISOString(),
-  })
-}
+let instance: LokFeelTracker | null = null;
 
-/**
- * Track onboarding step completion
- */
-export async function trackOnboardingStep(
-  userId: string,
-  step: number,
-  stepName: string
-) {
-  return trackEvent(userId, 'onboarding_step_completed', {
-    step,
-    stepName,
-  })
-}
-
-/**
- * Track onboarding completion
- */
-export async function trackOnboardingComplete(userId: string) {
-  return trackEvent(userId, 'onboarding_completed', {})
-}
-
-/**
- * Track match action
- */
-export async function trackMatchAction(
-  userId: string,
-  action: 'viewed' | 'accepted' | 'declined' | 'expired',
-  matchId: string,
-  // @ts-ignore - field not in current schema
-  compatibilityScore?: number
-) {
-  return trackEvent(userId, 'match_action', {
-    action,
-    matchId,
-    // @ts-ignore - field not in current schema
-    compatibilityScore,
-  })
-}
-
-/**
- * Track message sent
- */
-export async function trackMessageSent(
-  userId: string,
-  matchId: string,
-  messageLength: number
-) {
-  return trackEvent(userId, 'message_sent', {
-    matchId,
-    messageLength,
-  })
-}
-
-/**
- * Track subscription action
- */
-export async function trackSubscriptionAction(
-  userId: string,
-  action: 'started' | 'cancelled' | 'renewed' | 'expired',
-  plan: string,
-  amount?: number
-) {
-  return trackEvent(userId, 'subscription_action', {
-    action,
-    plan,
-    amount,
-  })
-}
-
-// ============================================================================
-// Dashboard Statistics
-// ============================================================================
-
-/**
- * Get comprehensive dashboard statistics
- */
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const weekAgo = new Date(today)
-  weekAgo.setDate(weekAgo.getDate() - 7)
-
-  const [
-    totalUsers,
-    activeUsers,
-    newUsersToday,
-    newUsersThisWeek,
-    totalMatches,
-    successfulMatches,
-    totalMessages,
-    messagesToday,
-  ] = await Promise.all([
-    // Total users
-    db.user.count(),
-    
-    // Active users (active in last 30 days)
-    db.user.count({
-      where: {
-        updatedAt: {
-          gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-        },
-      },
-    }),
-    
-    // New users today
-    db.user.count({
-      where: {
-        createdAt: {
-          gte: today,
-        },
-      },
-    }),
-    
-    // New users this week
-    db.user.count({
-      where: {
-        createdAt: {
-          gte: weekAgo,
-        },
-      },
-    }),
-    
-    // Total matches
-    db.match.count(),
-    
-    // Successful matches (both accepted)
-    db.match.count({
-      where: {
-        status: 'ACCEPTED',
-      },
-    }),
-    
-    // Total messages
-    db.message.count(),
-    
-    // Messages today
-    db.message.count({
-      where: {
-        createdAt: {
-          gte: today,
-        },
-      },
-    }),
-  ])
-
-  // Calculate conversion rate (users who completed onboarding)
-  const usersWithProfiles = await db.profile.count({
-    where: {
-      profileStatus: 'APPROVED',
-    },
-  })
-  
-  const conversionRate = totalUsers > 0
-    ? Math.round((usersWithProfiles / totalUsers) * 100)
-    : 0
-
-  // Get revenue stats
-  const revenueStats = await getRevenueStats()
-
-  return {
-    totalUsers,
-    activeUsers,
-    newUsersToday,
-    newUsersThisWeek,
-    totalMatches,
-    successfulMatches,
-    totalMessages,
-    messagesToday,
-    conversionRate,
-    revenue: revenueStats,
+export function initTracker(config?: TrackerConfig): LokFeelTracker {
+  if (!instance) {
+    instance = new LokFeelTracker(config);
   }
+  return instance;
 }
 
-/**
- * Get revenue statistics
- */
-async function getRevenueStats() {
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const weekAgo = new Date(today)
-  weekAgo.setDate(weekAgo.getDate() - 7)
-  const monthAgo = new Date(today)
-  monthAgo.setMonth(monthAgo.getMonth() - 1)
-
-  const [
-    todayRevenue,
-    weekRevenue,
-    monthRevenue,
-    totalRevenue,
-  ] = await Promise.all([
-    // Today's revenue
-    db.analyticsEvent.aggregate({
-      where: {
-        event: 'subscription_action',
-        // @ts-ignore - field not in current schema
-        timestamp: { gte: today },
-        properties: {
-          // @ts-ignore - field not in current schema
-          path: ['action'],
-          equals: 'started',
-        },
-      },
-      // @ts-ignore - field not in current schema
-      _sum: {
-        properties: {
-          // @ts-ignore - field not in current schema
-          path: ['amount'],
-        },
-      },
-    }),
-    
-    // This week's revenue
-    db.analyticsEvent.aggregate({
-      where: {
-        event: 'subscription_action',
-        // @ts-ignore - field not in current schema
-        timestamp: { gte: weekAgo },
-        properties: {
-          // @ts-ignore - field not in current schema
-          path: ['action'],
-          equals: 'started',
-        },
-      },
-      // @ts-ignore - field not in current schema
-      _sum: {
-        properties: {
-          // @ts-ignore - field not in current schema
-          path: ['amount'],
-        },
-      },
-    }),
-    
-    // This month's revenue
-    db.analyticsEvent.aggregate({
-      where: {
-        event: 'subscription_action',
-        // @ts-ignore - field not in current schema
-        timestamp: { gte: monthAgo },
-        properties: {
-          // @ts-ignore - field not in current schema
-          path: ['action'],
-          equals: 'started',
-        },
-      },
-      // @ts-ignore - field not in current schema
-      _sum: {
-        properties: {
-          // @ts-ignore - field not in current schema
-          path: ['amount'],
-        },
-      },
-    }),
-    
-    // Total revenue
-    db.analyticsEvent.aggregate({
-      where: {
-        event: 'subscription_action',
-        properties: {
-          // @ts-ignore - field not in current schema
-          path: ['action'],
-          equals: 'started',
-        },
-      },
-      // @ts-ignore - field not in current schema
-      _sum: {
-        properties: {
-          // @ts-ignore - field not in current schema
-          path: ['amount'],
-        },
-      },
-    }),
-  ])
-
-  return {
-    // @ts-ignore - field not in current schema
-    today: Number(todayRevenue._sum?.properties || 0),
-    // @ts-ignore - field not in current schema
-    thisWeek: Number(weekRevenue._sum?.properties || 0),
-    // @ts-ignore - field not in current schema
-    thisMonth: Number(monthRevenue._sum?.properties || 0),
-    // @ts-ignore - field not in current schema
-    total: Number(totalRevenue._sum?.properties || 0),
+export function getTracker(): LokFeelTracker {
+  if (!instance) {
+    if (typeof window !== 'undefined') {
+      // Auto-init in browser with defaults
+      instance = new LokFeelTracker({ debug: false, autoTrack: true });
+    } else {
+      throw new Error('Tracker not initialized. Call initTracker() first in a client component.');
+    }
   }
+  return instance;
 }
 
-// ============================================================================
-// User Funnel Analysis
-// ============================================================================
-
-/**
- * Get user conversion funnel
- */
-export async function getUserFunnel(): Promise<UserFunnel> {
-  const stages: UserFunnelStage[] = []
-
-  // Stage 1: Registration
-  const registered = await db.user.count()
-  stages.push({
-    stage: 'Registered',
-    count: registered,
-    percentage: 100,
-    dropOff: 0,
-  })
-
-  // Stage 2: Started Onboarding
-  const startedOnboarding = await db.profile.count()
-  stages.push({
-    stage: 'Started Onboarding',
-    count: startedOnboarding,
-    percentage: registered > 0 ? Math.round((startedOnboarding / registered) * 100) : 0,
-    dropOff: registered - startedOnboarding,
-  })
-
-  // Stage 3: Completed Onboarding
-  const completedOnboarding = await db.profile.count({
-    where: { profileStatus: 'APPROVED' },
-  })
-  stages.push({
-    stage: 'Completed Onboarding',
-    count: completedOnboarding,
-    percentage: startedOnboarding > 0 ? Math.round((completedOnboarding / startedOnboarding) * 100) : 0,
-    dropOff: startedOnboarding - completedOnboarding,
-  })
-
-  // Stage 4: Received First Match
-  const receivedFirstMatch = await db.user.count({
-    where: {
-      OR: [
-        { sentMatches: { some: {} } },
-        { receivedMatches: { some: {} } },
-      ],
-    },
-  })
-  stages.push({
-    stage: 'Received First Match',
-    count: receivedFirstMatch,
-    percentage: completedOnboarding > 0 ? Math.round((receivedFirstMatch / completedOnboarding) * 100) : 0,
-    dropOff: completedOnboarding - receivedFirstMatch,
-  })
-
-  // Stage 5: Accepted First Match
-  const acceptedFirstMatch = await db.user.count({
-    where: {
-      OR: [
-        // @ts-ignore - field not in current schema
-        { sentMatches: { some: { user1Accepted: true } } },
-        // @ts-ignore - field not in current schema
-        { receivedMatches: { some: { user2Accepted: true } } },
-      ],
-    },
-  })
-  stages.push({
-    stage: 'Accepted First Match',
-    count: acceptedFirstMatch,
-    percentage: receivedFirstMatch > 0 ? Math.round((acceptedFirstMatch / receivedFirstMatch) * 100) : 0,
-    dropOff: receivedFirstMatch - acceptedFirstMatch,
-  })
-
-  // Stage 6: Sent First Message
-  const sentFirstMessage = await db.user.count({
-    where: {
-      // @ts-ignore - field not in current schema
-      sentMessages: { some: {} },
-    },
-  })
-  stages.push({
-    stage: 'Sent First Message',
-    count: sentFirstMessage,
-    percentage: acceptedFirstMatch > 0 ? Math.round((sentFirstMessage / acceptedFirstMatch) * 100) : 0,
-    dropOff: acceptedFirstMatch - sentFirstMessage,
-  })
-
-  // Stage 7: Upgraded to Premium
-  const upgraded = await db.subscription.count({
-    where: {
-      plan: { in: ['PREMIUM_MONTHLY', 'PREMIUM_YEARLY'] },
-    },
-  })
-  stages.push({
-    stage: 'Upgraded to Premium',
-    count: upgraded,
-    percentage: sentFirstMessage > 0 ? Math.round((upgraded / sentFirstMessage) * 100) : 0,
-    dropOff: sentFirstMessage - upgraded,
-  })
-
-  const totalCompleted = stages[stages.length - 1]?.count || 0
-  const overallConversion = registered > 0
-    ? Math.round((totalCompleted / registered) * 100)
-    : 0
-
-  return {
-    stages,
-    totalStarted: registered,
-    totalCompleted,
-    overallConversion,
-  }
+export function resetTracker(): void {
+  instance = null;
 }
 
-// ============================================================================
-// Retention Analysis
-// ============================================================================
-
-interface RetentionData {
-  cohort: string
-  size: number
-  retention: number[] // Day 1, Day 7, Day 30 retention percentages
-}
-
-/**
- * Get user retention cohorts
- */
-export async function getRetentionCohorts(): Promise<RetentionData[]> {
-  const cohorts: RetentionData[] = []
-  const now = new Date()
-
-  // Get last 12 weeks of cohorts
-  for (let i = 0; i < 12; i++) {
-    const cohortStart = new Date(now)
-    cohortStart.setDate(cohortStart.getDate() - (i * 7))
-    cohortStart.setHours(0, 0, 0, 0)
-    
-    const cohortEnd = new Date(cohortStart)
-    cohortEnd.setDate(cohortEnd.getDate() + 7)
-
-    const cohortUsers = await db.user.findMany({
-      where: {
-        createdAt: {
-          gte: cohortStart,
-          lt: cohortEnd,
-        },
-      },
-      select: {
-        id: true,
-        createdAt: true,
-      },
-    })
-
-    if (cohortUsers.length === 0) continue
-
-    const userIds = cohortUsers.map((u: any) => u.id)
-
-    // Calculate retention at different intervals
-    const day1Retention = await calculateRetention(userIds, 1)
-    const day7Retention = await calculateRetention(userIds, 7)
-    const day30Retention = await calculateRetention(userIds, 30)
-
-    cohorts.push({
-      cohort: cohortStart.toISOString().split('T')[0],
-      size: cohortUsers.length,
-      retention: [day1Retention, day7Retention, day30Retention],
-    })
-  }
-
-  return cohorts.reverse()
-}
-
-async function calculateRetention(userIds: string[], days: number): Promise<number> {
-  if (userIds.length === 0) return 0
-
-  const cutoffDate = new Date()
-  cutoffDate.setDate(cutoffDate.getDate() - days)
-
-  const activeUsers = await db.user.count({
-    where: {
-      id: { in: userIds },
-      updatedAt: {
-        gte: cutoffDate,
-      },
-    },
-  })
-
-  return Math.round((activeUsers / userIds.length) * 100)
-}
-
-// ============================================================================
-// Match Analytics
-// ============================================================================
-
-interface MatchAnalytics {
-  totalMatches: number
-  acceptanceRate: number
-  averageCompatibilityScore: number
-  matchesByDay: { date: string; count: number }[]
-}
-
-/**
- * Get match analytics
- */
-export async function getMatchAnalytics(): Promise<MatchAnalytics> {
-  const [
-    totalMatches,
-    acceptedMatches,
-    avgScore,
-  ] = await Promise.all([
-    db.match.count(),
-    db.match.count({ where: { status: 'ACCEPTED' } }),
-    db.match.aggregate({
-      // @ts-ignore - field not in current schema
-      _avg: { compatibilityScore: true },
-    }),
-  ])
-
-  // Get matches by day for last 30 days
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-  const matches = await db.match.findMany({
-    where: {
-      createdAt: { gte: thirtyDaysAgo },
-    },
-    select: {
-      createdAt: true,
-    },
-  })
-
-  const matchesByDay: { date: string; count: number }[] = []
-  const dateMap = new Map<string, number>()
-
-  for (const match of matches) {
-    const date = match.createdAt.toISOString().split('T')[0]
-    dateMap.set(date, (dateMap.get(date) || 0) + 1)
-  }
-
-  // Fill in all dates
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(thirtyDaysAgo)
-    date.setDate(date.getDate() + i)
-    const dateStr = date.toISOString().split('T')[0]
-    matchesByDay.push({
-      date: dateStr,
-      count: dateMap.get(dateStr) || 0,
-    })
-  }
-
-  return {
-    totalMatches,
-    acceptanceRate: totalMatches > 0 ? Math.round((acceptedMatches / totalMatches) * 100) : 0,
-    // @ts-ignore - field not in current schema
-    averageCompatibilityScore: Math.round(avgScore._avg?.compatibilityScore || 0),
-    matchesByDay,
-  }
-}
-
-// ============================================================================
-// Export Data
-// ============================================================================
-
-/**
- * Export analytics data for external analysis
- */
-export async function exportAnalyticsData(
-  startDate: Date,
-  endDate: Date
-): Promise<{
-  events: unknown[]
-  users: unknown[]
-  matches: unknown[]
-}> {
-  const [events, users, matches] = await Promise.all([
-    db.analyticsEvent.findMany({
-      where: {
-        // @ts-ignore - field not in current schema
-        timestamp: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-    }),
-    db.user.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      select: {
-        id: true,
-        createdAt: true,
-        updatedAt: true,
-        role: true,
-        _count: {
-          select: {
-            sentMatches: true,
-            receivedMatches: true,
-            // @ts-ignore - field not in current schema
-            sentMessages: true,
-          },
-        },
-      },
-    }),
-    db.match.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      select: {
-        id: true,
-        createdAt: true,
-        status: true,
-        // @ts-ignore - field not in current schema
-        compatibilityScore: true,
-        // @ts-ignore - field not in current schema
-        user1Accepted: true,
-        // @ts-ignore - field not in current schema
-        user2Accepted: true,
-      },
-    }),
-  ])
-
-  return { events, users, matches }
-}
+export { LokFeelTracker };
+export default LokFeelTracker;

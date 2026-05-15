@@ -631,10 +631,21 @@ exports.Prisma.AnalyticsEventScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   event: 'event',
+  eventCategory: 'eventCategory',
   properties: 'properties',
   sessionId: 'sessionId',
+  deviceId: 'deviceId',
+  pagePath: 'pagePath',
+  platform: 'platform',
+  appVersion: 'appVersion',
   ipAddress: 'ipAddress',
-  userAgent: 'userAgent',
+  country: 'country',
+  city: 'city',
+  utmSource: 'utmSource',
+  utmMedium: 'utmMedium',
+  utmCampaign: 'utmCampaign',
+  utmContent: 'utmContent',
+  utmTerm: 'utmTerm',
   createdAt: 'createdAt'
 };
 
@@ -745,6 +756,28 @@ exports.Prisma.UserReportScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   deletedAt: 'deletedAt'
+};
+
+exports.Prisma.AnalyticsEventDefScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  category: 'category',
+  description: 'description',
+  properties: 'properties',
+  isActive: 'isActive',
+  sampleRate: 'sampleRate',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AnalyticsDailyAggScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  eventName: 'eventName',
+  metricName: 'metricName',
+  value: 'value',
+  dimensions: 'dimensions',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -1131,7 +1164,9 @@ exports.Prisma.ModelName = {
   SincerityWallet: 'SincerityWallet',
   SincerityTransaction: 'SincerityTransaction',
   Block: 'Block',
-  UserReport: 'UserReport'
+  UserReport: 'UserReport',
+  AnalyticsEventDef: 'AnalyticsEventDef',
+  AnalyticsDailyAgg: 'AnalyticsDailyAgg'
 };
 
 /**
