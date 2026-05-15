@@ -234,7 +234,7 @@ export default function UsersPage() {
 
       {/* Filter Area */}
       {showFilters && (
-        <div className="rounded-xl border border-card-border bg-card/30 p-3 flex flex-wrap items-center gap-2">
+        <div className="rounded-xl border border-card-border bg-card/60 p-3 flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground-subtle" />
             <input
@@ -280,7 +280,7 @@ export default function UsersPage() {
       )}
 
       {/* Data Table */}
-      <div className="rounded-xl border border-card-border bg-card/30 overflow-hidden">
+      <div className="rounded-xl border border-card-border bg-card/60 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

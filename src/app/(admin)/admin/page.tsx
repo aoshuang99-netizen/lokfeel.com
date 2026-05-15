@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { HealthBoard } from "@/components/admin/health-board";
 import { ActionItemsBar } from "@/components/admin/action-items-bar";
+import { ConversionFunnel } from "@/components/admin/conversion-funnel";
 
 // ─── Light Theme Colors ───
 const THEME = {
@@ -61,6 +62,7 @@ interface DashboardSummary {
     userGrowth: Array<{ date: string; count: number }>;
     revenueTrend: Array<{ month: string; revenue: number }>;
   };
+  funnel: Array<{ stage: string; count: number; pct: number }>;
 }
 
 export default function AdminDashboardPage() {
@@ -289,6 +291,11 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
+
+      {/* ─── Conversion Funnel ─── */}
+      {data?.funnel && data.funnel.length > 0 && (
+        <ConversionFunnel stages={data.funnel} />
+      )}
 
       {/* ─── Action Items ─── */}
       {data?.actions && (

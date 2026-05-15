@@ -171,7 +171,7 @@ export default function AnalyticsPage() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {loading && !analytics ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-card-border bg-card/30 p-5">
+            <div key={i} className="rounded-2xl border border-card-border bg-card/60 p-5">
               <Skeleton className="h-3 w-20 mb-4" />
               <Skeleton className="h-8 w-28 mb-3" />
               <Skeleton className="h-3 w-16" />
@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
           keyMetrics.map((m, idx) => (
             <div
               key={idx}
-              className="group rounded-2xl border border-card-border bg-card/30 hover:bg-card/60 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5"
+              className="group rounded-2xl border border-card-border bg-card/60 hover:bg-card/60 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5"
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[11px] text-foreground-subtle font-semibold uppercase tracking-wider">{m.label}</p>
@@ -204,7 +204,7 @@ export default function AnalyticsPage() {
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-4">
         {/* User Signups */}
-        <div className="rounded-2xl border border-card-border bg-card/30 p-6">
+        <div className="rounded-2xl border border-card-border bg-card/60 p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-sm font-semibold">User Signups</h2>
@@ -236,7 +236,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Match Trends */}
-        <div className="rounded-2xl border border-card-border bg-card/30 p-6">
+        <div className="rounded-2xl border border-card-border bg-card/60 p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-sm font-semibold">Match Trends</h2>
@@ -259,7 +259,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Messages Today */}
-        <div className="rounded-2xl border border-card-border bg-card/30 p-6">
+        <div className="rounded-2xl border border-card-border bg-card/60 p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-sm font-semibold">Messages Sent Today</h2>
@@ -282,7 +282,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Subscription Distribution */}
-        <div className="rounded-2xl border border-card-border bg-card/30 p-6">
+        <div className="rounded-2xl border border-card-border bg-card/60 p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-sm font-semibold">Subscription Distribution</h2>
@@ -316,7 +316,7 @@ export default function AnalyticsPage() {
 
       {/* Revenue */}
       {analytics && (
-        <div className="rounded-2xl border border-card-border bg-card/30 p-6">
+        <div className="rounded-2xl border border-card-border bg-card/60 p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-sm font-semibold">Revenue Summary</h2>

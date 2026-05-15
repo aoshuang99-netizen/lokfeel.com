@@ -103,6 +103,21 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest)
       });
     }
 
+    // ─── Conversion Funnel ───
+    const [usersWithProfile, usersWithMessages, usersWithMatches] = await Promise.all([
+      db.profile.count({ where: { profileStatus: "APPROVED" } }),
+      db.message.findMany({ select: { senderId: true }, distinct: ['senderId'] }).then(rows => rows.length),
+      db.match.findMany({ select: { senderId: true }, distinct: ['senderId'] }).then(rows => rows.length),
+    ]);
+
+    const funnel = [
+      { stage: "注册用户", count: totalUsers, pct: 100 },
+      { stage: "完善资料", count: usersWithProfile, pct: totalUsers > 0 ? Math.round((usersWithProfile / totalUsers) * 100) : 0 },
+      { stage: "发起匹配", count: usersWithMatches, pct: totalUsers > 0 ? Math.round((usersWithMatches / totalUsers) * 100) : 0 },
+      { stage: "发送消息", count: usersWithMessages, pct: totalUsers > 0 ? Math.round((usersWithMessages / totalUsers) * 100) : 0 },
+      { stage: "付费订阅", count: activeSubscriptions, pct: totalUsers > 0 ? Math.round((activeSubscriptions / totalUsers) * 100) : 0 },
+    ];
+
     // ─── Action Items ───
     const [recentAuditLogs] = await Promise.all([
       db.auditLog?.count?.({ where: { createdAt: { gte: subDays(now, 7) } } }) ?? Promise.resolve(0),
@@ -172,6 +187,7 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest)
         userGrowth: dailyGrowth,
         revenueTrend,
       },
+      funnel,
     };
 
     return success(summary);
