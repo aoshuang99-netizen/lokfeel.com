@@ -183,15 +183,15 @@ export default function UsersPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold font-display tracking-tight">Users</h1>
-            <p className="text-foreground-muted text-xs mt-0.5">Manage and monitor all users</p>
+            <p className="text-[#6e6e73] text-xs mt-0.5">Manage and monitor all users</p>
           </div>
         </div>
-        <div className="rounded-xl border border-card-border bg-card/50 p-8 text-center">
+        <div className="rounded-xl border border-[#e5e5e7] bg-white p-8 text-center">
           <div className="w-12 h-12 rounded-xl bg-error/10 flex items-center justify-center mx-auto mb-3">
             <ShieldAlert className="w-6 h-6 text-error" />
           </div>
           <h3 className="text-base font-semibold mb-1">Failed to Load Users</h3>
-          <p className="text-foreground-muted text-sm mb-4">{error}</p>
+          <p className="text-[#6e6e73] text-sm mb-4">{error}</p>
           <button onClick={() => fetchUsers(currentPage)} className="btn-primary text-sm px-4 py-2">
             <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Retry
           </button>
@@ -206,7 +206,7 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-display tracking-tight">Users</h1>
-          <p className="text-foreground-muted text-xs mt-0.5">
+          <p className="text-[#6e6e73] text-xs mt-0.5">
             {pagination ? `${pagination.total.toLocaleString()} total` : "Manage and monitor all users"}
           </p>
         </div>
@@ -216,7 +216,7 @@ export default function UsersPage() {
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
               showFilters
                 ? "bg-primary/8 border-primary/20 text-primary"
-                : "bg-card/60 border-card-border text-foreground-muted hover:text-foreground"
+                : "bg-white border-[#e5e5e7] text-[#6e6e73] hover:text-[#1d1d1f]"
             }`}
           >
             <Filter className="w-3.5 h-3.5" />
@@ -225,7 +225,7 @@ export default function UsersPage() {
           <button
             onClick={() => fetchUsers(currentPage)}
             disabled={loading}
-            className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-card-border hover:bg-card-hover transition-all text-xs font-medium"
+            className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#e5e5e7] hover:bg-[#f5f5f7] transition-all text-xs font-medium"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -234,9 +234,9 @@ export default function UsersPage() {
 
       {/* Filter Area */}
       {showFilters && (
-        <div className="rounded-xl border border-card-border bg-card/60 p-3 flex flex-wrap items-center gap-2">
+        <div className="rounded-xl border border-[#e5e5e7] bg-white p-3 flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground-subtle" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#86868b]" />
             <input
               type="text"
               placeholder="Search name, email..."
@@ -264,7 +264,7 @@ export default function UsersPage() {
       {/* Batch Action Bar */}
       {selectedKeys.size > 0 && (
         <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/20 rounded-xl">
-          <span className="text-xs text-foreground-muted font-medium">
+          <span className="text-xs text-[#6e6e73] font-medium">
             {selectedKeys.size} selected
           </span>
           <div className="w-px h-4 bg-primary/20 mx-1" />
@@ -280,29 +280,29 @@ export default function UsersPage() {
       )}
 
       {/* Data Table */}
-      <div className="rounded-xl border border-card-border bg-card/60 overflow-hidden">
+      <div className="rounded-xl border border-[#e5e5e7] bg-white overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-card-border/60 bg-background-tertiary/30">
+              <tr className="border-b border-[#e5e5e7]/60 bg-[#f5f5f7]">
                 <th className="text-left py-2 px-3 w-10">
                   <Checkbox
                     checked={selectedKeys.size === users.length && users.length > 0}
                     onCheckedChange={(checked) => handleSelectAll(checked)}
                   />
                 </th>
-                <th className="text-left py-2 px-3 text-[11px] font-bold text-foreground-subtle uppercase tracking-wider">User</th>
-                <th className="text-left py-2 px-3 text-[11px] font-bold text-foreground-subtle uppercase tracking-wider">Role</th>
-                <th className="text-left py-2 px-3 text-[11px] font-bold text-foreground-subtle uppercase tracking-wider">Status</th>
-                <th className="text-right py-2 px-3 text-[11px] font-bold text-foreground-subtle uppercase tracking-wider">Matches</th>
-                <th className="text-right py-2 px-3 text-[11px] font-bold text-foreground-subtle uppercase tracking-wider">Joined</th>
-                <th className="text-right py-2 px-3 text-[11px] font-bold text-foreground-subtle uppercase tracking-wider w-[100px]">Actions</th>
+                <th className="text-left py-2 px-3 text-[11px] font-bold text-[#86868b] uppercase tracking-wider">User</th>
+                <th className="text-left py-2 px-3 text-[11px] font-bold text-[#86868b] uppercase tracking-wider">Role</th>
+                <th className="text-left py-2 px-3 text-[11px] font-bold text-[#86868b] uppercase tracking-wider">Status</th>
+                <th className="text-right py-2 px-3 text-[11px] font-bold text-[#86868b] uppercase tracking-wider">Matches</th>
+                <th className="text-right py-2 px-3 text-[11px] font-bold text-[#86868b] uppercase tracking-wider">Joined</th>
+                <th className="text-right py-2 px-3 text-[11px] font-bold text-[#86868b] uppercase tracking-wider w-[100px]">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && users.length === 0 ? (
                 Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i} className="border-b border-card-border/30">
+                  <tr key={i} className="border-b border-[#e5e5e7]/30">
                     <td className="py-2 px-3"><Skeleton className="h-6 w-6" /></td>
                     <td className="py-2 px-3"><Skeleton className="h-6 w-48" /></td>
                     <td className="py-2 px-3"><Skeleton className="h-5 w-16" /></td>
@@ -315,7 +315,7 @@ export default function UsersPage() {
               ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center">
-                    <p className="text-foreground-subtle text-sm">No users found</p>
+                    <p className="text-[#86868b] text-sm">No users found</p>
                   </td>
                 </tr>
               ) : (
@@ -328,7 +328,7 @@ export default function UsersPage() {
                   return (
                     <tr 
                       key={user.id} 
-                      className={`border-b border-card-border/30 hover:bg-background-tertiary/30 transition-colors ${
+                      className={`border-b border-[#e5e5e7]/30 hover:bg-[#f5f5f7] transition-colors ${
                         isSelected ? "bg-primary/5" : ""
                       }`}
                     >
@@ -340,7 +340,7 @@ export default function UsersPage() {
                       </td>
                       <td className="py-2 px-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-foreground font-semibold text-xs overflow-hidden ring-1 ring-card-border/50 shrink-0">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-[#1d1d1f] font-semibold text-xs overflow-hidden ring-1 ring-[#e5e5e7]/50 shrink-0">
                             {user.image || user.profile?.avatar ? (
                               <img src={user.image || user.profile?.avatar || undefined} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -349,7 +349,7 @@ export default function UsersPage() {
                           </div>
                           <div className="min-w-0">
                             <p className="font-medium text-xs truncate">{displayName}</p>
-                            <p className="text-[11px] text-foreground-subtle truncate">{user.email}</p>
+                            <p className="text-[11px] text-[#86868b] truncate">{user.email}</p>
                           </div>
                         </div>
                       </td>
@@ -357,7 +357,7 @@ export default function UsersPage() {
                         <span className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
                           user.role === "ADMIN" || user.role === "SUPER_ADMIN"
                             ? "bg-primary/10 text-primary"
-                            : "bg-background-tertiary text-foreground-muted"
+                            : "bg-[#f5f5f7] text-[#6e6e73]"
                         }`}>
                           {user.role === "SUPER_ADMIN" ? "Super" : user.role}
                         </span>
@@ -367,7 +367,7 @@ export default function UsersPage() {
                           status === "APPROVED" ? "bg-emerald-500/10 text-emerald-400" :
                           status === "PENDING_REVIEW" ? "bg-amber-500/10 text-amber-400" :
                           status === "BANNED" || status === "DEACTIVATED" ? "bg-red-500/10 text-red-400" :
-                          "bg-background-tertiary text-foreground-muted"
+                          "bg-[#f5f5f7] text-[#6e6e73]"
                         }`}>
                           {status === "PENDING_REVIEW" ? "Pending" : (status || "N/A")}
                         </span>
@@ -375,18 +375,18 @@ export default function UsersPage() {
                       <td className="py-2 px-3 text-right">
                         <span className="text-xs font-medium tabular-nums">{matchCount}</span>
                       </td>
-                      <td className="py-2 px-3 text-right text-[11px] text-foreground-subtle">
+                      <td className="py-2 px-3 text-right text-[11px] text-[#86868b]">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="py-2 px-3">
                         <div className="flex items-center justify-end gap-0.5">
-                          <Link href={`/admin/users/${user.id}`} className="p-1.5 rounded-md hover:bg-background-tertiary text-foreground-subtle hover:text-foreground transition-colors" title="View">
+                          <Link href={`/admin/users/${user.id}`} className="p-1.5 rounded-md hover:bg-[#f5f5f7] text-[#86868b] hover:text-[#1d1d1f] transition-colors" title="View">
                             <Eye className="w-3.5 h-3.5" />
                           </Link>
                           {status !== "BANNED" && status !== "DEACTIVATED" && user.role !== "SUPER_ADMIN" && (
                             <button
                               onClick={() => { setSelectedUser(user); setShowBanDialog(true); }}
-                              className="p-1.5 rounded-md hover:bg-red-500/10 text-foreground-subtle hover:text-red-400 transition-colors"
+                              className="p-1.5 rounded-md hover:bg-red-500/10 text-[#86868b] hover:text-red-400 transition-colors"
                               title="Ban"
                             >
                               <Ban className="w-3.5 h-3.5" />
@@ -404,26 +404,26 @@ export default function UsersPage() {
 
         {/* Pagination */}
         {pagination && (
-          <div className="px-4 py-2 border-t border-card-border/50 flex items-center justify-between bg-background-tertiary/20">
-            <p className="text-[11px] text-foreground-subtle font-medium">
+          <div className="px-4 py-2 border-t border-[#e5e5e7]/50 flex items-center justify-between bg-[#fafafa]">
+            <p className="text-[11px] text-[#86868b] font-medium">
               {((pagination.page - 1) * pagination.pageSize) + 1}-{Math.min(pagination.page * pagination.pageSize, pagination.total)}
-              <span className="text-foreground-muted"> / {pagination.total}</span>
+              <span className="text-[#6e6e73]"> / {pagination.total}</span>
             </p>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage <= 1 || loading}
-                className="p-1.5 rounded-md hover:bg-background-tertiary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="p-1.5 rounded-md hover:bg-[#f5f5f7] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-              <span className="px-2 py-1 text-[11px] text-foreground-subtle font-mono tabular-nums">
+              <span className="px-2 py-1 text-[11px] text-[#86868b] font-mono tabular-nums">
                 {pagination.page}/{pagination.totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
                 disabled={currentPage >= pagination.totalPages || loading}
-                className="p-1.5 rounded-md hover:bg-background-tertiary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="p-1.5 rounded-md hover:bg-[#f5f5f7] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
