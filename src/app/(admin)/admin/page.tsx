@@ -222,10 +222,10 @@ export default function AdminDashboardPage() {
         ) : null}
       </div>
 
-      {/* ─── Charts + Health Boards ─── */}
-      <div className="grid lg:grid-cols-3 gap-4">
+      {/* ─── Charts Row: User Growth + Revenue ─── */}
+      <div className="grid lg:grid-cols-2 gap-4">
         {/* User Growth Chart */}
-        <div className="lg:col-span-2 rounded-xl border border-[#e5e5e7] bg-white p-5">
+        <div className="rounded-xl border border-[#e5e5e7] bg-white p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-sm font-semibold text-[#1d1d1f]">用户增长趋势</h2>
@@ -275,6 +275,69 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
+        {/* Revenue Chart */}
+        <div className="rounded-xl border border-[#e5e5e7] bg-white p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[#1d1d1f]">收入趋势</h2>
+              <p className="text-xs text-[#86868b] mt-0.5">近12个月</p>
+            </div>
+            <Link
+              href="/admin/subscriptions"
+              className="flex items-center gap-1 text-[11px] font-medium text-[#0071e3] hover:underline"
+            >
+              详情 <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          {loading && !data ? (
+            <Skeleton className="h-[260px] w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={data?.charts.revenueTrend} barCategoryGap="20%">
+                <defs>
+                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={THEME.primary} />
+                    <stop offset="100%" stopColor={THEME.primary} stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 6" stroke="#e5e5e7" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  stroke={THEME.textMuted}
+                  fontSize={11}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => v.slice(5)}
+                />
+                <YAxis
+                  stroke={THEME.textMuted}
+                  fontSize={11}
+                  axisLine={false}
+                  tickLine={false}
+                  width={48}
+                  tickFormatter={(v) => `¥${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  cursor={{ fill: "rgba(0,113,227,0.03)" }}
+                  formatter={(value) => [`¥${Number(value).toLocaleString()}`, "收入"]}
+                />
+                <Bar dataKey="revenue" fill="url(#revGrad)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      {/* ─── Analysis Row: Funnel + Health ─── */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        {/* Conversion Funnel */}
+        <div>
+          {data?.funnel && data.funnel.length > 0 && (
+            <ConversionFunnel stages={data.funnel} />
+          )}
+        </div>
+
         {/* Health Boards */}
         <div className="rounded-xl border border-[#e5e5e7] bg-white p-5">
           <div className="flex items-center justify-between mb-4">
@@ -292,68 +355,64 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ─── Conversion Funnel ─── */}
-      {data?.funnel && data.funnel.length > 0 && (
-        <ConversionFunnel stages={data.funnel} />
-      )}
-
       {/* ─── Action Items ─── */}
       {data?.actions && (
         <ActionItemsBar items={data.actions} />
       )}
 
-      {/* ─── Revenue Chart ─── */}
+      {/* ─── Quick Actions ─── */}
       <div className="rounded-xl border border-[#e5e5e7] bg-white p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-sm font-semibold text-[#1d1d1f]">收入趋势</h2>
-            <p className="text-xs text-[#86868b] mt-0.5">近12个月</p>
-          </div>
+        <h2 className="text-sm font-semibold text-[#1d1d1f] mb-3">快捷操作</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Link
+            href="/admin/users"
+            className="flex items-center gap-2.5 p-3 rounded-lg border border-[#e5e5e7] hover:border-[#0071e3]/30 hover:bg-[#0071e3]/3 transition-all duration-200 group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#0071e310] flex items-center justify-center">
+              <Users className="w-4 h-4 text-[#0071e3]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors">用户管理</p>
+              <p className="text-[11px] text-[#86868b]">查看和管理用户</p>
+            </div>
+          </Link>
+          <Link
+            href="/admin/matches"
+            className="flex items-center gap-2.5 p-3 rounded-lg border border-[#e5e5e7] hover:border-[#0071e3]/30 hover:bg-[#0071e3]/3 transition-all duration-200 group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#5856d610] flex items-center justify-center">
+              <Heart className="w-4 h-4 text-[#5856d6]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[#1d1d1f] group-hover:text-[#5856d6] transition-colors">匹配管理</p>
+              <p className="text-[11px] text-[#86868b]">审核和管理匹配</p>
+            </div>
+          </Link>
           <Link
             href="/admin/subscriptions"
-            className="flex items-center gap-1 text-[11px] font-medium text-[#0071e3] hover:underline"
+            className="flex items-center gap-2.5 p-3 rounded-lg border border-[#e5e5e7] hover:border-[#0071e3]/30 hover:bg-[#0071e3]/3 transition-all duration-200 group"
           >
-            详情 <ArrowRight className="w-3 h-3" />
+            <div className="w-8 h-8 rounded-lg bg-[#34c75910] flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-[#34c759]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[#1d1d1f] group-hover:text-[#34c759] transition-colors">订阅管理</p>
+              <p className="text-[11px] text-[#86868b]">管理订阅和退款</p>
+            </div>
+          </Link>
+          <Link
+            href="/admin/settings"
+            className="flex items-center gap-2.5 p-3 rounded-lg border border-[#e5e5e7] hover:border-[#0071e3]/30 hover:bg-[#0071e3]/3 transition-all duration-200 group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#ff950010] flex items-center justify-center">
+              <Zap className="w-4 h-4 text-[#ff9500]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[#1d1d1f] group-hover:text-[#ff9500] transition-colors">系统设置</p>
+              <p className="text-[11px] text-[#86868b]">配置平台参数</p>
+            </div>
           </Link>
         </div>
-        {loading && !data ? (
-          <Skeleton className="h-[200px] w-full" />
-        ) : (
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={data?.charts.revenueTrend} barCategoryGap="20%">
-              <defs>
-                <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={THEME.primary} />
-                  <stop offset="100%" stopColor={THEME.primary} stopOpacity={0.6} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 6" stroke="#e5e5e7" vertical={false} />
-              <XAxis
-                dataKey="month"
-                stroke={THEME.textMuted}
-                fontSize={11}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => v.slice(5)}
-              />
-              <YAxis
-                stroke={THEME.textMuted}
-                fontSize={11}
-                axisLine={false}
-                tickLine={false}
-                width={48}
-                tickFormatter={(v) => `¥${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
-              />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                cursor={{ fill: "rgba(0,113,227,0.03)" }}
-                formatter={(value) => [`¥${Number(value).toLocaleString()}`, "收入"]
-                }
-              />
-              <Bar dataKey="revenue" fill="url(#revGrad)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
       </div>
     </div>
   );
