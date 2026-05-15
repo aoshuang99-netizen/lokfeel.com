@@ -1,117 +1,81 @@
 "use client";
 
-/**
- * Admin KPI Card — Dashboard metric card with trend comparison
- *
- * @example
- * <KpiCard
- *   title="Total Users"
- *   value={1523}
- *   trend={{ value: 12.5, direction: "up" }}
- *   icon={Users}
- *   isLoading={false}
- * />
- */
-
-import { LucideIcon } from "lucide-react";
-import { SkeletonStatCard } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, ArrowDownRight, Minus, type LucideIcon } from "lucide-react";
 
 interface KpiCardProps {
-  title: string;
-  value: number | string;
-  trend?: {
-    value: number;
-    direction: "up" | "down" | "neutral";
-    label?: string;
-  };
-  icon?: LucideIcon;
-  isLoading?: boolean;
-  className?: string;
-  onClick?: () => void;
+  label: string;
+  value: string | number;
+  change: string;
+  trend: "up" | "down" | "warning" | "neutral";
+  icon: LucideIcon;
+  href: string;
+  prefix?: string;
+  suffix?: string;
+  sparkData?: number[];
 }
 
-export function KpiCard({
-  title,
-  value,
-  trend,
-  icon: Icon,
-  isLoading = false,
-  className = "",
-  onClick,
-}: KpiCardProps) {
-  if (isLoading) {
-    return <SkeletonStatCard className={className} />;
-  }
+export function KpiCard({ label, value, change, trend, icon: Icon, href, prefix = "", suffix = "", sparkData = [] }: KpiCardProps) {
+  const trendConfig = {
+    up: { color: "#34c759", bg: "#34c75915", icon: ArrowUpRight },
+    down: { color: "#ff3b30", bg: "#ff3b3015", icon: ArrowDownRight },
+    warning: { color: "#ff9500", bg: "#ff950015", icon: ArrowDownRight },
+    neutral: { color: "#86868b", bg: "#86868b15", icon: Minus },
+  };
 
-  const trendColor = trend?.direction === "up"
-    ? "text-green-500"
-    : trend?.direction === "down"
-      ? "text-red-500"
-      : "text-foreground-muted";
+  const config = trendConfig[trend];
+  const TrendIcon = config.icon;
 
-  const TrendIcon = trend?.direction === "up"
-    ? TrendingUp
-    : trend?.direction === "down"
-      ? TrendingDown
-      : Minus;
+  // Mini sparkline
+  const sparkline = sparkData.length > 1 ? (() => {
+    const max = Math.max(...sparkData);
+    const min = Math.min(...sparkData);
+    const range = max - min || 1;
+    const w = 64;
+    const h = 24;
+    const pts = sparkData.map((v, i) => {
+      const x = (i / (sparkData.length - 1)) * w;
+      const y = h - ((v - min) / range) * (h - 4) - 2;
+      return `${x},${y}`;
+    }).join(" ");
+    return (
+      <svg width={w} height={h} className="flex-shrink-0 opacity-60">
+        <polyline points={pts} fill="none" stroke={config.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  })() : null;
 
   return (
-    <div
-      className={`glass-card p-5 ${onClick ? "cursor-pointer hover:bg-card-hover transition-colors" : ""} ${className}`}
-      onClick={onClick}
+    <Link
+      href={href}
+      className="group block rounded-xl border border-[#e5e5e7] bg-white p-4 transition-all duration-200 hover:border-[#0071e3]/30 hover:shadow-sm"
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm text-foreground-muted">{title}</span>
-        {Icon && (
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Icon className="w-5 h-5 text-primary" />
-          </div>
-        )}
+      <div className="flex items-start justify-between mb-3">
+        <div
+          className="w-9 h-9 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: config.bg }}
+        >
+          <Icon className="w-4.5 h-4.5" style={{ color: config.color }} />
+        </div>
+        {sparkline}
       </div>
 
-      <div className="flex items-end gap-3">
-        <span className="text-2xl font-bold text-foreground">
-          {typeof value === "number" ? value.toLocaleString() : value}
-        </span>
-
-        {trend && (
-          <div className={`flex items-center gap-1 text-xs ${trendColor}`}>
-            <TrendIcon className="w-3.5 h-3.5" />
-            <span className="font-medium">
-              {Math.abs(trend.value).toFixed(1)}%
-            </span>
-            {trend.label && (
-              <span className="text-foreground-muted">
-                {trend.label}
-              </span>
-            )}
-          </div>
-        )}
+      <div className="mb-2">
+        <p className="text-[11px] font-medium text-[#86868b] uppercase tracking-wide">{label}</p>
+        <p className="text-2xl font-bold text-[#1d1d1f] tracking-tight mt-0.5">
+          {prefix}{typeof value === "number" ? value.toLocaleString() : value}{suffix}
+        </p>
       </div>
-    </div>
-  );
-}
 
-// ============================================================================
-// KPI Card Grid
-// ============================================================================
-
-interface KpiGridProps {
-  children: React.ReactNode;
-  columns?: 2 | 3 | 4;
-}
-
-export function KpiGrid({ children, columns = 4 }: KpiGridProps) {
-  const gridCols = {
-    2: "grid-cols-1 sm:grid-cols-2",
-    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
-  };
-
-  return (
-    <div className={`grid ${gridCols[columns]} gap-4`}>
-      {children}
-    </div>
+      <div className="flex items-center gap-1.5">
+        <div
+          className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold"
+          style={{ backgroundColor: config.bg, color: config.color }}
+        >
+          <TrendIcon className="w-3 h-3" />
+          {change}
+        </div>
+      </div>
+    </Link>
   );
 }

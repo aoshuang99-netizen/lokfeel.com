@@ -104,27 +104,27 @@ export default function AdminSidebar() {
     <>
       {/* ─── Desktop Sidebar ─── */}
       <aside
-        className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-background-secondary/60 backdrop-blur-2xl border-r border-card-border transition-all duration-300 z-fixed ${
+        className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-[#1a1a2e] border-r border-[#2a2a3e] transition-all duration-300 z-fixed ${
           isCollapsed ? "w-[72px]" : "w-[260px]"
         }`}
       >
         {/* Logo */}
-        <div className={`h-16 flex items-center ${isCollapsed ? "justify-center px-0" : "justify-between px-5"} border-b border-card-border/50`}>
+        <div className={`h-16 flex items-center ${isCollapsed ? "justify-center px-0" : "justify-between px-5"} border-b border-[#2a2a3e]`}>
           <Link href="/admin" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20 transition-transform duration-200 group-hover:scale-105">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0071e3] to-[#34c759] flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#0071e3]/20 transition-transform duration-200 group-hover:scale-105">
               <Shield className="w-4.5 h-4.5 text-white" />
             </div>
             {!isCollapsed && (
               <div className="flex flex-col">
-                <span className="text-[15px] font-bold tracking-tight leading-tight">LokFee!</span>
-                <span className="text-[10px] text-foreground-subtle leading-tight font-medium tracking-wide">ADMIN PANEL</span>
+                <span className="text-[15px] font-bold tracking-tight leading-tight text-white">LokFeel</span>
+                <span className="text-[10px] text-[#86868b] leading-tight font-medium tracking-wide">ADMIN PANEL</span>
               </div>
             )}
           </Link>
           {!isCollapsed && (
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-1.5 rounded-lg hover:bg-background-tertiary/80 transition-all duration-200 text-foreground-subtle hover:text-foreground"
+              className="p-1.5 rounded-lg hover:bg-white/10 transition-all duration-200 text-[#86868b] hover:text-white"
               aria-label="Collapse sidebar"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -145,21 +145,21 @@ export default function AdminSidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                     active
-                      ? "bg-primary/10 text-foreground shadow-sm"
-                      : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary/60"
+                      ? "bg-[#0071e3]/15 text-white shadow-sm"
+                      : "text-[#a0a0b0] hover:text-white hover:bg-white/5"
                   } ${isCollapsed ? "justify-center" : ""}`}
                   title={isCollapsed ? item.name : undefined}
                 >
                   <Icon
                     className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${
-                      active ? "text-primary" : "text-foreground-subtle group-hover:text-foreground"
+                      active ? "text-[#0071e3]" : "text-[#86868b] group-hover:text-white"
                     }`}
                   />
                   {!isCollapsed && (
                     <>
                       <span className="font-semibold text-[13px]">{item.name}</span>
                       {active && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0071e3] animate-pulse" />
                       )}
                     </>
                   )}
@@ -180,7 +180,7 @@ export default function AdminSidebar() {
                   {!isCollapsed && (
                     <button
                       onClick={() => toggleGroup(group.label)}
-                      className="flex items-center justify-between w-full px-3 py-2 text-[10px] font-bold text-foreground-subtle uppercase tracking-[0.15em] hover:text-foreground-muted transition-colors"
+                      className="flex items-center justify-between w-full px-3 py-2 text-[10px] font-bold text-[#86868b] uppercase tracking-[0.15em] hover:text-[#a0a0b0] transition-colors"
                     >
                       <span>{group.label}</span>
                       <ChevronRight
@@ -203,21 +203,21 @@ export default function AdminSidebar() {
                             href={item.href}
                             className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group ${
                               active
-                                ? "bg-primary/8 text-foreground"
-                                : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary/60"
+                                ? "bg-[#0071e3]/10 text-white"
+                                : "text-[#a0a0b0] hover:text-white hover:bg-white/5"
                             } ${isCollapsed ? "justify-center" : ""}`}
                             title={isCollapsed ? item.name : undefined}
                           >
                             <Icon
                               className={`w-[18px] h-[18px] flex-shrink-0 transition-colors duration-200 ${
-                                active ? "text-primary" : "text-foreground-subtle group-hover:text-foreground"
+                                active ? "text-[#0071e3]" : "text-[#86868b] group-hover:text-white"
                               }`}
                             />
                             {!isCollapsed && (
                               <span className="text-[13px]">{item.name}</span>
                             )}
                             {active && !isCollapsed && (
-                              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0071e3]" />
                             )}
                           </Link>
                         );
@@ -231,11 +231,11 @@ export default function AdminSidebar() {
         </nav>
 
         {/* Bottom: Expand button (when collapsed) + Back to App */}
-        <div className="p-3 border-t border-card-border/50">
+        <div className="p-3 border-t border-[#2a2a3e]">
           {isCollapsed && (
             <button
               onClick={() => setIsCollapsed(false)}
-              className="flex items-center justify-center w-full px-3 py-2.5 mb-1 rounded-xl text-foreground-subtle hover:text-foreground hover:bg-background-tertiary/60 transition-all duration-200"
+              className="flex items-center justify-center w-full px-3 py-2.5 mb-1 rounded-xl text-[#86868b] hover:text-white hover:bg-white/5 transition-all duration-200"
               aria-label="Expand sidebar"
             >
               <ChevronRight className="w-4 h-4" />
@@ -243,7 +243,7 @@ export default function AdminSidebar() {
           )}
           <Link
             href="/dashboard"
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-foreground-subtle hover:text-foreground hover:bg-background-tertiary/60 transition-all duration-200 ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#86868b] hover:text-white hover:bg-white/5 transition-all duration-200 ${
               isCollapsed ? "justify-center" : ""
             }`}
             title={isCollapsed ? "返回应用" : undefined}
