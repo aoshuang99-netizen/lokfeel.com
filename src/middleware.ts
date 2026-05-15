@@ -28,6 +28,11 @@ const ALLOWED_ORIGINS = [
   'https://admin.lokfeel.com',
 ]
 
+// Development/local testing origins (allow all localhost ports)
+function isLocalhostOrigin(origin: string): boolean {
+  return /^https?:\/\/localhost(:\d+)?$/.test(origin) || origin.startsWith('http://127.0.0.1')
+}
+
 // Paths that should always be accessible (even from blocked regions)
 const ALLOWED_PATHS = [
   '/blocked',
@@ -109,7 +114,7 @@ export async function middleware(request: NextRequest) {
     const requestHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
     const isSameOrigin = origin ? origin.endsWith(`://${requestHost}`) : true
 
-    if (origin && !ALLOWED_ORIGINS.includes(origin) && !isSameOrigin) {
+    if (origin && !ALLOWED_ORIGINS.includes(origin) && !isSameOrigin && !isLocalhostOrigin(origin)) {
       // Block requests from unauthorized cross-origin sources
       return new NextResponse(
         JSON.stringify({ error: 'Forbidden: CORS policy' }),
