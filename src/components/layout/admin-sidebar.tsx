@@ -10,12 +10,14 @@ import {
   FileText,
   Settings,
   Shield,
+  ShieldAlert,
   ChevronLeft,
   ChevronRight,
   Megaphone,
   Code2,
   Layers,
   TrendingUp,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
@@ -41,12 +43,14 @@ const NAV_GROUPS: NavGroup[] = [
       { name: "用户管理", href: "/admin/users", icon: Users },
       { name: "匹配管理", href: "/admin/matches", icon: Heart },
       { name: "内容管理", href: "/admin/content", icon: FileText },
+      { name: "用户审核", href: "/admin/review", icon: ShieldAlert, badge: "NEW", badgeColor: "#ff3b30" },
     ],
   },
   {
     label: "产品",
     items: [
       { name: "数据分析", href: "/admin/analytics", icon: BarChart3 },
+      { name: "事件分析", href: "/admin/analytics/events", icon: Activity, badge: "NEW", badgeColor: "#0071e3" },
       { name: "功能管理", href: "/admin/features", icon: Layers },
     ],
   },
