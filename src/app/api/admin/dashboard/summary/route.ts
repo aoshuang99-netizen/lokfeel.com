@@ -119,8 +119,10 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest)
     ];
 
     // ─── Action Items ───
-    const [recentAuditLogs] = await Promise.all([
+    const [recentAuditLogs, refundRequests, failedPayments] = await Promise.all([
       db.auditLog?.count?.({ where: { createdAt: { gte: subDays(now, 7) } } }) ?? Promise.resolve(0),
+      db.subscription.count({ where: { status: "CANCELLED" } }),
+      db.payment.count({ where: { status: "FAILED" } }),
     ]);
 
     // ─── Health Board Data ───
@@ -180,6 +182,8 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest)
       actions: {
         pendingMatches,
         pendingContent: 0,
+        refundRequests,
+        failedPayments,
         recentAuditLogs,
         activeSubscriptions,
       },

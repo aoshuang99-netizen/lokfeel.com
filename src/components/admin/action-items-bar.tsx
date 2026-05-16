@@ -15,6 +15,8 @@ interface ActionItemsBarProps {
   items: {
     pendingMatches: number;
     pendingContent: number;
+    refundRequests: number;
+    failedPayments: number;
     recentAuditLogs: number;
     activeSubscriptions: number;
   };
@@ -35,6 +37,20 @@ export function ActionItemsBar({ items }: ActionItemsBarProps) {
       href: "/admin/content",
       icon: FileText,
       severity: items.pendingContent > 10 ? "critical" : items.pendingContent > 0 ? "warning" : "info",
+    },
+    {
+      label: "退款申请",
+      count: items.refundRequests,
+      href: "/admin/subscriptions",
+      icon: CreditCard,
+      severity: items.refundRequests > 0 ? "warning" : "info",
+    },
+    {
+      label: "失败支付",
+      count: items.failedPayments,
+      href: "/admin/subscriptions",
+      icon: AlertCircle,
+      severity: items.failedPayments > 0 ? "critical" : "info",
     },
     {
       label: "审计日志",

@@ -209,6 +209,7 @@ export default function AdminDashboardPage() {
               icon={DollarSign}
               href="/admin/subscriptions"
               prefix="¥"
+              sparkData={data?.charts.revenueTrend.map((d) => d.revenue)}
             />
             <KpiCard
               label="待处理匹配"
@@ -315,7 +316,7 @@ export default function AdminDashboardPage() {
                   axisLine={false}
                   tickLine={false}
                   width={48}
-                  tickFormatter={(v) => `¥${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                  tickFormatter={(v) => v >= 1000 ? `¥${(v / 1000).toFixed(1)}k` : `¥${v}`}
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
