@@ -13,6 +13,7 @@ import { KpiCard } from "@/components/admin/kpi-card";
 import { HealthBoard } from "@/components/admin/health-board";
 import { ActionItemsBar } from "@/components/admin/action-items-bar";
 import { ConversionFunnel } from "@/components/admin/conversion-funnel";
+import { TimeRangeSelector, type TimeRange } from "@/components/admin/time-range-selector";
 
 // ─── Light Theme Colors ───
 const THEME = {
@@ -39,6 +40,8 @@ const tooltipStyle = {
 };
 
 interface DashboardSummary {
+  timeRange: TimeRange;
+  periodLabel: string;
   kpi: {
     totalUsers: { value: number; change: string; trend: "up" | "down" | "warning" | "neutral"; suffix?: string };
     dau: { value: number; change: string; trend: "up" | "down" | "warning" | "neutral"; suffix?: string };
@@ -72,6 +75,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [timeRange, setTimeRange] = useState<TimeRange>("month");
 
   const fetchSummary = useCallback(async () => {
     setLoading(true);
@@ -79,7 +83,7 @@ export default function AdminDashboardPage() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch("/api/admin/dashboard/summary", { signal: controller.signal, credentials: "include" });
+      const res = await fetch(`/api/admin/dashboard/summary?timeRange=${timeRange}`, { signal: controller.signal, credentials: "include" });
       clearTimeout(timeoutId);
 
       if (res.status === 401 || res.status === 403) {
@@ -102,9 +106,12 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [timeRange]);
 
   useEffect(() => { fetchSummary(); }, [fetchSummary]);
+
+  // Update period label in header when data changes
+  const periodLabel = data?.periodLabel || "本月";
 
   if (error) {
     return (
@@ -141,28 +148,31 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[#1d1d1f]">仪表盘</h1>
           <p className="text-[#86868b] text-sm mt-0.5">
             {lastUpdated ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#34c759] animate-pulse" />
-                实时 · 更新于 {lastUpdated}
+                {periodLabel} · 更新于 {lastUpdated}
               </span>
             ) : (
               "数据概览与业务监控"
             )}
           </p>
         </div>
-        <button
-          onClick={fetchSummary}
-          disabled={loading}
-          className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-[#e5e5e7] hover:border-[#0071e3]/30 transition-all duration-200 text-sm font-medium text-[#1d1d1f]"
-        >
-          <RefreshCw className={`w-4 h-4 text-[#86868b] group-hover:text-[#0071e3] transition-colors ${loading ? "animate-spin" : ""}`} />
-          刷新
-        </button>
+        <div className="flex items-center gap-3">
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+          <button
+            onClick={fetchSummary}
+            disabled={loading}
+            className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-[#e5e5e7] hover:border-[#0071e3]/30 transition-all duration-200 text-sm font-medium text-[#1d1d1f]"
+          >
+            <RefreshCw className={`w-4 h-4 text-[#86868b] group-hover:text-[#0071e3] transition-colors ${loading ? "animate-spin" : ""}`} />
+            刷新
+          </button>
+        </div>
       </div>
 
       {/* ─── KPI Row ─── */}
@@ -178,7 +188,7 @@ export default function AdminDashboardPage() {
         ) : kpiData ? (
           <>
             <KpiCard
-              label="总用户数"
+              label={`${periodLabel}新用户`}
               value={kpiData.totalUsers.value}
               change={kpiData.totalUsers.change}
               trend={kpiData.totalUsers.trend}
@@ -187,7 +197,7 @@ export default function AdminDashboardPage() {
               sparkData={data?.charts.userGrowth.map((d) => d.count)}
             />
             <KpiCard
-              label="日活跃用户"
+              label={`${periodLabel}活跃用户`}
               value={kpiData.dau.value}
               change={kpiData.dau.change}
               trend={kpiData.dau.trend}
@@ -204,7 +214,7 @@ export default function AdminDashboardPage() {
               suffix="%"
             />
             <KpiCard
-              label="月收入"
+              label={`${periodLabel}收入`}
               value={kpiData.mrr.value}
               change={kpiData.mrr.change}
               trend={kpiData.mrr.trend}
@@ -214,7 +224,7 @@ export default function AdminDashboardPage() {
               sparkData={data?.charts.revenueTrend.map((d) => d.revenue)}
             />
             <KpiCard
-              label="待处理匹配"
+              label="待审核匹配"
               value={kpiData.pendingMatches.value}
               change={kpiData.pendingMatches.change}
               trend={kpiData.pendingMatches.trend}
@@ -231,8 +241,8 @@ export default function AdminDashboardPage() {
         <div className="rounded-xl border border-[#e5e5e7] bg-white p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-[#1d1d1f]">用户增长趋势</h2>
-              <p className="text-xs text-[#86868b] mt-0.5">近30天新增用户</p>
+              <h2 className="text-sm font-semibold text-[#1d1d1f]">{periodLabel}用户增长</h2>
+              <p className="text-xs text-[#86868b] mt-0.5">每日新增用户趋势</p>
             </div>
             <Link
               href="/admin/analytics"
@@ -282,8 +292,8 @@ export default function AdminDashboardPage() {
         <div className="rounded-xl border border-[#e5e5e7] bg-white p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-[#1d1d1f]">收入趋势</h2>
-              <p className="text-xs text-[#86868b] mt-0.5">近12个月</p>
+              <h2 className="text-sm font-semibold text-[#1d1d1f]">{periodLabel}收入趋势</h2>
+              <p className="text-xs text-[#86868b] mt-0.5">月度收入数据</p>
             </div>
             <Link
               href="/admin/subscriptions"
