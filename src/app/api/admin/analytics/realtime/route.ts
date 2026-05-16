@@ -12,11 +12,12 @@ export const GET = withPermission('system.health')(async (req: NextRequest) => {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
-    // Active users in last 5 minutes
-    const activeUsers = await db.message.count({
+    // Active users in last 5 minutes (groupBy to get unique senders)
+    const activeUserGroups = await db.message.groupBy({
+      by: ['senderId'],
       where: { createdAt: { gte: fiveMinAgo } },
-      distinct: ['senderId'],
     });
+    const activeUsers = activeUserGroups.length;
 
     // Messages in last hour (per minute)
     const messagesThisHour = await db.message.count({
