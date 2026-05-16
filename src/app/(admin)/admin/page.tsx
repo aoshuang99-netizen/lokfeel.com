@@ -55,6 +55,8 @@ interface DashboardSummary {
   actions: {
     pendingMatches: number;
     pendingContent: number;
+    refundRequests: number;
+    failedPayments: number;
     recentAuditLogs: number;
     activeSubscriptions: number;
   };
