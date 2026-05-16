@@ -33,6 +33,11 @@ function isLocalhostOrigin(origin: string): boolean {
   return /^https?:\/\/localhost(:\d+)?$/.test(origin) || origin.startsWith('http://127.0.0.1')
 }
 
+// Vercel preview deployments (for testing)
+function isVercelPreview(origin: string): boolean {
+  return /https:\/\/nexus-app-.*\.vercel\.app$/.test(origin)
+}
+
 // Paths that should always be accessible (even from blocked regions)
 const ALLOWED_PATHS = [
   '/blocked',
@@ -114,7 +119,7 @@ export async function middleware(request: NextRequest) {
     const requestHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
     const isSameOrigin = origin ? origin.endsWith(`://${requestHost}`) : true
 
-    if (origin && !ALLOWED_ORIGINS.includes(origin) && !isSameOrigin && !isLocalhostOrigin(origin)) {
+    if (origin && !ALLOWED_ORIGINS.includes(origin) && !isSameOrigin && !isLocalhostOrigin(origin) && !isVercelPreview(origin)) {
       // Block requests from unauthorized cross-origin sources
       return new NextResponse(
         JSON.stringify({ error: 'Forbidden: CORS policy' }),
