@@ -18,6 +18,9 @@ import {
   Layers,
   TrendingUp,
   Activity,
+  Funnel,
+  Clock,
+  Bell,
   type LucideIcon,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
@@ -50,7 +53,10 @@ const NAV_GROUPS: NavGroup[] = [
     label: "产品",
     items: [
       { name: "数据分析", href: "/admin/analytics", icon: BarChart3 },
-      { name: "事件分析", href: "/admin/analytics/events", icon: Activity, badge: "NEW", badgeColor: "#0071e3" },
+      { name: "漏斗分析", href: "/admin/analytics/funnel", icon: Funnel, badge: "NEW", badgeColor: "#34c759" },
+      { name: "留存分析", href: "/admin/analytics/retention", icon: Clock, badge: "NEW", badgeColor: "#34c759" },
+      { name: "实时监控", href: "/admin/analytics/realtime", icon: Activity, badge: "NEW", badgeColor: "#34c759" },
+      { name: "事件分析", href: "/admin/analytics/events", icon: Activity },
       { name: "功能管理", href: "/admin/features", icon: Layers },
     ],
   },
@@ -60,6 +66,12 @@ const NAV_GROUPS: NavGroup[] = [
       { name: "系统设置", href: "/admin/settings", icon: Settings },
       { name: "审计日志", href: "/admin/settings/audit", icon: Shield },
       { name: "RBAC 权限", href: "/admin/settings/rbac", icon: Code2 },
+    ],
+  },
+  {
+    label: "运维",
+    items: [
+      { name: "告警系统", href: "/admin/alerts", icon: Bell, badge: "NEW", badgeColor: "#ff9500" },
     ],
   },
   {
