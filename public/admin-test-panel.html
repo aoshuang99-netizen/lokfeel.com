@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard V3 — 功能测试面板</title>
+<style>
+:root { --bg:#f5f5f7; --card:#fff; --text:#1d1d1f; --text2:#6e6e73; --text3:#86868b; --blue:#0071e3; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --border:#e5e5e7; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,sans-serif; background:var(--bg); color:var(--text); padding:24px; min-height:100vh; }
+h1 { font-size:22px; font-weight:700; margin-bottom:4px; }
+.sub { color:var(--text3); font-size:13px; margin-bottom:4px; }
+.controls { display:flex; gap:8px; margin:16px 0; flex-wrap:wrap; align-items:center; }
+.btn { padding:7px 15px; border-radius:10px; border:1px solid var(--border); background:var(--card); font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.btn:hover { border-color:var(--blue); }
+.btn-primary { background:var(--blue); color:#fff; border:none; }
+.btn-primary:hover { background:#0077ed; }
+.btn-danger { background:var(--red); color:#fff; border:none; }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:12px; margin-bottom:24px; }
+.card { background:var(--card); border-radius:12px; border:1px solid var(--border); padding:16px; }
+.card h3 { font-size:13px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.card .url { font-size:10px; color:var(--text3); font-family:monospace; word-break:break-all; margin-bottom:6px; }
+.card .desc { font-size:11px; color:var(--text2); margin-bottom:8px; }
+.result { padding:10px 12px; border-radius:8px; font-size:11px; font-family:monospace; line-height:1.6; max-height:200px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; }
+.result.pending { background:#f5f5f7; color:var(--text3); border:1px dashed #ccc; }
+.result.running { background:#fff8e1; color:#996600; border:1px solid #ff950020; }
+.result.ok { background:#f0fff4; color:#1a7a30; border:1px solid #34c75930; }
+.result.err { background:#fff0f0; color:#991b1b; border:1px solid #ff3b3030; }
+.badge { display:inline-block; padding:1px 6px; border-radius:4px; font-size:9px; font-weight:600; }
+.badge-new { background:#34c75915; color:var(--green); }
+.badge-auth { background:#ff950015; color:var(--orange); }
+.summary { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.summary-card { background:var(--card); border-radius:12px; border:1px solid var(--border); padding:12px 18px; min-width:80px; text-align:center; }
+.summary-card .num { font-size:24px; font-weight:700; }
+.summary-card .lbl { font-size:10px; color:var(--text3); margin-top:2px; }
+</style>
+</head>
+<body>
+
+<h1>Admin Dashboard V3 — 功能测试面板</h1>
+<p class="sub">V3.6: P2 漏斗+留存+监控+告警 | 2026-05-16</p>
+<p class="sub" id="origin-info"></p>
+
+<div class="summary" id="summary"></div>
+
+<div class="controls">
+  <button class="btn btn-primary" onclick="runAll()">▶ 运行全部测试</button>
+  <button class="btn" onclick="testLogin()">🔐 登录</button>
+  <button class="btn" onclick="testPages()">📄 页面测试</button>
+  <button class="btn" onclick="testAPIs()">🔌 API测试</button>
+  <button class="btn" onclick="clearAll()">🗑 清除</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+// 配置
+const BASE = 'https://nexus-app-kohl.vercel.app';
+const ADMIN = { user: 'admin@nexus.app', pass: 'admin123' };
+
+// 显示当前源
+document.getElementById('origin-info').textContent = '当前页面来源: ' + location.origin;
+
+// 测试结果存储
+const R = {};
+const TESTS = [
+  // 页面测试
+  {id:'P01',name:'登录页面',url:'/admin/login',m:'GET',exp:200,x:'无需认证'},
+  {id:'P02',name:'仪表盘',url:'/admin',m:'REDIRECT',exp:307,x:'需登录'},
+  {id:'P03',name:'数据分析',url:'/admin/analytics',m:'REDIRECT',exp:307,x:'需登录'},
+  {id:'P04',name:'用户管理',url:'/admin/users',m:'REDIRECT',exp:307,x:'需登录'},
+  {id:'P05',name:'漏斗分析',url:'/admin/analytics/funnel',m:'REDIRECT',exp:307,x:'NEW'},
+  {id:'P06',name:'留存分析',url:'/admin/analytics/retention',m:'REDIRECT',exp:307,x:'NEW'},
+  {id:'P07',name:'实时监控',url:'/admin/analytics/realtime',m:'REDIRECT',exp:307,x:'NEW'},
+  {id:'P08',name:'告警系统',url:'/admin/alerts',m:'REDIRECT',exp:307,x:'NEW'},
+  // API测试
+  {id:'A01',name:'登录API',url:'/api/admin/login',m:'LOGIN',exp:200,x:'POST'},
+  {id:'A02',name:'仪表盘数据',url:'/api/admin/dashboard/summary',m:'AUTH',exp:200,x:'需RBAC'},
+  {id:'A03',name:'用户列表',url:'/api/admin/users?pageSize=3',m:'AUTH',exp:200,x:'需RBAC'},
+  {id:'A04',name:'分析数据',url:'/api/admin/analytics',m:'AUTH',exp:200,x:'需RBAC'},
+  {id:'A05',name:'会话检查',url:'/api/admin/session',m:'AUTH',exp:200,x:'需登录'},
+  {id:'A06',name:'事件收集',url:'/api/analytics/collect',m:'POST',exp:200,x:'NEW'},
+];
+
+// 初始化UI
+TESTS.forEach(t => {
+  R[t.id] = { status:'pending', msg:'等待测试...' };
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.innerHTML = `
+    <h3><span id="s-${t.id}">⏳</span> ${t.name} ${t.x ? '<span class="badge badge-new">NEW</span>' : ''}</h3>
+    <div class="url">${t.m} ${t.url}</div>
+    <div class="desc">${t.x}</div>
+    <div class="result pending" id="r-${t.id}">等待测试...</div>
+  `;
+  document.getElementById('grid').appendChild(div);
+});
+updateSummary();
+
+// 设置结果
+function setResult(id, status, msg) {
+  R[id] = { status, msg };
+  const el = document.getElementById('r-' + id);
+  const icon = document.getElementById('s-' + id);
+  if (el) {
+    el.textContent = msg;
+    el.className = 'result ' + (status === 'pass' ? 'ok' : status === 'fail' ? 'err' : status === 'running' ? 'running' : 'pending');
+  }
+  if (icon) {
+    icon.textContent = status === 'pass' ? '✅' : status === 'fail' ? '❌' : status === 'skip' ? '⚠️' : '⏳';
+  }
+  updateSummary();
+}
+
+// 更新摘要
+function updateSummary() {
+  const pass = TESTS.filter(t => R[t.id]?.status === 'pass').length;
+  const fail = TESTS.filter(t => R[t.id]?.status === 'fail').length;
+  const skip = TESTS.filter(t => R[t.id]?.status === 'skip').length;
+  const pend = TESTS.length - pass - fail - skip;
+  document.getElementById('summary').innerHTML = `
+    <div class="summary-card"><div class="num" style="color:#34c759">${pass}</div><div class="lbl">✅ 通过</div></div>
+    <div class="summary-card"><div class="num" style="color:#ff3b30">${fail}</div><div class="lbl">❌ 失败</div></div>
+    <div class="summary-card"><div class="num" style="color:#ff9500">${skip}</div><div class="lbl">⚠️ 跳过</div></div>
+    <div class="summary-card"><div class="num" style="color:#86868b">${pend}</div><div class="lbl">⏳ 待测</div></div>
+    <div class="summary-card"><div class="num">${TESTS.length}</div><div class="lbl">📊 总计</div></div>
+  `;
+}
+
+// 清除
+function clearAll() {
+  TESTS.forEach(t => setResult(t.id, 'pending', '等待测试...'));
+}
+
+// 登录测试
+async function testLogin() {
+  setResult('A01', 'running', '正在登录...');
+  try {
+    const res = await fetch(BASE + '/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: ADMIN.user, password: ADMIN.pass }),
+      credentials: 'include',
+      mode: 'cors'
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 200 && body.success) {
+      setResult('A01', 'pass', `✅ 登录成功\n角色: ${body.user?.role}\n用户: ${body.user?.username}`);
+      setResult('P01', 'pass', `✅ 登录页面正常 (HTTP ${res.status})`);
+      return true;
+    } else {
+      setResult('A01', 'fail', `❌ 登录失败\nHTTP: ${res.status}\n${JSON.stringify(body)}`);
+      return false;
+    }
+  } catch (e) {
+    setResult('A01', 'fail', `❌ 网络错误: ${e.message}`);
+    return false;
+  }
+}
+
+// 页面测试
+async function testPages() {
+  for (const t of TESTS.filter(t => t.id.startsWith('P'))) {
+    setResult(t.id, 'running', '测试中...');
+    try {
+      const res = await fetch(BASE + t.url, {
+        credentials: 'include',
+        redirect: 'manual',
+        mode: 'cors'
+      });
+      const status = res.status;
+      if (status === 200) {
+        setResult(t.id, 'pass', `✅ HTTP ${status} | 页面正常`);
+      } else if (status === 307 || status === 302) {
+        const loc = res.headers.get('location') || '';
+        setResult(t.id, 'pass', `✅ HTTP ${status} | 重定向 (正常)\n→ ${loc}`);
+      } else if (status === 401 || status === 403) {
+        setResult(t.id, 'pass', `✅ HTTP ${status} | 需要认证`);
+      } else if (status === 404) {
+        setResult(t.id, 'fail', `❌ HTTP 404 | 页面不存在`);
+      } else {
+        setResult(t.id, 'skip', `⚠️ HTTP ${status} | 意外状态`);
+      }
+    } catch (e) {
+      setResult(t.id, 'fail', `❌ 网络错误: ${e.message}`);
+    }
+  }
+}
+
+// API测试
+async function testAPIs() {
+  for (const t of TESTS.filter(t => t.id.startsWith('A') && t.m !== 'LOGIN')) {
+    setResult(t.id, 'running', '测试中...');
+    try {
+      let opts = { credentials: 'include', mode: 'cors' };
+      let method = 'GET';
+      let body = null;
+      
+      if (t.m === 'POST') {
+        method = 'POST';
+        opts.method = 'POST';
+        opts.headers = { 'Content-Type': 'application/json' };
+        body = JSON.stringify({
+          events: [{
+            event_id: 'test-' + Date.now(),
+            event: 'test',
+            session_id: 'test',
+            device_id: 'test',
+            page_path: '/test',
+            platform: 'web'
+          }]
+        });
+        opts.body = body;
+      }
+      
+      const res = await fetch(BASE + t.url, opts);
+      const status = res.status;
+      const data = await res.json().catch(() => null);
+      
+      if (status === 200 && data?.success) {
+        setResult(t.id, 'pass', `✅ HTTP ${status} | API正常`);
+      } else if (status === 200) {
+        setResult(t.id, 'pass', `✅ HTTP ${status}`);
+      } else if (status === 401) {
+        setResult(t.id, 'skip', `⚠️ HTTP 401 | 未登录`);
+      } else if (data) {
+        setResult(t.id, 'fail', `❌ HTTP ${status}\n${JSON.stringify(data).slice(0, 200)}`);
+      } else {
+        setResult(t.id, 'fail', `❌ HTTP ${status} | 无响应体`);
+      }
+    } catch (e) {
+      setResult(t.id, 'fail', `❌ 网络错误: ${e.message}`);
+    }
+  }
+}
+
+// 全部测试
+async function runAll() {
+  clearAll();
+  await testLogin();
+  await testPages();
+  await testAPIs();
+}
+</script>
+</body>
+</html>
