@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
 
     const filter = searchParams.get('filter') // 'unread' or 'all'
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), 100) // Clamp 1-100
 
     const where: any = { userId: user.id }
     if (filter === 'unread') {

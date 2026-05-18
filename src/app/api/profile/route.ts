@@ -175,14 +175,36 @@ export async function POST(request: NextRequest) {
   return handleApiError(async () => {
     const { user } = await requireAuth()
 
-    const profile = await db.profile.update({
+    // Validate profile has required fields before submission
+    const profile = await db.profile.findUnique({
+      where: { userId: user.id },
+      select: { displayName: true, gender: true, bio: true, onboardingStep: true },
+    })
+
+    if (!profile) {
+      return NextResponse.json({ message: 'Profile not found. Complete onboarding first.' }, { status: 404 })
+    }
+
+    const missingFields: string[] = []
+    if (!profile.displayName) missingFields.push('displayName')
+    if (!profile.gender) missingFields.push('gender')
+    if (!profile.bio) missingFields.push('bio')
+
+    if (missingFields.length > 0) {
+      return NextResponse.json(
+        { message: `Missing required fields: ${missingFields.join(', ')}` },
+        { status: 400 }
+      )
+    }
+
+    const updatedProfile = await db.profile.update({
       where: { userId: user.id },
       data: {
         profileStatus: 'PENDING_REVIEW',
-        onboardingStep: 5,
+        onboardingStep: 5, // Completion step (STEPS.length - 1 in onboarding UI)
       },
     })
 
-    return NextResponse.json({ profile, message: 'Profile submitted for review' })
+    return NextResponse.json({ profile: updatedProfile, message: 'Profile submitted for review' })
   })
 }

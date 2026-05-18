@@ -1,53 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/auth'
+import { requireAuth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
 import { jsonArr, toJson } from '@/lib/json-helpers'
+import { AVAILABLE_TAGS } from '@/constants'
 
 export const dynamic = 'force-dynamic'
-
-// 可用标签配置
-export const AVAILABLE_TAGS = [
-  // 关系类型
-  { id: 'MONOGAMY', label: 'Monogamy', category: 'relationship', icon: 'Heart' },
-  { id: 'ETHICAL_NON_MONOGAMY', label: 'Ethical Non-Monogamy', category: 'relationship', icon: 'Users' },
-  { id: 'POLYAMORY', label: 'Polyamory', category: 'relationship', icon: 'GitBranch' },
-  { id: 'KINK_BDSM', label: 'Kink/BDSM', category: 'relationship', icon: 'Zap' },
-  { id: 'CASUAL_DATING', label: 'Casual Dating', category: 'relationship', icon: 'Coffee' },
-  { id: 'FRIENDSHIP_FIRST', label: 'Friendship First', category: 'relationship', icon: 'UserPlus' },
-  // 性取向
-  { id: 'STRAIGHT', label: 'Straight', category: 'orientation', icon: 'ArrowRight' },
-  { id: 'GAY', label: 'Gay', category: 'orientation', icon: 'Rainbow' },
-  { id: 'LESBIAN', label: 'Lesbian', category: 'orientation', icon: 'Heart' },
-  { id: 'BISEXUAL', label: 'Bisexual', category: 'orientation', icon: 'GitMerge' },
-  { id: 'PANSEXUAL', label: 'Pansexual', category: 'orientation', icon: 'Infinity' },
-  { id: 'QUEER', label: 'Queer', category: 'orientation', icon: 'Sparkles' },
-  { id: 'ASEXUAL', label: 'Asexual', category: 'orientation', icon: 'Circle' },
-  { id: 'DEMISEXUAL', label: 'Demisexual', category: 'orientation', icon: 'Shield' },
-  // 兴趣标签
-  { id: 'TRAVEL', label: 'Travel', category: 'interest', icon: 'Plane' },
-  { id: 'FITNESS', label: 'Fitness', category: 'interest', icon: 'Dumbbell' },
-  { id: 'ART', label: 'Art', category: 'interest', icon: 'Palette' },
-  { id: 'MUSIC', label: 'Music', category: 'interest', icon: 'Music' },
-  { id: 'FOOD', label: 'Food', category: 'interest', icon: 'Utensils' },
-  { id: 'TECH', label: 'Tech', category: 'interest', icon: 'Cpu' },
-  { id: 'READING', label: 'Reading', category: 'interest', icon: 'Book' },
-  { id: 'GAMING', label: 'Gaming', category: 'interest', icon: 'Gamepad2' },
-  { id: 'OUTDOORS', label: 'Outdoors', category: 'interest', icon: 'Mountain' },
-  { id: 'PHOTOGRAPHY', label: 'Photography', category: 'interest', icon: 'Camera' },
-] as const
 
 // GET /api/settings — Get current user settings
 export async function GET() {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    const { user } = await requireAuth()
+    if (!user?.id) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    const [user, profile] = await Promise.all([
+    const [fullUser, profile] = await Promise.all([
       db.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: user.id },
         select: {
           id: true,
           name: true,
@@ -58,7 +28,7 @@ export async function GET() {
         },
       }),
       db.profile.findUnique({
-        where: { userId: session.user.id },
+        where: { userId: user.id },
         select: {
           displayName: true,
           avatar: true,
@@ -94,13 +64,13 @@ export async function GET() {
       }),
     ])
 
-    if (!user) {
+    if (!fullUser) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 })
     }
 
     return NextResponse.json({
       success: true,
-      user,
+      user: fullUser,
       profile: {
         ...profile,
         selectedTags: jsonArr(profile?.selectedTags),
@@ -120,8 +90,8 @@ export async function GET() {
 // PUT /api/settings — Update user settings
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    const { user } = await requireAuth()
+    if (!user?.id) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
@@ -200,7 +170,7 @@ export async function PUT(request: NextRequest) {
     // Update user name if provided
     if (name !== undefined) {
       await db.user.update({
-        where: { id: session.user.id },
+        where: { id: user.id },
         data: { name },
       })
     }
@@ -215,7 +185,7 @@ export async function PUT(request: NextRequest) {
       }
 
       const fullUser = await db.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: user.id },
       })
 
       if (!fullUser?.password) {
@@ -244,7 +214,7 @@ export async function PUT(request: NextRequest) {
 
       const hashedPassword = await hashPassword(newPassword)
       await db.user.update({
-        where: { id: session.user.id },
+        where: { id: user.id },
         data: { password: hashedPassword },
       })
     }
@@ -280,7 +250,7 @@ export async function PUT(request: NextRequest) {
     // Only update profile if there are fields to update
     if (Object.keys(profileUpdateData).length > 0) {
       await db.profile.update({
-        where: { userId: session.user.id },
+        where: { userId: user.id },
         data: profileUpdateData,
       })
     }
@@ -298,17 +268,57 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/settings — Delete user account
-export async function DELETE() {
+// DELETE /api/settings — Delete user account (requires password confirmation)
+export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    const { user } = await requireAuth()
+    if (!user?.id) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Require password confirmation for account deletion
+    let body: Record<string, any> = {};
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: 'Request body with password confirmation is required' },
+        { status: 400 }
+      );
+    }
+
+    const { password } = body;
+    if (!password) {
+      return NextResponse.json(
+        { message: 'Password confirmation is required to delete your account' },
+        { status: 400 }
+      );
+    }
+
+    // Verify password
+    const fullUser = await db.user.findUnique({
+      where: { id: user.id },
+    });
+
+    if (!fullUser?.password) {
+      return NextResponse.json(
+        { message: 'Cannot delete OAuth-only account from this endpoint. Please contact support.' },
+        { status: 400 }
+      );
+    }
+
+    const bcrypt = await import('bcryptjs');
+    const isValid = await bcrypt.compare(password, fullUser.password);
+    if (!isValid) {
+      return NextResponse.json(
+        { message: 'Incorrect password' },
+        { status: 401 }
+      );
     }
 
     // Delete user and all related data (CASCADE)
     await db.user.delete({
-      where: { id: session.user.id },
+      where: { id: user.id },
     })
 
     return NextResponse.json({

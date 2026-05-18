@@ -1,15 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateMagicToken, sendPasswordResetEmail } from '@/lib/email'
+import { getRedis } from '@/lib/im/redis'
 
 export const dynamic = 'force-dynamic'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.lokfeel.com'
 
-// Rate limit: max 3 requests per email per hour (simple in-memory)
-const resetAttempts = new Map<string, { count: number; resetAt: number }>()
+// Rate limit: max 3 requests per email per hour (Redis-backed, survives cold starts)
 const MAX_ATTEMPTS = 3
-const WINDOW_MS = 60 * 60 * 1000 // 1 hour
+const WINDOW_SECONDS = 3600 // 1 hour
+
+function rateLimitKey(email: string): string {
+  return `ratelimit:forgot-password:${email}`
+}
+
+async function checkRateLimit(email: string): Promise<{ allowed: boolean; remaining: number }> {
+  try {
+    const redis = getRedis()
+    const key = rateLimitKey(email)
+    const current = await redis.incr(key)
+    if (current === 1) {
+      // First request — set TTL
+      await redis.expire(key, WINDOW_SECONDS)
+    }
+    if (current > MAX_ATTEMPTS) {
+      const ttl = await redis.ttl(key)
+      return { allowed: false, remaining: ttl > 0 ? ttl : WINDOW_SECONDS }
+    }
+    return { allowed: true, remaining: MAX_ATTEMPTS - current }
+  } catch {
+    // Redis unavailable — allow request (fail open)
+    return { allowed: true, remaining: MAX_ATTEMPTS }
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,12 +48,11 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim()
 
-    // Rate limiting
-    const now = Date.now()
-    const attempt = resetAttempts.get(normalizedEmail)
-    if (attempt && attempt.resetAt > now && attempt.count >= MAX_ATTEMPTS) {
+    // Rate limiting (Redis-backed)
+    const { allowed, remaining } = await checkRateLimit(normalizedEmail)
+    if (!allowed) {
       return NextResponse.json(
-        { message: 'Too many reset requests. Please try again later.' },
+        { message: `Too many reset requests. Please try again in ${Math.ceil(remaining / 60)} minutes.` },
         { status: 429 }
       )
     }
@@ -39,16 +62,6 @@ export async function POST(request: NextRequest) {
       where: { email: normalizedEmail },
       select: { id: true, name: true, email: true },
     })
-
-    // Update rate limit
-    const currentAttempt = resetAttempts.get(normalizedEmail) || { count: 0, resetAt: now + WINDOW_MS }
-    if (currentAttempt.resetAt <= now) {
-      currentAttempt.count = 1
-      currentAttempt.resetAt = now + WINDOW_MS
-    } else {
-      currentAttempt.count++
-    }
-    resetAttempts.set(normalizedEmail, currentAttempt)
 
     // If user doesn't exist, still return success (prevent enumeration)
     if (!user) {

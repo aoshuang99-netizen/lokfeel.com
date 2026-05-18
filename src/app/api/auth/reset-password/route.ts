@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
+      // Return same error as invalid token — prevent user enumeration via reset endpoint
       return NextResponse.json(
         { message: 'Invalid or expired reset link' },
         { status: 400 }

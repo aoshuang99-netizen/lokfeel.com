@@ -52,67 +52,8 @@ interface DiscoverUser {
 // DEMO USERS (fallback)
 // ══════════════════════════════════════
 
-// Real photo URLs — high-quality Unsplash portraits with gender-appropriate images
-// Format: https://images.unsplash.com/photo-{ID}?w=600&h=800&fit=crop&crop=face
-const DEMO_USERS: DiscoverUser[] = [
-  {
-    id: "demo-1",
-    name: "Sarah",
-    age: 28,
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop&crop=face",
-    city: "New York",
-    bio: "Coffee lover, hiking enthusiast, looking for meaningful connections",
-    matchScore: 95,
-    matchReason: "Both value deep conversations and outdoor activities",
-    tags: ["Coffee", "Hiking", "Deep Talks"],
-    verified: true,
-  },
-  {
-    id: "demo-2",
-    name: "Michael",
-    age: 32,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop&crop=face",
-    city: "Los Angeles",
-    bio: "Creative soul, photographer, love exploring new places",
-    matchScore: 88,
-    matchReason: "Shared interest in art and travel",
-    tags: ["Photography", "Travel", "Art"],
-  },
-  {
-    id: "demo-3",
-    name: "Emma",
-    age: 26,
-    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop&crop=face",
-    city: "Chicago",
-    bio: "Book worm, yoga practitioner, seeking genuine connections",
-    matchScore: 92,
-    matchReason: "Similar values around mindfulness and growth",
-    tags: ["Yoga", "Reading", "Mindfulness"],
-    verified: true,
-  },
-  {
-    id: "demo-4",
-    name: "James",
-    age: 30,
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face",
-    city: "San Francisco",
-    bio: "Tech professional, foodie, enjoy meaningful conversations",
-    matchScore: 85,
-    matchReason: "Both passionate about learning and good food",
-    tags: ["Tech", "Foodie", "Learning"],
-  },
-  {
-    id: "demo-5",
-    name: "Olivia",
-    age: 27,
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop&crop=face",
-    city: "Miami",
-    bio: "Dancer, beach lover, looking for someone authentic",
-    matchScore: 90,
-    matchReason: "Complementary personalities, shared love for adventure",
-    tags: ["Dance", "Beach", "Authenticity"],
-  },
-];
+// No demo users — show empty state instead of fake profiles
+// When API returns no users, we show a "No matches available" message
 
 // ══════════════════════════════════════
 // MATCH SCORE HELPERS
@@ -402,11 +343,11 @@ export default function DiscoverPage() {
         }));
         setUsers(transformedUsers);
       } else {
-        setUsers(DEMO_USERS);
+        setUsers([]); // Show empty state instead of fake profiles
       }
     } catch (e) {
       console.error("Failed to load users:", e);
-      setUsers(DEMO_USERS);
+      setUsers([]); // Show empty state on error
     } finally {
       setLoading(false);
     }

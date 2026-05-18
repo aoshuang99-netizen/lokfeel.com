@@ -54,7 +54,10 @@ const BLOCKED_DEBUG_PATHS = [
 ]
 
 function isAllowedPath(pathname: string): boolean {
-  return ALLOWED_PATHS.some(allowed => pathname.startsWith(allowed))
+  // Exact match for /blocked (not /blocked-foo, /blocked-bar, etc.)
+  if (pathname === '/blocked') return true
+  // Prefix match for paths that have sub-paths
+  return ALLOWED_PATHS.filter(p => p !== '/blocked').some(allowed => pathname.startsWith(allowed))
 }
 
 function getCountry(request: NextRequest): string {

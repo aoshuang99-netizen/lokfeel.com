@@ -7,7 +7,7 @@ import { handleApiError } from "@/lib/api-handler";
 import { success, badRequest } from "@/lib/api-response";
 import { fileTypeFromBuffer } from "file-type";
 import sharp from "sharp";
-import { pushJson } from "@/lib/json-helpers";
+import { pushJson, jsonArr } from "@/lib/json-helpers";
 
 // Allowed image MIME types for security
 const ALLOWED_MIME_TYPES = [
@@ -21,6 +21,9 @@ const MIN_WIDTH = 50;
 const MIN_HEIGHT = 50;
 const MAX_WIDTH = 8000;
 const MAX_HEIGHT = 8000;
+
+// Gallery photo count limit
+const MAX_GALLERY_PHOTOS = 9;
 
 // Target dimensions after server-side resize
 const AVATAR_MAX_SIZE = 1024;
@@ -147,6 +150,10 @@ export async function POST(request: NextRequest) {
       try {
         const existing = await db.profile.findUnique({ where: { userId: user.id }, select: { galleryPhotos: true } });
         if (existing) {
+          const currentPhotos = jsonArr(existing.galleryPhotos);
+          if (currentPhotos.length >= MAX_GALLERY_PHOTOS) {
+            return badRequest(`Gallery limit reached (max ${MAX_GALLERY_PHOTOS} photos). Remove a photo first.`);
+          }
           await db.profile.update({
             where: { userId: user.id },
             data: {
@@ -253,6 +260,10 @@ export async function PUT(request: NextRequest) {
       try {
         const existing = await db.profile.findUnique({ where: { userId: user.id }, select: { galleryPhotos: true } });
         if (existing) {
+          const currentPhotos = jsonArr(existing.galleryPhotos);
+          if (currentPhotos.length >= MAX_GALLERY_PHOTOS) {
+            return badRequest(`Gallery limit reached (max ${MAX_GALLERY_PHOTOS} photos). Remove a photo first.`);
+          }
           await db.profile.update({
             where: { userId: user.id },
             data: {

@@ -788,3 +788,37 @@ export const AI_SUGGESTIONS = [
   "Share a fun fact about yourself",
   "Ask what they're passionate about",
 ] as const
+
+// ============================================================================
+// Profile Tags (shared between settings API and settings page)
+// ============================================================================
+
+export const AVAILABLE_TAGS = [
+  // Relationship type
+  { id: 'MONOGAMY', label: 'Monogamy', category: 'relationship' },
+  { id: 'ETHICAL_NON_MONOGAMY', label: 'Ethical Non-Monogamy', category: 'relationship' },
+  { id: 'POLYAMORY', label: 'Polyamory', category: 'relationship' },
+  { id: 'KINK_BDSM', label: 'Kink/BDSM', category: 'relationship' },
+  { id: 'CASUAL_DATING', label: 'Casual Dating', category: 'relationship' },
+  { id: 'FRIENDSHIP_FIRST', label: 'Friendship First', category: 'relationship' },
+  // Sexual orientation
+  { id: 'STRAIGHT', label: 'Straight', category: 'orientation' },
+  { id: 'GAY', label: 'Gay', category: 'orientation' },
+  { id: 'LESBIAN', label: 'Lesbian', category: 'orientation' },
+  { id: 'BISEXUAL', label: 'Bisexual', category: 'orientation' },
+  { id: 'PANSEXUAL', label: 'Pansexual', category: 'orientation' },
+  { id: 'QUEER', label: 'Queer', category: 'orientation' },
+  { id: 'ASEXUAL', label: 'Asexual', category: 'orientation' },
+  { id: 'DEMISEXUAL', label: 'Demisexual', category: 'orientation' },
+  // Interest tags
+  { id: 'TRAVEL', label: 'Travel', category: 'interest' },
+  { id: 'FITNESS', label: 'Fitness', category: 'interest' },
+  { id: 'ART', label: 'Art', category: 'interest' },
+  { id: 'MUSIC', label: 'Music', category: 'interest' },
+  { id: 'FOOD', label: 'Food', category: 'interest' },
+  { id: 'TECH', label: 'Tech', category: 'interest' },
+  { id: 'READING', label: 'Reading', category: 'interest' },
+  { id: 'GAMING', label: 'Gaming', category: 'interest' },
+  { id: 'OUTDOORS', label: 'Outdoors', category: 'interest' },
+  { id: 'PHOTOGRAPHY', label: 'Photography', category: 'interest' },
+] as const

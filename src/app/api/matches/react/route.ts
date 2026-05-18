@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -10,12 +10,8 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = session.user.id;
+    const { user } = await requireAuth();
+    const userId = user.id;
     const body = await req.json();
     const { targetUserId, reaction } = body;
 
@@ -142,31 +138,40 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // 创建聊天室
-        const chatRoom = await prisma.chatRoom.create({
-          data: {
-            matchId: existingMatch.id,
-            vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          },
+        // 创建聊天室（幂等：检查是否已存在）
+        let chatRoom = await prisma.chatRoom.findFirst({
+          where: { matchId: existingMatch.id },
         });
 
-        // 添加成员
-        await prisma.chatRoomMember.createMany({
-          data: [
-            { roomId: chatRoom.id, userId: existingMatch.senderId },
-            { roomId: chatRoom.id, userId: existingMatch.receiverId },
-          ],
-        });
+        if (!chatRoom) {
+          chatRoom = await prisma.chatRoom.create({
+            data: {
+              matchId: existingMatch.id,
+              vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            },
+          });
 
-        // 创建系统消息
-        await prisma.message.create({
-          data: {
-            roomId: chatRoom.id,
-            senderId: existingMatch.senderId,
-            content: `🎉 It's a match! You both liked each other. The Vault is open for 24 hours.`,
-            messageType: "SYSTEM",
-          },
-        });
+          // 添加成员
+          await prisma.chatRoomMember.createMany({
+            data: [
+              { roomId: chatRoom.id, userId: existingMatch.senderId },
+              { roomId: chatRoom.id, userId: existingMatch.receiverId },
+            ],
+          });
+
+          // 创建系统消息
+          const matchMsg = isSuperLike
+            ? `🎉 It's a match! ⭐ Super Like! You both liked each other. The Vault is open for 24 hours.`
+            : `🎉 It's a match! You both liked each other. The Vault is open for 24 hours.`;
+          await prisma.message.create({
+            data: {
+              roomId: chatRoom.id,
+              senderId: existingMatch.senderId,
+              content: matchMsg,
+              messageType: "SYSTEM",
+            },
+          });
+        }
 
         return NextResponse.json({
           success: true,
@@ -193,7 +198,7 @@ export async function POST(req: NextRequest) {
           status: "PENDING",
           senderAction: "INTERESTED",
           matchScore,
-          matchReason: "New match",
+          matchReason: isSuperLike ? "Super Like" : "New match",
           isUnread: true,
         },
       });
