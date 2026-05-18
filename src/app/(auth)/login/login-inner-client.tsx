@@ -336,6 +336,5 @@ export default function LoginInnerClient({
           Create Account
         </Link>
       </div>
-    </div>
   );
 }
