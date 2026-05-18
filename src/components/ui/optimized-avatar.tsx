@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ZoomIn, User, Loader2 } from "lucide-react";
 import {
@@ -144,15 +145,18 @@ function AvatarLightbox({ src, alt = "Photo", isOpen, onClose }: LightboxProps) 
             animate={{ scale: loaded ? 1 : 0.85, opacity: loaded ? 1 : 0 }}
             exit={{ scale: 0.85, opacity: 0 }}
             transition={TRANSITIONS.spring}
-            className="relative max-w-[90vw] max-h-[85vh]"
+            className="relative max-w-[90vw] max-h-[85vh] w-auto h-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
+            <Image
               src={fullResUrl}
-              alt={alt}
-              className="max-w-full max-h-[85vh] object-contain rounded-2xl"
+              alt={alt || "Photo"}
+              fill
+              className="object-contain rounded-2xl"
               draggable={false}
               style={{ willChange: "transform" }}
+              onLoad={() => setLoaded(true)}
+              onError={() => setError(true)}
             />
           </motion.div>
 
@@ -278,18 +282,16 @@ export function OptimizedAvatar({
 
         {/* Actual image */}
         {!error && (
-          <img
-            ref={imgRef}
+          <Image
             src={imageSrc}
             alt={alt}
+            fill
             className={`w-full h-full object-cover object-top transition-opacity duration-300 ${
               loaded ? "opacity-100" : "opacity-0"
             }`}
             loading={priority ? "eager" : "lazy"}
-            decoding={priority ? "sync" : "async"}
             onError={handleError}
             onLoad={handleLoad}
-            crossOrigin="anonymous"
           />
         )}
 

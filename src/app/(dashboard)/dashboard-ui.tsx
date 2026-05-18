@@ -1,14 +1,35 @@
 "use client";
 
-import { useState, ReactNode, useEffect, createContext, useContext } from "react";
+import { useState, ReactNode, useEffect, createContext, useContext, Suspense } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
-import SidebarV2 from "@/components/layout/sidebar-v2";
-import BottomNav from "@/components/layout/bottom-nav";
+// 动态导入重量级组件 — 减少首屏JavaScript束大小
+import dynamic from "next/dynamic";
 import DashboardFooter from "@/components/layout/dashboard-footer";
+import { fetchWithRetry, getAdaptiveTimeout } from "@/lib/api";
+
+// ═════════════════════════════════════════════════
+// 动态导入重量级组件 — Code Splitting
+// ═════════════════════════════════════════════════
+
+// SidebarV2 — 桌面端侧边栏，延迟加载
+const SidebarV2 = dynamic(() => import("@/components/layout/sidebar-v2"), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed left-0 top-0 h-screen w-64 bg-background border-r border-border animate-pulse" />
+  ),
+});
+
+// BottomNav — 移动端底部导航，延迟加载
+const BottomNav = dynamic(() => import("@/components/layout/bottom-nav"), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border animate-pulse lg:hidden" />
+  ),
+});
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -65,7 +86,17 @@ let profilePromise: Promise<any> | null = null;
 
 function fetchProfileOnce(): Promise<any> {
   if (profilePromise) return profilePromise;
-  profilePromise = fetch("/api/profile")
+  
+  const timeout = getAdaptiveTimeout(10000); // 根据网络状况自适应超时
+  
+  profilePromise = fetchWithRetry("/api/profile", {
+    timeout,
+    retries: 3,
+    retryDelay: 1000,
+    onRetry: (attempt, error) => {
+      console.warn(`[Profile] Retry ${attempt}/3 after error:`, error.message);
+    },
+  })
     .then((res) => {
       if (!res.ok) throw new Error(`Error ${res.status}`);
       return res.json();
@@ -74,6 +105,7 @@ function fetchProfileOnce(): Promise<any> {
       // Allow re-fetch after 5s (for retry scenarios)
       setTimeout(() => { profilePromise = null; }, 5000);
     });
+  
   return profilePromise;
 }
 
