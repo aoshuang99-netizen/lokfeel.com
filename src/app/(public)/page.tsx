@@ -127,10 +127,10 @@ function Navbar({ onSignupClick, onLoginClick }: any) {
 
 // ─── STATS DATA ──────────────────────────────────────────────
 const stats = [
-  { value: "500K+", label: "Active Members" },
-  { value: "92%", label: "Match Rate" },
-  { value: "120K", label: "Success Stories" },
-  { value: "4.8\u2605", label: "App Rating" },
+  { value: "Science-Based", label: "Matching" },
+  { value: "Privacy-First", label: "Design" },
+  { value: "Verified", label: "Community" },
+  { value: "Inclusive", label: "For Everyone" },
 ];
 
 // ─── STORY DATA ──────────────────────────────────────────────

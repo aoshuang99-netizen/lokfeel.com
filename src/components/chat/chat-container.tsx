@@ -724,6 +724,19 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
               disabled={!!roomInfo.vaultExpiresAt}
               quotedMessage={quotedMessage}
               onCancelQuote={handleCancelQuote}
+              onImageSend={async (imageUrl: string) => {
+                if (!currentConvId) return;
+                try {
+                  if (userLimits && !userLimits.isPremium && userLimits.messagesRemaining <= 0) {
+                    toast.error("You've used all your free messages. Upgrade to continue.");
+                    return;
+                  }
+                  await chatApi.sendMessage(currentConvId, imageUrl, "IMAGE");
+                  // Message will appear via Pusher real-time update
+                } catch {
+                  toast.error("Failed to send image");
+                }
+              }}
             />
           </>
         ) : (

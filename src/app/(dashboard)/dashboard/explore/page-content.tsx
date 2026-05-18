@@ -638,7 +638,7 @@ export default function DiscoverPage() {
                 await fetch("/api/matches/react", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ targetUserId: user.id, reaction: "INTERESTED" }),
+                  body: JSON.stringify({ targetUserId: user.id, reaction: "SUPER_LIKE" }),
                 });
                 toast.success(`Super liked ${user.name}! ⭐`);
                 setCurrentIndex(prev => prev + 1);

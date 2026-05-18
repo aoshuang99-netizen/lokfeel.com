@@ -575,10 +575,10 @@ export default function ChatRoomPage() {
 
         {/* Header Actions */}
         <div className="flex items-center gap-1">
-          <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors">
+          <button disabled className="p-2 rounded-full opacity-40 cursor-not-allowed transition-colors" title="Voice calls coming soon">
             <Phone className="w-5 h-5 text-foreground-muted" />
           </button>
-          <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors">
+          <button disabled className="p-2 rounded-full opacity-40 cursor-not-allowed transition-colors" title="Video calls coming soon">
             <Video className="w-5 h-5 text-foreground-muted" />
           </button>
           <div className="relative">
