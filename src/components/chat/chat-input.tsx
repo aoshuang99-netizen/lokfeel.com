@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Smile, Image, Mic, Sparkles, X, Reply } from "lucide-react";
 import type { IMMessagePayload } from "@/lib/im/types";
+import { toast } from "sonner";
 
 interface ChatInputProps {
   onSend: (message: string, quotedMsgId?: string) => void;
@@ -112,11 +113,13 @@ export function ChatInput({
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10MB");
       return;
     }
 

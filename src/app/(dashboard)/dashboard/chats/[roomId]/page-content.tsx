@@ -925,11 +925,12 @@ export default function ChatRoomPage() {
                 const uploadData = await uploadRes.json();
                 const imageUrl = uploadData.url || uploadData.imageUrl;
                 if (imageUrl) {
-                  await fetch(`/api/chat/${roomId}/messages`, {
+                  const msgRes = await fetch(`/api/chat/${roomId}/messages`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ content: imageUrl, type: "IMAGE" }),
+                    body: JSON.stringify({ content: imageUrl, messageType: "IMAGE" }),
                   });
+                  if (!msgRes.ok) throw new Error("Failed to send image message");
                   loadMessagesWithAvatar();
                 }
               } catch {

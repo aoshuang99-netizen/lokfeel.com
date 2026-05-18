@@ -10,6 +10,13 @@ import { toast } from "sonner";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { AvatarLightbox } from "@/components/ui/avatar-lightbox";
 
+/** Safe JSON.parse that returns fallback on any error (corrupt data, null, etc.) */
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (!value || typeof value !== "string") return fallback;
+  try { return JSON.parse(value) as T; }
+  catch { return fallback; }
+}
+
 /**
  * Client-side image pre-compression: resize to max 2048px long side, output JPEG.
  * Reduces base64 size before passing to crop modal, preventing upload failures.
@@ -120,9 +127,9 @@ export default function ProfilePage() {
             communicationStyle: data.profile.communicationStyle?.toLowerCase() || "direct",
             conflictResolution: data.profile.conflictResolution?.toLowerCase().replace(/_/g, "-") || "talk-it-out",
             loveLanguage: data.profile.loveLanguage?.toLowerCase().replace(/ /g, "-") || "words-of-affirmation",
-            dealbreakers: data.profile.dealbreakers ? JSON.parse(data.profile.dealbreakers) : ["", "", ""],
-            boundaries: data.profile.boundaries ? JSON.parse(data.profile.boundaries) : ["", "", ""],
-            priorities: data.profile.lifePriorities ? JSON.parse(data.profile.lifePriorities) : [],
+            dealbreakers: safeJsonParse(data.profile.dealbreakers, ["", "", ""]),
+            boundaries: safeJsonParse(data.profile.boundaries, ["", "", ""]),
+            priorities: safeJsonParse(data.profile.lifePriorities, []),
             emotionalAvailability: data.profile.emotionalAvailability || "3",
             locationPreferences: data.profile.preferredLocation ? data.profile.preferredLocation.split(", ") : [],
             galleryPhotos: data.profile.galleryPhotos || [],
@@ -333,7 +340,7 @@ export default function ProfilePage() {
     const errors: string[] = [];
     if (!formData.avatar) errors.push("Photo is required");
     if (!formData.displayName.trim()) errors.push("Name is required");
-    if (!formData.age || formData.age < 18) errors.push("Age is required (18+)");
+    if (!formData.age || formData.age < 18 || formData.age > 120) errors.push("Please enter a valid age (18-120)");
     if (!formData.gender) errors.push("Gender is required");
     if (!formData.location.trim()) errors.push("Location is required");
     return errors;

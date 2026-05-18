@@ -419,9 +419,11 @@ function OnboardingV3Page() {
         console.log(`[Onboarding] Progress saved: step ${stepIndex + 1}, fields: ${fields.join(',')}`);
       } else {
         console.warn(`[Onboarding] Progress save failed: HTTP ${res.status}`);
+        toast.warning("Couldn't save progress. Check your connection.");
       }
     } catch (e) {
       console.warn("[Onboarding] Progress save failed:", e);
+      toast.warning("Couldn't save progress. Check your connection.");
     }
   }, [data]);
 
@@ -440,7 +442,7 @@ function OnboardingV3Page() {
         // If onboarding is complete (step >= 9 for v3), redirect to square
         if (profileData.profile?.onboardingStep >= 9) {
           console.log("[Onboarding] Already complete, redirecting...");
-          window.location.href = "/dashboard/explore";
+          router.replace("/dashboard/explore");
           return;
         }
 
@@ -521,7 +523,7 @@ function OnboardingV3Page() {
       case "desire":
         return !!data.relationshipDesire;
       case "identity":
-        return !!data.sexualOrientation;
+        return !!data.gender && !!data.sexualOrientation;
       case "traits":
         return !!data.attachmentStyle && !!data.communicationStyle && !!data.loveLanguage;
       case "photo":
@@ -716,7 +718,7 @@ function OnboardingV3Page() {
 
       setTimeout(() => {
         console.log("[Onboarding] Navigating to /dashboard/explore...");
-        window.location.href = "/dashboard/explore";
+        router.replace("/dashboard/explore");
       }, 1200);
     } catch (error) {
       console.error("[Onboarding] Save error:", error);
@@ -770,7 +772,7 @@ function OnboardingV3Page() {
       {/* Header */}
       <div className="pt-8 pb-4 px-6">
         <p className="text-xs uppercase tracking-widest text-center text-foreground-muted mb-1">
-          Step {currentStepIndex + 1} of {STEPS.length - 1}
+          Step {currentStepIndex + 1} of {STEPS.length}
         </p>
         <h2 className="text-xl font-bold text-center">{currentStep.title}</h2>
         <p className="text-xs text-center mt-1 text-foreground-muted">{currentStep.subtitle}</p>

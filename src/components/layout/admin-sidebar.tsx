@@ -91,6 +91,7 @@ const TOP_NAV: NavItem[] = [
 export default function AdminSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
 
@@ -118,6 +119,15 @@ export default function AdminSidebar() {
 
   return (
     <>
+      {/* ─── Mobile Hamburger (visible below lg) ─── */}
+      <button
+        onClick={() => setIsMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-[#1a1a2e] border border-[#2a2a3e] text-[#86868b] hover:text-white hover:bg-[#252538] transition-all duration-200 shadow-lg"
+        aria-label="Open menu"
+      >
+        <Layers className="w-5 h-5" />
+      </button>
+
       {/* ─── Desktop Sidebar ─── */}
       <aside
         className={`hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-[#1a1a2e] border-r border-[#2a2a3e] transition-all duration-300 z-fixed ${
@@ -271,8 +281,9 @@ export default function AdminSidebar() {
       </aside>
 
       {/* ─── Mobile Sidebar Overlay ─── */}
+      {isMobileOpen && (
       <aside className="lg:hidden fixed inset-0 z-fixed">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileOpen(false)} />
         <div className="absolute left-0 top-0 h-full w-[280px] bg-background-secondary border-r border-card-border overflow-y-auto">
           {/* Logo */}
           <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-card-border/50">
@@ -363,6 +374,7 @@ export default function AdminSidebar() {
           </div>
         </div>
       </aside>
+      )}
     </>
   );
 }

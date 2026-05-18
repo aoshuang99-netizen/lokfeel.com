@@ -71,7 +71,7 @@ export async function GET(
           avatar: otherParticipant?.user.profile?.avatar ||
                   otherParticipant?.user.image ||
                   null,
-          isOnline: isBot || Math.random() > 0.5, // Bots are always "online"
+          isOnline: isBot, // Bots are always "online"; real users use presence system
           isBot: isBot,
           lastSeen: isBot ? 'Active now' : 'Recently',
         },
