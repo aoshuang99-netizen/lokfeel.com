@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import Image from "next/image";
+import NextImage from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ZoomIn, User, Loader2 } from "lucide-react";
 import {
@@ -148,7 +148,7 @@ function AvatarLightbox({ src, alt = "Photo", isOpen, onClose }: LightboxProps) 
             className="relative max-w-[90vw] max-h-[85vh] w-auto h-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
+            <NextImage
               src={fullResUrl}
               alt={alt || "Photo"}
               fill
@@ -282,7 +282,7 @@ export function OptimizedAvatar({
 
         {/* Actual image */}
         {!error && (
-          <Image
+          <NextImage
             src={imageSrc}
             alt={alt}
             fill
