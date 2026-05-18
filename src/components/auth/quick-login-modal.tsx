@@ -54,20 +54,11 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      const csrfRes = await fetch("/api/auth/csrf", { headers: { "Content-Type": "application/json" } });
-      const { csrfToken } = await safeJsonParse<{ csrfToken?: string }>(csrfRes);
-      if (!csrfToken) { setError("Security check failed"); return; }
-      const res = await fetch("/api/auth/signin/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Auth-Return-Redirect": "1" },
-        body: new URLSearchParams({ csrfToken, callbackUrl: "/dashboard" }),
-      });
-      const data = await safeJsonParse<{ url?: string; error?: string }>(res);
-      if (data.url) { window.location.href = data.url; }
-      else { setError(data.error || "Google login failed"); }
-    } catch (e: any) { setError(getAuthErrorMessage(e)); }
+  const handleGoogleLogin = () => {
+    // Direct navigation to custom PKCE signin endpoint
+    // (Previous fetch-based approach failed because our [...nextauth] interceptor
+    // returns NextResponse.redirect() which doesn't work with fetch + X-Auth-Return-Redirect)
+    window.location.href = "/api/auth/oauth/google/signin?callbackUrl=/dashboard";
   };
 
   const handleXLogin = () => {
