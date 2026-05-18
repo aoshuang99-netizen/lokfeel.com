@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       where: { userId: user.id, status: "ACTIVE" },
     });
 
-    if (existingSub && existingSub.plan === "PREMIUM_MONTHLY" || existingSub?.plan === "PREMIUM_YEARLY") {
+    if (existingSub && (existingSub.plan === "PREMIUM_MONTHLY" || existingSub.plan === "PREMIUM_YEARLY")) {
       return NextResponse.json(
         { error: "You already have an active Premium subscription" },
         { status: 400 }

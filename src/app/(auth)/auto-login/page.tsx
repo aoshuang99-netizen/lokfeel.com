@@ -32,16 +32,17 @@ function AutoLoginContent() {
           body: JSON.stringify({ email }),
         });
 
-        if (!checkRes.ok) {
-          // User might not exist yet - redirect to complete registration
+        const userData = await safeJsonParse(checkRes);
+
+        // Check if user exists using the exists field (not HTTP status code)
+        if (!userData?.exists) {
+          // User doesn't exist - redirect to complete registration
           setMessage("Redirecting to complete your registration...");
           setTimeout(() => {
             router.push(`/register?email=${encodeURIComponent(email)}&verified=true`);
           }, 1500);
           return;
         }
-
-        const userData = await safeJsonParse(checkRes);
 
         // User exists - we need to sign them in
         // Since we don't have the password, we'll use a special "magic-link" provider

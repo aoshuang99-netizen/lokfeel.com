@@ -51,11 +51,11 @@ export async function POST(request: NextRequest) {
     let devCode: string | undefined
     
     if (method === 'email') {
-      const r = await sendVerificationEmail(user.email, code, user.name!)
+      const r = await sendVerificationEmail(user.email || '', code, user.name || 'User')
       success = r.success
       devCode = r.devCode
     } else if (method === 'sms' && phone) {
-      const r = await sendSMSVerification(phone.replace(/\s/g, ''), code, user.name!)
+      const r = await sendSMSVerification(phone.replace(/\s/g, ''), code, user.name || 'User')
       success = r.success
     }
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         ? `Verification code generated (dev mode)` 
         : `Verification code sent via ${method}`,
       maskedIdentifier: method === 'email'
-        ? user.email!.replace(/(.{2})(.*)(@.*)/, '$1***$3')
+        ? (user.email || '').replace(/(.{2})(.*)(@.*)/, '$1***$3')
         : phone ? phone.slice(0, 3) + '***' + phone.slice(-2) : '',
       devMode: isDevMode,
     }
@@ -142,7 +142,7 @@ export async function PUT(request: NextRequest) {
     if (!token) {
       token = await db.verificationToken.findFirst({
         where: {
-          identifier: user.email!,
+          identifier: user.email || '',
           token: code,
           used: false,
           expires: { gt: new Date() },
@@ -169,17 +169,15 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Mark verified
-    await Promise.all([
-      db.user.update({
-        where: { id: user.id },
-        data: { emailVerified: new Date() },
-      }),
-      db.verificationToken.update({
-        where: { id: token.id },
-        data: { used: true },
-      }),
-    ])
+    // Mark verified — sequential to avoid race condition
+    await db.user.update({
+      where: { id: user.id },
+      data: { emailVerified: new Date() },
+    })
+    await db.verificationToken.update({
+      where: { id: token.id },
+      data: { used: true },
+    })
 
     return NextResponse.json({
       message: 'Email verified successfully',

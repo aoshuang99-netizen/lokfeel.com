@@ -244,7 +244,7 @@ export default function DashboardPage() {
   const { profile, user: contextUser, loading: profileLoading } = useProfileContext();
   const user = contextUser || session?.user;
   const userName = user?.name || profile?.displayName || "there";
-  const firstName = userName.split(" ")[0];
+  const firstName = (userName || "there").split(" ")[0];
 
   // discover数据仍然需要单独请求
   const { data: discoverData, isLoading: discoverLoading } = useApiGetWithRetry<{ users: DiscoverUser[] }>("/api/discover?limit=8", retryKey);

@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic'
 /**
  * POST /api/auth/check-user
  * Check if a user exists by email
+ * 🔴 FIX: Return generic response regardless of whether user exists
+ * to prevent email enumeration attacks
  */
 export async function POST(request: NextRequest) {
   try {
@@ -34,24 +36,26 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      )
+      // 🔴 FIX: Return 200 with exists=false instead of 404 to prevent enumeration
+      return NextResponse.json({
+        exists: false,
+        message: 'If an account with this email exists, you can proceed',
+      })
     }
 
+    // Only return safe fields — never expose user.id to unauthenticated callers
     return NextResponse.json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      emailVerified: user.emailVerified,
+      exists: true,
+      emailVerified: !!user.emailVerified,
       onboardingStep: user.profile?.onboardingStep || 0,
+      message: 'If an account with this email exists, you can proceed',
     })
   } catch (error) {
     console.error('Check user error:', error)
-    return NextResponse.json(
-      { message: 'Server error' },
-      { status: 500 }
-    )
+    // 🔴 FIX: Don't reveal server errors to prevent information leakage
+    return NextResponse.json({
+      exists: false,
+      message: 'If an account with this email exists, you can proceed',
+    })
   }
 }

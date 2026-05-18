@@ -229,7 +229,7 @@ export function withPermission(
 
       // Admin routes: check admin_session cookie FIRST
       if (isAdminRoute) {
-        const adminSession = await await parseAdminSession(req);
+        const adminSession = await parseAdminSession(req);
         if (adminSession) {
           userId = DEMO_ADMIN_SESSION_KEY + (adminSession.username || adminSession.email || "admin");
           userRole = adminSession.role;
