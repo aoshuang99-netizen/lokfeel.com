@@ -86,7 +86,6 @@ export default function LoginInnerClient({
   // Using CSS classes for responsive behavior; keep minimal inline styles for dynamic states
 
   return (
-    {/* PC-optimized: wider card, responsive padding */}
       <div className="auth-card">
         {/* Header — Brand: LokFee! */}
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
