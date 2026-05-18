@@ -1,6 +1,6 @@
 /**
  * Server-Side Auth Guard for Dashboard Routes
- * 
+ *
  * This runs in Node.js runtime (NOT Edge/middleware),
  * so it can properly decrypt NextAuth v5's JWE session tokens.
  */

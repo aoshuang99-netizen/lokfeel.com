@@ -329,6 +329,7 @@ model User {
   @@index([role])
   @@index([createdAt])
   @@index([deletedAt])
+  @@index([isBot]) // P1: AutoMatch bot 查找
 }
 
 model Account {
@@ -471,6 +472,11 @@ model Profile {
   @@index([linkedInVerified])
   @@index([gender, profileStatus])
   @@index([isApproved])
+  // Discover API 加速索引
+  @@index([onboardingStep]) // P0: Discover/AutoMatch 核心过滤字段
+  @@index([age]) // P0: 年龄范围查询
+  @@index([onboardingStep, gender]) // P0: 复合过滤 (step>=N + gender=G)
+  @@index([gender, age]) // P1: 先 gender 精确匹配再 age 范围查询
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -546,6 +552,7 @@ model Match {
   @@index([senderId])
   @@index([receiverId])
   @@index([senderId, receiverId])
+  @@index([receiverId, senderId]) // P2: OR 反向查询优化
   @@index([isUnread])
   @@index([inboxPriority])
   @@index([deletedAt])

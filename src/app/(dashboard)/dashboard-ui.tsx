@@ -5,12 +5,15 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { Toaster } from "sonner";
+import { SessionProvider } from "next-auth/react";
 import SidebarV2 from "@/components/layout/sidebar-v2";
 import BottomNav from "@/components/layout/bottom-nav";
 import DashboardFooter from "@/components/layout/dashboard-footer";
 
 interface DashboardLayoutProps {
   children: ReactNode;
+  /** Server-side session from auth() — preloads SessionProvider, skipping /api/auth/session fetch */
+  session?: any;
 }
 
 // ══════════════════════════════════════════════════
@@ -74,7 +77,7 @@ function fetchProfileOnce(): Promise<any> {
   return profilePromise;
 }
 
-export default function DashboardUI({ children }: DashboardLayoutProps) {
+export default function DashboardUI({ children, session }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -174,6 +177,7 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
   };
 
   return (
+    <SessionProvider session={session} refetchInterval={5 * 60} refetchOnWindowFocus={false}>
     <ProfileContext.Provider value={profileContextValue}>
       <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
         {/* Cool Blue gradient orbs — atmospheric depth */}
@@ -249,5 +253,6 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
         />
       </div>
     </ProfileContext.Provider>
+    </SessionProvider>
   );
 }

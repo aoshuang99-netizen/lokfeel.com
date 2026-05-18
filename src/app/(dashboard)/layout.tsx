@@ -1,22 +1,29 @@
 /**
  * Dashboard Layout — Server Component (Auth Guard + Client UI)
- * 
+ *
  * Architecture:
  * - This file is a SERVER COMPONENT → can use auth() to check session
- * - Wraps the actual UI in DashboardAuthGuard (redirects if not logged in)
- * - The actual dashboard UI is in dashboard-ui.tsx (client component)
+ * - Fetches session ONCE and passes it to DashboardUI for SessionProvider preloading
+ * - This eliminates the client-side /api/auth/session waterfall on dashboard pages
  */
-import DashboardAuthGuard from "./auth-guard";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth/auth";
 import DashboardUI from "./dashboard-ui";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login?callbackUrl=/dashboard");
+  }
+
+  // Pass server-side session to client — SessionProvider will use it
+  // as initial data, skipping the /api/auth/session fetch entirely
   return (
-    <DashboardAuthGuard>
-      <DashboardUI>{children}</DashboardUI>
-    </DashboardAuthGuard>
+    <DashboardUI session={session}>{children}</DashboardUI>
   );
 }
