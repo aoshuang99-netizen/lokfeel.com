@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   Heart,
   MessageCircle,
@@ -16,24 +17,32 @@ import {
   Search,
   User,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/components/ui";
 import { getAvatarKind, getAvatarBackground, parseEmojiAvatar, getRealPhotoAvatarUrl, isUnsplashUrl, generateLocalAvatarDataUri } from "@/lib/avatar-utils";
-import { AnalyticsReport } from "@/components/dashboard/analytics-report";
+import { useProfileContext } from "../dashboard-ui";
 
-// ════════════════════════════════════
-// DESIGN TOKENS — Cool Blue Design System
-// ════════════════════════════════════
-const COLORS = {
-  primary: "#3b82f6",
-  primaryHover: "#60a5fa",
-  secondary: "#6366f1",
-  cta: "#22d3ee",
-  pink: "#f472b6",
-};
-
-const EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+// ══════════════════════════════════════════════════
+// CRITICAL PERFORMANCE: Lazy load AnalyticsReport
+// This 490-line component is NOT needed for first paint.
+// Saves ~30KB+ from the initial JS bundle.
+// ══════════════════════════════════════════════════
+const AnalyticsReport = dynamic(
+  () => import("@/components/dashboard/analytics-report").then((mod) => ({ default: mod.AnalyticsReport })),
+  {
+    loading: () => (
+      <div className="bg-background-secondary rounded-2xl p-6 border border-card-border animate-pulse">
+        <div className="h-6 w-40 bg-foreground-faint rounded mb-4" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-24 bg-foreground-faint rounded-xl" />
+          ))}
+        </div>
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 // ════════════════════════════════════
 // TYPES
@@ -58,7 +67,7 @@ interface DiscoverUser {
 }
 
 // ════════════════════════════════════
-// TODAY'S PICK CARD — 精简优化
+// TODAY'S PICK CARD — CSS动画替代framer-motion
 // ════════════════════════════════════
 function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
   const getMatchScoreColor = (score: number) => {
@@ -68,11 +77,9 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.08 }}
-      className="flex-shrink-0 w-[280px] snap-start"
+    <div
+      className="flex-shrink-0 w-[280px] snap-start animate-fadeInUp"
+      style={{ animationDelay: `${index * 80}ms` }}
     >
       <Link href={`/dashboard/users/${user.id}`}>
         <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-background-secondary border border-card-border hover:border-primary/30 transition-all duration-300">
@@ -91,7 +98,6 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
                   </div>
                 );
               }
-              // Use real photo: either user's photo or gender/age-aware fallback
               const photoUrl = kind === 'photo' && user.avatar
                 ? user.avatar
                 : getRealPhotoAvatarUrl(user.id || user.name, user.gender, 'preview', user.age);
@@ -104,12 +110,10 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
                   decoding="async"
                   onError={(e) => {
                     const img = e.currentTarget as HTMLImageElement;
-                    // Tier-1: Try different Unsplash photo from pool
                     const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, user.gender, 'preview', user.age);
                     if (img.src !== fallbackUrl) {
                       img.src = fallbackUrl;
                     } else {
-                      // Tier-2: All external URLs failed — use local SVG data-URI
                       img.src = generateLocalAvatarDataUri(user.id || user.name);
                     }
                   }}
@@ -156,13 +160,33 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }
 
 // ════════════════════════════════════
-// USE API GET WITH RETRY
+// USE API GET WITH RETRY — 使用全局SWR缓存去重
 // ════════════════════════════════════
+// 模块级请求去重Map — 同一URL同时只发一次请求
+const pendingRequests = new Map<string, Promise<any>>();
+
+function dedupedFetch(url: string): Promise<any> {
+  const existing = pendingRequests.get(url);
+  if (existing) return existing;
+
+  const promise = fetch(url)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      return res.json();
+    })
+    .finally(() => {
+      pendingRequests.delete(url);
+    });
+
+  pendingRequests.set(url, promise);
+  return promise;
+}
+
 function useApiGetWithRetry<T>(url: string | null, retryKey: number): {
   data: T | null;
   isLoading: boolean;
@@ -177,7 +201,6 @@ function useApiGetWithRetry<T>(url: string | null, retryKey: number): {
   const refetch = () => {
     setError(null);
     setIsLoading(true);
-    // The useEffect below will re-run due to retryKey change
   };
 
   useEffect(() => {
@@ -192,14 +215,7 @@ function useApiGetWithRetry<T>(url: string | null, retryKey: number): {
     let cancelled = false;
     const fetchData = async () => {
       try {
-        const res = await fetch(url);
-        if (cancelled) return;
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ message: "Request failed" }));
-          setError(err.message || `Error ${res.status}`);
-          return;
-        }
-        const json = await res.json();
+        const json = await dedupedFetch(url);
         if (!cancelled) setData(json);
       } catch (err: any) {
         if (!cancelled) setError(err.message || "Service unavailable");
@@ -216,7 +232,7 @@ function useApiGetWithRetry<T>(url: string | null, retryKey: number): {
 }
 
 // ════════════════════════════════════
-// MAIN DASHBOARD PAGE — 重新设计
+// MAIN DASHBOARD PAGE — 性能优化版
 // ════════════════════════════════════
 export default function DashboardPage() {
   const { data: session, status: authStatus } = useSession();
@@ -224,13 +240,14 @@ export default function DashboardPage() {
   const [retryKey, setRetryKey] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data: profileData, isLoading: profileLoading, error: profileError } = useApiGetWithRetry<DashboardData>("/api/profile", retryKey);
-  const { data: discoverData, isLoading: discoverLoading } = useApiGetWithRetry<{ users: DiscoverUser[] }>("/api/discover?limit=8", retryKey);
-
-  const user = profileData?.user || session?.user;
-  const profile = profileData?.profile;
+  // ═══ 从ProfileContext获取profile数据 — 不再重复请求 /api/profile ═══
+  const { profile, user: contextUser, loading: profileLoading } = useProfileContext();
+  const user = contextUser || session?.user;
   const userName = user?.name || profile?.displayName || "there";
   const firstName = userName.split(" ")[0];
+
+  // discover数据仍然需要单独请求
+  const { data: discoverData, isLoading: discoverLoading } = useApiGetWithRetry<{ users: DiscoverUser[] }>("/api/discover?limit=8", retryKey);
   const discoverUsers = discoverData?.users || [];
 
   // Greeting based on time
@@ -247,22 +264,31 @@ export default function DashboardPage() {
   const profileRequiredMissing = !profile?.avatar || !profile?.displayName || !profile?.age || !profile?.gender || !profile?.city;
   const isProfileLocked = !isOnboardingComplete || profileRequiredMissing;
 
-  // ═══ AUTO-MATCH ═══
+  // ═══ AUTO-MATCH — 非阻塞, 不触发重新渲染 ═══
   const [autoMatchTriggered, setAutoMatchTriggered] = useState(false);
   useEffect(() => {
     if (autoMatchTriggered || authStatus === "loading") return;
-    if (profileData?.profile) {
+    if (profile) {
       setAutoMatchTriggered(true);
-      fetch("/api/auto-match", { method: "POST" })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.createdCount > 0) {
-            setRetryKey((prev) => prev + 1);
-          }
-        })
-        .catch((err) => console.warn("[Auto-Match] Failed:", err));
+      // Fire-and-forget: auto-match不阻塞UI，用requestIdleCallback降低优先级
+      const runAutoMatch = () => {
+        fetch("/api/auto-match", { method: "POST" })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.createdCount > 0) {
+              setRetryKey((prev) => prev + 1);
+            }
+          })
+          .catch((err) => console.warn("[Auto-Match] Failed:", err));
+      };
+      // 优先让UI渲染完成，再跑auto-match
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(runAutoMatch);
+      } else {
+        setTimeout(runAutoMatch, 1000);
+      }
     }
-  }, [profileData, authStatus, autoMatchTriggered]);
+  }, [profile, authStatus, autoMatchTriggered]);
 
   // ═══ LOADING STATE ═══
   if (profileLoading) {
@@ -278,11 +304,11 @@ export default function DashboardPage() {
     );
   }
 
-  // ═══ ERROR STATE ═══
-  if (profileError) {
+  // ═══ ERROR STATE — profileContext加载失败时profile为null ═══
+  if (!profile && !profileLoading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <InlineError error={profileError} onRetry={() => setRetryKey((prev) => prev + 1)} />
+        <InlineError error="Failed to load profile" onRetry={() => setRetryKey((prev) => prev + 1)} />
       </div>
     );
   }
@@ -296,20 +322,16 @@ export default function DashboardPage() {
       </div>
 
       {/* ════════════════════════════════════
-          SECTION 1: PERSONALIZED GREETING
+          SECTION 1: PERSONALIZED GREETING — CSS动画
           ════════════════════════════════════ */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
+      <section className="animate-fadeIn">
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1 font-display">
           {getGreeting()}, <span className="text-primary-hover">{firstName}</span>
         </h1>
         <p className="text-foreground-muted text-sm">
           Discover people who match your relationship blueprint
         </p>
-      </motion.section>
+      </section>
 
       {/* ════════════════════════════════════
           SECTION 2: TODAY'S PICKS — 核心区块
@@ -350,11 +372,7 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-background-secondary rounded-2xl p-8 text-center border border-card-border"
-          >
+          <div className="bg-background-secondary rounded-2xl p-8 text-center border border-card-border animate-fadeIn">
             <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-7 h-7 text-primary" />
             </div>
@@ -366,7 +384,7 @@ export default function DashboardPage() {
               <Search className="w-4 h-4" />
               Browse Discover
             </Link>
-          </motion.div>
+          </div>
         )}
       </section>
 
@@ -408,23 +426,15 @@ export default function DashboardPage() {
       </section>
 
       {/* ════════════════════════════════════
-          SECTION 4: ANALYTICS REPORT
+          SECTION 4: ANALYTICS REPORT — 懒加载
           ════════════════════════════════════ */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
+      <section className="animate-fadeIn" style={{ animationDelay: "300ms" }}>
         <AnalyticsReport />
-      </motion.section>
+      </section>
 
       {/* Onboarding CTA — 如果没有完成 */}
       {isProfileLocked && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-background-secondary rounded-2xl p-6 border border-primary/30"
-        >
+        <div className="bg-background-secondary rounded-2xl p-6 border border-primary/30 animate-fadeIn">
           <div className="flex flex-col md:flex-row items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-6 h-6 text-white" />
@@ -443,7 +453,7 @@ export default function DashboardPage() {
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );

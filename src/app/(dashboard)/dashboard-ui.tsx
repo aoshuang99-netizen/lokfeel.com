@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode, useEffect } from "react";
+import { useState, ReactNode, useEffect, createContext, useContext } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
@@ -13,10 +13,31 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
+// ══════════════════════════════════════════════════
+// PROFILE CONTEXT — 全局共享profile数据，消除重复API请求
+// dashboard-ui.tsx 和 page.tsx 共享同一份数据
+// ══════════════════════════════════════════════════
+interface ProfileContextType {
+  profile: any;
+  user: any;
+  loading: boolean;
+  complete: boolean;
+  refetch: () => void;
+}
+
+const ProfileContext = createContext<ProfileContextType>({
+  profile: null,
+  user: null,
+  loading: true,
+  complete: false,
+  refetch: () => {},
+});
+
+export function useProfileContext() {
+  return useContext(ProfileContext);
+}
+
 // Routes that are ALWAYS accessible even with incomplete profile
-// NOTE: Core user features (chats, connections, notifications) should always
-// be accessible — blocking them creates a dead-end experience where users
-// can't use the app at all. Only lock truly premium/advanced features.
 const ALLOWED_ROUTES_WHEN_INCOMPLETE = [
   "/dashboard/onboarding",
   "/dashboard/profile",
@@ -34,6 +55,25 @@ function isAllowedWhenIncomplete(path: string): boolean {
   );
 }
 
+// ══════════════════════════════════════════════════
+// 模块级profile请求去重 — 确保全局只发一次 /api/profile
+// ══════════════════════════════════════════════════
+let profilePromise: Promise<any> | null = null;
+
+function fetchProfileOnce(): Promise<any> {
+  if (profilePromise) return profilePromise;
+  profilePromise = fetch("/api/profile")
+    .then((res) => {
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      return res.json();
+    })
+    .finally(() => {
+      // Allow re-fetch after 5s (for retry scenarios)
+      setTimeout(() => { profilePromise = null; }, 5000);
+    });
+  return profilePromise;
+}
+
 export default function DashboardUI({ children }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
@@ -46,43 +86,33 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
     needsBlueprint: boolean;
     needsProfile: boolean;
     profile: any;
+    user: any;
   }>({
     loading: true,
     complete: false,
     needsBlueprint: false,
     needsProfile: false,
     profile: null,
+    user: null,
   });
 
-  // Fetch profile status on mount
+  // Fetch profile status on mount — 使用去重fetch
   useEffect(() => {
     async function checkProfile() {
       try {
-        const res = await fetch("/api/profile");
-        if (!res.ok) {
-          setProfileCheck((p) => ({ ...p, loading: false }));
-          return;
-        }
-        const data = await res.json();
+        const data = await fetchProfileOnce();
         const profile = data.profile;
+        const user = data.user;
 
         const onboardingStep = profile?.onboardingStep || 0;
-        // Onboarding is complete if step >= 9, or profileStatus is APPROVED/ACTIVE
-        // NOTE: Onboarding sets profileStatus to "APPROVED" (not "ACTIVE"),
-        // so we must check both values.
         const isOnboardingComplete = onboardingStep >= 9
           || profile?.profileStatus === "ACTIVE"
           || profile?.profileStatus === "APPROVED";
 
-        // Blueprint check — only flag if onboarding is NOT complete
-        // Once onboarding finishes, these fields are guaranteed populated
         const needsBlueprint = !isOnboardingComplete
           && !profile?.attachmentStyle
           && !profile?.relationshipGoal;
 
-        // Profile fields check — only flag if onboarding is NOT complete
-        // Once onboarding finishes (step >= 9), the user has provided all
-        // required data. Don't re-lock them over optional fields like city.
         const needsProfile = !isOnboardingComplete
           && (!profile?.avatar || !profile?.displayName || !profile?.age || !profile?.gender);
 
@@ -94,6 +124,7 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
           needsBlueprint,
           needsProfile,
           profile,
+          user,
         });
       } catch {
         setProfileCheck((p) => ({ ...p, loading: false }));
@@ -103,13 +134,11 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
   }, []);
 
   // Auto-redirect incomplete users away from locked pages
-  // Instead of forcing to explore, redirect to onboarding/profile
   useEffect(() => {
     if (profileCheck.loading) return;
     if (profileCheck.complete) return;
     if (isAllowedWhenIncomplete(pathname)) return;
 
-    // User is incomplete and on a locked page → redirect to profile completion
     const target = profileCheck.needsProfile
       ? "/dashboard/onboarding"
       : "/dashboard/profile";
@@ -125,79 +154,100 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
     ? "/dashboard/onboarding"
     : "/dashboard/profile";
 
+  // Profile context value — 共享给子组件
+  const profileContextValue: ProfileContextType = {
+    profile: profileCheck.profile,
+    user: profileCheck.user,
+    loading: profileCheck.loading,
+    complete: profileCheck.complete,
+    refetch: () => {
+      profilePromise = null; // 清除缓存，允许重新fetch
+      setProfileCheck({
+        loading: true,
+        complete: false,
+        needsBlueprint: false,
+        needsProfile: false,
+        profile: null,
+        user: null,
+      });
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      {/* Cool Blue gradient orbs — atmospheric depth */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-breathe" />
-        <div className="absolute top-1/2 -left-20 w-72 h-72 bg-secondary/5 rounded-full blur-[100px] animate-breathe" style={{ animationDelay: "2s" }} />
-        <div className="absolute -bottom-32 right-1/4 w-80 h-80 bg-cyan-500/3 rounded-full blur-[110px] animate-breathe" style={{ animationDelay: "4s" }} />
-      </div>
+    <ProfileContext.Provider value={profileContextValue}>
+      <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+        {/* Cool Blue gradient orbs — atmospheric depth */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-breathe" />
+          <div className="absolute top-1/2 -left-20 w-72 h-72 bg-secondary/5 rounded-full blur-[100px] animate-breathe" style={{ animationDelay: "2s" }} />
+          <div className="absolute -bottom-32 right-1/4 w-80 h-80 bg-cyan-500/3 rounded-full blur-[110px] animate-breathe" style={{ animationDelay: "4s" }} />
+        </div>
 
-      {/* Desktop Sidebar */}
-      <SidebarV2 onCollapseChange={setSidebarCollapsed} />
+        {/* Desktop Sidebar */}
+        <SidebarV2 onCollapseChange={setSidebarCollapsed} />
 
-      {/* Main Content Area */}
-      <div className={`transition-all duration-300 flex-1 flex flex-col ${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
-        {/* Page Content */}
-        <main className="p-4 lg:p-8 pb-24 lg:pb-8 flex-1 relative">
-          {/* ── Global Lock Overlay (non-dashboard locked pages) ── */}
-          {isLocked && !isDashboard && (
-            <div
-              className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
-              style={{
-                background: "rgba(5, 10, 24, 0.92)",
-                backdropFilter: "blur(12px)",
-              }}
-            >
+        {/* Main Content Area */}
+        <div className={`transition-all duration-300 flex-1 flex flex-col ${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
+          {/* Page Content */}
+          <main className="p-4 lg:p-8 pb-24 lg:pb-8 flex-1 relative">
+            {/* ── Global Lock Overlay (non-dashboard locked pages) ── */}
+            {isLocked && !isDashboard && (
               <div
-                className="glass-card p-8 max-w-md mx-4 text-center border-primary/30 shadow-lg animate-slideUp"
+                className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
+                style={{
+                  background: "rgba(5, 10, 24, 0.92)",
+                  backdropFilter: "blur(12px)",
+                }}
               >
-                <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-5">
-                  <AlertTriangle className="w-8 h-8 text-amber-400" />
-                </div>
-                <h2 className="text-xl font-bold text-foreground mb-2 font-display">
-                  Complete Your Setup First
-                </h2>
-                <p className="text-sm text-foreground-muted mb-6 leading-relaxed">
-                  You need to finish your profile before accessing this feature.
-                  Complete your five-dimension card to unlock all features.
-                </p>
-                <Link
-                  href={completionTarget}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
+                <div
+                  className="glass-card p-8 max-w-md mx-4 text-center border-primary/30 shadow-lg animate-slideUp"
                 >
-                  Complete Profile
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-5">
+                    <AlertTriangle className="w-8 h-8 text-amber-400" />
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground mb-2 font-display">
+                    Complete Your Setup First
+                  </h2>
+                  <p className="text-sm text-foreground-muted mb-6 leading-relaxed">
+                    You need to finish your profile before accessing this feature.
+                    Complete your five-dimension card to unlock all features.
+                  </p>
+                  <Link
+                    href={completionTarget}
+                    className="btn-primary w-full flex items-center justify-center gap-2"
+                  >
+                    Complete Profile
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {children}
-        </main>
+            {children}
+          </main>
 
-        {/* Dashboard Footer (桌面端) */}
-        <DashboardFooter />
+          {/* Dashboard Footer (桌面端) */}
+          <DashboardFooter />
+        </div>
+
+        {/* Mobile Bottom Navigation */}
+        <BottomNav />
+
+        {/* Sonner Toast — renders all toast notifications for dashboard pages */}
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            duration: 4000,
+            classNames: {
+              toast: "glass-card border",
+              title: "text-foreground font-medium",
+              description: "text-foreground-muted text-sm",
+            },
+          }}
+          richColors
+          closeButton
+        />
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <BottomNav />
-
-      {/* Sonner Toast — renders all toast notifications for dashboard pages */}
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          duration: 4000,
-          classNames: {
-            toast: "glass-card border",
-            title: "text-foreground font-medium",
-            description: "text-foreground-muted text-sm",
-          },
-        }}
-        richColors
-        closeButton
-      />
-    </div>
+    </ProfileContext.Provider>
   );
 }

@@ -1560,3 +1560,26 @@ img {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ══════════════════════════════════════════════════
+   Performance CSS Animations — Replace framer-motion
+   Zero-JS, GPU-accelerated, 60fps
+   ══════════════════════════════════════════════════ */
+
+/* Fade in from transparent */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Fade in + slide up (replaces motion.div initial={{opacity:0, y:20}}) */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
