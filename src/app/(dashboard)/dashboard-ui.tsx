@@ -4,6 +4,7 @@ import { useState, ReactNode, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
+import { Toaster } from "sonner";
 import SidebarV2 from "@/components/layout/sidebar-v2";
 import BottomNav from "@/components/layout/bottom-nav";
 import DashboardFooter from "@/components/layout/dashboard-footer";
@@ -182,6 +183,21 @@ export default function DashboardUI({ children }: DashboardLayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       <BottomNav />
+
+      {/* Sonner Toast — renders all toast notifications for dashboard pages */}
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 4000,
+          classNames: {
+            toast: "glass-card border",
+            title: "text-foreground font-medium",
+            description: "text-foreground-muted text-sm",
+          },
+        }}
+        richColors
+        closeButton
+      />
     </div>
   );
 }

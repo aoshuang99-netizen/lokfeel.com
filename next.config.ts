@@ -213,6 +213,18 @@ const nextConfig: NextConfig = {
   
   // Keep heavy server-only packages out of client bundle
   serverExternalPackages: ['@prisma/client', '@prisma/adapter-libsql', '@libsql/client', 'libsql', 'bcryptjs', 'stripe', 'firebase-admin'],
+
+  // ─── Tree-shaking for heavy UI/utility libraries ───
+  experimental: {
+    optimizePackageImports: [
+      'framer-motion',
+      'lucide-react',
+      'recharts',
+      'date-fns',
+      'firebase',
+      '@sentry/nextjs',
+    ],
+  },
   
   // Logging
   logging: {

@@ -129,6 +129,9 @@ if ('serviceWorker' in navigator) {
 
         {/* Preconnect only for GTM (fonts are now self-hosted via next/font) */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
+        {/* Preconnect to Unsplash CDN for avatar images */}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         {/* Google Tag Manager (noscript) */}
