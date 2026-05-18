@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
 import { cache } from "@/lib/cache";
 import { NextRequest, NextResponse } from "next/server";
-import { isMaleGender, isFemaleGender } from "@/lib/gender-utils";
+import { isMaleGender, isFemaleGender, getOppositeGenders } from "@/lib/gender-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -82,9 +82,11 @@ export async function GET(request: NextRequest) {
 
     // Build where clause - RELAXED to show more users
     // Only require: has profile, not current user, not already matched/reacted
+    // 🔴 BUG FIX: Must filter out bot users (isBot=false)!
     // Prisma 7 requires nested filter fields wrapped in `is:`
     let whereClause: any = {
       id: { notIn: excludeIds },
+      isBot: false,  // 🔴 FIX: Never show bot users in Discover
       profile: {
         is: {
           onboardingStep: { gte: minOnboardingStep },
@@ -93,21 +95,17 @@ export async function GET(request: NextRequest) {
     };
 
     // Add gender preference filter (optional) - RELAXED for homepage display
-    // Map various gender preference formats to standard values
-    // Note: preferredGender may be null for new users who haven't completed onboarding
+    // 🔴 BUG FIX: Use getOppositeGenders() to handle both MALE/FEMALE and MAN/WOMAN
+    // The database has BOTH naming conventions — simple MALE→MAN mapping misses FEMALE/MALE rows
     const preferredGender = profile.preferredGender?.toUpperCase() || null;
 
     if (preferredGender && preferredGender !== "EVERYONE") {
-      const genderMap: Record<string, string> = {
-        'MALE': 'MAN',
-        'MAN': 'MAN',
-        'FEMALE': 'WOMAN',
-        'WOMAN': 'WOMAN',
-      };
-      const targetGender = genderMap[preferredGender];
-      if (targetGender) {
-        whereClause.profile.is.gender = targetGender;
+      const targetGenders = getOppositeGenders(preferredGender);
+      if (targetGenders.length > 0 && targetGenders.length < 5) {
+        // Use IN clause to match both MALE/FEMALE and MAN/WOMAN
+        whereClause.profile.is.gender = { in: targetGenders };
       }
+      // If "everyone" or non-binary, no gender filter applied
     }
 
     // Add age range filter (optional) - RELAXED
@@ -154,6 +152,7 @@ export async function GET(request: NextRequest) {
       
       const fallbackWhereClause: any = {
         id: { notIn: fallbackExcludeIds },
+        isBot: false,  // 🔴 FIX: Also filter bots in fallback
         profile: {
           is: {
             onboardingStep: { gte: Math.min(minOnboardingStep, 2) },
