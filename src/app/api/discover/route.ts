@@ -34,7 +34,9 @@ export async function GET(request: NextRequest) {
     });
 
     if (!currentUser?.profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      const res = NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      res.headers.set('Cache-Control', 'no-cache');
+      return res;
     }
 
     const profile = currentUser.profile;
@@ -212,13 +214,17 @@ export async function GET(request: NextRequest) {
     // Sort by match score
     formattedUsers.sort((a, b) => b.matchScore - a.matchScore);
 
-    return NextResponse.json({ users: formattedUsers });
-  } catch (error) {
+    const res = NextResponse.json({ users: formattedUsers });
+    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+    return res;
+    } catch (error) {
     console.error("Discover API error:", error);
-    return NextResponse.json(
+    const res = NextResponse.json(
       { error: "Failed to load discover users", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
+    res.headers.set('Cache-Control', 'no-cache');
+    return res;
   }
 }
 

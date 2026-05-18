@@ -47,18 +47,22 @@ export async function GET() {
 
     if (!profile) {
       // Return null profile — frontend should redirect to onboarding
-      return NextResponse.json({
+      const res = NextResponse.json({
         profile: null,
         user: fullUser,
         emailVerified: fullUser?.emailVerified !== null
-      })
+      });
+      res.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300');
+      return res;
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       profile,
       user: fullUser,
       emailVerified: fullUser?.emailVerified !== null
-    })
+    });
+    res.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300');
+    return res;
   })
 }
 

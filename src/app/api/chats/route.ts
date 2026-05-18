@@ -117,15 +117,19 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       chats: formattedChats,
     });
+    res.headers.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+    return res;
 
-  } catch (error) {
+    } catch (error) {
     console.error("Chats API error:", error);
-    return NextResponse.json(
+    const res = NextResponse.json(
       { error: "Failed to fetch chats" },
       { status: 500 }
     );
+    res.headers.set('Cache-Control', 'no-cache');
+    return res;
   }
 }

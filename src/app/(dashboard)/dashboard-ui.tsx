@@ -180,11 +180,10 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
     <SessionProvider session={session} refetchInterval={5 * 60} refetchOnWindowFocus={false}>
     <ProfileContext.Provider value={profileContextValue}>
       <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-        {/* Cool Blue gradient orbs — atmospheric depth */}
+        {/* Lightweight background gradient — no heavy animations */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-breathe" />
-          <div className="absolute top-1/2 -left-20 w-72 h-72 bg-secondary/5 rounded-full blur-[100px] animate-breathe" style={{ animationDelay: "2s" }} />
-          <div className="absolute -bottom-32 right-1/4 w-80 h-80 bg-cyan-500/3 rounded-full blur-[110px] animate-breathe" style={{ animationDelay: "4s" }} />
+          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/5" />
+          <div className="absolute top-1/2 -left-20 w-72 h-72 rounded-full bg-secondary/5" />
         </div>
 
         {/* Desktop Sidebar */}
