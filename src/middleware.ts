@@ -21,6 +21,15 @@ import type { NextRequest } from 'next/server'
 // ENABLED: Block all CN traffic from home, auth, admin, and dashboard pages.
 const BLOCKED_COUNTRIES: string[] = ['CN']
 
+// IP whitelist — always allow (add your home/office IPs here)
+const IP_WHITELIST: string[] = [
+  // Add Frank's IPs here to bypass geo-block
+  // Example: '123.456.789.0'
+]
+
+// Environment variable to completely disable geo-block (for development/testing)
+const DISABLE_GEO_BLOCK = process.env.DISABLE_GEO_BLOCK === 'true'
+
 // Allowed CORS origins
 const ALLOWED_ORIGINS = [
   'https://app.lokfeel.com',
@@ -73,27 +82,40 @@ function getCountry(request: NextRequest): string {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const country = getCountry(request)
+  const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                 request.headers.get('x-real-ip') || 
+                 ''
 
+  // ─── 0. Bypass geo-block if disabled ───
+  if (DISABLE_GEO_BLOCK) {
+    console.log(`[Middleware] Geo-block DISABLED via env var`)
+  }
+  // ─── 0.5 IP Whitelist bypass ───
+  else if (IP_WHITELIST.includes(clientIp)) {
+    console.log(`[Middleware] IP ${clientIp} whitelisted, bypassing geo-block`)
+  }
   // ─── 1. Region Block ───
   // Skip geo-block for API routes — they return JSON, not HTML.
   // Redirecting API calls to /blocked (an HTML page) causes
   // "Unexpected end of JSON input" on the client when fetch().json() runs.
   // API routes have their own auth/permission checks.
-  const isApiRoute = pathname.startsWith('/api')
-
-  if (BLOCKED_COUNTRIES.includes(country) && !isAllowedPath(pathname) && !isApiRoute) {
-    const blockedUrl = request.nextUrl.clone()
-    blockedUrl.pathname = '/blocked'
-    blockedUrl.searchParams.set('from', pathname)
-    return NextResponse.redirect(blockedUrl)
-  }
-
-  // For API routes from blocked regions, return a proper JSON error
-  if (BLOCKED_COUNTRIES.includes(country) && isApiRoute && !isAllowedPath(pathname)) {
-    return new NextResponse(
-      JSON.stringify({ error: 'Service not available in your region', code: 'REGION_BLOCKED' }),
-      { status: 451, headers: { 'Content-Type': 'application/json' } }
-    )
+  else {
+    const isApiRoute = pathname.startsWith('/api')
+  
+    if (BLOCKED_COUNTRIES.includes(country) && !isAllowedPath(pathname) && !isApiRoute) {
+      const blockedUrl = request.nextUrl.clone()
+      blockedUrl.pathname = '/blocked'
+      blockedUrl.searchParams.set('from', pathname)
+      return NextResponse.redirect(blockedUrl)
+    }
+  
+    // For API routes from blocked regions, return a proper JSON error
+    if (BLOCKED_COUNTRIES.includes(country) && isApiRoute && !isAllowedPath(pathname)) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Service not available in your region', code: 'REGION_BLOCKED' }),
+        { status: 451, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
   }
 
   // ─── 2. Block debug/diagnostic endpoints from external access ───
