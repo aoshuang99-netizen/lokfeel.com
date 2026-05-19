@@ -29,7 +29,16 @@ const COOKIE_NAME = process.env.NODE_ENV === "production"
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    let body: any = {}
+    try {
+      body = await request.json()
+    } catch (e) {
+      return NextResponse.json(
+        { error: "Invalid request body. Please provide email and password." },
+        { status: 400 }
+      )
+    }
+    
     const { email, password, callbackUrl } = body as {
       email?: string
       password?: string

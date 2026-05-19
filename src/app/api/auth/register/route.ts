@@ -52,7 +52,16 @@ function mapSexuality(sexuality: string): string {
 // ─── POST: Send Code / Verify & Create ────────────────────
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    let body: any = {}
+    try {
+      body = await request.json()
+    } catch (e) {
+      return NextResponse.json(
+        { message: 'Invalid request body. Please provide email, password, and other required fields.' },
+        { status: 400 }
+      )
+    }
+    
     const {
       name, email, password, gender, sexuality,
       phone, countryCode, verifyMethod, step, code,
