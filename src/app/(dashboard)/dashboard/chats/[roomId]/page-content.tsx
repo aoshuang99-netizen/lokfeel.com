@@ -110,6 +110,7 @@ function InlineAvatar({ avatar, name, className = "", emojiSize }: {
   const photoUrl = (kind === 'photo' && avatar && !isBrokenAvatarUrl(avatar))
     ? avatar
     : getRealPhotoAvatarUrl(name || 'default', undefined, 'thumb');
+  
   return (
     <img
       src={photoUrl}
@@ -118,16 +119,13 @@ function InlineAvatar({ avatar, name, className = "", emojiSize }: {
       crossOrigin="anonymous"
       onError={(e) => {
         const img = e.currentTarget;
-        img.src = getRealPhotoAvatarUrl(name || 'default', undefined, 'thumb');
+        // Prevent infinite loop: only set fallback once
+        if (!img.dataset.fallbackApplied) {
+          img.dataset.fallbackApplied = 'true';
+          img.src = getRealPhotoAvatarUrl(name || 'default', undefined, 'thumb');
+        }
       }}
     />
-  );
-
-  // Fallback: initials
-  return (
-    <div className={`w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-foreground font-bold ${className}`}>
-      {name?.[0] || "?"}
-    </div>
   );
 }
 
@@ -528,11 +526,11 @@ export default function ChatRoomPage() {
   // RENDER
   // ═══════════════════════════════════════════════════════
   return (
-    <div className="flex-1 flex flex-col h-full bg-background">
+    <div className="flex-1 flex flex-col min-h-0 bg-background">
       {/* ═══════════════════════════════════════════════════════
           CHAT HEADER
           ═══════════════════════════════════════════════════════ */}
-      <div className="flex items-center justify-between px-4 py-3 bg-background-secondary border-b border-card-border">
+      <div className="flex items-center justify-between px-4 py-3 bg-background-secondary border-b border-card-border flex-shrink-0">
         <div className="flex items-center gap-3">
           {/* Back Button (Mobile) */}
           <Link
@@ -644,7 +642,7 @@ export default function ChatRoomPage() {
       {/* ═══════════════════════════════════════════════════════
           MESSAGES AREA
           ═══════════════════════════════════════════════════════ */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mb-4">

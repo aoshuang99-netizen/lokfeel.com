@@ -48,8 +48,8 @@ export async function GET(request: NextRequest) {
   const codeChallenge = generateCodeChallenge(codeVerifier);
 
   // Build the redirect URI (where Google will send the user back)
-  // Google OAuth app is configured with this redirect URI
-  const redirectUri = `${request.nextUrl.origin}/api/auth/callback/google`;
+  // This MUST match the actual route path: /api/auth/oauth/google/callback
+  const redirectUri = `${request.nextUrl.origin}/api/auth/oauth/google/callback`;
 
   // Build Google authorization URL
   const googleAuthUrl = buildGoogleAuthorizationUrl({

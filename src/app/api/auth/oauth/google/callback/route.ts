@@ -70,7 +70,8 @@ export async function GET(request: NextRequest) {
 
     // Step 3: Exchange code for tokens
     // NOTE: The redirect_uri MUST match what was used in the authorization request
-    const redirectUri = `${request.nextUrl.origin}/api/auth/callback/google`;
+    // This MUST match the signin route: /api/auth/oauth/google/callback
+    const redirectUri = `${request.nextUrl.origin}/api/auth/oauth/google/callback`;
 
     let tokenResponse;
     try {
