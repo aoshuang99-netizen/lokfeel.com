@@ -20,31 +20,68 @@ const SESSION_OPTIONS = {
   path: "/",
 };
 
-function createLoginResponse(username: string, role: string) {
+function createLoginResponse(
+  username: string,
+  role: string,
+  isFormSubmit: boolean,
+  baseUrl: string
+) {
   const sessionToken = createAdminSession({
     username,
     role,
     exp: Date.now() + 24 * 60 * 60 * 1000,
   });
 
+  // For form submit, redirect to admin dashboard
+  if (isFormSubmit) {
+    const response = NextResponse.redirect(
+      new URL("/admin", baseUrl),
+      302
+    );
+    response.cookies.set("admin_session", sessionToken, SESSION_OPTIONS);
+    return response;
+  }
+
+  // For API/JSON, return JSON response
   const response = NextResponse.json({
     success: true,
     user: { username, role },
   });
-
   response.cookies.set("admin_session", sessionToken, SESSION_OPTIONS);
   return response;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, username, password } = body;
+    const contentType = request.headers.get("content-type") || "";
+    let username: string | undefined;
+    let password: string | undefined;
+    let isFormSubmit = false;
 
-    // Support both 'email' and 'username' from login form
-    const loginId = (email || username || "").toLowerCase().trim();
+    // Parse based on content type
+    if (contentType.includes("application/json")) {
+      const body = await request.json();
+      username = body.username || body.email || body.name;
+      password = body.password;
+    } else if (
+      contentType.includes("application/x-www-form-urlencoded") ||
+      contentType.includes("multipart/form-data")
+    ) {
+      const formData = await request.formData();
+      username = formData.get("username") as string | null;
+      password = formData.get("password") as string | null;
+      isFormSubmit = true;
+    }
+
+    const loginId = (username || "").toLowerCase().trim();
 
     if (!loginId || !password) {
+      if (isFormSubmit) {
+        // Redirect back to login with error
+        const url = new URL("/admin-login", request.url);
+        url.searchParams.set("error", "missing_fields");
+        return NextResponse.redirect(url, 302);
+      }
       return NextResponse.json(
         { success: false, error: "用户名和密码不能为空" },
         { status: 400 }
@@ -57,7 +94,7 @@ export async function POST(request: NextRequest) {
       : null;
 
     if (demoAdmin) {
-      return createLoginResponse(demoAdmin.username, demoAdmin.role);
+      return createLoginResponse(demoAdmin.username, demoAdmin.role, isFormSubmit, request.url);
     }
 
     // Check database for admin users
@@ -80,24 +117,16 @@ export async function POST(request: NextRequest) {
       const isValid = await compare(password, user.password);
       if (isValid) {
         const role = user.adminRoles?.[0]?.role || "ADMIN";
-        const sessionToken = createAdminSession({
-          userId: user.id,
-          email: user.email,
-          role,
-          exp: Date.now() + 24 * 60 * 60 * 1000,
-        });
-
-        const response = NextResponse.json({
-          success: true,
-          user: {
-            username: user.name || user.email,
-            role,
-          },
-        });
-
-        response.cookies.set("admin_session", sessionToken, SESSION_OPTIONS);
-        return response;
+        const username = user.name || user.email;
+        return createLoginResponse(username, role, isFormSubmit, request.url);
       }
+    }
+
+    // Invalid credentials
+    if (isFormSubmit) {
+      const url = new URL("/admin-login", request.url);
+      url.searchParams.set("error", "invalid_credentials");
+      return NextResponse.redirect(url, 302);
     }
 
     return NextResponse.json(
