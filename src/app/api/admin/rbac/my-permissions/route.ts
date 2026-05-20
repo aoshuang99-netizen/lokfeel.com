@@ -4,20 +4,22 @@ import { success } from "@/lib/api-response";
 import { ALL_PERMISSION_CODES } from "@/lib/admin-permissions";
 import { ROLE_PERMISSIONS } from "@/lib/admin-roles";
 import { withPermission } from "@/lib/with-permission";
+import { getAdminSession } from "@/lib/admin-auth";
 
-export const GET = withPermission("rbac.role.view")(async (req: NextRequest, { userId, session }) => {
+export const GET = withPermission("rbac.role.view")(async (req: NextRequest, { userId }) => {
   const db = getDb();
 
-  // Get role from session (for demo admin, role is passed from middleware)
-  const sessionRole = (session as any)?.user?.role;
+  // Get role directly from admin session (handles both demo and real users)
+  const adminSession = await getAdminSession(req);
+  const sessionRole = adminSession?.role;
 
-  // 1. Check if user has role from session (handles demo admins)
+  // 1. Build roles array
   const roles: string[] = [];
   if (sessionRole) {
     roles.push(sessionRole);
   }
 
-  // 2. Also check database for additional roles (for real users)
+  // 2. For real users (not demo), also check database for additional roles
   if (!userId.startsWith("demo:")) {
     const userRoles = await db.adminUserRole.findMany({
       where: {
