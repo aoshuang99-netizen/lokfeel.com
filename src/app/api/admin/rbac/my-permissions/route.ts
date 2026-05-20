@@ -9,9 +9,14 @@ import { getAdminSession } from "@/lib/admin-auth";
 export const GET = withPermission("rbac.role.view")(async (req: NextRequest, { userId }) => {
   const db = getDb();
 
+  // DEBUG: Log the request cookies
+  console.log("[My Permissions] Request cookies:", req.cookies.getAll?.().map(c => c.name));
+
   // Get role directly from admin session (handles both demo and real users)
   const adminSession = await getAdminSession(req);
+  console.log("[My Permissions] Admin session:", adminSession);
   const sessionRole = adminSession?.role;
+  console.log("[My Permissions] Session role:", sessionRole);
 
   // 1. Build roles array
   const roles: string[] = [];
