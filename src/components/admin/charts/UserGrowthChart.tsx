@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import {
-  LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, defs, linearGradient, stop
+  LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Area
 } from "recharts";
 
 const tooltipStyle = {
