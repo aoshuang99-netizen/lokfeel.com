@@ -13,19 +13,20 @@ export const GET = withPermission("rbac.role.view")(async (req: NextRequest, { u
   const adminSession = await getAdminSession(req);
   const sessionRole = adminSession?.role;
 
-  // DEBUG: Return session info in response
-  if (!adminSession) {
-    return success({
-      debug: {
-        cookies: req.cookies.getAll?.().map(c => c.name),
-        adminSession: null,
-        userId,
-      },
-      permissions: [],
-      roles: [],
-      isSuperAdmin: false,
-    });
-  }
+  // DEBUG: Return all info for debugging
+  return success({
+    debug: {
+      hasAdminSession: !!adminSession,
+      adminSessionType: adminSession ? typeof adminSession : 'null',
+      adminSessionKeys: adminSession ? Object.keys(adminSession) : [],
+      adminSession: adminSession,
+      sessionRole,
+      userId,
+    },
+    permissions: [],
+    roles: [],
+    isSuperAdmin: false,
+  });
 
   // 1. Build roles array
   const roles: string[] = [];
