@@ -31,6 +31,11 @@ export const GET = withPermission("rbac.role.view")(async (req: NextRequest, { u
   const roles: string[] = [];
   if (sessionRole) {
     roles.push(sessionRole);
+  } else {
+    // Fallback: check if adminSession itself has role
+    if (adminSession && 'role' in adminSession) {
+      roles.push(adminSession.role);
+    }
   }
 
   // 2. For real users (not demo), also check database for additional roles
