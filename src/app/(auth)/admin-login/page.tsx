@@ -1,8 +1,8 @@
 /**
  * Admin Login Page
  *
- * This page is served when accessing /admin/login directly or
- * when the admin layout redirects unauthenticated users here.
+ * This page is served at /admin-login (NOT /admin/login)
+ * to avoid being wrapped by AdminLayout auth guard.
  */
 
 import AdminLoginForm from "@/components/admin/login-form";

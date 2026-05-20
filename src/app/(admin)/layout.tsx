@@ -42,8 +42,8 @@ export default async function AdminLayout({
   }
 
   if (!adminSession && !nextAuthSession?.user) {
-    // Redirect to admin login (NOT the main /login page)
-    redirect("/admin/login");
+    // Redirect to admin login page (NOT under /admin/ to avoid redirect loop)
+    redirect("/admin-login");
   }
 
   // Determine display info

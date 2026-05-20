@@ -145,14 +145,15 @@ const nextConfig: NextConfig = {
 
   // ─── Admin Domain Routing ───
   // admin.lokfeel.com → /admin/*
+  // admin.lokfeel.com → /admin-login (bypasses admin auth)
   // Deploy: Add CNAME record "admin.lokfeel.com" → your Vercel domain
   async rewrites() {
     return [
       {
-        // Redirect admin root to dashboard
+        // Redirect admin root to login page (which is now at /admin-login)
         source: '/',
         has: [{ type: 'host', value: 'admin.lokfeel.com' }],
-        destination: '/admin',
+        destination: '/admin-login',
       },
     ]
   },
