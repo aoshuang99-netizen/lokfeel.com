@@ -39,9 +39,12 @@ function createLoginResponse(username: string, role: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password } = body;
+    const { email, username, password } = body;
 
-    if (!username || !password) {
+    // Support both 'email' and 'username' from login form
+    const loginId = (email || username || "").toLowerCase().trim();
+
+    if (!loginId || !password) {
       return NextResponse.json(
         { success: false, error: "用户名和密码不能为空" },
         { status: 400 }
@@ -50,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     // Check admin credentials (all environments, controlled by env var)
     const demoAdmin = DEMO_ADMINS.length > 0
-      ? DEMO_ADMINS.find((a) => a.username === username && a.password === password)
+      ? DEMO_ADMINS.find((a) => a.username === loginId && a.password === password)
       : null;
 
     if (demoAdmin) {
@@ -61,8 +64,8 @@ export async function POST(request: NextRequest) {
     const user = await db.user.findFirst({
       where: {
         OR: [
-          { email: username },
-          { name: username },
+          { email: loginId },
+          { name: loginId },
         ],
         adminRoles: {
           some: {},
