@@ -61,7 +61,7 @@ export function RevenueChart({ data }: { data: DataPoint[] }) {
           />
           <Tooltip
             contentStyle={tooltipStyle}
-            formatter={(value: number) => [`¥${Number(value).toLocaleString()}`, "收入"]}
+            formatter={(value) => [`¥${Number(value).toLocaleString()}`, "收入"]}
             cursor={{ stroke: "rgba(255,255,255,0.1)" }}
           />
           <Area

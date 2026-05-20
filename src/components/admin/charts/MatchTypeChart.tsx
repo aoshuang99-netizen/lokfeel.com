@@ -50,7 +50,7 @@ export function MatchTypeChart({ data }: { data: DataPoint[] }) {
           />
           <Tooltip
             contentStyle={tooltipStyle}
-            formatter={(value: number) => [`${value}%`, "占比"]}
+            formatter={(value) => [`${value}%`, "占比"]}
             cursor={{ fill: "rgba(255,255,255,0.05)" }}
           />
           <Bar dataKey="value" radius={[0, 4, 4, 0]}>
