@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
       contentType.includes("multipart/form-data")
     ) {
       const formData = await request.formData();
-      username = formData.get("username") as string | null;
-      password = formData.get("password") as string | null;
+      username = (formData.get("username") as string | null) ?? undefined;
+      password = (formData.get("password") as string | null) ?? undefined;
       isFormSubmit = true;
     }
 

@@ -11,35 +11,16 @@ export const GET = withPermission("rbac.role.view")(async (req: NextRequest, { u
 
   // Get role directly from admin session (handles both demo and real users)
   const adminSession = await getAdminSession(req);
-  const sessionRole = adminSession?.role;
 
-  // DEBUG: Return all info for debugging
-  return success({
-    debug: {
-      hasAdminSession: !!adminSession,
-      adminSessionType: adminSession ? typeof adminSession : 'null',
-      adminSessionKeys: adminSession ? Object.keys(adminSession) : [],
-      adminSession: adminSession,
-      sessionRole,
-      userId,
-    },
-    permissions: [],
-    roles: [],
-    isSuperAdmin: false,
-  });
-
-  // 1. Build roles array
+  // 1. Build roles array from session + database
   const roles: string[] = [];
-  if (sessionRole) {
-    roles.push(sessionRole);
-  } else {
-    // Fallback: check if adminSession itself has role
-    if (adminSession && 'role' in adminSession) {
-      roles.push(adminSession.role);
-    }
+
+  // From admin session cookie (demo admin or NextAuth fallback)
+  if (adminSession?.role) {
+    roles.push(adminSession.role);
   }
 
-  // 2. For real users (not demo), also check database for additional roles
+  // From database (real users with AdminUserRole records)
   if (!userId.startsWith("demo:")) {
     const userRoles = await db.adminUserRole.findMany({
       where: {
@@ -64,17 +45,16 @@ export const GET = withPermission("rbac.role.view")(async (req: NextRequest, { u
     }
   }
 
-  const permissionSet = new Set<string>();
   const isSuperAdmin = roles.includes("SUPER_ADMIN");
+  const permissionSet = new Set<string>();
 
-  // 3. Build permission set from roles
+  // 2. Build permission set from roles
   if (isSuperAdmin) {
-    // SUPER_ADMIN gets all permissions
     for (const perm of ALL_PERMISSION_CODES) {
       permissionSet.add(perm);
     }
   } else {
-    // For other roles, need to get from database
+    // For non-SUPER_ADMIN roles, collect permissions from role definitions + custom roles
     if (!userId.startsWith("demo:")) {
       const userRolesData = await db.adminUserRole.findMany({
         where: {
@@ -111,9 +91,9 @@ export const GET = withPermission("rbac.role.view")(async (req: NextRequest, { u
           }
         }
       }
-    } else {
+    } else if (adminSession?.role) {
       // Demo non-SUPER_ADMIN: use session role
-      const demoRolePerms = ROLE_PERMISSIONS[sessionRole as keyof typeof ROLE_PERMISSIONS];
+      const demoRolePerms = ROLE_PERMISSIONS[adminSession.role as keyof typeof ROLE_PERMISSIONS];
       if (demoRolePerms) {
         for (const perm of demoRolePerms) {
           permissionSet.add(perm);
