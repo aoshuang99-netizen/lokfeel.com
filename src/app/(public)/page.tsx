@@ -345,14 +345,19 @@ function AboutSection() {
     <section id="about" className="py-24 md:py-32 bg-[#0a0a0a]" ref={ref}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Left: Image placeholder */}
+          {/* Left: Real image */}
           <div
             className={`relative transition-all duration-1000 ${
               inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-12"
             }`}
           >
-            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden ring-1 ring-white/5 bg-[#111111] flex items-center justify-center">
-              <span className="text-white/20 text-lg">Couple photo</span>
+            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden ring-1 ring-white/5">
+              <img
+                src="/images/about-couple.jpg"
+                alt="Real couple connecting through LokFeel"
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/30 via-transparent to-transparent" />
             </div>
             {/* Floating badge */}
@@ -412,16 +417,19 @@ function HowSection() {
       num: "01",
       title: "Share your story",
       desc: "A 5-minute conversation about what matters to you.",
+      image: "/images/bg/photo-couple-main.jpg",
     },
     {
       num: "02",
       title: "Get curated matches",
       desc: "5 handpicked people weekly, with explanations why you connect.",
+      image: "/images/bg/photo-team-1.jpg",
     },
     {
       num: "03",
       title: "Meet with intention",
       desc: "Skip the small talk. Start with genuine compatibility.",
+      image: "/images/bg/photo-team-2.jpg",
     },
   ];
 
@@ -507,7 +515,7 @@ function HowSection() {
             ))}
           </div>
 
-          {/* Right: Image placeholder */}
+          {/* Right: Real images */}
           <div
             className={`relative aspect-[4/3] rounded-2xl overflow-hidden transition-all duration-700 ${
               inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"
@@ -524,15 +532,18 @@ function HowSection() {
                   activeStep === i ? "opacity-100 scale-100" : "opacity-0 scale-110"
                 }`}
               >
-                <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center">
-                  <span className="text-white/20 text-lg">{step.title}</span>
-                </div>
+                <img
+                  src={step.image}
+                  alt={`Step ${step.num}: ${step.title}`}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/60 via-transparent to-transparent" />
               </div>
             ))}
 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {steps.map((_, i) => (
+              {steps.map((step, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveStep(i)}
