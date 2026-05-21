@@ -1,10 +1,15 @@
 /**
- * Vercel Cron Job — Bot Online Status Updates
+ * Vercel Cron Job — Bot Online Status Updates (Batch Mode)
  *
- * This endpoint is called every 15 minutes by Vercel Cron Jobs.
- * It processes online status transitions for all bots.
+ * This endpoint is called by WorkBuddy automation (every 15 min).
+ * Processes online status in batches to avoid Vercel Hobby 10s timeout.
  *
- * Schedule: Every 15 minutes
+ * Batch strategy:
+ *   - Processes MAX_BOTS_PER_BATCH bots per invocation
+ *   - Returns hasMore: true when more bots remain
+ *   - Caller should re-invoke with ?cursor=<lastUserId> until hasMore = false
+ *
+ * Schedule: Every 15 minutes via WorkBuddy automation
  * Purpose: Update bot online/offline states based on time and personality
  *
  * Environment Variables Required:
@@ -13,12 +18,14 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { createPrismaAdapter } from '@/lib/bot-engine/schedulers/prisma-adapter';
 import { evaluateOnlineTransition, createOnlineState } from '@/lib/bot-engine/modules/online-status';
 import { deserializeBotConfig } from '@/lib/bot-engine/config';
 
 export const dynamic = 'force-dynamic';
+// maxDuration is ignored on Vercel Hobby (hard limit: 10s)
 export const maxDuration = 30;
+
+const MAX_BOTS_PER_BATCH = 100; // ~100 bots per 10s budget
 
 interface BotState {
   userId: string;
@@ -28,10 +35,10 @@ interface BotState {
   currentSessionStart: Date | null;
 }
 
-// In-memory state for online status tracking
+// In-memory state for online status tracking (survives warm starts)
 const botStates = new Map<string, BotState>();
 
-function getBotConfig(botConfig: string | null, userId: string, timezone: string) {
+function getBotConfig(botConfig: string | null) {
   if (botConfig) {
     try {
       return deserializeBotConfig(botConfig);
@@ -53,6 +60,7 @@ function getBotConfig(botConfig: string | null, userId: string, timezone: string
 // GET /api/cron/bot-online
 export async function GET(request: Request) {
   const startTime = Date.now();
+  const now = new Date();
 
   // Verify cron secret (REQUIRED - not optional)
   const authHeader = request.headers.get('authorization');
@@ -63,14 +71,24 @@ export async function GET(request: Request) {
   }
 
   try {
-    const now = new Date();
+    const requestUrl = new URL(request.url);
+    const cursor = requestUrl.searchParams.get('cursor') || undefined;
+
     let onlineCount = 0;
     let offlineCount = 0;
     let transitions = 0;
+    let hasMore = false;
+    let lastUserId: string | undefined = undefined;
 
-    // Load all bots from database
+    // Fetch bots in batches, using cursor-based pagination
     const bots = await db.user.findMany({
-      where: { isBot: true, role: 'USER' },
+      where: {
+        isBot: true,
+        role: 'USER',
+        ...(cursor ? { id: { gt: cursor } } : {}),
+      },
+      orderBy: { id: 'asc' },
+      take: MAX_BOTS_PER_BATCH + 1, // +1 to detect hasMore
       select: {
         id: true,
         botConfig: true,
@@ -78,22 +96,39 @@ export async function GET(request: Request) {
       },
     });
 
+    // Determine if more bots remain
+    if (bots.length > MAX_BOTS_PER_BATCH) {
+      hasMore = true;
+      bots.pop(); // Remove the +1 extra
+    }
+
     if (bots.length === 0) {
       return NextResponse.json({
-        status: 'no_bots',
-        timestamp: new Date().toISOString(),
+        status: 'ok',
+        timestamp: now.toISOString(),
+        executionMs: Date.now() - startTime,
+        hasMore: false,
+        stats: { totalBots: 0, online: 0, offline: 0, transitions: 0 },
       });
     }
 
-    // Process each bot
+    lastUserId = bots[bots.length - 1].id;
+
+    // Process each bot in batch
     for (const bot of bots) {
+      // Timeout guard: stop at 9s
+      if (Date.now() - startTime > 9000) {
+        hasMore = true;
+        break;
+      }
+
       let state = botStates.get(bot.id);
 
       if (!state) {
         // Initialize state
         state = {
           userId: bot.id,
-          config: getBotConfig(bot.botConfig, bot.id, 'America/New_York'),
+          config: getBotConfig(bot.botConfig),
           timezone: 'America/New_York',
           isOnline: false,
           currentSessionStart: null,
@@ -144,14 +179,20 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       status: 'ok',
-      timestamp: new Date().toISOString(),
+      timestamp: now.toISOString(),
       executionMs: duration,
+      hasMore,
+      ...(hasMore && lastUserId ? { nextCursor: lastUserId } : {}),
       stats: {
-        totalBots: bots.length,
+        batchSize: bots.length,
         online: onlineCount,
         offline: offlineCount,
         transitions,
       },
+      // Hint for caller
+      ...(hasMore ? {
+        nextUrl: `/api/cron/bot-online?cursor=${lastUserId}`,
+      } : {}),
     });
 
   } catch (error) {

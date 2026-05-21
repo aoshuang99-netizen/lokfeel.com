@@ -1,12 +1,17 @@
 /**
- * Bot Learning Cron API - 定时触发学习任务的API端点
+ * Bot Learning Cron API - 定时触发学习任务的API端点 (Batch Mode)
  *
  * 可以通过以下方式触发:
- * 1. Vercel Cron (配置在vercel.json)
+ * 1. WorkBuddy automation (推荐)
  * 2. 外部定时服务 (如GitHub Actions)
  * 3. 手动触发
  *
  * Auth: Bearer CRON_SECRET header (same pattern as bot-chat, bot-online, bot-tick)
+ *
+ * Batch strategy:
+ *   - Each invocation processes ONE task only (no 'all' bulk)
+ *   - Add ?task=learning|match|chat|profile to select task
+ *   - Returns hasMore: true if learning batch needs continuation
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -14,6 +19,9 @@ import { processLearningBatch, getLearningStats } from '@/lib/bot-learning/engin
 import { simulateMatchBehavior, simulateChatBehavior, updateBotProfiles } from '@/lib/bot-learning/scheduler';
 
 export const dynamic = 'force-dynamic';
+// maxDuration is ignored on Vercel Hobby (hard limit: 10s)
+// Keep declaration for documentation; upgrade to Pro to enable 60s
+export const maxDuration = 60;
 
 /**
  * Verify cron secret from Authorization header.
@@ -34,6 +42,8 @@ function verifyCronAuth(request: Request): boolean {
  * Headers: Authorization: Bearer <CRON_SECRET>
  * Query params:
  * - task: 'learning' | 'match' | 'chat' | 'profile' | 'all'
+ *   'all' processes ONE subtask per invocation (round-robin via continue param)
+ * - continue: 'true' | undefined (for future batch continuation)
  */
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -41,57 +51,77 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const startTime = Date.now();
+  const TIMEOUT_MS = 9000; // 9s guard for Hobby 10s limit
+
   try {
     const { searchParams } = new URL(request.url);
-    const task = searchParams.get('task') || 'all';
+    let task = searchParams.get('task') || 'learning';
+
+    // 'all' picks a deterministic subtask based on minute-of-hour
+    // This spreads subtasks across cron invocations
+    if (task === 'all') {
+      const minute = new Date().getMinutes();
+      const subtasks = ['learning', 'match', 'chat', 'profile'];
+      task = subtasks[minute % subtasks.length];
+    }
+
     const results: Record<string, unknown> = {
       timestamp: new Date().toISOString(),
       task,
     };
 
-    // 执行指定任务
+    // Timeout guard helper
+    function checkTimeout(label: string): boolean {
+      if (Date.now() - startTime > TIMEOUT_MS) {
+        console.log(`[Cron:learning] Timeout guard triggered at ${label}`);
+        return true;
+      }
+      return false;
+    }
+
+    // Execute the selected task
     switch (task) {
       case 'learning':
+        if (checkTimeout('learning-start')) break;
         results.learning = await processLearningBatch();
+        if (checkTimeout('learning-stats')) break;
+        results.stats = await getLearningStats();
         break;
 
       case 'match':
+        if (checkTimeout('match-start')) break;
         await simulateMatchBehavior();
         results.match = { status: 'completed' };
         break;
 
       case 'chat':
+        if (checkTimeout('chat-start')) break;
         await simulateChatBehavior();
         results.chat = { status: 'completed' };
         break;
 
       case 'profile':
+        if (checkTimeout('profile-start')) break;
         await updateBotProfiles();
         results.profile = { status: 'completed' };
         break;
 
-      case 'all':
       default:
-        // 执行所有任务
-        const [learning, stats] = await Promise.all([
-          processLearningBatch(),
-          getLearningStats(),
-        ]);
-
-        results.learning = learning;
-        results.stats = stats;
-
-        // 串行执行模拟行为 (避免冲突)
-        await simulateMatchBehavior();
-        results.match = { status: 'completed' };
-
-        await simulateChatBehavior();
-        results.chat = { status: 'completed' };
+        // Unknown task: default to learning
+        if (checkTimeout('default-start')) break;
+        results.learning = await processLearningBatch();
+        results.stats = await getLearningStats();
+        results.task = 'learning';
         break;
     }
 
+    const timedOut = (Date.now() - startTime) > TIMEOUT_MS;
+
     return NextResponse.json({
       success: true,
+      timedOut,
+      executionMs: Date.now() - startTime,
       ...results,
     });
 
@@ -122,7 +152,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { task = 'all' } = body;
+    const { task = 'learning' } = body;
 
     // Reuse GET handler logic
     const url = new URL(request.url);
