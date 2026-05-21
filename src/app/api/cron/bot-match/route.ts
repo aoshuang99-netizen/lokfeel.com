@@ -5,9 +5,10 @@
  * Processes pending matches in batches to avoid Vercel Hobby 10s timeout.
  *
  * Batch strategy:
- *   - maxMatchesPerBatch = 15  (designed to fit within 10s Hobby timeout)
- *   - Returns hasMore: true when pending matches remain
- *   - Caller should re-invoke until hasMore = false
+ *   - Queries Match table directly (NOT iterating all bots — avoids N+1 queries)
+ *   - Processes MAX_MATCHES_PER_BATCH matches per invocation
+ *   - Uses cursor-based pagination (?continueFrom=<matchId>)
+ *   - Returns hasMore: true when more matches need processing
  *
  * Schedule: Hourly via WorkBuddy automation (NOT Vercel Cron)
  * Purpose: Process pending match reactions, generate accept/reject decisions
@@ -35,13 +36,16 @@ const actionMap: Record<string, string> = {
 
 const MAX_MATCHES_PER_BATCH = 15; // Stay well under 10s Hobby timeout
 
-// GET /api/cron/bot-match
+/**
+ * GET /api/cron/bot-match
+ *
+ * Query params:
+ *   - continueFrom: match ID to start from (cursor pagination)
+ */
 export async function GET(request: Request) {
   const startTime = Date.now();
-  const requestUrl = new URL(request.url);
-  const continueFrom = requestUrl.searchParams.get('continueFrom') || undefined;
 
-  // Verify cron secret (REQUIRED - not optional)
+  // Verify cron secret (REQUIRED — not optional)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -50,77 +54,58 @@ export async function GET(request: Request) {
   }
 
   try {
+    const requestUrl = new URL(request.url);
+    const continueFrom = requestUrl.searchParams.get('continueFrom') || undefined;
+
     let processedCount = 0;
     let acceptCount = 0;
     let rejectCount = 0;
     let ghostCount = 0;
-    let totalPending = 0;
     let hasMore = false;
+    let lastProcessedId: string | undefined = undefined;
 
-    // Load all bots (lightweight query)
-    const bots = await db.user.findMany({
-      where: { isBot: true, role: 'USER' },
+    // DIRECT QUERY: find pending matches WITHOUT iterating all bots
+    // This avoids N+1 queries (one per bot)
+    const whereClause: any = {
+      status: 'PENDING',
+      OR: [
+        { senderAction: null },
+        { receiverAction: null },
+      ],
+    };
+
+    // Apply cursor pagination
+    if (continueFrom) {
+      whereClause.id = { gt: continueFrom };
+    }
+
+    const pendingMatches = await db.match.findMany({
+      where: whereClause,
+      orderBy: { id: 'asc' },
+      take: MAX_MATCHES_PER_BATCH + 1, // +1 to detect hasMore
       select: {
         id: true,
-        botConfig: true,
+        matchScore: true,
+        senderId: true,
+        receiverId: true,
+        senderAction: true,
+        receiverAction: true,
       },
     });
 
-    if (bots.length === 0) {
-      return NextResponse.json({
-        status: 'no_bots',
-        timestamp: new Date().toISOString(),
-      });
+    // Determine if more matches remain
+    if (pendingMatches.length > MAX_MATCHES_PER_BATCH) {
+      hasMore = true;
+      pendingMatches.pop(); // Remove the +1 extra
     }
 
-    // Collect pending matches across all bots (with limit for batching)
-    // Use a flat list of { botId, match } for batch processing
-    const pendingList: Array<{
-      botId: string;
-      matchId: string;
-      matchScore: number | null;
-      isSender: boolean;
-    }> = [];
-
-    for (const bot of bots) {
-      const pendingMatches = await db.match.findMany({
-        where: {
-          OR: [
-            { senderId: bot.id, senderAction: null },
-            { receiverId: bot.id, receiverAction: null },
-          ],
-          status: 'PENDING',
-        },
-        select: {
-          id: true,
-          matchScore: true,
-          senderId: true,
-          receiverId: true,
-        },
-      });
-
-      for (const m of pendingMatches) {
-        const isSender = m.senderId === bot.id;
-        // Skip if other side already acted (no decision needed)
-        pendingList.push({
-          botId: bot.id,
-          matchId: m.id,
-          matchScore: m.matchScore,
-          isSender,
-        });
-      }
-    }
-
-    totalPending = pendingList.length;
-
-    if (totalPending === 0) {
+    if (pendingMatches.length === 0) {
       return NextResponse.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
         executionMs: Date.now() - startTime,
         hasMore: false,
         stats: {
-          totalBots: bots.length,
           totalPending: 0,
           processed: 0,
           accepted: 0,
@@ -130,176 +115,149 @@ export async function GET(request: Request) {
       });
     }
 
-    // Apply continueFrom cursor: skip matches before this matchId
-    let startIndex = 0;
-    if (continueFrom) {
-      const idx = pendingList.findIndex((m) => m.matchId === continueFrom);
-      if (idx >= 0) startIndex = idx;
+    // Collect unique bot IDs from pending matches
+    const botIdSet = new Set<string>();
+    for (const m of pendingMatches) {
+      // Only process if at least one side is a bot (optimization)
+      botIdSet.add(m.senderId);
+      botIdSet.add(m.receiverId);
     }
 
-    const batch = pendingList.slice(startIndex, startIndex + MAX_MATCHES_PER_BATCH);
+    // Preload bot configs (single query)
+    const bots = await db.user.findMany({
+      where: {
+        id: { in: [...botIdSet] },
+        isBot: true,
+      },
+      select: { id: true, botConfig: true },
+    });
 
-    if (batch.length === 0) {
-      return NextResponse.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        executionMs: Date.now() - startTime,
-        hasMore: false,
-        stats: {
-          totalBots: bots.length,
-          totalPending,
-          processed: 0,
-          accepted: 0,
-          rejected: 0,
-          ghosted: 0,
-        },
-      });
-    }
-
-    // Build a bot config cache to avoid re-deserializing per match
-    const configCache = new Map<string, ReturnType<typeof deserializeBotConfig> | null>();
-    function getBotConfig(botId: string, botConfigRaw: any) {
-      if (configCache.has(botId)) return configCache.get(botId);
-      let config: ReturnType<typeof deserializeBotConfig> | null = null;
-      if (botConfigRaw) {
-        try { config = deserializeBotConfig(botConfigRaw); } catch { config = null; }
-      }
-      configCache.set(botId, config);
-      return config;
-    }
-
-    // Preload all bot configs
+    const botConfigMap = new Map<string, ReturnType<typeof deserializeBotConfig> | null>();
     for (const bot of bots) {
-      getBotConfig(bot.id, bot.botConfig);
+      try {
+        botConfigMap.set(bot.id, bot.botConfig ? deserializeBotConfig(bot.botConfig) : null);
+      } catch {
+        botConfigMap.set(bot.id, null);
+      }
     }
 
-    // Process the batch
-    for (const item of batch) {
-      // Timeout guard: if we're approaching 9s, stop and return hasMore
+    // Process each pending match in batch
+    for (const match of pendingMatches) {
+      // Timeout guard: stop at ~9s to avoid Hobby 10s kill
       if (Date.now() - startTime > 9000) {
         hasMore = true;
         break;
       }
 
-      const bot = bots.find((b) => b.id === item.botId);
-      if (!bot) continue;
+      // Skip if both sides already acted
+      if (match.senderAction && match.receiverAction) continue;
 
-      const config = getBotConfig(bot.id, bot.botConfig);
-      if (!config) continue;
+      // Process bot actors on both sides
+      const actors: string[] = [];
+      if (!match.senderAction) actors.push(match.senderId);
+      if (!match.receiverAction) actors.push(match.receiverId);
 
-      const decision = makeMatchDecision(
-        config,
-        item.botId,
-        item.matchId,
-        item.matchScore ?? 50 // null → default 50
-      );
+      for (const actorId of actors) {
+        const config = botConfigMap.get(actorId);
+        // Skip if actor is not a bot (no config)
+        if (!config) continue;
 
-      // Handle ghosting
-      if (decision.decision === 'ghost') {
-        ghostCount++;
-        continue;
-      }
+        const isSender = actorId === match.senderId;
+        const decision = makeMatchDecision(
+          config,
+          actorId,
+          match.id,
+          match.matchScore ?? 50 // null → default 50
+        );
 
-      // Apply decision
-      const action = actionMap[decision.decision] || 'PASS';
+        // Handle ghosting
+        if (decision.decision === 'ghost') {
+          ghostCount++;
+          continue;
+        }
 
-      const updateData: any = {
-        updatedAt: new Date(),
-      };
+        // Apply decision
+        const action = actionMap[decision.decision] || 'PASS';
 
-      if (item.isSender) {
-        updateData.senderAction = action;
-      } else {
-        updateData.receiverAction = action;
-      }
+        const updateData: any = { updatedAt: new Date() };
+        if (isSender) {
+          updateData.senderAction = action;
+        } else {
+          updateData.receiverAction = action;
+        }
 
-      // Check if match should be accepted/rejected based on other side
-      const otherReaction = await db.match.findUnique({
-        where: { id: item.matchId },
-        select: { senderAction: true, receiverAction: true },
-      });
+        // Check if match is now complete (both sides acted)
+        const finalSenderAction = updateData.senderAction ?? match.senderAction;
+        const finalReceiverAction = updateData.receiverAction ?? match.receiverAction;
 
-      const otherAction = item.isSender
-        ? otherReaction?.receiverAction
-        : otherReaction?.senderAction;
+        if (finalSenderAction && finalReceiverAction) {
+          const senderAccepts = ['INTERESTED', 'MAYBE'].includes(finalSenderAction);
+          const receiverAccepts = ['INTERESTED', 'MAYBE'].includes(finalReceiverAction);
+          if (senderAccepts && receiverAccepts) {
+            updateData.status = 'ACCEPTED';
+          } else {
+            updateData.status = 'REJECTED';
+          }
+        }
 
-      if (otherAction) {
-        const otherAccepts = ['INTERESTED', 'MAYBE'].includes(otherAction);
-        const thisAccepts = ['INTERESTED', 'MAYBE'].includes(action);
+        // Update match
+        await db.match.update({
+          where: { id: match.id },
+          data: updateData,
+        });
 
-        if (otherAccepts && thisAccepts) {
-          updateData.status = 'ACCEPTED';
-        } else if (!thisAccepts) {
-          updateData.status = 'REJECTED';
+        // Create match reaction record
+        await db.matchReaction.create({
+          data: {
+            matchId: match.id,
+            userId: actorId,
+            reaction: action as any,
+            feedback: decision.reason,
+          },
+        });
+
+        // Log analytics event
+        await db.analyticsEvent.create({
+          data: {
+            userId: actorId,
+            event: 'bot.match_reaction',
+            properties: JSON.stringify({
+              matchId: match.id,
+              decision: decision.decision,
+              matchScore: match.matchScore,
+            }),
+          },
+        });
+
+        processedCount++;
+        if (decision.decision === 'accept' || decision.decision === 'super_like') {
+          acceptCount++;
+        } else if (decision.decision === 'reject') {
+          rejectCount++;
         }
       }
 
-      // Update match
-      await db.match.update({
-        where: { id: item.matchId },
-        data: updateData,
-      });
-
-      // Create match reaction record
-      await db.matchReaction.create({
-        data: {
-          matchId: item.matchId,
-          userId: item.botId,
-          reaction: action as any,
-          feedback: decision.reason,
-        },
-      });
-
-      // Log analytics event
-      await db.analyticsEvent.create({
-        data: {
-          userId: item.botId,
-          event: 'bot.match_reaction',
-          properties: JSON.stringify({
-            matchId: item.matchId,
-            decision: decision.decision,
-            matchScore: item.matchScore,
-          }),
-        },
-      });
-
-      processedCount++;
-      if (decision.decision === 'accept' || decision.decision === 'super_like') {
-        acceptCount++;
-      } else if (decision.decision === 'reject') {
-        rejectCount++;
-      }
+      lastProcessedId = match.id;
     }
 
-    // Determine if more work remains
-    const lastProcessedIndex = startIndex + batch.length;
-    hasMore = hasMore || (lastProcessedIndex < totalPending);
-
     const duration = Date.now() - startTime;
-
-    // Build response
-    const nextContinueFrom = hasMore && batch.length > 0
-      ? batch[batch.length - 1].matchId
-      : undefined;
 
     return NextResponse.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
       executionMs: duration,
       hasMore,
-      continueFrom: nextContinueFrom,
+      continueFrom: hasMore && lastProcessedId ? lastProcessedId : undefined,
       stats: {
-        totalBots: bots.length,
-        totalPending,
+        totalPending: pendingMatches.length,
         processed: processedCount,
         accepted: acceptCount,
         rejected: rejectCount,
         ghosted: ghostCount,
       },
-      // Hint for caller on how to continue
-      ...(hasMore ? {
-        nextUrl: `/api/cron/bot-match?continueFrom=${nextContinueFrom}`,
-      } : {}),
+      ...(hasMore && lastProcessedId
+        ? { nextUrl: `/api/cron/bot-match?continueFrom=${lastProcessedId}` }
+        : {}),
     });
 
   } catch (error) {
