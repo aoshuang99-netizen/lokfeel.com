@@ -8,11 +8,7 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Video Background — identical to landing page */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
-        {/* Dark base for instant perceived load — visible before video loads */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-indigo-950 to-black" />
-
-        {/* eslint-disable-next-line @next/next/no-page-custom-font -- using preload=metadata for performance */}
+      <div className="hero-video-container" aria-hidden="true">
         <video
           autoPlay
           muted
@@ -21,13 +17,7 @@ export default function AuthLayout({
           preload="metadata"
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            top: "50%",
-            left: "50%",
-            minWidth: "100%",
-            minHeight: "100%",
-            width: "auto",
-            height: "auto",
-            transform: "translate(-50%, -50%)",
+            filter: 'brightness(0.6) contrast(1.1) saturate(0.85)',
           }}
         >
           {/* Mobile: lightweight 720p */}
@@ -47,15 +37,16 @@ export default function AuthLayout({
             type="video/mp4"
           />
         </video>
-
-        {/* Cool Blue overlay — identical to landing page */}
+        {/* Purple overlay — identical to landing page */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(135deg, rgba(59,130,246,0.4) 0%, rgba(99,102,241,0.25) 50%, rgba(0,0,0,0.1) 100%)",
+              "linear-gradient(135deg, rgba(76, 29, 149, 0.4) 0%, rgba(109, 40, 217, 0.25) 50%, rgba(0, 0, 0, 0.1) 100%)",
           }}
         />
+        {/* Purple ambient glow — bottom left (identical to landing) */}
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#4c1d95]/20 rounded-full blur-[120px] pointer-events-none" />
       </div>
 
       {/* Auth Content */}
