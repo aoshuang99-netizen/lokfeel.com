@@ -105,6 +105,7 @@ export default function RegisterPage() {
     gender: "",
     sexuality: "",
     agreeToTerms: false,
+    confirmAge: false,
   });
   const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
@@ -195,7 +196,8 @@ export default function RegisterPage() {
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
     if (age < 18) return "You must be at least 18 years old";
     if (formData.password.length < 8) return "Password must be at least 8 characters";
-    if (!formData.agreeToTerms) return "Please agree to the Terms of Service";
+    if (!formData.agreeToTerms) return "You must agree to the Terms of Service and Privacy Policy";
+    if (!formData.confirmAge) return "You must confirm you are at least 18 years old";
     return null;
   };
 
@@ -764,20 +766,42 @@ export default function RegisterPage() {
 
           {/* Gender/sexuality set via formData state (handleSendCode/handleVerifyAndCreate) */}
 
-          {/* Terms */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", paddingTop: "4px" }}>
-            <input
-                id="agreeToTerms" name="agreeToTerms" type="checkbox"
-                checked={formData.agreeToTerms} onChange={handleChange} required
-                style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: colors.primary, flexShrink: 0 }}
+          {/* Terms + Privacy Checkbox — merged into one */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "4px" }}>
+            {/* Checkbox 1: Terms of Service + Privacy Policy (merged) */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+              <input
+                id="agreeToTerms"
+                name="agreeToTerms"
+                type="checkbox"
+                checked={formData.agreeToTerms}
+                onChange={handleChange}
+                required
+                style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: colors.primary, flexShrink: 0, cursor: "pointer" }}
               />
-              <label htmlFor="agreeToTerms" style={{ fontSize: "12px", color: colors.textMuted, lineHeight: "1.5" }}>
+              <label htmlFor="agreeToTerms" style={{ fontSize: "12px", color: colors.textMuted, lineHeight: "1.5", cursor: "pointer" }}>
                 I agree to the{' '}
-                <Link href="/terms" style={{ color: colors.purple, textDecoration: "none", fontWeight: "500" }}>Terms</Link>
+                <Link href="/terms" target="_blank" style={{ color: colors.purple, textDecoration: "none", fontWeight: "600" }}>Terms of Service</Link>
                 {' '}and{' '}
-                <Link href="/privacy" style={{ color: colors.purple, textDecoration: "none", fontWeight: "500" }}>Privacy Policy</Link>.
-                A verification code will be sent to your email.
+                <Link href="/privacy" target="_blank" style={{ color: colors.purple, textDecoration: "none", fontWeight: "600" }}>Privacy Policy</Link>
               </label>
+            </div>
+
+            {/* Checkbox 2: Age confirmation */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+              <input
+                id="confirmAge"
+                name="confirmAge"
+                type="checkbox"
+                checked={formData.confirmAge}
+                onChange={handleChange}
+                required
+                style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: colors.primary, flexShrink: 0, cursor: "pointer" }}
+              />
+              <label htmlFor="confirmAge" style={{ fontSize: "12px", color: colors.textMuted, lineHeight: "1.5", cursor: "pointer" }}>
+                I confirm I am at least 18 years old
+              </label>
+            </div>
           </div>
 
           {/* Submit */}

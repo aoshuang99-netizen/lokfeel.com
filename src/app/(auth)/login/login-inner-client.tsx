@@ -29,6 +29,7 @@ export default function LoginInnerClient({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [twitterError, setTwitterError] = useState<string | null>(null);
 
   // ─── X (Twitter) OAuth — Manual navigation with error handling ───
@@ -50,6 +51,14 @@ export default function LoginInnerClient({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validate consent checkbox
+    if (!agreeToTerms) {
+      setError("You must agree to the Terms of Service and Privacy Policy");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -60,6 +69,7 @@ export default function LoginInnerClient({
           email: email.toLowerCase().trim(),
           password,
           callbackUrl: callbackUrl || "/dashboard",
+          rememberMe,
         }),
       });
 
@@ -303,6 +313,24 @@ export default function LoginInnerClient({
             >
               Forgot password?
             </Link>
+          </div>
+
+          {/* Terms + Privacy Checkbox — merged into one */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", paddingTop: "4px" }}>
+            <input
+              id="login-agreeToTerms"
+              type="checkbox"
+              checked={agreeToTerms}
+              onChange={(e) => setAgreeToTerms(e.target.checked)}
+              required
+              style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: "#3b82f6", flexShrink: 0, cursor: "pointer" }}
+            />
+            <label htmlFor="login-agreeToTerms" style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", lineHeight: "1.5", cursor: "pointer" }}>
+              I agree to the{' '}
+              <Link href="/terms" target="_blank" style={{ color: "#60a5fa", textDecoration: "none", fontWeight: "600" }}>Terms of Service</Link>
+              {' '}and{' '}
+              <Link href="/privacy" target="_blank" style={{ color: "#60a5fa", textDecoration: "none", fontWeight: "600" }}>Privacy Policy</Link>
+            </label>
           </div>
 
           {/* Submit */}
