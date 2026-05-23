@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 /**
- * MIDDLEWARE — Region Block + Security + CORS + Debug Endpoint Protection
+ * PROXY — Region Block + Security + CORS + Debug Endpoint Protection
  *
  * FEATURES:
  * 1. Block access from China (CN) mainland IP addresses on ALL pages
@@ -11,14 +11,11 @@ import type { NextRequest } from 'next/server'
  * 3. CORS restrictions for API routes
  * 4. Block debug/diagnostic endpoints from non-admin origins
  *
- * WHY NO AUTH CHECK HERE:
- * NextAuth v5 beta uses JWE (encrypted) session tokens.
- * Auth protection is at SERVER COMPONENT level using auth().
- * See: src/app/(dashboard)/layout.tsx
+ * NOTE: This replaces the deprecated `middleware.ts` file.
+ * See: https://nextjs.org/docs/messages/middleware-to-proxy
  */
 
 // Blocked country codes — mainland China
-// ENABLED: Block all CN traffic from home, auth, admin, and dashboard pages.
 const BLOCKED_COUNTRIES: string[] = ['CN']
 
 // IP whitelist — always allow (add your home/office IPs here)
@@ -27,27 +24,7 @@ const IP_WHITELIST: string[] = [
   // Example: '123.456.789.0'
 ]
 
-// Environment variable to completely disable geo-block (for development/testing)
-const DISABLE_GEO_BLOCK = process.env.DISABLE_GEO_BLOCK === 'true'
-
-// Allowed CORS origins
-const ALLOWED_ORIGINS = [
-  'https://app.lokfeel.com',
-  'https://lokfeel.com',
-  'https://admin.lokfeel.com',
-]
-
-// Development/local testing origins (allow all localhost ports)
-function isLocalhostOrigin(origin: string): boolean {
-  return /^https?:\/\/localhost(:\d+)?$/.test(origin) || origin.startsWith('http://127.0.0.1')
-}
-
-// Vercel preview deployments (for testing)
-function isVercelPreview(origin: string): boolean {
-  return /https:\/\/nexus-app-.*\.vercel\.app$/.test(origin)
-}
-
-// Paths that should always be accessible (even from blocked regions)
+// Allowed paths (even from blocked regions)
 const ALLOWED_PATHS = [
   '/blocked',
   '/api/health',
@@ -55,7 +32,7 @@ const ALLOWED_PATHS = [
   '/favicon',
 ]
 
-// Debug/diagnostic paths — block external access entirely (Vercel Cron bypasses middleware)
+// Debug/diagnostic paths — block external access entirely
 const BLOCKED_DEBUG_PATHS = [
   '/api/debug-auth',
   '/api/db-check',
@@ -79,43 +56,33 @@ function getCountry(request: NextRequest): string {
   return ''
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const country = getCountry(request)
   const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                 request.headers.get('x-real-ip') || 
-                 ''
+                request.headers.get('x-real-ip') || 
+                ''
 
-  // ─── 0. Bypass geo-block if disabled ───
-  if (DISABLE_GEO_BLOCK) {
-    console.log(`[Middleware] Geo-block DISABLED via env var`)
-  }
-  // ─── 0.5 IP Whitelist bypass ───
-  else if (IP_WHITELIST.includes(clientIp)) {
-    console.log(`[Middleware] IP ${clientIp} whitelisted, bypassing geo-block`)
-  }
   // ─── 1. Region Block ───
   // Skip geo-block for API routes — they return JSON, not HTML.
   // Redirecting API calls to /blocked (an HTML page) causes
   // "Unexpected end of JSON input" on the client when fetch().json() runs.
   // API routes have their own auth/permission checks.
-  else {
-    const isApiRoute = pathname.startsWith('/api')
+  const isApiRoute = pathname.startsWith('/api')
   
-    if (BLOCKED_COUNTRIES.includes(country) && !isAllowedPath(pathname) && !isApiRoute) {
-      const blockedUrl = request.nextUrl.clone()
-      blockedUrl.pathname = '/blocked'
-      blockedUrl.searchParams.set('from', pathname)
-      return NextResponse.redirect(blockedUrl)
-    }
+  if (BLOCKED_COUNTRIES.includes(country) && !isAllowedPath(pathname) && !isApiRoute) {
+    const blockedUrl = request.nextUrl.clone()
+    blockedUrl.pathname = '/blocked'
+    blockedUrl.searchParams.set('from', pathname)
+    return NextResponse.redirect(blockedUrl)
+  }
   
-    // For API routes from blocked regions, return a proper JSON error
-    if (BLOCKED_COUNTRIES.includes(country) && isApiRoute && !isAllowedPath(pathname)) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Service not available in your region', code: 'REGION_BLOCKED' }),
-        { status: 451, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
+  // For API routes from blocked regions, return a proper JSON error
+  if (BLOCKED_COUNTRIES.includes(country) && isApiRoute && !isAllowedPath(pathname)) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Service not available in your region', code: 'REGION_BLOCKED' }),
+      { status: 451, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 
   // ─── 2. Block debug/diagnostic endpoints from external access ───
@@ -143,7 +110,22 @@ export async function middleware(request: NextRequest) {
     // This ensures all Vercel deployment URLs work automatically
     const requestHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
     const isSameOrigin = origin ? origin.endsWith(`://${requestHost}`) : true
-
+    
+    // Allowed CORS origins
+    const ALLOWED_ORIGINS = [
+      'https://app.lokfeel.com',
+      'https://lokfeel.com',
+      'https://admin.lokfeel.com',
+    ]
+    
+    function isLocalhostOrigin(origin: string): boolean {
+      return /^https?:\/\/localhost(:\d+)?$/.test(origin) || origin.startsWith('http://127.0.0.1')
+    }
+    
+    function isVercelPreview(origin: string): boolean {
+      return /https:\/\/nexus-app-.*\.vercel\.app$/.test(origin)
+    }
+    
     if (origin && !ALLOWED_ORIGINS.includes(origin) && !isSameOrigin && !isLocalhostOrigin(origin) && !isVercelPreview(origin)) {
       // Block requests from unauthorized cross-origin sources
       return new NextResponse(
@@ -162,7 +144,7 @@ export async function middleware(request: NextRequest) {
       response.headers.set('Access-Control-Max-Age', '86400')
       response.headers.set('Vary', 'Origin')
     }
-
+    
     // Handle preflight
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, { status: 204, headers: response.headers })
