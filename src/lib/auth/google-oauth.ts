@@ -80,12 +80,12 @@ interface GoogleTokenResponse {
 
 /**
  * Exchange authorization code for tokens
- * Uses client_secret for confidential client auth (no PKCE needed)
- * codeVerifier is optional — Google accepts confidential client auth without PKCE
+ * PKCE-only flow: client_secret is OPTIONAL (public client)
+ * Confidential client: can use both PKCE + client_secret
  */
 export async function exchangeCodeForTokens(options: {
   clientId: string;
-  clientSecret: string;
+  clientSecret?: string;
   redirectUri: string;
   code: string;
   codeVerifier?: string;
@@ -95,8 +95,12 @@ export async function exchangeCodeForTokens(options: {
     code: options.code,
     redirect_uri: options.redirectUri,
     client_id: options.clientId,
-    client_secret: options.clientSecret,
   };
+
+  // Only include client_secret if provided (PKCE-only flow omits it)
+  if (options.clientSecret && options.clientSecret.length > 0) {
+    params.client_secret = options.clientSecret;
+  }
 
   // Only include code_verifier if explicitly provided
   // (For Google confidential clients, PKCE is not required when client_secret is present)
@@ -166,9 +170,15 @@ export function decodeIdToken(idToken: string): GoogleUserInfo {
 
 // ─── Config validation ───
 
+/**
+ * Google OAuth 2.0 with PKCE — client_secret is OPTIONAL
+ * PKCE-only flow works without client_secret (public client)
+ * Confidential client can use both PKCE + client_secret
+ */
 export function getGoogleConfig(): { clientId: string; clientSecret: string; valid: boolean } {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim() || "";
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim() || "";
-  const valid = clientId.length > 0 && clientSecret.length > 0;
+  // Only require clientId — clientSecret is optional for PKCE flow
+  const valid = clientId.length > 0;
   return { clientId, clientSecret, valid };
 }

@@ -78,11 +78,12 @@ interface TwitterTokenResponse {
 
 /**
  * Exchange authorization code + code_verifier for access token
- * Uses client_secret_post auth method (Twitter requirement)
+ * client_secret is OPTIONAL (some Twitter apps support public clients)
+ * If clientSecret is empty, omits it from the request
  */
 export async function exchangeCodeForToken(options: {
   clientId: string;
-  clientSecret: string;
+  clientSecret?: string;
   redirectUri: string;
   code: string;
   codeVerifier: string;
@@ -93,8 +94,12 @@ export async function exchangeCodeForToken(options: {
     redirect_uri: options.redirectUri,
     code_verifier: options.codeVerifier,
     client_id: options.clientId,
-    client_secret: options.clientSecret,
   });
+
+  // Only include client_secret if provided
+  if (options.clientSecret && options.clientSecret.length > 0) {
+    params.append("client_secret", options.clientSecret);
+  }
 
   const response = await fetch(TWITTER_TOKEN_URL, {
     method: "POST",
@@ -180,6 +185,7 @@ export async function fetchUserInfo(accessToken: string): Promise<TwitterUserInf
 export function getTwitterConfig(): { clientId: string; clientSecret: string; valid: boolean } {
   const clientId = process.env.TWITTER_CLIENT_ID?.trim() || "";
   const clientSecret = process.env.TWITTER_CLIENT_SECRET?.trim() || "";
-  const valid = clientId.length > 0 && clientSecret.length > 0;
+  // Only require clientId — clientSecret is optional for some flows
+  const valid = clientId.length > 0;
   return { clientId, clientSecret, valid };
 }
