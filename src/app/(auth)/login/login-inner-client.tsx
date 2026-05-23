@@ -38,7 +38,7 @@ export default function LoginInnerClient({
     setIsLoading(true);
     try {
       // Use GET redirect — Twitter has its own custom handler that works via GET
-      window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+      window.location.href = `/api/auth/oauth/twitter/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
     } catch (err: any) {
       setTwitterError("Failed to connect to X. Please try again.");
       setIsLoading(false);
