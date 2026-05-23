@@ -38,20 +38,32 @@ export default function SubscriptionPage() {
     setIsLoading(true);
 
     try {
-      // Call Stripe Checkout
-      const res = await fetch("/api/subscription/checkout", {
+      // Map tier to Creem plan
+      const planMap: Record<string, "PREMIUM_MONTHLY" | "PREMIUM_YEARLY"> = {
+        [SubscriptionTier.PREMIUM]: "PREMIUM_MONTHLY",
+        [SubscriptionTier.FOUNDER]: "PREMIUM_YEARLY",
+      };
+      const plan = planMap[tier];
+      if (!plan) throw new Error(`No Creem plan mapping for tier: ${tier}`);
+
+      // Call Creem Checkout
+      const res = await fetch("/api/payments/creem/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier }),
+        body: JSON.stringify({ plan }),
       });
 
-      if (!res.ok) throw new Error("Failed to create checkout session");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create checkout session");
+      }
 
-      const { url } = await res.json();
-      window.location.href = url; // Redirect to Stripe
-    } catch (error) {
+      const { checkoutUrl } = await res.json();
+      if (!checkoutUrl) throw new Error("No checkout URL returned");
+      window.location.href = checkoutUrl; // Redirect to Creem
+    } catch (error: any) {
       console.error("Checkout error:", error);
-      alert("Failed to start checkout. Please try again.");
+      alert(error.message || "Failed to start checkout. Please try again.");
       setIsLoading(false);
     }
   };
