@@ -56,7 +56,7 @@ function getCountry(request: NextRequest): string {
   return ''
 }
 
-export async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const country = getCountry(request)
   const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
