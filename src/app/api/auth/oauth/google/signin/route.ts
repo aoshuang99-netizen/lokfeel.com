@@ -58,8 +58,10 @@ export async function GET(request: NextRequest) {
   console.log("[Google OAuth Signin] Generated PKCE code_challenge (length):", codeChallenge.length);
 
   // Build the redirect URI (where Google will send the user back)
-  // This MUST match the actual route path: /api/auth/oauth/google/callback
-  const redirectUri = `${request.nextUrl.origin}/api/auth/oauth/google/callback`;
+  // This MUST match the actual route path and Google Cloud Console configuration
+  // Use NEXT_PUBLIC_APP_URL to ensure correct domain in production
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+  const redirectUri = `${baseUrl}/api/auth/oauth/google/callback`;
 
   // Build Google authorization URL
   const googleAuthUrl = buildGoogleAuthorizationUrl({

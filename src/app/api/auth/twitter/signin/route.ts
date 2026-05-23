@@ -56,7 +56,10 @@ export async function GET(request: NextRequest) {
   console.log("[Twitter OAuth Signin] Generated state:", state);
 
   // Build the redirect URI (where Twitter will send the user back)
-  const redirectUri = `${request.nextUrl.origin}/api/auth/twitter/callback`;
+  // This MUST match the actual route path and Twitter Developer Portal configuration
+  // Use NEXT_PUBLIC_APP_URL to ensure correct domain in production
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+  const redirectUri = `${baseUrl}/api/auth/oauth/twitter/callback`;
 
   // Build Twitter authorization URL
   const twitterAuthUrl = buildAuthorizationUrl({
