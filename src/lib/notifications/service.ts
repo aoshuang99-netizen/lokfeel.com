@@ -63,7 +63,7 @@ export async function createMatchNotification(
     NOTIFICATION_TYPES.MATCH_CREATED.title,
     `You have a new match with ${matchName}! Compatibility: ${compatibilityScore}%`,
     { matchId, compatibilityScore },
-    `/matches/${matchId}`
+    `/dashboard/matches/${matchId}`
   )
 }
 
@@ -75,15 +75,20 @@ export async function createMessageNotification(
   senderId: string,
   senderName: string,
   messagePreview: string,
-  matchId: string
+  matchId: string,
+  chatRoomId?: string
 ) {
+  const actionUrl = chatRoomId
+    ? `/dashboard/chats/${chatRoomId}`
+    : `/dashboard/matches/${matchId}`
+
   return createNotification(
     userId,
     'NEW_MESSAGE',
     `New message from ${senderName}`,
     messagePreview.length > 50 ? messagePreview.slice(0, 50) + '...' : messagePreview,
-    { senderId, matchId },
-    `/chat/${matchId}`
+    { senderId, matchId, chatRoomId },
+    actionUrl
   )
 }
 
@@ -102,7 +107,7 @@ export async function createMatchExpiringNotification(
     NOTIFICATION_TYPES.MATCH_EXPIRING.title,
     `Your match with ${matchName} expires in ${hoursRemaining} hours. Don't miss out!`,
     { matchId, hoursRemaining },
-    `/matches/${matchId}`
+    `/dashboard/matches/${matchId}`
   )
 }
 

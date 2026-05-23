@@ -36,7 +36,7 @@ export async function GET(
           select: { id: true },
         },
       },
-    })
+    }) as any
 
     if (!match) {
       return NextResponse.json({ message: 'Match not found' }, { status: 404 })
@@ -49,8 +49,8 @@ export async function GET(
 
     const isSender = match.senderId === user.id
     const otherUser = isSender ? match.receiver : match.sender
-    const myReaction = match.matchReactions.find((r) => r.userId === user.id)
-    const otherReaction = match.matchReactions.find((r) => r.userId !== user.id)
+    const myReaction = match.matchReactions.find((r: any) => r.userId === user.id)
+    const otherReaction = match.matchReactions.find((r: any) => r.userId !== user.id)
 
     return NextResponse.json({
       id: match.id,
