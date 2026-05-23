@@ -31,10 +31,14 @@ import { getGoogleConfig, generateCodeVerifier, generateCodeChallenge, buildGoog
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  // Step 1: Validate Google OAuth config
   const config = getGoogleConfig();
 
+  console.log("[Google OAuth Signin] Config valid:", config.valid);
+  console.log("[Google OAuth Signin] Client ID (first 10 chars):", config.clientId.substring(0, 10) + "...");
+
   if (!config.valid) {
-    console.error("[Google OAuth Signin] Google OAuth not configured");
+    console.error("[Google OAuth Signin] Google OAuth not configured — missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET");
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("error", "Google OAuth not configured. Please contact support.");
     return NextResponse.redirect(loginUrl);
@@ -43,9 +47,15 @@ export async function GET(request: NextRequest) {
   // Get callbackUrl from query params
   const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/dashboard";
 
-  // Generate our own PKCE
+  console.log("[Google OAuth Signin] Callback URL:", callbackUrl);
+  console.log("[Google OAuth Signin] Redirect URI (for Google):", `${request.nextUrl.origin}/api/auth/oauth/google/callback`);
+
+  // Step 2: Generate our own PKCE
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
+
+  console.log("[Google OAuth Signin] Generated PKCE code_verifier (length):", codeVerifier.length);
+  console.log("[Google OAuth Signin] Generated PKCE code_challenge (length):", codeChallenge.length);
 
   // Build the redirect URI (where Google will send the user back)
   // This MUST match the actual route path: /api/auth/oauth/google/callback
@@ -58,24 +68,35 @@ export async function GET(request: NextRequest) {
     codeChallenge,
   });
 
+  console.log("[Google OAuth Signin] Google authorization URL:", googleAuthUrl.substring(0, 100) + "...");
+
   // Store code_verifier and callbackUrl in cookies (plain-text, like Twitter)
   const response = NextResponse.redirect(googleAuthUrl);
 
-  // PKCE code verifier (needed for token exchange)
+  // Determine if we're in production (for cookie secure flag)
+  // In production (HTTPS), secure must be true
+  // In development (HTTP localhost), secure must be false
+  const isProduction = process.env.NODE_ENV === "production";
+  const isSecure = isProduction;
+
+  console.log("[Google OAuth Signin] Environment:", process.env.NODE_ENV);
+  console.log("[Google OAuth Signin] Cookie secure flag:", isSecure);
+
+  // PKCE code verifier (needed for token exchange) — 30 min timeout
   response.cookies.set("google-pkce-verifier", codeVerifier, {
     httpOnly: true,
-    secure: true,
+    secure: isSecure,  // Dynamic based on environment
     sameSite: "lax",
-    maxAge: 600, // 10 minutes
+    maxAge: 1800, // 30 minutes (was 600 = 10 min)
     path: "/",
   });
 
-  // Callback URL for after sign-in
+  // Callback URL for after sign-in — 30 min timeout
   response.cookies.set("google-callback-url", callbackUrl, {
     httpOnly: true,
-    secure: true,
+    secure: isSecure,  // Dynamic based on environment
     sameSite: "lax",
-    maxAge: 600,
+    maxAge: 1800, // 30 minutes (was 600 = 10 min)
     path: "/",
   });
 

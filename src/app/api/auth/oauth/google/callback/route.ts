@@ -33,6 +33,11 @@ export async function GET(request: NextRequest) {
   try {
     const config = getGoogleConfig();
 
+    console.log("[Google OAuth Callback] Starting callback handler");
+    console.log("[Google OAuth Callback] Config valid:", config.valid);
+    console.log("[Google OAuth Callback] Request URL:", request.url);
+    console.log("[Google OAuth Callback] Search params:", Object.fromEntries(request.nextUrl.searchParams));
+
     if (!config.valid) {
       console.error("[Google OAuth Callback] Google OAuth not configured");
       const loginUrl = new URL("/login", request.url);
@@ -45,9 +50,12 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get("code");
     const error = searchParams.get("error");
 
+    console.log("[Google OAuth Callback] Authorization code present:", !!code);
+    console.log("[Google OAuth Callback] Error from Google:", error || "none");
+
     if (error) {
       const errorDesc = searchParams.get("error_description") || error;
-      console.error("[Google OAuth Callback] Authorization error:", errorDesc);
+      console.error("[Google OAuth Callback] Authorization error:", error, errorDesc);
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("error", `Google authorization failed: ${errorDesc}`);
       return NextResponse.redirect(loginUrl);
@@ -64,6 +72,8 @@ export async function GET(request: NextRequest) {
     // Set by /api/auth/oauth/google/signin (plain-text, NOT JWE-encrypted like NextAuth's)
     const codeVerifier = request.cookies.get("google-pkce-verifier")?.value;
 
+    console.log("[Google OAuth Callback] PKCE code_verifier present:", !!codeVerifier);
+
     if (!codeVerifier) {
       console.warn("[Google OAuth Callback] Missing google-pkce-verifier cookie — attempting without PKCE");
     }
@@ -73,8 +83,11 @@ export async function GET(request: NextRequest) {
     // This MUST match the signin route: /api/auth/oauth/google/callback
     const redirectUri = `${request.nextUrl.origin}/api/auth/oauth/google/callback`;
 
+    console.log("[Google OAuth Callback] Redirect URI (for token exchange):", redirectUri);
+
     let tokenResponse;
     try {
+      console.log("[Google OAuth Callback] Exchanging code for tokens...");
       tokenResponse = await exchangeCodeForTokens({
         clientId: config.clientId,
         clientSecret: config.clientSecret,
@@ -82,6 +95,7 @@ export async function GET(request: NextRequest) {
         code,
         codeVerifier: codeVerifier || undefined,
       });
+      console.log("[Google OAuth Callback] Token exchange successful, got id_token:", !!tokenResponse.id_token);
     } catch (err: any) {
       console.error("[Google OAuth Callback] Token exchange error:", err.message);
       const loginUrl = new URL("/login", request.url);
@@ -102,114 +116,101 @@ export async function GET(request: NextRequest) {
 
     console.log("[Google OAuth Callback] Got user:", googleUser.sub, googleUser.email, googleUser.name);
 
-    // Step 5: Find or create user in DB
+    // Step 5: Find or create user in DB (OPTIMIZED — single query when possible)
     const normalizedEmail = googleUser.email.toLowerCase().trim();
     const userName = googleUser.name || googleUser.email.split("@")[0];
     const avatar = googleUser.picture || null;
 
-    const user = await db.$transaction(async (tx) => {
-      // Check existing user by Google account
-      const existingAccount = await tx.account.findUnique({
-        where: {
-          provider_providerAccountId: {
-            provider: "google",
-            providerAccountId: googleUser.sub,
-          },
+    // Fast path: try to find existing account first (most common case)
+    let user;
+    const existingAccount = await db.account.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider: "google",
+          providerAccountId: googleUser.sub,
         },
-        include: { user: true },
-      });
+      },
+      include: { user: true },
+    });
 
-      if (existingAccount) {
-        // Update user info if better data available
-        if (userName && (!existingAccount.user.name || existingAccount.user.name === existingAccount.user.email)) {
-          await tx.user.update({
-            where: { id: existingAccount.userId },
-            data: {
-              name: userName,
-              image: avatar || existingAccount.user.image,
-              emailVerified: googleUser.email_verified ? new Date() : existingAccount.user.emailVerified,
-            },
-          });
-        } else if (avatar && !existingAccount.user.image) {
-          // Just update the avatar if missing
-          await tx.user.update({
-            where: { id: existingAccount.userId },
-            data: { image: avatar },
-          });
-        }
-        return existingAccount.user;
+    if (existingAccount) {
+      // Update user info if better data available
+      const updates: any = {};
+      if (userName && (!existingAccount.user.name || existingAccount.user.name === existingAccount.user.email)) {
+        updates.name = userName;
       }
-
+      if (avatar && !existingAccount.user.image) {
+        updates.image = avatar;
+      }
+      if (googleUser.email_verified && !existingAccount.user.emailVerified) {
+        updates.emailVerified = new Date();
+      }
+      if (Object.keys(updates).length > 0) {
+        await db.user.update({
+          where: { id: existingAccount.userId },
+          data: updates,
+        });
+      }
+      user = existingAccount.user;
+    } else {
       // Check by email
-      const existingUser = await tx.user.findUnique({
+      const existingUser = await db.user.findUnique({
         where: { email: normalizedEmail },
-        include: { accounts: true, profile: true },
       });
 
       if (existingUser) {
         // Link Google account
-        const hasGoogleAccount = existingUser.accounts.some(
-          (a) => a.provider === "google" && a.providerAccountId === googleUser.sub
-        );
-        if (!hasGoogleAccount) {
+        await db.account.create({
+          data: {
+            userId: existingUser.id,
+            type: "oauth",
+            provider: "google",
+            providerAccountId: googleUser.sub,
+          },
+        });
+        // Update user info
+        const updates: any = {};
+        if (userName) updates.name = userName;
+        if (avatar) updates.image = avatar;
+        if (googleUser.email_verified) updates.emailVerified = new Date();
+        if (Object.keys(updates).length > 0) {
+          await db.user.update({ where: { id: existingUser.id }, data: updates });
+        }
+        user = existingUser;
+      } else {
+        // Create new user + profile in transaction
+        user = await db.$transaction(async (tx) => {
+          const newUser = await tx.user.create({
+            data: {
+              email: normalizedEmail,
+              name: userName,
+              image: avatar,
+              emailVerified: googleUser.email_verified ? new Date() : null,
+            },
+          });
           await tx.account.create({
             data: {
-              userId: existingUser.id,
+              userId: newUser.id,
               type: "oauth",
               provider: "google",
               providerAccountId: googleUser.sub,
             },
           });
-        }
-        // Update user info
-        if (userName) {
-          await tx.user.update({
-            where: { id: existingUser.id },
+          await tx.profile.create({
             data: {
-              name: userName,
-              image: avatar || existingUser.image,
-              emailVerified: googleUser.email_verified ? new Date() : existingUser.emailVerified,
+              userId: newUser.id,
+              displayName: userName,
+              avatar: avatar,
+              profileStatus: "DRAFT",
+              age: 18,
+              gender: "OTHER",
+              sexuality: "OTHER",
             },
           });
-        }
-        return existingUser;
+          return newUser;
+        });
       }
-
-      // Create new user
-      const newUser = await tx.user.create({
-        data: {
-          email: normalizedEmail,
-          name: userName,
-          image: avatar,
-          emailVerified: googleUser.email_verified ? new Date() : null,
-        },
-      });
-
-      // Create Account record
-      await tx.account.create({
-        data: {
-          userId: newUser.id,
-          type: "oauth",
-          provider: "google",
-          providerAccountId: googleUser.sub,
-        },
-      });
-
-      // Create Profile
-      await tx.profile.create({
-        data: {
-          userId: newUser.id,
-          displayName: userName,
-          avatar: avatar,
-          profileStatus: "DRAFT",
-          age: 18,
-          gender: "OTHER",
-          sexuality: "OTHER",
-        },
-      });
-
-      return newUser;
-    });
+    }
 
     // Step 6: Create NextAuth-compatible JWT session token directly
     const secret = process.env.AUTH_SECRET;
@@ -276,9 +277,38 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error: any) {
-    console.error("[Google OAuth Callback] Fatal error:", error);
+    // 生成唯一的错误ID用于追踪
+    const errorId = `oauth_google_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    
+    // 详细记录错误信息
+    console.error("[Google OAuth Callback] ❌ Fatal error:", {
+      errorId,
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      metadata: error.metadata,
+    });
+
+    // 根据错误类型提供更好的错误信息
+    let userMessage = "Google login failed. Please try again.";
+    
+    if (error.message?.includes("token exchange failed")) {
+      userMessage = "Failed to connect to Google. Please try again.";
+    } else if (error.message?.includes("ID token decode failed")) {
+      userMessage = "Failed to verify Google account. Please try again.";
+    } else if (error.message?.includes("database")) {
+      userMessage = "Server error. Please contact support.";
+    } else if (error.message?.includes("AUTH_SECRET")) {
+      userMessage = "Server configuration error. Please contact support.";
+    }
+
+    // 重定向到登录页面，附带错误信息和错误ID
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("error", `Google login error: ${error.message?.substring(0, 50) || 'Unknown error'}`);
+    loginUrl.searchParams.set("error", userMessage);
+    loginUrl.searchParams.set("errorId", errorId);
+    
+    console.error(`[Google OAuth Callback] ❌ Error ID: ${errorId} - Redirecting to login with error: ${userMessage}`);
+    
     return NextResponse.redirect(loginUrl);
   }
 }

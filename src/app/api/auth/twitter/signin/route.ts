@@ -24,8 +24,12 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const config = getTwitterConfig();
 
+  console.log("[Twitter OAuth Signin] Config valid:", config.valid);
+  console.log("[Twitter OAuth Signin] Client ID (first 10 chars):", config.clientId.substring(0, 10) + "...");
+
   if (!config.valid) {
     // Twitter OAuth not configured — redirect to login with error
+    console.error("[Twitter OAuth Signin] Twitter OAuth not configured — missing TWITTER_CLIENT_ID or TWITTER_CLIENT_SECRET");
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set(
       "error",
@@ -37,12 +41,19 @@ export async function GET(request: NextRequest) {
   // Get callbackUrl from query params
   const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/dashboard";
 
+  console.log("[Twitter OAuth Signin] Callback URL:", callbackUrl);
+  console.log("[Twitter OAuth Signin] Redirect URI (for Twitter):", `${request.nextUrl.origin}/api/auth/twitter/callback`);
+
   // Generate PKCE
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
 
+  console.log("[Twitter OAuth Signin] Generated PKCE code_verifier (length):", codeVerifier.length);
+
   // Generate CSRF state
   const state = crypto.randomUUID();
+
+  console.log("[Twitter OAuth Signin] Generated state:", state);
 
   // Build the redirect URI (where Twitter will send the user back)
   const redirectUri = `${request.nextUrl.origin}/api/auth/twitter/callback`;
@@ -55,33 +66,44 @@ export async function GET(request: NextRequest) {
     state,
   });
 
+  console.log("[Twitter OAuth Signin] Twitter authorization URL:", twitterAuthUrl.substring(0, 100) + "...");
+
   // Store code_verifier, state, and callbackUrl in cookies
   const response = NextResponse.redirect(twitterAuthUrl);
 
-  // PKCE code verifier (needed for token exchange)
+  // Determine if we're in production (for cookie secure flag)
+  // In production (HTTPS), secure must be true
+  // In development (HTTP localhost), secure must be false
+  const isProduction = process.env.NODE_ENV === "production";
+  const isSecure = isProduction;
+
+  console.log("[Twitter OAuth Signin] Environment:", process.env.NODE_ENV);
+  console.log("[Twitter OAuth Signin] Cookie secure flag:", isSecure);
+
+  // PKCE code verifier (needed for token exchange) — 30 min timeout
   response.cookies.set("twitter-pkce-verifier", codeVerifier, {
     httpOnly: true,
-    secure: true,
+    secure: isSecure,  // Dynamic based on environment
     sameSite: "lax",
-    maxAge: 600, // 10 minutes (matches Twitter's code TTL)
+    maxAge: 1800, // 30 minutes (was 600 = 10 min)
     path: "/",
   });
 
-  // CSRF state
+  // CSRF state — 30 min timeout
   response.cookies.set("twitter-oauth-state", state, {
     httpOnly: true,
-    secure: true,
+    secure: isSecure,  // Dynamic based on environment
     sameSite: "lax",
-    maxAge: 600,
+    maxAge: 1800, // 30 minutes (was 600 = 10 min)
     path: "/",
   });
 
-  // Callback URL for after sign-in
+  // Callback URL for after sign-in — 30 min timeout
   response.cookies.set("twitter-callback-url", callbackUrl, {
     httpOnly: true,
-    secure: true,
+    secure: isSecure,  // Dynamic based on environment
     sameSite: "lax",
-    maxAge: 600,
+    maxAge: 1800, // 30 minutes (was 600 = 10 min)
     path: "/",
   });
 

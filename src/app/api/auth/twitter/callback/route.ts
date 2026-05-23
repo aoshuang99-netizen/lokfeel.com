@@ -28,22 +28,31 @@ export async function GET(request: NextRequest) {
   try {
     const config = getTwitterConfig();
 
+    console.log("[Twitter OAuth Callback] Starting callback handler");
+    console.log("[Twitter OAuth Callback] Config valid:", config.valid);
+    console.log("[Twitter OAuth Callback] Request URL:", request.url);
+    console.log("[Twitter OAuth Callback] Search params:", Object.fromEntries(request.nextUrl.searchParams));
+
     // Step 1: Extract code and state from query params
     const { searchParams } = request.nextUrl;
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const error = searchParams.get("error");
 
+    console.log("[Twitter OAuth Callback] Authorization code present:", !!code);
+    console.log("[Twitter OAuth Callback] State present:", !!state);
+    console.log("[Twitter OAuth Callback] Error from Twitter:", error || "none");
+
     if (error) {
       const errorDesc = searchParams.get("error_description") || error;
-      console.error("[Twitter OAuth] Authorization error:", errorDesc);
+      console.error("[Twitter OAuth Callback] Authorization error:", error, errorDesc);
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("error", `Twitter 授权失败: ${errorDesc}`);
       return NextResponse.redirect(loginUrl);
     }
 
     if (!code || !state) {
-      console.error("[Twitter OAuth] Missing code or state");
+      console.error("[Twitter OAuth Callback] Missing code or state");
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("error", "Twitter 回调缺少必要参数");
       return NextResponse.redirect(loginUrl);
@@ -51,8 +60,11 @@ export async function GET(request: NextRequest) {
 
     // Step 2: Verify state (CSRF protection)
     const savedState = request.cookies.get("twitter-oauth-state")?.value;
+    console.log("[Twitter OAuth Callback] Saved state present:", !!savedState);
+    console.log("[Twitter OAuth Callback] State match:", savedState === state);
+
     if (!savedState || savedState !== state) {
-      console.error("[Twitter OAuth] State mismatch — possible CSRF attack");
+      console.error("[Twitter OAuth Callback] State mismatch — possible CSRF attack");
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("error", "安全验证失败，请重试");
       return NextResponse.redirect(loginUrl);
@@ -60,8 +72,10 @@ export async function GET(request: NextRequest) {
 
     // Step 3: Read PKCE code_verifier
     const codeVerifier = request.cookies.get("twitter-pkce-verifier")?.value;
+    console.log("[Twitter OAuth Callback] PKCE code_verifier present:", !!codeVerifier);
+
     if (!codeVerifier) {
-      console.error("[Twitter OAuth] Missing PKCE code_verifier");
+      console.error("[Twitter OAuth Callback] Missing PKCE code_verifier");
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("error", "PKCE 验证失败，请重试");
       return NextResponse.redirect(loginUrl);
@@ -70,8 +84,11 @@ export async function GET(request: NextRequest) {
     // Step 4: Exchange code for access token
     const redirectUri = `${request.nextUrl.origin}/api/auth/twitter/callback`;
 
+    console.log("[Twitter OAuth Callback] Redirect URI (for token exchange):", redirectUri);
+
     let tokenResponse;
     try {
+      console.log("[Twitter OAuth Callback] Exchanging code for tokens...");
       tokenResponse = await exchangeCodeForToken({
         clientId: config.clientId,
         clientSecret: config.clientSecret,
@@ -79,8 +96,9 @@ export async function GET(request: NextRequest) {
         code,
         codeVerifier,
       });
+      console.log("[Twitter OAuth Callback] Token exchange successful, got access_token:", !!tokenResponse.access_token);
     } catch (err: any) {
-      console.error("[Twitter OAuth] Token exchange error:", err.message);
+      console.error("[Twitter OAuth Callback] Token exchange error:", err.message);
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("error", "Twitter 令牌交换失败");
       return NextResponse.redirect(loginUrl);
@@ -99,108 +117,97 @@ export async function GET(request: NextRequest) {
 
     console.log("[Twitter OAuth] Got user:", twitterUser.id, "@", twitterUser.username);
 
-    // Step 6: Find or create user in DB
+    // Step 6: Find or create user in DB (OPTIMIZED — single query when possible)
     const normalizedEmail = twitterUser.email || `${twitterUser.username}@twitter.lokfeel.com`;
     const userName = twitterUser.name || `@${twitterUser.username}`;
     const avatar = twitterUser.profileImageUrl || null;
 
-    const user = await db.$transaction(async (tx) => {
-      // Check existing user by Twitter account
-      const existingAccount = await tx.account.findUnique({
-        where: {
-          provider_providerAccountId: {
-            provider: "twitter",
-            providerAccountId: twitterUser.id,
-          },
+    // Fast path: try to find existing account first (most common case)
+    let user;
+    const existingAccount = await db.account.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider: "twitter",
+          providerAccountId: twitterUser.id,
         },
-        include: { user: true },
-      });
+      },
+      include: { user: true },
+    });
 
-      if (existingAccount) {
-        // Update user info if better data available
-        if (userName && (!existingAccount.user.name || existingAccount.user.name === existingAccount.user.email)) {
-          await tx.user.update({
-            where: { id: existingAccount.userId },
-            data: {
-              name: userName,
-              image: avatar || existingAccount.user.image,
-              emailVerified: new Date(),
-            },
-          });
-        }
-        return existingAccount.user;
+    if (existingAccount) {
+      // Update user info if better data available
+      const updates: any = {};
+      if (userName && (!existingAccount.user.name || existingAccount.user.name === existingAccount.user.email)) {
+        updates.name = userName;
       }
-
+      if (avatar && !existingAccount.user.image) {
+        updates.image = avatar;
+      }
+      if (Object.keys(updates).length > 0) {
+        await db.user.update({
+          where: { id: existingAccount.userId },
+          data: { ...updates, emailVerified: new Date() },
+        });
+      }
+      user = existingAccount.user;
+    } else {
       // Check by email
-      const existingUser = await tx.user.findUnique({
+      const existingUser = await db.user.findUnique({
         where: { email: normalizedEmail.toLowerCase().trim() },
-        include: { accounts: true, profile: true },
       });
 
       if (existingUser) {
         // Link Twitter account
-        const hasTwitterAccount = existingUser.accounts.some(
-          (a) => a.provider === "twitter" && a.providerAccountId === twitterUser.id
-        );
-        if (!hasTwitterAccount) {
+        await db.account.create({
+          data: {
+            userId: existingUser.id,
+            type: "oauth",
+            provider: "twitter",
+            providerAccountId: twitterUser.id,
+          },
+        });
+        // Update user info
+        const updates: any = {};
+        if (userName) updates.name = userName;
+        if (avatar) updates.image = avatar;
+        if (Object.keys(updates).length > 0) {
+          await db.user.update({ where: { id: existingUser.id }, data: { ...updates, emailVerified: new Date() } });
+        }
+        user = existingUser;
+      } else {
+        // Create new user + profile in transaction
+        user = await db.$transaction(async (tx) => {
+          const newUser = await tx.user.create({
+            data: {
+              email: normalizedEmail.toLowerCase().trim(),
+              name: userName,
+              image: avatar,
+              emailVerified: new Date(),
+            },
+          });
           await tx.account.create({
             data: {
-              userId: existingUser.id,
+              userId: newUser.id,
               type: "oauth",
               provider: "twitter",
               providerAccountId: twitterUser.id,
             },
           });
-        }
-        // Update user info
-        if (userName) {
-          await tx.user.update({
-            where: { id: existingUser.id },
+          await tx.profile.create({
             data: {
-              name: userName,
-              image: avatar || existingUser.image,
-              emailVerified: new Date(),
+              userId: newUser.id,
+              displayName: userName,
+              avatar: avatar,
+              profileStatus: "DRAFT",
+              age: 18,
+              gender: "OTHER",
+              sexuality: "OTHER",
             },
           });
-        }
-        return existingUser;
+          return newUser;
+        });
       }
-
-      // Create new user
-      const newUser = await tx.user.create({
-        data: {
-          email: normalizedEmail.toLowerCase().trim(),
-          name: userName,
-          image: avatar,
-          emailVerified: new Date(),
-        },
-      });
-
-      // Create Account record
-      await tx.account.create({
-        data: {
-          userId: newUser.id,
-          type: "oauth",
-          provider: "twitter",
-          providerAccountId: twitterUser.id,
-        },
-      });
-
-      // Create Profile
-      await tx.profile.create({
-        data: {
-          userId: newUser.id,
-          displayName: userName,
-          avatar: avatar,
-          profileStatus: "DRAFT",
-          age: 18,
-          gender: "OTHER",
-          sexuality: "OTHER",
-        },
-      });
-
-      return newUser;
-    });
+    }
 
     // Step 7: Create NextAuth-compatible JWT session token directly
     const secret = process.env.AUTH_SECRET;
@@ -258,10 +265,37 @@ export async function GET(request: NextRequest) {
     console.log("[Twitter OAuth] Success! User:", user.id, user.email, "→", destination);
 
     return response;
-  } catch (error) {
-    console.error("[Twitter OAuth] Callback error:", error);
+  } catch (error: any) {
+    // 生成唯一的错误ID用于追踪
+    const errorId = `oauth_twitter_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    
+    // 详细记录错误信息
+    console.error("[Twitter OAuth] ❌ Fatal error:", {
+      errorId,
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      metadata: error.metadata,
+    });
+
+    // 根据错误类型提供更好的错误信息
+    let userMessage = "Twitter login failed. Please try again.";
+    
+    if (error.message?.includes("token exchange failed")) {
+      userMessage = "Failed to connect to Twitter. Please try again.";
+    } else if (error.message?.includes("database")) {
+      userMessage = "Server error. Please contact support.";
+    } else if (error.message?.includes("AUTH_SECRET")) {
+      userMessage = "Server configuration error. Please contact support.";
+    }
+
+    // 重定向到登录页面，附带错误信息和错误ID
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("error", "Twitter 登录过程中发生错误");
+    loginUrl.searchParams.set("error", userMessage);
+    loginUrl.searchParams.set("errorId", errorId);
+    
+    console.error(`[Twitter OAuth] ❌ Error ID: ${errorId} - Redirecting to login with error: ${userMessage}`);
+    
     return NextResponse.redirect(loginUrl);
   }
 }
