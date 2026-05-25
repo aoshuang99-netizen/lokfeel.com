@@ -164,10 +164,10 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  // TEMP DEBUG: removed x-geo-country to verify cache clear
   // Add geo info to response headers (non-sensitive, for debug)
   if (country) {
     response.headers.set('x-geo-country-v2', country)
+    response.headers.set('x-simple-test', 'HELLO')
   }
   // Debug: mark that proxy.ts reached the geo-debug section
   response.headers.set('x-debug-proxy-reached', 'yes')
