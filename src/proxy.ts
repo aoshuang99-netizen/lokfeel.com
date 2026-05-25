@@ -168,11 +168,15 @@ export default async function middleware(request: NextRequest) {
   if (country) {
     response.headers.set('x-geo-country', country)
   }
-  // Debug: always show what getCountry() returned (remove after verification)
-  response.headers.set('x-debug-geo-source', 
-    request.headers.get('x-vercel-ip-country') ? 'vercel' :
-    request.headers.get('cf-ipcountry') ? 'cloudflare' : 'none'
-  )
+  // Debug: echo raw Vercel geo header (remove after verification)
+  const rawVercelCountry = request.headers.get('x-vercel-ip-country')
+  if (rawVercelCountry) {
+    response.headers.set('x-vercel-ip-country-echo', rawVercelCountry)
+  }
+  const rawCfCountry = request.headers.get('cf-ipcountry')
+  if (rawCfCountry) {
+    response.headers.set('x-cf-ipcountry-echo', rawCfCountry)
+  }
 
   // ─── 4. Security headers on all responses ───
   response.headers.set('X-Content-Type-Options', 'nosniff')
