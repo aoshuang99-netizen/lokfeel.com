@@ -27,6 +27,7 @@ const IP_WHITELIST: string[] = [
 // Allowed paths (even from blocked regions)
 const ALLOWED_PATHS = [
   '/blocked',
+  '/api/geo-check',
   '/api/health',
   '/_next/',
   '/favicon',
@@ -47,25 +48,16 @@ function isAllowedPath(pathname: string): boolean {
 }
 
 function getCountry(request: NextRequest): string {
-  // 1. Vercel Edge 头 (Pro/Enterprise 保证, Hobby 尽力而为)
+  // 1. Vercel Edge header (Pro/Enterprise guaranteed, Hobby best-effort)
   const vercelCountry = request.headers.get('x-vercel-ip-country')
   if (vercelCountry && vercelCountry !== 'unknown') return vercelCountry
 
-  // 2. Cloudflare 头 (如果走 CF)
+  // 2. Cloudflare header (if behind CF)
   const cfCountry = request.headers.get('cf-ipcountry')
   if (cfCountry && cfCountry !== 'XX') return cfCountry
 
-  // 3. 直接读取 x-forwarded-for 第一个IP (降级方案, 需配合 IP 库)
-  const forwardedFor = request.headers.get('x-forwarded-for')
-  if (forwardedFor) {
-    const clientIp = forwardedFor.split(',')[0]?.trim()
-    // 中国常见IP段快速判断 (无需外部API, 覆盖大部分移动/电信/联通)
-    if (clientIp) {
-      // 简单启发式: 如果以后接入 IP 地理库, 这里替换
-      // 目前依赖 Vercel 头; 如果头不存在, 不阻断 (避免误杀)
-    }
-  }
-
+  // 3. Fallback: read x-forwarded-for (limited accuracy)
+  // Future: integrate IP geolocation API for Hobby plans
   return ''
 }
 
@@ -73,8 +65,8 @@ export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const country = getCountry(request)
   const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                request.headers.get('x-real-ip') || 
-                ''
+               request.headers.get('x-real-ip') || 
+               ''
 
   // ─── 1. Region Block ───
   // Skip geo-block for API routes — they return JSON, not HTML.
@@ -164,28 +156,7 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  // Add geo info to response headers (non-sensitive, for debug)
-  if (country) {
-    response.headers.set('x-geo-country-v2', country)
-    response.headers.set('x-simple-test', 'HELLO')
-  }
-  // Debug: mark that proxy.ts reached the geo-debug section
-  response.headers.set('x-debug-proxy-reached', 'yes')
-  // Debug: echo raw geo headers (remove after verification)
-  const rawVercelCountry = request.headers.get('x-vercel-ip-country')
-  if (rawVercelCountry) {
-    response.headers.set('x-echo-vercel-country', rawVercelCountry)
-  } else {
-    response.headers.set('x-echo-vercel-country', '(empty)')
-  }
-  const rawCfCountry = request.headers.get('cf-ipcountry')
-  if (rawCfCountry) {
-    response.headers.set('x-echo-cf-country', rawCfCountry)
-  }
-
   // ─── 4. Security headers on all responses ───
-  // TEMP: unique marker to verify this file is being used (remove after verification)
-  response.headers.set('x-unique-test-abc123', 'FILE-V2-LOADED')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '1; mode=block')
