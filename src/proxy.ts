@@ -168,11 +168,14 @@ export default async function middleware(request: NextRequest) {
   if (country) {
     response.headers.set('x-geo-country', country)
   }
+  // Debug: mark that proxy.ts reached the geo-debug section
+  response.headers.set('x-debug-proxy-reached', 'yes')
   // Debug: echo raw geo headers (remove after verification)
-  // NOTE: Vercel may strip 'x-vercel-*' response headers; use neutral names
   const rawVercelCountry = request.headers.get('x-vercel-ip-country')
   if (rawVercelCountry) {
     response.headers.set('x-echo-vercel-country', rawVercelCountry)
+  } else {
+    response.headers.set('x-echo-vercel-country', '(empty)')
   }
   const rawCfCountry = request.headers.get('cf-ipcountry')
   if (rawCfCountry) {
