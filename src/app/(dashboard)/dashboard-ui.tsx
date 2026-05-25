@@ -6,30 +6,11 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
-// 动态导入重量级组件 — 减少首屏JavaScript束大小
-import dynamic from "next/dynamic";
+// 直接 import — 导航组件体积小，SSG 首屏必须可见，禁用 SSR 会导致"导航丢失"
+import SidebarV2 from "@/components/layout/sidebar-v2";
+import BottomNav from "@/components/layout/bottom-nav";
 import DashboardFooter from "@/components/layout/dashboard-footer";
 import { fetchWithRetry, getAdaptiveTimeout } from "@/lib/api";
-
-// ═════════════════════════════════════════════════
-// 动态导入重量级组件 — Code Splitting
-// ═════════════════════════════════════════════════
-
-// SidebarV2 — 桌面端侧边栏，延迟加载
-const SidebarV2 = dynamic(() => import("@/components/layout/sidebar-v2"), {
-  ssr: false,
-  loading: () => (
-    <div className="fixed left-0 top-0 h-screen w-64 bg-background border-r border-border animate-pulse" />
-  ),
-});
-
-// BottomNav — 移动端底部导航，延迟加载
-const BottomNav = dynamic(() => import("@/components/layout/bottom-nav"), {
-  ssr: false,
-  loading: () => (
-    <div className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border animate-pulse lg:hidden" />
-  ),
-});
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -230,15 +211,16 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
               <div
                 className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
                 style={{
-                  background: "rgba(5, 10, 24, 0.92)",
+                  background: "var(--background)",
                   backdropFilter: "blur(12px)",
+                  opacity: 0.92,
                 }}
               >
                 <div
                   className="glass-card p-8 max-w-md mx-4 text-center border-primary/30 shadow-lg animate-slideUp"
                 >
                   <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-5">
-                    <AlertTriangle className="w-8 h-8 text-amber-400" />
+                    <AlertTriangle className="w-8 h-8 text-warning" />
                   </div>
                   <h2 className="text-xl font-bold text-foreground mb-2 font-display">
                     Complete Your Setup First
