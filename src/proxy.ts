@@ -168,14 +168,15 @@ export default async function middleware(request: NextRequest) {
   if (country) {
     response.headers.set('x-geo-country', country)
   }
-  // Debug: echo raw Vercel geo header (remove after verification)
+  // Debug: echo raw geo headers (remove after verification)
+  // NOTE: Vercel may strip 'x-vercel-*' response headers; use neutral names
   const rawVercelCountry = request.headers.get('x-vercel-ip-country')
   if (rawVercelCountry) {
-    response.headers.set('x-vercel-ip-country-echo', rawVercelCountry)
+    response.headers.set('x-echo-vercel-country', rawVercelCountry)
   }
   const rawCfCountry = request.headers.get('cf-ipcountry')
   if (rawCfCountry) {
-    response.headers.set('x-cf-ipcountry-echo', rawCfCountry)
+    response.headers.set('x-echo-cf-country', rawCfCountry)
   }
 
   // ─── 4. Security headers on all responses ───
