@@ -30,10 +30,16 @@ interface PaywallProps {
 // TIER CONFIGURATION
 // ══════════════════════════════════
 
+// ════════════════════════════════════
+// TIER CONFIGURATION — 动态价格（从 Creem API 获取）
+// ════════════════════════════════════
+
+// 默认配置（Creem 不可用时降级显示）
 const TIER_CONFIG = {
   [SubscriptionTier.FREE]: {
     name: "Free",
     price: "$0",
+    description: "Basic matching",
     color: "text-gray-400",
     bgColor: "bg-gray-500/10",
     borderColor: "border-gray-500/20",
@@ -41,13 +47,15 @@ const TIER_CONFIG = {
   [SubscriptionTier.PLUS]: {
     name: "Plus",
     price: "$9.99/mo",
+    description: "More matches",
     color: "text-primary",
     bgColor: "bg-primary/10",
     borderColor: "border-primary/30",
   },
   [SubscriptionTier.PREMIUM]: {
     name: "Premium",
-    price: "$19.99/mo",
+    price: "$39.90/mo",
+    description: "Unlimited everything",
     color: "text-accent",
     bgColor: "bg-accent/10",
     borderColor: "border-accent/30",
@@ -55,11 +63,12 @@ const TIER_CONFIG = {
   },
   [SubscriptionTier.FOUNDER]: {
     name: "Founder",
-    price: "$99 (Lifetime)",
+    price: "$149.99/yr",
+    description: "Best value — 12 months",
     color: "text-amber-400",
     bgColor: "bg-amber-500/10",
     borderColor: "border-amber-500/30",
-    limited: true,
+    annual: true,
   },
 };
 
