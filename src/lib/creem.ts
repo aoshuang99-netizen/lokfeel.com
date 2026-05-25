@@ -48,17 +48,17 @@ export const CREEM_PLAN_CONFIG = {
   PREMIUM_MONTHLY: {
     name: "LokFeel Premium Monthly",
     description: "Full power for serious seekers — monthly billing",
-    amount: 1999,       // $19.99
+    price: 1999,        // $19.99 (Creem API 字段名是 price，单位：分)
     currency: "usd",
-    interval: "monthly" as const,
+    billingPeriod: "monthly" as const,  // Creem API 字段名是 billing_period
     perks: { weeklyLimit: 999, canInitiateChat: true, canViewFullProfile: true },
   },
   PREMIUM_YEARLY: {
     name: "LokFeel Premium Yearly",
     description: "Full power for serious seekers — yearly billing (save 37%)",
-    amount: 14999,      // $149.99/year
+    price: 14999,       // $149.99/year (Creem API 字段名是 price，单位：分)
     currency: "usd",
-    interval: "yearly" as const,
+    billingPeriod: "yearly" as const,
     perks: { weeklyLimit: 999, canInitiateChat: true, canViewFullProfile: true },
   },
 } as const;

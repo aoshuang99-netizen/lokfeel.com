@@ -86,8 +86,8 @@ export default function SubscriptionPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-6">
-            <Crown className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary-hover flex items-center justify-center mx-auto mb-6">
+            <Crown className="w-8 h-8 text-background" />
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-3">
             Choose Your Plan
@@ -117,15 +117,15 @@ export default function SubscriptionPage() {
         </div>
 
         {/* Feature Comparison Table */}
-        <Card className="bg-[#111111] border-white/5 overflow-hidden">
-          <div className="p-6 border-b border-white/5">
+        <Card className="bg-background-secondary border-card-border overflow-hidden">
+          <div className="p-6 border-b border-card-border">
             <h2 className="text-xl font-bold text-foreground">Feature Comparison</h2>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/5">
+                <tr className="border-b border-card-border">
                   <th className="text-left p-4 text-sm font-medium text-foreground-muted">Feature</th>
                   {TIERS.map((tier) => (
                     <th key={tier} className="text-center p-4 text-sm font-medium text-foreground-muted">
@@ -136,12 +136,12 @@ export default function SubscriptionPage() {
               </thead>
               <tbody>
                 {FEATURE_ROWS.map((row, i) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02]">
+                  <tr key={i} className="border-b border-card-border hover:bg-background-tertiary">
                     <td className="p-4 text-sm text-foreground">{row.feature}</td>
                     {TIERS.map((tier) => (
                       <td key={tier} className="p-4 text-center">
                         {row.access[tier] ? (
-                          <Check className="w-5 h-5 text-green-500 mx-auto" />
+                          <Check className="w-5 h-5 text-success mx-auto" />
                         ) : (
                           <X className="w-5 h-5 text-foreground-faint mx-auto" />
                         )}
@@ -161,7 +161,7 @@ export default function SubscriptionPage() {
           </h2>
           <div className="space-y-4">
             {FAQS.map((faq, i) => (
-              <Card key={i} className="bg-[#111111] border-white/5">
+              <Card key={i} className="bg-background-secondary border-card-border">
                 <CardHeader>
                   <CardTitle className="text-base text-foreground">{faq.q}</CardTitle>
                 </CardHeader>
