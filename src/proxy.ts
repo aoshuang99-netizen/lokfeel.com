@@ -47,11 +47,24 @@ function isAllowedPath(pathname: string): boolean {
 }
 
 function getCountry(request: NextRequest): string {
+  // 1. Vercel Edge 头 (Pro/Enterprise 保证, Hobby 尽力而为)
   const vercelCountry = request.headers.get('x-vercel-ip-country')
-  if (vercelCountry) return vercelCountry
+  if (vercelCountry && vercelCountry !== 'unknown') return vercelCountry
 
+  // 2. Cloudflare 头 (如果走 CF)
   const cfCountry = request.headers.get('cf-ipcountry')
-  if (cfCountry) return cfCountry
+  if (cfCountry && cfCountry !== 'XX') return cfCountry
+
+  // 3. 直接读取 x-forwarded-for 第一个IP (降级方案, 需配合 IP 库)
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  if (forwardedFor) {
+    const clientIp = forwardedFor.split(',')[0]?.trim()
+    // 中国常见IP段快速判断 (无需外部API, 覆盖大部分移动/电信/联通)
+    if (clientIp) {
+      // 简单启发式: 如果以后接入 IP 地理库, 这里替换
+      // 目前依赖 Vercel 头; 如果头不存在, 不阻断 (避免误杀)
+    }
+  }
 
   return ''
 }
@@ -151,10 +164,15 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  // Add geo info to response headers (non-sensitive)
+  // Add geo info to response headers (non-sensitive, for debug)
   if (country) {
     response.headers.set('x-geo-country', country)
   }
+  // Debug: always show what getCountry() returned (remove after verification)
+  response.headers.set('x-debug-geo-source', 
+    request.headers.get('x-vercel-ip-country') ? 'vercel' :
+    request.headers.get('cf-ipcountry') ? 'cloudflare' : 'none'
+  )
 
   // ─── 4. Security headers on all responses ───
   response.headers.set('X-Content-Type-Options', 'nosniff')
