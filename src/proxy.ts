@@ -184,6 +184,8 @@ export default async function middleware(request: NextRequest) {
   }
 
   // ─── 4. Security headers on all responses ───
+  // TEMP: unique marker to verify this file is being used (remove after verification)
+  response.headers.set('x-unique-test-abc123', 'FILE-V2-LOADED')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '1; mode=block')
