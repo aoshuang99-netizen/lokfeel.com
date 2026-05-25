@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle } from "lucide-react";
 
 interface TooltipProps {
@@ -14,7 +13,7 @@ interface TooltipProps {
 
 /**
  * Tooltip component with customizable positioning and icon
- * Used for explaining concepts like "Attachment Style", "Love Language", etc.
+ * Pure CSS animation — no framer-motion dependency.
  */
 export function Tooltip({
   children,
@@ -41,7 +40,6 @@ export function Tooltip({
         case "top":
           x = rect.left + rect.width / 2 - tooltipWidth / 2;
           y = rect.top - tooltipHeight - 8;
-          // Keep within viewport
           if (x < 8) x = 8;
           if (x + tooltipWidth > window.innerWidth - 8) {
             x = window.innerWidth - tooltipWidth - 8;
@@ -65,7 +63,6 @@ export function Tooltip({
           break;
       }
 
-      // Prevent going above viewport for top position
       if (position === "top" && y < 8) {
         y = rect.bottom + 8;
       }
@@ -73,6 +70,12 @@ export function Tooltip({
       setCoords({ x, y });
     }
   }, [isVisible, position]);
+
+  /* Arrow position helpers */
+  const arrowCls =
+    position === "top"
+      ? "-bottom-1 left-1/2 -translate-x-1/2 border-r border-b"
+      : "-top-1 left-1/2 -translate-x-1/2 border-l border-t";
 
   return (
     <div className={`inline-flex items-center ${className}`}>
@@ -87,37 +90,39 @@ export function Tooltip({
         {icon || <HelpCircle className="w-4 h-4 text-foreground-muted" />}
       </div>
 
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            ref={tooltipRef}
-            initial={{ opacity: 0, scale: 0.95, y: 4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 4 }}
-            transition={{ duration: 0.15 }}
-            style={{
-              position: "fixed",
-              left: coords.x,
-              top: coords.y,
-              zIndex: 9999,
-            }}
-            className="max-w-[280px] px-4 py-3 rounded-xl bg-[var(--background-secondary,#1a1a1a)] border border-card-border shadow-xl"
-          >
-            <p className="text-sm text-foreground leading-relaxed">{content}</p>
-            {/* Arrow */}
-            <div
-              className={`absolute w-2 h-2 bg-[var(--background-secondary,#1a1a1a)] border-card-border border-r border-t transform rotate-45 ${
-                position === "top" ? "-bottom-1 left-1/2 -translate-x-1/2" : ""
-              } ${position === "bottom" ? "-top-1 left-1/2 -translate-x-1/2" : ""}`}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Tooltip body — CSS transition, no AnimatePresence */}
+      <div
+        ref={tooltipRef}
+        style={{
+          position: "fixed",
+          left: coords.x,
+          top: coords.y,
+          zIndex: 9999,
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? "scale(1) translateY(0)" : "scale(0.95) translateY(4px)",
+          transition: "opacity 150ms ease-out, transform 150ms ease-out",
+          pointerEvents: isVisible ? "auto" : "none",
+        } as React.CSSProperties}
+        className="
+          max-w-[280px] px-4 py-3 rounded-xl
+          bg-background-secondary
+          border border-card-border
+          shadow-xl
+          text-sm text-foreground leading-relaxed
+        "
+      >
+        <p className="text-sm text-foreground leading-relaxed">{content}</p>
+
+        {/* Arrow */}
+        <span
+          className={`absolute w-2 h-2 -rotate-45 bg-background-secondary border-card-border ${arrowCls}`}
+        />
+      </div>
     </div>
   );
 }
 
-// Pre-built explanation content for common concepts
+/* Pre‑built explanation content (unchanged) */
 export const CONCEPT_EXPLANATIONS = {
   attachmentStyle: {
     Secure: "You feel comfortable getting close to others and don't worry much about being abandoned.",

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, createContext, useContext } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, createContext, useContext, useId, useRef, useEffect } from "react";
 
-// ══════════════════════════════════════
-// TAB CONTEXT
-// ══════════════════════════════════════
+/* ══════════════════════════════════
+   Tab Context
+   ══════════════════════════════════ */
 
 interface TabContextValue {
   activeTab: string;
@@ -16,13 +15,13 @@ const TabContext = createContext<TabContextValue | null>(null);
 
 function useTabContext() {
   const ctx = useContext(TabContext);
-  if (!ctx) throw new Error("useTabContext must be used within TabProvider");
+  if (!ctx) throw new Error("useTabContext must be used within <TabGroup>");
   return ctx;
 }
 
-// ══════════════════════════════════════
-// TAB GROUP
-// ══════════════════════════════════════
+/* ══════════════════════════════════
+   TabGroup
+   ══════════════════════════════════ */
 
 interface TabGroupProps {
   defaultTab: string;
@@ -46,9 +45,9 @@ export function TabGroup({ defaultTab, children, className = "", onChange }: Tab
   );
 }
 
-// ══════════════════════════════════════
-// TAB LIST
-// ══════════════════════════════════════
+/* ══════════════════════════════════
+   TabList
+   ══════════════════════════════════ */
 
 interface TabListProps {
   children: React.ReactNode;
@@ -57,9 +56,8 @@ interface TabListProps {
 }
 
 export function TabList({ children, className = "", variant = "underline" }: TabListProps) {
-  const baseClasses = "flex gap-1";
-  
-  const variantClasses = {
+  const base = "flex gap-1";
+  const variants: Record<string, string> = {
     underline: "border-b border-card-border",
     pill: "",
     bordered: "border border-card-border rounded-xl p-1 bg-background-tertiary",
@@ -68,16 +66,16 @@ export function TabList({ children, className = "", variant = "underline" }: Tab
   return (
     <div
       role="tablist"
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
+      className={`${base} ${variants[variant]} ${className}`}
     >
       {children}
     </div>
   );
 }
 
-// ══════════════════════════════════════
-// TAB TRIGGER
-// ══════════════════════════════════════
+/* ══════════════════════════════════
+   TabTrigger
+   ══════════════════════════════════ */
 
 interface TabTriggerProps {
   value: string;
@@ -101,23 +99,16 @@ export function TabTrigger({
   const { activeTab, setActiveTab } = useTabContext();
   const isActive = activeTab === value;
 
-  const baseClasses = "relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors focus:outline-none";
-
-  const variantClasses = {
-    underline: `${baseClasses} rounded-none ${
-      isActive
-        ? "text-foreground"
-        : "text-foreground-muted hover:text-foreground"
+  const base = "relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors duration-200 focus:outline-none";
+  const variants: Record<string, string> = {
+    underline: `${base} rounded-none ${
+      isActive ? "text-foreground" : "text-foreground-muted hover:text-foreground"
     }`,
-    pill: `${baseClasses} rounded-full ${
-      isActive
-        ? "bg-primary text-white"
-        : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
+    pill: `${base} rounded-full ${
+      isActive ? "bg-primary text-white" : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
     }`,
-    bordered: `${baseClasses} rounded-lg ${
-      isActive
-        ? "bg-card text-foreground shadow-sm"
-        : "text-foreground-muted hover:text-foreground"
+    bordered: `${base} rounded-lg ${
+      isActive ? "bg-card text-foreground shadow-sm" : "text-foreground-muted hover:text-foreground"
     }`,
   };
 
@@ -127,7 +118,7 @@ export function TabTrigger({
       aria-selected={isActive}
       disabled={disabled}
       onClick={() => !disabled && setActiveTab(value)}
-      className={`${variantClasses[variant]} ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${className}`}
+      className={`${variants[variant]} ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${className}`}
     >
       {icon}
       {children}
@@ -138,21 +129,19 @@ export function TabTrigger({
           {badge}
         </span>
       )}
-      {/* Active indicator for underline variant */}
+
+      {/* Active indicator — CSS only, no framer-motion */}
       {variant === "underline" && isActive && (
-        <motion.div
-          layoutId="activeTab"
-          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-primary rounded-full"
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        />
+        <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-primary to-secondary-hover" />
       )}
     </button>
   );
 }
 
-// ══════════════════════════════════════
-// TAB CONTENT
-// ══════════════════════════════════════
+/* ══════════════════════════════════
+   TabContent
+   CSS fade‑in, no AnimatePresence
+   ══════════════════════════════════ */
 
 interface TabContentProps {
   value: string;
@@ -162,28 +151,34 @@ interface TabContentProps {
 
 export function TabContent({ value, children, className = "" }: TabContentProps) {
   const { activeTab } = useTabContext();
+  const isActive  = activeTab === value;
+  const prevActiveRef = useRef(activeTab);
+  const [renderKey, setRenderKey] = useState(0);
+
+  // bump key on tab change → retriggers CSS animation
+  useEffect(() => {
+    if (prevActiveRef.current !== activeTab) {
+      setRenderKey(k => k + 1);
+      prevActiveRef.current = activeTab;
+    }
+  }, [activeTab]);
+
+  if (!isActive) return null;
 
   return (
-    <AnimatePresence mode="wait">
-      {activeTab === value && (
-        <motion.div
-          role="tabpanel"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className={className}
-        >
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div
+      key={renderKey}
+      role="tabpanel"
+      className={`animate-[fadeIn_200ms_ease-out] ${className}`}
+    >
+      {children}
+    </div>
   );
 }
 
-// ══════════════════════════════════════
-// CONVENIENCE COMPOSITE COMPONENT
-// ══════════════════════════════════════
+/* ══════════════════════════════════
+   Convenience composite — Tabs
+   ══════════════════════════════════ */
 
 interface TabsProps {
   tabs: { value: string; label: string; icon?: React.ReactNode; badge?: string | number; content: React.ReactNode }[];
@@ -194,18 +189,24 @@ interface TabsProps {
 }
 
 export function Tabs({ tabs, defaultTab, variant = "underline", className = "", contentClassName = "" }: TabsProps) {
-  const activeTab = defaultTab || tabs[0]?.value || "";
+  const active = defaultTab || tabs[0]?.value || "";
 
   return (
-    <TabGroup defaultTab={activeTab} className={className}>
+    <TabGroup defaultTab={active} className={className}>
       <TabList variant={variant}>
-        {tabs.map((tab) => (
-          <TabTrigger key={tab.value} value={tab.value} icon={tab.icon} badge={tab.badge} variant={variant}>
+        {tabs.map(tab => (
+          <TabTrigger
+            key={tab.value}
+            value={tab.value}
+            icon={tab.icon}
+            badge={tab.badge}
+            variant={variant}
+          >
             {tab.label}
           </TabTrigger>
         ))}
       </TabList>
-      {tabs.map((tab) => (
+      {tabs.map(tab => (
         <TabContent key={tab.value} value={tab.value} className={contentClassName}>
           {tab.content}
         </TabContent>
