@@ -1,13 +1,8 @@
 // ============================================================
-// Bot Avatar Generator
-// 数字用户头像生成管道
-// 基于 bot-architect 的架构设计
+// Bot Avatar Generator (DiceBear Edition)
+// 数字用户头像生成管道 — 使用 DiceBear API（可靠、免费、不被墙）
 // ============================================================
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import { fileTypeFromBuffer } from 'file-type';
 import { getDb } from '../db';
 import { isMaleGender } from '@/lib/gender-utils';
 
@@ -54,127 +49,93 @@ interface GenerationResult {
 }
 
 // ============================================================
+// DiceBear 风格映射
+// ============================================================
+
+const DICEBEAR_BASE = 'https://api.dicebear.com/9.x';
+
+// 不同风格对应不同 DiceBear 风格
+const STYLE_MAP: Record<AvatarStyle, string> = {
+  professional: 'avataaars',   // 商务卡通风格
+  casual: 'adventurer',       // 休闲冒险风格
+  artistic: 'shapes',          // 艺术几何风格
+  natural: 'lorelei',         // 自然真实风格
+};
+
+// 肤色映射（DiceBear 支持 backgroundColor 参数）
+const ETHNICITY_BG: Record<Ethnicity, string> = {
+  caucasian: 'f3d5b3,d2b48c,c19a6b',    // 浅肤色
+  african: '8b4513,a0522d,6b3410',         // 深肤色
+  asian: 'f5cba7,e8b894,d4a574',          // 亚洲肤色
+  hispanic: 'd2b48c,b8860b,a0522d',       // 拉丁肤色
+  south_asian: 'f7d794,e8b894,d4a574',    // 南亚肤色
+  middle_eastern: 'e8b894,d2b48c,c19a6b',  // 中东肤色
+};
+
+// ============================================================
 // BotAvatarGenerator 类
 // ============================================================
 
 export class BotAvatarGenerator {
-  private services = {
-    thispersondoesnotexist: 'https://thispersondoesnotexist.com/image',
-    randomuser: 'https://randomuser.me/api/portraits',
-    uiavatars: 'https://ui-avatars.com/api'
-  };
+  /**
+   * 生成 DiceBear 头像 URL（确定性：同 seed = 同头像）
+   */
+  generateDiceBearUrl(config: AvatarConfig, seed: string): string {
+    const style = STYLE_MAP[config.style] || 'avataaars';
+    const bgColor = ETHNICITY_BG[config.ethnicity] || 'b6b5b0,8b5cf6,a78bfa';
+    const isFemale = config.gender === 'female';
 
-  private downloadDir: string;
+    // DiceBear 参数
+    const params = new URLSearchParams({
+      seed: seed,
+      backgroundColor: bgColor,
+      radius: '50',
+    });
 
-  constructor(downloadDir: string = './public/avatars/bots') {
-    this.downloadDir = downloadDir;
-    // 确保目录存在
-    if (!fs.existsSync(this.downloadDir)) {
-      fs.mkdirSync(this.downloadDir, { recursive: true });
+    // 女性/男性使用不同参数（某些风格支持）
+    if (isFemale) {
+      params.set('eyebrow', 'raised');
     }
+
+    return `${DICEBEAR_BASE}/${style}/svg?${params.toString()}`;
   }
 
-  // ============================================================
-  // 策略1：This Person Does Not Exist (推荐)
-  // ============================================================
-
-  async generateFromTPDNE(config: AvatarConfig): Promise<string> {
-    const seed = this.hashConfig(config);
-
-    try {
-      // 生成随机种子URL
-      const imageUrl = `${this.services.thispersondoesnotexist}?t=${seed}`;
-
-      // 下载并验证
-      const imageBuffer = await this.downloadImage(imageUrl);
-      const isValid = await this.validateImage(imageBuffer);
-
-      if (isValid) {
-        // 保存到本地
-        const filename = `bot_${seed}.jpg`;
-        const filepath = path.join(this.downloadDir, filename);
-        fs.writeFileSync(filepath, imageBuffer);
-
-        // 上传到存储
-        return await this.uploadToStorage(filepath, filename);
-      }
-
-      // 验证失败则回退到其他方案
-      console.log(`[TPDNE] Validation failed for ${seed}, trying RandomUser`);
-      return await this.generateFromRandomUser(config);
-    } catch (error) {
-      console.log(`[TPDNE] Error: ${error}, falling back to RandomUser`);
-      return await this.generateFromRandomUser(config);
-    }
-  }
-
-  // ============================================================
-  // 策略2：RandomUser.me API
-  // ============================================================
-
-  async generateFromRandomUser(config: AvatarConfig): Promise<string> {
-    const gender = config.gender === 'male' ? 'men' : 'women';
-
-    const ethnicityMap: Record<Ethnicity, string> = {
-      caucasian: 'us',
-      african: 'za',
-      asian: 'jp',
-      hispanic: 'mx',
-      south_asian: 'in',
-      middle_eastern: 'eg'
-    };
-
-    const nationality = ethnicityMap[config.ethnicity] || 'us';
-
-    // 随机选择1-99的头像编号
-    const imgId = Math.floor(Math.random() * 99) + 1;
-
-    // 构建URL（使用多个备选 nationality 增加多样性）
-    const nationalities = Object.values(ethnicityMap);
-    const randomNat = nationalities[Math.floor(Math.random() * nationalities.length)];
-
-    return `https://randomuser.me/api/portraits/${gender}/${imgId}.jpg`;
-  }
-
-  // ============================================================
-  // 策略3：UI Avatars（最后备选）
-  // ============================================================
-
-  generateFromUIAvatars(name: string, background?: string): string {
+  /**
+   * 生成 UI Avatars 备用 URL（首字母头像）
+   */
+  generateUIAvatars(name: string, gender: Gender): string {
+    const bgColor = gender === 'female' ? 'ec4899' : '3b82f6';
     const encodedName = encodeURIComponent(name);
-    const bg = background || this.randomBackgroundColor();
-    return `https://ui-avatars.com/api/?name=${encodedName}&size=200&background=${bg}&color=fff&bold=true&font-size=0.4`;
+    return `https://ui-avatars.com/api/?name=${encodedName}&size=256&background=${bgColor}&color=fff&bold=true&font-size=0.4`;
   }
 
-  // ============================================================
-  // 主生成方法（智能选择策略）
-  // ============================================================
+  /**
+   * 主生成方法 — 使用 DiceBear（确定性，不需要下载）
+   */
+  async generateAvatar(config: AvatarConfig, displayName: string): Promise<string> {
+    // 用 displayName + gender 作为确定性 seed
+    const seed = `${displayName}-${config.gender}-${config.style}`;
 
-  async generateAvatar(config: AvatarConfig): Promise<string> {
-    // 优先尝试 TPDNE（完全AI生成，无法反向搜索）
+    // 策略1：DiceBear（主要方案，100% 可靠）
+    const diceBearUrl = this.generateDiceBearUrl(config, seed);
+
     try {
-      const url = await this.generateFromTPDNE(config);
-      if (url) return url;
+      // 验证 URL 可访问（HEAD 请求）
+      const checkResponse = await fetch(diceBearUrl, { method: 'HEAD' });
+      if (checkResponse.ok) {
+        return diceBearUrl;
+      }
     } catch {
-      // 继续尝试其他方案
+      // 继续备用方案
     }
 
-    // 回退到 RandomUser
-    try {
-      const url = await this.generateFromRandomUser(config);
-      if (url) return url;
-    } catch {
-      // 继续
-    }
-
-    // 最后备选：UI Avatars
-    return this.generateFromUIAvatars('Bot User');
+    // 策略2：UI Avatars（备用方案，首字母头像）
+    return this.generateUIAvatars(displayName, config.gender);
   }
 
-  // ============================================================
-  // 批量生成头像
-  // ============================================================
-
+  /**
+   * 批量生成头像 URL（不需要下载，直接返回 DiceBear URL）
+   */
   async batchGenerate(
     bots: BotProfile[],
     options: BatchGenerateOptions = { parallel: 5, retryFailed: true }
@@ -183,7 +144,6 @@ export class BotAvatarGenerator {
     const failed: BotProfile[] = [];
 
     console.log(`[AvatarGenerator] Starting batch generation for ${bots.length} bots`);
-    console.log(`[AvatarGenerator] Parallel: ${options.parallel}, RetryFailed: ${options.retryFailed}`);
 
     // 分块处理（控制并发）
     const chunks = this.chunkArray(bots, options.parallel);
@@ -199,10 +159,10 @@ export class BotAvatarGenerator {
             ethnicity: this.mapEthnicity(bot.ethnicity),
             age: bot.profile.age,
             gender: isMaleGender(bot.profile.gender) ? 'male' : 'female',
-            mood: 'friendly'
+            mood: 'friendly',
           };
 
-          const avatarUrl = await this.generateAvatar(config);
+          const avatarUrl = await this.generateAvatar(config, bot.profile.displayName);
           results.set(bot.id, avatarUrl);
 
           console.log(`[AvatarGenerator] ✓ Generated avatar for ${bot.profile.displayName}`);
@@ -214,17 +174,15 @@ export class BotAvatarGenerator {
 
       await Promise.all(promises);
 
-      // 进度报告
       console.log(`[AvatarGenerator] Progress: ${results.size}/${bots.length} (${failed.length} failed)`);
     }
 
     // 重试失败项
     if (options.retryFailed && failed.length > 0) {
       console.log(`[AvatarGenerator] Retrying ${failed.length} failed avatars...`);
-
       for (const bot of failed) {
-        const avatarUrl = this.generateFromUIAvatars(bot.profile.displayName);
-        results.set(bot.id, avatarUrl);
+        const fallbackUrl = this.generateUIAvatars(bot.profile.displayName, 'female');
+        results.set(bot.id, fallbackUrl);
         console.log(`[AvatarGenerator] ✓ Fallback avatar for ${bot.profile.displayName}`);
       }
     }
@@ -232,10 +190,9 @@ export class BotAvatarGenerator {
     return results;
   }
 
-  // ============================================================
-  // 批量生成并保存到数据库
-  // ============================================================
-
+  /**
+   * 批量生成并保存到数据库
+   */
   async batchGenerateAndSave(bots: BotProfile[]): Promise<GenerationResult[]> {
     const results: GenerationResult[] = [];
     const avatarMap = await this.batchGenerate(bots);
@@ -245,7 +202,6 @@ export class BotAvatarGenerator {
 
       if (url) {
         try {
-          // 保存到 BotAvatar 表
           await prisma.botAvatar.upsert({
             where: { botId: bot.id },
             create: {
@@ -253,34 +209,34 @@ export class BotAvatarGenerator {
               originalUrl: url,
               style: bot.avatarStyle || 'natural',
               ethnicity: bot.ethnicity || 'caucasian',
-              status: 'active'
+              status: 'active',
             },
             update: {
               originalUrl: url,
               style: bot.avatarStyle || 'natural',
               ethnicity: bot.ethnicity || 'caucasian',
-              status: 'active'
-            }
+              status: 'active',
+            },
           });
 
           results.push({
             botId: bot.id,
             success: true,
-            url
+            url,
           });
         } catch (error) {
           results.push({
             botId: bot.id,
             success: false,
             url,
-            error: `Database error: ${error}`
+            error: `Database error: ${error}`,
           });
         }
       } else {
         results.push({
           botId: bot.id,
           success: false,
-          error: 'No avatar URL generated'
+          error: 'No avatar URL generated',
         });
       }
     }
@@ -289,56 +245,8 @@ export class BotAvatarGenerator {
   }
 
   // ============================================================
-  // 图片验证
-  // ============================================================
-
-  private async validateImage(buffer: Buffer): Promise<boolean> {
-    // 1. 检查文件类型
-    const fileType = await fileTypeFromBuffer(buffer);
-    if (!fileType || !['image/jpeg', 'image/png', 'image/webp'].includes(fileType.mime)) {
-      console.log(`[Validate] Invalid file type: ${fileType?.mime}`);
-      return false;
-    }
-
-    // 2. 检查文件大小 (50KB - 5MB)
-    const sizeKB = buffer.length / 1024;
-    if (sizeKB < 50 || sizeKB > 5000) {
-      console.log(`[Validate] Invalid file size: ${sizeKB}KB`);
-      return false;
-    }
-
-    return true;
-  }
-
-  // ============================================================
   // 辅助方法
   // ============================================================
-
-  private async downloadImage(url: string): Promise<Buffer> {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to download image: ${response.status}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  }
-
-  private async uploadToStorage(filepath: string, filename: string): Promise<string> {
-    // TODO: 实现实际上传到 Vercel Blob / Cloudflare CDN
-    // 目前返回本地路径
-    return `/avatars/bots/${filename}`;
-  }
-
-  private hashConfig(config: AvatarConfig): string {
-    const str = JSON.stringify(config);
-    return crypto.createHash('md5').update(str).digest('hex').substring(0, 12);
-  }
 
   private mapEthnicity(ethnicity?: string): Ethnicity {
     const mapping: Record<string, Ethnicity> = {
@@ -349,9 +257,8 @@ export class BotAvatarGenerator {
       HISPANIC_LATINO: 'hispanic',
       HISPANIC: 'hispanic',
       SOUTH_ASIAN: 'south_asian',
-      MIDDLE_EASTERN: 'middle_eastern'
+      MIDDLE_EASTERN: 'middle_eastern',
     };
-
     return mapping[ethnicity || ''] || 'caucasian';
   }
 
@@ -361,14 +268,6 @@ export class BotAvatarGenerator {
       chunks.push(array.slice(i, i + size));
     }
     return chunks;
-  }
-
-  private randomBackgroundColor(): string {
-    const colors = [
-      '1abc9c', '2ecc71', '3498db', '9b59b6', 'f39c12',
-      'e74c3c', '16a085', '27ae60', '2980b9', '8e44ad'
-    ];
-    return colors[Math.floor(Math.random() * colors.length)];
   }
 }
 

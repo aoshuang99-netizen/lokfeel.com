@@ -450,7 +450,8 @@ export const MatchAction: {
   INTERESTED: 'INTERESTED',
   PASS: 'PASS',
   MAYBE: 'MAYBE',
-  BLOCK: 'BLOCK'
+  BLOCK: 'BLOCK',
+  SUPER_LIKE: 'SUPER_LIKE'
 };
 
 export type MatchAction = (typeof MatchAction)[keyof typeof MatchAction]

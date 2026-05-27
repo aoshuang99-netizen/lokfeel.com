@@ -295,6 +295,8 @@ function MessageBubbleComponent({
   
   // State for context menu
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  // State for image fullscreen preview
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   
   // Determine if message is from current user
   const isFromMe = currentUserId ? senderId === currentUserId : sender?.id === currentUserId;
@@ -436,7 +438,11 @@ function MessageBubbleComponent({
                 <img
                   src={payload}
                   alt="Shared image"
-                  className="rounded-lg max-w-[250px] max-h-[300px] object-cover"
+                  className="rounded-lg max-w-[250px] max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFullscreenImage(payload);
+                  }}
                 />
               </div>
             )}
@@ -505,6 +511,38 @@ function MessageBubbleComponent({
             onReply={handleReply}
             canDelete={isFromMe}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Image Fullscreen Preview */}
+      <AnimatePresence>
+        {fullscreenImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 cursor-pointer"
+            onClick={() => setFullscreenImage(null)}
+          >
+            <button
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-[61]"
+              onClick={() => setFullscreenImage(null)}
+              aria-label="Close preview"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              src={fullscreenImage}
+              alt="Full size preview"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </>

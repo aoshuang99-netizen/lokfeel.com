@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charSet="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>LokFeel 功能测试页面</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+    .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+    .success { color: green; }
+    .error { color: red; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔍 LokFeel 功能测试页面</h1>
+  <p>用于测试后端 API 是否工作正常</p>
+
+  <!-- Google OAuth 测试 -->
+  <div class="section">
+    <h2>1. Google OAuth 测试</h2>
+    <button onclick="testGoogleOAuth()">测试 Google OAuth Signin</button>
+    <div id="google-result"></div>
+  </div>
+
+  <!-- Creem 产品 API 测试 -->
+  <div class="section">
+    <h2>2. Creem 产品 API 测试</h2>
+    <button onclick="testCreemProducts()">获取产品列表</button>
+    <div id="creem-result"></div>
+  </div>
+
+  <!-- 环境变量检查 -->
+  <div class="section">
+    <h2>3. 环境变量检查</h2>
+    <button onclick="checkEnv()">检查 Google OAuth 配置</button>
+    <div id="env-result"></div>
+  </div>
+
+  <script>
+    // 测试 Google OAuth
+    async function testGoogleOAuth() {
+      const resultDiv = document.getElementById('google-result');
+      resultDiv.innerHTML = '测试中...';
+      
+      try {
+        const response = await fetch('/api/auth/oauth/google/signin?callbackUrl=/dashboard');
+        resultDiv.innerHTML = `
+          <p class="success">✅ Signin 端点返回: ${response.status} ${response.statusText}</p>
+          <p>重定向到 Google 授权页面...</p>
+          <p><a href="/api/auth/oauth/google/signin?callbackUrl=/dashboard" target="_blank">点击这里手动测试</a></p>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `<p class="error">❌ 错误: ${error.message}</p>`;
+      }
+    }
+
+    // 测试 Creem 产品 API
+    async function testCreemProducts() {
+      const resultDiv = document.getElementById('creem-result');
+      resultDiv.innerHTML = '获取中...';
+      
+      try {
+        const response = await fetch('/api/payments/creem/products');
+        const data = await response.json();
+        
+        if (data.ok) {
+          resultDiv.innerHTML = `
+            <p class="success">✅ 成功获取 ${data.count} 个产品:</p>
+            <pre>${JSON.stringify(data.products, null, 2)}</pre>
+          `;
+        } else {
+          resultDiv.innerHTML = `<p class="error">❌ 错误: ${data.error}</p>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<p class="error">❌ 错误: ${error.message}</p>`;
+      }
+    }
+
+    // 检查环境变量
+    async function checkEnv() {
+      const resultDiv = document.getElementById('env-result');
+      resultDiv.innerHTML = '检查中...';
+      
+      try {
+        const response = await fetch('/api/debug/google-oauth-check');
+        const data = await response.json();
+        
+        resultDiv.innerHTML = `
+          <p>配置状态: <strong>${data.summary.allConfigured ? '✅ 已配置' : '❌ 未配置'}</p>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `<p class="error">❌ 无法检查: ${error.message}</p><p>可能部署还未生效，请等待 1-2 分钟。</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

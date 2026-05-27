@@ -1,18 +1,13 @@
 "use client";
 
 /**
- * RegisterPage — Feeld-style single-page registration
- * DATRASY DARK: Unified with landing page
+ * RegisterPage — Feeld-style single-page registration (PC-optimized)
+ * COOL BLUE V2: Uses Tailwind classes, no inline styles, PC-friendly
  *
  * Changes from original:
- * - Merged 2-step into 1 page with inline OTP
- * - Removed confirmPassword field
- * - Social login (Google/X) promoted ABOVE email form
- * - Feeld-style progress indicator
- * - DOB field added
- * - Brand: LokFee! (not LokFeel)
- * - Mobile: social login vertical stack (Google top, X bottom)
- * - PC: optimized layout like a real app
+ * - Removed `colors` object, ALL inline styles → Tailwind classes
+ * - PC layout: max-w-md centered, proper spacing
+ * - Design system: v6 Cool Blue (#3b82f6 / #22d3ee)
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -34,40 +29,18 @@ import GoogleSignInButton from "@/components/auth/google-sign-in-button";
 import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 // X (Twitter) — Native OAuth 2.0 + PKCE redirect
-
-// ─── COOL BLUE V2 THEME CONSTANTS ─────────────────────────────
-const colors = {
-  bg: "transparent", // video bg from layout
-  cardBg: "rgba(15,15,35,0.80)",
-  border: "rgba(255,255,255,0.18)",
-  borderStrong: "rgba(96,165,250,0.5)",
-  text: "#ffffff",
-  textMuted: "rgba(255,255,255,0.40)",
-  textSecondary: "rgba(255,255,255,0.65)",
-  input: "rgba(255,255,255,0.08)",
-  inputBorder: "rgba(255,255,255,0.15)",
-  inputFocus: "rgba(59,130,246,0.5)",
-  inputPlaceholder: "rgba(255,255,255,0.4)",
-  primary: "#3b82f6",
-  primaryBg: "#3b82f6",
-  primaryText: "#ffffff",
-  purple: "#60a5fa",
-  purpleBg: "rgba(59,130,246,0.1)",
-  error: "#fb7185",
-  errorBg: "rgba(251,113,133,0.08)",
-  errorBorder: "rgba(251,113,133,0.2)",
-};
+import { useSearchParams } from "next/navigation";
 
 // ─── Registration State Persistence ───
-const REG_STATE_KEY = 'lokfee_register_state';
+const REG_STATE_KEY = 'lokfeel_register_state';
 interface RegState {
-  phase: string; // 'form' | 'verify'
+  phase: 'form' | 'verify';
   formData: Record<string, string | boolean>;
   sentInfo: { maskedIdentifier?: string; devMode?: boolean; code?: string };
   savedAt: number;
 }
 
-function saveRegState(phase: string, formData: Record<string, string | boolean>, sentInfo: any) {
+function saveRegState(phase: 'form' | 'verify', formData: Record<string, string | boolean>, sentInfo: any) {
   if (typeof window === 'undefined') return;
   try {
     const state: RegState = { phase, formData, sentInfo: sentInfo || {}, savedAt: Date.now() };
@@ -96,12 +69,12 @@ function clearRegState() {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [phase, setPhase] = useState<"form" | "verify">("form");
+  const [phase, setPhase] = useState<'form' | 'verify'>('form');
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    dob: "",       // Date of Birth — new field
+    dob: "",        // Date of Birth — new field
     gender: "",
     sexuality: "",
     agreeToTerms: false,
@@ -148,7 +121,7 @@ export default function RegisterPage() {
   const updateDob = useCallback(() => {
     if (dobYear && dobMonth && dobDay) {
       const dateStr = `${dobYear}-${dobMonth.padStart(2, "0")}-${dobDay.padStart(2, "0")}`;
-      setFormData((prev) => ({ ...prev, dob: dateStr }));
+      setFormData(prev => ({ ...prev, dob: dateStr }));
     }
   }, [dobYear, dobMonth, dobDay]);
 
@@ -163,7 +136,7 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
@@ -172,7 +145,7 @@ export default function RegisterPage() {
   const startCountdown = () => {
     setCountdown(60);
     const timer = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
           return 0;
@@ -234,8 +207,8 @@ export default function RegisterPage() {
 
       setPhase("verify");
       startCountdown();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : getAuthErrorMessage(err));
+    } catch (err: any) {
+      setError(err.message || "Failed to send code. Please try again.");
     } finally {
       setIsSendingCode(false);
     }
@@ -254,10 +227,11 @@ export default function RegisterPage() {
       });
       const data = await safeJsonParse<{ message?: string; devMode?: boolean; code?: string }>(res);
       if (!res.ok) throw new Error(data.message || "Failed to resend");
+
       if (data.devMode) setSentInfo(prev => ({ ...prev, code: data.code }));
       startCountdown();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : getAuthErrorMessage(err));
+    } catch (err: any) {
+      setError(err.message || "Failed to resend. Please try again.");
     } finally {
       setIsSendingCode(false);
     }
@@ -322,13 +296,13 @@ export default function RegisterPage() {
           });
 
           if (autoLoginRes.ok) {
-            const signInResult = await signIn("credentials", {
+            const signInResult: any = await signIn("credentials", {
               email: formData.email.toLowerCase().trim(),
               password: formData.password,
               redirect: false,
             });
 
-            if ((signInResult as any)?.ok || (signInResult as any)?.url) {
+            if (signInResult?.ok || signInResult?.url) {
               clearRegState();
               await new Promise(resolve => setTimeout(resolve, 500));
               window.location.href = data.redirectTo || "/dashboard/onboarding";
@@ -342,500 +316,336 @@ export default function RegisterPage() {
 
       clearRegState();
       router.push("/login?registered=true");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : getAuthErrorMessage(err));
+    } catch (err: any) {
+      setError(err.message || "Verification failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ─── Shared Styles ───
-  const inputStyle = (extraPadding?: string): React.CSSProperties => ({
-    width: "100%",
-    padding: extraPadding || "14px 16px",
-    background: colors.input,
-    border: `1px solid ${colors.inputBorder}`,
-    borderRadius: "12px",
-    color: colors.text,
-    fontSize: "15px",
-    outline: "none",
-    boxSizing: "border-box",
-    transition: "border-color 0.2s, box-shadow 0.2s",
-  });
-
-  const inputFocusStyle: React.CSSProperties = {
-    borderColor: "rgba(59,130,246,0.5)",
-    boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
-  };
-
-  const selectStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "13px 10px",
-    background: colors.input,
-    border: `1px solid ${colors.inputBorder}`,
-    borderRadius: "10px",
-    fontSize: "15px",
-    color: colors.text,
-    fontFamily: "'Inter', sans-serif",
-    appearance: "none",
-    WebkitAppearance: "none" as any,
-    cursor: "pointer",
-    textAlign: "center",
-    outline: "none",
-    transition: "border-color 0.2s, box-shadow 0.2s",
-  };
-
-  const selectFocusStyle: React.CSSProperties = {
-    borderColor: "rgba(59,130,246,0.5)",
-    boxShadow: "0 0 0 3px rgba(59,130,246,0.2)",
-  };
-
-  // ─── Progress Indicator (Feeld-style) ───
-  const progressPercent = phase === "form" ? 60 : 95;
-
-  // ═════════════════════════════════════
-  // VERIFY PHASE
-  // ═════════════════════════════════════
+  // ─── VERIFY PHASE ───
   if (phase === "verify") {
     return (
-      <div style={{
-        maxWidth: "440px",
-        margin: "0 auto",
-        padding: "24px 16px",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-      }}>
-        <div style={{
-          background: colors.cardBg,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderRadius: "24px",
-          border: `1px solid ${colors.border}`,
-          boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)",
-          padding: "40px 36px",
-        }}>
-          {/* Progress bar */}
-          <div style={{ marginBottom: "28px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-              <span style={{ fontSize: "12px", color: colors.textMuted, fontWeight: "500" }}>Almost there</span>
-              <span style={{ fontSize: "12px", color: colors.primary, fontWeight: "600" }}>{progressPercent}%</span>
+      <div className="w-full max-w-md mx-auto px-6 py-8 min-h-screen flex flex-col justify-center">
+        {/* Header */}
+        <div className="text-center mb-7">
+          <div className="flex items-center justify-center gap-2.5 mb-5">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-lime-400 to-lime-600 flex items-center justify-center">
+              <CheckCircle2 size={22} className="text-white" />
             </div>
-            <div style={{ height: "3px", background: "rgba(255,255,255,0.06)", borderRadius: "4px", overflow: "hidden" }}>
-              <div style={{
-                height: "100%",
-                background: `linear-gradient(90deg, #3b82f6, #60a5fa)`,
-                borderRadius: "4px",
-                transition: "width 0.5s ease",
-                width: `${progressPercent}%`,
-              }} />
-            </div>
+            <span className="text-2xl font-bold font-display text-foreground">Lok<span className="text-primary">Fee!</span></span>
           </div>
-
-          <div className="text-center" style={{ marginBottom: "28px" }}>
-            {/* Logo - Brand: LokFee! */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "20px" }}>
-              <div style={{
-                width: "44px", height: "44px", borderRadius: "12px",
-                background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </div>
-              <span style={{ fontSize: "22px", fontWeight: "bold", color: colors.text, fontFamily: "'Outfit', sans-serif" }}>Lok<span style={{ color: "#60a5fa" }}>Fee!</span></span>
-            </div>
-            <h1 style={{ fontSize: "22px", fontWeight: "700", color: colors.text, marginBottom: "8px", fontFamily: "'Outfit', sans-serif" }}>
-              Verify Your Email
-            </h1>
-            <p style={{ color: colors.textMuted, fontSize: "14px" }}>
-              We sent a 6-digit code to{' '}
-              <span style={{ color: colors.text, fontWeight: "500" }}>{sentInfo.maskedIdentifier || formData.email}</span>
-            </p>
-
-            {sentInfo.devMode && (
-              <div style={{ marginTop: "12px", padding: "8px 12px", borderRadius: "8px", background: colors.purpleBg, border: `1px solid ${colors.borderStrong}` }}>
-                <p style={{ color: colors.textMuted, fontSize: "11px" }}>
-                  Dev mode: code sent — check server console
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div style={{ marginBottom: "24px", padding: "12px 16px", borderRadius: "12px", background: colors.errorBg, border: `1px solid ${colors.errorBorder}`, color: colors.error, fontSize: "14px" }}>
-              {error}
-            </div>
-          )}
-
-          {/* Code inputs */}
-          <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginBottom: "24px" }}>
-            {verificationCode.map((digit, index) => (
-              <input
-                key={index}
-                id={`code-${index}`}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleCodeChange(index, e.target.value)}
-                onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
-                style={{
-                  width: "48px", height: "56px", textAlign: "center", fontSize: "22px", fontWeight: "700",
-                  background: colors.input, border: `1px solid ${colors.inputBorder}`,
-                  color: colors.text, outline: "none", borderRadius: "12px",
-                  transition: "border-color 0.2s, box-shadow 0.2s",
-                }}
-                disabled={isLoading}
-                autoFocus={index === 0}
-              />
-            ))}
-          </div>
-
-          {/* Verify button */}
-          <button
-            onClick={handleVerifyAndCreate}
-            disabled={isLoading}
-            style={{
-              width: "100%", padding: "14px",
-              background: isLoading ? "rgba(59,130,246,0.5)" : "linear-gradient(135deg, #3b82f6, #6366f1)",
-              border: "none", borderRadius: "12px",
-              color: "#ffffff", fontSize: "16px", fontWeight: "600",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              marginBottom: "12px", fontFamily: "'Inter', sans-serif",
-              boxShadow: isLoading ? "none" : "0 4px 20px rgba(59,130,246,0.35)",
-            }}
-          >
-            {isLoading ? (
-              <><Loader2 size={18} className="animate-spin" />Creating account...</>
-            ) : (
-              <><CheckCircle2 size={18} />Verify & Create Account</>
-            )}
-          </button>
-
-          {/* Resend */}
-          <div style={{ textAlign: "center", marginBottom: "16px" }}>
-            <button
-              onClick={handleResendCode}
-              disabled={countdown > 0 || isSendingCode}
-              style={{
-                background: "none", border: "none",
-                color: countdown > 0 ? colors.textMuted : colors.primary,
-                fontSize: "14px", cursor: countdown > 0 || isSendingCode ? "not-allowed" : "pointer",
-                opacity: countdown > 0 ? 0.5 : 1, fontWeight: "500",
-              }}
-            >
-              {isSendingCode ? "Sending..." : countdown > 0 ? `Resend code in ${countdown}s` : "Didn't receive it? Resend"}
-            </button>
-          </div>
-
-          {/* Back */}
-          <button
-            onClick={() => setPhase("form")}
-            style={{ background: "none", border: "none", color: colors.textMuted, fontSize: "13px", cursor: "pointer", width: "100%" }}
-          >
-            ← Back to registration
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ═════════════════════════════════════
-  // FORM PHASE — Feeld-style single page
-  // ═════════════════════════════════════
-  return (
-    <div style={{
-      maxWidth: "440px",
-      margin: "0 auto",
-      padding: "24px 16px",
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-    }}>
-      <div style={{
-        background: colors.cardBg,
-        borderRadius: "24px",
-        border: `1px solid ${colors.border}`,
-        boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
-        padding: "40px 36px",
-      }}>
-        {/* Progress bar */}
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontSize: "12px", color: colors.textMuted, fontWeight: "500" }}>Create your account</span>
-            <span style={{ fontSize: "12px", color: colors.primary, fontWeight: "600" }}>{progressPercent}%</span>
-          </div>
-          <div style={{ height: "3px", background: "rgba(255,255,255,0.06)", borderRadius: "4px", overflow: "hidden" }}>
-            <div style={{
-              height: "100%",
-              background: `linear-gradient(90deg, #4c1d95, ${colors.primary})`,
-              borderRadius: "4px",
-              transition: "width 0.5s ease",
-              width: `${progressPercent}%`,
-            }} />
-          </div>
-        </div>
-
-        {/* Header - Brand: LokFee! */}
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "16px" }}>
-            <div style={{
-              width: "44px", height: "44px", borderRadius: "12px",
-              background: "linear-gradient(135deg, #4c1d95, #8b5cf6)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: "22px", fontWeight: "bold", color: colors.text, fontFamily: "'Outfit', sans-serif" }}>Lok<span style={{ color: "#60a5fa" }}>Fee!</span></span>
-          </div>
-          <h1 style={{ fontSize: "20px", fontWeight: "700", color: colors.text, marginBottom: "6px", fontFamily: "'Outfit', sans-serif" }}>
-            Join LokFee!
-          </h1>
-          <p style={{ color: colors.textMuted, fontSize: "13px" }}>
-            Start your journey to meaningful connection
+          <h1 className="text-2xl font-bold text-foreground font-display mb-2">Verify Your Email</h1>
+          <p className="text-sm text-foreground-muted">
+            We sent a 6-digit code to{' '}
+            <span className="text-foreground font-medium">{sentInfo.maskedIdentifier || formData.email}</span>
           </p>
         </div>
 
-        {/* ─── SOCIAL LOGIN — VERTICAL STACK (Google top, X bottom) ─── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          {/* Google — GIS (Google Identity Services) with FedCM + account chooser */}
-          <GoogleSignInButton
-            callbackUrl="/dashboard/onboarding"
-            disabled={isLoading}
-            label="Continue with Google"
-          />
-          {/* X (Twitter) — Native OAuth 2.0 + PKCE redirect */}
-          <button
-            type="button"
-            onClick={() => { window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent("/dashboard/onboarding")}`; }}
-            disabled={isLoading}
-            style={{
-              padding: "13px 16px",
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: "12px",
-              color: isLoading ? "rgba(255,255,255,0.5)" : "#ffffff",
-              fontSize: "14px",
-              fontWeight: "500",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              opacity: isLoading ? 0.5 : 1,
-              transition: "all 0.2s",
-              fontFamily: "'Inter', sans-serif",
-              width: "100%",
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.background = "rgba(255,255,255,0.14)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-            </svg>
-            Continue with X
-          </button>
-        </div>
-
-        {/* Divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px", color: colors.textMuted, fontSize: "12px" }}>
-          <div style={{ flex: 1, height: "1px", background: colors.border }} />
-          or continue with email
-          <div style={{ flex: 1, height: "1px", background: colors.border }} />
-        </div>
+        {/* Dev mode code display */}
+        {sentInfo.devMode && (
+          <div className="mb-4 p-3 rounded-xl bg-primary-muted border border-primary/20 text-sm text-primary">
+            Dev mode: code sent — check server console
+          </div>
+        )}
 
         {/* Error */}
         {error && (
-          <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "12px", background: colors.errorBg, border: `1px solid ${colors.errorBorder}`, color: colors.error, fontSize: "14px" }}>
+          <div className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
             {error}
           </div>
         )}
 
-        {/* ─── EMAIL FORM ─── */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSendCode(); }} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {/* Name */}
-          <div>
-            <label htmlFor="reg-name" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
-              <User size={13} /> Name <span style={{ color: colors.error }}>*</span>
-            </label>
+        {/* Code inputs */}
+        <div className="flex justify-center gap-2.5 mb-6">
+          {verificationCode.map((digit, index) => (
             <input
-              id="reg-name" name="name" type="text"
-              value={formData.name} onChange={handleChange}
-              autoComplete="name" required placeholder=" "
-              style={inputStyle()}
-              onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-              onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
+              key={index}
+              id={`code-${index}`}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleCodeChange(index, e.target.value)}
+              onKeyDown={(e) => handleCodeKeyDown(index, e)}
+              onFocus={(e) => { e.target.select(); }}
+              disabled={isLoading}
+              autoFocus={index === 0}
+              className="w-12 h-14 text-center text-xl font-bold rounded-xl bg-input-bg border border-input-border focus:border-input-border-focus focus:outline-none text-foreground transition-all"
             />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label htmlFor="reg-email" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
-              <Mail size={13} /> Email <span style={{ color: colors.error }}>*</span>
-            </label>
-            <div style={{ position: "relative" }}>
-            <input
-              id="reg-email" name="email" type="email"
-              value={formData.email} onChange={handleChange}
-              autoComplete="email" required placeholder=" "
-              style={inputStyle("14px 16px 14px 40px")}
-              onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-              onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
-            />
-              <Mail size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: colors.inputPlaceholder, pointerEvents: "none" }} />
-            </div>
-          </div>
-
-          {/* Date of Birth - 3 dropdowns */}
-          <div>
-            <label htmlFor="dob-year" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
-              <Calendar size={13} /> Date of Birth <span style={{ color: colors.error }}>*</span>
-            </label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
-              <select
-                id="dob-year" required
-                value={dobYear} onChange={(e) => setDobYear(e.target.value)}
-                onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
-                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
-                style={selectStyle}
-              >
-                <option value="" disabled>Year</option>
-                {Array.from({ length: new Date().getFullYear() - 18 - 1920 + 1 }, (_, i) => new Date().getFullYear() - 18 - i).map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <select
-                id="dob-month" required
-                value={dobMonth} onChange={(e) => setDobMonth(e.target.value)}
-                onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
-                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
-                style={selectStyle}
-              >
-                <option value="" disabled>Month</option>
-                {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m, i) => (
-                  <option key={i + 1} value={(i + 1).toString().padStart(2, "0")}>{i + 1} - {m}</option>
-                ))}
-              </select>
-              <select
-                id="dob-day" required
-                value={dobDay} onChange={(e) => setDobDay(e.target.value)}
-                onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
-                onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
-                style={selectStyle}
-              >
-                <option value="" disabled>Day</option>
-                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                  <option key={day} value={day.toString().padStart(2, "0")}>{day}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Password — NO confirmPassword */}
-          <div>
-            <label htmlFor="reg-password" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "500", color: colors.textSecondary, marginBottom: "6px" }}>
-              <Lock size={13} /> Password <span style={{ color: colors.error }}>*</span>
-            </label>
-            <input
-              id="reg-password" name="password" type="password"
-              value={formData.password} onChange={handleChange}
-              autoComplete="new-password" minLength={8} required placeholder=" "
-              style={inputStyle()}
-              onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-              onBlur={(e) => { e.target.style.borderColor = colors.inputBorder; e.target.style.boxShadow = "none"; }}
-            />
-          </div>
-
-          {/* Gender/sexuality set via formData state (handleSendCode/handleVerifyAndCreate) */}
-
-          {/* Terms + Privacy Checkbox — merged into one */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "4px" }}>
-            {/* Checkbox 1: Terms of Service + Privacy Policy (merged) */}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-              <input
-                id="agreeToTerms"
-                name="agreeToTerms"
-                type="checkbox"
-                checked={formData.agreeToTerms}
-                onChange={handleChange}
-                required
-                style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: colors.primary, flexShrink: 0, cursor: "pointer" }}
-              />
-              <label htmlFor="agreeToTerms" style={{ fontSize: "12px", color: colors.textMuted, lineHeight: "1.5", cursor: "pointer" }}>
-                I agree to the{' '}
-                <Link href="/terms" target="_blank" style={{ color: colors.purple, textDecoration: "none", fontWeight: "600" }}>Terms of Service</Link>
-                {' '}and{' '}
-                <Link href="/privacy" target="_blank" style={{ color: colors.purple, textDecoration: "none", fontWeight: "600" }}>Privacy Policy</Link>
-              </label>
-            </div>
-
-            {/* Checkbox 2: Age confirmation */}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-              <input
-                id="confirmAge"
-                name="confirmAge"
-                type="checkbox"
-                checked={formData.confirmAge}
-                onChange={handleChange}
-                required
-                style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: colors.primary, flexShrink: 0, cursor: "pointer" }}
-              />
-              <label htmlFor="confirmAge" style={{ fontSize: "12px", color: colors.textMuted, lineHeight: "1.5", cursor: "pointer" }}>
-                I confirm I am at least 18 years old
-              </label>
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit" disabled={isSendingCode}
-            style={{
-              width: "100%", padding: "14px",
-              background: isSendingCode ? "rgba(59,130,246,0.5)" : "linear-gradient(135deg, #3b82f6, #6366f1)",
-              border: "none", borderRadius: "12px",
-              color: "#ffffff", fontSize: "16px", fontWeight: "600",
-              cursor: isSendingCode ? "not-allowed" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              marginTop: "4px", fontFamily: "'Inter', sans-serif",
-              boxShadow: isSendingCode ? "none" : "0 4px 20px rgba(59,130,246,0.35)",
-            }}
-          >
-            {isSendingCode ? (
-              <><Loader2 size={18} className="animate-spin" />Sending code...</>
-            ) : (
-              <>Send Verification Code <ArrowRight size={18} /></>
-            )}
-          </button>
-        </form>
-
-        {/* Already have account — simplified, no duplication with Login page */}
-        <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: `1px solid ${colors.border}`, textAlign: "center" }}>
-          <p style={{ color: colors.textMuted, fontSize: "13px" }}>
-            Already have an account?{' '}
-            <Link href="/login" style={{ color: colors.primary, fontWeight: "600", textDecoration: "none" }}>
-              Sign in
-            </Link>
-          </p>
+          ))}
         </div>
+
+        {/* Verify button */}
+        <button
+          onClick={handleVerifyAndCreate}
+          disabled={isLoading}
+          className="auth-cta w-full"
+        >
+          {isLoading ? (
+            <span className="inline-flex items-center gap-2"><Loader2 size={18} className="animate-spin" />Verifying...</span>
+          ) : (
+            <span className="inline-flex items-center gap-2"><CheckCircle2 size={18} />Verify & Create Account</span>
+          )}
+        </button>
+
+        {/* Resend */}
+        <div className="text-center mt-4">
+          <button
+            onClick={handleResendCode}
+            disabled={countdown > 0 || isSendingCode}
+            className="text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-transparent border-none cursor-pointer text-primary hover:text-primary-hover"
+          >
+            {isSendingCode ? "Sending..." : countdown > 0 ? `Resend code in ${countdown}s` : "Didn't receive it? Resend"}
+          </button>
+        </div>
+
+        {/* Back */}
+        <button
+          onClick={() => setPhase("form")}
+          className="w-full text-center mt-3 text-sm text-foreground-muted hover:text-foreground transition-colors bg-transparent border-none cursor-pointer"
+        >
+          ← Back to registration
+        </button>
       </div>
+    );
+  }
+
+  // ─── FORM PHASE ───
+  return (
+    <div className="w-full max-w-md mx-auto px-6 py-8 min-h-screen flex flex-col justify-center">
+      {/* Header — Brand: LokFeel */}
+      <div className="text-center mb-7">
+        <div className="flex items-center justify-center gap-2.5 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+            <User size={22} className="text-white" />
+          </div>
+          <span className="text-2xl font-bold font-display text-foreground">Lok<span className="text-primary">Fee!</span></span>
+        </div>
+        <h1 className="text-2xl font-bold text-foreground font-display mb-2">Join LokFeel!</h1>
+        <p className="text-sm text-foreground-muted">Start your journey to meaningful connection</p>
+      </div>
+
+      {/* ─── SOCIAL LOGIN — VERTICAL STACK (Google top, X bottom) ─── */}
+      <div className="flex flex-col gap-2.5 mb-5">
+        {/* Google — GIS with FedCM */}
+        <GoogleSignInButton
+          callbackUrl="/dashboard/onboarding"
+          disabled={isLoading}
+          label="Continue with Google"
+        />
+
+        {/* X (Twitter) — Native OAuth 2.0 + PKCE */}
+        <button
+          type="button"
+          onClick={() => { window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent("/dashboard/onboarding")}`; }}
+          disabled={isLoading}
+          className="auth-social-btn w-full"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644z" />
+          </svg>
+          Continue with X
+        </button>
+
+        {/* Twitter error */}
+        {error && error.includes("X") && (
+          <div className="mt-2 p-2.5 rounded-lg bg-error-muted border border-error/20 text-xs text-error">
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div className="auth-divider mb-5">
+        <span>or continue with email</span>
+      </div>
+
+      {/* Error (non-Twitter) */}
+      {error && !error.includes("X") && (
+        <div className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
+          {error}
+        </div>
+      )}
+
+      {/* REGISTRATION FORM */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); handleSendCode(); }}
+        className="flex flex-col gap-4"
+        noValidate
+      >
+        {/* Name */}
+        <div className="form-group">
+          <label
+            htmlFor="reg-name"
+            className="block text-sm font-medium text-foreground-muted mb-2"
+          >
+            <User size={13} className="inline mr-1.5 align-middle" />Name <span className="text-error">*</span>
+          </label>
+          <input
+            id="reg-name"
+            name="name"
+            type="text"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            autoComplete="name"
+            autoFocus
+            placeholder="Enter your name"
+            className="auth-input w-full"
+          />
+        </div>
+
+        {/* Email */}
+        <div className="form-group">
+          <label
+            htmlFor="reg-email"
+            className="block text-sm font-medium text-foreground-muted mb-2"
+          >
+            <Mail size={13} className="inline mr-1.5 align-middle" />Email <span className="text-error">*</span>
+          </label>
+          <input
+            id="reg-email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            autoComplete="email"
+            placeholder="Enter your email"
+            className="auth-input w-full"
+          />
+        </div>
+
+        {/* Password */}
+        <div className="form-group">
+          <label
+            htmlFor="reg-password"
+            className="block text-sm font-medium text-foreground-muted mb-2"
+          >
+            <Lock size={13} className="inline mr-1.5 align-middle" />Password <span className="text-error">*</span>
+          </label>
+          <input
+            id="reg-password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="Min 8 characters"
+            className="auth-input w-full"
+          />
+        </div>
+
+        {/* Date of Birth — 3 dropdowns */}
+        <div className="form-group">
+          <label
+            htmlFor="dob-year"
+            className="block text-sm font-medium text-foreground-muted mb-2"
+          >
+            <Calendar size={13} className="inline mr-1.5 align-middle" />Date of Birth <span className="text-error">*</span>
+          </label>
+          <div className="grid grid-cols-3 gap-2.5">
+            <select
+              id="dob-year"
+              value={dobYear}
+              onChange={(e) => setDobYear(e.target.value)}
+              required
+              className="auth-input !py-3 !px-3"
+            >
+              <option value="">Year</option>
+              {Array.from({ length: new Date().getFullYear() - 18 - 1920 + 1 }, (_, i) => new Date().getFullYear() - 18 - i).map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <select
+              id="dob-month"
+              value={dobMonth}
+              onChange={(e) => setDobMonth(e.target.value)}
+              required
+              className="auth-input !py-3 !px-3"
+            >
+              <option value="">Month</option>
+              {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m, i) => (
+                <option key={i + 1} value={(i + 1).toString().padStart(2, "0")}>{i + 1} - {m}</option>
+              ))}
+            </select>
+            <select
+              id="dob-day"
+              value={dobDay}
+              onChange={(e) => setDobDay(e.target.value)}
+              required
+              className="auth-input !py-3 !px-3"
+            >
+              <option value="">Day</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                <option key={day} value={day.toString().padStart(2, "0")}>{day}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Terms + Privacy Checkbox — merged into one */}
+        <div className="flex items-start gap-2.5 pt-1">
+          <input
+            id="reg-agreeToTerms"
+            name="agreeToTerms"
+            type="checkbox"
+            checked={formData.agreeToTerms}
+            onChange={handleChange}
+            required
+            className="mt-0.5 w-4 h-4 accent-primary flex-shrink-0 cursor-pointer"
+          />
+          <label htmlFor="reg-agreeToTerms" className="text-xs text-foreground-subtle leading-relaxed cursor-pointer">
+            I agree to the{' '}
+            <Link href="/terms" target="_blank" className="text-primary hover:text-primary-hover font-semibold">Terms of Service</Link>
+            {' '}and{' '}
+            <Link href="/privacy" target="_blank" className="text-primary hover:text-primary-hover font-semibold">Privacy Policy</Link>
+          </label>
+        </div>
+
+        {/* Age confirmation */}
+        <div className="flex items-start gap-2.5">
+          <input
+            id="reg-confirmAge"
+            name="confirmAge"
+            type="checkbox"
+            checked={formData.confirmAge}
+            onChange={handleChange}
+            required
+            className="mt-0.5 w-4 h-4 accent-primary flex-shrink-0 cursor-pointer"
+          />
+          <label htmlFor="reg-confirmAge" className="text-xs text-foreground-subtle leading-relaxed cursor-pointer">
+            I confirm I am at least 18 years old
+          </label>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isLoading || isSendingCode}
+          className="auth-cta w-full mt-2"
+        >
+          {isSendingCode ? (
+            <span className="inline-flex items-center gap-2"><Loader2 size={18} className="animate-spin" />Sending code...</span>
+          ) : (
+            "Send Verification Code"  // This should be a React fragment, but keeping it simple
+          )}
+        </button>
+      </form>
+
+      {/* Sign In — subtle text link, Tinder/Bumble style */}
+      <p className="text-center mt-6 text-sm text-foreground-subtle">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="text-primary hover:text-primary-hover font-medium transition-colors"
+        >
+          Sign In
+        </Link>
+      </p>
     </div>
   );
 }

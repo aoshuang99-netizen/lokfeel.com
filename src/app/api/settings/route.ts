@@ -4,10 +4,11 @@ import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
 import { jsonArr, toJson } from '@/lib/json-helpers'
 import { AVAILABLE_TAGS } from '@/constants'
+import { cache } from '@/lib/cache'
 
 export const dynamic = 'force-dynamic'
 
-// GET /api/settings — Get current user settings
+// GET /api/settings — Get current user settings (cached 300s)
 export async function GET() {
   try {
     const { user } = await requireAuth()
@@ -15,69 +16,83 @@ export async function GET() {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
-    const [fullUser, profile] = await Promise.all([
-      db.user.findUnique({
-        where: { id: user.id },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-          role: true,
-          createdAt: true,
-        },
-      }),
-      db.profile.findUnique({
-        where: { userId: user.id },
-        select: {
-          displayName: true,
-          avatar: true,
-          bio: true,
-          city: true,
-          country: true,
-          age: true,
-          gender: true,
-          sexuality: true,
-          relationshipGoal: true,
-          attachmentStyle: true,
-          communicationStyle: true,
-          conflictResolution: true,
-          loveLanguage: true,
-          lifePriorities: true,
-          emotionalAvailability: true,
-          boundaries: true,
-          dealbreakers: true,
-          preferredAgeMin: true,
-          preferredAgeMax: true,
-          preferredGender: true,
-          preferredDistance: true,
-          selectedTags: true,
-          galleryPhotos: true,
-          profileStatus: true,
-          onboardingStep: true,
-          linkedInVerified: true,
-          verificationBadge: true,
-          occupation: true,
-          company: true,
-          industry: true,
-        },
-      }),
-    ])
+    const data = await cache.get(
+      `settings:${user.id}`,
+      async () => {
+        const [fullUser, profile] = await Promise.all([
+          db.user.findUnique({
+            where: { id: user.id },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              role: true,
+              createdAt: true,
+            },
+          }),
+          db.profile.findUnique({
+            where: { userId: user.id },
+            select: {
+              displayName: true,
+              avatar: true,
+              bio: true,
+              city: true,
+              country: true,
+              age: true,
+              gender: true,
+              sexuality: true,
+              relationshipGoal: true,
+              attachmentStyle: true,
+              communicationStyle: true,
+              conflictResolution: true,
+              loveLanguage: true,
+              lifePriorities: true,
+              emotionalAvailability: true,
+              boundaries: true,
+              dealbreakers: true,
+              preferredAgeMin: true,
+              preferredAgeMax: true,
+              preferredGender: true,
+              preferredDistance: true,
+              selectedTags: true,
+              galleryPhotos: true,
+              profileStatus: true,
+              onboardingStep: true,
+              linkedInVerified: true,
+              verificationBadge: true,
+              occupation: true,
+              company: true,
+              industry: true,
+            },
+          }),
+        ])
 
-    if (!fullUser) {
+        if (!fullUser) return null
+
+        return {
+          success: true,
+          user: fullUser,
+          profile: {
+            ...profile,
+            selectedTags: jsonArr(profile?.selectedTags),
+            galleryPhotos: jsonArr(profile?.galleryPhotos),
+          },
+          availableTags: AVAILABLE_TAGS,
+        }
+      },
+      300 // 300s TTL
+    )
+
+    if (!data) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json({
-      success: true,
-      user: fullUser,
-      profile: {
-        ...profile,
-        selectedTags: jsonArr(profile?.selectedTags),
-        galleryPhotos: jsonArr(profile?.galleryPhotos),
-      },
-      availableTags: AVAILABLE_TAGS,
-    })
+    const res = NextResponse.json(data)
+    // Cache-Control: private (user-specific), max-age matches Redis TTL (300s),
+    // stale-while-revalidate allows serving stale while refreshing in background
+    res.headers.set('Cache-Control', 'private, max-age=300, stale-while-revalidate=600')
+    return res
   } catch (error: any) {
     console.error('[API] Get settings error:', error)
     return NextResponse.json(
@@ -255,6 +270,12 @@ export async function PUT(request: NextRequest) {
       })
     }
 
+    // Invalidate cache for this user
+    await Promise.all([
+      cache.invalidate(`settings:${user.id}`),
+      cache.invalidate(`discover:profile:${user.id}`),
+    ])
+
     return NextResponse.json({
       success: true,
       message: 'Settings updated successfully',
@@ -320,6 +341,11 @@ export async function DELETE(request: NextRequest) {
     await db.user.delete({
       where: { id: user.id },
     })
+
+    // Clear all cached data for deleted user
+    await cache.invalidateByPrefix(`settings:${user.id}`);
+    await cache.invalidateByPrefix(`discover:${user.id}`);
+    await cache.invalidateByPrefix(`who-liked-me:${user.id}`);
 
     return NextResponse.json({
       success: true,

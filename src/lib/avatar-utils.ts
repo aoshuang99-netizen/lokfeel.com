@@ -5,129 +5,40 @@
  * Supports three avatar formats:
  * 1. emoji:emoji_char:color  (emoji avatar from onboarding)
  * 2. Photo URL              (uploaded real photo - PRIMARY)
- * 3. Legacy SVG (phased out) — treated as 'none' to trigger fallback
+ * 3. DiceBear API          (reliable CDN fallback - REPLACES Unsplash)
  *
- * STRATEGY: All avatars should be real photos. Cartoon/SVG is no longer supported.
+ * STRATEGY: All avatars should be real photos. DiceBear is used as fallback.
+ * DiceBear is open-source, free, and NOT blocked in China.
  */
 
-// ═══════════════════════════════════════════════════════════════
-// AGE-AWARE PHOTO POOLS
-// Photos categorized by approximate age range for better matching
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
+// DICEBEAR CDN — Reliable, open-source avatar API
+// ═════════════════════════════════════════════════════════════
 
-type AgeRange = 'young' | 'mid' | 'mature';
+/** DiceBear base URL */
+const DICEBEAR_BASE = 'https://api.dicebear.com/9.x';
 
-/** Female portrait pool — age-segmented for consistent look */
-const FEMALE_PHOTOS_YOUNG = [
-  // Ages ~18-25: youthful, fresh-faced portraits
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1523264939339-c89f9dadde2e?w=600&h=800&fit=crop&crop=face',
-];
-
-const FEMALE_PHOTOS_MID = [
-  // Ages ~26-35: professional, confident portraits
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1502323777036-f29e3972d82f?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?w=600&h=800&fit=crop&crop=face',
-];
-
-const FEMALE_PHOTOS_MATURE = [
-  // Ages ~36+: elegant, mature portraits
-  'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1463453091185-61582044d556?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=600&h=800&fit=crop&crop=face',
-];
-
-/** Male portrait pool — age-segmented for consistent look */
-const MALE_PHOTOS_YOUNG = [
-  // Ages ~18-25: youthful, clean-shaven portraits
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1502323777036-f29e3972d82f?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1523264939339-c89f9dadde2e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?w=600&h=800&fit=crop&crop=face',
-];
-
-const MALE_PHOTOS_MID = [
-  // Ages ~26-35: professional, confident portraits
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=800&fit=crop&crop=face',
-];
-
-const MALE_PHOTOS_MATURE = [
-  // Ages ~36+: distinguished, mature portraits
-  'https://images.unsplash.com/photo-1463453091185-61582044d556?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&h=800&fit=crop&crop=face',
-];
-
-/** Age-range lookup maps */
-const FEMALE_PHOTO_MAP: Record<AgeRange, string[]> = {
-  young: FEMALE_PHOTOS_YOUNG,
-  mid: FEMALE_PHOTOS_MID,
-  mature: FEMALE_PHOTOS_MATURE,
-};
-
-const MALE_PHOTO_MAP: Record<AgeRange, string[]> = {
-  young: MALE_PHOTOS_YOUNG,
-  mid: MALE_PHOTOS_MID,
-  mature: MALE_PHOTOS_MATURE,
-};
+/** DiceBear style for avatar fallback */
+const DICEBEAR_STYLE = 'avataaars'; // Cartoon-style avatars (good for dating app)
 
 /**
- * Determine the age range bucket for photo selection.
- * Ensures avatar photos match the displayed age on user cards.
+ * Generate DiceBear avatar URL from seed
+ * Format: https://api.dicebear.com/9.x/{style}/svg?seed={seed}&backgroundColor={color}
  */
-function getAgeRange(age?: number): AgeRange {
-  if (!age || age <= 0) return 'mid'; // Default to mid-range
-  if (age <= 25) return 'young';
-  if (age <= 35) return 'mid';
-  return 'mature';
+function getDiceBearUrl(seed: string, gender?: string, age?: number): string {
+  // Gender-aware background color
+  const bgColor = gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN'
+    ? 'f3a8f9,ec4899,f472b6' // Pink/Purple for female
+    : gender === 'male' || gender === 'MALE' || gender === 'MAN'
+    ? '3b82f6,6366f1,06b6d4' // Blue for male
+    : '8b5cf6,6d28d9,a78bfa'; // Purple for others
+
+  return `${DICEBEAR_BASE}/${DICEBEAR_STYLE}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${bgColor}&radius=50`;
 }
 
-/** @deprecated Use age-segmented pools instead. Kept for backward compatibility. */
-const FEMALE_PHOTOS = [...FEMALE_PHOTOS_YOUNG, ...FEMALE_PHOTOS_MID, ...FEMALE_PHOTOS_MATURE];
-
-/** @deprecated Use age-segmented pools instead. Kept for backward compatibility. */
-const MALE_PHOTOS = [...MALE_PHOTOS_YOUNG, ...MALE_PHOTOS_MID, ...MALE_PHOTOS_MATURE];
-
-/** Generic fallback pool — when gender is unknown */
-const ALL_PHOTOS = [...FEMALE_PHOTOS, ...MALE_PHOTOS];
-
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 // AVATAR TYPE DETECTION
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 
 export type AvatarKind = 'emoji' | 'photo' | 'none';
 
@@ -188,9 +99,9 @@ export function getAvatarBackground(kind: AvatarKind, avatar: string | null | un
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 // BROKEN CDN DETECTION
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 
 /**
  * Known broken avatar CDN patterns — these always 403/404 and should be
@@ -199,6 +110,7 @@ export function getAvatarBackground(kind: AvatarKind, avatar: string | null | un
 const BROKEN_CDN_PATTERNS = [
   'i.pravatar.cc',      // Cloudflare challenge → 403 since 2026-04
   'thispersondoesnotexist.com', // Often slow/unreliable
+  'images.unsplash.com', // BLOCKED in China (Great Firewall)
 ];
 
 /**
@@ -210,7 +122,7 @@ export function isBrokenAvatarUrl(avatar: string | null | undefined): boolean {
 }
 
 /**
- * Check if an avatar URL is from Unsplash (may be blocked in China/Huawei browsers).
+ * Check if an avatar URL is from Unsplash (blocked in China/Huawei browsers).
  * Used to determine if we should add a local fallback strategy.
  */
 export function isUnsplashUrl(avatar: string | null | undefined): boolean {
@@ -218,9 +130,9 @@ export function isUnsplashUrl(avatar: string | null | undefined): boolean {
   return avatar.includes('images.unsplash.com');
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 // REAL PHOTO FALLBACK — Deterministic, gender-aware
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 
 /**
  * Generate a deterministic hash from a seed string.
@@ -237,9 +149,8 @@ function hashSeed(seed: string): number {
 
 /**
  * Get a real photo avatar URL with gender and age awareness.
- * Uses curated Unsplash portrait pool for consistent, high-quality results.
- * Age-aware: selects photos from age-appropriate pools to avoid mismatch
- * between displayed age and photo appearance.
+ * Uses DiceBear API for consistent, high-quality results.
+ * DiceBear is NOT blocked in China (unlike Unsplash).
  *
  * @param seed - Deterministic seed (userId, name, etc.)
  * @param gender - 'female' | 'male' | undefined
@@ -252,31 +163,8 @@ export function getRealPhotoAvatarUrl(
   size: 'thumb' | 'preview' | 'full' = 'preview',
   age?: number
 ): string {
-  const hash = hashSeed(seed);
-  const ageRange = getAgeRange(age);
-
-  // Select pool based on gender AND age range
-  let pool: string[];
-  if (gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN') {
-    pool = FEMALE_PHOTO_MAP[ageRange];
-  } else if (gender === 'male' || gender === 'MALE' || gender === 'MAN') {
-    pool = MALE_PHOTO_MAP[ageRange];
-  } else {
-    // Gender unknown — use mid-age pools combined
-    pool = [...FEMALE_PHOTO_MAP[ageRange], ...MALE_PHOTO_MAP[ageRange]];
-  }
-
-  const photoUrl = pool[hash % pool.length];
-
-  // Adjust resolution based on size parameter
-  const sizeMap = {
-    thumb: 'w=200&h=200&fit=crop&crop=face',
-    preview: 'w=600&h=800&fit=crop&crop=face',
-    full: 'w=1200&h=1600&fit=crop&crop=face',
-  };
-
-  // Replace size params in URL
-  return photoUrl.replace(/w=\d+&h=\d+&fit=crop&crop=face/, sizeMap[size]);
+  // Use DiceBear API (NOT Unsplash — blocked in China)
+  return getDiceBearUrl(seed, gender, age);
 }
 
 /**
@@ -297,9 +185,9 @@ export function getSafeAvatarUrl(avatar: string | null | undefined): string | nu
   return avatar;
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 // IMAGE LOADING OPTIMIZATION
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 
 /**
  * Preload critical avatar images for instant display.
@@ -336,8 +224,7 @@ export function preloadAvatar(url: string): void {
  * Call on hover or when lightbox is likely to open.
  */
 export function preloadLightboxImage(url: string): void {
-  const fullResUrl = url.replace(/w=\d+&h=\d+/, 'w=1200&h=1600');
-  preloadAvatar(fullResUrl);
+  preloadAvatar(url);
 }
 
 /**
@@ -348,7 +235,7 @@ export function getAvatarSrcSet(baseUrl: string): string {
   const sizes = [200, 400, 600, 800, 1200];
   return sizes
     .map(size => {
-      const url = baseUrl.replace(/w=\d+/, `w=${size}`).replace(/h=\d+/, `h=${Math.round(size * 1.33)}`);
+      const url = baseUrl; // DiceBear is SVG — no size params needed
       return `${url} ${size}w`;
     })
     .join(', ');
@@ -358,18 +245,16 @@ export function getAvatarSrcSet(baseUrl: string): string {
  * Get the optimal avatar size for a given display size.
  */
 export function getOptimalAvatarUrl(baseUrl: string, displayWidth: number): string {
-  const size = Math.min(1200, Math.max(200, Math.ceil(displayWidth * 2 / 100) * 100));
-  return baseUrl
-    .replace(/w=\d+/, `w=${size}`)
-    .replace(/h=\d+/, `h=${Math.round(size * 1.33)}`);
+  // DiceBear is SVG — scalable, no size optimization needed
+  return baseUrl;
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 // ERROR HANDLING
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
 
 /**
- * Handle image load error — replace with real photo fallback.
+ * Handle image load error — replace with DiceBear fallback.
  * If all external URLs fail, generate a local data-URI SVG placeholder.
  * Usage: <img onError={(e) => handleAvatarError(e, userId, gender, age)} />
  */
@@ -377,17 +262,52 @@ export function handleAvatarError(e: React.SyntheticEvent<HTMLImageElement>, see
   const img = e.currentTarget;
   const fallbackSeed = seed || img.alt || 'default';
 
-  // Try real photo fallback (only if not already the fallback URL)
+  // Try DiceBear fallback (only if not already the fallback URL)
   const fallbackUrl = getRealPhotoAvatarUrl(fallbackSeed, gender, 'preview', age);
 
   if (img.src !== fallbackUrl && !img.src.endsWith(encodeURIComponent(fallbackUrl))) {
     img.src = fallbackUrl;
   } else {
     // All external URLs failed — use local SVG data-URI placeholder
-    // This works offline and in China/Huawei browsers where Unsplash is blocked
+    // This works offline and in China/Huawei browsers where DiceBear is blocked
     img.src = generateLocalAvatarDataUri(fallbackSeed);
     img.style.display = '';
   }
+}
+
+/**
+ * Generate a blur placeholder data URL for progressive image loading.
+ * Creates a tiny (10px) blurred version encoded as base64 data URI.
+ * Perfect for Next.js Image `blurDataURL` prop — instant visual feedback
+ * before the full image loads (typically <50 bytes).
+ *
+ * @param seed - Deterministic seed for consistent color
+ * @param gender - Optional gender for color tint
+ */
+export function generateBlurDataURL(seed?: string, gender?: string): string {
+  const hash = hashSeed(seed || 'default');
+
+  // Cool Blue palette tints — subtle gender-agnostic colors
+  const tints = gender === 'female' || gender === 'FEMALE'
+    ? ['rgba(167,139,250,0.4)', 'rgba(244,114,182,0.4)', 'rgba(139,92,246,0.4)']
+    : gender === 'male' || gender === 'MALE'
+    ? ['rgba(59,130,246,0.4)', 'rgba(14,165,233,0.4)', 'rgba(34,211,238,0.4)']
+    : ['rgba(139,92,246,0.3)', 'rgba(59,130,246,0.3)', 'rgba(168,85,247,0.3)'];
+
+  const tint = tints[hash % tints.length];
+
+  // Tiny 10x10 SVG for ultra-small placeholder (~40 bytes)
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="${tint}"/></svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+}
+
+/**
+ * Generate blurDataURL from an existing avatar URL.
+ * Useful when you want a placeholder matching the actual image color.
+ */
+export function getAvatarBlurPlaceholder(avatar?: string | null, seed?: string, gender?: string): string {
+  // Use seed-based deterministic placeholder (no extra network request)
+  return generateBlurDataURL(seed || avatar || 'default', gender);
 }
 
 /**

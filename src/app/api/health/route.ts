@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { cache } from '@/lib/cache'
 
 export const dynamic = 'force-dynamic'
 
 const DB_TIMEOUT_MS = 3000  // 3s timeout for Turso cold starts
+const DB_CHECK_TTL = 30  // 30 seconds (Redis or in-memory)
 
-// Cache DB check result for 30 seconds to reduce load
-let lastDbCheck: { connected: boolean; latency: number; timestamp: number } | null = null
-const CACHE_TTL_MS = 30000  // 30 seconds
+type DbCheckResult = { connected: boolean; latency: number }
 
-// GET /api/health — Lightweight health check with caching
+// GET /api/health — Lightweight health check with Redis-backed caching
 export async function GET() {
   const requestStart = Date.now()
 
@@ -17,79 +17,90 @@ export async function GET() {
   const responseHeaders = new Headers()
   responseHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate')
 
-  // Use cached DB result if fresh
-  if (lastDbCheck && Date.now() - lastDbCheck.timestamp < CACHE_TTL_MS) {
-    const totalLatency = Date.now() - requestStart
-    responseHeaders.set('X-Response-Time', `${totalLatency}ms`)
-    responseHeaders.set('X-DB-Cache', 'hit')
+  // Use Redis-backed cache for DB check result (30s TTL, shared across instances)
+  const dbResult = await cache.get<DbCheckResult>(
+    'health:db-check',
+    async () => {
+      try {
+        const dbStart = Date.now()
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), DB_TIMEOUT_MS)
 
-    return NextResponse.json({
-      status: lastDbCheck.connected ? 'ok' : 'degraded',
-      timestamp: new Date().toISOString(),
-      database: {
-        connected: lastDbCheck.connected,
-        latencyMs: lastDbCheck.latency,
-        cached: true,
-      },
-    }, { headers: responseHeaders })
-  }
-
-  let dbConnected = false
-  let dbLatency = 0
-  let dbError: string | undefined
-
-  try {
-    const dbStart = Date.now()
-
-    // Use AbortController timeout to prevent blocking on slow DB
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), DB_TIMEOUT_MS)
-
-    try {
-      // Use $queryRaw for lightweight SELECT 1 instead of ORM query
-      await getDb().$queryRaw`SELECT 1`
-      clearTimeout(timeoutId)
-
-      dbConnected = true
-      dbLatency = Date.now() - dbStart
-
-      // Cache successful result
-      lastDbCheck = { connected: true, latency: dbLatency, timestamp: Date.now() }
-    } catch (rawError) {
-      clearTimeout(timeoutId)
-      if (rawError instanceof Error && rawError.name === 'AbortError') {
-        dbError = `Database check timed out after ${DB_TIMEOUT_MS}ms`
-        lastDbCheck = { connected: false, latency: DB_TIMEOUT_MS, timestamp: Date.now() }
-      } else {
-        throw rawError
+        try {
+          await getDb().$queryRaw`SELECT 1`
+          clearTimeout(timeoutId)
+          return { connected: true, latency: Date.now() - dbStart }
+        } catch (rawError) {
+          clearTimeout(timeoutId)
+          if (rawError instanceof Error && rawError.name === 'AbortError') {
+            return { connected: false, latency: DB_TIMEOUT_MS }
+          }
+          throw rawError
+        }
+      } catch {
+        return { connected: false, latency: 0 }
       }
-    }
-  } catch (error) {
-    const errMsg = error instanceof Error ? error.message : String(error)
-    const totalLatency = Date.now() - requestStart
-    responseHeaders.set('X-Response-Time', `${totalLatency}ms`)
-
-    return NextResponse.json({
-      status: 'degraded',
-      timestamp: new Date().toISOString(),
-      database: {
-        connected: false,
-        error: errMsg || 'Database unreachable',
-      },
-    }, { status: 503, headers: responseHeaders })
-  }
+    },
+    DB_CHECK_TTL
+  )
 
   const totalLatency = Date.now() - requestStart
   responseHeaders.set('X-Response-Time', `${totalLatency}ms`)
-  responseHeaders.set('X-DB-Cache', 'miss')
+  responseHeaders.set('X-DB-Cache', dbResult.latency < totalLatency ? 'hit' : 'miss')
+
+  if (dbResult.connected) {
+    return NextResponse.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: {
+        connected: true,
+        latencyMs: dbResult.latency,
+        cached: dbResult.latency < totalLatency,
+      },
+      payment: getPaymentStatus(),
+    }, { headers: responseHeaders })
+  }
 
   return NextResponse.json({
-    status: dbConnected ? 'ok' : 'degraded',
+    status: 'degraded',
     timestamp: new Date().toISOString(),
     database: {
-      connected: dbConnected,
-      latencyMs: dbLatency,
-      ...(dbError && { error: dbError }),
+      connected: false,
+      error: dbResult.latency >= DB_TIMEOUT_MS
+        ? `Database check timed out after ${DB_TIMEOUT_MS}ms`
+        : 'Database unreachable',
     },
-  }, { headers: responseHeaders })
+    payment: getPaymentStatus(),
+  }, { status: 503, headers: responseHeaders })
+}
+
+function getPaymentStatus() {
+  const apiKey = process.env.CREEM_API_KEY
+  const env = process.env.CREEM_ENV || 'not set'
+  const monthlyId = process.env.CREEM_MONTHLY_PRODUCT_ID
+  const yearlyId = process.env.CREEM_YEARLY_PRODUCT_ID
+  const webhookSecret = process.env.CREEM_WEBHOOK_SECRET
+
+  if (!apiKey) {
+    return {
+      provider: 'creem',
+      configured: false,
+      reason: 'CREEM_API_KEY not set',
+      vars: { CREEM_API_KEY: false, CREEM_ENV: env, CREEM_MONTHLY_PRODUCT_ID: !!monthlyId, CREEM_YEARLY_PRODUCT_ID: !!yearlyId, CREEM_WEBHOOK_SECRET: !!webhookSecret }
+    }
+  }
+
+  return {
+    provider: 'creem',
+    configured: true,
+    environment: env,
+    apiKeyPrefix: apiKey.substring(0, 8) + '...',
+    vars: {
+      CREEM_API_KEY: true,
+      CREEM_ENV: env,
+      CREEM_MONTHLY_PRODUCT_ID: !!monthlyId,
+      CREEM_YEARLY_PRODUCT_ID: !!yearlyId,
+      CREEM_WEBHOOK_SECRET: !!webhookSecret,
+    }
+  }
 }

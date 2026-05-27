@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Sora } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/auth-provider";
+import { registerServiceWorker } from "@/lib/service-worker";
 
 // Self-hosted fonts via next/font — eliminates Google Fonts CDN dependency
 // Auto-optimizes: no CLS, no layout shift, no external request, works in China
@@ -129,9 +130,9 @@ if ('serviceWorker' in navigator) {
 
         {/* Preconnect only for GTM (fonts are now self-hosted via next/font) */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
-        {/* Preconnect to Unsplash CDN for avatar images */}
-        <link rel="preconnect" href="https://images.unsplash.com" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        {/* Preconnect to DiceBear CDN for avatar images (REPLACES Unsplash) */}
+        <link rel="preconnect" href="https://api.dicebear.com" />
+        <link rel="dns-prefetch" href="https://api.dicebear.com" />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         {/* Google Tag Manager (noscript) */}

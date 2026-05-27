@@ -57,12 +57,23 @@ export async function GET() {
       },
     });
 
+    // Count Super Likes used this week (senderAction = SUPER_LIKE in last 7 days)
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const superLikesUsed = await db.match.count({
+      where: {
+        senderId: userId,
+        senderAction: "SUPER_LIKE",
+        createdAt: { gte: weekAgo },
+      },
+    });
+
     // Limits by plan
     const PLAN_LIMITS = {
       FREE: {
         maxChats: 3,
         maxMessagesPerMatch: 2,
         weeklyMatches: 3,
+        superLikeLimit: 1,      // ★ New: Free gets 1 Super Like / week
         canSeeWhoLikedMe: false,
         advancedFilters: false,
         readReceipts: false,
@@ -74,6 +85,7 @@ export async function GET() {
         maxChats: -1, // unlimited
         maxMessagesPerMatch: -1, // unlimited
         weeklyMatches: 5,
+        superLikeLimit: 5,      // ★ New: Lady Free gets 5 Super Likes / week
         canSeeWhoLikedMe: true,
         advancedFilters: true,
         readReceipts: true,
@@ -85,6 +97,7 @@ export async function GET() {
         maxChats: -1, // unlimited
         maxMessagesPerMatch: -1, // unlimited
         weeklyMatches: 5,
+        superLikeLimit: -1,    // ★ New: Premium gets unlimited Super Likes
         canSeeWhoLikedMe: true,
         advancedFilters: true,
         readReceipts: true,
@@ -101,6 +114,8 @@ export async function GET() {
       isPremium,
       isFemale,
       ...limits,
+      superLikesUsed: superLikesUsed,
+      superLikesRemaining: limits.superLikeLimit === -1 ? -1 : Math.max(0, limits.superLikeLimit - superLikesUsed),
       currentChats: activeChats,
       messagesSent,
       messagesRemaining: limits.maxMessagesPerMatch === -1 ? -1 : Math.max(0, limits.maxMessagesPerMatch - (messagesSent % limits.maxMessagesPerMatch)),

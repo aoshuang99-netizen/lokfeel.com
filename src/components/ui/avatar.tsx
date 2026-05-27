@@ -70,7 +70,9 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
     const canOptimize = useNextImage(src)
 
     // Real photo fallback when image fails to load
-    const realPhotoFallback = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face'
+    // Use DiceBear API (NOT Unsplash — blocked in China)
+    const diceBearSeed = alt || fallback || 'default'
+    const realPhotoFallback = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(diceBearSeed)}&backgroundColor=b6b5b0,8b5cf6,a78bfa&radius=50`
 
     return (
       <div

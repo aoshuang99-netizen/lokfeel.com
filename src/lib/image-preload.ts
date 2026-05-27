@@ -220,11 +220,11 @@ export function preloadUserAvatars(
 /**
  * Preload full-resolution image for lightbox viewing.
  * Call on hover or when lightbox is likely to open.
+ * NOTE: DiceBear URLs are SVG — no resolution upgrade needed.
  */
 export function preloadLightboxImage(url: string): void {
-  // Upgrade URL to full resolution
-  const fullResUrl = url.replace(/w=\d+&h=\d+/, "w=1200&h=1600");
-  preloadAvatar(fullResUrl);
+  // DiceBear SVG is resolution-independent — preload as-is
+  preloadAvatar(url);
 }
 
 /**
@@ -242,9 +242,9 @@ export function preloadAdjacentImages(
     currentIndex + 2,
   ].filter((i) => i >= 0 && i < allUrls.length);
 
+  // DiceBear SVG is resolution-independent — preload as-is
   preloadIndices.forEach((i) => {
-    const url = allUrls[i].replace(/w=\d+&h=\d+/, "w=800&h=1000");
-    preloadAvatar(url);
+    preloadAvatar(allUrls[i]);
   });
 }
 

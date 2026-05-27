@@ -26,12 +26,18 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 /**
  * Require authentication for API routes.
  * Returns user info or throws.
+ * Guest sessions are rejected with a specific error.
  */
 export async function requireAuth() {
   const session = await auth()
   
   if (!session?.user) {
     throw new UnauthorizedError('Unauthorized')
+  }
+
+  // Guest sessions: reject API write operations
+  if ((session.user as any).guest === true) {
+    throw new UnauthorizedError('Guest sessions cannot perform this action. Please log in.')
   }
   
   const userId = (session.user as any).id
@@ -62,11 +68,24 @@ export async function requireAdminAuth() {
 
 /**
  * Get the current authenticated user from the session
+ * Returns null for guest sessions
  */
 export async function getCurrentUser() {
   const session = await auth()
   
   if (!session?.user) return null
+
+  // Guest session: return minimal guest object (read-only)
+  if ((session.user as any).guest === true) {
+    return {
+      id: (session.user as any).id,
+      email: null,
+      name: "Guest",
+      role: "USER",
+      image: null,
+      isGuest: true,
+    }
+  }
   
   const userId = (session.user as any).id
   if (!userId) return null

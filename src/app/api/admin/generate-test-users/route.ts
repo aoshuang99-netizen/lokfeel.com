@@ -24,13 +24,14 @@ export const dynamic = 'force-dynamic'
  * 注意: 测试用户标记 isBot=true，方便后续清理
  */
 
-// RandomUser.me头像URL模板
-const AVATAR_BASE = 'https://randomuser.me/api/portraits'
-
-function randomAvatarUrl(gender: string): string {
-  const g = gender === 'FEMALE' ? 'women' : 'men'
-  const id = Math.floor(Math.random() * 99) + 1
-  return `${AVATAR_BASE}/${g}/${id}.jpg`
+// DiceBear 头像 URL 生成（确定性，不被墙）
+function randomAvatarUrl(gender: string, seed: string): string {
+  const genderUpper = (gender || '').toUpperCase()
+  const isFemale = genderUpper === 'FEMALE' || genderUpper === 'WOMAN'
+  const bgColor = isFemale
+    ? 'f3a8f9,ec4899,f472b6'
+    : '3b82f6,6366f1,06b6d4'
+  return `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${bgColor}&radius=50`
 }
 
 // 女性名字池
@@ -148,7 +149,7 @@ export const POST = withPermission('user.create', { dangerous: true })(async (re
       const displayName = randomFrom(names)
       const email = `${prefix}-${timestamp}-${i}@test.lokfeel.com`
       const age = randomBetween(22, 38)
-      const avatar = withAvatar ? randomAvatarUrl(gender) : null
+      const avatar = withAvatar ? randomAvatarUrl(gender, `${displayName}-${timestamp}-${i}`) : null
 
       try {
         // 创建User

@@ -96,6 +96,7 @@ export async function GET() {
           } : { id: '', name: 'Unknown', age: 0, avatar: null, isOnline: false, isBot: false },
           lastMessage: lastMessage ? {
             content: lastMessage.content,
+            msgType: "TEXT",
             timestamp: lastMessage.createdAt,
             isFromMe: lastMessage.senderId === user.id,
           } : null,
@@ -142,6 +143,7 @@ export async function GET() {
           select: {
             id: true,
             payload: true,
+            msgType: true,
             senderId: true,
             createdAt: true,
           },
@@ -173,6 +175,7 @@ export async function GET() {
         },
         lastMessage: lastMessage ? {
           content: lastMessage.payload.slice(0, 100),
+          msgType: lastMessage.msgType,
           timestamp: lastMessage.createdAt,
           isFromMe: lastMessage.senderId === user.id,
         } : null,

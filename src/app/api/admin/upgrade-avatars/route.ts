@@ -7,30 +7,48 @@ export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/admin/upgrade-avatars
- * 
- * 升级bot用户头像到更高分辨率
- * 
- * 策略:
- * - 模式1 (默认): 用pravatar.cc 512px URL替换128px RandomUser.me URL
- * - 模式2 (hd): 用TPDNE 1024px JPEG data URL替换 (慢, 每批5个)
- * 
+ *
+ * 为 bot 用户分配可靠的 DiceBear 头像 URL
+ * 替代不可靠的 pravatar.cc / thispersondoesnotexist.com
+ *
  * Body:
  *   { mode?: 'url' | 'hd', batch?: number, force?: boolean, dryRun?: boolean }
+ *
+ * 注：DiceBear 返回 SVG（分辨率无关），url 和 hd 模式行为一致。
  */
 
-const PRAVATAR_BASE = 'https://i.pravatar.cc'
-const TPDNE_URL = 'https://thispersondoesnotexist.com'
-const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+const DICEBEAR_BASE = 'https://api.dicebear.com/9.x'
+
+const STYLES = ['avataaars', 'adventurer', 'lorelei']
+
+function generateDiceBearUrl(seed: string, gender?: string): string {
+  const style = STYLES[Math.abs(hashCode(seed)) % STYLES.length]
+  const isFemale = (gender || '').toUpperCase() === 'FEMALE' || (gender || '').toUpperCase() === 'WOMAN'
+  const bgColor = isFemale
+    ? 'f3a8f9,ec4899,f472b6'
+    : '3b82f6,6366f1,06b6d4'
+  return `${DICEBEAR_BASE}/${style}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${bgColor}&radius=50`
+}
+
+function hashCode(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash
+  }
+  return hash
+}
 
 export const POST = withPermission('user.edit')(async (request: NextRequest) => {
   try {
     const body = await request.json()
-    const mode = body.mode || 'url' // 'url' = fast URL swap, 'hd' = TPDNE data URL
-    const batchSize = Math.min(body.batch || (mode === 'hd' ? 5 : 200), mode === 'hd' ? 10 : 500)
+    const mode = body.mode || 'url'
+    const batchSize = Math.min(body.batch || 200, 500)
     const force = body.force || false
     const dryRun = body.dryRun || false
 
-    // 查询需要升级的bot用户
+    // 查询需要升级的 bot 用户
     const botUsers = await db.user.findMany({
       where: {
         isBot: true,
@@ -38,7 +56,10 @@ export const POST = withPermission('user.edit')(async (request: NextRequest) => 
           profile: {
             OR: [
               { avatar: { startsWith: 'emoji:' } },
-              { avatar: { contains: 'randomuser.me/api/portraits/' } },
+              { avatar: { contains: 'randomuser.me' } },
+              { avatar: { contains: 'pravatar.cc' } },
+              { avatar: { contains: 'thispersondoesnotexist.com' } },
+              { avatar: { contains: 'images.unsplash.com' } },
               { avatar: null },
             ],
           },
@@ -79,115 +100,61 @@ export const POST = withPermission('user.edit')(async (request: NextRequest) => 
     let failed = 0
     let skipped = 0
 
-    if (mode === 'url') {
-      // ─── Fast Mode: URL swap to pravatar.cc 512px ───
-      for (const user of botUsers) {
-        try {
-          if (!user.profile?.id) {
-            skipped++
-            continue
-          }
-
-          const gender = user.profile?.gender || 'FEMALE'
-          // pravatar.cc: 1-70 for images, 512px size
-          const imgId = (upgraded + Math.floor(Math.random() * 70) + 1)
-          const avatarUrl = `${PRAVATAR_BASE}/512?img=${imgId}`
-
-          await db.profile.update({
-            where: { id: user.profile.id },
-            data: {
-              avatar: avatarUrl,
-              avatarType: 'photo',
-            },
-          })
-
-          upgraded++
+    for (const user of botUsers) {
+      try {
+        if (!user.profile?.id) {
+          skipped++
           results.push({
             userId: user.id,
-            displayName: user.profile?.displayName || 'Unknown',
-            status: 'upgraded',
-            newAvatar: avatarUrl,
+            displayName: 'Unknown',
+            status: 'skipped',
           })
-        } catch (error) {
-          failed++
-          const errMsg = error instanceof Error ? error.message : String(error)
-          results.push({
-            userId: user.id,
-            displayName: user.profile?.displayName || 'Unknown',
-            status: 'failed',
-            error: errMsg,
-          })
+          continue
         }
-      }
-    } else {
-      // ─── HD Mode: TPDNE 1024px JPEG → data URL ───
-      for (const user of botUsers) {
-        try {
-          if (!user.profile?.id) {
-            skipped++
-            continue
-          }
 
-          const response = await fetch(TPDNE_URL, {
-            headers: { 'User-Agent': USER_AGENT },
-            redirect: 'follow',
-            signal: AbortSignal.timeout(15000),
-          })
+        const displayName = user.profile?.displayName || user.name || user.id
+        const gender = user.profile?.gender || 'FEMALE'
+        const avatarUrl = generateDiceBearUrl(displayName, gender)
 
-          if (!response.ok) throw new Error(`TPDNE ${response.status}`)
+        await db.profile.update({
+          where: { id: user.profile.id },
+          data: {
+            avatar: avatarUrl,
+            avatarType: 'photo',
+          },
+        })
 
-          const buffer = Buffer.from(await response.arrayBuffer())
-
-          if (buffer.length < 10000) throw new Error('Image too small')
-
-          const base64 = buffer.toString('base64')
-          const dataUrl = `data:image/jpeg;base64,${base64}`
-
-          await db.profile.update({
-            where: { id: user.profile!.id },
-            data: {
-              avatar: dataUrl,
-              avatarType: 'photo',
-            },
-          })
-
-          upgraded++
-          results.push({
-            userId: user.id,
-            displayName: user.profile?.displayName || 'Unknown',
-            status: 'upgraded',
-            newAvatar: `data:image/jpeg;base64,...(${(buffer.length / 1024).toFixed(1)}KB)`,
-          })
-
-          // TPDNE限流延时
-          await new Promise(resolve => setTimeout(resolve, 300))
-
-        } catch (error) {
-          failed++
-          const errMsg = error instanceof Error ? error.message : String(error)
-          results.push({
-            userId: user.id,
-            displayName: user.profile?.displayName || 'Unknown',
-            status: 'failed',
-            error: errMsg,
-          })
-        }
+        upgraded++
+        results.push({
+          userId: user.id,
+          displayName,
+          status: 'upgraded',
+          newAvatar: avatarUrl,
+        })
+      } catch (error) {
+        failed++
+        const errMsg = error instanceof Error ? error.message : String(error)
+        results.push({
+          userId: user.id,
+          displayName: user.profile?.displayName || 'Unknown',
+          status: 'failed',
+          error: errMsg,
+        })
       }
     }
 
     return success({
       mode,
+      total: botUsers.length,
       upgraded,
       failed,
       skipped,
-      total: botUsers.length,
-      results: results.slice(0, 20),
-      message: `${mode === 'url' ? 'URL' : 'HD'} upgrade: ${upgraded}/${botUsers.length} avatars`,
+      results: results.slice(0, 10),
+      message: `Upgraded ${upgraded} avatars to DiceBear URLs`,
     })
-
   } catch (error) {
     console.error('Upgrade avatars error:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'
     return serverError(`Avatar upgrade failed: ${message}`)
   }
-});
+})

@@ -71,8 +71,9 @@ export async function GET(request: NextRequest) {
     // Step 2: Read PKCE code_verifier from our custom cookie
     // Set by /api/auth/oauth/google/signin (plain-text, NOT JWE-encrypted like NextAuth's)
     const codeVerifier = request.cookies.get("google-pkce-verifier")?.value;
-
-    console.log("[Google OAuth Callback] PKCE code_verifier present:", !!codeVerifier);
+    
+    console.log("[Google OAuth Callback] 🔍 All Cookies:", request.cookies.getAll().map(c => `${c.name}=${c.value.substring(0, 20)}...`));
+    console.log("[Google OAuth Callback] 🔍 code_verifier present:", !!codeVerifier, "length:", codeVerifier?.length || 0);
 
     if (!codeVerifier) {
       console.warn("[Google OAuth Callback] Missing google-pkce-verifier cookie — attempting without PKCE");

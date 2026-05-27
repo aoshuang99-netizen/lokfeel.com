@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
+import { cache } from "@/lib/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Normalize: "LIKE" → INTERESTED, "SUPER_LIKE" → SUPER_LIKE (new enum value)
+    const actionValue = reaction === "LIKE" ? "INTERESTED" : reaction === "SUPER_LIKE" ? "SUPER_LIKE" : "PASS";
 
     // 不能对自己操作
     if (targetUserId === userId) {
@@ -68,6 +72,8 @@ export async function POST(req: NextRequest) {
 
     // 如果已经REJECTED，不允许再操作
     if (existingMatch?.status === "REJECTED") {
+      // Still invalidate discover cache for this user
+      await cache.invalidate(`discover:exclude:${userId}`);
       return NextResponse.json({
         success: true,
         isMatch: false,
@@ -117,6 +123,12 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Invalidate both users' discover caches
+      await Promise.all([
+        cache.invalidate(`discover:exclude:${userId}`),
+        cache.invalidate(`discover:exclude:${targetUserId}`),
+      ]);
+
       return NextResponse.json({
         success: true,
         isMatch: false,
@@ -124,7 +136,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 如果是LIKE或SUPER_LIKE
+    // 如果是LIKE或SUPER_LIKE — actionValue 已在顶部计算
     const isSuperLike = reaction === "SUPER_LIKE";
 
     if (existingMatch) {
@@ -134,7 +146,7 @@ export async function POST(req: NextRequest) {
           where: { id: existingMatch.id },
           data: {
             status: "ACCEPTED",
-            receiverAction: "INTERESTED",
+            receiverAction: actionValue, // SUPER_LIKE or INTERESTED
           },
         });
 
@@ -173,6 +185,14 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        // Invalidate both users' caches after a match
+        await Promise.all([
+          cache.invalidate(`discover:exclude:${userId}`),
+          cache.invalidate(`discover:exclude:${targetUserId}`),
+          cache.invalidate(`who-liked-me:${userId}`),
+          cache.invalidate(`who-liked-me:${targetUserId}`),
+        ]);
+
         return NextResponse.json({
           success: true,
           isMatch: true,
@@ -186,7 +206,7 @@ export async function POST(req: NextRequest) {
       await prisma.match.update({
         where: { id: existingMatch.id },
         data: {
-          senderAction: "INTERESTED",
+          senderAction: actionValue, // SUPER_LIKE or INTERESTED
         },
       });
     } else {
@@ -196,13 +216,19 @@ export async function POST(req: NextRequest) {
           senderId: userId,
           receiverId: targetUserId,
           status: "PENDING",
-          senderAction: "INTERESTED",
+          senderAction: actionValue, // SUPER_LIKE or INTERESTED
           matchScore,
           matchReason: isSuperLike ? "Super Like" : "New match",
           isUnread: true,
         },
       });
     }
+
+    // Invalidate sender's discover cache + receiver's who-liked-me cache
+    await Promise.all([
+      cache.invalidate(`discover:exclude:${userId}`),
+      cache.invalidate(`who-liked-me:${targetUserId}`),
+    ]);
 
     return NextResponse.json({
       success: true,

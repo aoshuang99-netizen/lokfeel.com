@@ -315,7 +315,7 @@ export async function getCollectiveWisdom(
     where: {
       gender: gender as any,
       age: { gte: ageRange.min, lte: ageRange.max },
-      user: { role: 'BOT' as any },
+      user: { isBot: true },
     },
     include: {
       user: {

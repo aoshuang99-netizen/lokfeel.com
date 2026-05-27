@@ -336,6 +336,7 @@ export interface ConversationItemUIProps {
     content: string;
     timestamp: string;
     isFromMe?: boolean;
+    msgType?: string;
   } | null;
   unreadCount?: number;
   isVault?: boolean;

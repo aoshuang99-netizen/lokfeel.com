@@ -27,60 +27,77 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const minOnboardingStep = parseInt(searchParams.get("minOnboardingStep") || "4");
 
-    // Get current user's profile with preferences
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { profile: true },
-    });
+    // ★ New: Explicit filter params (override profile preferences when provided)
+    const filterGender = searchParams.get("preferredGender") || null;
+    const filterAgeMin = searchParams.get("preferredAgeMin") ? parseInt(searchParams.get("preferredAgeMin")!) : null;
+    const filterAgeMax = searchParams.get("preferredAgeMax") ? parseInt(searchParams.get("preferredAgeMax")!) : null;
+    const filterDistance = searchParams.get("preferredDistance") ? parseInt(searchParams.get("preferredDistance")!) : null;
+    const filterRelationshipGoal = searchParams.get("relationshipGoal") || null;
+    const filterAttachmentStyle = searchParams.get("attachmentStyle") || null;
+    const filterCity = searchParams.get("city") || null;
 
-    if (!currentUser?.profile) {
+    const userId = session.user.id;
+
+    // ═══ Redis-backed caching of expensive prerequisite queries ═══
+    // Cache current user profile (300s TTL — profiles change rarely)
+    const profile = await cache.get(
+      `discover:profile:${userId}`,
+      async () => {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          include: { profile: true },
+        });
+        if (!user?.profile) return null;
+        return user.profile;
+      },
+      300
+    );
+
+    if (!profile) {
       const res = NextResponse.json({ error: "Profile not found" }, { status: 404 });
       res.headers.set('Cache-Control', 'no-cache');
       return res;
     }
 
-    const profile = currentUser.profile;
-
-    // Get IDs of users to exclude (already matched)
-    const existingMatches = await prisma.match.findMany({
-      where: {
-        OR: [
-          { senderId: session.user.id },
-          { receiverId: session.user.id },
-        ],
-      },
-      select: {
-        senderId: true,
-        receiverId: true,
-      },
-    });
-
-    const userId = session.user.id;
-    const matchedUserIds = existingMatches.map((m) =>
-      m.senderId === userId ? m.receiverId : m.senderId
-    );
-
-    // Get IDs of users already reacted to (via MatchReaction)
-    // H-04: Use select instead of include to reduce payload
-    const existingReactions = await prisma.matchReaction.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      select: {
-        match: {
-          select: {
-            senderId: true,
-            receiverId: true,
+    // Cache match history + reactions (30s TTL — changes on each swipe)
+    const excludeIdsResult = await cache.get(
+      `discover:exclude:${userId}`,
+      async () => {
+        // Get IDs of users to exclude (already matched)
+        const existingMatches = await prisma.match.findMany({
+          where: {
+            OR: [
+              { senderId: userId },
+              { receiverId: userId },
+            ],
           },
-        },
-      },
-    });
+          select: { senderId: true, receiverId: true },
+        });
 
-    const reactedUserIds = existingReactions.map((r) =>
-      r.match.senderId === userId ? r.match.receiverId : r.match.senderId
+        const matchedUserIds = existingMatches.map((m) =>
+          m.senderId === userId ? m.receiverId : m.senderId
+        );
+
+        // Get IDs of users already reacted to (via MatchReaction)
+        const existingReactions = await prisma.matchReaction.findMany({
+          where: { userId },
+          select: {
+            match: {
+              select: { senderId: true, receiverId: true },
+            },
+          },
+        });
+
+        const reactedUserIds = existingReactions.map((r) =>
+          r.match.senderId === userId ? r.match.receiverId : r.match.senderId
+        );
+
+        return [...new Set([...matchedUserIds, ...reactedUserIds, userId])];
+      },
+      30
     );
 
-    let excludeIds = [...new Set([...matchedUserIds, ...reactedUserIds, session.user.id])];
+    let excludeIds = excludeIdsResult;
 
     // Build where clause - RELAXED to show more users
     // Only require: has profile, not current user, not already matched/reacted
@@ -96,13 +113,12 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // Add gender preference filter (optional) - RELAXED for homepage display
-    // 🔴 BUG FIX: Use getOppositeGenders() to handle both MALE/FEMALE and MAN/WOMAN
-    // The database has BOTH naming conventions — simple MALE→MAN mapping misses FEMALE/MALE rows
-    const preferredGender = profile.preferredGender?.toUpperCase() || null;
+    // Add gender preference filter (optional)
+    // ★ Use explicit filter param if provided, else use profile preference
+    const effectiveGender = filterGender || profile.preferredGender?.toUpperCase() || null;
 
-    if (preferredGender && preferredGender !== "EVERYONE") {
-      const targetGenders = getOppositeGenders(preferredGender);
+    if (effectiveGender && effectiveGender !== "EVERYONE") {
+      const targetGenders = getOppositeGenders(effectiveGender);
       if (targetGenders.length > 0 && targetGenders.length < 5) {
         // Use IN clause to match both MALE/FEMALE and MAN/WOMAN
         whereClause.profile.is.gender = { in: targetGenders };
@@ -110,12 +126,36 @@ export async function GET(request: NextRequest) {
       // If "everyone" or non-binary, no gender filter applied
     }
 
-    // Add age range filter (optional) - RELAXED
-    if (profile.preferredAgeMin || profile.preferredAgeMax) {
+    // Add age range filter (optional)
+    // ★ Use explicit filter param if provided, else use profile preference
+    const effectiveAgeMin = filterAgeMin ?? profile.preferredAgeMin;
+    const effectiveAgeMax = filterAgeMax ?? profile.preferredAgeMax;
+    if (effectiveAgeMin || effectiveAgeMax) {
       whereClause.profile.is.age = {
-        gte: profile.preferredAgeMin || 18,
-        lte: profile.preferredAgeMax || 99,
+        gte: effectiveAgeMin || 18,
+        lte: effectiveAgeMax || 99,
       };
+    }
+
+    // ★ New: Add relationship goal filter
+    if (filterRelationshipGoal) {
+      whereClause.profile.is.relationshipGoal = filterRelationshipGoal;
+    }
+
+    // ★ New: Add attachment style filter
+    if (filterAttachmentStyle) {
+      whereClause.profile.is.attachmentStyle = filterAttachmentStyle;
+    }
+
+    // ★ New: Add city filter
+    if (filterCity) {
+      whereClause.profile.is.city = filterCity;
+    }
+
+    // ★ New: Add distance filter (future: actually calculate distance)
+    if (filterDistance) {
+      // Distance is stored in profile, for now skip if no geo-coords
+      // This can be enhanced with lat/lon calculation
     }
 
     // Fetch potential matches
@@ -149,8 +189,8 @@ export async function GET(request: NextRequest) {
     let finalUsers = users;
 
     if (users.length === 0) {
-      // Fallback: Only exclude current user and already matched users (allow reacted users)
-      const fallbackExcludeIds = [...new Set([...matchedUserIds, session.user.id])];
+      // Fallback: Only exclude current user (most relaxed — no match/reaction exclusions)
+      const fallbackExcludeIds = [session.user.id];
       
       const fallbackWhereClause: any = {
         id: { notIn: fallbackExcludeIds },

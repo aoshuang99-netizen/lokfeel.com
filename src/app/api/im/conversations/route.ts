@@ -82,7 +82,9 @@ export async function GET(req: NextRequest) {
           ? {
               id: lastMessage.id,
               content: lastMessage.payload?.slice?.(0, 100) || '',
+              msgType: lastMessage.msgType,
               type: lastMessage.msgType,
+              timestamp: lastMessage.createdAt,
               createdAt: lastMessage.createdAt,
               isFromMe: lastMessage.senderId === userId,
             }

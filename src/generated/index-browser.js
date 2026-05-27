@@ -926,7 +926,8 @@ exports.MatchAction = exports.$Enums.MatchAction = {
   INTERESTED: 'INTERESTED',
   PASS: 'PASS',
   MAYBE: 'MAYBE',
-  BLOCK: 'BLOCK'
+  BLOCK: 'BLOCK',
+  SUPER_LIKE: 'SUPER_LIKE'
 };
 
 exports.VaultStatus = exports.$Enums.VaultStatus = {

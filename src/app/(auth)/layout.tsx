@@ -17,7 +17,7 @@ export default function AuthLayout({
           preload="metadata"
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            filter: 'brightness(0.6) contrast(1.1) saturate(0.85)',
+            filter: 'brightness(0.55) contrast(1.1) saturate(0.8)',
           }}
         >
           {/* Mobile: lightweight 720p */}

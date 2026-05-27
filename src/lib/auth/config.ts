@@ -255,6 +255,10 @@ export const authConfig = {
         token.name = user.name;
         token.picture = user.image;
         token.emailVerified = user.emailVerified || null;
+        // Guest session flag (set by /api/auth/guest)
+        if ((user as any).guest) {
+          token.guest = true;
+        }
       }
 
       // Update token on session update
@@ -275,8 +279,11 @@ export const authConfig = {
         session.user.role = token.role;
         session.user.name = token.name;
         session.user.image = token.picture;
-        // Expose verification status to client
+        // Expose verification status and guest flag to client
         ;(session.user as any).emailVerified = token.emailVerified;
+        if (token.guest) {
+          (session.user as any).guest = true;
+        }
       }
       if (process.env.NODE_ENV === 'development') {
         console.log('[Auth Debug] session result - session.user.id:', session.user?.id);

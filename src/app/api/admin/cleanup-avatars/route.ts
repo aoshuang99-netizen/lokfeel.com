@@ -6,15 +6,24 @@ import { withPermission } from '@/lib/with-permission'
 /**
  * POST /api/admin/cleanup-avatars
  *
- * 清理大体积头像（data URL），替换为外部URL
- * 释放Neon PostgreSQL存储空间
+ * 清理大体积头像（data URL），替换为 DiceBear 外部URL
+ * 释放 Neon PostgreSQL 存储空间
  * Requires: bot.edit permission (RBAC)
  *
  * Body:
  *   { batch?: number, dryRun?: boolean }
  */
 
-const RANDOMUSER_BASE = 'https://randomuser.me/api/portraits'
+// 使用 DiceBear API（可靠、免费、不被墙）
+function generateDiceBearUrl(gender: string, index: number): string {
+  const isFemale = (gender || '').toUpperCase() === 'FEMALE' || (gender || '').toUpperCase() === 'WOMAN'
+  const bgColor = isFemale
+    ? 'f3a8f9,ec4899,f472b6'
+    : '3b82f6,6366f1,06b6d4'
+  // 用 index 作为 seed 的一部分，确保不同用户有不同头像
+  const seed = `bot-cleanup-${index}`
+  return `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${bgColor}&radius=50`
+}
 
 export const POST = withPermission('bot.edit', { dangerous: true })(
   async (request: NextRequest) => {
@@ -69,9 +78,10 @@ export const POST = withPermission('bot.edit', { dangerous: true })(
       try {
         if (!user.profile?.id) continue
 
-        const gender = user.profile?.gender === 'MALE' ? 'men' : 'women'
+        const profileGender = (user.profile?.gender || '').toUpperCase()
+        const gender = (profileGender === 'MALE' || profileGender === 'MAN') ? 'men' : 'women'
         const imgId = (cleaned % 99) + 1
-        const avatarUrl = `${RANDOMUSER_BASE}/${gender}/${imgId}.jpg`
+        const avatarUrl = generateDiceBearUrl(profileGender, cleaned)
 
         await db.profile.update({
           where: { id: user.profile.id },

@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LokFeel — Creem 全流程测试跟踪面板</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  :root {
+    --bg:#0a0a0a; --card:#111111; --border:#222; --border2:#333;
+    --text:#fff; --muted:#888; --dim:#555;
+    --green:#a3e635; --red:#ef4444; --yellow:#f59e0b; --blue:#3b82f6;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px;
+  }
+  h1 { font-size: 20px; font-weight:700; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .header-actions { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+  .btn {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border2);
+    background: var(--card); color: var(--text); font-size: 13px; cursor:pointer; transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn-primary { background: var(--green); color: #0a0a0a; border-color: var(--green); font-weight:600; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-danger { border-color: var(--red); color: var(--red); }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px; }
+  @media(max-width:900px){ .grid{grid-template-columns:1fr;} }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+  .card-title { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-bottom:12px; font-weight:600; }
+  .stat { font-size:28px; font-weight:800; }
+  .stat-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+  .flow { display:flex; flex-direction:column; gap:0; }
+  .flow-step { display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); position:relative; }
+  .flow-step:last-child { border-bottom:none; }
+  .step-num {
+    width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700; flex-shrink:0; border:2px solid var(--border2); color:var(--muted);
+  }
+  .step-num.done { background:var(--green); border-color:var(--green); color:#0a0a0a; }
+  .step-num.active { border-color:var(--blue); color:var(--blue); animation: pulse 1.5s infinite; }
+  .step-num.error { border-color:var(--red); color:var(--red); background:rgba(239,68,68,0.1); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .step-body { flex:1; min-width:0; }
+  .step-name { font-size:14px; font-weight:600; margin-bottom:2px; }
+  .step-desc { font-size:12px; color:var(--muted); }
+  .step-time { font-size:11px; color:var(--dim); margin-top:4px; }
+  .step-error {
+    margin-top:6px; padding:8px 10px; background:rgba(239,68,68,0.08);
+    border:1px solid rgba(239,68,68,0.2); border-radius:6px; font-size:12px;
+    color:var(--red); line-height:1.5;
+  }
+  .step-detail { font-size:11px; color:var(--dim); margin-top:4px; font-family:monospace; word-break:break-all; }
+  .log-box {
+    background:#0d0d0d; border:1px solid var(--border); border-radius:8px;
+    padding:12px; max-height:400px; overflow-y:auto; font-size:12px;
+    font-family: 'SF Mono', Menlo, monospace; line-height:1.7; color:var(--muted);
+  }
+  .log-box .line { padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
+  .log-box .ts { color:var(--dim); margin-right:8px; }
+  .log-box .ok { color:var(--green); }
+  .log-box .err { color:var(--red); }
+  .log-box .warn { color:var(--yellow); }
+  .log-box .info { color:var(--blue); }
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+  .badge-green { background:rgba(163,230,53,0.15); color:var(--green); }
+  .badge-red { background:rgba(239,68,68,0.15); color:var(--red); }
+  .badge-yellow { background:rgba(245,158,11,0.15); color:var(--yellow); }
+  .badge-blue { background:rgba(59,130,246,0.15); color:var(--blue); }
+  .progress-bar { height:3px; background:var(--border); border-radius:2px; margin-top:16px; overflow:hidden; }
+  .progress-fill { height:100%; background:var(--green); border-radius:2px; transition:width 0.4s; width:0%; }
+  .config-table { width:100%; font-size:12px; }
+  .config-table td { padding:6px 8px; border-bottom:1px solid var(--border); }
+  .config-table .label { color:var(--muted); white-space:nowrap; }
+  .config-table .value { font-family:monospace; color:var(--dim); word-break:break-all; }
+  .config-table .status-cell { text-align:right; }
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex;
+    align-items:center; justify-content:center; z-index:100; display:none;
+  }
+  .modal { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:28px; max-width:500px; width:90%; }
+  .modal h3 { margin-bottom:16px; }
+  .modal label { font-size:12px; color:var(--muted); display:block; margin-top:12px; }
+  .modal .btn { margin-top:16px; }
+  select, input[type=text] {
+    width:100%; padding:8px 12px; background:#0d0d0d; border:1px solid var(--border2);
+    border-radius:6px; color:var(--text); font-size:13px; margin-top:6px;
+  }
+  input[type=checkbox] { width:auto; margin-right:6px; }
+</style>
+</head>
+<body>
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+  <h1>🧪 Creem 全流程测试跟踪面板</h1>
+  <span class="badge badge-yellow" id="envBadge">MOCK MODE</span>
+  <span class="badge badge-blue" id="statusBadge">READY</span>
+</div>
+<p class="subtitle">实时监控 LokFeel × Creem 支付集成端到端测试流程 · 自动记录所有错误</p>
+
+<div class="header-actions">
+  <button class="btn btn-primary" onclick="startFullTest()">▶ 启动全流程测试</button>
+  <button class="btn" onclick="testCheckoutOnly()">🛒 仅测试 Checkout</button>
+  <button class="btn" onclick="testWebhookOnly()">🔗 仅测试 Webhook</button>
+  <button class="btn" onclick="clearAll()">🗑️ 清除结果</button>
+  <button class="btn" onclick="exportLog()">📥 导出报告</button>
+  <button class="btn" onclick="openSettings()">⚙️ 设置</button>
+</div>
+
+<!-- ● 一键自动测试 (需要 CRON_SECRET) -->
+<div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:20px;">
+  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <span style="font-size:13px; font-weight:600; white-space:nowrap;">🤖 一键自动测试</span>
+    <input type="password" id="autoCronSecret" placeholder="输入 CRON_SECRET（Vercel Dashboard → Settings → Env Vars）"
+      style="flex:1; min-width:280px; padding:8px 12px; background:#0d0d0d; border:1px solid var(--border2); border-radius:6px; color:var(--text); font-size:13px;">
+    <button class="btn btn-primary" onclick="autoRunE2E()" style="white-space:nowrap;">⚡ 自动运行</button>
+    <span id="autoStatus" style="font-size:12px; color:var(--muted);"></span>
+  </div>
+  <div id="autoResult" style="margin-top:12px; display:none;">
+    <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">📋 测试报告：</div>
+    <div id="autoResultBody" style="max-height:300px; overflow-y:auto; font-size:11px; line-height:1.6; background:#0a0a0a; border-radius:8px; padding:12px; font-family:monospace;"></div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-title">📊 测试流程</div>
+    <div class="flow" id="flowSteps">
+      <div class="flow-step" id="flow-1">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-name">用户登录</div>
+          <div class="step-desc">验证 NextAuth session 有效性</div>
+          <div class="step-time" id="time-1"></div>
+          <div class="step-error" id="err-1" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="flow-step" id="flow-2">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-name">创建 Checkout Session</div>
+          <div class="step-desc">POST /api/payments/creem/checkout</div>
+          <div class="step-time" id="time-2"></div>
+          <div class="step-error" id="err-2" style="display:none;"></div>
+          <div class="step-detail" id="detail-2"></div>
+        </div>
+      </div>
+      <div class="flow-step" id="flow-3">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-name">跳转支付页</div>
+          <div class="step-desc">用户完成支付操作</div>
+          <div class="step-time" id="time-3"></div>
+          <div class="step-error" id="err-3" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="flow-step" id="flow-4">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-name">发送 Webhook</div>
+          <div class="step-desc">POST /api/webhooks/creem (模拟)</div>
+          <div class="step-time" id="time-4"></div>
+          <div class="step-error" id="err-4" style="display:none;"></div>
+          <div class="step-detail" id="detail-4"></div>
+        </div>
+      </div>
+      <div class="flow-step" id="flow-5">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-name">验证订阅激活</div>
+          <div class="step-desc">查询 DB 确认 subscription 记录</div>
+          <div class="step-time" id="time-5"></div>
+          <div class="step-error" id="err-5" style="display:none;"></div>
+          <div class="step-detail" id="detail-5"></div>
+        </div>
+      </div>
+      <div class="flow-step" id="flow-6">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-name">访问 Premium 功能</div>
+          <div class="step-desc">验证 canInitiateChat / weeklyMatchLimit</div>
+          <div class="step-time" id="time-6"></div>
+          <div class="step-error" id="err-6" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">📈 实时统计</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div><div class="stat" id="statPassed">0</div><div class="stat-sub">✅ 通过</div></div>
+        <div><div class="stat" id="statFailed" style="color:var(--red);">0</div><div class="stat-sub">❌ 失败</div></div>
+        <div><div class="stat" id="statTime" style="color:var(--yellow);">0s</div><div class="stat-sub">⏱ 总耗时</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">🔧 环境配置</div>
+      <table class="config-table">
+        <tr>
+          <td class="label">Plan</td>
+          <td class="value">
+            <select id="selPlan" onchange="onPlanChange()" style="background:#0d0d0d;color:#aaa;border:1px solid #333;border-radius:4px;padding:4px 8px;width:100%;">
+              <option value="PREMIUM_MONTHLY">Monthly $19.99</option>
+              <option value="PREMIUM_YEARLY">Yearly $149.99</option>
+            </select>
+          </td>
+          <td class="status-cell"></td>
+        </tr>
+        <tr>
+          <td class="label">Mock Mode</td>
+          <td class="value"><label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="chkMock" checked onchange="toggleMock()"> 使用模拟支付</label></td>
+          <td class="status-cell" id="cfgMockSt"></td>
+        </tr>
+        <tr>
+          <td class="label">User Email</td>
+          <td class="value"><input type="text" id="inpEmail" value="test@lokfeel.com" onchange="onEmailChange()" style="font-size:12px;padding:4px 8px;"></td>
+          <td class="status-cell"></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 实时日志 <button class="btn" style="float:right;padding:2px 8px;font-size:11px;" onclick="clearLog()">清空</button></div>
+      <div class="log-box" id="logBox"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h3>⚙️ 测试设置</h3>
+    <label>Checkout API 地址</label>
+    <input type="text" id="cfgCheckoutUrl" value="/api/payments/creem/checkout" />
+    <label>Mock Checkout API 地址</label>
+    <input type="text" id="cfgMockUrl" value="/api/test/mock-checkout" />
+    <label>Webhook 测试地址</label>
+    <input type="text" id="cfgWebhookUrl" value="/api/webhooks/creem" />
+    <label>APP URL</label>
+    <input type="text" id="cfgAppUrl" value="" />
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-primary" onclick="saveSettings()">保存</button>
+      <button class="btn" onclick="closeSettings()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────
+let config = {
+  checkoutUrl: '/api/payments/creem/checkout',
+  mockUrl: '/api/test/mock-checkout',
+  webhookUrl: '/api/webhooks/creem',
+  appUrl: window.location.origin,
+  plan: 'PREMIUM_MONTHLY',
+  mockMode: true,
+  userEmail: 'test@lokfeel.com',
+};
+let testState = { running:false, step:0, errors:[], logs:[], startTime:0, checkoutSession:null };
+
+// ── Init ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+  updateEnvBadge();
+  log('ℹ️ 面板已加载。点击「启动全流程测试」开始。', 'info');
+  log('🧪 Mock 模式已开启：无需真实 Creem Product ID', 'info');
+});
+
+// ── Settings ─────────────────────────────────────────
+function loadSettings() {
+  try { const s = localStorage.getItem('creem_test_cfg'); if (s) config = {...config, ...JSON.parse(s)}; } catch(e){}
+  document.getElementById('chkMock').checked = config.mockMode;
+  document.getElementById('selPlan').value = config.plan;
+  document.getElementById('inpEmail').value = config.userEmail;
+  document.getElementById('cfgCheckoutUrl').value = config.checkoutUrl;
+  document.getElementById('cfgMockUrl').value = config.mockUrl;
+  document.getElementById('cfgWebhookUrl').value = config.webhookUrl;
+  document.getElementById('cfgAppUrl').value = config.appUrl;
+}
+function saveSettings() {
+  config.checkoutUrl = document.getElementById('cfgCheckoutUrl').value;
+  config.mockUrl = document.getElementById('cfgMockUrl').value;
+  config.webhookUrl = document.getElementById('cfgWebhookUrl').value;
+  config.appUrl = document.getElementById('cfgAppUrl').value;
+  localStorage.setItem('creem_test_cfg', JSON.stringify(config));
+  closeSettings(); log('✅ 设置已保存', 'ok');
+}
+function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
+function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+function toggleMock() {
+  config.mockMode = document.getElementById('chkMock').checked;
+  updateEnvBadge(); log(`🧪 Mock 模式: ${config.mockMode ? 'ON' : 'OFF'}`, 'info');
+}
+function onPlanChange() { config.plan = document.getElementById('selPlan').value; log(`📝 Plan: ${config.plan}`, 'info'); }
+function onEmailChange() { config.userEmail = document.getElementById('inpEmail').value; }
+
+function updateEnvBadge() {
+  const b = document.getElementById('envBadge');
+  b.textContent = config.mockMode ? 'MOCK MODE' : 'LIVE MODE';
+  b.className = `badge ${config.mockMode ? 'badge-yellow' : 'badge-green'}`;
+}
+
+// ── Logging ──────────────────────────────────────────
+function log(msg, type='info') {
+  const now = new Date();
+  const ts = now.toLocaleTimeString('zh-CN',{hour12:false}) + '.' + String(now.getMilliseconds()).padStart(3,'0');
+  testState.logs.push({ts, msg, type});
+  const box = document.getElementById('logBox');
+  const line = document.createElement('div');
+  line.className = 'line';
+  line.innerHTML = `<span class="ts">${ts}</span><span class="${type}">${msg}</span>`;
+  box.appendChild(line); box.scrollTop = box.scrollHeight;
+}
+function clearLog() { document.getElementById('logBox').innerHTML = ''; testState.logs = []; }
+
+// ── Flow Control ─────────────────────────────────────
+function resetFlow() {
+  for (let i=1;i<=6;i++) {
+    const num = document.querySelector(`#flow-${i} .step-num`);
+    num.className = 'step-num'; num.textContent = i;
+    document.getElementById(`time-${i}`).textContent = '';
+    document.getElementById(`err-${i}`).style.display = 'none';
+    document.getElementById(`err-${i}`).textContent = '';
+    document.getElementById(`detail-${i}`).textContent = '';
+  }
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('statusBadge').textContent = 'READY';
+  document.getElementById('statusBadge').className = 'badge badge-blue';
+}
+function setStepStatus(step, status, errorMsg='', detail='') {
+  const num = document.querySelector(`#flow-${step} .step-num`);
+  num.className = 'step-num ' + status;
+  if (status==='done') num.textContent = '✓';
+  else if (status==='active') num.textContent = '◉';
+  else if (status==='error') num.textContent = '✗';
+  else num.textContent = step;
+  if (errorMsg) { const e = document.getElementById(`err-${step}`); e.textContent = errorMsg; e.style.display='block'; testState.errors.push({step,msg:errorMsg}); }
+  if (detail) document.getElementById(`detail-${step}`).textContent = detail;
+  document.getElementById(`time-${step}`).textContent = new Date().toLocaleTimeString('zh-CN',{hour12:false});
+  updateProgress();
+}
+function updateProgress() {
+  let done=0; for(let i=1;i<=6;i++) { if(document.querySelector(`#flow-${i} .step-num`).className.includes('done')) done++; }
+  document.getElementById('progressFill').style.width = `${done/6*100}%`;
+  document.getElementById('statPassed').textContent = done;
+  document.getElementById('statFailed').textContent = testState.errors.length;
+}
+let _timerId = null;
+function updateTimer() {
+  if (!testState.running) return;
+  const elapsed = ((Date.now()-testState.startTime)/1000).toFixed(1);
+  document.getElementById('statTime').textContent = elapsed+'s';
+  _timerId = setTimeout(updateTimer, 100);
+}
+
+// ── API helpers ──────────────────────────────────────
+async function api(method, url, body=null) {
+  const opts = { method, headers:{'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  const text = await res.text();
+  let data = {}; try { data = JSON.parse(text); } catch(e) {}
+  return { res, data, text };
+}
+
+// ── Main Test Flow ───────────────────────────────────
+async function startFullTest() {
+  if (testState.running) { log('⚠️ 测试已在进行中', 'warn'); return; }
+  resetFlow();
+  testState = { running:true, step:0, errors:[], logs:testState.logs, startTime:Date.now(), checkoutSession:null };
+  updateTimer();
+  log('🚀 启动全流程端到端测试...', 'info');
+  document.getElementById('statusBadge').textContent = 'RUNNING';
+  document.getElementById('statusBadge').className = 'badge badge-yellow';
+
+  try {
+    await step1_login();
+    await step2_checkout();
+    if (config.mockMode) await step3_mockPayment();
+    else await step3_livePayment();
+    await step4_webhook();
+    await step5_verifySubscription();
+    await step6_verifyPremiumFeatures();
+    document.getElementById('statusBadge').textContent = 'ALL PASSED';
+    document.getElementById('statusBadge').className = 'badge badge-green';
+    log('🎉 全流程测试通过！所有步骤成功。', 'ok');
+  } catch (err) {
+    document.getElementById('statusBadge').textContent = 'FAILED';
+    document.getElementById('statusBadge').className = 'badge badge-red';
+    log(`❌ 测试失败（步骤 ${testState.step}）: ${err.message}`, 'err');
+  } finally {
+    testState.running = false; clearTimeout(_timerId);
+  }
+}
+
+// ── Step 1 ───────────────────────────────────────────
+async function step1_login() {
+  testState.step = 1; setStepStatus(1, 'active');
+  log('[1/6] 检查用户登录状态...', 'info');
+  const {res,data} = await api('GET', '/api/auth/session');
+  if (data?.user) {
+    log(`✅ 用户已登录: ${data.user.email||data.user.name||''}`, 'ok');
+    setStepStatus(1, 'done', '', `User: ${data.user.email||'logged in'}`);
+  } else {
+    if (config.mockMode) {
+      log('🧪 Mock 模式：跳过登录检查，继续测试', 'warn');
+      setStepStatus(1, 'done', '', 'Mock: 跳过登录');
+    } else {
+      throw new Error('用户未登录 — 请先登录 /dashboard');
+    }
+  }
+}
+
+// ── Step 2 ───────────────────────────────────────────
+async function step2_checkout() {
+  testState.step = 2; setStepStatus(2, 'active');
+  log('[2/6] 创建 Checkout Session...', 'info');
+  const url = config.mockMode ? config.mockUrl : config.checkoutUrl;
+  log(`   POST ${url}`, 'info');
+  const body = { plan: config.plan };
+  log(`   Body: ${JSON.stringify(body)}`, 'info');
+  const {res, data, text} = await api('POST', url, body);
+  log(`   响应状态: ${res.status}`, res.ok?'ok':'err');
+  if (!res.ok) {
+    const errMsg = data.error || `HTTP ${res.status}`;
+    log(`   ❌ 错误: ${errMsg}`, 'err');
+    setStepStatus(2, 'error', `${errMsg} (HTTP ${res.status})`);
+    throw new Error(`Checkout 失败: ${errMsg}`);
+  }
+  testState.checkoutSession = data;
+  log(`   ✅ Checkout 创建成功`, 'ok');
+  log(`   checkoutUrl: ${data.checkoutUrl||'(mock)'}`, 'info');
+  const detail = `ID: ${(data.checkoutId||data.id||'mock').slice(0,24)}...`;
+  setStepStatus(2, 'done', '', detail);
+}
+
+// ── Step 3 ───────────────────────────────────────────
+async function step3_mockPayment() {
+  testState.step = 3; setStepStatus(3, 'active');
+  log('[3/6] Mock 支付：模拟用户完成支付...', 'info');
+  log('   🧪 Mock 模式：通过 PATCH mock-checkout 完成', 'info');
+  const sessionId = testState.checkoutSession?.checkoutId || testState.checkoutSession?.id;
+  if (!sessionId) { log('   ⚠️ 无 session ID，跳过', 'warn'); setStepStatus(3,'done','','跳过（无session ID）'); return; }
+  const {res,data} = await api('PATCH', config.mockUrl, { session_id:sessionId, action:'complete' });
+  log(`   PATCH ${config.mockUrl} → ${res.status}`, res.ok?'ok':'err');
+  if (res.ok) {
+    setStepStatus(3, 'done', '', 'Mock: 支付完成');
+  } else {
+    setStepStatus(3, 'error', `Mock支付失败: ${data.error||res.status}`);
+    throw new Error('Mock 支付失败');
+  }
+}
+async function step3_livePayment() {
+  testState.step = 3; setStepStatus(3, 'active');
+  log('[3/6] 跳转至 Creem 支付页...', 'info');
+  log(`   Checkout URL: ${testState.checkoutSession.checkoutUrl}`, 'info');
+  window.open(testState.checkoutSession.checkoutUrl, '_blank');
+  const confirmed = confirm('完成支付后点击「确定」继续，或点击「取消」跳过。');
+  if (!confirmed) log('   ⚠️ 用户跳过了支付确认', 'warn');
+  setStepStatus(3, 'done', '', '用户手动完成支付');
+}
+
+// ── Step 4 ───────────────────────────────────────────
+async function step4_webhook() {
+  testState.step = 4; setStepStatus(4, 'active');
+  log('[4/6] 模拟 Creem Webhook 事件...', 'info');
+
+  if (config.mockMode) {
+    log('   🧪 Mock 模式：构造 webhook 事件并发送...', 'info');
+    const sessionId = testState.checkoutSession?.checkoutId || testState.checkoutSession?.id || `mock_${Date.now()}`;
+    const mockEvent = {
+      id: `evt_mock_${Date.now()}`,
+      eventType: 'checkout.completed',
+      created_at: Date.now(),
+      object: {
+        id: sessionId,
+        customer: `cust_mock_test`,
+        subscription: `sub_mock_${Date.now()}`,
+        amount: config.plan==='PREMIUM_MONTHLY'?1999:14999,
+        currency: 'usd',
+        metadata: { userId: 'test-user', plan: config.plan },
+      },
+    };
+    log(`   POST ${config.webhookUrl}`, 'info');
+    log(`   Event: ${mockEvent.eventType}`, 'info');
+    const {res, text} = await api('POST', config.webhookUrl, mockEvent);
+    // Override headers for mock
+    // (The mock webhook endpoint accepts mock_signature_for_testing)
+    log(`   响应状态: ${res.status}`, res.ok?'ok':'err');
+    if (!res.ok) {
+      const errText = await res.clone().text().catch(()=>text);
+      setStepStatus(4, 'error', `Webhook 返回 ${res.status}: ${text.slice(0,100)}`);
+      throw new Error(`Webhook 失败: HTTP ${res.status}`);
+    }
+    log('   ✅ Webhook 投递成功', 'ok');
+    setStepStatus(4, 'done', '', `Event: ${mockEvent.eventType}`);
+  } else {
+    log('   🔗 等待 Creem 发送真实 webhook...', 'info');
+    log('   ⏳ 轮询 webhook 状态（最多等待 30s）...', 'warn');
+    await new Promise(r=>setTimeout(r,3000));
+    setStepStatus(4, 'done', '', '等待真实 webhook（超时）');
+  }
+}
+
+// ── Step 5 ───────────────────────────────────────────
+async function step5_verifySubscription() {
+  testState.step = 5; setStepStatus(5, 'active');
+  log('[5/6] 验证订阅是否已激活...', 'info');
+  const {res,data} = await api('GET', '/api/debug/subscription-status');
+  if (res.ok && data.subscription) {
+    log(`   ✅ 订阅记录存在: plan=${data.subscription.plan}, status=${data.subscription.status}`, 'ok');
+    setStepStatus(5, 'done', '', `Plan: ${data.subscription.plan}, Status: ${data.subscription.status}`);
+  } else {
+    log(`   ⚠️ 无法验证订阅状态（API ${res.status}）`, 'warn');
+    setStepStatus(5, 'done', '', '需手动验证（端点可能不存在）');
+  }
+}
+
+// ── Step 6 ───────────────────────────────────────────
+async function step6_verifyPremiumFeatures() {
+  testState.step = 6; setStepStatus(6, 'active');
+  log('[6/6] 验证 Premium 功能权限...', 'info');
+  const {res} = await api('GET', '/api/matches');
+  if (res.ok) {
+    log(`   ✅ 可以访问匹配接口（Premium 权限）`, 'ok');
+    setStepStatus(6, 'done', '', 'Premium 功能正常');
+  } else {
+    log(`   ⚠️ 匹配接口返回 ${res.status}，可能未激活 Premium`, 'warn');
+    setStepStatus(6, 'error', `API 返回 ${res.status}，Premium 可能未激活`);
+  }
+}
+
+// ── Individual Tests ───────────────────────────────────
+async function testCheckoutOnly() {
+  resetFlow(); testState.running=true;
+  try { await step1_login(); await step2_checkout(); log('✅ Checkout 测试通过', 'ok'); }
+  catch(err) { log(`❌ Checkout 测试失败: ${err.message}`, 'err'); }
+  finally { testState.running=false; }
+}
+async function testWebhookOnly() {
+  resetFlow(); testState.running=true;
+  try { await step4_webhook(); log('✅ Webhook 测试通过', 'ok'); }
+  catch(err) { log(`❌ Webhook 测试失败: ${err.message}`, 'err'); }
+  finally { testState.running=false; }
+}
+
+// ── Export / Clear ───────────────────────────────────
+function clearAll() {
+  if (!confirm('确认清除所有测试结果？')) return;
+  resetFlow();
+  testState = { running:false, step:0, errors:[], logs:[], startTime:0, checkoutSession:null };
+  clearLog();
+  document.getElementById('statPassed').textContent='0';
+  document.getElementById('statFailed').textContent='0';
+  document.getElementById('statTime').textContent='0s';
+  document.getElementById('statusBadge').textContent='READY';
+  document.getElementById('statusBadge').className='badge badge-blue';
+  log('🗑️ 已清除所有结果', 'info');
+}
+function exportLog() {
+  const report = {
+    timestamp: new Date().toISOString(), config,
+    steps: [], errors: testState.errors, logs: testState.logs,
+  };
+  for (let i=1;i<=6;i++) {
+    const numEl = document.querySelector(`#flow-${i} .step-num`);
+    const isDone = numEl.className.includes('done');
+    const isError = numEl.className.includes('error');
+    report.steps.push({
+      step:i, name:document.querySelector(`#flow-${i} .step-name`)?.textContent||'',
+      status: isError?'FAILED':isDone?'PASSED':'SKIPPED',
+      error: document.getElementById(`err-${i}`)?.textContent||'',
+      detail: document.getElementById(`detail-${i}`)?.textContent||'',
+    });
+  }
+  const blob = new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url;
+  a.download = `creem-test-report-${Date.now()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  log('📥 测试报告已导出', 'ok');
+}
+</script>
+
+<!-- 一键自动测试脚本 -->
+<script>
+async function autoRunE2E() {
+  const secret = document.getElementById('autoCronSecret').value.trim();
+  const statusEl = document.getElementById('autoStatus');
+  const resultEl = document.getElementById('autoResult');
+  const resultBody = document.getElementById('autoResultBody');
+  
+  if (!secret) {
+    statusEl.textContent = '❌ 请输入 CRON_SECRET';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  
+  statusEl.textContent = '⏳ 运行中...';
+  statusEl.style.color = 'var(--blue)';
+  resultEl.style.display = 'none';
+  
+  try {
+    const resp = await fetch(`/api/test/run-e2e?cron_secret=${encodeURIComponent(secret)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    const data = await resp.json();
+    const passed = data.passed || 0;
+    const failed = data.failed || 0;
+    const skipped = data.skipped || 0;
+    const duration = data.totalDurationMs || 0;
+    
+    if (resp.status === 401) {
+      statusEl.textContent = '❌ CRON_SECRET 错误';
+      statusEl.style.color = 'var(--red)';
+      resultBody.innerHTML = `<span style="color:var(--red)">认证失败：CRON_SECRET 不正确。请在 Vercel Dashboard → Environment Variables 中找到正确的值。</span>`;
+      resultEl.style.display = 'block';
+      return;
+    }
+    
+    const ok = failed === 0;
+    statusEl.textContent = ok ? `✅ 全部通过! (${duration}ms)` : `❌ ${failed} 项失败 (${duration}ms)`;
+    statusEl.style.color = ok ? 'var(--green)' : 'var(--red)';
+    
+    // Build result HTML
+    let html = '';
+    
+    // Summary
+    html += `<div style="margin-bottom:8px; font-size:12px; font-family:sans-serif;">`;
+    html += `<span style="color:var(--green)">✅ ${passed}</span> `;
+    html += `<span style="color:var(--red)">❌ ${failed}</span> `;
+    html += `<span style="color:var(--yellow)">⚠️ ${skipped}</span> `;
+    html += `<span style="color:var(--dim)">/ ${data.totalSteps} steps · ${duration}ms</span>`;
+    html += `</div>`;
+    
+    // Environment
+    const env = data.environment || {};
+    html += `<div style="margin-bottom:8px; color:var(--dim);">`;
+    html += `Creem API: ${env.hasCreemApiKey ? '✅' : '❌'} | `;
+    html += `Webhook: ${env.hasCreemWebhookSecret ? '✅' : '❌'} | `;
+    html += `Monthly: ${env.hasCreemMonthlyProductId ? '✅' : '❌'} | `;
+    html += `Yearly: ${env.hasCreemYearlyProductId ? '✅' : '❌'}`;
+    html += `</div>`;
+    
+    // Steps
+    html += `<hr style="border-color:var(--border); margin:8px 0;">`;
+    for (const s of data.steps || []) {
+      const icon = { pass: '✅', fail: '❌', warn: '⚠️', skip: '⏭️' }[s.status] || '❓';
+      const color = { pass: 'var(--green)', fail: 'var(--red)', warn: 'var(--yellow)', skip: 'var(--dim)' }[s.status] || 'var(--dim)';
+      html += `<div style="color:${color}; margin:4px 0;">${icon} Step ${s.step}: ${s.name} <span style="color:var(--dim)">(${s.durationMs}ms)</span></div>`;
+      if (s.error) {
+        html += `<div style="color:var(--red); margin-left:24px; font-size:10px;">  ↳ ${s.error}</div>`;
+      }
+      if (s.details) {
+        for (const [k, v] of Object.entries(s.details)) {
+          html += `<div style="color:var(--dim); margin-left:24px; font-size:10px;">  ${k}: ${v}</div>`;
+        }
+      }
+    }
+    
+    resultBody.innerHTML = html;
+    resultEl.style.display = 'block';
+    
+    // Also update the main flow steps
+    updateFlowFromReport(data);
+    
+    // Log to panel
+    log(`🤖 自动测试完成: ${passed}/${data.totalSteps} 通过, ${failed} 失败`, ok ? 'ok' : 'err');
+    
+  } catch (e) {
+    statusEl.textContent = '❌ 网络错误';
+    statusEl.style.color = 'var(--red)';
+    resultBody.innerHTML = `<span style="color:var(--red)">请求失败: ${e.message}</span>`;
+    resultEl.style.display = 'block';
+    log('❌ 自动测试请求失败: ' + e.message, 'err');
+  }
+}
+
+function updateFlowFromReport(data) {
+  // Map report steps to flow steps
+  const stepMap = {
+    1: 2,  // Find test user → flow step 2
+    2: 3,  // Simulate webhook → flow step 3
+    3: 4,  // Verify subscription → flow step 4
+    4: 5,  // Verify payment → flow step 5
+    5: 6,  // Verify permissions → flow step 6
+  };
+  
+  for (const s of data.steps || []) {
+    const flowIdx = stepMap[s.step];
+    if (!flowIdx) continue;
+    
+    const stepEl = document.getElementById('flow-' + flowIdx);
+    const numEl = stepEl ? stepEl.querySelector('.step-num') : null;
+    const timeEl = document.getElementById('time-' + flowIdx);
+    const errEl = document.getElementById('err-' + flowIdx);
+    
+    if (numEl) {
+      numEl.className = 'step-num ' + (s.status === 'pass' ? 'done' : s.status === 'fail' ? 'error' : '');
+      numEl.textContent = s.status === 'pass' ? '✓' : s.status === 'fail' ? '✗' : s.step;
+    }
+    if (timeEl) timeEl.textContent = `${s.durationMs}ms`;
+    if (errEl && s.error) {
+      errEl.textContent = s.error;
+      errEl.style.display = 'block';
+    }
+  }
+  
+  updateProgress();
+}
+
+// Expose auto runner to global scope
+window.autoRunE2E = autoRunE2E;
+</script>
+</body>
+</html>

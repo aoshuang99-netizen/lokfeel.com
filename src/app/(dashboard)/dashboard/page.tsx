@@ -71,8 +71,8 @@ interface DiscoverUser {
 // ════════════════════════════════════
 function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
   const getMatchScoreColor = (score: number) => {
-    if (score >= 90) return "from-amber-400 to-amber-600";
-    if (score >= 80) return "from-primary to-pink-500";
+    if (score >= 90) return "from-warning to-accent-pink";
+    if (score >= 80) return "from-primary to-accent-pink";
     return "from-primary/70 to-secondary/70";
   };
 
@@ -122,11 +122,11 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
             })()}
 
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
 
             {/* Match Score Badge */}
             <div className="absolute top-3 left-3">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getMatchScoreColor(user.matchScore)}`}>
+              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-background bg-gradient-to-r ${getMatchScoreColor(user.matchScore)}`}>
                 <Flame className="w-3 h-3" />
                 {Math.round(user.matchScore)}%
               </span>
@@ -135,7 +135,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
             {/* Verified Badge */}
             {user.verified && (
               <div className="absolute top-3 right-3">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/80 text-white text-[10px] font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/80 text-background text-[10px] font-medium">
                   ✓ Verified
                 </span>
               </div>
@@ -143,11 +143,11 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
 
             {/* Name & Age Overlay */}
             <div className="absolute bottom-3 left-3 right-3">
-              <h3 className="text-lg font-bold text-white font-display">
+              <h3 className="text-lg font-bold text-foreground font-display">
                 {user.name}, {user.age}
               </h3>
               {user.city && (
-                <p className="text-white/70 text-xs mt-0.5">{user.city}</p>
+                <p className="text-foreground/70 text-xs mt-0.5">{user.city}</p>
               )}
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function DashboardPage() {
       {/* ── Subtle background orbs ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
         <div className="absolute w-[500px] h-[500px] -top-48 -right-48 bg-primary/5 rounded-full blur-3xl opacity-40 animate-pulse" />
-        <div className="absolute w-[400px] h-[400px] bottom-32 -left-40 bg-accent/5 rounded-full blur-3xl opacity-30 animate-pulse" style={{ animationDelay: "2s" }} />
+        <div className="absolute w-[400px] h-[400px] bottom-32 -left-40 bg-secondary-muted rounded-full blur-3xl opacity-30 animate-pulse" style={{ animationDelay: "2s" }} />
       </div>
 
       {/* ════════════════════════════════════
@@ -437,7 +437,7 @@ export default function DashboardPage() {
         <div className="bg-background-secondary rounded-2xl p-6 border border-primary/30 animate-fadeIn">
           <div className="flex flex-col md:flex-row items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-white" />
+              <Sparkles className="w-6 h-6 text-background" />
             </div>
             <div className="flex-1 text-center md:text-left">
               <h3 className="font-semibold text-foreground">Complete your profile</h3>

@@ -85,16 +85,16 @@ function formatMessageTime(dateStr: string): string {
 }
 
 function getMatchScoreColor(score: number): string {
-  if (score >= 90) return "text-amber-400 bg-amber-500/15";
-  if (score >= 80) return "text-orange-400 bg-orange-500/15";
+  if (score >= 90) return "text-warning bg-warning/15";
+  if (score >= 80) return "text-accent-pink bg-accent-pink/15";
   if (score >= 70) return "text-primary bg-primary/15";
   return "text-foreground-muted bg-background-tertiary";
 }
 
 function getMatchScoreBadge(score: number): string {
-  if (score >= 90) return "from-amber-400 to-amber-600";
-  if (score >= 80) return "from-orange-400 to-pink-500";
-  return "from-amber-400 to-amber-700";
+  if (score >= 90) return "from-warning to-accent-pink";
+  if (score >= 80) return "from-accent-pink to-secondary-hover";
+  return "from-warning to-secondary-hover";
 }
 
 function formatVaultTime(expiresAt?: string): string {
@@ -287,7 +287,7 @@ export default function ChatLayout({
               )}
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-card-border">
               {filteredChats.map((chat) => (
                 <Link
                     href={`/dashboard/chats/${chat.id}`}
@@ -325,7 +325,7 @@ export default function ChatLayout({
                       </div>
                       {/* Online Status */}
                       {chat.otherUser.isOnline ? (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-background" />
                       ) : (
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-foreground-muted/40 rounded-full border-2 border-background" />
                       )}
@@ -405,7 +405,7 @@ export default function ChatLayout({
 
                         {/* Vault Timer */}
                         {chat.isVault && chat.vaultExpiresAt && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-amber-400 ml-auto">
+                          <span className="flex items-center gap-0.5 text-[10px] text-warning ml-auto">
                             <Clock className="w-2.5 h-2.5" />
                             {formatVaultTime(chat.vaultExpiresAt)}
                           </span>

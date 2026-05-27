@@ -43,7 +43,7 @@ async function refreshActiveBots(): Promise<void> {
   if (now - lastBotRefresh < 5 * 60 * 1000) return; // 5分钟缓存
   
   const bots = await db.user.findMany({
-    where: { role: 'BOT' as any },
+    where: { isBot: true },
     include: { profile: true },
     take: 100, // 最多100个活跃Bot
   });
@@ -147,8 +147,8 @@ async function simulateChatBehavior(): Promise<void> {
   for (const match of activeMatches) {
     try {
       // 检查是否涉及Bot
-      const isSenderBot = match.sender.role === 'BOT' as any;
-      const isReceiverBot = match.receiver.role === 'BOT' as any;
+      const isSenderBot = match.sender.isBot === true;
+      const isReceiverBot = match.receiver.isBot === true;
       
       if (!isSenderBot && !isReceiverBot) continue;
       

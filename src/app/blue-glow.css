@@ -1,0 +1,82 @@
+/* ================================================
+   BLUE GRADIENT BACKGROUND — LokFeel Signature
+   Add to Dashboard layout for blue atmosphere
+   ================================================ */
+
+.blue-gradient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, 
+    rgba(30, 64, 175, 0.08) 0%, 
+    rgba(59, 130, 246, 0.05) 50%, 
+    rgba(96, 165, 250, 0.03) 100%
+  );
+  pointer-events: none;
+}
+
+/* Blue glow orbs — ambient atmosphere */
+.blue-glow-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: -1;
+  animation: float 10s ease-in-out infinite;
+}
+
+.blue-glow-orb-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+  top: -10%;
+  left: -10%;
+  animation-delay: 0s;
+}
+
+.blue-glow-orb-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  bottom: -10%;
+  right: -10%;
+  animation-delay: 3s;
+}
+
+.blue-glow-orb-3 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.12) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 6s;
+}
+
+/* Purple glow orbs — secondary atmosphere */
+.purple-glow-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: -1;
+  animation: float 12s ease-in-out infinite;
+}
+
+.purple-glow-orb-1 {
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%);
+  top: 20%;
+  right: -5%;
+  animation-delay: 1.5s;
+}
+
+.purple-glow-orb-2 {
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, transparent 70%);
+  bottom: 10%;
+  left: 5%;
+  animation-delay: 4.5s;
+}

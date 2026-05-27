@@ -10,3 +10,14 @@ out/
 *.log
 .DS_Store
 coverage/
+
+# Env files - must NOT be uploaded (Vercel manages env via dashboard)
+.env
+.env.*
+.env.local
+.env.production
+.env.production.local
+.env.development.local
+.env.test.local
+.vercel
+.env.vercel.local

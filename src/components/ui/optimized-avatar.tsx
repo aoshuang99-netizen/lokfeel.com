@@ -76,12 +76,10 @@ const shapeConfig = {
 function AvatarLightbox({ src, alt = "Photo", isOpen, onClose }: LightboxProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const fullResUrl = React.useMemo(() => {
-    // Upgrade to full resolution for lightbox
-    return src.replace(/w=\d+&h=\d+/, "w=1200&h=1600");
-  }, [src]);
+  // DiceBear SVG is resolution-independent — no URL upgrade needed
+  const fullResUrl = src;
 
-  // Preload full-resolution image when lightbox opens
+  // Preload image when lightbox opens
   useEffect(() => {
     if (isOpen && fullResUrl) {
       setLoaded(false);

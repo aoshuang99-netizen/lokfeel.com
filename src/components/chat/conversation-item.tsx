@@ -26,6 +26,7 @@ export interface ConversationItemProps {
     content: string;
     timestamp: string;
     isFromMe?: boolean;
+    msgType?: string;
   } | null;
   unreadCount?: number;
   isVault?: boolean;
@@ -214,7 +215,13 @@ function ConversationItemComponent({
             {lastMessage ? (
               <>
                 {lastMessage.isFromMe && <span className="text-foreground-faint">You: </span>}
-                {lastMessage.content}
+                {lastMessage.msgType === "IMAGE" ? (
+                  <span className="text-foreground-subtle">📷 Image</span>
+                ) : lastMessage.msgType === "VOICE" ? (
+                  <span className="text-foreground-subtle">🎤 Voice</span>
+                ) : (
+                  lastMessage.content
+                )}
               </>
             ) : (
               <span className="italic text-foreground-faint">Start chatting...</span>

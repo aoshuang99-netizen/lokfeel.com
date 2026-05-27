@@ -1457,6 +1457,7 @@ enum MatchAction {
   PASS // "Not for me right now"
   MAYBE // "Tell me more"
   BLOCK // "Don't match me with this person"
+  SUPER_LIKE // "Super Like — highlight in recommendations"
 }
 
 enum MessageType {

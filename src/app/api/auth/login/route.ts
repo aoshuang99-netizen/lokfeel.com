@@ -70,8 +70,19 @@ export async function POST(request: NextRequest) {
 
     // ─── 3. Verify password ───
     if (!(user as any).password) {
+      // CHECK: Does this user have OAuth accounts?
+      const oauthAccounts = await db.account.findMany({
+        where: { userId: user.id },
+        select: { provider: true },
+      });
+      const providers = oauthAccounts.map(a => a.provider).join(", ");
       return NextResponse.json(
-        { error: "This account uses social login. Please sign in with Google or X." },
+        {
+          error: "This account uses social login.",
+          errorCode: "OAUTH_ONLY",
+          providers,
+          email: normalizedEmail,
+        },
         { status: 401 }
       )
     }

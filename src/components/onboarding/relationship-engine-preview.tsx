@@ -76,12 +76,12 @@ const DIMENSIONS = [
 // ═══════════════════════════════════════════════════════════════
 
 const SIMULATED_USERS = [
-  { id: "1", name: "Sarah", age: 28, location: "San Francisco", avatar: "https://randomuser.me/api/portraits/women/1.jpg" },
-  { id: "2", name: "Emma", age: 26, location: "New York", avatar: "https://randomuser.me/api/portraits/women/2.jpg" },
-  { id: "3", name: "Jessica", age: 30, location: "Los Angeles", avatar: "https://randomuser.me/api/portraits/women/3.jpg" },
-  { id: "4", name: "Michael", age: 32, location: "Chicago", avatar: "https://randomuser.me/api/portraits/men/1.jpg" },
-  { id: "5", name: "David", age: 29, location: "Seattle", avatar: "https://randomuser.me/api/portraits/men/2.jpg" },
-  { id: "6", name: "Alex", age: 27, location: "Austin", avatar: "https://randomuser.me/api/portraits/women/4.jpg" },
+  { id: "1", name: "Sarah", age: 28, location: "San Francisco", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=Sarah&backgroundColor=f3a8f9,ec4899,f472b6&radius=50" },
+  { id: "2", name: "Emma", age: 26, location: "New York", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=Emma&backgroundColor=f3a8f9,ec4899,f472b6&radius=50" },
+  { id: "3", name: "Jessica", age: 30, location: "Los Angeles", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=Jessica&backgroundColor=f3a8f9,ec4899,f472b6&radius=50" },
+  { id: "4", name: "Michael", age: 32, location: "Chicago", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=Michael&backgroundColor=3b82f6,6366f1,06b6d4&radius=50" },
+  { id: "5", name: "David", age: 29, location: "Seattle", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=David&backgroundColor=3b82f6,6366f1,06b6d4&radius=50" },
+  { id: "6", name: "Alex", age: 27, location: "Austin", avatar: "https://api.dicebear.com/9.x/avataaars/svg?seed=Alex&backgroundColor=f3a8f9,ec4899,f472b6&radius=50" },
 ];
 
 // ═══════════════════════════════════════════════════════════════

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const { conversationId, content, type = "TEXT" } = await req.json();
+    const { conversationId, content, msgType = "TEXT" } = await req.json();
 
     if (!conversationId || !content) {
       return NextResponse.json(
@@ -57,11 +57,11 @@ export async function POST(req: NextRequest) {
           senderId: userId,
           receiverId,
           seq: nextSeq,
-          msgType: type,
+          msgType,
           payload: content,
           encryptionMode: "SERVER",
           consentState: "CONSENT_NONE",
-          mediaLevel: "L0_TEXT",
+          mediaLevel: msgType === "IMAGE" ? "L1_IMAGE" : msgType === "VOICE" ? "L2_VOICE" : "L0_TEXT",
           ruleResult: "PASS",
         },
         include: {
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
           encryptionMode: "SERVER",
           complianceTags: [],
           consentState: "CONSENT_NONE",
-          mediaLevel: "L0_TEXT",
+          mediaLevel: message.msgType === "IMAGE" ? "L1_IMAGE" : message.msgType === "VOICE" ? "L2_VOICE" : "L0_TEXT",
           ruleResult: "PASS",
           isEdited: false,
           isDeleted: false,

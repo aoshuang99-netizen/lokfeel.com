@@ -36,19 +36,19 @@ const team = [
     name: "Alexandra Chen",
     role: "CEO & Co-Founder",
     bio: "Former product lead at Hinge. Passionate about creating technology that serves human connection.",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Alexandra-Chen&backgroundColor=f3a8f9,ec4899,f472b6&radius=50",
   },
   {
     name: "Dr. Sarah Martinez",
     role: "Chief Science Officer",
     bio: "PhD in Relationship Psychology. 15 years of research on attachment theory and relationship compatibility.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Sarah-Martinez&backgroundColor=f3a8f9,ec4899,f472b6&radius=50",
   },
   {
     name: "Michael Park",
     role: "CTO & Co-Founder",
     bio: "Previously led engineering at Bumble. Expert in building scalable, secure platforms.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Michael-Park&backgroundColor=3b82f6,6366f1,06b6d4&radius=50",
   },
 ];
 

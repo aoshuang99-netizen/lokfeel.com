@@ -42,6 +42,7 @@ interface WhoLikedMeUser {
   matchId: string;
   matchScore: number;
   matchReason: string;
+  isSuperLike?: boolean;  // ★ New: Super Like marker
   sender: MatchUser & {
     gender: string | null;
     relationshipGoal: string | null;
@@ -144,6 +145,7 @@ export default function ConnectionsPage() {
                   onReact={handleReact}
                   isReacting={isReacting}
                   showActions={true}
+                  isSuperLike={like.isSuperLike}  // ★ New
                 />
               ))}
             </div>
@@ -225,6 +227,7 @@ function ConnectionCard({
   showActions,
   chatHref,
   expiresAt,
+  isSuperLike,  // ★ New
 }: {
   user: MatchUser;
   matchScore: number;
@@ -235,6 +238,7 @@ function ConnectionCard({
   showActions: boolean;
   chatHref?: string;
   expiresAt?: string | null;
+  isSuperLike?: boolean;  // ★ New
 }) {
   return (
     <div className="glass-card p-3 rounded-xl border border-card-border hover:border-primary/30 transition-all group">
@@ -283,6 +287,13 @@ function ConnectionCard({
         }`}>
           {matchScore}%
         </div>
+
+        {/* ★ New: Super Like Badge */}
+        {isSuperLike && (
+          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 animate-pulse">
+            ⭐ Super Like
+          </div>
+        )}
       </div>
 
       {/* Info */}

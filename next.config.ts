@@ -27,19 +27,10 @@ const nextConfig: NextConfig = {
   // ─── Image Optimization ───
   images: {
     remotePatterns: [
+      // DiceBear API — Reliable avatar CDN (REPLACES Unsplash)
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'randomuser.me',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
+        hostname: 'api.dicebear.com',
         pathname: '/**',
       },
       // Google OAuth avatars
@@ -179,10 +170,37 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Default API: no caching (for mutation-heavy endpoints)
       {
         source: '/api/:path*',
         headers: [
           { key: 'Cache-Control', value: 'no-store, max-age=0' },
+        ],
+      },
+      // Read-only API endpoints: allow CDN/browser caching
+      // TTLs match Redis cache layer TTLs to prevent stale data
+      {
+        source: '/api/discover',
+        headers: [
+          { key: 'Cache-Control', value: 'private, max-age=30, stale-while-revalidate=60' },
+        ],
+      },
+      {
+        source: '/api/settings',
+        headers: [
+          { key: 'Cache-Control', value: 'private, max-age=300, stale-while-revalidate=600' },
+        ],
+      },
+      {
+        source: '/api/who-liked-me',
+        headers: [
+          { key: 'Cache-Control', value: 'private, max-age=60, stale-while-revalidate=120' },
+        ],
+      },
+      {
+        source: '/api/health',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
         ],
       },
       // Static assets: aggressive caching

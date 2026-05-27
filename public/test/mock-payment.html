@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LokFeel - Mock Payment</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0a; color: #ffffff;
+    min-height: 100vh; display:flex; align-items:center; justify-content:center;
+    padding: 20px;
+  }
+  .card {
+    background: #111111; border:1px solid #222; border-radius:16px;
+    padding: 40px; max-width:480px; width:100%;
+  }
+  .badge {
+    display:inline-block; background:#f59e0b; color:#000;
+    font-size:11px; font-weight:700; padding:4px 10px;
+    border-radius:20px; margin-bottom:16px; letter-spacing:0.05em;
+  }
+  h1 { font-size:22px; font-weight:700; margin-bottom:8px; }
+  .subtitle { color:#888; font-size:14px; margin-bottom:32px; }
+  .plan-box {
+    background:#1a1a1a; border:1px solid #333; border-radius:12px;
+    padding:20px; margin-bottom:24px;
+  }
+  .plan-name { font-size:16px; font-weight:600; margin-bottom:4px; }
+  .plan-price { font-size:32px; font-weight:800; color:#a3e635; }
+  .plan-interval { color:#888; font-size:14px; }
+  .form-group { margin-bottom:16px; }
+  label { display:block; font-size:12px; color:#888; margin-bottom:6px; font-weight:500; }
+  input {
+    width:100%; padding:12px 16px; background:#1a1a1a;
+    border:1px solid #333; border-radius:8px; color:#555; font-size:14px;
+  }
+  .row { display:flex; gap:12px; }
+  .row > * { flex:1; }
+  .btn {
+    width:100%; padding:14px; border:none; border-radius:10px;
+    font-size:15px; font-weight:700; cursor:pointer; transition:all 0.2s;
+    margin-top:8px;
+  }
+  .btn-primary { background:linear-gradient(135deg,#a3e635,#65a30d); color:#0a0a0a; }
+  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(163,230,53,0.3); }
+  .btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .btn-secondary { background:transparent; border:1px solid #333; color:#aaa; margin-top:12px; }
+  .btn-secondary:hover { border-color:#555; color:#fff; }
+  .status { padding:12px; border-radius:8px; margin-top:16px; font-size:13px; display:none; }
+  .status.success { display:block; background:rgba(163,230,53,0.1); border:1px solid rgba(163,230,53,0.3); color:#a3e635; }
+  .status.error { display:block; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#ef4444; }
+  .steps { margin-top:24px; padding-top:24px; border-top:1px solid #222; }
+  .step { display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:13px; color:#555; }
+  .step.active { color:#aaa; }
+  .step.done { color:#a3e635; }
+  .step-icon { font-size:16px; }
+  .note {
+    margin-top:20px; padding:12px; background:rgba(245,158,11,0.1);
+    border:1px solid rgba(245,158,11,0.3); border-radius:8px;
+    font-size:12px; color:#f59e0b; line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="mainCard">
+  <div class="badge">🧪 MOCK MODE — NO REAL PAYMENT</div>
+  <h1>Complete Your Subscription</h1>
+  <p class="subtitle">This is a test payment page. No real transaction will occur.</p>
+
+  <div class="plan-box" id="planBox"></div>
+
+  <div class="form-group">
+    <label>Card Number</label>
+    <input type="text" value="4242 4242 4242 4242" disabled style="color:#555;" />
+  </div>
+  <div class="row">
+    <div class="form-group">
+      <label>Expiry</label>
+      <input type="text" value="12/28" disabled style="color:#555;" />
+    </div>
+    <div class="form-group">
+      <label>CVC</label>
+      <input type="text" value="123" disabled style="color:#555;" />
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="payBtn" onclick="completePayment()">
+    💳 Pay
+  </button>
+  <button class="btn btn-secondary" onclick="failPayment()">Simulate Payment Failure</button>
+  <div class="status" id="statusMsg"></div>
+
+  <div class="steps">
+    <div class="step" id="step1"><span class="step-icon">⏳</span><span>Checkout session created</span></div>
+    <div class="step" id="step2"><span class="step-icon">⏳</span><span>Payment processing</span></div>
+    <div class="step" id="step3"><span class="step-icon">⏳</span><span>Webhook delivered</span></div>
+    <div class="step" id="step4"><span class="step-icon">⏳</span><span>Subscription activated</span></div>
+  </div>
+
+  <div class="note">
+    💡 <strong>How it works:</strong><br/>
+    1. Click "Pay" to simulate successful payment<br/>
+    2. A mock webhook will be sent to <code>/api/webhooks/creem</code><br/>
+    3. Your subscription will be activated in DB<br/>
+    4. You'll be redirected to the success page
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const sessionId = params.get('session_id') || '';
+  let sessionData = null;
+
+  async function loadSession() {
+    if (!sessionId) return showError('Missing session_id parameter');
+    try {
+        const res = await fetch(`/api/test/mock-checkout?session_id=${sessionId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        sessionData = await res.json();
+        renderPlan();
+        setStep(1, 'done');
+      } catch (err) {
+        showError('Failed to load session: ' + err.message);
+      }
+  }
+
+  function renderPlan() {
+    const plan = sessionData.plan === 'PREMIUM_MONTHLY' ? 'Premium Monthly' : 'Premium Yearly';
+    const amount = sessionData.plan === 'PREMIUM_MONTHLY' ? '$19.99' : '$149.99';
+    const interval = sessionData.plan === 'PREMIUM_MONTHLY' ? '/month' : '/year';
+    document.getElementById('planBox').innerHTML = `
+      <div class="plan-name">${plan}</div>
+      <div class="plan-price">${amount}<span class="plan-interval">${interval}</span></div>
+    `;
+    const btn = document.getElementById('payBtn');
+    btn.textContent = `💳 Pay ${amount}`;
+  }
+
+  function setStep(n, status) {
+    const el = document.getElementById('step'+n);
+    if (!el) return;
+    el.className = 'step ' + status;
+    const icon = el.querySelector('.step-icon');
+    if (icon) icon.textContent = status==='done'?'✅':status==='active'?'🔄':'⏳';
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('statusMsg');
+    el.className = 'status ' + type;
+    el.textContent = msg;
+  }
+
+  function showError(msg) {
+    const card = document.getElementById('mainCard');
+    card.innerHTML = `<div class="badge" style="background:#ef4444;color:#fff;">ERROR</div>
+      <h1>⚠️ Error</h1><p class="subtitle">${msg}</p>
+      <button class="btn btn-secondary" onclick="location.reload()">Retry</button>`;
+  }
+
+  async function completePayment() {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.textContent = '🔄 Processing...';
+    setStep(2, 'active');
+    showStatus('Processing payment...', 'success');
+
+    try {
+      const res = await fetch('/api/test/mock-checkout', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, action: 'complete' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Payment failed');
+
+      setStep(2, 'done');
+      setStep(3, 'done');
+      showStatus('✅ Payment successful! Webhook sent. Redirecting...', 'success');
+
+      setTimeout(() => {
+        setStep(4, 'done');
+        window.location.href = data.redirectUrl || '/dashboard/subscription/success?provider=creem&mock=true';
+      }, 2000);
+    } catch (err) {
+      setStep(2, '');
+      showStatus('❌ ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '💳 Pay';
+    }
+  }
+
+  async function failPayment() {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    showStatus('Simulating payment failure...', 'error');
+    try {
+      await fetch('/api/test/mock-checkout', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, action: 'fail' }),
+      });
+    } catch(e) {}
+    showStatus('❌ Payment failed (mock). This simulates a declined card.', 'error');
+    btn.disabled = false;
+  }
+
+  loadSession();
+</script>
+</body>
+</html>

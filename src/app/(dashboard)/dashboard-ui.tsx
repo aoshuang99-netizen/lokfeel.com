@@ -195,6 +195,8 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
       <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
         {/* Lightweight background gradient — no heavy animations */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        {/* Blue glow orbs */}
+        <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-blue-600/8" />
           <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/5" />
           <div className="absolute top-1/2 -left-20 w-72 h-72 rounded-full bg-secondary/5" />
         </div>

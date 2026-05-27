@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * LoginInnerClient — Cool Blue V2 Glassmorphism
+ * LoginInnerClient — Cool Blue V2 Glassmorphism (Optimized for PC)
  * Seamless visual transition from landing page (same video bg + overlay)
  * Retains all OAuth functionality (Google OAuth 2.0, X OAuth 2.0)
+ * OPTIMIZED: Removed all inline styles, use Tailwind classes, PC-friendly layout
  */
 
 import { useState, useCallback } from "react";
@@ -29,8 +30,8 @@ export default function LoginInnerClient({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [twitterError, setTwitterError] = useState<string | null>(null);
+  const [oauthOnly, setOauthOnly] = useState<{ providers: string; email: string } | null>(null);
 
   // ─── X (Twitter) OAuth — Manual navigation with error handling ───
   const handleTwitterSignIn = useCallback(async () => {
@@ -52,13 +53,6 @@ export default function LoginInnerClient({
     e.preventDefault();
     setError("");
 
-    // Validate consent checkbox
-    if (!agreeToTerms) {
-      setError("You must agree to the Terms of Service and Privacy Policy");
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -73,9 +67,26 @@ export default function LoginInnerClient({
         }),
       });
 
-      const data = await safeJsonParse<{ success?: boolean; error?: string; redirectUrl?: string }>(res);
+      const data = await safeJsonParse<{
+        success?: boolean;
+        error?: string;
+        errorCode?: string;
+        providers?: string;
+        email?: string;
+        redirectUrl?: string;
+      }>(res);
 
       if (!res.ok || !data.success) {
+        // Handle OAuth-only user: show OAuth buttons instead of error
+        if (data.errorCode === "OAUTH_ONLY") {
+          setOauthOnly({
+            providers: data.providers || "",
+            email: data.email || email,
+          });
+          setError("");
+          setIsLoading(false);
+          return;
+        }
         // Map server error messages to user-friendly text
         const msg = data.error || "Sign in failed. Please try again.";
         setError(msg);
@@ -92,277 +103,258 @@ export default function LoginInnerClient({
     }
   };
 
-  // ─── Cool Blue Glass Styles ───
-  // Using CSS classes for responsive behavior; keep minimal inline styles for dynamic states
+  // ─── Continue as Guest ───
+  const handleGuestContinue = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Set guest JWT via API route, then redirect
+      window.location.href = `/api/guest?callbackUrl=${encodeURIComponent(callbackUrl || "/dashboard")}`;
+    } catch (err: any) {
+      setError("Unable to continue as guest. Please try again.");
+      setIsLoading(false);
+    }
+  }, [callbackUrl]);
 
-  return (
-      <div className="auth-card">
-        {/* Header — Brand: LokFee! */}
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+  // ─── OAuth-only UI (shown when user has no password) ───
+  if (oauthOnly) {
+    return (
+      <div className="w-full max-w-md mx-auto px-6 py-8">
+        <div className="text-center mb-8">
           <Link
             href="/"
-            style={{
-              fontSize: "26px",
-              fontWeight: "700",
-              color: "#fff",
-              textDecoration: "none",
-              display: "inline-block",
-              marginBottom: "14px",
-            }}
+            className="text-3xl font-bold text-foreground hover:text-primary transition-colors inline-block mb-4"
           >
-            Lok<span style={{ color: "#60a5fa" }}>Feel</span>
+            Lok<span className="text-primary">Feel</span>
           </Link>
-          <h1
-            style={{
-              fontSize: "26px",
-              fontWeight: "700",
-              margin: "0 0 8px",
-              fontFamily: "'Inter', sans-serif",
-            }}
-          >
+          <h1 className="text-2xl font-bold text-foreground font-display mb-2">
             Welcome Back
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "14px", margin: 0 }}>
-            Log in to continue your journey
+          <p className="text-foreground-muted text-sm">
+            This account uses social login
           </p>
         </div>
 
-        {/* ─── SOCIAL LOGIN — VERTICAL STACK (Google top, X bottom) ─── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-          {/* Google — GIS with FedCM */}
-          <GoogleSignInButton
-            callbackUrl={callbackUrl}
-            disabled={isLoading}
-            label="Continue with Google"
-          />
-
-          {/* X (Twitter) — Native OAuth 2.0 + PKCE */}
-          <div style={{ width: "100%" }}>
+        <div className="flex flex-col gap-3 mb-6">
+          {oauthOnly.providers.includes("google") && (
+            <GoogleSignInButton
+              callbackUrl={callbackUrl}
+              label="Continue with Google"
+            />
+          )}
+          {oauthOnly.providers.includes("twitter") && (
             <button
               type="button"
               onClick={handleTwitterSignIn}
-              disabled={isLoading}
-              className="auth-social-btn"
+              className="auth-social-btn w-full"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644z" />
               </svg>
               Continue with X
             </button>
-            {twitterError && (
-              <div style={{
-                marginTop: "8px",
-                padding: "10px 14px",
-                borderRadius: "10px",
-                background: "rgba(251,113,133,0.1)",
-                border: "1px solid rgba(251,113,133,0.2)",
-                color: "#fb7185",
-                fontSize: "13px",
-              }}>
-                {twitterError}
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Divider */}
-        <div className="auth-divider">
-          <span>or continue with email</span>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div
-            style={{
-              marginBottom: "18px",
-              padding: "12px 16px",
-              borderRadius: "12px",
-              background: "rgba(251,113,133,0.08)",
-              border: "1px solid rgba(251,113,133,0.2)",
-              color: "#fb7185",
-              fontSize: "14px",
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        {/* LOGIN FORM */}
-        <form
-          onSubmit={handleSubmit}
-          style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-          noValidate
-        >
-          {/* Email */}
-          <div className="form-group">
-            <label
-              htmlFor="login-email"
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "500",
-                marginBottom: "8px",
-                color: "rgba(255,255,255,0.9)",
-              }}
-            >
-              Email or Phone
-            </label>
-            <input
-              id="login-email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              autoFocus
-              disabled={isLoading}
-              placeholder="Enter your email or phone"
-              className="auth-input"
-            />
-          </div>
-
-          {/* Password */}
-          <div className="form-group">
-            <label
-              htmlFor="login-password"
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "500",
-                marginBottom: "8px",
-                color: "rgba(255,255,255,0.9)",
-              }}
-            >
-              Password
-            </label>
-            <div style={{ position: "relative" }}>
-              <input
-                id="login-password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="current-password"
-                disabled={isLoading}
-                placeholder="Enter your password"
-                className="auth-input"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-                disabled={isLoading}
-                style={{
-                  position: "absolute",
-                  right: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "rgba(255,255,255,0.5)",
-                  padding: "4px",
-                }}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Remember Me + Forgot Password */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "14px",
-                color: "rgba(255,255,255,0.8)",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                style={{
-                  width: "18px",
-                  height: "18px",
-                  accentColor: "#3b82f6",
-                }}
-              />
-              Remember me
-            </label>
-            <Link
-              href="/forgot-password"
-              style={{
-                fontSize: "14px",
-                color: "#60a5fa",
-                textDecoration: "none",
-                fontWeight: "500",
-              }}
-            >
-              Forgot password?
-            </Link>
-          </div>
-
-          {/* Terms + Privacy Checkbox — merged into one */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", paddingTop: "4px" }}>
-            <input
-              id="login-agreeToTerms"
-              type="checkbox"
-              checked={agreeToTerms}
-              onChange={(e) => setAgreeToTerms(e.target.checked)}
-              required
-              style={{ marginTop: "3px", width: "16px", height: "16px", borderRadius: "4px", accentColor: "#3b82f6", flexShrink: 0, cursor: "pointer" }}
-            />
-            <label htmlFor="login-agreeToTerms" style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", lineHeight: "1.5", cursor: "pointer" }}>
-              I agree to the{' '}
-              <Link href="/terms" target="_blank" style={{ color: "#60a5fa", textDecoration: "none", fontWeight: "600" }}>Terms of Service</Link>
-              {' '}and{' '}
-              <Link href="/privacy" target="_blank" style={{ color: "#60a5fa", textDecoration: "none", fontWeight: "600" }}>Privacy Policy</Link>
-            </label>
-          </div>
-
-          {/* Submit */}
+        <p className="text-center text-xs text-foreground-subtle mb-4">
           <button
-            type="submit"
-            disabled={isLoading}
-            className="auth-cta"
+            type="button"
+            onClick={() => { setOauthOnly(null); setEmail(""); setPassword(""); }}
+            className="text-primary hover:text-primary-hover underline cursor-pointer bg-transparent border-none p-0"
           >
-            {isLoading ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Signing In...
-              </>
-            ) : (
-              "Log In"
-            )}
+            ← Use a different email
           </button>
-        </form>
+        </p>
 
-        {/* Create Account — simplified, no duplication with Register page */}
+        <button
+          type="button"
+          onClick={handleGuestContinue}
+          className="auth-cta-secondary w-full text-center"
+        >
+          Continue as Guest
+        </button>
+      </div>
+    );
+  }
+
+  // ─── Cool Blue Glass Styles (PC-optimized) ───
+  // Using Tailwind classes for all styling (no inline styles)
+
+  return (
+    <div className="w-full max-w-md mx-auto px-6 py-8">
+      {/* Header — Brand: LokFeel */}
+      <div className="text-center mb-8">
+        <Link
+          href="/"
+          className="text-3xl font-bold text-foreground hover:text-primary transition-colors inline-block mb-4"
+        >
+          Lok<span className="text-primary">Feel</span>
+        </Link>
+        <h1 className="text-2xl font-bold text-foreground font-display mb-2">
+          Welcome Back
+        </h1>
+        <p className="text-foreground-muted text-sm">
+          Log in to continue your journey
+        </p>
+      </div>
+
+      {/* ─── SOCIAL LOGIN — VERTICAL STACK (Google top, X bottom) ─── */}
+      <div className="flex flex-col gap-3 mb-6">
+        {/* Google — GIS with FedCM */}
+        <GoogleSignInButton
+          callbackUrl={callbackUrl}
+          disabled={isLoading}
+          label="Continue with Google"
+        />
+
+        {/* X (Twitter) — Native OAuth 2.0 + PKCE */}
+        <div className="w-full">
+          <button
+            type="button"
+            onClick={handleTwitterSignIn}
+            disabled={isLoading}
+            className="auth-social-btn w-full"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644z" />
+            </svg>
+            Continue with X
+          </button>
+          {twitterError && (
+            <div className="mt-2 p-3 rounded-xl bg-error-muted border border-error-muted text-error text-sm">
+              {twitterError}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="auth-divider mb-6">
+        <span>or continue with email</span>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="mb-4 p-3 rounded-xl bg-error-muted border border-error-muted text-error text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* LOGIN FORM */}
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4"
+        noValidate
+      >
+        {/* Email */}
+        <div className="form-group">
+          <label
+            htmlFor="login-email"
+            className="block text-sm font-medium text-foreground-muted mb-2"
+          >
+            Email or Phone
+          </label>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            autoFocus
+            disabled={isLoading}
+            placeholder="Enter your email or phone"
+            className="auth-input w-full"
+          />
+        </div>
+
+        {/* Password */}
+        <div className="form-group">
+          <label
+            htmlFor="login-password"
+            className="block text-sm font-medium text-foreground-muted mb-2"
+          >
+            Password
+          </label>
+          <div className="relative">
+            <input
+              id="login-password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              autoComplete="current-password"
+              disabled={isLoading}
+              placeholder="Enter your password"
+              className="auth-input w-full pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex={-1}
+              disabled={isLoading}
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-foreground-subtle hover:text-foreground p-1"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Remember Me */}
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 text-sm text-foreground-muted cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 accent-lime-400"
+            />
+            Remember me
+          </label>
+          <Link
+            href="/forgot-password"
+            className="text-sm text-primary hover:text-primary-hover font-medium"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="auth-cta w-full mt-2"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Signing In...
+            </>
+          ) : (
+            "Log In"
+          )}
+        </button>
+      </form>
+
+      {/* ─── Bottom Links Row — subtle, Tinder/Bumble style ─── */}
+      <div className="flex items-center justify-center gap-3 mt-6 text-sm text-foreground-subtle">
+        <button
+          type="button"
+          onClick={handleGuestContinue}
+          className="bg-transparent border-none cursor-pointer text-foreground-subtle hover:text-foreground transition-colors p-0 text-sm"
+        >
+          Continue as Guest
+        </button>
+        <span className="text-foreground-faint">·</span>
         <Link
           href="/register"
-          className="auth-cta"
-          style={{
-            background: "linear-gradient(135deg, #8b5cf6, #a855f7)",
-            boxShadow: "0 4px 20px rgba(139,92,246,0.35)",
-            textDecoration: "none",
-            marginTop: "14px",
-          }}
+          className="text-primary hover:text-primary-hover font-medium transition-colors"
         >
-          Create Account
+          Sign up
         </Link>
       </div>
+    </div>
   );
 }

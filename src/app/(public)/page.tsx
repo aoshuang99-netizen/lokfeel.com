@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import QuickSignupModal from "@/components/auth/quick-signup-modal";
-import QuickLoginModal from "@/components/auth/quick-login-modal";
 import Footer from "@/components/layout/footer";
 
 /**
@@ -651,7 +651,7 @@ function CTASection({ onSignupClick }: any) {
 export default function LandingPage() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [signupOpen, setSignupOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -687,7 +687,7 @@ export default function LandingPage() {
       <VideoBackground />
 
       {/* Navbar */}
-      <Navbar onSignupClick={() => setSignupOpen(true)} onLoginClick={() => setLoginOpen(true)} />
+      <Navbar onSignupClick={() => setSignupOpen(true)} onLoginClick={() => router.push("/login")} />
 
       {/* Main Content */}
       <main id="main-content" tabIndex={-1}>
@@ -700,18 +700,10 @@ export default function LandingPage() {
       {/* Footer */}
       <Footer />
 
-      {/* Modals */}
+      {/* Modal — unified Sign Up only */}
       <QuickSignupModal
         isOpen={signupOpen}
         onClose={() => setSignupOpen(false)}
-      />
-      <QuickLoginModal
-        isOpen={loginOpen}
-        onClose={() => setLoginOpen(false)}
-        onSwitchToSignup={() => {
-          setLoginOpen(false);
-          setSignupOpen(true);
-        }}
       />
     </div>
   );

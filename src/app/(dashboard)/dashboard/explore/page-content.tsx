@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, isBrokenAvatarUrl, getRealPhotoAvatarUrl, generateLocalAvatarDataUri } from "@/lib/avatar-utils";
+import { FilterPanel } from "@/components/discover/filter-panel";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -316,14 +317,28 @@ export default function DiscoverPage() {
   const [showFilter, setShowFilter] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // ★ New: Filter state for FilterPanel → Discover API
+  const [activeFilters, setActiveFilters] = useState<Record<string, string | number | null>>({});
+
   useEffect(() => {
     loadUsers();
   }, []);
 
-  const loadUsers = async () => {
+  const loadUsers = async (filters?: Record<string, string | number | null>) => {
     try {
       setLoading(true);
-      const res = await fetch("/api/discover?limit=20");
+      // Build query params from filters
+      const params = new URLSearchParams({ limit: "20" });
+      if (filters) {
+        if (filters.preferredGender) params.set("preferredGender", String(filters.preferredGender));
+        if (filters.preferredAgeMin) params.set("preferredAgeMin", String(filters.preferredAgeMin));
+        if (filters.preferredAgeMax) params.set("preferredAgeMax", String(filters.preferredAgeMax));
+        if (filters.preferredDistance) params.set("preferredDistance", String(filters.preferredDistance));
+        if (filters.relationshipGoal) params.set("relationshipGoal", String(filters.relationshipGoal));
+        if (filters.attachmentStyle) params.set("attachmentStyle", String(filters.attachmentStyle));
+        if (filters.city) params.set("city", String(filters.city));
+      }
+      const res = await fetch(`/api/discover?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
 
@@ -454,7 +469,7 @@ export default function DiscoverPage() {
             <Filter className="w-4 h-4 text-foreground-muted" />
           </button>
           <button
-            onClick={loadUsers}
+            onClick={() => loadUsers()}
             className="p-2 rounded-full hover:bg-background-tertiary transition-colors"
           >
             <RefreshCw className="w-4 h-4 text-foreground-muted" />
@@ -472,46 +487,16 @@ export default function DiscoverPage() {
         />
       </div>
 
-      {/* ── Filter Panel (Coming Soon) ── */}
-      <AnimatePresence>
-        {showFilter && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-b border-card-border"
-          >
-            <div className="px-5 py-4 bg-card">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Filters</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-foreground-muted mb-1 block">Age Range</label>
-                  <div className="flex items-center gap-2">
-                    <input type="number" placeholder="18" min="18" max="99"
-                      className="w-full px-3 py-2 rounded-lg border border-card-border bg-background text-sm text-foreground" />
-                    <span className="text-foreground-muted text-sm">-</span>
-                    <input type="number" placeholder="50" min="18" max="99"
-                      className="w-full px-3 py-2 rounded-lg border border-card-border bg-background text-sm text-foreground" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs text-foreground-muted mb-1 block">Distance</label>
-                  <select className="w-full px-3 py-2 rounded-lg border border-card-border bg-background text-sm text-foreground">
-                    <option>Any distance</option>
-                    <option>5 km</option>
-                    <option>25 km</option>
-                    <option>50 km</option>
-                    <option>100 km</option>
-                  </select>
-                </div>
-              </div>
-              <p className="text-xs text-foreground-muted mt-3">
-                More filters and advanced matching coming soon.
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── Filter Panel ── */}
+      <FilterPanel
+        isOpen={showFilter}
+        onClose={() => setShowFilter(false)}
+        onApply={(filters) => {
+          const typedFilters = filters as unknown as Record<string, string | number | null>;
+          setActiveFilters(typedFilters);
+          loadUsers(typedFilters);
+        }}
+      />
 
       {/* ── Card Stack ── */}
       <div className="flex-1 flex flex-col items-center justify-center p-5 min-h-[50vh]">
@@ -544,7 +529,7 @@ export default function DiscoverPage() {
                     Check back later for more profiles
                   </p>
                   <button
-                    onClick={loadUsers}
+                    onClick={() => loadUsers()}
                     className="btn-primary text-sm"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
@@ -605,7 +590,7 @@ export default function DiscoverPage() {
           </button>
         </div>
         <p className="text-center text-xs text-foreground-subtle mt-3">
-          Swipe right to like, left to pass
+          Swipe right to like, left to pass, star to super like ⭐
         </p>
       </div>
     </div>

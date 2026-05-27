@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Check, Mail, Lock, User as UserIcon, Cake, Heart, ArrowRight } from "lucide-react";
 import { GENDER_OPTIONS, SEXUALITY_OPTIONS } from "@/constants";
@@ -15,6 +16,7 @@ interface QuickSignupModalProps {
 }
 
 export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email" }: QuickSignupModalProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"email" | "social">(defaultTab);
   const [step, setStep] = useState<Step>(defaultTab);
   const [loading, setLoading] = useState(false);
@@ -531,9 +533,9 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
                 <div className="mt-6 text-center">
                   <p className="text-xs text-foreground-faint">
                     By signing up, you agree to our{" "}
-                    <a href="/terms" className="text-blue-400 hover:text-blue-300">Terms</a>
+                    <a href="/terms" className="text-lime-400 hover:text-lime-300">Terms</a>
                     {" "}and{" "}
-                    <a href="/privacy" className="text-blue-400 hover:text-blue-300">Privacy</a>
+                    <a href="/privacy" className="text-lime-400 hover:text-lime-300">Privacy</a>
                   </p>
                 </div>
 
@@ -541,8 +543,8 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
                   <p className="text-sm text-foreground-muted">
                     Already have an account?{" "}
                     <button
-                      onClick={() => { setActiveTab("email"); setStep("basic"); }}
-                      className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                      onClick={() => { onClose(); router.push("/login"); }}
+                      className="text-lime-400 hover:text-lime-300 font-medium transition-colors bg-transparent border-none cursor-pointer"
                     >
                       Log in
                     </button>
