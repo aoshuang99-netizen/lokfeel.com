@@ -29,6 +29,7 @@ export default function LoginInnerClient({
   const [error, setError] = useState(initialError);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSlowResponse, setIsSlowResponse] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [twitterError, setTwitterError] = useState<string | null>(null);
   const [oauthOnly, setOauthOnly] = useState<{ providers: string; email: string } | null>(null);
@@ -52,10 +53,28 @@ export default function LoginInnerClient({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsSlowResponse(false);
+
+    // Basic validation before sending request
+    if (!email.trim() || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
 
     setIsLoading(true);
 
+    // Show "still working" feedback after 3 seconds
+    const slowTimer = setTimeout(() => setIsSlowResponse(true), 3000);
+
     try {
+      // Add 10-second timeout so user isn't stuck forever
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -65,7 +84,11 @@ export default function LoginInnerClient({
           callbackUrl: callbackUrl || "/dashboard",
           rememberMe,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+      clearTimeout(slowTimer);
 
       const data = await safeJsonParse<{
         success?: boolean;
@@ -96,9 +119,16 @@ export default function LoginInnerClient({
 
       // Session cookie is already set by the server — just navigate
       window.location.href = data.redirectUrl || "/dashboard";
-    } catch (err) {
+    } catch (err: any) {
+      clearTimeout(slowTimer);
       console.error("[Login] Error:", err);
-      setError(getAuthErrorMessage(err));
+
+      // AbortError = timeout — show specific message
+      if (err.name === "AbortError") {
+        setError("Request timed out. The server may be busy. Please try again.");
+      } else {
+        setError(getAuthErrorMessage(err));
+      }
       setIsLoading(false);
     }
   };
@@ -330,7 +360,7 @@ export default function LoginInnerClient({
           {isLoading ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Signing In...
+              {isSlowResponse ? "Still working..." : "Signing In..."}
             </>
           ) : (
             "Log In"

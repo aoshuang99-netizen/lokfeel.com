@@ -18,20 +18,21 @@
 /** DiceBear base URL */
 const DICEBEAR_BASE = 'https://api.dicebear.com/9.x';
 
-/** DiceBear style for avatar fallback */
-const DICEBEAR_STYLE = 'avataaars'; // Cartoon-style avatars (good for dating app)
+/** DiceBear style for avatar fallback — lorelei is the most realistic style */
+const DICEBEAR_STYLE = 'lorelei';
 
 /**
- * Generate DiceBear avatar URL from seed
- * Format: https://api.dicebear.com/9.x/{style}/svg?seed={seed}&backgroundColor={color}
+ * Generate DiceBear avatar URL from seed.
+ * Uses lorelei style (most realistic, least cartoonish).
+ * Format: https://api.dicebear.com/9.x/lorelei/svg?seed={seed}&backgroundColor={color}&radius=50
  */
 function getDiceBearUrl(seed: string, gender?: string, age?: number): string {
-  // Gender-aware background color
+  // Gender-aware background color — softer, more natural palette
   const bgColor = gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN'
-    ? 'f3a8f9,ec4899,f472b6' // Pink/Purple for female
+    ? 'fce7f3,fbcfe8,f9a8d4' // Soft pink for female
     : gender === 'male' || gender === 'MALE' || gender === 'MAN'
-    ? '3b82f6,6366f1,06b6d4' // Blue for male
-    : '8b5cf6,6d28d9,a78bfa'; // Purple for others
+    ? 'dbeafe,bfdbfe,93c5fd' // Soft blue for male
+    : 'f3e8ff,e9d5ff,d8b4fe'; // Soft purple for others
 
   return `${DICEBEAR_BASE}/${DICEBEAR_STYLE}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${bgColor}&radius=50`;
 }

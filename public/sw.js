@@ -3,12 +3,12 @@
  *
  * Achieves millisecond-scale loading via:
  * 1. App Shell Strategy   — HTML/JS/CSS cached on install (instant navigation)
- * 2. Image Cache Strategy — Avatars/photos cached with stale-while-revalidate
- * 3. Offline Fallback    — Local SVG avatars work offline
+ * 2. Image Cache Strategy — Avatars cached with stale-while-revalidate (lorelei style)
+ * 3. Offline Fallback    — Turso-stored base64 avatars work offline
  * 4. Background Sync     — Defers non-critical API calls
  */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;

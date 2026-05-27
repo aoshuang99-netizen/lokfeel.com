@@ -55,10 +55,9 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim()
 
-    // ─── 2. Find user ───
+    // ─── 2. Find user (LEAN: no profile include, we only need user fields) ───
     const user = await db.user.findUnique({
       where: { email: normalizedEmail },
-      include: { profile: true },
     })
 
     if (!user) {
@@ -114,10 +113,10 @@ export async function POST(request: NextRequest) {
     const tokenPayload = {
       id: user.id,
       email: user.email,
-      name: user.name || user.profile?.displayName || "",
-      picture: user.image || user.profile?.avatar || null,
-      role: user.role || "USER",
-      emailVerified: user.emailVerified || null,
+      name: user.name || "",
+      picture: user.image || null,
+      role: (user as any).role || "USER",
+      emailVerified: (user as any).emailVerified || null,
       sub: user.id,
     }
 

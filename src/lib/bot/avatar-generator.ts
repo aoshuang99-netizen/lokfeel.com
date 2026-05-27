@@ -54,22 +54,22 @@ interface GenerationResult {
 
 const DICEBEAR_BASE = 'https://api.dicebear.com/9.x';
 
-// 不同风格对应不同 DiceBear 风格
+// 所有风格统一使用 lorelei（DiceBear 最逼真的风格）以实现高清效果
 const STYLE_MAP: Record<AvatarStyle, string> = {
-  professional: 'avataaars',   // 商务卡通风格
-  casual: 'adventurer',       // 休闲冒险风格
-  artistic: 'shapes',          // 艺术几何风格
-  natural: 'lorelei',         // 自然真实风格
+  professional: 'lorelei',   // 统一使用最逼真风格
+  casual: 'lorelei',         // 统一使用最逼真风格
+  artistic: 'lorelei',       // 统一使用最逼真风格
+  natural: 'lorelei',        // 统一使用最逼真风格
 };
 
 // 肤色映射（DiceBear 支持 backgroundColor 参数）
 const ETHNICITY_BG: Record<Ethnicity, string> = {
-  caucasian: 'f3d5b3,d2b48c,c19a6b',    // 浅肤色
-  african: '8b4513,a0522d,6b3410',         // 深肤色
-  asian: 'f5cba7,e8b894,d4a574',          // 亚洲肤色
-  hispanic: 'd2b48c,b8860b,a0522d',       // 拉丁肤色
-  south_asian: 'f7d794,e8b894,d4a574',    // 南亚肤色
-  middle_eastern: 'e8b894,d2b48c,c19a6b',  // 中东肤色
+  caucasian: 'fce7f3,fbcfe8,dbeafe,bfdbfe',    // 柔和色彩
+  african: 'f3e8ff,e9d5ff,d8b4fe,c4b5fd',      // 柔和紫色
+  asian: 'fce7f3,f3e8ff,e9d5ff,fbcfe8',          // 柔和混合
+  hispanic: 'dbeafe,bfdbfe,f3e8ff,e9d5ff',       // 柔和蓝紫
+  south_asian: 'fce7f3,fbcfe8,f3e8ff,e9d5ff',    // 柔和粉紫
+  middle_eastern: 'dbeafe,bfdbfe,fce7f3,fbcfe8',  // 柔和蓝粉
 };
 
 // ============================================================
