@@ -80,9 +80,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Step 3: Exchange code for tokens
-    // NOTE: The redirect_uri MUST match what was used in the authorization request
-    // This MUST match the signin route: /api/auth/oauth/google/callback
-    const redirectUri = `${request.nextUrl.origin}/api/auth/oauth/google/callback`;
+    // NOTE: The redirect_uri MUST match what was used in the authorization request.
+    // The signin handler sends /api/auth/callback/google (matching Google Cloud Console).
+    // Token exchange MUST use the same redirect_uri.
+    const redirectUri = `${request.nextUrl.origin}/api/auth/callback/google`;
 
     console.log("[Google OAuth Callback] Redirect URI (for token exchange):", redirectUri);
 

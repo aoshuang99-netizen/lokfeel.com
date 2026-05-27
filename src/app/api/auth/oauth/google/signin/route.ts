@@ -48,7 +48,6 @@ export async function GET(request: NextRequest) {
   const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/dashboard";
 
   console.log("[Google OAuth Signin] Callback URL:", callbackUrl);
-  console.log("[Google OAuth Signin] Redirect URI (for Google):", `${request.nextUrl.origin}/api/auth/oauth/google/callback`);
 
   // Step 2: Generate our own PKCE
   const codeVerifier = generateCodeVerifier();
@@ -58,10 +57,14 @@ export async function GET(request: NextRequest) {
   console.log("[Google OAuth Signin] Generated PKCE code_challenge (length):", codeChallenge.length);
 
   // Build the redirect URI (where Google will send the user back)
-  // This MUST match the actual route path and Google Cloud Console configuration
+  // This MUST match Google Cloud Console's Authorized Redirect URIs.
+  // Google Cloud Console has: /api/auth/callback/google (the old NextAuth path).
+  // The [...nextauth] interceptor bridges this to our actual handler at /api/auth/oauth/google/callback.
   // Use NEXT_PUBLIC_APP_URL to ensure correct domain in production
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-  const redirectUri = `${baseUrl}/api/auth/oauth/google/callback`;
+  const redirectUri = `${baseUrl}/api/auth/callback/google`;
+
+  console.log("[Google OAuth Signin] Redirect URI (for Google):", redirectUri);
 
   // Build Google authorization URL
   const googleAuthUrl = buildGoogleAuthorizationUrl({
