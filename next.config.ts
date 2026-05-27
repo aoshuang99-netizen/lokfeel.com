@@ -7,7 +7,7 @@ const CSP_VALUE = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://accounts.google.com",
   "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com",
   "font-src 'self' fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com",
+  "img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com",
   "connect-src 'self' https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com",
   "frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com",
   "base-uri 'self'",

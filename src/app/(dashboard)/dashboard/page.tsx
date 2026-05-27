@@ -6,16 +6,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import {
-  Heart,
-  MessageCircle,
   Sparkles,
   ChevronRight,
   Flame,
   ArrowRight,
-  Check,
-  Loader2,
   Search,
-  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/components/ui";
@@ -78,7 +73,7 @@ function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
 
   return (
     <div
-      className="flex-shrink-0 w-[280px] snap-start animate-fadeInUp"
+      className="flex-shrink-0 w-[calc(100vw-48px)] sm:w-[280px] snap-start animate-fadeInUp"
       style={{ animationDelay: `${index * 80}ms` }}
     >
       <Link href={`/dashboard/users/${user.id}`}>
@@ -314,21 +309,16 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-10 relative min-h-screen">
-      {/* ── Subtle background orbs ── */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
-        <div className="absolute w-[500px] h-[500px] -top-48 -right-48 bg-primary/5 rounded-full blur-3xl opacity-40 animate-pulse" />
-        <div className="absolute w-[400px] h-[400px] bottom-32 -left-40 bg-secondary-muted rounded-full blur-3xl opacity-30 animate-pulse" style={{ animationDelay: "2s" }} />
-      </div>
+    <div className="max-w-6xl mx-auto px-0 sm:px-4 py-4 sm:py-6 space-y-5 sm:space-y-8 relative min-h-screen">
 
       {/* ════════════════════════════════════
           SECTION 1: PERSONALIZED GREETING — CSS动画
           ════════════════════════════════════ */}
       <section className="animate-fadeIn">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1 font-display">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-1 font-display">
           {getGreeting()}, <span className="text-primary-hover">{firstName}</span>
         </h1>
-        <p className="text-foreground-muted text-sm">
+        <p className="text-foreground-muted text-xs sm:text-sm">
           Discover people who match your relationship blueprint
         </p>
       </section>
@@ -336,13 +326,13 @@ export default function DashboardPage() {
       {/* ════════════════════════════════════
           SECTION 2: TODAY'S PICKS — 核心区块
           ════════════════════════════════════ */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
+      <section className="space-y-3 sm:space-y-4">
+        <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cta/30 to-cta/10 flex items-center justify-center">
-              <Flame className="w-4 h-4 text-cta" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-cta/30 to-cta/10 flex items-center justify-center">
+              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cta" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground font-display">Today's Picks</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-foreground font-display">Today's Picks</h2>
             <span className="text-xs text-foreground-muted ml-2">
               {discoverUsers.length} {discoverUsers.length === 1 ? 'person' : 'people'} nearby
             </span>
@@ -356,23 +346,23 @@ export default function DashboardPage() {
         </div>
 
         {discoverLoading ? (
-          <div className="flex gap-4 overflow-hidden">
+          <div className="flex gap-3 sm:gap-4 overflow-hidden px-1">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="w-[280px] flex-shrink-0 rounded-2xl bg-foreground-faint animate-pulse aspect-[3/4]" />
+              <div key={i} className="w-[calc(100vw-48px)] sm:w-[280px] flex-shrink-0 rounded-2xl bg-foreground-faint animate-pulse aspect-[3/4]" />
             ))}
           </div>
         ) : discoverUsers.length > 0 ? (
           <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 sm:pb-4 snap-x snap-mandatory scrollbar-hide touch-pan-x"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
           >
             {discoverUsers.map((user, index) => (
               <TodayPickCard key={user.id} user={user} index={index} />
             ))}
           </div>
         ) : (
-          <div className="bg-background-secondary rounded-2xl p-8 text-center border border-card-border animate-fadeIn">
+          <div className="bg-background-secondary rounded-2xl p-6 sm:p-8 text-center border border-card-border animate-fadeIn mx-1">
             <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-7 h-7 text-primary" />
             </div>
@@ -389,43 +379,6 @@ export default function DashboardPage() {
       </section>
 
       {/* ════════════════════════════════════
-          SECTION 3: QUICK ACTIONS — 简化
-          ════════════════════════════════════ */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Link href="/dashboard/chats" className="bg-background-secondary rounded-2xl p-4 border border-card-border hover:border-primary/30 transition-all duration-300 group">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <MessageCircle className="w-5 h-5 text-primary" />
-          </div>
-          <p className="text-sm font-medium text-foreground">Messages</p>
-          <p className="text-xs text-foreground-muted mt-0.5">Chat with matches</p>
-        </Link>
-
-        <Link href="/dashboard/notifications" className="bg-background-secondary rounded-2xl p-4 border border-card-border hover:border-pink-500/30 transition-all duration-300 group">
-          <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <Heart className="w-5 h-5 text-pink-400" />
-          </div>
-          <p className="text-sm font-medium text-foreground">Matches</p>
-          <p className="text-xs text-foreground-muted mt-0.5">View your matches</p>
-        </Link>
-
-        <Link href="/dashboard/profile" className="bg-background-secondary rounded-2xl p-4 border border-card-border hover:border-primary/30 transition-all duration-300 group">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <User className="w-5 h-5 text-primary" />
-          </div>
-          <p className="text-sm font-medium text-foreground">Profile</p>
-          <p className="text-xs text-foreground-muted mt-0.5">Edit your info</p>
-        </Link>
-
-        <Link href="/dashboard/subscription" className="bg-background-secondary rounded-2xl p-4 border border-card-border hover:border-cta/30 transition-all duration-300 group">
-          <div className="w-10 h-10 rounded-xl bg-cta/20 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-5 h-5 text-cta" />
-          </div>
-          <p className="text-sm font-medium text-foreground">Upgrade</p>
-          <p className="text-xs text-foreground-muted mt-0.5">Unlock premium</p>
-        </Link>
-      </section>
-
-      {/* ════════════════════════════════════
           SECTION 4: ANALYTICS REPORT — 懒加载
           ════════════════════════════════════ */}
       <section className="animate-fadeIn" style={{ animationDelay: "300ms" }}>
@@ -434,8 +387,8 @@ export default function DashboardPage() {
 
       {/* Onboarding CTA — 如果没有完成 */}
       {isProfileLocked && (
-        <div className="bg-background-secondary rounded-2xl p-6 border border-primary/30 animate-fadeIn">
-          <div className="flex flex-col md:flex-row items-center gap-4">
+        <div className="bg-background-secondary rounded-2xl p-4 sm:p-6 border border-primary/30 animate-fadeIn">
+          <div className="flex flex-col md:flex-row items-center gap-3 sm:gap-4">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-6 h-6 text-background" />
             </div>

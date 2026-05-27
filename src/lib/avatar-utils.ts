@@ -50,8 +50,11 @@ export type AvatarKind = 'emoji' | 'photo' | 'none';
 export function getAvatarKind(avatar: string | null | undefined): AvatarKind {
   if (!avatar || avatar === '') return 'none';
   if (avatar.startsWith('emoji:')) return 'emoji';
-  // Legacy cartoon/SVG avatars are phased out — treat as none to use real photo fallback
-  if (avatar.includes('dicebear.com') || avatar.endsWith('.svg')) return 'none';
+  // DiceBear is NOW our PRIMARY avatar source (migrated from Unsplash).
+  // Never reject it — it MUST render as a photo.
+  if (avatar.includes('api.dicebear.com')) return 'photo';
+  // Legacy SVG avatars from unknown sources — treat as none for fallback
+  if (avatar.endsWith('.svg')) return 'none';
   return 'photo';
 }
 
@@ -345,7 +348,10 @@ export function generateLocalAvatarDataUri(seed: string): string {
 export function isValidPhotoUrl(url: string | null | undefined): boolean {
   if (!url) return false;
   if (url.startsWith('emoji:')) return false;
-  if (url.includes('dicebear.com') || url.endsWith('.svg')) return false;
+  // DiceBear is our primary avatar source — treat as valid
+  if (url.includes('api.dicebear.com')) return true;
+  // Reject legacy/non-standard SVG avatars
+  if (url.endsWith('.svg')) return false;
   if (isBrokenAvatarUrl(url)) return false;
   return true;
 }
