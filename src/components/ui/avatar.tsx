@@ -48,10 +48,9 @@ function useNextImage(src: string | null | undefined): boolean {
   // SVG: use native img to preserve animation
   if (src.endsWith('.svg')) return false
   
-  // DiceBear API returns SVG (Content-Type: image/svg+xml)
-  // next/image with dangerouslyAllowSVG:false silently rejects SVGs
-  // → bypass next/image and use native <img> for all DiceBear URLs
-  if (src.includes('api.dicebear.com')) return false
+  // DiceBear: now handled by next/image (dangerouslyAllowSVG: true enables SVG optimization)
+  // SVG optimization improves LCP by converting to AVIF/WebP in supported browsers
+  // → let next/image handle it (remotePatterns already configured)
   
   // Blob URLs: local object URLs
   if (src.startsWith('blob:')) return false

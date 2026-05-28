@@ -56,8 +56,10 @@ const nextConfig: NextConfig = {
     imageSizes: [32, 48, 64, 96, 128, 256, 384, 512, 768],
     // Disable unoptimized images in production (always optimize)
     unoptimized: false,
-    // Dangerously allow SVG (for emoji avatars if needed)
-    dangerouslyAllowSVG: false,
+    // Dangerously allow SVG — REQUIRED for DiceBear avatars
+    // DiceBear returns SVG (Content-Type: image/svg+xml) which next/image
+    // silently rejects when dangerouslyAllowSVG=false, causing blank avatars
+    dangerouslyAllowSVG: true,
   },
   
   // ─── Navigation Route Redirects ───
