@@ -156,12 +156,22 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  // ─── 4. Security headers on all responses ───
+  // ─── 4. Security + Cache headers on all responses ───
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)')
+
+  // ─── 5. CDN cache headers for public pages ───
+  // next.config.ts headers() may not apply when middleware is present,
+  // so we explicitly set s-maxage here for Cloudflare to cache.
+  const publicPaths = ['/', '/login', '/register']
+  if (publicPaths.includes(pathname) || pathname === '/') {
+    // s-maxage=60: CDN caches for 60s
+    // stale-while-revalidate: serve stale while revalidating
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300')
+  }
 
   return response
 }
