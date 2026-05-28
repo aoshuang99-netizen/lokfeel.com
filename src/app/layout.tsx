@@ -128,11 +128,13 @@ if ('serviceWorker' in navigator) {
           }}
         />
 
-        {/* Preconnect only for GTM (fonts are now self-hosted via next/font) */}
+        {/* Preconnect for critical services — reduces TLS+DNS on cold start */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
-        {/* Preconnect to DiceBear CDN for avatar images (REPLACES Unsplash) */}
         <link rel="preconnect" href="https://api.dicebear.com" />
+        <link rel="preconnect" href="https://accounts.google.com" />
+        <link rel="preconnect" href="https://www.googleapis.com" />
         <link rel="dns-prefetch" href="https://api.dicebear.com" />
+        <link rel="dns-prefetch" href="https://accounts.google.com" />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         {/* Google Tag Manager (noscript) */}
