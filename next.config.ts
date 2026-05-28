@@ -172,6 +172,29 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // ─── Public ISR pages: allow CDN caching ───
+      // Without this, Vercel defaults to max-age=0, preventing Cloudflare
+      // from caching the response (cf-cache-status: DYNAMIC)
+      // s-maxage controls CDN cache; stale-while-revalidate allows serving
+      // slightly stale content while Vercel regenerates ISR in background
+      {
+        source: '/',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
+        ],
+      },
+      {
+        source: '/login',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
+        ],
+      },
+      {
+        source: '/register',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
+        ],
+      },
       // Default API: no caching (for mutation-heavy endpoints)
       {
         source: '/api/:path*',

@@ -48,9 +48,11 @@ function useNextImage(src: string | null | undefined): boolean {
   // SVG: use native img to preserve animation
   if (src.endsWith('.svg')) return false
   
-  // DiceBear: now handled by next/image (dangerouslyAllowSVG: true enables SVG optimization)
-  // SVG optimization improves LCP by converting to AVIF/WebP in supported browsers
-  // → let next/image handle it (remotePatterns already configured)
+  // DiceBear: MUST use native <img> because Vercel's _next/image returns
+  // 400 INVALID_IMAGE_OPTIMIZE_REQUEST for DiceBear SVG URLs
+  // (the path /9.x/lorelei/svg lacks a .svg extension, confusing the optimizer)
+  // DiceBear SVGs are only ~5KB so optimization wouldn't help anyway
+  if (src.includes('api.dicebear.com')) return false
   
   // Blob URLs: local object URLs
   if (src.startsWith('blob:')) return false
