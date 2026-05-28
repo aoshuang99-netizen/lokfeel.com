@@ -177,14 +177,16 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Explicitly list all paths that need middleware processing.
+  // Next.js middleware matcher: negative lookahead was incorrectly excluding /login etc.
+  // Using positive match list instead for reliability.
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (images, etc.)
-     */
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|html|json)$).*)',
+    '/',
+    '/login',
+    '/register',
+    '/dashboard/:path*',
+    '/api/:path*',
+    '/admin/:path*',
+    '/blocked',
   ],
 }
