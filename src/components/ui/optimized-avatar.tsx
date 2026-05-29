@@ -20,6 +20,11 @@ function isDiceBearUrl(src: string): boolean {
   return src?.includes("api.dicebear.com") || false;
 }
 
+// Data URLs (base64 photos from upload) must use native <img> — next/image does NOT support data: URLs
+function isDataUrl(src: string): boolean {
+  return src?.startsWith("data:") || false;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // DESIGN TOKENS
 // ═══════════════════════════════════════════════════════════════
@@ -284,9 +289,9 @@ export function OptimizedAvatar({
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/2 animate-pulse" />
         )}
 
-        {/* Actual image — use <img> for DiceBear SVGs (next/image returns 400) */}
+        {/* Actual image — use <img> for DiceBear SVGs and data URLs (next/image can't handle them) */}
         {!error && (
-          isDiceBearUrl(imageSrc) ? (
+          (isDiceBearUrl(imageSrc) || isDataUrl(imageSrc)) ? (
             <img
               src={imageSrc}
               alt={alt}
