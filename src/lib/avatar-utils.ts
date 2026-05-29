@@ -173,10 +173,15 @@ export function getRealPhotoAvatarUrl(
   age?: number
 ): string {
   // Use local HD photos (mirrored from i.pravatar.cc, 800×800)
+  // i.pravatar.cc only has 70 photos (img=1..70)
+  // men/1..50 (50 photos), women/51..70 (20 photos)
   const isFemale = gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN';
   const hash = hashSeed(seed);
-  const index = (hash % 100) + 1;
+  const totalPhotos = isFemale ? 20 : 50;
+  const offset = isFemale ? 50 : 0; // women start at 51
+  const index = (hash % totalPhotos) + 1 + offset;
   const folder = isFemale ? 'women' : 'men';
+  // Returns: /avatars/hd/men/{1..50}.jpg or /avatars/hd/women/{51..70}.jpg
   return `/avatars/hd/${folder}/${index}.jpg`;
 }
 
