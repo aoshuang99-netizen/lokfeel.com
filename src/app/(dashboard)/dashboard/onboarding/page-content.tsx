@@ -684,6 +684,7 @@ function OnboardingV3Page() {
         loveLanguage: data.loveLanguage,
         // Step 4: Photo
         avatar: finalAvatarUrl,
+        ...(finalAvatarUrl ? { avatarType: 'photo' } : {}),
         // Mark onboarding complete
         onboardingStep: 9,
         profileStatus: "APPROVED",
