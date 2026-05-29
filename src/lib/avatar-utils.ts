@@ -172,12 +172,12 @@ export function getRealPhotoAvatarUrl(
   size: 'thumb' | 'preview' | 'full' = 'preview',
   age?: number
 ): string {
-  // Use randomuser.me for REAL photos (not DiceBear cartoons)
+  // Use local HD photos (mirrored from i.pravatar.cc, 800×800)
   const isFemale = gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN';
   const hash = hashSeed(seed);
-  const index = (hash % 99) + 1;
+  const index = (hash % 100) + 1;
   const folder = isFemale ? 'women' : 'men';
-  return `https://randomuser.me/api/portraits/${folder}/${index}.jpg`;
+  return `/avatars/hd/${folder}/${index}.jpg`;
 }
 
 /**
