@@ -45,16 +45,21 @@ export type AvatarKind = 'emoji' | 'photo' | 'none';
 
 /**
  * Detect the avatar type from the avatar string.
- * SVG/cartoon avatars are treated as 'none' to force real photo fallback.
+ * DiceBear URLs are NOW treated as 'none' (cartoons, not real photos).
+ * Only randomuser.me URLs and uploaded photos are 'photo'.
  */
 export function getAvatarKind(avatar: string | null | undefined): AvatarKind {
   if (!avatar || avatar === '') return 'none';
   if (avatar.startsWith('emoji:')) return 'emoji';
-  // DiceBear is NOW our PRIMARY avatar source (migrated from Unsplash).
-  // Never reject it — it MUST render as a photo.
-  if (avatar.includes('api.dicebear.com')) return 'photo';
-  // Legacy SVG avatars from unknown sources — treat as none for fallback
+  // DiceBear is a CARTOON fallback — treat as none so real photo fallback is used
+  if (avatar.includes('api.dicebear.com')) return 'none';
+  // Real photos from randomuser.me or uploaded
+  if (avatar.includes('randomuser.me')) return 'photo';
+  // Data URLs (uploaded photos)
+  if (avatar.startsWith('data:')) return 'photo';
+  // Legacy SVG avatars — treat as none
   if (avatar.endsWith('.svg')) return 'none';
+  // Everything else (http URLs) — treat as photo
   return 'photo';
 }
 
@@ -153,8 +158,8 @@ function hashSeed(seed: string): number {
 
 /**
  * Get a real photo avatar URL with gender and age awareness.
- * Uses DiceBear API for consistent, high-quality results.
- * DiceBear is NOT blocked in China (unlike Unsplash).
+ * Uses randomuser.me for REAL photos (NOT DiceBear cartoons).
+ * DiceBear is used as last resort fallback only.
  *
  * @param seed - Deterministic seed (userId, name, etc.)
  * @param gender - 'female' | 'male' | undefined
@@ -167,8 +172,12 @@ export function getRealPhotoAvatarUrl(
   size: 'thumb' | 'preview' | 'full' = 'preview',
   age?: number
 ): string {
-  // Use DiceBear API (NOT Unsplash — blocked in China)
-  return getDiceBearUrl(seed, gender, age);
+  // Use randomuser.me for REAL photos (not DiceBear cartoons)
+  const isFemale = gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN';
+  const hash = hashSeed(seed);
+  const index = (hash % 99) + 1;
+  const folder = isFemale ? 'women' : 'men';
+  return `https://randomuser.me/api/portraits/${folder}/${index}.jpg`;
 }
 
 /**
@@ -343,13 +352,18 @@ export function generateLocalAvatarDataUri(seed: string): string {
 }
 
 /**
- * Check if a URL is a valid photo URL (not emoji, not SVG, not broken).
+ * Check if a URL is a valid photo URL (not emoji, not SVG, not DiceBear cartoon).
+ * Only randomuser.me URLs and uploaded photos are valid.
  */
 export function isValidPhotoUrl(url: string | null | undefined): boolean {
   if (!url) return false;
   if (url.startsWith('emoji:')) return false;
-  // DiceBear is our primary avatar source — treat as valid
-  if (url.includes('api.dicebear.com')) return true;
+  // DiceBear is a CARTOON — not a valid photo
+  if (url.includes('api.dicebear.com')) return false;
+  // Randomuser.me URLs are real photos
+  if (url.includes('randomuser.me')) return true;
+  // Data URLs (uploaded photos)
+  if (url.startsWith('data:')) return true;
   // Reject legacy/non-standard SVG avatars
   if (url.endsWith('.svg')) return false;
   if (isBrokenAvatarUrl(url)) return false;
