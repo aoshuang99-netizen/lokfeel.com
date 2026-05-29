@@ -6,7 +6,31 @@
  * 使用：npx tsx scripts/db-fix-bot-photos.ts
  */
 
-import { db } from '../src/lib/db.js'
+// ⚠️ 必须在 import db 之前设置 DATABASE_URL！
+// 手动加载 .env 文件到 process.env
+import fs from 'fs';
+import path from 'path';
+
+const envPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf-8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...valueParts] = trimmed.split('=');
+      if (key && valueParts.length > 0) {
+        process.env[key.trim()] = valueParts.join('=').trim();
+      }
+    }
+  }
+  console.log('✅ 已加载 .env 文件');
+} else {
+  console.error('❌ .env 文件不存在:', envPath);
+  process.exit(1);
+}
+
+// 现在可以安全导入 db 了
+import { db } from '../src/lib/db.js';
 
 const RANDOMUSER_BASE = 'https://randomuser.me/api/portraits'
 
@@ -70,36 +94,32 @@ async function main() {
   let skipped = 0
   const errors: string[] = []
 
-  // 分批处理
-  const batchSize = 50  // 减小批次大小以适应 Turso 延迟
-  for (let i = 0; i < profiles.length; i += batchSize) {
-    const batch = profiles.slice(i, i + batchSize)
+  // 分批处理（减小批次以适应 Turso 延迟）
+  for (const profile of profiles) {
+    try {
+      const photoUrl = generateRealPhotoUrl(
+        profile.displayName || profile.id,
+        profile.gender
+      )
 
-    // 顺序处理（避免 Turso 并发问题）
-    for (const profile of batch) {
-      try {
-        const photoUrl = generateRealPhotoUrl(
-          profile.displayName || profile.id,
-          profile.gender
-        )
+      await db.profile.update({
+        where: { id: profile.id },
+        data: {
+          avatar: photoUrl,
+          avatarType: 'photo',
+        },
+      })
 
-        await db.profile.update({
-          where: { id: profile.id },
-          data: {
-            avatar: photoUrl,
-            avatarType: 'photo',
-          },
-        })
-
-        updated++
-      } catch (err) {
-        skipped++
-        const msg = err instanceof Error ? err.message : 'Unknown error'
-        errors.push(`  Profile ${profile.id}: ${msg}`)
+      updated++
+      
+      if (updated % 100 === 0) {
+        console.log(`  进度: ${updated}/${profiles.length}`)
       }
+    } catch (err) {
+      skipped++
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      errors.push(`  Profile ${profile.id}: ${msg}`)
     }
-
-    console.log(`  进度: ${Math.min(i + batchSize, profiles.length)}/${profiles.length}`)
   }
 
   console.log('='.repeat(50))
