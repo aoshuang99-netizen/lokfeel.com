@@ -24,14 +24,14 @@ export async function GET(request: Request) {
 
     // Get bot count
     const botCount = await db.user.count({
-      where: { isBot: true, role: 'USER' },
+      where: { isBot: { not: false }, role: 'USER' },
     });
 
     // Get recent bot events (last hour)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const recentEvents = await db.analyticsEvent.count({
       where: {
-        user: { isBot: true },
+        user: { isBot: { not: false } },
         createdAt: { gte: oneHourAgo },
       },
     });
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     // Get active chat rooms with bots
     const activeBotChats = await db.chatRoomMember.count({
       where: {
-        user: { isBot: true },
+        user: { isBot: { not: false } },
         room: {
           isArchived: false,
           lastMessageAt: { gte: oneHourAgo },

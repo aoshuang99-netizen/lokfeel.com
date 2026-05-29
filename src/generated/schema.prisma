@@ -472,6 +472,8 @@ model Profile {
   @@index([linkedInVerified])
   @@index([gender, profileStatus])
   @@index([isApproved])
+  @@index([attachmentStyle]) // BUG-02 FIX: Discover API 过滤加速
+  @@index([city]) // BUG-02 FIX: Discover API 城市过滤加速
   // Discover API 加速索引
   @@index([onboardingStep]) // P0: Discover/AutoMatch 核心过滤字段
   @@index([age]) // P0: 年龄范围查询

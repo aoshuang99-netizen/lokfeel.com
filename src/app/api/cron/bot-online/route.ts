@@ -83,7 +83,7 @@ export async function GET(request: Request) {
     // Fetch bots in batches, using cursor-based pagination
     const bots = await db.user.findMany({
       where: {
-        isBot: true,
+        isBot: { not: false },  // BUG-01 FIX: 兼容 SQLite Boolean
         role: 'USER',
         ...(cursor ? { id: { gt: cursor } } : {}),
       },

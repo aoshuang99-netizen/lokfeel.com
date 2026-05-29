@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
     // Prisma 7 requires nested filter fields wrapped in `is:`
     let whereClause: any = {
       id: { notIn: excludeIds },
-      isBot: false,  // 🔴 FIX: Never show bot users in Discover
+      isBot: { not: true },  // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
       profile: {
         is: {
           onboardingStep: { gte: minOnboardingStep },
@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
       
       const fallbackWhereClause: any = {
         id: { notIn: fallbackExcludeIds },
-        isBot: false,  // 🔴 FIX: Also filter bots in fallback
+        isBot: { not: true },  // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
         profile: {
           is: {
             onboardingStep: { gte: Math.min(minOnboardingStep, 2) },

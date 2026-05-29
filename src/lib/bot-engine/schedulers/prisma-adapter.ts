@@ -38,7 +38,7 @@ export function createPrismaAdapter(
 
     async loadBotUsers() {
       const bots = await prisma.user.findMany({
-        where: { isBot: true, role: 'USER' },
+        where: { isBot: { not: false }, role: 'USER' },
         include: {
           profile: {
             select: {
@@ -107,7 +107,7 @@ export function createPrismaAdapter(
         where: {
           userId: { not: botUserId },
           profileStatus: 'APPROVED',
-          user: { isBot: false }, // Prioritize real users for browsing
+          user: { isBot: { not: { not: false } }, }, // Prioritize real users (isBot=false or null)
         },
         select: { userId: true },
         take: 50,

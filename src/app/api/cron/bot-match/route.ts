@@ -127,7 +127,7 @@ export async function GET(request: Request) {
     const bots = await db.user.findMany({
       where: {
         id: { in: [...botIdSet] },
-        isBot: true,
+        isBot: { not: false },  // BUG-01 FIX: 兼容 SQLite Boolean
       },
       select: { id: true, botConfig: true },
     });

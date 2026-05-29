@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     // Priority: users with completed profiles (onboardingStep >= 4)
     const botUsers = await prisma.user.findMany({
       where: {
-        isBot: true,
+        isBot: { not: false },  // BUG-01 FIX: 兼容 SQLite Boolean
         id: { notIn: Array.from(matchedUserIds) },
         profile: {
           is: {
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       // Fallback: try with even more relaxed conditions (any profile)
       const fallbackBots = await prisma.user.findMany({
         where: {
-          isBot: true,
+          isBot: { not: false },  // BUG-01 FIX: 兼容 SQLite Boolean
           id: { notIn: Array.from(matchedUserIds) },
           profile: { isNot: null },
         },
