@@ -14,6 +14,12 @@ import {
   preloadAvatar,
 } from "@/lib/avatar-utils";
 
+// DiceBear URLs must use native <img> — next/image returns 400 INVALID_IMAGE_OPTIMIZE_REQUEST
+// because DiceBear SVGs don't have a .svg extension in the URL path
+function isDiceBearUrl(src: string): boolean {
+  return src?.includes("api.dicebear.com") || false;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // DESIGN TOKENS
 // ═══════════════════════════════════════════════════════════════
@@ -278,19 +284,34 @@ export function OptimizedAvatar({
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/2 animate-pulse" />
         )}
 
-        {/* Actual image */}
+        {/* Actual image — use <img> for DiceBear SVGs (next/image returns 400) */}
         {!error && (
-          <NextImage
-            src={imageSrc}
-            alt={alt}
-            fill
-            className={`w-full h-full object-cover object-top transition-opacity duration-300 ${
-              loaded ? "opacity-100" : "opacity-0"
-            }`}
-            loading={priority ? "eager" : "lazy"}
-            onError={handleError}
-            onLoad={handleLoad}
-          />
+          isDiceBearUrl(imageSrc) ? (
+            <img
+              src={imageSrc}
+              alt={alt}
+              className={`w-full h-full object-cover object-top transition-opacity duration-300 ${
+                loaded ? "opacity-100" : "opacity-0"
+              }`}
+              loading={priority ? "eager" : "lazy"}
+              decoding="async"
+              onLoad={handleLoad}
+              onError={handleError}
+              crossOrigin="anonymous"
+            />
+          ) : (
+            <NextImage
+              src={imageSrc}
+              alt={alt}
+              fill
+              className={`w-full h-full object-cover object-top transition-opacity duration-300 ${
+                loaded ? "opacity-100" : "opacity-0"
+              }`}
+              loading={priority ? "eager" : "lazy"}
+              onError={handleError}
+              onLoad={handleLoad}
+            />
+          )
         )}
 
         {/* Error fallback — initials */}
