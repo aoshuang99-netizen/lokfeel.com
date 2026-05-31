@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { cache } from '@/lib/cache'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 60  // ISR: revalidate every 60 seconds
 
 const DB_TIMEOUT_MS = 3000  // 3s timeout for Turso cold starts
 const DB_CHECK_TTL = 30  // 30 seconds (Redis or in-memory)
