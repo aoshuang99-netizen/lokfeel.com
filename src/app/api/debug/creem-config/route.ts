@@ -3,21 +3,25 @@
  * GET /api/debug/creem-config
  * 
  * 仅用于开发/内部诊断，不暴露密钥值
- * 生产环境应删除或加 IP 白名单
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const isDev = process.env.NODE_ENV !== "production";
-  const isVercelDev = process.env.VERCEL_ENV === "development";
-
-  // 生产环境拒绝访问（简单保护）
-  if (!isDev && !isVercelDev) {
-    return NextResponse.json({ error: "Not available in production" }, { status: 403 });
+  // ─── Admin Auth Gate ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
+    return NextResponse.json(
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
+    );
   }
 
   const checks = {

@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminAuth } from "@/lib/auth";
 import { getGoogleConfig } from "@/lib/auth/google-oauth";
 
 /**
  * GET /api/debug/google-oauth-check
  * 
  * 检查 Google OAuth 配置状态
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth
  */
 export async function GET(request: NextRequest) {
+  // ─── Admin Auth Gate ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
+    return NextResponse.json(
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
+    );
+  }
+
   const config = getGoogleConfig();
   
   // 检查环境变量（不暴露敏感信息）

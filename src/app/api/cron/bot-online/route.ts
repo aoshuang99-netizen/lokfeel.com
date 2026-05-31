@@ -41,12 +41,17 @@ const botStates = new Map<string, BotState>();
 function getBotConfig(botConfig: string | null) {
   if (botConfig) {
     try {
-      return deserializeBotConfig(botConfig);
+      const parsed = deserializeBotConfig(botConfig);
+      // Defensive: ensure required nested structures exist
+      if (parsed?.online?.avgSessionsPerDay) {
+        return parsed;
+      }
     } catch { /* ignore */ }
   }
   // Return a default passive config
   return {
     personalityType: 'passive',
+    seed: 42,
     online: {
       avgSessionsPerDay: 1,
       avgSessionDurationMin: 10,
@@ -126,9 +131,14 @@ export async function GET(request: Request) {
 
       if (!state) {
         // Initialize state
+        const config = getBotConfig(bot.botConfig);
+        // Ensure seed exists (evaluateOnlineTransition requires it)
+        if (!config.seed) {
+          config.seed = bot.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+        }
         state = {
           userId: bot.id,
-          config: getBotConfig(bot.botConfig),
+          config,
           timezone: 'America/New_York',
           isOnline: false,
           currentSessionStart: null,

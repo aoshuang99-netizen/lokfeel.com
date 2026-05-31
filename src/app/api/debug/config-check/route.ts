@@ -8,21 +8,23 @@
  * - GOOGLE_CLIENT_ID 长度
  * - AUTH_SECRET 是否存在
  * - DATABASE_URL 是否存在
+ * 
+ * 安全：仅允许管理员访问（requireAdminAuth）
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminAuth } from '@/lib/auth';
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  // 仅允许生产环境访问（通过密钥）
-  const secret = request.nextUrl.searchParams.get("secret");
-  const expectedSecret = process.env.CRON_SECRET || "debug-secret-2026";
-  
-  if (secret !== expectedSecret) {
+  // ─── 强制管理员认证 ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
     return NextResponse.json(
-      { error: "Unauthorized. Provide ?secret=CRON_SECRET" },
-      { status: 401 }
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
     );
   }
 
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
         ? `${process.env.GOOGLE_CLIENT_ID.substring(0, 20)}...` 
         : "not set",
       hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-      hasNextPublicGoogleAuthClientId: !!process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
+      hasNextPublicGoogleOAuthClientId: !!process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
     },
     auth: {
       hasAuthSecret: !!process.env.AUTH_SECRET,

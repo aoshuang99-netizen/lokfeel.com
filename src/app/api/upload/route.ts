@@ -5,11 +5,33 @@ import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth"
 import { handleApiError } from "@/lib/api-handler";
 import { success, badRequest } from "@/lib/api-response";
-import { fileTypeFromBuffer } from "file-type";
+// file-type removed — using magic bytes detection instead
 import sharp from "sharp";
 import { pushJson, jsonArr } from "@/lib/json-helpers";
 
 // Allowed image MIME types for security
+
+// ✅ Magic bytes detection — works in all environments (no file-type dep)
+function detectImageType(buffer: Buffer): { ext: string; mime: string } | null {
+  if (!buffer || buffer.length < 12) return null;
+  
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
+    return { ext: 'jpg', mime: 'image/jpeg' };
+  }
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+    return { ext: 'png', mime: 'image/png' };
+  }
+  // WebP: 52 49 46 46 ... 57 45 42 50 (RIFF ... WEBP)
+  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+      buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) {
+    return { ext: 'webp', mime: 'image/webp' };
+  }
+  
+  return null;
+}
+
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
@@ -82,18 +104,10 @@ export async function POST(request: NextRequest) {
       return badRequest("File size exceeds 10MB limit");
     }
 
-    // 🔐 Verify actual file content using file-type library
-    const detectedType = await fileTypeFromBuffer(buffer);
-
+    // ✅ Magic bytes detection (reliable in serverless)
+    const detectedType = detectImageType(buffer);
     if (!detectedType) {
       return badRequest("Unable to verify file type. Please upload a valid image.");
-    }
-
-    // Strict MIME type validation
-    if (!ALLOWED_MIME_TYPES.includes(detectedType.mime as AllowedMimeType)) {
-      return badRequest(
-        `Invalid file type: ${detectedType.mime}. Only JPEG, PNG, and WebP allowed.`
-      );
     }
 
     // Validate image dimensions (basic check, no minimum MP requirement)
@@ -199,18 +213,10 @@ export async function PUT(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 🔐 Verify actual file content
-    const detectedType = await fileTypeFromBuffer(buffer);
-
+    // ✅ Magic bytes detection (reliable in serverless)
+    const detectedType = detectImageType(buffer);
     if (!detectedType) {
       return badRequest("Unable to verify file type. Please upload a valid image.");
-    }
-
-    // Strict MIME type validation
-    if (!ALLOWED_MIME_TYPES.includes(detectedType.mime as AllowedMimeType)) {
-      return badRequest(
-        `Invalid file type: ${detectedType.mime}. Only JPEG, PNG, and WebP allowed.`
-      );
     }
 
     // Validate image dimensions

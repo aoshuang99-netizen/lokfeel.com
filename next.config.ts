@@ -225,7 +225,8 @@ const nextConfig: NextConfig = {
       {
         source: '/api/health',
         headers: [
-          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=86400' },
+          { key: 'Surrogate-Control', value: 'public, max-age=60' },
         ],
       },
       // Static assets: aggressive caching

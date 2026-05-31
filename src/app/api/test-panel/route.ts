@@ -1,4 +1,12 @@
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/auth';
+
+/**
+ * Admin Test Panel V3.6
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth
+ * Must be accessed with valid admin session cookie
+ */
 
 const HTML = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -41,14 +49,12 @@ h1 { font-size:22px; font-weight:700; margin-bottom:4px; }
 </div>
 <div class="controls">
   <button class="btn btn-primary" onclick="runAll()">▶ 运行全部测试</button>
-  <button class="btn" onclick="testLogin()">🔐 登录</button>
   <button class="btn" onclick="testPages()">📄 页面</button>
   <button class="btn" onclick="testAPIs()">🔌 API</button>
 </div>
 <div class="grid" id="grid"></div>
 <script>
-const BASE = 'https://nexus-app-kohl.vercel.app';
-const ADMIN = { user: 'admin@nexus.app', pass: 'admin123' };
+const BASE = window.location.origin;
 const R = {};
 const TESTS = [
   {id:'P01',name:'登录页面',url:'/admin/login',m:'GET'},
@@ -58,10 +64,9 @@ const TESTS = [
   {id:'P05',name:'留存分析',url:'/admin/analytics/retention',m:'REDIRECT',x:'NEW'},
   {id:'P06',name:'实时监控',url:'/admin/analytics/realtime',m:'REDIRECT',x:'NEW'},
   {id:'P07',name:'告警系统',url:'/admin/alerts',m:'REDIRECT',x:'NEW'},
-  {id:'A01',name:'登录API',url:'/api/admin/login',m:'LOGIN'},
+  {id:'A01',name:'会话检查',url:'/api/admin/session',m:'AUTH'},
   {id:'A02',name:'仪表盘数据',url:'/api/admin/dashboard/summary',m:'AUTH'},
   {id:'A03',name:'用户列表',url:'/api/admin/users?pageSize=3',m:'AUTH'},
-  {id:'A04',name:'会话检查',url:'/api/admin/session',m:'AUTH'},
 ];
 TESTS.forEach(t => { R[t.id]='pending'; const d=document.createElement('div'); d.className='card'; d.innerHTML='<h3>'+t.name+(t.x?' <span class="badge">NEW</span>':'')+'</h3><div class="url">'+t.m+' '+t.url+'</div><div class="result pending" id="r-'+t.id+'">等待测试...</div>'; document.getElementById('grid').appendChild(d); });
 document.getElementById('total').textContent = TESTS.length;
@@ -74,15 +79,6 @@ function setResult(id, status, msg) {
 function updateSummary() {
   document.getElementById('pass').textContent = TESTS.filter(t=>R[t.id]==='pass').length;
   document.getElementById('fail').textContent = TESTS.filter(t=>R[t.id]==='err').length;
-}
-async function testLogin() {
-  setResult('A01','pending','登录中...');
-  try {
-    const res = await fetch(BASE+'/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ADMIN),credentials:'include'});
-    const d = await res.json().catch(()=>({}));
-    if(res.status===200&&d.success){ setResult('A01','pass','✅ 登录成功: '+d.user?.role); return true; }
-    else { setResult('A01','err','❌ 失败:'+res.status); return false; }
-  } catch(e){ setResult('A01','err','❌ 网络错误:'+e.message); return false; }
 }
 async function testPages() {
   for(const t of TESTS.filter(t=>t.id.startsWith('P'))){
@@ -97,7 +93,7 @@ async function testPages() {
   }
 }
 async function testAPIs() {
-  for(const t of TESTS.filter(t=>t.id.startsWith('A')&&t.m!=='LOGIN')){
+  for(const t of TESTS.filter(t=>t.id.startsWith('A'))){
     setResult(t.id,'pending','测试中...');
     try {
       const res = await fetch(BASE+t.url,{credentials:'include'});
@@ -108,12 +104,20 @@ async function testAPIs() {
     } catch(e){ setResult(t.id,'err','❌ '+e.message); }
   }
 }
-async function runAll() { await testLogin(); await testPages(); await testAPIs(); }
+async function runAll() { await testPages(); await testAPIs(); }
 </script>
 </body>
 </html>`;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // ─── Admin Auth Gate ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
+    // Redirect to admin login if not authenticated
+    return NextResponse.redirect(new URL('/admin/login', request.url));
+  }
+
   return new NextResponse(HTML, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',

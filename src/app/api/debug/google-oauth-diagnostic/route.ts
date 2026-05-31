@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminAuth } from "@/lib/auth";
 import { getGoogleConfig } from "@/lib/auth/google-oauth";
 
 /**
@@ -6,8 +7,20 @@ import { getGoogleConfig } from "@/lib/auth/google-oauth";
  * 
  * 超详细 Google OAuth 诊断
  * 检查所有配置和常见问题
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth
  */
 export async function GET(request: NextRequest) {
+  // ─── Admin Auth Gate ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
+    return NextResponse.json(
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
+    );
+  }
+
   const protocol = request.nextUrl.protocol;
   const host = request.nextUrl.host;
   const baseUrl = `${protocol}//${host}`;

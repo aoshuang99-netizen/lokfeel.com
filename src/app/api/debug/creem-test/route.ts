@@ -1,9 +1,26 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { requireAdminAuth } from "@/lib/auth";
 import { Creem } from "creem";
 
+/**
+ * Debug: Test Creem API connectivity and product listing
+ * GET /api/debug/creem-test
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth
+ */
 export async function GET() {
+  // ─── Admin Auth Gate ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
+    return NextResponse.json(
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
+    );
+  }
+
   const results: Record<string, any> = {};
 
   // 1. Check env vars

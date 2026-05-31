@@ -3,24 +3,30 @@
  * 
  * GET /api/debug/subscription-status
  * Returns the current user's subscription record (for testing panel)
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth (always, not just production)
  */
 
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/auth";
+import { requireAdminAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-// Only allow in development/test — block in production
-const BLOCKED = process.env.VERCEL_ENV === "production";
-
 export async function GET(request: NextRequest) {
-  if (BLOCKED) {
-    return NextResponse.json({ error: "Not available in production" }, { status: 403 });
+  // ─── Admin Auth Gate (ALWAYS, not just production) ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
+    );
   }
 
   try {
-    const { user } = await requireAuth();
+    // Get the authenticated admin user
+    const { user } = await requireAdminAuth();
 
     const subscription = await db.subscription.findFirst({
       where: { userId: user.id },

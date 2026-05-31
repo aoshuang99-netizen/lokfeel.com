@@ -1,13 +1,26 @@
 /**
  * Creem API 连通性测试 V2（绕过缓存）
  * GET /api/debug/creem-ping-v2
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  // ─── Admin Auth Gate ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
+    return NextResponse.json(
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
+    );
+  }
+
   const results: Record<string, any> = {
     version: "v2-20260524",
     timestamp: new Date().toISOString(),

@@ -14,8 +14,10 @@ export async function GET() {
   const requestStart = Date.now()
 
   // Response headers for timing and caching
+  // Allow CDN caching: cache for 60s, serve stale for up to 24h while revalidating
   const responseHeaders = new Headers()
-  responseHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  responseHeaders.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=86400')
+  responseHeaders.set('Surrogate-Control', 'public, max-age=60')  // Explicit CDN caching
 
   // Use Redis-backed cache for DB check result (30s TTL, shared across instances)
   const dbResult = await cache.get<DbCheckResult>(

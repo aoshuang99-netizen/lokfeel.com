@@ -3,14 +3,26 @@
  * GET /api/debug/creem-ping
  * 
  * 用配置的 API Key 调用 Creem API，获取产品列表并提取 Monthly/Yearly 产品 ID
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCreemClient, CREEM_PLAN_CONFIG } from "@/lib/creem";
+import { requireAdminAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  // ─── Admin Auth Gate ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
+    return NextResponse.json(
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
+    );
+  }
+
   const results: Record<string, any> = {
     timestamp: new Date().toISOString(),
   };

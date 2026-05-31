@@ -4,15 +4,28 @@
  * 
  * Returns whether Google and Twitter OAuth are configured
  * (does NOT expose actual secrets)
+ * 
+ * ⚠️ ADMIN ONLY — Protected by requireAdminAuth
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminAuth } from "@/lib/auth";
 import { getGoogleConfig } from "@/lib/auth/google-oauth";
 import { getTwitterConfig } from "@/lib/auth/twitter-oauth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  // ─── Admin Auth Gate ──────────────────────
+  try {
+    await requireAdminAuth();
+  } catch {
+    return NextResponse.json(
+      { error: "Forbidden: Admin access required" },
+      { status: 403 }
+    );
+  }
+
   const googleConfig = getGoogleConfig();
   const twitterConfig = getTwitterConfig();
 
