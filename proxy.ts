@@ -163,14 +163,18 @@ export default async function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)')
 
-  // ─── 5. CDN cache headers for public pages ───
+  // ─── 5. CDN cache headers for public pages (Early Return) ───
   // next.config.ts headers() may not apply when middleware is present,
   // so we explicitly set s-maxage here for Cloudflare to cache.
-  const publicPaths = ['/', '/login', '/register']
-  if (publicPaths.includes(pathname) || pathname === '/') {
+  // Early return for static pages to skip unnecessary CORS processing.
+  const publicPaths = ['/', '/login', '/register', '/blocked']
+  if (publicPaths.includes(pathname)) {
     // s-maxage=60: CDN caches for 60s
     // stale-while-revalidate: serve stale while revalidating
     response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300')
+    
+    // Early return for static pages - skip CORS check (not needed for static pages)
+    return response
   }
 
   return response
