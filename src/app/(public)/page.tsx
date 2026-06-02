@@ -267,9 +267,9 @@ function HeroSection({ onSignupClick }: any) {
             loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          Feel the connection
+          AI matches what
           <br />
-          <span className="text-[#a3e635]">before you meet</span>
+          <span className="text-[#a3e635]">swiping can't</span>
         </h1>
 
         <p
@@ -277,7 +277,7 @@ function HeroSection({ onSignupClick }: any) {
             loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          5 curated matches weekly. Each with a reason why you click.
+          Our AI engine analyzes personality, values & chemistry. 5 curated matches weekly — each with a reason why.
         </p>
 
         {/* CTA Buttons — Lime primary */}
@@ -362,8 +362,8 @@ function AboutSection() {
             </div>
             {/* Floating badge */}
             <div className="absolute -bottom-4 -right-4 bg-[#111111] border border-[#4c1d95]/20 rounded-xl p-4 shadow-xl">
-              <p className="text-3xl font-bold font-display text-[#a3e635]">10K+</p>
-              <p className="text-sm text-white/40">Real connections made</p>
+              <p className="text-3xl font-bold font-display text-[#a3e635]">AI</p>
+              <p className="text-sm text-white/40">Powered matching engine</p>
             </div>
           </div>
 
@@ -374,14 +374,14 @@ function AboutSection() {
                 inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
-              Dating apps are exhausting.
+              Swiping is random. AI matching is intentional.
             </h2>
             <p
               className={`text-xl text-white/50 mt-6 transition-all duration-700 delay-100 ${
                 inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
-              We built LokFeel for people who want something real.
+              LokFeel's AI engine understands who you really are — and finds the people you'll genuinely click with.
             </p>
             <div
               className={`mt-8 transition-all duration-700 delay-200 ${
@@ -415,20 +415,20 @@ function HowSection() {
   const steps = [
     {
       num: "01",
-      title: "Share your story",
-      desc: "A 5-minute conversation about what matters to you.",
+      title: "Tell the AI who you are",
+      desc: "A 5-minute conversation. Our engine learns your personality, values & patterns.",
       image: "/images/bg/photo-couple-main.jpg",
     },
     {
       num: "02",
-      title: "Get curated matches",
-      desc: "5 handpicked people weekly, with explanations why you connect.",
+      title: "Get AI-curated matches",
+      desc: "5 people weekly, selected by our matching engine — with explanations why.",
       image: "/images/bg/photo-team-1.jpg",
     },
     {
       num: "03",
-      title: "Meet with intention",
-      desc: "Skip the small talk. Start with genuine compatibility.",
+      title: "Connect with confidence",
+      desc: "Every match comes with compatibility insights. Skip the guesswork.",
       image: "/images/bg/photo-team-2.jpg",
     },
   ];
@@ -577,14 +577,14 @@ function CTASection({ onSignupClick }: any) {
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          Ready for real connection?
+          Let AI find your match
         </h2>
         <p
           className={`text-white/50 mb-8 transition-all duration-700 delay-100 ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          Join the early access. Women get premium features free — forever.
+          Join the AI matching revolution. Women get premium features free — forever.
         </p>
 
         {/* App Download Buttons */}

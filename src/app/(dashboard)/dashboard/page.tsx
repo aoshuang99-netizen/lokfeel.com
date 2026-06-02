@@ -1,7 +1,5 @@
 "use client";
 
-export const revalidate = 60;  // ISR: revalidate every 60 seconds
-
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
