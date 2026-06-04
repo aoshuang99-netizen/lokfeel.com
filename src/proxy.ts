@@ -167,10 +167,14 @@ export default async function middleware(request: NextRequest) {
   // next.config.ts headers() may not apply when middleware is present,
   // so we explicitly set s-maxage here for Cloudflare to cache.
   const publicPaths = ['/', '/login', '/register']
+  const staticPublicPaths = ['/terms', '/privacy', '/about', '/faq', '/contact', '/community-guidelines', '/safety-tips', '/cookies', '/dmca', '/18-usc-2257', '/cancellations-policy', '/refunds', '/press', '/careers', '/support']
   if (publicPaths.includes(pathname) || pathname === '/') {
     // s-maxage=60: CDN caches for 60s
     // stale-while-revalidate: serve stale while revalidating
     response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300')
+  } else if (staticPublicPaths.includes(pathname)) {
+    // Static legal/info pages: cache for 1 hour, serve stale for 24h
+    response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   }
 
   return response
@@ -184,6 +188,21 @@ export const config = {
     '/',
     '/login',
     '/register',
+    '/terms',
+    '/privacy',
+    '/about',
+    '/faq',
+    '/contact',
+    '/community-guidelines',
+    '/safety-tips',
+    '/cookies',
+    '/dmca',
+    '/18-usc-2257',
+    '/cancellations-policy',
+    '/refunds',
+    '/press',
+    '/careers',
+    '/support',
     '/dashboard/:path*',
     '/api/:path*',
     '/admin/:path*',

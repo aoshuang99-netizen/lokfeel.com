@@ -25,43 +25,41 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL("https://lokfeel.com"),
   title: {
-    default: "LokFeel — Real Matches. Real Connection.",
+    default: "LokFeel — AI Relationship Matching Engine",
     template: "%s | LokFeel",
   },
   description:
-    "LokFeel is a relationship structure matching engine built for depth, not swiping. Get 5 AI-curated matches per week with explanations of why you connect. Safe, private, and designed for meaningful relationships.",
+    "LokFeel's AI engine analyzes personality, values & chemistry. 5 curated matches weekly — each with a reason why. Women get premium free forever.",
   keywords: [
     "dating app",
     "relationship matching",
     "AI matchmaking",
+    "AI relationship",
     "deep connection",
     "intentional dating",
     "relationship structure",
     "lokfeel",
-    "alternative dating",
-    "kink-friendly dating",
-    "LGBTQ+ dating",
-    "meaningful relationships",
     "curated matches",
+    "AI matching engine",
   ],
   authors: [{ name: "LokFeel Team" }],
   creator: "LokFeel",
   publisher: "LokFeel",
   manifest: "/manifest.json",
   openGraph: {
-    title: "LokFeel — Real Matches. Real Connection.",
+    title: "LokFeel — AI Relationship Matching Engine",
     description:
-      "Relationship structure matching engine built for depth, not swiping. 5 AI-curated matches per week.",
-    url: "https://lokfeel.com",
+      "AI-powered relationship matching. 5 curated matches weekly — each with a reason why. Women get premium free forever.",
+    url: "https://app.lokfeel.com",
     siteName: "LokFeel",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LokFeel — Real Matches. Real Connection.",
+    title: "LokFeel — AI Relationship Matching Engine",
     description:
-      "Relationship structure matching engine built for depth, not swiping.",
+      "AI-powered relationship matching. 5 curated matches weekly — each with a reason why.",
     creator: "@lokfeel",
   },
   robots: {

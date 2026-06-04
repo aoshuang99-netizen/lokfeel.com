@@ -1,7 +1,7 @@
 {
-  "name": "LokFee!",
-  "short_name": "LokFee!",
-  "description": "Relationship structure matching engine built for depth, not swiping. Get 5 AI-curated matches per week.",
+  "name": "LokFeel — AI Relationship Matching",
+  "short_name": "LokFeel",
+  "description": "AI relationship matching engine. 5 curated matches per week — each with a reason why. Women get premium free forever.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#0a0a0a",
