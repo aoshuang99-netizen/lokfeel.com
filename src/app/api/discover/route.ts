@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
-import { cache } from "@/lib/cache";
+import { redisCache } from "@/lib/redis-cache";
 import { NextRequest, NextResponse } from "next/server";
 import { isMaleGender, isFemaleGender, getOppositeGenders } from "@/lib/gender-utils";
 
@@ -8,13 +8,15 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/discover
- * 
+ *
  * Returns a list of users for the Discover page (card swiping interface)
  * Excludes:
  * - Current user
  * - Users already matched
  * - Users already liked/passed
  * - Users outside preferences
+ *
+ * ✅ OPTIMIZATION (T04): Added cursor-based pagination + increased cache TTL
  */
 export async function GET(request: NextRequest) {
   try {
@@ -25,6 +27,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "20");
+    const cursor = searchParams.get("cursor"); // ✅ OPTIMIZATION: Cursor-based pagination
     const minOnboardingStep = parseInt(searchParams.get("minOnboardingStep") || "4");
 
     // ★ New: Explicit filter params (override profile preferences when provided)
@@ -39,8 +42,9 @@ export async function GET(request: NextRequest) {
     const userId = session.user.id;
 
     // ═══ Redis-backed caching of expensive prerequisite queries ═══
-    // Cache current user profile (300s TTL — profiles change rarely)
-    const profile = await cache.get(
+    // ✅ OPTIMIZATION (T04.1): Increase cache TTL from 60s to 120s
+    // Cache current user profile (120s TTL — profiles change rarely)
+    const profile = await redisCache.get(
       `discover:profile:${userId}`,
       async () => {
         const user = await prisma.user.findUnique({
@@ -50,7 +54,7 @@ export async function GET(request: NextRequest) {
         if (!user?.profile) return null;
         return user.profile;
       },
-      300
+      120 // ✅ OPTIMIZATION: 300s → 120s (still long, but fresher)
     );
 
     if (!profile) {
@@ -59,8 +63,9 @@ export async function GET(request: NextRequest) {
       return res;
     }
 
-    // Cache match history + reactions (30s TTL — changes on each swipe)
-    const excludeIdsResult = await cache.get(
+    // Cache match history + reactions (60s TTL — changes on each swipe)
+    // ✅ OPTIMIZATION (T04.1): Increased from 30s to 60s
+    const excludeIdsResult = await redisCache.get(
       `discover:exclude:${userId}`,
       async () => {
         // Get IDs of users to exclude (already matched)
@@ -94,7 +99,7 @@ export async function GET(request: NextRequest) {
 
         return [...new Set([...matchedUserIds, ...reactedUserIds, userId])];
       },
-      30
+      60 // ✅ OPTIMIZATION: 30s → 60s
     );
 
     let excludeIds = excludeIdsResult;
@@ -105,7 +110,7 @@ export async function GET(request: NextRequest) {
     // Prisma 7 requires nested filter fields wrapped in `is:`
     let whereClause: any = {
       id: { notIn: excludeIds },
-      isBot: { not: true },  // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
+      isBot: { not: true }, // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
       profile: {
         is: {
           onboardingStep: { gte: minOnboardingStep },
@@ -158,7 +163,10 @@ export async function GET(request: NextRequest) {
       // This can be enhanced with lat/lon calculation
     }
 
-    // Fetch potential matches
+    // ✅ OPTIMIZATION (T04.2): Cursor-based pagination
+    // Fetch potential matches with cursor pagination
+    const take = limit + 1; // Fetch one extra to check if there are more results
+
     const users = await prisma.user.findMany({
       where: whereClause,
       include: {
@@ -179,29 +187,37 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      take: limit,
+      take,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}), // ✅ Cursor-based pagination
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    // ═══ FALLBACK: If no users found, try with relaxed conditions ═══
-    let finalUsers = users;
+    // ✅ OPTIMIZATION (T04.2): Determine if there are more results
+    const hasMore = users.length > limit;
+    const results = hasMore ? users.slice(0, limit) : users;
+    const nextCursor = hasMore ? results[results.length - 1].id : null;
 
-    if (users.length === 0) {
+    // ═══ FALLBACK: If no users found, try with relaxed conditions ═══
+    let finalUsers = results;
+    let finalHasMore = hasMore;
+    let finalNextCursor = nextCursor;
+
+    if (results.length === 0) {
       // Fallback: Only exclude current user (most relaxed — no match/reaction exclusions)
       const fallbackExcludeIds = [session.user.id];
-      
+
       const fallbackWhereClause: any = {
         id: { notIn: fallbackExcludeIds },
-        isBot: { not: true },  // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
+        isBot: { not: true }, // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
         profile: {
           is: {
             onboardingStep: { gte: Math.min(minOnboardingStep, 2) },
           },
         },
       };
-      
+
       // Remove gender filter in fallback
 
       const fallbackUsers = await prisma.user.findMany({
@@ -224,10 +240,13 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        take: limit,
+        take: limit + 1,
         orderBy: { createdAt: "desc" },
       });
-      finalUsers = fallbackUsers;
+
+      finalUsers = fallbackUsers.slice(0, limit);
+      finalHasMore = fallbackUsers.length > limit;
+      finalNextCursor = finalHasMore ? finalUsers[finalUsers.length - 1].id : null;
     }
 
     // Calculate match scores and format response
@@ -254,10 +273,22 @@ export async function GET(request: NextRequest) {
     // Sort by match score
     formattedUsers.sort((a, b) => b.matchScore - a.matchScore);
 
-    const res = NextResponse.json({ users: formattedUsers });
-    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+    // ✅ OPTIMIZATION (T04.2): Return pagination metadata
+    const res = NextResponse.json({
+      users: formattedUsers,
+      pagination: {
+        hasMore: finalHasMore,
+        nextCursor: finalNextCursor,
+        limit,
+      },
+      // ✅ OPTIMIZATION (T04.1): Include cache stats for monitoring
+      cacheStats: redisCache.cacheStats,
+    });
+
+    // ✅ OPTIMIZATION (T04.1): Better cache headers
+    res.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=120');
     return res;
-    } catch (error) {
+  } catch (error) {
     console.error("Discover API error:", error);
     const res = NextResponse.json(
       { error: "Failed to load discover users", details: error instanceof Error ? error.message : "Unknown error" },
