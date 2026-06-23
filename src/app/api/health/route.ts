@@ -1,109 +1,127 @@
-import { NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
-import { cache } from '@/lib/cache'
+/**
+ * Health Check API Endpoint
+ *
+ * Monitors system health including:
+ * - Database connection status and latency
+ * - Redis cache availability and hit rate
+ *
+ * OPTIMIZATION: Added for performance monitoring (T02 task)
+ *
+ * ENDPOINT: GET /api/health
+ *
+ * Response (healthy):
+ * {
+ *   "status": "healthy",
+ *   "dbLatency": 42,
+ *   "timestamp": "2025-06-08T12:00:00.000Z",
+ *   "cache": {
+ *     "hits": 150,
+ *     "misses": 50,
+ *     "hitRate": 0.75
+ *   },
+ *   "version": "1.0.0"
+ * }
+ *
+ * Response (unhealthy):
+ * {
+ *   "status": "unhealthy",
+ *   "error": "Database connection failed",
+ *   "timestamp": "2025-06-08T12:00:00.000Z"
+ * }
+ *
+ * HTTP Status:
+ * - 200: System is healthy
+ * - 503: Database connection failed (Service Unavailable)
+ */
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 60  // ISR: revalidate every 60 seconds
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { getCacheStats } from "@/lib/redis-cache";
 
-const DB_TIMEOUT_MS = 3000  // 3s timeout for Turso cold starts
-const DB_CHECK_TTL = 30  // 30 seconds (Redis or in-memory)
+/**
+ * GET /api/health
+ * Check system health
+ */
+export async function GET(): Promise<NextResponse> {
+  const timestamp = new Date().toISOString();
 
-type DbCheckResult = { connected: boolean; latency: number }
+  try {
+    // Test database connection
+    const dbStart = Date.now();
 
-// GET /api/health — Lightweight health check with Redis-backed caching
-export async function GET() {
-  const requestStart = Date.now()
+    // Use a simple query to test connection
+    await db.$queryRaw`SELECT 1`;
 
-  // Response headers for timing and caching
-  // Allow CDN caching: cache for 60s, serve stale for up to 24h while revalidating
-  const responseHeaders = new Headers()
-  responseHeaders.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=86400')
-  responseHeaders.set('Surrogate-Control', 'public, max-age=60')  // Explicit CDN caching
+    const dbLatency = Date.now() - dbStart;
 
-  // Use Redis-backed cache for DB check result (30s TTL, shared across instances)
-  const dbResult = await cache.get<DbCheckResult>(
-    'health:db-check',
-    async () => {
-      try {
-        const dbStart = Date.now()
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), DB_TIMEOUT_MS)
+    // Get cache statistics
+    const cacheStats = getCacheStats();
 
-        try {
-          await getDb().$queryRaw`SELECT 1`
-          clearTimeout(timeoutId)
-          return { connected: true, latency: Date.now() - dbStart }
-        } catch (rawError) {
-          clearTimeout(timeoutId)
-          if (rawError instanceof Error && rawError.name === 'AbortError') {
-            return { connected: false, latency: DB_TIMEOUT_MS }
-          }
-          throw rawError
-        }
-      } catch {
-        return { connected: false, latency: 0 }
-      }
-    },
-    DB_CHECK_TTL
-  )
-
-  const totalLatency = Date.now() - requestStart
-  responseHeaders.set('X-Response-Time', `${totalLatency}ms`)
-  responseHeaders.set('X-DB-Cache', dbResult.latency < totalLatency ? 'hit' : 'miss')
-
-  if (dbResult.connected) {
-    return NextResponse.json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      database: {
-        connected: true,
-        latencyMs: dbResult.latency,
-        cached: dbResult.latency < totalLatency,
+    // Build healthy response
+    const healthData = {
+      status: "healthy" as const,
+      dbLatency,
+      timestamp,
+      cache: {
+        hits: cacheStats.hits,
+        misses: cacheStats.misses,
+        hitRate: cacheStats.hitRate,
       },
-      payment: getPaymentStatus(),
-    }, { headers: responseHeaders })
-  }
+      // Add version from package.json (optional)
+      version: process.env.npm_package_version || "unknown",
+    };
 
-  return NextResponse.json({
-    status: 'degraded',
-    timestamp: new Date().toISOString(),
-    database: {
-      connected: false,
-      error: dbResult.latency >= DB_TIMEOUT_MS
-        ? `Database check timed out after ${DB_TIMEOUT_MS}ms`
-        : 'Database unreachable',
-    },
-    payment: getPaymentStatus(),
-  }, { status: 503, headers: responseHeaders })
+    // Log health check in development
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[health] OK - DB latency: ${dbLatency}ms, Cache hit rate: ${Math.round(cacheStats.hitRate * 100)}%`);
+    }
+
+    return NextResponse.json(healthData, {
+      status: 200,
+      headers: {
+        // Cache health check for 60 seconds (matching existing header config)
+        "Cache-Control": "public, max-age=60, stale-while-revalidate=86400",
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    // Database connection failed
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Log error in development
+    if (process.env.NODE_ENV === "development") {
+      console.error(`[health] FAILED - ${errorMessage}`);
+    }
+
+    // Build unhealthy response
+    const healthData = {
+      status: "unhealthy" as const,
+      error: errorMessage,
+      timestamp,
+      // Include partial cache stats even on DB failure
+      cache: getCacheStats(),
+    };
+
+    return NextResponse.json(healthData, {
+      status: 503, // Service Unavailable
+      headers: {
+        // Don't cache error responses
+        "Cache-Control": "no-store, max-age=0",
+        "Content-Type": "application/json",
+      },
+    });
+  }
 }
 
-function getPaymentStatus() {
-  const apiKey = process.env.CREEM_API_KEY
-  const env = process.env.CREEM_ENV || 'not set'
-  const monthlyId = process.env.CREEM_MONTHLY_PRODUCT_ID
-  const yearlyId = process.env.CREEM_YEARLY_PRODUCT_ID
-  const webhookSecret = process.env.CREEM_WEBHOOK_SECRET
-
-  if (!apiKey) {
-    return {
-      provider: 'creem',
-      configured: false,
-      reason: 'CREEM_API_KEY not set',
-      vars: { CREEM_API_KEY: false, CREEM_ENV: env, CREEM_MONTHLY_PRODUCT_ID: !!monthlyId, CREEM_YEARLY_PRODUCT_ID: !!yearlyId, CREEM_WEBHOOK_SECRET: !!webhookSecret }
-    }
-  }
-
-  return {
-    provider: 'creem',
-    configured: true,
-    environment: env,
-    apiKeyPrefix: apiKey.substring(0, 8) + '...',
-    vars: {
-      CREEM_API_KEY: true,
-      CREEM_ENV: env,
-      CREEM_MONTHLY_PRODUCT_ID: !!monthlyId,
-      CREEM_YEARLY_PRODUCT_ID: !!yearlyId,
-      CREEM_WEBHOOK_SECRET: !!webhookSecret,
-    }
+/**
+ * HEAD /api/health
+ * Lightweight health check (no response body)
+ */
+export async function HEAD(): Promise<NextResponse> {
+  try {
+    await db.$queryRaw`SELECT 1`;
+    return new NextResponse(null, { status: 200 });
+  } catch {
+    return new NextResponse(null, { status: 503 });
   }
 }
