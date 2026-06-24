@@ -3,7 +3,7 @@
 import { useState, ReactNode, useEffect, createContext, useContext, Suspense } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, AlertCircle, RefreshCw, Home, ArrowLeft } from "lucide-react";
 import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
 // 直接 import — 导航组件体积小，SSG 首屏必须可见，禁用 SSR 会导致"导航丢失"
@@ -11,7 +11,7 @@ import SidebarV2 from "@/components/layout/sidebar-v2";
 import BottomNav from "@/components/layout/bottom-nav";
 import DashboardFooter from "@/components/layout/dashboard-footer";
 import { fetchWithRetry, getAdaptiveTimeout } from "@/lib/api";
-import { ErrorFallback } from "@/components/ui/error-boundary";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -198,7 +198,7 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
   return (
     <SessionProvider session={session} refetchInterval={5 * 60} refetchOnWindowFocus={false}>
       <ProfileContext.Provider value={profileContextValue}>
-        <ErrorFallback error={null} title="Dashboard Error" description="Something went wrong loading the dashboard. Please try refreshing the page.">
+        <ErrorBoundary>
           <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
         {/* Lightweight background gradient — no heavy animations */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
@@ -273,8 +273,8 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
           richColors
           closeButton
         />
-        </div>
-        </ErrorFallback>
+          </div>
+        </ErrorBoundary>
       </ProfileContext.Provider>
     </SessionProvider>
   );
