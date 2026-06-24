@@ -46,6 +46,9 @@ export const metadata: Metadata = {
   creator: "LokFeel",
   publisher: "LokFeel",
   manifest: "/manifest.json",
+  alternates: {
+    canonical: 'https://app.lokfeel.com',
+  },
   openGraph: {
     title: "LokFeel — AI Relationship Matching Engine",
     description:
@@ -54,6 +57,14 @@ export const metadata: Metadata = {
     siteName: "LokFeel",
     type: "website",
     locale: "en_US",
+    images: [
+      {
+        url: 'https://app.lokfeel.com/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'LokFeel — AI Relationship Matching Engine',
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -61,6 +72,7 @@ export const metadata: Metadata = {
     description:
       "AI-powered relationship matching. 5 curated matches weekly — each with a reason why.",
     creator: "@lokfeel",
+    images: ['https://app.lokfeel.com/opengraph-image'],
   },
   robots: {
     index: true,

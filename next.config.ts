@@ -180,19 +180,19 @@ const nextConfig: NextConfig = {
       {
         source: '/',
         headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
         ],
       },
       {
         source: '/login',
         headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
         ],
       },
       {
         source: '/register',
         headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
         ],
       },
       // Default API: no caching (for mutation-heavy endpoints)
@@ -207,7 +207,7 @@ const nextConfig: NextConfig = {
       {
         source: '/api/discover',
         headers: [
-          { key: 'Cache-Control', value: 'private, max-age=30, stale-while-revalidate=60' },
+          { key: 'Cache-Control', value: 'private, max-age=60, stale-while-revalidate=120' },
         ],
       },
       {
@@ -248,6 +248,26 @@ const nextConfig: NextConfig = {
         source: '/avatars/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=604800, immutable' },
+        ],
+      },
+      // Open Graph image: cache 1 day, stale-while-revalidate 7 days
+      {
+        source: '/opengraph-image',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+        ],
+      },
+      // Sitemap & robots: cache 1 hour
+      {
+        source: '/sitemap.xml',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=3600, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/robots.txt',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=3600, stale-while-revalidate=86400' },
         ],
       },
     ]
