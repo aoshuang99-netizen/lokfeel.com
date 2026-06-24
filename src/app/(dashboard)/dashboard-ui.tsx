@@ -11,6 +11,7 @@ import SidebarV2 from "@/components/layout/sidebar-v2";
 import BottomNav from "@/components/layout/bottom-nav";
 import DashboardFooter from "@/components/layout/dashboard-footer";
 import { fetchWithRetry, getAdaptiveTimeout } from "@/lib/api";
+import { ErrorFallback } from "@/components/ui/error-boundary";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -78,13 +79,18 @@ function fetchProfileOnce(): Promise<any> {
       console.warn(`[Profile] Retry ${attempt}/3 after error:`, error.message);
     },
   })
-    .then((res) => {
-      if (!res.ok) throw new Error(`Error ${res.status}`);
+    .then(async (res) => {
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`[Profile] API error ${res.status}:`, errorText);
+        throw new Error(`Error ${res.status}: ${errorText}`);
+      }
       return res.json();
     })
-    .finally(() => {
-      // Allow re-fetch after 5s (for retry scenarios)
-      setTimeout(() => { profilePromise = null; }, 5000);
+    .catch((error) => {
+      console.error('[Profile] Fetch failed:', error);
+      profilePromise = null; // 清除失败 promise，允许重试
+      throw error;
     });
   
   return profilePromise;
@@ -191,8 +197,9 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
 
   return (
     <SessionProvider session={session} refetchInterval={5 * 60} refetchOnWindowFocus={false}>
-    <ProfileContext.Provider value={profileContextValue}>
-      <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      <ProfileContext.Provider value={profileContextValue}>
+        <ErrorFallback error={null} title="Dashboard Error" description="Something went wrong loading the dashboard. Please try refreshing the page.">
+          <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
         {/* Lightweight background gradient — no heavy animations */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         {/* Blue glow orbs */}
@@ -266,8 +273,9 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
           richColors
           closeButton
         />
-      </div>
-    </ProfileContext.Provider>
+        </div>
+        </ErrorFallback>
+      </ProfileContext.Provider>
     </SessionProvider>
   );
 }
