@@ -15,6 +15,7 @@ import type { ConversationListProps } from "./conversation-list";
 import type { MessageBubbleProps } from "./message-bubble";
 import { useChatRoomSocket } from "@/hooks/useSocket";
 import { chatApi } from "@/lib/chat-api";
+import { useIMConversation } from "@/hooks/use-im-pusher";
 
 // ============================================================================
 // Types
@@ -400,7 +401,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
   const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const deletedMsgIdsRef = useRef<Set<string>>(new Set());
 
-  // Socket connection (IM API v2 - 使用 conversationId)
+  // Pusher connection (IM API v2 - 使用 conversationId)
   const {
     messages,
     isTyping,
@@ -408,8 +409,16 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
     sendMessage,
     sendTyping,
     markAsRead,
-    error: socketError,
-  } = useChatRoomSocket({ conversationId: currentConvId });
+    error: pusherError,
+  } = useIMConversation(currentConvId);
+  
+  // 错误显示
+  useEffect(() => {
+    if (pusherError) {
+      console.error("[Chat] Pusher error:", pusherError);
+      toast.error("Real-time connection error. Messages may be delayed.");
+    }
+  }, [pusherError]);
 
   // Detect mobile
   useEffect(() => {
