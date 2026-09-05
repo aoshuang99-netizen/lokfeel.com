@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Bot, Check, CheckCheck, Clock, Copy, Trash2, Flag, Reply, ChevronRight, Sparkles } from "lucide-react";
 import type { IMMessagePayload, MessageDeliveryStatus } from "@/lib/im/types";
 import { ReactionPicker, ReactionSummary, type ReactionSummaryDisplay } from "./reaction-picker";
@@ -153,7 +153,7 @@ function ContextMenu({ x, y, onClose, onCopy, onDelete, onReport, onReply, canDe
       />
       
       {/* Menu */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -197,7 +197,7 @@ function ContextMenu({ x, y, onClose, onCopy, onDelete, onReport, onReply, canDe
             Report
           </button>
         )}
-      </motion.div>
+      </m.div>
     </>
   );
 }
@@ -391,7 +391,7 @@ function MessageBubbleComponent({
 
   return (
     <>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
@@ -496,7 +496,7 @@ function MessageBubbleComponent({
             )}
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Context Menu */}
       <AnimatePresence>
@@ -517,7 +517,7 @@ function MessageBubbleComponent({
       {/* Image Fullscreen Preview */}
       <AnimatePresence>
         {fullscreenImage && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -533,7 +533,7 @@ function MessageBubbleComponent({
                 <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
-            <motion.img
+            <m.img
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -542,7 +542,7 @@ function MessageBubbleComponent({
               className="max-w-full max-h-[90vh] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

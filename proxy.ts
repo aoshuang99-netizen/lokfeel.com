@@ -98,6 +98,15 @@ export default async function middleware(request: NextRequest) {
   // ─── 2. Block debug/diagnostic endpoints from external access ───
   const isDebugPath = BLOCKED_DEBUG_PATHS.some(p => pathname.startsWith(p))
   if (isDebugPath) {
+    // BUG-637: if DEBUG_SECRET is configured, require it (fails closed).
+    // Replaces the spoofable User-Agent check as the primary gate.
+    const debugSecret = process.env.DEBUG_SECRET
+    if (debugSecret && request.headers.get('x-debug-secret') !== debugSecret) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Not Found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
     // Allow Vercel internal requests (cron) but block external browser/API access
     const userAgent = request.headers.get('user-agent') || ''
     const isVercelCron = request.headers.get('x-vercel-cron') === 'true'
@@ -119,7 +128,17 @@ export default async function middleware(request: NextRequest) {
     // Allow same-origin requests (Origin matches the request host)
     // This ensures all Vercel deployment URLs work automatically
     const requestHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
-    const isSameOrigin = origin ? origin.endsWith(`://${requestHost}`) : true
+    // BUG-636: compare hosts properly instead of a fragile endsWith()
+    // (an attacker origin could otherwise suffix-match). Falls back to allowed
+    // origins / localhost / vercel-preview checks below.
+    const isSameOrigin = (() => {
+      if (!origin) return true
+      try {
+        return new URL(origin).host === requestHost
+      } catch {
+        return false
+      }
+    })()
     
     // Allowed CORS origins
     const ALLOWED_ORIGINS = [

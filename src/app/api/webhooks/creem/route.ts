@@ -4,6 +4,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyCreemWebhookSignature, upsertCreemSubscription, createCreemPaymentRecord } from "@/lib/creem";
 import { db } from "@/lib/db";
 
+// BUG-632: Idempotency — skip processing if a payment record for this Creem
+// object/event id already exists (protects against webhook replay duplicates).
+async function creemPaymentAlreadyProcessed(key: string): Promise<boolean> {
+  if (!key) return false;
+  const existing = await db.payment.findFirst({ where: { stripePaymentIntentId: key } });
+  return !!existing;
+}
+
 // ── POST /api/webhooks/creem ────────────────────────────
 //
 // Creem webhook event payload structure (from official docs):
@@ -21,7 +29,18 @@ export async function POST(request: NextRequest) {
   try {
     const webhookSecret = process.env.CREEM_WEBHOOK_SECRET;
     const isMock = request.headers.get("creem-signature") === "mock_signature_for_testing";
-    if (!webhookSecret && !isMock) {
+
+    // SECURITY (BUG-625 P0): the "mock" bypass must NEVER be honored in production,
+    // nor when a real webhook secret is configured. In those cases it would let any
+    // attacker forge subscription/payment events with a single static header value.
+    const isProd = process.env.NODE_ENV === "production";
+    const allowMock = !isProd && !webhookSecret;
+    if (isMock && !allowMock) {
+      console.error("[Creem Webhook] Mock bypass rejected (production or secret configured)");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    if (!webhookSecret && !allowMock) {
       console.error("[Creem Webhook] CREEM_WEBHOOK_SECRET not configured");
       return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
     }
@@ -75,6 +94,12 @@ export async function POST(request: NextRequest) {
         const subscriptionId = obj.subscription || obj.subscription_id || obj.id || "";
         const amount = obj.amount || 0;
         const currency = obj.currency || "usd";
+
+        // BUG-632: idempotency — skip if this event was already processed
+        if (await creemPaymentAlreadyProcessed(obj.id || eventId)) {
+          console.log(`[Creem Webhook] Already processed ${eventId}, skipping`);
+          break;
+        }
 
         // Create payment record
         try {
@@ -190,6 +215,11 @@ export async function POST(request: NextRequest) {
         const userId = metadata.userId;
 
         if (userId) {
+          // BUG-632: idempotency
+          if (await creemPaymentAlreadyProcessed(obj.id || eventId)) {
+            console.log(`[Creem Webhook] Already processed ${eventId}, skipping`);
+            break;
+          }
           try {
             await createCreemPaymentRecord({
               userId,
@@ -213,6 +243,11 @@ export async function POST(request: NextRequest) {
         const userId = metadata.userId;
 
         if (userId) {
+          // BUG-632: idempotency
+          if (await creemPaymentAlreadyProcessed(obj.id || eventId)) {
+            console.log(`[Creem Webhook] Already processed ${eventId}, skipping`);
+            break;
+          }
           try {
             await createCreemPaymentRecord({
               userId,

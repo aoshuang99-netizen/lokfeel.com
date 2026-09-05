@@ -49,8 +49,8 @@ export async function GET(): Promise<NextResponse> {
     // Test database connection
     const dbStart = Date.now();
 
-    // Use a simple query to test connection
-    await db.$queryRaw`SELECT 1`;
+    // Use Prisma model query instead of $queryRaw (Turso blocks raw SQL)
+    await db.user.count();
 
     const dbLatency = Date.now() - dbStart;
 
@@ -119,7 +119,7 @@ export async function GET(): Promise<NextResponse> {
  */
 export async function HEAD(): Promise<NextResponse> {
   try {
-    await db.$queryRaw`SELECT 1`;
+    await db.user.count();
     return new NextResponse(null, { status: 200 });
   } catch {
     return new NextResponse(null, { status: 503 });

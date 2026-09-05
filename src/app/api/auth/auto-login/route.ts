@@ -31,9 +31,12 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
+      // EP-S2 (2026-09-04): do NOT distinguish "user not found" (404) from
+      // "invalid token" (401) — a distinct 404 enables email enumeration.
+      // Return the same generic 401 used for an invalid/expired token.
       return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
+        { message: 'Invalid or expired auto-login link' },
+        { status: 401 }
       )
     }
 

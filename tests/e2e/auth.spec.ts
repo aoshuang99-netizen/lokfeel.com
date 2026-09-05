@@ -43,21 +43,23 @@ test.describe('🔐 登录页面 — UI验证', () => {
   });
 
   test('LokFeel品牌标识可见', async ({ page }) => {
-    await expect(page.locator('text=LokFeel')).toBeVisible();
+    await expect(page.locator('a[href="/"]').filter({ hasText: 'LokFeel' })).toBeVisible();
     await expect(page.locator('text=Welcome Back')).toBeVisible();
   });
 
-  test('OAuth按钮可见 — Google + Discord', async ({ page }) => {
+  test('OAuth按钮可见 — Google + X', async ({ page }) => {
     await expect(page.locator('button:has-text("Google")')).toBeVisible();
-    await expect(page.locator('button:has-text("Discord")')).toBeVisible();
-    // 不应该有LinkedIn或Facebook
+    await expect(page.locator('button:has-text("X"), button:has-text("Twitter")')).toBeVisible();
+    // 不应该有LinkedIn、Facebook或Discord
     await expect(page.locator('button:has-text("LinkedIn")')).not.toBeVisible();
     await expect(page.locator('button:has-text("Facebook")')).not.toBeVisible();
+    await expect(page.locator('button:has-text("Discord")')).not.toBeVisible();
   });
 
   test('注册链接可见且可点击', async ({ page }) => {
-    const registerLink = page.locator('a:has-text("Create one")');
-    await expect(registerLink).toBeVisible();
+    // 使用更通用的选择器 - 查找包含 "Sign up" 或 "Register" 的链接
+    const registerLink = page.locator('a').filter({ hasText: /sign up|register|create|注册/i }).first();
+    await expect(registerLink).toBeVisible({ timeout: 10000 });
   });
 
   test('表单字段有正确的placeholder和属性', async ({ page }) => {

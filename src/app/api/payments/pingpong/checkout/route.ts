@@ -7,6 +7,7 @@ import { requireAuth } from "@/lib/auth/auth";
 import { success, badRequest, serverError, forbidden } from "@/lib/api-response";
 import { handleApiError } from "@/lib/api-handler";
 import { createPingPongClient } from "@/lib/pingpong";
+import { isFemaleGender } from "@/lib/gender-utils";
 
 // ═══ Checkout Schema ════════════════════════════════════════
 const checkoutSchema = z.object({
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       select: { gender: true },
     });
 
-    if (userProfile?.gender === "FEMALE") {
+    if (isFemaleGender(userProfile?.gender)) {
       return NextResponse.json(
         { error: "Women already have premium-level access for free via Lady Free plan" },
         { status: 403 }

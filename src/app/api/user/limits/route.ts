@@ -1,14 +1,16 @@
 import { requireAuth } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-handler";
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { isFemaleGender } from "@/lib/gender-utils";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   return handleApiError(async () => {
     const { user } = await requireAuth();
     const userId = user.id;
+    const roomId = new URL(request.url).searchParams.get("roomId");
 
     // Get user's subscription status and gender
     const userData = await db.user.findUnique({
@@ -26,9 +28,9 @@ export async function GET() {
       },
     });
 
-    const isPremium = userData?.subscriptions && userData.subscriptions.length > 0;
-    const gender = userData?.profile?.gender?.toLowerCase() || "";
-    const isFemale = gender === "woman" || gender === "female" || gender === "trans_woman";
+    const premiumPlans = ['PREMIUM_MONTHLY', 'PREMIUM_YEARLY', 'LIFETIME'];
+    const isPremium = (userData?.subscriptions ?? []).some((s: any) => premiumPlans.includes(s.plan));
+    const isFemale = isFemaleGender(userData?.profile?.gender);
 
     // Plan determination: Premium > Lady Free > Basic Free
     const planId = isPremium ? "PREMIUM" : isFemale ? "LADY_FREE" : "FREE";
@@ -118,7 +120,16 @@ export async function GET() {
       superLikesRemaining: limits.superLikeLimit === -1 ? -1 : Math.max(0, limits.superLikeLimit - superLikesUsed),
       currentChats: activeChats,
       messagesSent,
-      messagesRemaining: limits.maxMessagesPerMatch === -1 ? -1 : Math.max(0, limits.maxMessagesPerMatch - (messagesSent % limits.maxMessagesPerMatch)),
+      // Per-room remaining for FREE plan (matches the real gate in
+      // /api/chat/[id]/messages: 2 messages per conversation). Without a
+      // roomId (e.g. dashboard summary) we return the plan cap as a hint.
+      // BUG FIX: removed the modulo expression which made remaining cycle
+      // between 1 and 2 and never reach 0.
+      messagesRemaining: limits.maxMessagesPerMatch === -1
+        ? -1
+        : roomId
+          ? Math.max(0, limits.maxMessagesPerMatch - (await db.message.count({ where: { roomId, senderId: userId } })))
+          : limits.maxMessagesPerMatch,
       chatsRemaining: limits.maxChats === -1 ? -1 : Math.max(0, limits.maxChats - activeChats),
     });
   });

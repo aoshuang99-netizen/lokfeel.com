@@ -51,7 +51,27 @@ interface OptimizedAvatarProps {
   enableLightbox?: boolean;
   className?: string;
   onClick?: () => void;
+  /**
+   * Optional `sizes` attribute for the underlying next/image. When omitted we
+   * derive a sensible default from `size` so the browser requests an
+   * appropriately-sized image (avoids downloading a 384px image for a 32px
+   * thumbnail). Does not affect layout or visuals.
+   */
+  sizes?: string;
 }
+
+// ✅ PERF (T04): Map each `size` to the rendered pixel size so next/image
+// generates a correctly-sized srcset. `full` can fill a large container, so it
+// uses a responsive clause.
+const AVATAR_SIZES: Record<NonNullable<OptimizedAvatarProps["size"]>, string> = {
+  xs: "24px",
+  sm: "32px",
+  md: "40px",
+  lg: "48px",
+  xl: "64px",
+  "2xl": "96px",
+  full: "(max-width: 768px) 100vw, 384px",
+};
 
 interface LightboxProps {
   src: string;
@@ -161,6 +181,7 @@ function AvatarLightbox({ src, alt = "Photo", isOpen, onClose }: LightboxProps) 
               src={fullResUrl}
               alt={alt || "Photo"}
               fill
+              sizes="100vw"
               className="object-contain rounded-2xl"
               draggable={false}
               style={{ willChange: "transform" }}
@@ -195,6 +216,7 @@ export function OptimizedAvatar({
   enableLightbox = false,
   className = "",
   onClick,
+  sizes,
 }: OptimizedAvatarProps) {
   const [error, setError] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -309,6 +331,7 @@ export function OptimizedAvatar({
               src={imageSrc}
               alt={alt}
               fill
+              sizes={sizes ?? AVATAR_SIZES[size]}
               className={`w-full h-full object-cover object-top transition-opacity duration-300 ${
                 loaded ? "opacity-100" : "opacity-0"
               }`}

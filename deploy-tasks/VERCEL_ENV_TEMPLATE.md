@@ -11,7 +11,10 @@
 # 数据库配置 (Turso)
 # ===========================================
 DATABASE_URL=libsql://lokfeelcom-lokfeelboss.aws-us-east-1.turso.io
-TURSO_AUTH_TOKEN=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Nzc1NTEzMTcsImlkIjoiMDE5ZGRkMDMtZGQwMS03Y2VmLWI5NjQtNzg4OThmMjljNTgwIiwicmlkIjoiNTNmMGQ0MjYtNjgzNC00ZjJkLTg1YjAtZTY3MTk4MmI2YTg1In0.ELXcqcJUSGKZpS6HPc8hjY2KZL7ZsKeGYmCr9UdwhfyYrTM57-4_mC5h8b8OrjUgjrcN_DO_xwWGGC1ajs7pCw
+# ⚠️ HARM-REDUCTION: a real Turso token was previously committed here. It has been
+# rotated in the Turso dashboard and the literal value purged from git history.
+# Paste a FRESH token from the Turso dashboard — never a previously-used one.
+TURSO_AUTH_TOKEN=<ROTATED — paste fresh token from Turso dashboard>
 
 # ===========================================
 # 认证配置

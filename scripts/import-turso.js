@@ -6,7 +6,7 @@ const { createClient } = require('@libsql/client');
 const fs = require('fs');
 
 const TURSO_URL = 'libsql://lokfeelcom-lokfeelboss.aws-us-east-1.turso.io';
-const TURSO_TK = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Nzc1NTEzMTcsImlkIjoiMDE5ZGRkMDMtZGQwMS03Y2VmLWI5NjQtNzg4OThmMjljNTgwIiwicmlkIjoiNTNmMGQ0MjYtNjgzNC00ZjJkLTg1YjAtZTY3MTk4MmI2YTg1In0.ELXcqcJUSGKZpS6HPc8hjY2KZL7ZsKeGYmCr9UdwhfyYrTM57-4_mC5h8b8OrjUgjrcN_DO_xwWGGC1ajs7pCw';
+const TURSO_TK = process.env.TURSO_TOKEN;
 
 const BATCH_SIZE = 50; // 50 rows per transaction
 

@@ -36,6 +36,10 @@ interface MockCheckoutSession {
 }
 
 export async function POST(request: NextRequest) {
+  // EP-S3 (2026-09-04): test-only mock checkout — exclude from production runtime
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
   try {
     // 1. Authenticate
     let user;
@@ -116,6 +120,10 @@ export async function POST(request: NextRequest) {
 
 // ── GET: Retrieve mock session (for mock payment page) ─────
 export async function GET(request: NextRequest) {
+  // EP-S3 (2026-09-04): test-only mock checkout — exclude from production runtime
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
   const sessionId = request.nextUrl.searchParams.get("session_id");
   if (!sessionId) {
     return NextResponse.json({ error: "Missing session_id" }, { status: 400 });
@@ -138,6 +146,10 @@ export async function GET(request: NextRequest) {
 // ── PATCH: Simulate payment completion ─────────────
 // Called by the mock payment page when user clicks "Complete Payment"
 export async function PATCH(request: NextRequest) {
+  // EP-S3 (2026-09-04): test-only mock checkout — exclude from production runtime
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
   try {
     const body = await request.json();
     const { session_id, action } = body; // action: "complete" | "fail"

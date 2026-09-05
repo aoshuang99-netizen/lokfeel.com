@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, FormEvent } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { MotionDiv, LazyAnimatePresence } from "@/components/ui/motion-lazy";
 import { X, Mail, Lock, Heart, ArrowRight } from "lucide-react";
 import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
@@ -68,11 +68,11 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
+    <LazyAnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           {/* Backdrop */}
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -81,7 +81,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
           />
 
           {/* Modal */}
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -190,9 +190,9 @@ export default function QuickLoginModal({ isOpen, onClose, onSwitchToSignup }: Q
                 </button>
               </p>
             </div>
-          </motion.div>
+          </MotionDiv>
         </div>
       )}
-    </AnimatePresence>
+    </LazyAnimatePresence>
   );
 }

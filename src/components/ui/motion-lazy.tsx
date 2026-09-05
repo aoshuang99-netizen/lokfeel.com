@@ -61,8 +61,24 @@ const MotionArticle = dynamic(
   }
 );
 
+// Lazy <motion.img> — used by the avatar lightbox. Null fallback (no pulse box
+// around an image) to avoid a flash before framer-motion loads on first open.
+const MotionImg = dynamic(
+  () => import('framer-motion').then((mod) => {
+    const Img = ({ children, ...props }: any) => {
+      const MotionComponent = mod.motion.img;
+      return <MotionComponent {...props}>{children}</MotionComponent>;
+    };
+    return { default: Img };
+  }),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
+
 // Export motion components
-export { MotionDiv, MotionSection, MotionArticle };
+export { MotionDiv, MotionSection, MotionArticle, MotionImg };
 
 // Lazy load AnimatePresence
 export const LazyAnimatePresence = dynamic(

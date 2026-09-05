@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Sora } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/auth-provider";
+import { LazyMotion, domAnimation } from "framer-motion";
 import { registerServiceWorker } from "@/lib/service-worker";
 
 // Self-hosted fonts via next/font — eliminates Google Fonts CDN dependency
@@ -158,7 +159,9 @@ if ('serviceWorker' in navigator) {
             />
           </noscript>
         )}
-        <AuthProvider>{children}</AuthProvider>
+        <LazyMotion features={domAnimation}>
+          <AuthProvider>{children}</AuthProvider>
+        </LazyMotion>
       </body>
     </html>
   );

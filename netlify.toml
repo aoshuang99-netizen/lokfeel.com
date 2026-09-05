@@ -1,0 +1,39 @@
+# Netlify deployment config — replaces vercel.json (Vercel-only).
+# Vercel ignores this file; Netlify auto-applies the Next.js plugin below.
+# Deploy: connect this repo in Netlify, or `netlify deploy --prod` with NETLIFY_AUTH_TOKEN.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Next.js on Netlify (handles server functions, proxy.ts, rewrites, ISR).
+# NOTE: Next 16 support depends on the latest plugin version — Netlify
+# resolves "latest" at build time. If your build fails on plugin compat,
+# pin a newer @netlify/plugin-nextjs or use Netlify's auto-detected Next.js.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ─── Geo / Security note ───
+# The CN region-block in src/proxy.ts reads x-vercel-ip-country first, then
+# falls back to cf-ipcountry (line 52-57). Since app.lokfeel.com sits behind
+# Cloudflare (orange-cloud), cf-ipcountry IS present, so the block works on
+# Netlify without any extra Edge Function.
+
+# ─── Scheduled cron runner (replaces Vercel Cron) ───
+# One hourly Netlify scheduled function (source: netlify/functions/cron-runner.ts)
+# that pings all internal cron endpoints with CRON_SECRET. Sub-hourly crons
+# (bot-tick/minute, bot-online/15m, bot-chat/5m) run hourly here; for finer
+# granularity add cron-job.org jobs hitting the same endpoints.
+[functions.cron-runner]
+schedule = "23 * * * *"
+
+# ─── Required environment variables (set in Netlify dashboard) ───
+# DATABASE_URL (Turso libSQL URL), AUTH_SECRET, GOOGLE_CLIENT_ID/SECRET,
+# NEXT_PUBLIC_PUSHER_KEY/CLUSTER, PUSHER_APP_ID/KEY/SECRET,
+# CREEM_API_KEY/CREEM_WEBHOOK_SECRET, STRIPE_SECRET_KEY,
+# NEXT_PUBLIC_SITE_URL=https://app.lokfeel.com, DEBUG_SECRET (optional),
+# plus any SENTRY_*/firebase vars the app uses.

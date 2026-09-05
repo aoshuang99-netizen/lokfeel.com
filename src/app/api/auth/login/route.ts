@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { verifyPassword } from "@/lib/auth/auth"
 import { encode } from "next-auth/jwt"
+import { isSafeRedirect } from "@/lib/auth/safe-redirect"
 
 /**
  * POST /api/auth/login
@@ -22,6 +23,9 @@ import { encode } from "next-auth/jwt"
  */
 export const dynamic = "force-dynamic"
 
+// Open-redirect guard shared with the OAuth callbacks (isSafeRedirect) so every
+// auth entry-point enforces the same allow-list. See src/lib/auth/safe-redirect.ts.
+
 // NextAuth JWT cookie names (matches next-auth v5 defaults)
 const COOKIE_NAME = process.env.NODE_ENV === "production"
   ? "__Secure-authjs.session-token"
@@ -29,6 +33,32 @@ const COOKIE_NAME = process.env.NODE_ENV === "production"
 
 export async function POST(request: NextRequest) {
   try {
+    // ─── 0. CSRF guard (defense-in-depth) ───
+    // This custom credentials endpoint intentionally bypasses NextAuth's CSRF
+    // cookie layer (see file header). Browsers always send `Origin` for
+    // same-origin POST/fetch and for cross-site POST; a forged cross-site
+    // form submit will either lack `Origin` or carry an attacker host → reject.
+    // When `Origin` is absent we fall back to `Referer` host (a genuine
+    // same-origin SPA login always sends one of the two).
+    const origin = request.headers.get("origin")
+    const referer = request.headers.get("referer")
+    const siteHost = request.nextUrl.host
+    const hostMatches = (h?: string | null) => {
+      if (!h) return false
+      try {
+        return new URL(h).host === siteHost
+      } catch {
+        return false
+      }
+    }
+    const csrfOk = origin ? hostMatches(origin) : hostMatches(referer)
+    if (!csrfOk) {
+      return NextResponse.json(
+        { error: "Cross-origin request blocked. Please log in from the app." },
+        { status: 403 }
+      )
+    }
+
     let body: any = {}
     try {
       body = await request.json()
@@ -118,6 +148,7 @@ export async function POST(request: NextRequest) {
       role: (user as any).role || "USER",
       emailVerified: (user as any).emailVerified || null,
       sub: user.id,
+      tokenVersion: (user as any).tokenVersion || 0,
     }
 
     // CRITICAL: salt MUST match the cookie name exactly.
@@ -133,10 +164,13 @@ export async function POST(request: NextRequest) {
 
     // ─── 5. Determine redirect destination ───
     const role = (user as any).role
+    // Validate callbackUrl to close the open-redirect: only allow relative
+    // paths or same-origin URLs; fall back to /dashboard otherwise.
+    const safeCallback = isSafeRedirect(callbackUrl) ? callbackUrl! : "/dashboard"
     const destination =
       role === "ADMIN" || role === "SUPER_ADMIN"
         ? "/admin"
-        : (callbackUrl || "/dashboard")
+        : safeCallback
 
     // ─── 6. Build response with session cookie ───
     const response = NextResponse.json({

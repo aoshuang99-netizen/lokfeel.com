@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
 import { redisCache } from "@/lib/redis-cache";
 import { NextRequest, NextResponse } from "next/server";
-import { isMaleGender, isFemaleGender, getOppositeGenders } from "@/lib/gender-utils";
+import { getTargetGenders } from "@/lib/gender-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "20");
     const cursor = searchParams.get("cursor"); // ✅ OPTIMIZATION: Cursor-based pagination
-    const minOnboardingStep = parseInt(searchParams.get("minOnboardingStep") || "4");
+    // Profiles are only shown in Discover once onboarding is complete (step 9).
+    const minOnboardingStep = parseInt(searchParams.get("minOnboardingStep") || "9");
 
     // ★ New: Explicit filter params (override profile preferences when provided)
     const filterGender = searchParams.get("preferredGender") || null;
@@ -63,58 +64,45 @@ export async function GET(request: NextRequest) {
       return res;
     }
 
-    // Cache match history + reactions (60s TTL — changes on each swipe)
-    // ✅ OPTIMIZATION (T04.1): Increased from 30s to 60s
-    const excludeIdsResult = await redisCache.get(
-      `discover:exclude:${userId}`,
-      async () => {
-        // Get IDs of users to exclude (already matched)
-        const existingMatches = await prisma.match.findMany({
-          where: {
-            OR: [
-              { senderId: userId },
-              { receiverId: userId },
-            ],
-          },
-          select: { senderId: true, receiverId: true },
-        });
-
-        const matchedUserIds = existingMatches.map((m) =>
-          m.senderId === userId ? m.receiverId : m.senderId
-        );
-
-        // Get IDs of users already reacted to (via MatchReaction)
-        const existingReactions = await prisma.matchReaction.findMany({
-          where: { userId },
-          select: {
-            match: {
-              select: { senderId: true, receiverId: true },
-            },
-          },
-        });
-
-        const reactedUserIds = existingReactions.map((r) =>
-          r.match.senderId === userId ? r.match.receiverId : r.match.senderId
-        );
-
-        return [...new Set([...matchedUserIds, ...reactedUserIds, userId])];
-      },
-      60 // ✅ OPTIMIZATION: 30s → 60s
-    );
-
-    let excludeIds = excludeIdsResult;
 
     // Build where clause - RELAXED to show more users
     // Only require: has profile, not current user, not already matched/reacted
     // 🔴 BUG FIX: Must filter out bot users (isBot=false)!
     // Prisma 7 requires nested filter fields wrapped in `is:`
+    // ✅ PERF (T02): Replace the previous `id: { notIn: excludeIds }` (a large
+    // literal IN-list, slow on big tables) with index-friendly correlated
+    // subqueries expressed as Prisma relation filters (NOT EXISTS in SQL).
+    // Excludes exactly the same set: users the current user already matched
+    // (either direction), users the current user already reacted to (other
+    // participant of any match with a MatchReaction by the current user), and
+    // the current user themselves (via `id: { not: userId }`).
     let whereClause: any = {
-      id: { notIn: excludeIds },
+      id: { not: userId }, // exclude self
       isBot: { not: true }, // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
       profile: {
         is: {
           onboardingStep: { gte: minOnboardingStep },
         },
+      },
+      NOT: {
+        OR: [
+          // Current user sent a match to this user
+          { sentMatches: { some: { receiverId: userId } } },
+          // This user sent a match to the current user
+          { receivedMatches: { some: { senderId: userId } } },
+          // Current user reacted to a match where this user was the sender
+          {
+            sentMatches: {
+              some: { receiverId: userId, matchReactions: { some: { userId } } },
+            },
+          },
+          // Current user reacted to a match where this user was the receiver
+          {
+            receivedMatches: {
+              some: { senderId: userId, matchReactions: { some: { userId } } },
+            },
+          },
+        ],
       },
     };
 
@@ -123,12 +111,15 @@ export async function GET(request: NextRequest) {
     const effectiveGender = filterGender || profile.preferredGender?.toUpperCase() || null;
 
     if (effectiveGender && effectiveGender !== "EVERYONE") {
-      const targetGenders = getOppositeGenders(effectiveGender);
-      if (targetGenders.length > 0 && targetGenders.length < 5) {
-        // Use IN clause to match both MALE/FEMALE and MAN/WOMAN
+      // preferredGender is the TARGET gender the viewer wants to see.
+      // BUG FIX: was using getOppositeGenders(preferredGender) which inverted
+      // the filter (a woman wanting men was shown only women). Use
+      // getTargetGenders instead. Returns null when no filter is needed
+      // (EVERYONE / non-binary inclusive).
+      const targetGenders = getTargetGenders(effectiveGender);
+      if (targetGenders && targetGenders.length > 0) {
         whereClause.profile.is.gender = { in: targetGenders };
       }
-      // If "everyone" or non-binary, no gender filter applied
     }
 
     // Add age range filter (optional)
@@ -189,9 +180,13 @@ export async function GET(request: NextRequest) {
       },
       take,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}), // ✅ Cursor-based pagination
-      orderBy: {
-        createdAt: "desc",
-      },
+      // ✅ PERF/correctness: deterministic tiebreaker. Cursor pagination must
+      // match the orderBy, and `createdAt` is not unique — without the `id`
+      // tiebreaker, pages could duplicate or skip profiles.
+      orderBy: [
+        { createdAt: "desc" },
+        { id: "desc" },
+      ],
     });
 
     // ✅ OPTIMIZATION (T04.2): Determine if there are more results
@@ -206,10 +201,8 @@ export async function GET(request: NextRequest) {
 
     if (results.length === 0) {
       // Fallback: Only exclude current user (most relaxed — no match/reaction exclusions)
-      const fallbackExcludeIds = [session.user.id];
-
       const fallbackWhereClause: any = {
-        id: { notIn: fallbackExcludeIds },
+        id: { not: session.user.id },
         isBot: { not: true }, // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
         profile: {
           is: {
@@ -241,7 +234,11 @@ export async function GET(request: NextRequest) {
           },
         },
         take: limit + 1,
-        orderBy: { createdAt: "desc" },
+        // ✅ PERF/correctness: deterministic tiebreaker (see main query above)
+        orderBy: [
+          { createdAt: "desc" },
+          { id: "desc" },
+        ],
       });
 
       finalUsers = fallbackUsers.slice(0, limit);
@@ -281,8 +278,6 @@ export async function GET(request: NextRequest) {
         nextCursor: finalNextCursor,
         limit,
       },
-      // ✅ OPTIMIZATION (T04.1): Include cache stats for monitoring
-      cacheStats: redisCache.cacheStats,
     });
 
     // ✅ OPTIMIZATION (T04.1): Better cache headers

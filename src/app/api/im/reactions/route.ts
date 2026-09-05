@@ -11,6 +11,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { addReaction, removeReaction, getReactionsByMessageId } from '@/lib/im/queries';
+import { db } from '@/lib/db';
+
+/**
+ * Verify the authed user is a participant of the conversation that owns `messageId`.
+ * Prevents cross-conversation reaction reads/writes (S1 authz gap).
+ * Returns a 403/404 NextResponse if not allowed, or null if allowed.
+ */
+async function requireMessageParticipant(
+  messageId: string,
+  userId: string
+): Promise<NextResponse | null> {
+  const msg = await db.iMMessage.findUnique({
+    where: { id: messageId },
+    select: { conversationId: true },
+  });
+  if (!msg) {
+    return NextResponse.json(
+      { success: false, error: { code: 'NOT_FOUND', message: 'Message not found' } },
+      { status: 404 }
+    );
+  }
+  const conv = await db.conversation.findFirst({
+    where: { id: msg.conversationId, OR: [{ userAId: userId }, { userBId: userId }] },
+    select: { id: true },
+  });
+  if (!conv) {
+    return NextResponse.json(
+      { success: false, error: { code: 'FORBIDDEN', message: 'You are not a participant of this conversation' } },
+      { status: 403 }
+    );
+  }
+  return null;
+}
 
 // ============================================================================
 // GET /api/im/reactions/:messageId
@@ -36,6 +69,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const denied = await requireMessageParticipant(messageId, session.user.id);
+    if (denied) return denied;
 
     const reactions = await getReactionsByMessageId(messageId, session.user.id);
 
@@ -84,6 +120,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const denied = await requireMessageParticipant(messageId, session.user.id);
+    if (denied) return denied;
 
     try {
       const reaction = await addReaction(messageId, session.user.id, emoji);
@@ -139,6 +178,9 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const denied = await requireMessageParticipant(messageId, session.user.id);
+    if (denied) return denied;
 
     const removed = await removeReaction(messageId, session.user.id, emoji);
 

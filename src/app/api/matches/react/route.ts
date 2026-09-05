@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
 import { cache } from "@/lib/cache";
+import { createConversation } from "@/lib/im/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -155,6 +156,10 @@ export async function POST(req: NextRequest) {
           where: { matchId: existingMatch.id },
         });
 
+        const matchMsg = isSuperLike
+          ? `🎉 It's a match! ⭐ Super Like! You both liked each other. The Vault is open for 24 hours.`
+          : `🎉 It's a match! You both liked each other. The Vault is open for 24 hours.`;
+
         if (!chatRoom) {
           chatRoom = await prisma.chatRoom.create({
             data: {
@@ -172,9 +177,6 @@ export async function POST(req: NextRequest) {
           });
 
           // 创建系统消息
-          const matchMsg = isSuperLike
-            ? `🎉 It's a match! ⭐ Super Like! You both liked each other. The Vault is open for 24 hours.`
-            : `🎉 It's a match! You both liked each other. The Vault is open for 24 hours.`;
           await prisma.message.create({
             data: {
               roomId: chatRoom.id,
@@ -183,6 +185,55 @@ export async function POST(req: NextRequest) {
               messageType: "SYSTEM",
             },
           });
+        }
+
+        // ── TWIN-CHAT FIX (P0): ensure the newer IM system (Conversation +
+        // IMMessage) exists for this match. createConversation is an idempotent
+        // upsert, so this runs safely on every match formation — it also
+        // BACKFILLS Conversations for matches formed before this fix. The
+        // mirrored system message is only seeded when the conversation has no
+        // messages yet, to avoid duplicates.
+        try {
+          const conv = await createConversation(
+            existingMatch.senderId,
+            existingMatch.receiverId,
+            existingMatch.senderId,
+            { chatRoomId: chatRoom.id }
+          );
+          const existingMsg = await prisma.iMMessage.findFirst({
+            where: { conversationId: conv.convId },
+            select: { id: true },
+          });
+          if (!existingMsg) {
+            const last = await prisma.iMMessage.findFirst({
+              where: { conversationId: conv.convId },
+              orderBy: { seq: "desc" },
+              select: { seq: true },
+            });
+            const sysSeq = (last?.seq || 0) + 1;
+            await prisma.iMMessage.create({
+              data: {
+                conversationId: conv.convId,
+                senderId: existingMatch.senderId,
+                receiverId: existingMatch.receiverId,
+                seq: sysSeq,
+                msgType: "SYSTEM",
+                payload: matchMsg,
+                encryptionMode: "SERVER",
+                consentState: "CONSENT_NONE",
+                mediaLevel: "L0_TEXT",
+                ruleResult: "PASS",
+              },
+            });
+            await prisma.conversation.update({
+              where: { id: conv.convId },
+              data: { lastMessageAt: new Date(), messageCount: { increment: 1 } },
+            });
+          }
+        } catch (twinErr) {
+          // Legacy ChatRoom was already created above — don't fail the match
+          // if the IM twin hits a transient error. Log and continue.
+          console.error("[Match React] Twin-chat (Conversation) creation failed:", twinErr);
         }
 
         // Invalidate both users' caches after a match

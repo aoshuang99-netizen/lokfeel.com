@@ -58,14 +58,47 @@ export async function GET(
       : null;
 
     // 构建响应（处理 profile 可能为 null 的情况）
+    // SECURITY: never leak another user's email (PII). Only return email when
+    // the viewer is requesting their own profile.
+    //
+    // SECURITY (S1 follow-up): the raw Profile also contains deeply-sensitive
+    // fields that are NOT part of any public dating profile and must not be
+    // broadcast to arbitrary authenticated viewers (other users, bots):
+    // kink/power-dynamics (kinkInterests, hardLimits, domSubRole, preferredRole,
+    // kinkExperienceLevel), the full personalityData dump, the exact
+    // preferredLocation, and adminNotes. The official public profile endpoint
+    // (/api/profile/[userId]) already omits these — this endpoint must match
+    // that boundary. Owners always get their full profile (needed for editing).
+    const SENSITIVE_PROFILE_FIELDS = [
+      "kinkInterests",
+      "hardLimits",
+      "domSubRole",
+      "preferredRole",
+      "kinkExperienceLevel",
+      "personalityData",
+      "preferredLocation",
+      "adminNotes",
+    ] as const;
+
+    const isSelf = userId === session.user.id;
+    const safeProfile = isSelf
+      ? user.profile
+      : user.profile
+        ? Object.fromEntries(
+            Object.entries(user.profile as Record<string, unknown>).filter(
+              ([key]) => !(SENSITIVE_PROFILE_FIELDS as readonly string[]).includes(key)
+            )
+          )
+        : null;
+
     const userDetail = {
       id: user.id,
       name: user.name,
-      email: user.email,
+      email: isSelf ? user.email : undefined,
       image: user.image,
       isBot: user.isBot || false,
       createdAt: user.createdAt,
-      profile: user.profile, // profile 可能为 null，前端需要处理
+      profile: safeProfile, // profile 可能为 null，前端需要处理；非本人已剔除敏感字段
       matchStatus: existingMatch ? existingMatch.status : null,
       myReaction: existingReaction?.reaction || null,
       matchId: existingMatch?.id || null,

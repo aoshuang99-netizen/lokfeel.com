@@ -255,6 +255,7 @@ export const authConfig = {
         token.name = user.name;
         token.picture = user.image;
         token.emailVerified = user.emailVerified || null;
+        token.tokenVersion = (user as any).tokenVersion ?? 0;
         // Guest session flag (set by /api/auth/guest)
         if ((user as any).guest) {
           token.guest = true;
@@ -281,6 +282,7 @@ export const authConfig = {
         session.user.image = token.picture;
         // Expose verification status and guest flag to client
         ;(session.user as any).emailVerified = token.emailVerified;
+        ;(session.user as any).tokenVersion = token.tokenVersion;
         if (token.guest) {
           (session.user as any).guest = true;
         }

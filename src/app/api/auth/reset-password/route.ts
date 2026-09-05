@@ -103,6 +103,11 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
       data: { password: hashedPassword },
     })
+    // Invalidate all existing sessions: bump tokenVersion (requireAuth rejects old JWTs).
+    await db.user.update({
+      where: { id: user.id },
+      data: { tokenVersion: { increment: 1 } },
+    })
 
     // Invalidate all other reset tokens for this user
     await db.verificationToken.updateMany({

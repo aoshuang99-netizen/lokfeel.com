@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       case "PAYMENT_COMPLETED": {
         const payment = await db.payment.findFirst({
           where: {
-            description: { contains: merchantTransactionId },
+            metadata: { contains: merchantTransactionId },
           },
         });
 
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       case "PAYMENT_CANCELED": {
         const failedPayment = await db.payment.findFirst({
           where: {
-            description: { contains: merchantTransactionId },
+            metadata: { contains: merchantTransactionId },
           },
         });
 
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       case "REFUND_SUCCESS": {
         const refundPayment = await db.payment.findFirst({
           where: {
-            description: { contains: merchantTransactionId },
+            metadata: { contains: merchantTransactionId },
           },
         });
 

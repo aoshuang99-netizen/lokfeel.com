@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth/auth";
 import { success, serverError } from "@/lib/api-response";
 import { handleApiError } from "@/lib/api-handler";
 import { db } from "@/lib/db";
+import { isFemaleGender } from "@/lib/gender-utils";
 
 // ═══ GET /api/payments/status ════════════════════════════════
 // Returns user's current subscription and payment status
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    const isFemale = profile?.gender === "FEMALE";
+    const isFemale = isFemaleGender(profile?.gender);
     const effectivePlan = subscription?.plan || (isFemale ? "LADY_FREE" : "FREE");
     const isActive = subscription?.status === "ACTIVE";
     const isPremium = effectivePlan === "PREMIUM_MONTHLY" || effectivePlan === "PREMIUM_YEARLY";

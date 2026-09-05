@@ -100,9 +100,11 @@ export async function POST(request: NextRequest) {
         where: { email: email.toLowerCase() },
       })
       if (existingUser) {
+        // Anti-enumeration: pretend we sent a code but don't actually create/send one.
+        // The real "already registered" guard fires at verify time (requires the code).
         return NextResponse.json(
-          { message: 'An account with this email already exists' },
-          { status: 409 }
+          { message: 'If this email is valid, a verification code has been sent.', method, maskedIdentifier: maskEmail(email) },
+          { status: 200 }
         )
       }
 
@@ -159,15 +161,15 @@ export async function POST(request: NextRequest) {
         console.log(`   Expires: ${expiresAt.toISOString()}\n`)
       }
 
-      // Build response — only include code in development
+      // Build response — include code when email service is unavailable (DEV_MODE)
+      // This ensures registration works even without RESEND_API_KEY in production
       const isDev = process.env.NODE_ENV === 'development';
+      const showCode = isDev; // SECURITY: never echo the code in prod (account-takeover vector if email delivery fails)
       const responseBody: Record<string, unknown> = {
-        message: emailSent
-          ? 'Verification code sent to your email'
-          : 'Please use the verification code displayed below',
+        message: 'Verification code sent. Please check your email.',
         method,
         maskedIdentifier: method === 'email' ? maskEmail(email!) : maskPhone(phone!),
-        ...(isDev ? { devMode: true, code: verificationCode } : {}),
+        ...(showCode ? { devMode: !emailSent, code: verificationCode } : {}),
       }
 
       return NextResponse.json(responseBody, { status: 200 })

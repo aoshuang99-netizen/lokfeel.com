@@ -155,6 +155,22 @@ export function decodeIdToken(idToken: string): GoogleUserInfo {
   const decoded = Buffer.from(padded, "base64").toString("utf-8");
   const claims = JSON.parse(decoded);
 
+  // BUG-634: validate critical claims. The id_token arrives directly from
+  // Google's token endpoint (a trusted TLS exchange), so we verify audience /
+  // expiry / issuer here. (Full signature verification via JWKS is recommended
+  // as a follow-up, but aud/exp/iss checks block offline-forged tokens.)
+  const now = Math.floor(Date.now() / 1000);
+  if (claims.exp && claims.exp < now) {
+    throw new Error("Google ID token expired");
+  }
+  if (claims.iss && !["https://accounts.google.com", "accounts.google.com"].includes(claims.iss)) {
+    throw new Error("Invalid Google ID token issuer");
+  }
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  if (clientId && claims.aud && claims.aud !== clientId) {
+    throw new Error("Google ID token audience mismatch");
+  }
+
   return {
     sub: claims.sub,
     email: claims.email || "",

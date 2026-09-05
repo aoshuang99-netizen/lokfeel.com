@@ -2,6 +2,7 @@ import { compare, hash } from 'bcryptjs'
 import NextAuth from 'next-auth'
 import { authConfig } from './config'
 import { db } from '@/lib/db'
+import { redisCache } from '@/lib/redis-cache'
 import { redirect } from 'next/navigation'
 import { UserRole } from "@/generated/client"
 import { UnauthorizedError, ForbiddenError } from '@/lib/errors'
@@ -41,15 +42,37 @@ export async function requireAuth() {
   }
   
   const userId = (session.user as any).id
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { id: true, email: true, name: true, role: true, image: true },
-  })
+  if (!userId) {
+    throw new UnauthorizedError('Unauthorized')
+  }
+
+  // ✅ PERF (T01): Cache the per-request user lookup for a short TTL so we don't
+  // hit the DB on every authenticated API request. The JWT session is still
+  // validated above on every call (auth()); this only caches the existence +
+  // profile fields we return. Safe under concurrency: redisCache.get is
+  // read-through and only runs fn() on a miss — concurrent misses just do
+  // duplicate reads, never return incorrect data.
+  const user = await redisCache.get(
+    `auth:user:${userId}`,
+    () =>
+      db.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, name: true, role: true, image: true, tokenVersion: true },
+      }),
+    60 // short TTL (60s) — keeps role/name fresh while cutting DB load
+  )
   
   if (!user) {
     throw new UnauthorizedError('User not found')
   }
-  
+
+  // Session invalidation: reject JWTs issued before the user's tokenVersion advanced
+  // (e.g. after a password change/reset), so a stolen or old session cannot outlive it.
+  const jwtVersion = (session.user as any).tokenVersion
+  if (typeof jwtVersion === 'number' && user.tokenVersion !== jwtVersion) {
+    throw new UnauthorizedError('Session expired. Please sign in again.')
+  }
+
   return { user, session }
 }
 

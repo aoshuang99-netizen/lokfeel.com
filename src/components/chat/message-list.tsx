@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useCallback, useMemo, memo } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback, useMemo, memo } from "react";
 import { Sparkles, Bot, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { MessageBubble, MessageBubbleProps } from "./message-bubble";
 import type { IMMessagePayload } from "@/lib/im/types";
 import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
+import { useMessageWindowing } from "./use-message-windowing";
 
 // ============================================================================
 // Types
@@ -38,14 +39,20 @@ interface MessageListProps {
   className?: string;
 }
 
+interface SenderInfo {
+  id: string;
+  name: string;
+  avatar?: string | null;
+  isBot: boolean;
+  isFromMe: boolean;
+}
+
 interface MessageGroup {
   id: string;
   messages: IMMessagePayload[];
   isFromMe: boolean;
   isFromBot: boolean;
-  senderName: string;
-  senderAvatar?: string | null;
-  senderId: string;
+  sender: SenderInfo;
 }
 
 // ============================================================================
@@ -53,49 +60,54 @@ interface MessageGroup {
 // ============================================================================
 
 /**
- * Group consecutive messages from the same sender
+ * Group consecutive messages from the same sender.
+ * The `sender` object is built once per group so it stays referentially stable
+ * across re-renders — this is what lets memo(MessageBubble) actually skip work.
  */
 function groupMessages(
-  messages: IMMessagePayload[], 
+  messages: IMMessagePayload[],
   currentUserId?: string,
   otherUserAvatar?: string | null,
   otherUserName?: string,
   otherUserIsBot?: boolean,
 ): MessageGroup[] {
   const groups: MessageGroup[] = [];
-  
+
   messages.forEach((message, index) => {
     const isFromMe = message.senderId === currentUserId || message.senderId === "me";
-    // Bot detection: prefer otherUserIsBot prop, fallback to ID patterns
-    const isFromBot = otherUserIsBot || 
-                      message.senderId?.startsWith("bot-") || 
-                      message.senderId?.startsWith("bot_") || false;
-    
-    // Check if this message should be grouped with the previous one
+    const isFromBot =
+      otherUserIsBot ||
+      message.senderId?.startsWith("bot-") ||
+      message.senderId?.startsWith("bot_") ||
+      false;
+
     const prevMessage = messages[index - 1];
     const prevIsFromMe = prevMessage && (prevMessage.senderId === currentUserId || prevMessage.senderId === "me");
-    const prevIsFromBot = otherUserIsBot || 
-                          (prevMessage?.senderId?.startsWith("bot-") || prevMessage?.senderId?.startsWith("bot_") || false);
-    
+    const prevIsFromBot =
+      otherUserIsBot ||
+      (prevMessage?.senderId?.startsWith("bot-") || prevMessage?.senderId?.startsWith("bot_") || false);
+
     const shouldGroup = prevMessage && isFromMe === prevIsFromMe && isFromBot === prevIsFromBot;
-    
+
     if (shouldGroup && groups.length > 0) {
-      // Add to existing group
       groups[groups.length - 1].messages.push(message);
     } else {
-      // Create new group
       groups.push({
         id: message.msgId,
         messages: [message],
         isFromMe,
         isFromBot,
-        senderName: isFromMe ? "You" : otherUserName || (isFromBot ? "Bot" : "Unknown"),
-        senderAvatar: isFromMe ? undefined : otherUserAvatar,
-        senderId: message.senderId,
+        sender: {
+          id: message.senderId,
+          name: isFromMe ? "You" : otherUserName || (isFromBot ? "Bot" : "Unknown"),
+          avatar: isFromMe ? undefined : otherUserAvatar,
+          isBot: isFromBot,
+          isFromMe,
+        },
       });
     }
   });
-  
+
   return groups;
 }
 
@@ -106,7 +118,7 @@ function groupMessages(
 function EmptyState({ isBot }: { isBot?: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
@@ -120,23 +132,23 @@ function EmptyState({ isBot }: { isBot?: boolean }) {
             <Sparkles className="w-7 h-7 text-foreground-faint" />
           )}
         </div>
-      </motion.div>
-      <motion.p
+      </m.div>
+      <m.p
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
         className="text-foreground-muted mb-1.5 text-[15px]"
       >
         {isBot ? "Start chatting" : "No messages yet"}
-      </motion.p>
-      <motion.p
+      </m.p>
+      <m.p
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
         className="text-foreground-faint text-sm leading-relaxed"
       >
         {isBot ? "Say hello to start the conversation!" : "Say hello to start the conversation!"}
-      </motion.p>
+      </m.p>
     </div>
   );
 }
@@ -152,23 +164,21 @@ interface TypingIndicatorProps {
 }
 
 function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
-  // Skip broken CDN URLs
   const safeAvatar = avatar && !isBrokenAvatarUrl(avatar) ? avatar : null;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 4 }}
       transition={{ duration: 0.2 }}
       className="flex items-center gap-2.5 px-4 py-2"
     >
-      {/* Avatar */}
       <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/10">
         {safeAvatar ? (
           safeAvatar.startsWith("emoji:") ? (
             <div className={`w-full h-full flex items-center justify-center ${
-              isBot 
+              isBot
                 ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
                 : 'bg-gradient-to-br from-primary to-secondary'
             }`}>
@@ -192,7 +202,7 @@ function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
           )
         ) : (
           <div className={`w-full h-full flex items-center justify-center text-foreground text-xs font-bold ${
-            isBot 
+            isBot
               ? 'bg-gradient-to-br from-amber-500/80 to-rose-500/80'
               : 'bg-gradient-to-br from-primary to-secondary'
           }`}>
@@ -200,7 +210,6 @@ function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
           </div>
         )}
       </div>
-      {/* Typing dots + text */}
       <div className="flex items-center gap-2 bg-background-tertiary rounded-2xl px-4 py-2.5 border border-card-border/[0.06]">
         <div className="flex items-center gap-[3px]">
           <span className="w-[5px] h-[5px] bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1.4s" }} />
@@ -211,9 +220,51 @@ function TypingIndicator({ name, avatar, isBot }: TypingIndicatorProps) {
           {name ? `${name} is typing...` : "Typing..."}
         </span>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
+
+// ============================================================================
+// Chat Row (memoized so scrolling only re-renders the windowed slice)
+// ============================================================================
+
+interface ChatRowProps {
+  message: IMMessagePayload;
+  sender: SenderInfo;
+  showAvatar: boolean;
+  currentUserId?: string;
+  onRetry?: (msgId: string) => void;
+  onCopy?: (content: string) => void;
+  onDelete?: (msgId: string) => void;
+  onReport?: (msgId: string, senderId: string) => void;
+  onReply?: (message: IMMessagePayload) => void;
+}
+
+const ChatRow = memo(function ChatRow({
+  message,
+  sender,
+  showAvatar,
+  currentUserId,
+  onRetry,
+  onCopy,
+  onDelete,
+  onReport,
+  onReply,
+}: ChatRowProps) {
+  return (
+    <MessageBubble
+      message={message}
+      currentUserId={currentUserId}
+      sender={sender}
+      showAvatar={showAvatar}
+      onRetry={onRetry}
+      onCopy={onCopy}
+      onDelete={onDelete}
+      onReport={onReport}
+      onReply={onReply}
+    />
+  );
+});
 
 // ============================================================================
 // Message List Component
@@ -242,63 +293,124 @@ function MessageListComponent({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isAtBottomRef = useRef(true);
   const previousMessagesLengthRef = useRef(0);
+  const pinToBottomRef = useRef(true);
+  const anchorScrollHeightRef = useRef<number | null>(null);
 
-  // Group messages
-  const messageGroups = useMemo(() => groupMessages(messages, currentUserId, otherUserAvatar, otherUserName, otherUserIsBot), [messages, currentUserId, otherUserAvatar, otherUserName, otherUserIsBot]);
-
-  // Check if we have bot messages
-  const hasBotMessages = useMemo(
-    () => messages.some((m) => m.senderId?.startsWith("bot-")),
-    [messages]
+  // Group messages (memoized; stable sender objects per group)
+  const messageGroups = useMemo(
+    () => groupMessages(messages, currentUserId, otherUserAvatar, otherUserName, otherUserIsBot),
+    [messages, currentUserId, otherUserAvatar, otherUserName, otherUserIsBot],
   );
 
-  // Scroll to bottom when new messages arrive
+  // Flatten to a row list (one per message) carrying group context.
+  const rows = useMemo(() => {
+    const result: { key: string; message: IMMessagePayload; sender: SenderInfo; isFirstInGroup: boolean }[] = [];
+    messageGroups.forEach((group) => {
+      group.messages.forEach((message, i) => {
+        result.push({
+          key: message.msgId,
+          message,
+          sender: group.sender,
+          isFirstInGroup: i === 0,
+        });
+      });
+    });
+    return result;
+  }, [messageGroups]);
+
+  // Only virtualize long conversations; short/medium chats keep the classic
+  // render path so there is zero behavioural regression for the common case.
+  const USE_WINDOW = rows.length > 60;
+
+  const win = useMessageWindowing({
+    items: rows,
+    getKey: (row) => row.key,
+    estimateSize: 64,
+    overscan: 10,
+    getScrollElement: () => containerRef.current,
+  });
+
+  const hasBotMessages = useMemo(
+    () => messages.some((m) => m.senderId?.startsWith("bot-")),
+    [messages],
+  );
+
+  // Scroll to bottom (classic path)
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }, []);
 
-  // Track scroll position to detect if user is at bottom
+  // Track scroll position (isAtBottom + stop pinning once the user scrolls up)
   const handleScroll = useCallback(() => {
     if (containerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
       isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 100;
+      if (!isAtBottomRef.current) pinToBottomRef.current = false;
     }
   }, []);
 
   // Auto-scroll on new messages if user is at bottom
   useEffect(() => {
-    // Only auto-scroll if new messages were added (not on initial load)
-    if (messages.length > previousMessagesLengthRef.current && isAtBottomRef.current) {
-      scrollToBottom("smooth");
+    if (messages.length > previousMessagesLengthRef.current) {
+      if (USE_WINDOW) {
+        if (win.isAtBottom()) win.scrollToBottom("smooth");
+      } else if (isAtBottomRef.current) {
+        scrollToBottom("smooth");
+      }
     }
     previousMessagesLengthRef.current = messages.length;
-  }, [messages, scrollToBottom]);
+  }, [messages, USE_WINDOW, win, scrollToBottom]);
 
   // Initial scroll to bottom
-  useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom("instant");
+  useLayoutEffect(() => {
+    if (messages.length === 0) return;
+    if (USE_WINDOW) {
+      pinToBottomRef.current = true;
+      win.scrollToBottom("auto");
+      const id = requestAnimationFrame(() => win.scrollToBottom("auto"));
+      return () => cancelAnimationFrame(id);
     }
+    scrollToBottom("instant");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load more handler
+  // Keep pinned to the bottom while measurements settle (windowed only)
+  useEffect(() => {
+    if (USE_WINDOW && pinToBottomRef.current && rows.length > 0) {
+      win.scrollToBottom("auto");
+    }
+  }, [USE_WINDOW, win.totalSize, rows.length, win]);
+
+  // Load more (windowed: preserve scroll position across prepend)
   const handleLoadMore = useCallback(() => {
     if (onLoadMore && hasMore && !isLoading) {
+      const el = containerRef.current;
+      if (el && USE_WINDOW) anchorScrollHeightRef.current = el.scrollHeight;
       onLoadMore();
     }
-  }, [onLoadMore, hasMore, isLoading]);
+  }, [onLoadMore, hasMore, isLoading, USE_WINDOW]);
+
+  // Restore scroll position after older messages are prepended
+  useLayoutEffect(() => {
+    if (USE_WINDOW && anchorScrollHeightRef.current !== null && containerRef.current) {
+      const el = containerRef.current;
+      const delta = el.scrollHeight - anchorScrollHeightRef.current;
+      if (delta > 0) el.scrollTop += delta;
+      anchorScrollHeightRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
 
   // Check for scroll to top (load more trigger)
   const handleScrollForLoadMore = useCallback(() => {
     if (containerRef.current && hasMore && onLoadMore) {
       const { scrollTop } = containerRef.current;
       if (scrollTop < 200 && !isLoading) {
-        onLoadMore();
+        handleLoadMore();
       }
     }
-  }, [hasMore, onLoadMore, isLoading]);
+  }, [hasMore, onLoadMore, isLoading, handleLoadMore]);
 
-  // Combine scroll handlers
   const handleScrollCombined = useCallback(() => {
     handleScroll();
     handleScrollForLoadMore();
@@ -327,6 +439,85 @@ function MessageListComponent({
     );
   }
 
+  // Load-more bar (sticky so it never scrolls out of view)
+  const loadMoreBar = hasMore ? (
+    <div className="sticky top-0 z-20 flex justify-center py-2 bg-background/90 backdrop-blur-sm">
+      {isLoading ? (
+        <Loader2 className="w-5 h-5 text-foreground-subtle animate-spin" />
+      ) : (
+        <button
+          onClick={handleLoadMore}
+          className="text-xs text-foreground-subtle hover:text-foreground-muted transition-colors"
+        >
+          Load earlier messages
+        </button>
+      )}
+    </div>
+  ) : null;
+
+  // Typing indicator (sticky bottom)
+  const typingBar = isTyping || isBotTyping ? (
+    <div className="sticky bottom-0 z-20 bg-background/90 backdrop-blur-sm">
+      <div className="py-2">
+        <TypingIndicator
+          name={typingUserName || otherUserName}
+          avatar={otherUserAvatar}
+          isBot={otherUserIsBot || isBotTyping}
+        />
+      </div>
+    </div>
+  ) : null;
+
+  // ---- Windowed render (long conversations) ----
+  if (USE_WINDOW) {
+    const count = Math.max(0, win.rangeEnd - win.rangeStart + 1);
+    return (
+      <div
+        ref={containerRef}
+        onScroll={handleScrollCombined}
+        className={`flex-1 overflow-y-auto ${className}`}
+      >
+        {loadMoreBar}
+        <div style={{ height: win.totalSize, position: "relative", width: "100%" }}>
+          {Array.from({ length: count }, (_, k) => {
+            const index = win.rangeStart + k;
+            if (index < 0 || index >= rows.length) return null;
+            const row = rows[index];
+            return (
+              <div
+                key={row.key}
+                data-index={index}
+                ref={(el) => win.measure(row.key, el)}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${win.offsetOf(index)}px)`,
+                }}
+                className="px-4 pb-1"
+              >
+                <ChatRow
+                  message={row.message}
+                  sender={row.sender}
+                  showAvatar={!row.sender.isFromMe && row.isFirstInGroup}
+                  currentUserId={currentUserId}
+                  onRetry={onRetry}
+                  onCopy={onCopy}
+                  onDelete={onDelete}
+                  onReport={onReport}
+                  onReply={onReply}
+                />
+              </div>
+            );
+          })}
+        </div>
+        {typingBar}
+      </div>
+    );
+  }
+
+  // ---- Classic render (short / medium conversations) ----
   return (
     <div
       ref={containerRef}
@@ -334,41 +525,19 @@ function MessageListComponent({
       className={`flex-1 overflow-y-auto ${className}`}
     >
       <div className="p-4 space-y-1">
-        {/* Load more indicator */}
-        {hasMore && (
-          <div className="flex justify-center py-2">
-            {isLoading ? (
-              <Loader2 className="w-5 h-5 text-foreground-subtle animate-spin" />
-            ) : (
-              <button
-                onClick={handleLoadMore}
-                className="text-xs text-foreground-subtle hover:text-foreground-muted transition-colors"
-              >
-                Load earlier messages
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Render message groups */}
-        {messageGroups.map((group, groupIndex) => (
+        {loadMoreBar}
+        {messageGroups.map((group) => (
           <div key={group.id} className="space-y-1">
             {group.messages.map((message, messageIndex) => {
               const isFirstInGroup = messageIndex === 0;
-              const showAvatar = !group.isFromMe && isFirstInGroup;
-              
+              const showAvatar = !group.sender.isFromMe && isFirstInGroup;
               return (
-                <MessageBubble
+                <ChatRow
                   key={message.msgId}
                   message={message}
-                  currentUserId={currentUserId}
-                  sender={{
-                    id: message.senderId,
-                    name: group.senderName,
-                    avatar: group.senderAvatar,
-                    isBot: group.isFromBot,
-                  }}
+                  sender={group.sender}
                   showAvatar={showAvatar}
+                  currentUserId={currentUserId}
                   onRetry={onRetry}
                   onCopy={onCopy}
                   onDelete={onDelete}
@@ -379,19 +548,7 @@ function MessageListComponent({
             })}
           </div>
         ))}
-
-        {/* Typing indicator - socket typing OR bot simulated typing */}
-        {(isTyping || isBotTyping) && (
-          <div className="py-2">
-            <TypingIndicator 
-              name={typingUserName || otherUserName} 
-              avatar={otherUserAvatar}
-              isBot={otherUserIsBot || isBotTyping}
-            />
-          </div>
-        )}
-
-        {/* End spacer for scroll positioning */}
+        {typingBar}
         <div ref={messagesEndRef} />
       </div>
     </div>

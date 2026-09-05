@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import { motion, m, AnimatePresence, PanInfo } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -189,24 +189,24 @@ function SwipeCard({
         {/* Swipe Indicators */}
         <AnimatePresence>
           {showIndicator === "right" && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
               className="absolute top-10 left-8 border-4 border-green-500 text-green-500 rounded-xl px-5 py-2 font-bold text-2xl rotate-[-15deg] shadow-lg"
             >
               LIKE
-            </motion.div>
+            </m.div>
           )}
           {showIndicator === "left" && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
               className="absolute top-10 right-8 border-4 border-red-500 text-red-500 rounded-xl px-5 py-2 font-bold text-2xl rotate-[15deg] shadow-lg"
             >
               NOPE
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -288,14 +288,14 @@ function SwipeCard({
               </div>
               <AnimatePresence>
                 {showWhyMatch && (
-                  <motion.p
+                  <m.p
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     className="text-xs text-primary/80 mt-2 overflow-hidden"
                   >
                     {user.matchReason}
-                  </motion.p>
+                  </m.p>
                 )}
               </AnimatePresence>
             </div>
@@ -479,7 +479,7 @@ export default function DiscoverPage() {
 
       {/* ── Progress Bar ── */}
       <div className="h-0.5 bg-background-tertiary">
-        <motion.div
+        <m.div
           className="h-full bg-gradient-to-r from-primary to-secondary"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
@@ -515,7 +515,7 @@ export default function DiscoverPage() {
                   />
                 ))
             ) : (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="absolute inset-0 flex items-center justify-center"
@@ -536,7 +536,7 @@ export default function DiscoverPage() {
                     Refresh
                   </button>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

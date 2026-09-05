@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { MotionDiv, LazyAnimatePresence } from "@/components/ui/motion-lazy";
 import { X, ZoomIn, ZoomOut, Check, RotateCcw, Camera, Upload } from "lucide-react";
 
 interface ImageCropModalProps {
@@ -343,15 +343,15 @@ export function ImageCropModal({
   // ─── Camera Capture Mode ───
   if (isCapturing) {
     return (
-      <AnimatePresence>
-        <motion.div
+      <LazyAnimatePresence>
+        <MotionDiv
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.95)" }}
         >
-          <motion.div
+          <MotionDiv
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -403,9 +403,9 @@ export function ImageCropModal({
             </div>
 
             <canvas ref={canvasRef} className="hidden" />
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
+          </MotionDiv>
+        </MotionDiv>
+      </LazyAnimatePresence>
     );
   }
 
@@ -416,15 +416,15 @@ export function ImageCropModal({
   const confirmLabel = isAvatarTab ? "Set as Avatar" : "Save to Gallery";
 
   return (
-    <AnimatePresence>
-      <motion.div
+    <LazyAnimatePresence>
+      <MotionDiv
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
         style={{ background: "rgba(0,0,0,0.6)" }}
       >
-        <motion.div
+        <MotionDiv
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 40, opacity: 0 }}
@@ -601,8 +601,8 @@ export function ImageCropModal({
               Drag to position &middot; Zoom to adjust &middot; Tap <strong>{confirmLabel}</strong> to confirm
             </p>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </MotionDiv>
+      </MotionDiv>
+    </LazyAnimatePresence>
   );
 }

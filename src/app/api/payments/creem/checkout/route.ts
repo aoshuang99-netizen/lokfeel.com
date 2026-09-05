@@ -11,6 +11,7 @@ import {
   createCreemCheckout,
   CreemPlan,
 } from "@/lib/creem";
+import { isFemaleGender } from "@/lib/gender-utils";
 
 // ── Checkout Schema ──────────────────────────────
 // 支持两种方式：plan（兼容旧版）或 productId（动态）
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
       select: { gender: true },
     });
 
-    if (userProfile?.gender === "FEMALE") {
+    if (isFemaleGender(userProfile?.gender)) {
       return NextResponse.json(
         { error: "Women already have premium-level access for free via Lady Free plan" },
         { status: 403 },

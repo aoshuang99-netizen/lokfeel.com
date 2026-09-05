@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { encode } from "next-auth/jwt"
+import { isSafeRedirect } from "@/lib/auth/safe-redirect"
 
 /**
  * GET /api/guest
@@ -45,8 +46,10 @@ export async function GET(request: Request) {
 
   const isSecure = process.env.NODE_ENV === "production"
   const url = new URL(request.url)
-  const callbackUrl =
-    url.searchParams.get("callbackUrl") || "/dashboard"
+  const rawCallback = url.searchParams.get("callbackUrl") || "/dashboard"
+  // EP-S2 (2026-09-04): validate callbackUrl to prevent open-redirect phishing
+  // (new URL(absoluteExternalUrl, origin) ignores origin → would redirect off-site)
+  const callbackUrl = isSafeRedirect(rawCallback) ? rawCallback : "/dashboard"
 
   const response = NextResponse.redirect(
     new URL(callbackUrl, url.origin)

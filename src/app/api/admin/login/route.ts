@@ -3,14 +3,18 @@ import { db } from "@/lib/db";
 import { compare } from "bcryptjs";
 import { createAdminSession } from "@/lib/admin-auth";
 
-// Admin credentials disabled by default in production for security.
-// Enable explicitly with ADMIN_CREDENTIALS_ENABLED=true in Vercel env vars.
-const ADMIN_CREDENTIALS_ENABLED = process.env.ADMIN_CREDENTIALS_ENABLED === "true";
-const DEMO_ADMINS = ADMIN_CREDENTIALS_ENABLED ? [
-  { username: "admin", password: "Admin@2026!", role: "SUPER_ADMIN" },
-  { username: "moderator", password: "Mod@2026!", role: "MODERATOR" },
-  { username: "analyst", password: "Analyst@2026!", role: "ANALYST" },
-] : [];
+// Admin credentials are NOT hardcoded in source (previously a hardcoded
+// backdoor: admin/Admin@2026!, etc.). A single optional env-backed admin
+// account may be enabled for emergencies via ADMIN_USERNAME / ADMIN_PASSWORD /
+// ADMIN_ROLE; otherwise admin access requires a real admin user in the DB.
+const DEMO_ADMINS = (() => {
+  const u = process.env.ADMIN_USERNAME;
+  const p = process.env.ADMIN_PASSWORD;
+  if (u && p) {
+    return [{ username: u, password: p, role: (process.env.ADMIN_ROLE || "SUPER_ADMIN") }];
+  }
+  return [];
+})();
 
 const SESSION_OPTIONS = {
   httpOnly: true,

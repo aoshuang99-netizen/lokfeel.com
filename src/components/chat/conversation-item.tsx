@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { User, Bot, Lock, Sparkles } from "lucide-react";
 import { isBrokenAvatarUrl } from "@/lib/avatar-utils";
 
@@ -168,7 +168,7 @@ function ConversationItemComponent({
 
   // Render as link if no onClick handler
   const content = (
-    <motion.div
+    <m.div
       className={`
         flex items-center gap-3 p-3 transition-all duration-200 cursor-pointer
         ${isSelected ? "bg-background-tertiary" : "hover:bg-background-tertiary"}
@@ -247,7 +247,7 @@ function ConversationItemComponent({
           )}
         </p>
       </div>
-    </motion.div>
+    </m.div>
   );
 
   // If onClick is provided, use a div; otherwise use Link

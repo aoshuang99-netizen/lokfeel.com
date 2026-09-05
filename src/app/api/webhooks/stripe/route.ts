@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import Stripe from "stripe";
+import { isFemaleGender } from "@/lib/gender-utils";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -19,6 +20,11 @@ export async function POST(request: NextRequest) {
 
     if (!signature) {
       return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
+    }
+
+    if (!endpointSecret) {
+      console.error("[Webhook] STRIPE_WEBHOOK_SECRET is not configured");
+      return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
     }
 
     let event: Stripe.Event;
@@ -202,8 +208,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     select: { gender: true },
   });
 
-  const newPlan = userProfile?.gender === "FEMALE" ? "LADY_FREE" : "FREE";
-  const newLimit = userProfile?.gender === "FEMALE" ? 5 : 3;
+  // DB maps registrations to the modern WOMAN convention, so almost no rows
+  // hold the legacy "FEMALE". Use isFemaleGender() to cover both conventions.
+  const female = isFemaleGender(userProfile?.gender);
+  const newPlan = female ? "LADY_FREE" : "FREE";
+  const newLimit = female ? 5 : 3;
 
   await db.subscription.update({
     where: { id: userSubscription.id },
@@ -211,8 +220,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       plan: newPlan as any,
       status: "CANCELLED",
       weeklyMatchLimit: newLimit,
-      canInitiateChat: userProfile?.gender === "FEMALE",
-      canViewFullProfile: userProfile?.gender === "FEMALE",
+      canInitiateChat: female,
+      canViewFullProfile: female,
       endsAt: new Date(),
     },
   });
@@ -222,7 +231,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       userId: userSubscription.userId,
       type: "SUBSCRIPTION_EXPIRED",
       title: "Subscription Cancelled",
-      body: userProfile?.gender === "FEMALE"
+      body: female
         ? "Your Premium subscription has ended, but you still have Lady Free access with premium-level features."
         : "Your Premium subscription has ended. Upgrade again anytime to get full access.",
     },

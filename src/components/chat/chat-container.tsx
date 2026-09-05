@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, MoreVertical, Phone, Video, Sparkles, MessageCircle, Shield, X, Ban } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 import { ConversationList } from "./conversation-list";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { ReportModal } from "./report-modal";
+import { VideoCallModal } from "@/components/video-call/VideoCallModal";
 import type { ConversationListProps } from "./conversation-list";
 import type { MessageBubbleProps } from "./message-bubble";
 import { useChatRoomSocket } from "@/hooks/useSocket";
@@ -64,7 +65,7 @@ interface QuotedMessageState {
 function EmptyChat({ isBot }: EmptyChatProps) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
@@ -79,16 +80,16 @@ function EmptyChat({ isBot }: EmptyChatProps) {
             <MessageCircle className="w-10 h-10 text-foreground-subtle" />
           )}
         </div>
-      </motion.div>
-      <motion.h3 
+      </m.div>
+      <m.h3 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.4 }}
         className="text-lg font-semibold text-foreground mb-2"
       >
         {isBot ? "Say hello" : "Your messages"}
-      </motion.h3>
-      <motion.p 
+      </m.h3>
+      <m.p 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.4 }}
@@ -97,7 +98,7 @@ function EmptyChat({ isBot }: EmptyChatProps) {
         {isBot
           ? "Start a conversation — they're ready to chat"
           : "Pick a conversation from the sidebar, or match with someone new"}
-      </motion.p>
+      </m.p>
     </div>
   );
 }
@@ -105,7 +106,7 @@ function EmptyChat({ isBot }: EmptyChatProps) {
 function EmptyConversation() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
@@ -115,24 +116,24 @@ function EmptyConversation() {
         <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-card-border/[0.06] flex items-center justify-center backdrop-blur-sm">
           <MessageCircle className="w-10 h-10 text-foreground-faint" />
         </div>
-      </motion.div>
-      <motion.h3
+      </m.div>
+      <m.h3
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.4 }}
         className="text-lg font-semibold text-foreground mb-2"
       >
         No conversations yet
-      </motion.h3>
-      <motion.p
+      </m.h3>
+      <m.p
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.4 }}
         className="text-foreground-subtle text-sm max-w-[260px] leading-relaxed mb-6"
       >
         Accept a match to start chatting with someone
-      </motion.p>
-      <motion.div
+      </m.p>
+      <m.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, duration: 0.4 }}
@@ -143,7 +144,7 @@ function EmptyConversation() {
         >
           Find Matches
         </Link>
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -157,9 +158,10 @@ interface ChatHeaderProps {
   onBack?: () => void;
   onReport?: () => void;
   onBlock?: () => void;
+  onVideoCall?: () => void;
 }
 
-function ChatHeader({ roomInfo, onBack, onReport, onBlock }: ChatHeaderProps) {
+function ChatHeader({ roomInfo, onBack, onReport, onBlock, onVideoCall }: ChatHeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   
   const isBot = roomInfo?.otherUser?.isBot || false;
@@ -269,10 +271,11 @@ function ChatHeader({ roomInfo, onBack, onReport, onBlock }: ChatHeaderProps) {
 
       {/* Header Actions */}
       <div className="flex items-center gap-0.5">
-        <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors duration-200" aria-label="Voice call">
-          <Phone className="w-[18px] h-[18px] text-foreground-subtle" />
-        </button>
-        <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors duration-200" aria-label="Video call">
+        <button 
+          onClick={() => onVideoCall?.()}
+          className="p-2 rounded-full hover:bg-background-tertiary transition-colors duration-200" 
+          aria-label="Video call"
+        >
           <Video className="w-[18px] h-[18px] text-foreground-subtle" />
         </button>
         <div className="relative">
@@ -287,7 +290,7 @@ function ChatHeader({ roomInfo, onBack, onReport, onBlock }: ChatHeaderProps) {
           {/* Menu Dropdown */}
           <AnimatePresence>
             {showMenu && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 8, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.96 }}
@@ -319,7 +322,7 @@ function ChatHeader({ roomInfo, onBack, onReport, onBlock }: ChatHeaderProps) {
                   <Ban className="w-4 h-4" />
                   Block User
                 </button>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -398,6 +401,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
+  const [showVideoCallModal, setShowVideoCallModal] = useState(false);
   const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const deletedMsgIdsRef = useRef<Set<string>>(new Set());
 
@@ -691,7 +695,7 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
         {currentConvId && roomInfo ? (
           <>
             {/* Chat Header */}
-            <ChatHeader roomInfo={roomInfo} onBack={handleBack} onReport={() => setShowReportModal(true)} onBlock={handleBlockUser} />
+            <ChatHeader roomInfo={roomInfo} onBack={handleBack} onReport={() => setShowReportModal(true)} onBlock={handleBlockUser} onVideoCall={() => setShowVideoCallModal(true)} />
 
             {/* Vault Banner */}
             <VaultBanner expiresAt={roomInfo.vaultExpiresAt} />
@@ -762,6 +766,12 @@ export function ChatContainer({ className = "" }: ChatContainerProps) {
           reportedUserName={roomInfo.otherUser.name}
         />
       )}
+
+      {/* Video Call Modal */}
+      <VideoCallModal
+        open={showVideoCallModal}
+        onClose={() => setShowVideoCallModal(false)}
+      />
     </div>
   );
 }

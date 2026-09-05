@@ -4,11 +4,13 @@ import { withSentryConfig } from '@sentry/nextjs'
 
 const CSP_VALUE = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' fonts.googleapis.com https://accounts.google.com",
+  "script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com",
   "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com",
   "font-src 'self' fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com",
-  "connect-src 'self' https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com",
+  // Removed 'unsafe-eval' (was a high-risk XSS vector). Added Creem, Firebase
+  // and Pusher hosts so realtime auth/messaging/payments work under CSP.
+  "connect-src 'self' https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcm.googleapis.com https://api.creem.io https://www.creem.io https://*.pusher.com wss://*.pusher.com",
   "frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com",
   "base-uri 'self'",
   "form-action 'self' https://accounts.google.com https://twitter.com",
@@ -71,7 +73,10 @@ const nextConfig: NextConfig = {
         source: '/dashboard',
         destination: '/dashboard/explore',
         permanent: false,
-        has: [{ type: 'cookie', key: 'next-auth.session-token' }],
+        // NextAuth v5 cookie name is `authjs.session-token` (v4 used
+        // `next-auth.session-token`). Must match or the logged-in redirect
+        // never fires.
+        has: [{ type: 'cookie', key: 'authjs.session-token' }],
       },
       // Discover → Explore
       {

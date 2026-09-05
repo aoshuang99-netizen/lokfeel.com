@@ -232,6 +232,14 @@ export async function PUT(request: NextRequest) {
         where: { id: user.id },
         data: { password: hashedPassword },
       })
+      // Invalidate all existing sessions: bump tokenVersion so any previously-issued
+      // JWT is rejected by requireAuth() on the next request (victim can kick out an
+      // attacker by resetting their password).
+      await db.user.update({
+        where: { id: user.id },
+        data: { tokenVersion: { increment: 1 } },
+      })
+      await cache.invalidate(`auth:user:${user.id}`)
     }
 
     // Update profile if any profile fields provided
@@ -342,9 +350,13 @@ export async function DELETE(request: NextRequest) {
       where: { id: user.id },
     })
 
-    // Clear all cached data for deleted user
+    // Clear all cached data for deleted user.
+    // NOTE: discover keys are `discover:profile:<id>` and `discover:exclude:<id>`
+    // (see redisCache usage in /api/discover), so a bare `discover:<id>` prefix
+    // matches nothing. Invalidate the real prefixes.
     await cache.invalidateByPrefix(`settings:${user.id}`);
-    await cache.invalidateByPrefix(`discover:${user.id}`);
+    await cache.invalidateByPrefix(`discover:profile:${user.id}`);
+    await cache.invalidateByPrefix(`discover:exclude:${user.id}`);
     await cache.invalidateByPrefix(`who-liked-me:${user.id}`);
 
     return NextResponse.json({

@@ -26,6 +26,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { exchangeCodeForTokens, decodeIdToken, getGoogleConfig } from "@/lib/auth/google-oauth";
 import { db } from "@/lib/db";
 import { encode } from "next-auth/jwt";
+import { isSafeRedirect } from "@/lib/auth/safe-redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -235,6 +236,7 @@ export async function GET(request: NextRequest) {
       role: user.role || "USER",
       emailVerified: user.emailVerified || null,
       sub: user.id,
+      tokenVersion: user.tokenVersion || 0,
     };
 
     const sessionToken = await encode({
@@ -245,10 +247,11 @@ export async function GET(request: NextRequest) {
     });
 
     // Step 7: Redirect to dashboard with session cookie
-    const callbackUrl = request.cookies.get("google-callback-url")?.value
+    const rawCb = request.cookies.get("google-callback-url")?.value
       || request.cookies.get("__Secure-authjs.callback-url")?.value
       || request.cookies.get("authjs.callback-url")?.value
       || "/dashboard";
+    const callbackUrl = isSafeRedirect(rawCb) ? rawCb : "/dashboard";
     const destination =
       user.role === "ADMIN" || user.role === "SUPER_ADMIN"
         ? "/admin"

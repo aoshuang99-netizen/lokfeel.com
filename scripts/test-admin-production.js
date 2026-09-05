@@ -8,11 +8,26 @@ const { chromium } = require('playwright');
 const BASE_URL = 'https://admin.lokfeel.com';
 const API_BASE = 'https://admin.lokfeel.com/api/admin';
 
-// Test credentials
+// Test credentials — MUST come from environment now.
+// The app's hardcoded demo-admin backdoor was removed (see
+// src/app/api/admin/login/route.ts); tests must use a real admin account
+// supplied via env vars. No plaintext secrets are committed to the repo.
 const CREDENTIALS = {
-  admin: { username: 'admin', password: 'Admin@2026!', role: 'SUPER_ADMIN' },
-  moderator: { username: 'moderator', password: 'Mod@2026!', role: 'MODERATOR' },
-  analyst: { username: 'analyst', password: 'Analyst@2026!', role: 'ANALYST' },
+  admin: {
+    username: process.env.ADMIN_TEST_USERNAME || 'admin',
+    password: process.env.ADMIN_TEST_PASSWORD || '',
+    role: 'SUPER_ADMIN',
+  },
+  moderator: {
+    username: process.env.MODERATOR_TEST_USERNAME || 'moderator',
+    password: process.env.MODERATOR_TEST_PASSWORD || '',
+    role: 'MODERATOR',
+  },
+  analyst: {
+    username: process.env.ANALYST_TEST_USERNAME || 'analyst',
+    password: process.env.ANALYST_TEST_PASSWORD || '',
+    role: 'ANALYST',
+  },
 };
 
 // All admin pages to test
@@ -326,7 +341,7 @@ async function main() {
     const loginResp = await securityPage.goto(BASE_URL + '/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'Admin@2026!' }),
+      body: JSON.stringify({ username: CREDENTIALS.admin.username, password: CREDENTIALS.admin.password }),
     });
 
     const status = loginResp.status();

@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionImg, LazyAnimatePresence } from "@/components/ui/motion-lazy";
 import { X, ZoomIn } from "lucide-react";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 
 interface AvatarLightboxProps {
   src: string;
@@ -32,9 +32,9 @@ export function AvatarLightbox({ src, alt = "Photo", children }: AvatarLightboxP
       </div>
 
       {/* Fullscreen lightbox overlay */}
-      <AnimatePresence>
+      <LazyAnimatePresence>
         {isOpen && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -59,7 +59,7 @@ export function AvatarLightbox({ src, alt = "Photo", children }: AvatarLightboxP
             </div>
 
             {/* Image — Full resolution with fast loading */}
-            <motion.img
+            <MotionImg
               key={src}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -68,7 +68,7 @@ export function AvatarLightbox({ src, alt = "Photo", children }: AvatarLightboxP
               src={src}
               alt={alt}
               className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: MouseEvent) => e.stopPropagation()}
               draggable={false}
               loading="eager"
               decoding="async"
@@ -79,9 +79,9 @@ export function AvatarLightbox({ src, alt = "Photo", children }: AvatarLightboxP
             <p className="absolute bottom-6 text-white/30 text-xs">
               Tap anywhere to close
             </p>
-          </motion.div>
+          </MotionDiv>
         )}
-      </AnimatePresence>
+      </LazyAnimatePresence>
     </>
   );
 }

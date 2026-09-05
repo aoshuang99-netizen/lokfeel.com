@@ -135,8 +135,13 @@ export async function createCreemCheckout(params: {
     },
   });
 
+  const checkoutUrl = (checkout as any)?.checkoutUrl || (checkout as any)?.checkout_url;
+  // BUG-3: guard against an empty/invalid checkoutUrl so callers fail loudly
+  if (!checkoutUrl || typeof checkoutUrl !== "string") {
+    throw new Error("Creem checkout did not return a valid checkoutUrl");
+  }
   return {
-    checkoutUrl: (checkout as any).checkoutUrl || (checkout as any).checkout_url,
+    checkoutUrl,
     checkoutId: checkout.id,
   };
 }

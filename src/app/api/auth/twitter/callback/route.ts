@@ -21,6 +21,7 @@ import {
 } from "@/lib/auth/twitter-oauth";
 import { db } from "@/lib/db";
 import { encode } from "next-auth/jwt";
+import { isSafeRedirect } from "@/lib/auth/safe-redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -230,6 +231,7 @@ export async function GET(request: NextRequest) {
       role: user.role || "USER",
       emailVerified: user.emailVerified || null,
       sub: user.id,
+      tokenVersion: user.tokenVersion || 0,
     };
 
     const sessionToken = await encode({
@@ -240,7 +242,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Step 8: Redirect to dashboard with session cookie
-    const callbackUrl = request.cookies.get("twitter-callback-url")?.value || "/dashboard";
+    const rawCb = request.cookies.get("twitter-callback-url")?.value || "/dashboard";
+    const callbackUrl = isSafeRedirect(rawCb) ? rawCb : "/dashboard";
     const destination =
       user.role === "ADMIN" || user.role === "SUPER_ADMIN"
         ? "/admin"

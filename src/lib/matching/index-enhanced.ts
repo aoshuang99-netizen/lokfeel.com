@@ -1,64 +1,59 @@
 /**
  * LokFee! Enhanced Matching Engine — API Integration v2.0
- * 
+ *
  * 集成Chyrpe PRD核心概念的API层
+ *
+ * Performance notes (audit round 7): same optimizations as index-base —
+ * `select` instead of full-row + dead `user` include, age preference pushed
+ * into the DB `where`, batched existing-match lookup, and a one-shot profile
+ * fetch for the batch generator (was O(N²)).
  */
 
 import { db } from '@/lib/db'
-import { 
-  calculateEnhancedMatchScore, 
+import {
+  calculateEnhancedMatchScore,
   findTopEnhancedMatches,
   EnhancedUserProfile,
-  EnhancedMatchScore 
+  EnhancedMatchScore,
 } from './enhanced-engine'
 
-/**
- * 为特定用户生成增强版匹配
- */
-export async function generateEnhancedMatchesForUser(
-  userId: string,
-  limit: number = 5,
-  matchType: 'WEEKLY' | 'AI_SUGGESTED' | 'MANUAL' = 'WEEKLY',
-) {
-  // 获取用户Profile
-  const userProfile = await db.profile.findUnique({
-    where: { userId },
-  })
+// Columns needed by the enhanced scorer. NOTE: `relationshipType` /
+// `sexualOrientation` are NOT schema columns (legacy `(c as any)` reads),
+// so they are intentionally omitted from the select.
+const CANDIDATE_SELECT = {
+  userId: true,
+  attachmentStyle: true,
+  communicationStyle: true,
+  conflictResolution: true,
+  loveLanguage: true,
+  lifePriorities: true,
+  relationshipGoal: true,
+  boundaries: true,
+  dealbreakers: true,
+  emotionalAvailability: true,
+  preferredAgeMin: true,
+  preferredAgeMax: true,
+  preferredGender: true,
+  preferredDistance: true,
+  age: true,
+  gender: true,
+  city: true,
+  country: true,
+} as const
 
-  if (!userProfile) {
-    throw new Error('User profile not found')
-  }
+type ProfileCandidate = Awaited<
+  ReturnType<typeof db.profile.findMany<{ select: typeof CANDIDATE_SELECT }>>
+>[number]
 
-  if (userProfile.profileStatus !== 'APPROVED') {
-    throw new Error('User profile must be approved to receive matches')
-  }
-
-  // 获取所有已批准的候选人
-  const candidates = await db.profile.findMany({
-    where: {
-      userId: { not: userId },
-      profileStatus: 'APPROVED',
-    },
-    include: {
-      user: {
-        select: { id: true, name: true, email: true, image: true, role: true },
-      },
-    },
-  })
-
-  if (candidates.length === 0) {
-    return []
-  }
-
-  // 转换为EnhancedUserProfile格式
-  const candidateProfiles: EnhancedUserProfile[] = candidates.map((c) => ({
+function toEnhancedUserProfile(c: ProfileCandidate): EnhancedUserProfile {
+  return {
     id: c.userId,
     attachmentStyle: c.attachmentStyle,
     communicationStyle: c.communicationStyle,
     conflictResolution: c.conflictResolution,
     loveLanguage: c.loveLanguage,
     lifePriorities: c.lifePriorities,
-    relationshipGoal: c.relationshipGoal,
+    relationshipGoal: c.relationshipGoal ?? undefined,
     boundaries: c.boundaries,
     dealbreakers: c.dealbreakers,
     emotionalAvailability: c.emotionalAvailability,
@@ -70,58 +65,82 @@ export async function generateEnhancedMatchesForUser(
     gender: c.gender,
     city: c.city,
     country: c.country,
-    // 新增字段
+    // 新增字段（非 schema 列，保持与旧行为一致：undefined）
     relationshipType: (c as any).relationshipType,
     sexualOrientation: (c as any).sexualOrientation,
-  }))
+  }
+}
 
-  const userProfileData: EnhancedUserProfile = {
-    id: userId,
-    attachmentStyle: userProfile.attachmentStyle,
-    communicationStyle: userProfile.communicationStyle,
-    conflictResolution: userProfile.conflictResolution,
-    loveLanguage: userProfile.loveLanguage,
-    lifePriorities: userProfile.lifePriorities,
-    relationshipGoal: userProfile.relationshipGoal,
-    boundaries: userProfile.boundaries,
-    dealbreakers: userProfile.dealbreakers,
-    emotionalAvailability: userProfile.emotionalAvailability,
-    preferredAgeMin: userProfile.preferredAgeMin,
-    preferredAgeMax: userProfile.preferredAgeMax,
-    preferredGender: userProfile.preferredGender,
-    preferredDistance: userProfile.preferredDistance,
-    age: userProfile.age,
-    gender: userProfile.gender,
-    city: userProfile.city,
-    country: userProfile.country,
-    // 新增字段
-    relationshipType: (userProfile as any).relationshipType,
-    sexualOrientation: (userProfile as any).sexualOrientation,
+/**
+ * 为特定用户生成增强版匹配
+ */
+export async function generateEnhancedMatchesForUser(
+  userId: string,
+  limit: number = 5,
+  matchType: 'WEEKLY' | 'AI_SUGGESTED' | 'MANUAL' = 'WEEKLY',
+  preloadedCandidates?: EnhancedUserProfile[],
+  preloadedSelf?: EnhancedUserProfile,
+) {
+  // 获取用户Profile（或复用批处理预加载）
+  let userProfileData: EnhancedUserProfile
+  if (preloadedSelf) {
+    userProfileData = preloadedSelf
+  } else {
+    const userProfile = await db.profile.findUnique({
+      where: { userId },
+    })
+    if (!userProfile) {
+      throw new Error('User profile not found')
+    }
+    if (userProfile.profileStatus !== 'APPROVED') {
+      throw new Error('User profile must be approved to receive matches')
+    }
+    userProfileData = toEnhancedUserProfile(userProfile)
+  }
+
+  // 获取候选人（或复用批处理预加载池）
+  const candidateProfiles =
+    preloadedCandidates ??
+    (
+      await db.profile.findMany({
+        where: {
+          userId: { not: userId },
+          profileStatus: 'APPROVED',
+          ...(userProfileData.preferredAgeMin != null
+            ? { age: { gte: userProfileData.preferredAgeMin } }
+            : {}),
+          ...(userProfileData.preferredAgeMax != null
+            ? { age: { lte: userProfileData.preferredAgeMax } }
+            : {}),
+        },
+        select: CANDIDATE_SELECT,
+      })
+    ).map(toEnhancedUserProfile)
+
+  if (candidateProfiles.length === 0) {
+    return []
   }
 
   // 查找最佳匹配
-  const topMatches = findTopEnhancedMatches(
-    userProfileData, 
-    candidateProfiles, 
-    limit
+  const topMatches = findTopEnhancedMatches(userProfileData, candidateProfiles, limit)
+
+  // 批量查已存在匹配（替代逐候选人 findFirst）
+  const existingRows = await db.match.findMany({
+    where: {
+      OR: [{ senderId: userId }, { receiverId: userId }],
+    },
+    select: { senderId: true, receiverId: true },
+  })
+  const existingKeys = new Set(
+    existingRows.map((m) => [m.senderId, m.receiverId].sort().join('|')),
   )
 
   // 创建匹配记录
   const createdMatches = []
   for (const match of topMatches) {
-    // 检查是否已存在匹配
-    const existing = await db.match.findFirst({
-      where: {
-        OR: [
-          { senderId: userId, receiverId: match.profile.id },
-          { senderId: match.profile.id, receiverId: userId },
-        ],
-      },
-    })
+    const key = [userId, match.profile.id].sort().join('|')
+    if (existingKeys.has(key)) continue
 
-    if (existing) continue
-
-    // 创建新匹配
     const newMatch = await db.match.create({
       data: {
         senderId: userId,
@@ -136,9 +155,6 @@ export async function generateEnhancedMatchesForUser(
         conflictCompat: match.score.conflict,
         valuesCompat: match.score.values,
         lifestyleCompat: match.score.lifestyle,
-        // 新增维度存储（需要扩展schema）
-        // relationshipTypeCompat: match.score.relationshipType,
-        // sexualOrientationCompat: match.score.sexualOrientation,
         matchType,
         status: 'PENDING',
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7天
@@ -156,32 +172,41 @@ export async function generateEnhancedMatchesForUser(
 
 /**
  * 为所有已批准用户生成增强版匹配（批量操作）
+ *
+ * 一次性获取所有已批准 profile 并复用（原先每个用户都全表扫描一次 → O(N²)）。
  */
 export async function generateAllEnhancedWeeklyMatches() {
   const approvedProfiles = await db.profile.findMany({
     where: { profileStatus: 'APPROVED' },
-    select: { userId: true },
+    select: CANDIDATE_SELECT,
   })
 
   const results = []
   for (const profile of approvedProfiles) {
     try {
+      const selfProfile = toEnhancedUserProfile(profile)
+      const candidateProfiles = approvedProfiles
+        .filter((p) => p.userId !== profile.userId)
+        .map(toEnhancedUserProfile)
+
       const matches = await generateEnhancedMatchesForUser(
-        profile.userId, 
-        5, 
-        'WEEKLY'
+        profile.userId,
+        5,
+        'WEEKLY',
+        candidateProfiles,
+        selfProfile,
       )
-      results.push({ 
-        userId: profile.userId, 
+      results.push({
+        userId: profile.userId,
         matchesCreated: matches.length,
-        topScore: matches[0]?.enhancedScore?.finalScore || 0
+        topScore: matches[0]?.enhancedScore?.finalScore || 0,
       })
     } catch (error) {
       console.error(`Failed to generate matches for user ${profile.userId}:`, error)
-      results.push({ 
-        userId: profile.userId, 
-        matchesCreated: 0, 
-        error: 'Failed' 
+      results.push({
+        userId: profile.userId,
+        matchesCreated: 0,
+        error: 'Failed',
       })
     }
   }
@@ -192,10 +217,7 @@ export async function generateAllEnhancedWeeklyMatches() {
 /**
  * 获取匹配的详细兼容性分析
  */
-export async function getMatchCompatibilityDetails(
-  matchId: string,
-  userId: string
-) {
+export async function getMatchCompatibilityDetails(matchId: string, userId: string) {
   const match = await db.match.findUnique({
     where: { id: matchId },
     include: {
@@ -229,7 +251,7 @@ export async function getMatchCompatibilityDetails(
     conflictResolution: myProfile.conflictResolution,
     loveLanguage: myProfile.loveLanguage,
     lifePriorities: myProfile.lifePriorities,
-    relationshipGoal: myProfile.relationshipGoal,
+    relationshipGoal: myProfile.relationshipGoal ?? undefined,
     boundaries: myProfile.boundaries,
     dealbreakers: myProfile.dealbreakers,
     emotionalAvailability: myProfile.emotionalAvailability,
@@ -252,7 +274,7 @@ export async function getMatchCompatibilityDetails(
     conflictResolution: otherProfile.conflictResolution,
     loveLanguage: otherProfile.loveLanguage,
     lifePriorities: otherProfile.lifePriorities,
-    relationshipGoal: otherProfile.relationshipGoal,
+    relationshipGoal: otherProfile.relationshipGoal ?? undefined,
     boundaries: otherProfile.boundaries,
     dealbreakers: otherProfile.dealbreakers,
     emotionalAvailability: otherProfile.emotionalAvailability,

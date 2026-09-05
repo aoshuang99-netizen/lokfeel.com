@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, type MouseEvent } from "react";
+import { MotionDiv, LazyAnimatePresence } from "@/components/ui/motion-lazy";
 import { X, Flag, AlertTriangle, Check, Loader2 } from "lucide-react";
 
 interface ReportModalProps {
@@ -72,8 +72,8 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
+    <LazyAnimatePresence>
+      <MotionDiv
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -81,24 +81,24 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
         style={{ background: "rgba(0,0,0,0.8)" }}
         onClick={onClose}
       >
-        <motion.div
+        <MotionDiv
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           className="w-full max-w-md bg-background-tertiary rounded-2xl overflow-hidden"
           style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: MouseEvent) => e.stopPropagation()}
         >
           {isSuccess ? (
             // Success State
             <div className="p-8 text-center">
-              <motion.div
+              <MotionDiv
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4"
               >
                 <Check className="w-8 h-8 text-green-400" />
-              </motion.div>
+              </MotionDiv>
               <h3 className="text-xl font-semibold text-foreground mb-2">Report Submitted</h3>
               <p className="text-sm text-foreground-muted">
                 Thank you for helping keep our community safe. We&apos;ll review this report promptly.
@@ -227,8 +227,8 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
               </div>
             </>
           )}
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </MotionDiv>
+      </MotionDiv>
+    </LazyAnimatePresence>
   );
 }

@@ -33,21 +33,27 @@ export async function GET(req: NextRequest) {
 
     const roomIds = chatRooms.map(r => r.id);
 
-    if (roomIds.length === 0) {
-      return NextResponse.json({
-        unreadCount: 0,
-        totalChats: 0,
-      });
-    }
-
-    // 统计所有未读消息数
-    const unreadCount = await prisma.message.count({
+    // 统计旧聊天系统的未读消息数
+    const legacyUnread = roomIds.length > 0 ? await prisma.message.count({
       where: {
         senderId: { not: userId },
         isRead: false,
         roomId: { in: roomIds },
       },
+    }) : 0;
+
+    // BUG-628: also count the NEW IM system (conversation.unreadCountA/B).
+    // unreadCountA is the receiver-A counter, unreadCountB is the receiver-B counter.
+    // A user may be userA in some conversations and userB in others, so we sum both
+    // columns across all conversations they participate in.
+    const convAgg = await prisma.conversation.aggregate({
+      where: { OR: [{ userAId: userId }, { userBId: userId }] },
+      _sum: { unreadCountA: true, unreadCountB: true },
     });
+    const imUnread =
+      (convAgg._sum.unreadCountA || 0) + (convAgg._sum.unreadCountB || 0);
+
+    const unreadCount = legacyUnread + imUnread;
 
     return NextResponse.json({
       unreadCount,

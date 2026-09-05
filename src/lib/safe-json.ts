@@ -100,6 +100,25 @@ export async function safeFetch<T = Record<string, unknown>>(
 }
 
 /**
+ * Safely parse a server-side Request/NextRequest JSON body.
+ *
+ * Returns `fallback` (default null) instead of throwing on malformed or empty
+ * bodies, so API routes can return a clean 400 instead of a 500. (BUG-630)
+ */
+export async function safeRequestBody<T = Record<string, unknown>>(
+  req: Request,
+  fallback: T | null = null
+): Promise<T | null> {
+  try {
+    const text = await req.text();
+    if (!text || text.trim().length === 0) return fallback;
+    return JSON.parse(text) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
  * Get a user-friendly error message from caught errors in auth flows.
  */
 export function getAuthErrorMessage(err: unknown): string {

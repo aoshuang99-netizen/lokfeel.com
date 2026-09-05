@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { User, Settings, LogOut, ChevronRight } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
@@ -103,7 +103,7 @@ export default function UserAvatarMenu({ collapsed }: UserAvatarMenuProps) {
 
         <AnimatePresence>
           {!collapsed && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
@@ -111,24 +111,24 @@ export default function UserAvatarMenu({ collapsed }: UserAvatarMenuProps) {
             >
               <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
               <p className="text-[11px] text-foreground-subtle truncate">{email}</p>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
         {!collapsed && (
-          <motion.div
+          <m.div
             animate={{ rotate: expanded ? 90 : 0 }}
             transition={{ duration: 0.2 }}
           >
             <ChevronRight className="w-4 h-4 text-foreground-subtle" />
-          </motion.div>
+          </m.div>
         )}
       </button>
 
       {/* Expanded menu */}
       <AnimatePresence>
         {expanded && !collapsed && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -160,7 +160,7 @@ export default function UserAvatarMenu({ collapsed }: UserAvatarMenuProps) {
                 <span>Sign Out</span>
               </button>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

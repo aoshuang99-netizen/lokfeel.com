@@ -20,7 +20,7 @@ import type {
 // ============================================================================
 
 const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY || "";
-const PUSHER_CLUSTER = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "us2";
+const PUSHER_CLUSTER = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "us3"; // BUG-627: align default with server (pusher.ts)
 const USE_PUSHER = process.env.NEXT_PUBLIC_USE_PUSHER === "true";
 
 // ============================================================================

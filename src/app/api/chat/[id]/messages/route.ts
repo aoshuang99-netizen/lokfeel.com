@@ -274,7 +274,7 @@ export async function POST(
       }
 
       // Card verification check — all non-premium users must verify after 3 total messages
-      const isPremiumPlan = hasActiveSub && (activeSubs[0]?.plan === 'PREMIUM_MONTHLY' || activeSubs[0]?.plan === 'PREMIUM_YEARLY')
+      const isPremiumPlan = hasActiveSub && ['PREMIUM_MONTHLY', 'PREMIUM_YEARLY', 'LIFETIME'].includes(activeSubs[0]?.plan)
       if (!isPremiumPlan) {
         const totalMessages = await db.message.count({ where: { senderId: user.id } })
         if (!cardVerified && totalMessages >= 3) {

@@ -35,19 +35,10 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    if (!user) {
-      // 🔴 FIX: Return 200 with exists=false instead of 404 to prevent enumeration
-      return NextResponse.json({
-        exists: false,
-        message: 'If an account with this email exists, you can proceed',
-      })
-    }
-
-    // Only return safe fields — never expose user.id to unauthenticated callers
+    // 🔴 FIX: Always return a generic response — never reveal whether the email is
+    // registered (prevents unauthenticated account enumeration / scraping).
     return NextResponse.json({
-      exists: true,
-      emailVerified: !!user.emailVerified,
-      onboardingStep: user.profile?.onboardingStep || 0,
+      exists: false,
       message: 'If an account with this email exists, you can proceed',
     })
   } catch (error) {
