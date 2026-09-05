@@ -168,18 +168,21 @@ export default async function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)')
 
-  // ─── 5. CDN cache headers for public pages (Early Return) ───
+  // ─── 5. CDN cache headers for public pages ───
   // next.config.ts headers() may not apply when middleware is present,
   // so we explicitly set s-maxage here for Cloudflare to cache.
-  // Early return for static pages to skip unnecessary CORS processing.
-  const publicPaths = ['/', '/login', '/register', '/blocked']
-  if (publicPaths.includes(pathname)) {
-    // s-maxage=60: CDN caches for 60s
-    // stale-while-revalidate: serve stale while revalidating
-    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300')
-    
-    // Early return for static pages - skip CORS check (not needed for static pages)
-    return response
+  const publicPaths = ['/', '/login', '/register']
+  const staticPublicPaths = ['/terms', '/privacy', '/about', '/faq', '/contact', '/community-guidelines', '/safety-tips', '/cookies', '/dmca', '/18-usc-2257', '/cancellations-policy', '/refunds', '/press', '/careers', '/support']
+  if (publicPaths.includes(pathname) || pathname === '/') {
+    // s-maxage=300: CDN caches for 5 min
+    // stale-while-revalidate=86400: serve stale for up to 24h while revalidating
+    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400')
+  } else if (staticPublicPaths.includes(pathname)) {
+    // Static legal/info pages: cache for 2 hours, serve stale for 24h
+    response.headers.set('Cache-Control', 'public, s-maxage=7200, stale-while-revalidate=86400')
+  } else if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
+    // Sitemap & robots: cache for 1 hour, serve stale for 24h
+    response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   }
 
   return response
@@ -193,9 +196,26 @@ export const config = {
     '/',
     '/login',
     '/register',
+    '/terms',
+    '/privacy',
+    '/about',
+    '/faq',
+    '/contact',
+    '/community-guidelines',
+    '/safety-tips',
+    '/cookies',
+    '/dmca',
+    '/18-usc-2257',
+    '/cancellations-policy',
+    '/refunds',
+    '/press',
+    '/careers',
+    '/support',
     '/dashboard/:path*',
     '/api/:path*',
     '/admin/:path*',
+    '/sitemap.xml',
+    '/robots.txt',
     '/blocked',
   ],
 }
