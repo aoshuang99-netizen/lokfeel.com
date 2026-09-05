@@ -16,7 +16,12 @@ import type { NextRequest } from 'next/server'
  */
 
 // Blocked country codes — mainland China
-const BLOCKED_COUNTRIES: string[] = ['CN']
+// NOTE: temporarily DISABLED (empty array) so the app is reachable from China
+// (owner access from GMT+8). Re-enable with ['CN'] ONLY after wiring IP_WHITELIST
+// into the check below (it is currently dead code) and adding the owner's static
+// IP, otherwise every CN visitor is redirected to /blocked. Compliance review
+// required before re-enabling a blanket CN region block.
+const BLOCKED_COUNTRIES: string[] = []
 
 // IP whitelist — always allow (add your home/office IPs here)
 const IP_WHITELIST: string[] = [
