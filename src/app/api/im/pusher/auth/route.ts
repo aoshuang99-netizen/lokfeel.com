@@ -55,7 +55,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Return Pusher auth signature
-    // Pusher expects: { auth: "app_key:signature" }
-    return NextResponse.json({ auth: authResponse });
+    // Pusher expects: { auth: "app_key:signature" } (flat).
+    // pusher-bridge returns JSON.stringify(auth), so parse it back to the
+    // flat shape — otherwise pusher-js receives a double-encoded string and
+    // private-channel subscriptions are rejected by the Pusher server.
+    return NextResponse.json(JSON.parse(authResponse as string));
   });
 }
