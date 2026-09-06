@@ -229,6 +229,7 @@ exports.Prisma.UserScalarFieldEnum = {
   image: 'image',
   password: 'password',
   role: 'role',
+  tokenVersion: 'tokenVersion',
   isBot: 'isBot',
   botType: 'botType',
   botConfig: 'botConfig',

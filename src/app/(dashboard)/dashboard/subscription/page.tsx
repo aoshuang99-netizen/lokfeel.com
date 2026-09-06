@@ -51,7 +51,13 @@ export default function SubscriptionPage() {
           );
           setProducts(subs);
         } else {
-          setError(data.error || "Failed to load products");
+          // Graceful degradation: never surface raw backend/config errors to users.
+          const msg: string = data.error || "";
+          setError(
+            /CREEM_API_KEY|not configured|payment provider/i.test(msg)
+              ? "Subscription plans are temporarily unavailable. Please check back soon."
+              : "Failed to load plans. Please try again."
+          );
         }
       })
       .catch(err => setError(err.message))

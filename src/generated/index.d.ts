@@ -12747,8 +12747,18 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    tokenVersion: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    tokenVersion: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -12759,6 +12769,7 @@ export namespace Prisma {
     image: string | null
     password: string | null
     role: $Enums.UserRole | null
+    tokenVersion: number | null
     isBot: boolean | null
     botType: string | null
     botConfig: string | null
@@ -12777,6 +12788,7 @@ export namespace Prisma {
     image: string | null
     password: string | null
     role: $Enums.UserRole | null
+    tokenVersion: number | null
     isBot: boolean | null
     botType: string | null
     botConfig: string | null
@@ -12795,6 +12807,7 @@ export namespace Prisma {
     image: number
     password: number
     role: number
+    tokenVersion: number
     isBot: number
     botType: number
     botConfig: number
@@ -12807,6 +12820,14 @@ export namespace Prisma {
   }
 
 
+  export type UserAvgAggregateInputType = {
+    tokenVersion?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    tokenVersion?: true
+  }
+
   export type UserMinAggregateInputType = {
     id?: true
     name?: true
@@ -12815,6 +12836,7 @@ export namespace Prisma {
     image?: true
     password?: true
     role?: true
+    tokenVersion?: true
     isBot?: true
     botType?: true
     botConfig?: true
@@ -12833,6 +12855,7 @@ export namespace Prisma {
     image?: true
     password?: true
     role?: true
+    tokenVersion?: true
     isBot?: true
     botType?: true
     botConfig?: true
@@ -12851,6 +12874,7 @@ export namespace Prisma {
     image?: true
     password?: true
     role?: true
+    tokenVersion?: true
     isBot?: true
     botType?: true
     botConfig?: true
@@ -12900,6 +12924,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -12930,6 +12966,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -12942,6 +12980,7 @@ export namespace Prisma {
     image: string | null
     password: string | null
     role: $Enums.UserRole
+    tokenVersion: number
     isBot: boolean
     botType: string | null
     botConfig: string | null
@@ -12951,6 +12990,8 @@ export namespace Prisma {
     updatedAt: Date
     deletedAt: Date | null
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -12977,6 +13018,7 @@ export namespace Prisma {
     image?: boolean
     password?: boolean
     role?: boolean
+    tokenVersion?: boolean
     isBot?: boolean
     botType?: boolean
     botConfig?: boolean
@@ -13029,6 +13071,7 @@ export namespace Prisma {
     image?: boolean
     password?: boolean
     role?: boolean
+    tokenVersion?: boolean
     isBot?: boolean
     botType?: boolean
     botConfig?: boolean
@@ -13047,6 +13090,7 @@ export namespace Prisma {
     image?: boolean
     password?: boolean
     role?: boolean
+    tokenVersion?: boolean
     isBot?: boolean
     botType?: boolean
     botConfig?: boolean
@@ -13065,6 +13109,7 @@ export namespace Prisma {
     image?: boolean
     password?: boolean
     role?: boolean
+    tokenVersion?: boolean
     isBot?: boolean
     botType?: boolean
     botConfig?: boolean
@@ -13075,7 +13120,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "password" | "role" | "isBot" | "botType" | "botConfig" | "cardVerified" | "cardVerifiedAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "password" | "role" | "tokenVersion" | "isBot" | "botType" | "botConfig" | "cardVerified" | "cardVerifiedAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
@@ -13160,6 +13205,7 @@ export namespace Prisma {
       image: string | null
       password: string | null
       role: $Enums.UserRole
+      tokenVersion: number
       isBot: boolean
       botType: string | null
       botConfig: string | null
@@ -13631,6 +13677,7 @@ export namespace Prisma {
     readonly image: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'UserRole'>
+    readonly tokenVersion: FieldRef<"User", 'Int'>
     readonly isBot: FieldRef<"User", 'Boolean'>
     readonly botType: FieldRef<"User", 'String'>
     readonly botConfig: FieldRef<"User", 'String'>
@@ -56510,6 +56557,7 @@ export namespace Prisma {
     image: 'image',
     password: 'password',
     role: 'role',
+    tokenVersion: 'tokenVersion',
     isBot: 'isBot',
     botType: 'botType',
     botConfig: 'botConfig',
@@ -58089,6 +58137,7 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
+    tokenVersion?: IntFilter<"User"> | number
     isBot?: BoolFilter<"User"> | boolean
     botType?: StringNullableFilter<"User"> | string | null
     botConfig?: StringNullableFilter<"User"> | string | null
@@ -58140,6 +58189,7 @@ export namespace Prisma {
     image?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
     role?: SortOrder
+    tokenVersion?: SortOrder
     isBot?: SortOrder
     botType?: SortOrderInput | SortOrder
     botConfig?: SortOrderInput | SortOrder
@@ -58194,6 +58244,7 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     password?: StringNullableFilter<"User"> | string | null
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
+    tokenVersion?: IntFilter<"User"> | number
     isBot?: BoolFilter<"User"> | boolean
     botType?: StringNullableFilter<"User"> | string | null
     botConfig?: StringNullableFilter<"User"> | string | null
@@ -58245,6 +58296,7 @@ export namespace Prisma {
     image?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
     role?: SortOrder
+    tokenVersion?: SortOrder
     isBot?: SortOrder
     botType?: SortOrderInput | SortOrder
     botConfig?: SortOrderInput | SortOrder
@@ -58254,8 +58306,10 @@ export namespace Prisma {
     updatedAt?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -58269,6 +58323,7 @@ export namespace Prisma {
     image?: StringNullableWithAggregatesFilter<"User"> | string | null
     password?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
+    tokenVersion?: IntWithAggregatesFilter<"User"> | number
     isBot?: BoolWithAggregatesFilter<"User"> | boolean
     botType?: StringNullableWithAggregatesFilter<"User"> | string | null
     botConfig?: StringNullableWithAggregatesFilter<"User"> | string | null
@@ -62372,6 +62427,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -62423,6 +62479,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -62474,6 +62531,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -62525,6 +62583,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -62576,6 +62635,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -62594,6 +62654,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -62612,6 +62673,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -67354,6 +67416,7 @@ export namespace Prisma {
     image?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    tokenVersion?: SortOrder
     isBot?: SortOrder
     botType?: SortOrder
     botConfig?: SortOrder
@@ -67364,6 +67427,10 @@ export namespace Prisma {
     deletedAt?: SortOrder
   }
 
+  export type UserAvgOrderByAggregateInput = {
+    tokenVersion?: SortOrder
+  }
+
   export type UserMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -67372,6 +67439,7 @@ export namespace Prisma {
     image?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    tokenVersion?: SortOrder
     isBot?: SortOrder
     botType?: SortOrder
     botConfig?: SortOrder
@@ -67390,6 +67458,7 @@ export namespace Prisma {
     image?: SortOrder
     password?: SortOrder
     role?: SortOrder
+    tokenVersion?: SortOrder
     isBot?: SortOrder
     botType?: SortOrder
     botConfig?: SortOrder
@@ -67398,6 +67467,10 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    tokenVersion?: SortOrder
   }
 
   export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -76321,6 +76394,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -76371,6 +76445,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -76437,6 +76512,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76487,6 +76563,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76537,6 +76614,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -76587,6 +76665,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -76653,6 +76732,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76703,6 +76783,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76753,6 +76834,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -76803,6 +76885,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -76869,6 +76952,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76919,6 +77003,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -76969,6 +77054,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -77019,6 +77105,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -77156,6 +77243,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77206,6 +77294,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77333,6 +77422,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -77383,6 +77473,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -77438,6 +77529,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -77488,6 +77580,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -77628,6 +77721,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77678,6 +77772,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77739,6 +77834,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77789,6 +77885,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77977,6 +78074,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -78027,6 +78125,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -78166,6 +78265,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78216,6 +78316,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78663,6 +78764,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -78713,6 +78815,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -78834,6 +78937,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78884,6 +78988,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78983,6 +79088,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -79033,6 +79139,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -79154,6 +79261,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79204,6 +79312,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79254,6 +79363,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -79304,6 +79414,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -79359,6 +79470,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -79409,6 +79521,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -79733,6 +79846,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79783,6 +79897,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79844,6 +79959,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79894,6 +80010,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -80136,6 +80253,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -80186,6 +80304,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -80315,6 +80434,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -80365,6 +80485,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -80472,6 +80593,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -80522,6 +80644,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -80703,6 +80826,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -80753,6 +80877,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -80957,6 +81082,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -81007,6 +81133,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -81207,6 +81334,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -81257,6 +81385,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -81372,6 +81501,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -81422,6 +81552,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -81559,6 +81690,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -81609,6 +81741,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -81659,6 +81792,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -81709,6 +81843,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -81775,6 +81910,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -81825,6 +81961,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -81875,6 +82012,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -81925,6 +82063,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -81980,6 +82119,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -82030,6 +82170,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -82153,6 +82294,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82203,6 +82345,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82264,6 +82407,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82314,6 +82458,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82427,6 +82572,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -82477,6 +82623,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -82532,6 +82679,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -82582,6 +82730,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -82705,6 +82854,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82755,6 +82905,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82816,6 +82967,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82866,6 +83018,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -82979,6 +83132,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83029,6 +83183,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83095,6 +83250,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83145,6 +83301,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83195,6 +83352,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83245,6 +83403,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83311,6 +83470,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83361,6 +83521,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83411,6 +83572,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83461,6 +83623,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83527,6 +83690,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83577,6 +83741,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83627,6 +83792,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83677,6 +83843,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83743,6 +83910,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83793,6 +83961,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83843,6 +84012,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83893,6 +84063,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -83959,6 +84130,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -84009,6 +84181,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -84059,6 +84232,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -84109,6 +84283,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -84175,6 +84350,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -84225,6 +84401,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -84275,6 +84452,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -84325,6 +84503,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -84391,6 +84570,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -84441,6 +84621,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -84658,6 +84839,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -84708,6 +84890,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -84799,6 +84982,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -84849,6 +85033,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -84930,6 +85115,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -84980,6 +85166,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85083,6 +85270,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85133,6 +85321,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85297,6 +85486,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85347,6 +85537,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85402,6 +85593,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85452,6 +85644,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85518,6 +85711,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85568,6 +85762,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85629,6 +85824,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85679,6 +85875,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85729,6 +85926,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85779,6 +85977,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85834,6 +86033,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85884,6 +86084,7 @@ export namespace Prisma {
     image?: string | null
     password?: string | null
     role?: $Enums.UserRole
+    tokenVersion?: number
     isBot?: boolean
     botType?: string | null
     botConfig?: string | null
@@ -85950,6 +86151,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -86000,6 +86202,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -86061,6 +86264,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
@@ -86111,6 +86315,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
     isBot?: BoolFieldUpdateOperationsInput | boolean
     botType?: NullableStringFieldUpdateOperationsInput | string | null
     botConfig?: NullableStringFieldUpdateOperationsInput | string | null
