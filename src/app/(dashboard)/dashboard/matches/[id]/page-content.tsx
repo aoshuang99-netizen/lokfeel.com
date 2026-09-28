@@ -51,7 +51,8 @@ interface MatchDetail {
   status: string;
   createdAt: string;
   expiresAt: string | null;
-  chatRoom: { id: string } | null;
+  hasChatRoom: boolean;
+  chatRoomId: string | null;
   sender: MatchUser;
   receiver: MatchUser;
   matchReactions: Array<{
@@ -111,8 +112,10 @@ export default function MatchDetailPage() {
   };
 
   const handleMessage = () => {
-    if (matchData?.chatRoom) {
-      router.push(`/dashboard/chats/${matchData.chatRoom.id}`);
+    // P1-6 阶段 5：API 改回 chatRoomId（旧房间 id，可经 resolve 别名回退打开旧书签；
+    // 无旧房间的会话为 Conversation.id），不再内嵌 chatRoom 对象。
+    if (matchData?.chatRoomId) {
+      router.push(`/dashboard/chats/${matchData.chatRoomId}`);
     }
   };
 
@@ -332,7 +335,7 @@ export default function MatchDetailPage() {
       {/* Action Buttons */}
       <div className="card p-5 space-y-3">
         {/* Message Button */}
-        {matchData.status === "ACCEPTED" && matchData.chatRoom && (
+        {matchData.status === "ACCEPTED" && matchData.chatRoomId && (
           <button
             onClick={handleMessage}
             className="auth-cta w-full flex items-center justify-center gap-2"

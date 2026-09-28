@@ -1,10 +1,37 @@
 "use client";
 
+/**
+ * ✅ [P1-6 阶段 4 — 前端已换源至 IM] 聊天详情页。
+ *
+ * 方案 A（2026-09-27 确认，见 docs/CHAT-MERGE-AUDIT.md §4）确定 IM（Conversation + IMMessage）
+ * 为终局消息模型。阶段 4 的改造原则是「**保留已验证的 UI 外壳，只替换数据源**」——
+ * 避免同时引入「未验证的新 UI」+「数据源变更」两层风险（见 §10：IM 侧的 chat-container.tsx
+ * 因混用 socket.io 与 Pusher 两套实时通道而始终未能上线，不采用它）。
+ *
+ * 本文件的阶段 4 变更：
+ *   1. 会话头信息：`/api/chat/${roomId}`（三级回退链）→ `/api/im/conversations/${roomId}`
+ *      单次调用。后者同时接受 Conversation.id 与 ChatRoom.id，**前端不再需要猜 id**，
+ *      也修掉了原回退链的真实缺陷：用第 51 个之后的会话打开详情时，第二级回退
+ *      （拉全量列表遍历查找，take:50）恒失败。
+ *   2. 读消息：`/api/chat/${roomId}/messages` → `/api/im/messages/${conversationId}`，
+ *      形状经 `@/lib/chat/adapter` 适配为 UI 原有 Message 接口，渲染代码零改动。
+ *      轮询改为 **seq 增量**（`afterSeq`），替代原来的每 5 秒全量重拉。
+ *   3. 发消息：`/api/chat/${roomId}/messages` → `/api/im/send`（带 clientMsgId 幂等）。
+ *   4. 打开会话即标记已读（`POST /api/im/conversations/${id}`）——
+ *      改造前的详情页从不标记已读，导致列表未读徽章只增不减。
+ *   5. 视频通话接线（`NEXT_PUBLIC_ENABLE_VIDEO_CALL=1` 时启用），见文件末尾。
+ *
+ * 即日起冻结：禁止在本文件新增聊天功能。新增能力一律通过 IM 侧实现（阶段 5 本文件将
+ * 被 IM 原生 UI 取代）。保留 `[roomId]` 目录名与路由参数名不变，以免破坏既有链接与书签。
+ */
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { CardVerificationWall } from "@/components/payment/CardVerificationWall";
+import { toUiMessage, toUiMessages, maxSeq } from "@/lib/chat/adapter";
+import { VideoCallModal } from "@/components/video-call/VideoCallModal";
+import { useVideoCallStore } from "@/store/videoCallStore";
 import {
   ArrowLeft,
   MoreVertical,
@@ -43,6 +70,27 @@ const EMOJIS = [
   "❤️", "💕", "💖", "💗", "💝", "💘", "🔥", "✨",
   "🌹", "🌸", "🌺", "🌻", "🌙", "⭐", "☀️", "🌈",
 ];
+
+// ══════════════════════════════════════
+// FEATURE FLAG — 视频通话
+// ══════════════════════════════════════
+
+/**
+ * WebRTC 视频通话开关。
+ *
+ * 为什么用开关而不是直接启用（这是阶段 4 唯一需要产品决策的项）：
+ *   WebRTC 全套实现（`useWebRTC` / `usePusherSignaling` / `VideoCallModal` / `videoCallStore`）
+ *   在仓库里是**完整可用**的，但从未接线到任何线上页面（D5）——而它依赖 Pusher 信令通道。
+ *   直接默认开启等于把一条从未在线上验证过的链路（信令 + STUN/TURN + 权限申请）一次性推给
+ *   全部用户，风险与本次"前端换源"这一目标的收益不成比例。
+ *
+ * 因此策略是：**接线完成 + 默认关闭**。翻开关只需设置环境变量，无需改代码、无需重新评审：
+ *   NEXT_PUBLIC_ENABLE_VIDEO_CALL=1
+ *
+ * 启用前请先在 staging 验证：Pusher 信令可达、ICE 候选可协商、摄像头权限引导正常
+ * （见 docs/IM-UNSHIPPED-FEATURES.md 中 WebRTC 条目）。
+ */
+const VIDEO_CALL_ENABLED = process.env.NEXT_PUBLIC_ENABLE_VIDEO_CALL === "1";
 
 // ══════════════════════════════════════
 // MESSAGE INTERFACE
@@ -129,6 +177,66 @@ function InlineAvatar({ avatar, name, className = "", emojiSize }: {
   );
 }
 
+/**
+ * 判断消息内容是否是可渲染的图片地址。
+ *
+ * P1-6 阶段 5（G-7）加固：`type === 'image'` 只说明*意图*，并不保证 `content`
+ * 一定是地址 —— 历史数据（或客户端直传）里可能存的是任意文本。
+ * 若不加判断直接塞进 `<img src>`，浏览器会发起一次必然失败的请求并渲染破图。
+ * 因此这里做白名单式判断，非地址一律回退为文本渲染，**不丢内容**。
+ */
+function isRenderableImageUrl(content: string | null | undefined): boolean {
+  if (!content) return false;
+  const v = content.trim();
+  if (v.length === 0 || v.length > 4096) return false;
+  return /^(https?:\/\/|data:image\/|\/)/i.test(v);
+}
+
+/**
+ * 聊天图片气泡。
+ *
+ * P1-6 阶段 5（G-7）：改造前 IMAGE 消息与 TEXT 走同一条 `<p>{msg.content}</p>` 路径，
+ * 用户看到的是一串裸 URL（见 docs/CHAT-MERGE-AUDIT.md §11.3 G-7）。
+ * 这里改为真正的图片渲染，并补齐三件线上必需的事：
+ *   · 加载失败 → 降级为可点击链接（而不是破图）
+ *   · 点击 → 新标签页打开原图（`noopener noreferrer` 防 tabnabbing）
+ *   · 约束尺寸 → 不影响气泡布局与滚动位置
+ */
+function ChatImageBubble({ src, filename }: { src: string; filename?: string }) {
+  const [broken, setBroken] = useState(false);
+
+  if (broken) {
+    return (
+      <a
+        href={src}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline text-sm break-all"
+      >
+        {filename || 'View image'}
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={src}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
+    >
+      <img
+        src={src}
+        alt={filename || 'Shared image'}
+        loading="lazy"
+        decoding="async"
+        className="rounded-lg max-w-full max-h-72 w-auto h-auto object-contain bg-black/20"
+        onError={() => setBroken(true)}
+      />
+    </a>
+  );
+}
+
 export default function ChatRoomPage() {
   const params = useParams();
   const roomId = params.roomId as string;
@@ -149,6 +257,9 @@ export default function ChatRoomPage() {
   const [isBlocking, setIsBlocking] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [isBotTyping, setIsBotTyping] = useState(false);
+  /** 阶段 4：会话统一 id（Conversation.id），由 /api/im/conversations/[id] 解析得到 */
+  const [conversationId, setConversationId] = useState<string>("");
+  const [showVideoCall, setShowVideoCall] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -156,31 +267,187 @@ export default function ChatRoomPage() {
   const [sendingImage, setSendingImage] = useState(false);
   const hasInitialLoaded = useRef(false);
 
-  // Stable reference that always enriches with current roomInfo
-  const loadMessagesWithAvatar = useCallback(() => loadMessages(), [roomId, roomInfo?.otherUser?.avatar]);
+  // ══════════════════════════════════════
+  // 阶段 4：ref 镜像
+  // ══════════════════════════════════════
+  // 轮询 effect 的依赖数组刻意只含 [roomId]（避免 roomInfo/messages 每次变化都重建定时器），
+  // 因此它调用的 refreshMessages 必须是零依赖的稳定函数，否则会捕获过期闭包。
+  // 改造前这里确实存在该缺陷：轮询永远调用首次渲染的版本，导致"用 roomInfo 补全头像"
+  // 的逻辑在轮询路径中从不生效（只在首次加载时生效）。
+  // 解法：把会变化的值放进 ref，callback 本身依赖数组为空。
+  const conversationIdRef = useRef<string>("");
+  const roomInfoRef = useRef<RoomInfo | null>(null);
+  const currentUserIdRef = useRef<string>("");
+  /** 已加载到的最大 seq；0 表示尚未加载，首次走全量 */
+  const lastSeqRef = useRef<number>(0);
 
-  // Load room info and messages — load roomInfo first, then messages with avatar context
-  // Use ref to prevent circular re-triggering: loadRoomInfo updates roomInfo,
-  // which changes loadMessagesWithAvatar deps, which re-triggers this effect.
-  useEffect(() => {
-    if (roomId && !hasInitialLoaded.current) {
-      setLoading(true);
-      hasInitialLoaded.current = true; // Prevent re-entry on subsequent renders
-      loadRoomInfo().then(() => {
-        return loadMessagesWithAvatar();
-      }).finally(() => {
-        setLoading(false);
-      });
-      loadUserLimits();
+  // ═══════════════════════════════════════════════════════
+  // 阶段 4：数据访问层（IM）
+  // 这三个函数刻意用 useCallback 且**声明在 effect 之前**：轮询 effect 依赖它们，
+  // 必须引用稳定，否则每次渲染都会重建定时器；且不能在依赖数组里引用 TDZ 变量。
+  // ═══════════════════════════════════════════════════════
+
+  /**
+   * 标记会话已读。
+   * 改造前的详情页从不调用任何已读接口 —— 列表未读徽章因此只增不减。
+   * 失败不阻塞主流程（已读属于体验优化，不是数据完整性要求）。
+   */
+  const markConversationRead = useCallback(async () => {
+    const convId = conversationIdRef.current;
+    if (!convId) return;
+    try {
+      await fetch(`/api/im/conversations/${convId}`, { method: "POST" });
+    } catch (e) {
+      console.warn("[Chat] mark read failed:", e);
     }
-  }, [roomId, loadMessagesWithAvatar]);
+  }, []);
 
-  // Optimized polling: Check for new messages every 5 seconds (reduced from 3s)
-  // Use incremental loading with cursor-based pagination for efficiency
+  /**
+   * 解析会话头信息。
+   * `/api/im/conversations/[id]` 同时接受 Conversation.id 与 ChatRoom.id，
+   * 因此这里是**单次调用**，取代改造前的三级回退链（那条链在第 51 个之后的会话上恒失效）。
+   */
+  const loadRoomInfo = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/im/conversations/${roomId}`);
+      if (!res.ok) {
+        console.error("[Chat] conversation detail failed:", res.status);
+        toast.error("Failed to load chat room");
+        return;
+      }
+      const data = await res.json();
+
+      // 统一 id —— 后续所有 IM 调用都以它为准
+      const convId: string = data.conversationId || data.id || roomId;
+      conversationIdRef.current = convId;
+      setConversationId(convId);
+
+      const info: RoomInfo = {
+        id: data.id || convId,
+        otherUser: {
+          id: data.otherUser?.id || "",
+          name: data.otherUser?.name || "Unknown",
+          avatar: data.otherUser?.avatar || null,
+          isOnline: !!data.otherUser?.isOnline,
+          lastSeen: data.otherUser?.lastSeen,
+          isBot: !!data.otherUser?.isBot,
+        },
+        isVault: !!data.isVault,
+        vaultExpiresAt: data.vaultExpiresAt,
+      };
+      roomInfoRef.current = info;
+      setRoomInfo(info);
+    } catch (e) {
+      console.error("[Chat] Failed to load chat room:", e);
+      toast.error("Failed to load chat room");
+    }
+  }, [roomId]);
+
+  /**
+   * 拉取消息。`reset=true` 走全量（最近 50 条）；否则按 afterSeq 增量。
+   *
+   * 为什么增量游标用 seq 而非时间戳：同一毫秒内的多条消息用 `createdAt > lastTs`
+   * 比较会漏掉一部分（改造前的注释已指出该问题）。seq 由服务端在事务内单调分配，可靠。
+   */
+  const refreshMessages = useCallback(async (opts?: { reset?: boolean }) => {
+    const convId = conversationIdRef.current;
+    if (!convId) return;
+
+    try {
+      const reset = !!opts?.reset;
+      const afterSeq = reset ? 0 : lastSeqRef.current;
+
+      const url =
+        afterSeq > 0
+          ? `/api/im/messages/${convId}?afterSeq=${afterSeq}`
+          : `/api/im/messages/${convId}`;
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "Unknown error");
+        console.error("[Chat] messages API error:", res.status, errText);
+        return;
+      }
+      const data = await res.json();
+      const raw = Array.isArray(data.messages) ? data.messages : [];
+      if (raw.length === 0) return;
+
+      // IM 形状 → UI 形状。必须适配：IM 响应没有顶层 senderId 与 sender.isSelf，
+      // 缺失会让 isMessageFromMe() 恒为 false —— 所有气泡都会渲染成"对方发的"。
+      const mapped = toUiMessages(raw, currentUserIdRef.current || undefined);
+
+      // 头像/昵称补全：IM 的 sender.avatar 取自 profile，可能为空，用对方信息兜底。
+      // 语义与改造前的 Legacy 版本一致，未改变渲染结果。
+      const other = roomInfoRef.current?.otherUser;
+      const enriched = mapped.map((msg) => {
+        if (!msg.sender || msg.sender.isSelf) return msg;
+        if (!msg.sender.avatar && other?.avatar) {
+          return { ...msg, sender: { ...msg.sender, avatar: other.avatar, isBot: other.isBot } };
+        }
+        return {
+          ...msg,
+          sender: {
+            ...msg.sender,
+            name: other?.name || msg.sender.name,
+            isBot: other?.isBot,
+          },
+        };
+      });
+
+      if (afterSeq > 0) {
+        // 增量：按 id 去重后追加（幂等，重复轮询不会重复渲染）
+        setMessages((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          const add = enriched.filter((m) => !seen.has(m.id));
+          return add.length > 0 ? [...prev, ...add] : prev;
+        });
+      } else {
+        // 全量：保留尚未落库的乐观消息（temp-），避免被服务端结果抹掉
+        setMessages((prev) => {
+          const seen = new Set(enriched.map((m) => m.id));
+          const keepTemp = prev.filter(
+            (m) => m.id.startsWith("temp-") && !seen.has(m.id),
+          );
+          return keepTemp.length > 0 ? [...enriched, ...keepTemp] : enriched;
+        });
+      }
+
+      const seq = maxSeq(raw);
+      if (seq > lastSeqRef.current) lastSeqRef.current = seq;
+
+      // 推断当前用户 id（IM 响应不直接告知"我是谁"，从 isSelf 反推一次即可）
+      if (!currentUserIdRef.current) {
+        const self = enriched.find((m) => m.sender?.isSelf);
+        if (self?.senderId) currentUserIdRef.current = self.senderId;
+      }
+    } catch (e) {
+      console.error("[Chat] Failed to load messages:", e);
+    }
+  }, []);
+
+  // ── 初始加载：解析会话 → 拉消息 → 标记已读 ──
+  useEffect(() => {
+    if (!roomId || hasInitialLoaded.current) return;
+    hasInitialLoaded.current = true; // 防止后续渲染重复触发
+    setLoading(true);
+
+    (async () => {
+      try {
+        await loadRoomInfo(); // 先解析出统一 conversationId
+        await refreshMessages({ reset: true });
+        await markConversationRead(); // 打开即已读（改造前缺失）
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    loadUserLimits();
+  }, [roomId, loadRoomInfo, refreshMessages, markConversationRead]);
+
+  // ── 轮询：5s（标签页隐藏时暂停），已改为 seq 增量 ──
   useEffect(() => {
     if (!roomId) return;
 
-    // Adaptive polling: 5s when active, pause when tab is hidden
     let intervalId: ReturnType<typeof setInterval>;
     let isVisible = true;
 
@@ -188,7 +455,7 @@ export default function ChatRoomPage() {
       isVisible = !document.hidden;
       if (isVisible) {
         // Tab became visible - immediately check for new messages
-        loadMessagesWithAvatar();
+        refreshMessages();
         startPolling();
       } else {
         stopPolling();
@@ -198,7 +465,7 @@ export default function ChatRoomPage() {
     const startPolling = () => {
       stopPolling();
       intervalId = setInterval(() => {
-        if (isVisible) loadMessagesWithAvatar();
+        if (isVisible) refreshMessages();
       }, 5000);
     };
 
@@ -213,7 +480,7 @@ export default function ChatRoomPage() {
       stopPolling();
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [roomId]);
+  }, [roomId, refreshMessages]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -222,125 +489,6 @@ export default function ChatRoomPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const loadRoomInfo = async () => {
-    try {
-      // Try legacy ChatRoom API first (for old chat rooms)
-      let res = await fetch(`/api/chat/${roomId}`);
-      if (res.ok) {
-        const data = await res.json();
-        console.log('[Chat] Room info loaded (legacy):', data);
-        setRoomInfo(data.room || data);
-        return;
-      }
-
-      // Fallback: use IM v2 conversations API to find this conversation
-      console.log('[Chat] Legacy API failed, trying IM conversations API for:', roomId);
-      res = await fetch('/api/im/conversations?limit=100');
-      if (!res.ok) {
-        throw new Error(`Failed to load room info: ${res.status}`);
-      }
-      const convData = await res.json();
-      const conv = convData.conversations?.find((c: any) => c.id === roomId);
-      if (conv?.otherUser) {
-        console.log('[Chat] Room info loaded (IM v2):', conv);
-        setRoomInfo({
-          id: roomId,
-          otherUser: {
-            id: conv.otherUser.id,
-            name: conv.otherUser.name || 'Unknown',
-            avatar: conv.otherUser.avatar || null,
-            isOnline: conv.otherUser.presence === 'ONLINE',
-            isBot: conv.otherUser.isBot || false,
-            lastSeen: undefined,
-          },
-          isVault: false,
-          vaultExpiresAt: undefined,
-        });
-        return;
-      }
-
-      // Last resort: query messages API which supports both systems
-      console.log('[Chat] Conversation not in list, trying messages API...');
-      const msgRes = await fetch(`/api/chat/${roomId}/messages?limit=1`);
-      if (msgRes.ok) {
-        const msgData = await msgRes.json();
-        const msgs = msgData.messages || [];
-        if (msgs.length > 0 && msgs[0].sender && !msgs[0].sender.isSelf) {
-          console.log('[Chat] Room info inferred from messages:', msgs[0].sender);
-          setRoomInfo({
-            id: roomId,
-            otherUser: {
-              id: msgs[0].sender.id,
-              name: msgs[0].sender.name || 'Unknown',
-              avatar: msgs[0].sender.avatar || null,
-              isBot: msgs[0].sender.isBot || false,
-              lastSeen: undefined,
-            },
-            isVault: false,
-            vaultExpiresAt: undefined,
-          });
-          return;
-        }
-      }
-
-      console.warn('[Chat] Could not determine room info for:', roomId);
-    } catch (e) {
-      console.error("[Chat] Failed to load chat room:", e);
-      toast.error("Failed to load chat room");
-    }
-  };
-
-  const loadMessages = async () => {
-    try {
-      const res = await fetch(`/api/chat/${roomId}/messages`);
-      if (!res.ok) {
-        const errText = await res.text().catch(() => 'Unknown error');
-        console.error('[Chat] Messages API error:', res.status, errText);
-        throw new Error(`Failed to load messages: ${res.status}`);
-      }
-      const data = await res.json();
-      console.log('[Chat] Messages loaded:', data.messages?.length || 0, 'messages');
-      
-      // Handle both old and new API response formats
-      const msgs = data.messages || data;
-      if (Array.isArray(msgs)) {
-        // Ensure every message from the other user has avatar from roomInfo
-        const enrichedMsgs = msgs.map((msg: Message) => {
-          if (!msg.sender && roomInfo?.otherUser) {
-            return {
-              ...msg,
-              sender: {
-                id: msg.senderId,
-                name: roomInfo.otherUser.name,
-                avatar: roomInfo.otherUser.avatar,
-                isBot: roomInfo.otherUser.isBot,
-                isSelf: false,
-              },
-            };
-          }
-          // Patch avatar if missing on non-self messages
-          if (msg.sender && !msg.sender.avatar && !msg.sender.isSelf && roomInfo?.otherUser?.avatar) {
-            return {
-              ...msg,
-              sender: { ...msg.sender, avatar: roomInfo.otherUser.avatar },
-            };
-          }
-          return msg;
-        });
-        setMessages(enrichedMsgs);
-        // Extract current user ID from first message if available
-        if (msgs.length > 0 && msgs[0].sender) {
-          const selfMsg = msgs.find((m: Message) => m.sender?.isSelf);
-          if (selfMsg) {
-            setCurrentUserId(selfMsg.sender.id);
-          }
-        }
-      }
-    } catch (e) {
-      console.error("[Chat] Failed to load messages:", e);
-    }
   };
 
   const loadUserLimits = async () => {
@@ -386,18 +534,25 @@ export default function ChatRoomPage() {
     setMessages((prev) => [...prev, tempMessage]);
 
     try {
-      console.log('[Chat] Sending message to room:', roomId);
-      const res = await fetch(`/api/chat/${roomId}/messages`, {
+      const convId = conversationIdRef.current;
+      if (!convId) {
+        toast.error("Conversation not ready");
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        return;
+      }
+
+      // clientMsgId 幂等：网络抖动重试时服务端返回原消息而非新建，避免重复发言
+      const clientMsgId = `c-${tempId}`;
+      const res = await fetch("/api/im/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ conversationId: convId, content, clientMsgId }),
       });
-
-      console.log('[Chat] Send response status:', res.status);
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         console.error('[Chat] Send error:', errData);
+        // 错误码契约与改造前一致（/api/im/send 经共享守卫返回同样的 code）
         if (res.status === 403 && errData.code === "CARD_VERIFICATION_REQUIRED") {
           setShowCardVerificationModal(true);
           setMessages((prev) => prev.filter((m) => m.id !== tempId));
@@ -408,15 +563,26 @@ export default function ChatRoomPage() {
           setMessages((prev) => prev.filter((m) => m.id !== tempId));
           return;
         }
-        throw new Error(errData.message || "Failed to send");
+        throw new Error(errData.message || errData.error || "Failed to send");
       }
 
       const data = await res.json();
-      console.log('[Chat] Message sent successfully:', data);
+
+      // IM 响应 → UI 形状（补顶层 senderId 与 sender.isSelf，否则气泡会渲染到错误一侧）
+      const realMsg: Message = toUiMessage(data.message, currentUserIdRef.current || undefined);
+
+      // 推进 seq 游标，使后续轮询只拉新消息
+      if (typeof data.message?.seq === "number" && data.message.seq > lastSeqRef.current) {
+        lastSeqRef.current = data.message.seq;
+      }
+      if (!currentUserIdRef.current && realMsg.senderId) {
+        currentUserIdRef.current = realMsg.senderId;
+        setCurrentUserId(realMsg.senderId);
+      }
 
       // Replace temp message with real one
       setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? data.message : m))
+        prev.map((m) => (m.id === tempId ? realMsg : m))
       );
 
       // Update limits
@@ -436,7 +602,7 @@ export default function ChatRoomPage() {
         // Wait 2 seconds before polling for the bot reply (simulate real person reading + typing)
         setTimeout(() => {
           setIsBotTyping(false);
-          loadMessagesWithAvatar();
+          refreshMessages();
         }, 2000);
       }
     } catch (e) {
@@ -468,6 +634,29 @@ export default function ChatRoomPage() {
       setIsBlocking(false);
     }
   };
+
+  /**
+   * 发起视频通话。
+   *
+   * 说明：这一步是**功能补全**，不只是"合并" —— WebRTC 全套实现
+   * （useWebRTC / usePusherSignaling / VideoCallModal / videoCallStore）此前从未接线到
+   * 任何线上页面（审计缺陷 D5），唯一引用方是不曾上线的 chat-container.tsx。
+   *
+   * 默认关闭：见文件顶部 VIDEO_CALL_ENABLED 的说明。开启方式为设置
+   * `NEXT_PUBLIC_ENABLE_VIDEO_CALL=1`（前端可见变量，需重新构建）。
+   * 信令走 Pusher（与项目 serverless 部署链兼容）；未配置 Pusher 时会话无法建立，
+   * 但不会影响消息收发。
+   */
+  const startVideoCall = useCallback(() => {
+    const targetId = roomInfoRef.current?.otherUser?.id;
+    if (!targetId) {
+      toast.error("Unable to start call: unknown recipient");
+      return;
+    }
+    setShowVideoCall(true);
+    // store 负责 getUserMedia、创建 offer 并发信令
+    void useVideoCallStore.getState().initiateCall(targetId);
+  }, []);
 
   const formatTime = (dateStr: string) => {
     return new Date(dateStr).toLocaleTimeString([], {
@@ -576,9 +765,20 @@ export default function ChatRoomPage() {
           <button disabled className="p-2 rounded-full opacity-40 cursor-not-allowed transition-colors" title="Voice calls coming soon">
             <Phone className="w-5 h-5 text-foreground-muted" />
           </button>
-          <button disabled className="p-2 rounded-full opacity-40 cursor-not-allowed transition-colors" title="Video calls coming soon">
-            <Video className="w-5 h-5 text-foreground-muted" />
-          </button>
+          {VIDEO_CALL_ENABLED ? (
+            <button
+              onClick={startVideoCall}
+              disabled={!roomInfo?.otherUser?.id}
+              className="p-2 rounded-full hover:bg-background-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Start video call"
+            >
+              <Video className="w-5 h-5 text-foreground-muted" />
+            </button>
+          ) : (
+            <button disabled className="p-2 rounded-full opacity-40 cursor-not-allowed transition-colors" title="Video calls coming soon">
+              <Video className="w-5 h-5 text-foreground-muted" />
+            </button>
+          )}
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
@@ -731,7 +931,14 @@ export default function ChatRoomPage() {
                     }`}
                   >
 
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">{msg.content}</p>
+                    {/* P1-6 阶段 5（G-7）：图片消息走图片渲染，文本消息保持原样。
+                        判断条件是「声明为 image **且** 内容确实是地址」——
+                        后者不成立时回退为文本，保证历史脏数据不丢内容。 */}
+                    {msg.type === "image" && isRenderableImageUrl(msg.content) ? (
+                      <ChatImageBubble src={msg.content.trim()} />
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">{msg.content}</p>
+                    )}
                     <p className={`text-xs mt-1 ${fromMe ? "text-foreground-muted" : "text-foreground-muted"}`}>
                       {formatTime(msg.createdAt)}
                     </p>
@@ -923,13 +1130,19 @@ export default function ChatRoomPage() {
                 const uploadData = await uploadRes.json();
                 const imageUrl = uploadData.url || uploadData.imageUrl;
                 if (imageUrl) {
-                  const msgRes = await fetch(`/api/chat/${roomId}/messages`, {
+                  const convId = conversationIdRef.current;
+                  if (!convId) throw new Error("Conversation not ready");
+                  const msgRes = await fetch("/api/im/send", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ content: imageUrl, messageType: "IMAGE" }),
+                    body: JSON.stringify({
+                      conversationId: convId,
+                      content: imageUrl,
+                      msgType: "IMAGE",
+                    }),
                   });
                   if (!msgRes.ok) throw new Error("Failed to send image message");
-                  loadMessagesWithAvatar();
+                  await refreshMessages();
                 }
               } catch {
                 toast.error("Failed to send image");
@@ -1090,6 +1303,17 @@ export default function ChatRoomPage() {
         reportedUserName={roomInfo?.otherUser?.name || "User"}
         chatRoomId={roomId}
       />
+
+      {/* ═══════════════════════════════════════════════════════
+          VIDEO CALL MODAL（阶段 4 接线，默认关闭）
+          仅当 NEXT_PUBLIC_ENABLE_VIDEO_CALL=1 时挂载 —— 关闭时不加载任何 WebRTC 代码路径。
+          ═══════════════════════════════════════════════════════ */}
+      {VIDEO_CALL_ENABLED && (
+        <VideoCallModal
+          open={showVideoCall}
+          onClose={() => setShowVideoCall(false)}
+        />
+      )}
     </div>
   );
 }

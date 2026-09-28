@@ -1,5 +1,11 @@
 /**
- * Chat API Client
+ * ✅ [P1-6 TARGET — KEEP，但需清理 Legacy 方法] 聊天 API 客户端
+ *
+ * 方案 A 已确认（2026-09-27，见 docs/CHAT-MERGE-AUDIT.md §4）：IM API 为终局接口。
+ *
+ * ⚠️ 待清理：文件末尾的 Legacy 段（getConversationsLegacy / getConversation /
+ *    sendMessageLegacy，均为 @deprecated 且无调用者）在阶段 5 一并删除。
+ *    其余部分为终局保留，请勿依据"无引用"删除。
  * 
  * Provides a typed interface for all chat-related API endpoints.
  * Handles authentication, error handling, and response parsing.

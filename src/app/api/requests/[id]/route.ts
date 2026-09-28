@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
+import { createConversation } from "@/lib/im/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -83,51 +84,75 @@ export async function PUT(
       },
     });
 
-    // 如果接受，创建聊天室
+    // 如果接受，创建会话（IM 终局模型为主，Legacy 为可选兼容副本）
+    //
+    // ⚠️ P1-6 阶段 5：本处原为**纯 Legacy 写入**（建房 + 成员 + 系统消息），
+    //    IM 侧一行都没有。这比"裸写"更危险 —— 门禁的判据是
+    //    「探测 ∧ **IM 承接** ∧ 标注」，只加探测不补 IM 写入会得到
+    //    "删表后静默丢功能"：接口仍返回 200，但用户点进匹配看不到任何会话。
+    //    因此本处**先补 IM 写入**（与 `/api/matches/react`、`/api/matches/[id]` 同规格），
+    //    再把 Legacy 那一半降级为受探测保护的可选副本。
     if (action === "accept") {
-      // 检查是否已存在聊天室
-      const existingChatRoom = await prisma.chatRoom.findFirst({
-        where: {
-          matchId: match.id,
-        },
-      });
+      const matchMsg =
+        "🎉 It's a match! You both liked each other. The Vault is open for 24 hours.";
 
-      let chatRoomId = existingChatRoom?.id;
+      // ── IM 侧（终局模型）──
+      let conversationId: string | null = null;
+      try {
+        const conv = await createConversation(
+          match.senderId,
+          match.receiverId,
+          match.senderId,
+          { matchId: match.id },
+        );
+        conversationId = conv.convId;
 
-      if (!existingChatRoom) {
-        // 创建新聊天室
-        const newChatRoom = await prisma.chatRoom.create({
-          data: {
-            matchId: match.id,
-            vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24小时Vault
-          },
+        // 开场系统消息只在会话还没有任何消息时写入 —— 避免重复接受同一请求导致刷屏
+        const existingMsg = await prisma.iMMessage.findFirst({
+          where: { conversationId: conv.convId },
+          select: { id: true },
         });
-        chatRoomId = newChatRoom.id;
-
-        // 添加成员
-        await prisma.chatRoomMember.createMany({
-          data: [
-            { roomId: chatRoomId, userId: match.senderId },
-            { roomId: chatRoomId, userId: match.receiverId },
-          ],
-        });
+        if (!existingMsg) {
+          const last = await prisma.iMMessage.findFirst({
+            where: { conversationId: conv.convId },
+            orderBy: { seq: "desc" },
+            select: { seq: true },
+          });
+          await prisma.iMMessage.create({
+            data: {
+              conversationId: conv.convId,
+              senderId: match.senderId,
+              receiverId: match.receiverId,
+              seq: (last?.seq || 0) + 1,
+              msgType: "SYSTEM",
+              payload: matchMsg,
+              encryptionMode: "SERVER",
+              consentState: "CONSENT_NONE",
+              mediaLevel: "L0_TEXT",
+              ruleResult: "PASS",
+            },
+          });
+          await prisma.conversation.update({
+            where: { id: conv.convId },
+            data: { lastMessageAt: new Date(), messageCount: { increment: 1 } },
+          });
+        }
+      } catch (imErr) {
+        // IM 已是主数据源 —— 建不成 Conversation 意味着用户看不到会话，必须可告警。
+        console.error(
+          "[Requests Accept] 🔴 IM 会话创建失败 —— 匹配已接受但用户可能看不到会话:",
+          { matchId: match.id, error: imErr },
+        );
       }
-
-      // 创建系统消息
-      await prisma.message.create({
-        data: {
-          roomId: chatRoomId!,
-          senderId: match.senderId,
-          content: `🎉 It's a match! You both liked each other. The Vault is open for 24 hours.`,
-          messageType: "SYSTEM",
-        },
-      });
 
       return NextResponse.json({
         success: true,
         action: "accepted",
         match: updatedMatch,
-        chatId: chatRoomId,
+        // chatId：Legacy 语义的字段名保留以兼容旧前端；阶段 5 后取 Conversation 的
+        // 终局 id（`/api/im/conversations/[id]` 能解析，见 lib/im/resolve.ts）。
+        chatId: conversationId,
+        conversationId,
         message: "Request accepted! You can now chat.",
       });
     }

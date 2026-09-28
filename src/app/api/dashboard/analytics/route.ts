@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ApiError, formatErrorResponse } from "@/lib/errors";
+import { countUnreadForUser, countMessagesForUser } from "@/lib/im/stats";
 
 // ═════════════════════════════════
 // ANALYTICS API ROUTE
@@ -74,28 +75,13 @@ export async function GET(req: Request) {
     });
 
     // ═══ Unread Messages
-    const unreadMessages = await prisma.message.count({
-      where: {
-        room: {
-          members: {
-            some: { userId },
-          },
-        },
-        senderId: { not: userId },
-        isRead: false,
-      },
-    });
+    // P1-6 阶段 5：原为裸查 Legacy `Message`（B9 阻断点）。现收敛到统计单一
+    // 数据源 `lib/im/stats.ts`（口径 `max(Legacy, IM)`，删表后自动退化为纯 IM）。
+    // 未读口径刻意与底部导航徽章一致（同一函数），否则会出现
+    // "徽章显示 3 条未读、分析页显示 0 条"的矛盾。
+    const unreadMessages = await countUnreadForUser(userId);
 
-    const messagesThisWeek = await prisma.message.count({
-      where: {
-        room: {
-          members: {
-            some: { userId },
-          },
-        },
-        createdAt: { gte: startDate },
-      },
-    });
+    const messagesThisWeek = await countMessagesForUser(userId, { gte: startDate });
 
     // ═══ Profile Completion
     const profileCompletion = calculateProfileCompletion(profile);

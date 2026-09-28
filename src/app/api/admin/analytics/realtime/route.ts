@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withPermission } from '@/lib/with-permission';
 import { success } from '@/lib/api-response';
 import { db } from '@/lib/db';
+import { countMessages, countDistinctMessageSenders } from '@/lib/im/stats';
 import { startOfMinute } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
@@ -12,17 +13,14 @@ export const GET = withPermission('system.health')(async (req: NextRequest) => {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
-    // Active users in last 5 minutes (groupBy to get unique senders)
-    const activeUserGroups = await db.message.groupBy({
-      by: ['senderId'],
-      where: { createdAt: { gte: fiveMinAgo } },
-    });
-    const activeUsers = activeUserGroups.length;
-
-    // Messages in last hour (per minute)
-    const messagesThisHour = await db.message.count({
-      where: { createdAt: { gte: oneHourAgo } },
-    });
+    // P1-6 阶段 5：改为统一迁移安全口径（见 lib/im/stats 模块头部的阶段对照表）。
+    // 顺带修掉一个既有隐患：原实现在 Legacy 侧用了 `groupBy`，而 Turso/libSQL 上
+    // `groupBy` 不稳定（同目录 analytics/route.ts 早有注释记录）。stats 封装统一走
+    // `findMany + distinct`，与其它看板口径一致。
+    const [activeUsers, messagesThisHour] = await Promise.all([
+      countDistinctMessageSenders({ window: { gte: fiveMinAgo } }),
+      countMessages({ window: { gte: oneHourAgo } }),
+    ]);
 
     // Pending matches
     const pendingMatches = await db.match.count({

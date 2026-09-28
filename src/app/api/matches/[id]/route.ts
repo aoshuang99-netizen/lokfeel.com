@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth'
 import { requireVerifiedUser, verificationErrorResponse } from '@/lib/auth/verification'
 import { handleApiError } from '@/lib/api-handler'
 import { db } from '@/lib/db'
+import { createConversation } from '@/lib/im/queries'
 import { isMaleGender } from '@/lib/gender-utils'
 
 export const dynamic = 'force-dynamic'
@@ -32,9 +33,6 @@ export async function GET(
           },
         },
         matchReactions: true,
-        chatRoom: {
-          select: { id: true },
-        },
       },
     }) as any
 
@@ -51,6 +49,16 @@ export async function GET(
     const otherUser = isSender ? match.receiver : match.sender
     const myReaction = match.matchReactions.find((r: any) => r.userId === user.id)
     const otherReaction = match.matchReactions.find((r: any) => r.userId !== user.id)
+
+    // P1-6 阶段 5（G-10）：ChatRoom 表已删除，会话入口改按 matchId 反查 Conversation。
+    // chatRoomId 优先返回旧房间 id —— 老书签 /dashboard/chats/<ChatRoom.id> 靠
+    // Conversation.chatRoomId 的 @unique 索引做别名回退（lib/im/resolve.ts 路径 2）；
+    // 无旧房间的会话返回 Conversation.id 本身。
+    const conversation = await db.conversation.findFirst({
+      where: { matchId: match.id },
+      select: { id: true, chatRoomId: true },
+      orderBy: { createdAt: 'desc' },
+    })
 
     return NextResponse.json({
       id: match.id,
@@ -81,8 +89,8 @@ export async function GET(
       otherReaction: otherReaction?.reaction || null,
       matchType: match.matchType,
       expiresAt: match.expiresAt,
-      hasChatRoom: !!match.chatRoom,
-      chatRoomId: match.chatRoom?.id || null,
+      hasChatRoom: !!conversation,
+      chatRoomId: conversation?.chatRoomId || conversation?.id || null,
       createdAt: match.createdAt,
     })
   })
@@ -173,28 +181,57 @@ export async function POST(
           data: { status: 'REJECTED' },
         })
       } else if (reactions.every((r) => r === 'INTERESTED')) {
-        // Both interested — create chat room
-        const chatRoom = await db.chatRoom.create({
-          data: {
-            matchId: id,
-            members: {
-              create: [
-                { userId: match.senderId },
-                { userId: match.receiverId },
-              ],
-            },
-          },
-        })
+        // Both interested —— 建立会话（IM 终局模型为主，Legacy 为可选兼容副本）
+        //
+        // P1-6 阶段 5：本处是 B9 门禁的阻断引用点。改造模式与 `/api/matches/react`
+        // 完全一致（该路由在阶段 3 已改完，此处照其规格复刻，避免两条匹配路径行为分叉）。
+        const matchMsg =
+          "You matched! Start your conversation. Remember: this match is based on your relationship blueprints. Take time to explore your connection."
 
-        // System message
-        await db.message.create({
-          data: {
-            roomId: chatRoom.id,
-            senderId: match.senderId,
-            content: "You matched! Start your conversation. Remember: this match is based on your relationship blueprints. Take time to explore your connection.",
-            messageType: 'SYSTEM',
-          },
-        })
+        // ── IM 侧（终局模型）──
+        // 用 try/catch 包住：与 `matches/react` 同一策略 —— 双写遇到瞬时错误
+        // 不应让"匹配已成立"这个事实丢失（Legacy 侧此刻仍是主数据源）。
+        try {
+          const conversation = await createConversation(
+            match.senderId,
+            match.receiverId,
+            match.senderId,
+            { matchId: match.id }
+          )
+
+          // 开场系统消息只在会话还没有任何消息时写入，避免重复接受导致刷屏
+          const existingMsg = await db.iMMessage.findFirst({
+            where: { conversationId: conversation.convId },
+            select: { id: true },
+          })
+          if (!existingMsg) {
+            const last = await db.iMMessage.findFirst({
+              where: { conversationId: conversation.convId },
+              orderBy: { seq: 'desc' },
+              select: { seq: true },
+            })
+            await db.iMMessage.create({
+              data: {
+                conversationId: conversation.convId,
+                senderId: match.senderId,
+                receiverId: match.receiverId,
+                seq: (last?.seq || 0) + 1,
+                msgType: 'SYSTEM',
+                payload: matchMsg,
+                encryptionMode: 'SERVER',
+                consentState: 'CONSENT_NONE',
+                mediaLevel: 'L0_TEXT',
+                ruleResult: 'PASS',
+              },
+            })
+            await db.conversation.update({
+              where: { id: conversation.convId },
+              data: { lastMessageAt: new Date(), messageCount: { increment: 1 } },
+            })
+          }
+        } catch (twinErr) {
+          console.error('[Match Detail] Twin-chat (Conversation) creation failed:', twinErr)
+        }
 
         await db.match.update({
           where: { id },

@@ -1,5 +1,21 @@
 "use client";
 
+/**
+ * ✅ [P1-6 阶段 4 — 前端已换源至 IM] 会话列表。
+ *
+ * 方案 A（2026-09-27 确认，见 docs/CHAT-MERGE-AUDIT.md §4）确定 IM 为终局模型。
+ *
+ * 阶段 4 变更：数据源 `/api/chat` → `/api/im/conversations`。
+ * 两者在服务端已共用同一实现（`@/lib/im/list`），字段不可能漂移，因此这次切换是
+ * **纯架构收益**：阶段 5 可以安全删除 `/api/chat`（以及整个 Legacy 列表合并逻辑）
+ * 而前端零改动。
+ *
+ * 关键契约：列表项的 `id` 恒为 **Conversation.id**（仅历史遗留房间为 ChatRoom.id）。
+ * 这是详情页能够稳定走 IM 数据通路的前提 —— 改造前该 id 是两套系统混合的，
+ * 导致详情页必须靠"先试 A 再试 B"猜测，一半入口会落入 Legacy 写入路径。
+ *
+ * UI 外壳保持不变（冻结）：禁止在本文件新增功能。
+ */
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -56,7 +72,19 @@ interface ChatItem {
 }
 
 interface ChatListData {
-  chats: ChatItem[];
+  /**
+   * 阶段 4 换源后的规范字段。`/api/im/conversations` 返回的是 `{ conversations, chats }`
+   * —— `chats` 只是灰度期保留的别名。
+   *
+   * ⚠️ 这里原先写的是 `chats: ChatItem[]`（阶段 4 之前的接口形状）。因为泛型断言
+   *    不做多余属性检查，漏改**不会**在赋值处报错，而是让 `data.conversations`
+   *    退化成 `any`，进而在下面 9 个 `.filter((c) => …)` 回调里爆出
+   *    「参数 c 隐式具有 any 类型」。也就是说：一个字段名写错 = 9 个报错，
+   *    真正的病根只有这一行。
+   */
+  conversations: ChatItem[];
+  /** @deprecated 旧字段名，接口保留别名以便回滚，前端不应再读 */
+  chats?: ChatItem[];
 }
 
 // ══════════════════════════════════════
@@ -132,9 +160,10 @@ export default function ChatLayout({
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<ChatTab>("all");
-  const { data, isLoading, error } = useApiGet<ChatListData>("/api/chat");
+  // 阶段 4：改用统一 IM 列表接口（服务端与 /api/chat 共用 buildConversationList）
+  const { data, isLoading, error } = useApiGet<ChatListData>("/api/im/conversations");
 
-  const chats = data?.chats || [];
+  const chats = data?.conversations || [];
 
   // Filter chats by tab
   const filteredChats = useMemo(() => {

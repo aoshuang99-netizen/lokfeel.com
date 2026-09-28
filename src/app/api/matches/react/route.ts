@@ -84,17 +84,24 @@ export async function POST(req: NextRequest) {
 
     // 如果已经ACCEPTED，返回匹配状态
     if (existingMatch?.status === "ACCEPTED") {
-      const chatRoom = await prisma.chatRoom.findFirst({
-        where: {
-          matchId: existingMatch.id,
-        },
+      // P1-6 阶段 5：本处原为裸 `prisma.chatRoom.findFirst`（B9 阻断点）。
+      // 改为「IM 为主 + Legacy 可选」——Conversation 是终局模型，且它自己
+      // 保留了 `chatRoomId` 列，因此删表后仍能回填出 ChatRoom 时代的 id，
+      // 老书签 URL（/dashboard/chats/<ChatRoom.id>）不会失效。
+      const conversation = await prisma.conversation.findFirst({
+        where: { matchId: existingMatch.id },
+        select: { id: true, chatRoomId: true },
       });
 
       return NextResponse.json({
         success: true,
         isMatch: true,
         message: "Already matched!",
-        chatId: chatRoom?.id,
+        // chatId 语义曾是「Legacy ChatRoom.id」；Legacy 删除后回退到
+        // Conversation.chatRoomId（历史 id）→ Conversation.id（终局 id）。
+        // 两个值 `/api/im/conversations/[id]` 都认（见 lib/im/resolve.ts）。
+        chatId: conversation?.chatRoomId ?? conversation?.id ?? null,
+        conversationId: conversation?.id ?? null,
       });
     }
 
@@ -151,41 +158,13 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // 创建聊天室（幂等：检查是否已存在）
-        let chatRoom = await prisma.chatRoom.findFirst({
-          where: { matchId: existingMatch.id },
-        });
+        // 创建会话（幂等：createConversation 是幂等 upsert，重复触发不会重复建）
+        // P1-6 阶段 5：原「Legacy 建房/建消息 + IM 副本」整段已随 Legacy 表删除，
+        // 主链路只剩下方 createConversation 一条（功能零损失）。
 
         const matchMsg = isSuperLike
           ? `🎉 It's a match! ⭐ Super Like! You both liked each other. The Vault is open for 24 hours.`
           : `🎉 It's a match! You both liked each other. The Vault is open for 24 hours.`;
-
-        if (!chatRoom) {
-          chatRoom = await prisma.chatRoom.create({
-            data: {
-              matchId: existingMatch.id,
-              vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            },
-          });
-
-          // 添加成员
-          await prisma.chatRoomMember.createMany({
-            data: [
-              { roomId: chatRoom.id, userId: existingMatch.senderId },
-              { roomId: chatRoom.id, userId: existingMatch.receiverId },
-            ],
-          });
-
-          // 创建系统消息
-          await prisma.message.create({
-            data: {
-              roomId: chatRoom.id,
-              senderId: existingMatch.senderId,
-              content: matchMsg,
-              messageType: "SYSTEM",
-            },
-          });
-        }
 
         // ── TWIN-CHAT FIX (P0): ensure the newer IM system (Conversation +
         // IMMessage) exists for this match. createConversation is an idempotent
@@ -193,13 +172,20 @@ export async function POST(req: NextRequest) {
         // BACKFILLS Conversations for matches formed before this fix. The
         // mirrored system message is only seeded when the conversation has no
         // messages yet, to avoid duplicates.
+        // P1-6 阶段 4 准备：把终局模型的 Conversation.id 一并返回，
+        // 前端换源（阶段 4）时可直接使用，无需再改后端。
+        let conversationId: string | null = null;
+
         try {
           const conv = await createConversation(
             existingMatch.senderId,
             existingMatch.receiverId,
             existingMatch.senderId,
-            { chatRoomId: chatRoom.id }
+            // 新建会话本就没有旧书签，不写入 `chatRoomId`
+            //（G-8 的旧链接兼容只服务历史房间，由 Conversation.chatRoomId 反查）。
+            { matchId: existingMatch.id }
           );
+          conversationId = conv.convId;
           const existingMsg = await prisma.iMMessage.findFirst({
             where: { conversationId: conv.convId },
             select: { id: true },
@@ -231,9 +217,15 @@ export async function POST(req: NextRequest) {
             });
           }
         } catch (twinErr) {
-          // Legacy ChatRoom was already created above — don't fail the match
-          // if the IM twin hits a transient error. Log and continue.
-          console.error("[Match React] Twin-chat (Conversation) creation failed:", twinErr);
+          // ⚠️ P1-6 阶段 5：IM 已经是**主数据源**（前端只读 /api/im/*），所以这里
+          // 不再只是"双写副本失败"。Conversation 没建成就等于用户点进匹配后
+          // 看不到任何会话 —— 必须打出可告警的错误，而不是静默降级。
+          // 仍不向上抛：匹配已成立这件事不该因为 IM 瞬时故障丢失，
+          // 且 /api/matches/react 会被重放（幂等分支会补建 Conversation）。
+          console.error(
+            "[Match React] 🔴 IM 会话创建失败 —— 匹配已成立但用户可能看不到会话，请人工核对:",
+            { matchId: existingMatch.id, senderId: existingMatch.senderId, error: twinErr },
+          );
         }
 
         // Invalidate both users' caches after a match
@@ -248,7 +240,12 @@ export async function POST(req: NextRequest) {
           success: true,
           isMatch: true,
           message: "It's a match! 🎉",
-          chatId: chatRoom.id,
+          // chatId：Legacy 时代的字段，保留字段名以兼容旧前端。
+          // 阶段 5 后取 Conversation.id（`/api/im/conversations/[id]` 能解析，
+          // 见 lib/im/resolve.ts 的别名解析链）。
+          chatId: conversationId,
+          // P1-6 阶段 4 准备：终局模型 id，前端换源后改用这个
+          conversationId,
           match: updatedMatch,
         });
       }

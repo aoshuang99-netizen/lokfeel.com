@@ -1,9 +1,13 @@
 /**
- * IM Database Queries — Core CRUD operations for IM Module
- * 
- * This module provides low-level database access functions for the IM module.
- * All functions use Prisma client with proper error handling and transactions.
- * 
+ * ✅ [P1-6 TARGET — KEEP] IM 数据层，方案 A 的终局消息存储实现。
+ *
+ * 方案 A 已确认（2026-09-27，见 docs/CHAT-MERGE-AUDIT.md §4）：本模块是终局保留资产，
+ * 将承接从 Legacy `Message` 表迁入的全部存量消息。
+ *
+ * ⚠️ 现状提示：本文件约 90% 的导出目前**无生产调用者**（唯一在跑的是 createConversation，
+ *    被 /api/matches/react 使用）。这不是废弃信号——而是阶段 4 前端换源后将被全面启用。
+ *    请勿依据"无引用"删除任何导出。
+ *
  * @module lib/im/queries
  */
 
@@ -18,6 +22,7 @@ import {
   MediaAccessLevel,
   EncryptionMode,
   RuleEngineResult,
+  VaultStatus,
 } from '@/generated';
 import type {
   IMMessagePayload,
@@ -134,6 +139,17 @@ interface IMMessageWithRelations {
 /**
  * Create a new conversation between two users
  * Uses upsert to prevent duplicate conversations
+ *
+ * P1-6 阶段 5：新增 `vaultExpiresAt` / `vaultStatus` 两个可选参数（**仅在 create 分支生效**）。
+ *
+ * 背景：`matches/inbox`（批量接受匹配）原本只在 Legacy 侧创建 ChatRoom 并设置 24h Vault，
+ * IM 侧完全没有会话 —— 用户在会话列表里看不到刚接受的匹配。补建 Conversation 时
+ * 若不带上 Vault 字段，Conversation 会拿到 schema 默认值（`vaultStatus: ACTIVE`、
+ * `vaultExpiresAt: null`），而 `null` 在 IM 侧的含义是"无 Vault 倒计时"，
+ * 与 Legacy 侧的"24 小时后过期"不一致。
+ *
+ * 刻意不放进 `update` 分支：upsert 命中既有会话时**不重置** Vault ——
+ * 否则重复接受匹配会把一个已被女性用户 REVOKED 的会话重新激活。
  */
 export async function createConversation(
   userAId: string,
@@ -143,6 +159,21 @@ export async function createConversation(
     chatRoomId?: string;
     controllingUserId?: string;
     state?: ConversationState;
+    /** 24h Vault 过期时间（阶段 4 由 ChatRoom 迁入 Conversation） */
+    vaultExpiresAt?: Date;
+    /** Vault 四态（ACTIVE / EXTENDED / REVOKED / EXPIRED） */
+    vaultStatus?: VaultStatus;
+    /**
+     * 来源匹配（`Match.id`）。**匹配路径必须传**。
+     *
+     * 为什么必须：匹配分（`matchScore`）只存在于 `Match` 表，而 `Conversation`
+     * 与 `Match` 之间**刻意没有 relation**（见 `prisma/schema.prisma` 的 G-10 注释），
+     * 所以会话列表只能靠本列做一次批量回查来补分（`lib/im/list.ts` §2.5）。
+     *
+     * 漏传的后果不是报错，而是**匹配分静默消失** —— 列表里那一栏直接变空，
+     * 前端无从察觉。这正是 G-10 的另一半：schema 加了列，但创建路径忘了接线。
+     */
+    matchId?: string;
   }
 ): Promise<ConversationPayload> {
   // Ensure consistent ordering of user IDs for unique constraint
@@ -157,8 +188,11 @@ export async function createConversation(
       userBId: secondId,
       initiatorId,
       chatRoomId: options?.chatRoomId,
+      ...(options?.matchId ? { matchId: options.matchId } : {}),
       controllingUserId: options?.controllingUserId,
       state: options?.state || 'ACTIVE',
+      ...(options?.vaultExpiresAt ? { vaultExpiresAt: options.vaultExpiresAt } : {}),
+      ...(options?.vaultStatus ? { vaultStatus: options.vaultStatus } : {}),
       participants: {
         create: [
           { userId: firstId, isMuted: false, isPinned: false },
@@ -169,6 +203,11 @@ export async function createConversation(
     update: {
       state: 'ACTIVE',
       stateReason: null,
+      // `matchId` 也放进 update，用来**自愈**：本列是在 G-10 修复时才加上的，
+      // 早期创建的会话值为 null。因为 upsert 在每次匹配交互时都会跑，重复执行
+      // 即可逐步补齐历史行 —— 不必等 `chat:vault:apply` 的批量迁移。
+      // 安全性：一个匹配对只有一个 matchId，重复写不会覆盖成错误值。
+      ...(options?.matchId ? { matchId: options.matchId } : {}),
     },
     include: {
       participants: true,

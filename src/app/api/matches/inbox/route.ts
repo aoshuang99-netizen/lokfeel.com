@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { handleApiError } from '@/lib/api-handler';
 import { db } from '@/lib/db';
+import { createConversation } from '@/lib/im/queries';
 
 export const dynamic = 'force-dynamic';
 
@@ -243,28 +244,48 @@ export async function POST(request: NextRequest) {
           data: { status: 'ACCEPTED', isUnread: false },
         });
 
-        // Create chat rooms and process gifts in parallel
+        // Create the conversation (IM terminal model) + optional Legacy room, then process gifts
+        //
+        // P1-6 阶段 5 —— 本处是 B9 门禁的阻断引用点之一。改造要点有三：
+        //
+        // ① **补上 IM 侧会话**。改造前这里只建 Legacy `ChatRoom`，`Conversation` 从不创建，
+        //    于是"批量接受匹配"产生的会话**在 IM 会话列表里根本看不到**——这是真实
+        //    功能缺陷，不只是删表问题。现在以 `createConversation`（幂等 upsert）为准。
+        // ② **Legacy 建房降级为可选副本**。`legacy-capability` 模块注释写"写入不得用探测
+        //    豁免"，前提是当时 **Legacy 是主**——跳过一次写入就是静默丢功能。这里 IM 已
+        //    承接完整、Legacy 退化为兼容副本，因此豁免是安全的。
+        //    ⚠️ 方向不可颠倒：必须"先保证 IM 写入完整，再降级 Legacy"。
+        // ③ **顺带修掉幂等缺陷**。原实现无条件 `create`，重复接受同一匹配会建出多个房间；
+        //    `createConversation` 的 upsert 天然幂等（`unique_match_pair`/会话唯一约束兜底）。
         const acceptResults = await Promise.all(
           matches.map(async (match) => {
-            const chatRoom = await db.chatRoom.create({
-              data: {
+            const vaultExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+            // 终局模型：Conversation 必须存在（幂等）。新建会话本就没有旧书签，
+            // 不写入 `chatRoomId`（G-8 的旧链接兼容只服务历史房间）。
+            const conversation = await createConversation(
+              match.senderId,
+              match.receiverId,
+              match.senderId,
+              {
                 matchId: match.id,
-                vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                vaultExpiresAt,
                 vaultStatus: 'ACTIVE',
-                members: {
-                  create: [
-                    { userId: match.senderId },
-                    { userId: match.receiverId },
-                  ]
-                }
               }
-            });
+            );
 
             if (match.giftAmount > 0) {
               await processGiftTransaction(match, userId);
             }
 
-            return { matchId: match.id, status: 'accepted', chatRoomId: chatRoom.id };
+            return {
+              matchId: match.id,
+              status: 'accepted',
+              // `chatRoomId` 保留字段名以兼容既有消费者，阶段 5 后其值恒为 null；
+              // `conversationId` 是阶段 4 之后的正式入口 id，前端应优先使用它。
+              chatRoomId: null,
+              conversationId: conversation.convId,
+            };
           })
         );
         results.push(...acceptResults);

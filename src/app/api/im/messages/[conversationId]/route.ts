@@ -88,6 +88,9 @@ export async function GET(
       },
       isFromMe: msg.senderId === userId,
       isRead: msg.receipts.length > 0 && msg.receipts[0].readAt !== null,
+      // P1-6 阶段 4：暴露 seq 供前端做**增量轮询**游标。
+      // 此前不返回 seq，前端只能按 createdAt 比较增量 —— 同毫秒多条消息会漏拉。
+      seq: msg.seq,
     }));
 
     return NextResponse.json({

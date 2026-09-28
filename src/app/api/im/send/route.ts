@@ -3,8 +3,11 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { safeRequestBody } from "@/lib/safe-json";
 import { handleBotReply } from "@/lib/im/bot-reply";
-import { isFemaleGender } from "@/lib/gender-utils";
+import { checkSendPermission } from "@/lib/im/message-guards";
 import { IMMessageType } from "@/generated";
+
+/** 客户端被允许声明的消息类型白名单。SYSTEM 等枚举绝不可由客户端指定。 */
+const CLIENT_ALLOWED_MSG_TYPES: readonly string[] = ["TEXT", "IMAGE", "VOICE"];
 
 // Pusher is optional - gracefully degrade if not configured
 import { getPusherServer } from "@/lib/pusher";
@@ -30,8 +33,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid or empty request body" }, { status: 400 });
     }
     const { conversationId, content, clientMsgId } = body;
-    // BUG-630: typed msgType (enum) with a safe default so Prisma accepts it
-    const msgType: IMMessageType = (body.msgType as IMMessageType) || IMMessageType.TEXT;
+    // BUG-630: typed msgType (enum) with a safe default so Prisma accepts it.
+    // P1-6 阶段 4 加固：客户端此前可直接指定任意 IMMessageType（如 SYSTEM），
+    // 从而在会话里伪造"匹配成功""系统通知"之类的消息。改为白名单校验，
+    // 非白名单值一律降级为 TEXT（而非报错，保持向后兼容）。
+    const requestedType = (body.msgType || "").toUpperCase();
+    const msgType: IMMessageType = CLIENT_ALLOWED_MSG_TYPES.includes(requestedType)
+      ? (requestedType as IMMessageType)
+      : IMMessageType.TEXT;
 
     if (!conversationId || !content) {
       return NextResponse.json(
@@ -92,43 +101,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── MESSAGE GATE (mirror legacy /api/chat/[id]/messages) ──
+    // ── MESSAGE GATE ──
     // Premium / Lady Free / female: unlimited. Free male: 2 messages / conversation.
     // Non-premium must verify card after 3 total messages.
-    const [userWithSub, userProfile, activeSubs] = await Promise.all([
-      prisma.user.findFirst({ where: { id: userId }, select: { cardVerified: true } }),
-      prisma.profile.findUnique({ where: { userId }, select: { gender: true } }),
-      prisma.subscription.findMany({ where: { userId, status: "ACTIVE" }, take: 1 }),
-    ]);
-    const hasActiveSub = activeSubs.length > 0;
-    const isFemale = isFemaleGender(userProfile?.gender);
-    const cardVerified = userWithSub?.cardVerified ?? false;
-
-    if (!hasActiveSub && !isFemale) {
-      const perConversation = await prisma.iMMessage.count({ where: { conversationId, senderId: userId } });
-      if (perConversation >= 2) {
-        return NextResponse.json(
-          {
-            message: "Free users can send up to 2 messages per conversation. Upgrade to Premium for unlimited messaging.",
-            code: "UPGRADE_REQUIRED",
-            upgradeUrl: "/dashboard/subscription",
-          },
-          { status: 403 }
-        );
-      }
-    }
-    const isPremiumPlan = hasActiveSub && ["PREMIUM_MONTHLY", "PREMIUM_YEARLY", "LIFETIME"].includes(activeSubs[0]?.plan);
-    if (!isPremiumPlan) {
-      const totalMessages = await prisma.iMMessage.count({ where: { senderId: userId } });
-      if (!cardVerified && totalMessages >= 3) {
-        return NextResponse.json(
-          {
-            message: "Please verify your card to continue messaging. Identity verification only — no charges.",
-            code: "CARD_VERIFICATION_REQUIRED",
-          },
-          { status: 403 }
-        );
-      }
+    //
+    // P1-6 阶段 4：改用 `@/lib/im/message-guards` 的共享守卫，不再本地重算。
+    // 原因（这是一个真实的绕过风险，不只是重构）：
+    //   本文件原先只统计 `iMMessage`。但在阶段 3 的迁移过渡期内，用户的历史消息
+    //   仍可能在 Legacy `Message` 表里（尚未迁移或只迁了一半）。此时 IM 侧计数偏小，
+    //   **免费用户可通过本端点多发消息**，绕过 2 条/会话 与 卡片验证 两道限制。
+    //   共享守卫对两套表取 max()，在"迁移前 / 双写期 / 阶段 4 之后"三个时期都成立。
+    const verdict = await checkSendPermission({
+      userId,
+      conversationId,
+      chatRoomId: conversation.chatRoomId ?? null,
+    });
+    if (!verdict.ok) {
+      return NextResponse.json(verdict.body, { status: verdict.status });
     }
 
     // Atomic transaction: create message + update conversation (prevents data inconsistency)

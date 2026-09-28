@@ -70,7 +70,7 @@ export const GET = withPermission('user.view')(async (request: NextRequest, { us
           select: {
             sentMatches: true,
             receivedMatches: true,
-            messages: true,
+            // P1-6 阶段 5：原 `messages: true`（Legacy 计数）随表删除而移除。
           },
         },
       },

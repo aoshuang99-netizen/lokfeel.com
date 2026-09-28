@@ -297,16 +297,23 @@ export class AutomatedTestRunner {
       await this.performLogin(page);
       
       // 获取一个有聊天的用户
-      const chatRoom = await prisma.chatRoom.findFirst({
-        include: { messages: true },
+      // P1-6 阶段 5：原为 `prisma.chatRoom.findFirst({ include: { messages: true } })`。
+      // 改读终局模型 Conversation —— 阶段 4 之后聊天页只认 Conversation.id。
+      // ⚠️ 顺带修正一个**既有的错误路由**：旧代码跳的是 `/dashboard/chat/${id}`
+      //    （单数 chat），而实际路由是 `/dashboard/chats/[roomId]`（复数）。
+      //    也就是说这个用例过去必然 404 —— 但因为它在超时后才断言，
+      //    只表现为"界面上找不到输入框"，看不出是 URL 写错。
+      const conversation = await prisma.conversation.findFirst({
+        where: { state: 'ACTIVE' },
+        orderBy: { lastMessageAt: 'desc' },
       });
-      
-      if (!chatRoom) {
-        console.log("[Test] No chat room found, skipping chat dialog test");
+
+      if (!conversation) {
+        console.log("[Test] No conversation found, skipping chat dialog test");
         return;
       }
-      
-      await page.goto(`${TEST_CONFIG.baseUrl}/dashboard/chat/${chatRoom.id}`);
+
+      await page.goto(`${TEST_CONFIG.baseUrl}/dashboard/chats/${conversation.id}`);
       await page.waitForTimeout(3000);
       
       // 检查聊天界面

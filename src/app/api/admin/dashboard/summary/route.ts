@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from "next/server";
 import { withPermission } from "@/lib/with-permission";
 import { db } from "@/lib/db";
+import { countMessages, countConversations, countDistinctMessageSenders } from "@/lib/im/stats";
 import { success, serverError } from "@/lib/api-response";
 import { subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval } from "date-fns";
 
@@ -80,13 +81,10 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest)
     ]);
 
     // Activity metrics - period based
+    // P1-6 阶段 5：原直读 Legacy `Message` 表（阻断引用点），改为 stats 统一口径。
     const [messagesInPeriod, activeUsersInPeriod] = await Promise.all([
-      db.message.count({ where: { createdAt: { gte: start, lte: end } } }),
-      db.message.findMany({
-        where: { createdAt: { gte: start, lte: end } },
-        select: { senderId: true },
-        distinct: ['senderId'],
-      }).then(rows => rows.length),
+      countMessages({ window: { gte: start, lte: end } }),
+      countDistinctMessageSenders({ window: { gte: start, lte: end } }),
     ]);
 
     // Previous period for comparison
@@ -156,7 +154,7 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest)
     // ─── Conversion Funnel (period-based) ───
     const [usersWithProfile, usersWithMessages, usersWithMatches] = await Promise.all([
       db.profile.count({ where: { profileStatus: "APPROVED" } }),
-      db.message.findMany({ where: { createdAt: { gte: start, lte: end } }, select: { senderId: true }, distinct: ['senderId'] }).then(rows => rows.length),
+      countDistinctMessageSenders({ window: { gte: start, lte: end } }),
       db.match.findMany({ where: { createdAt: { gte: start, lte: end } }, select: { senderId: true }, distinct: ['senderId'] }).then(rows => rows.length),
     ]);
 
@@ -171,8 +169,8 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest)
       db.auditLog?.count?.({ where: { createdAt: { gte: subDays(now, 7) } } }) ?? Promise.resolve(0),
       db.subscription.count({ where: { status: "CANCELLED" } }),
       db.payment.count({ where: { status: "FAILED" } }),
-      db.chatRoom.count(),
-      db.message.count(),
+      countConversations(),
+      countMessages(),
     ]);
 
     // ─── Health Board Data ───

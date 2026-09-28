@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * ✅ [P1-6 TARGET — KEEP] IM 侧数据 hook（Pusher + 5s 轮询兜底）。
+ *
+ * 方案 A 已确认（2026-09-27，见 docs/CHAT-MERGE-AUDIT.md §4）。本 hook 目前无生产调用者，
+ * 但属终局保留资产——阶段 4 前端换源时启用。请勿依据"无引用"删除。
+ */
 import { useEffect, useRef, useState, useCallback } from "react";
 import { getPusherClient } from "@/lib/pusher";
 

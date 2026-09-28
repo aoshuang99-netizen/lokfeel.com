@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * ✅ [P1-6 TARGET — KEEP] IM 侧实时通道（Pusher），serverless 友好的终局实时方案。
+ *
+ * 方案 A 已确认（2026-09-27，见 docs/CHAT-MERGE-AUDIT.md §4、§10）。
+ * 本 hook 目前唯一的引用方是未挂载的 chat-container.tsx，但属终局保留资产。
+ *
+ * ⚠️ 与之并存的 hooks/useSocket.ts（socket.io）在本项目 serverless 部署下不可靠，
+ *    属待清理项，勿再把新功能接到 socket.io 上。
+ */
 import { useEffect, useRef, useState, useCallback } from "react";
 import Pusher, { Channel } from "pusher-js";
 import type {

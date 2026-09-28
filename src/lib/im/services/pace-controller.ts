@@ -9,7 +9,7 @@
  * - Progressive cooldown (escalating penalties)
  */
 
-import { redis, RedisKeys } from '../redis';
+import { redis, RedisKeys, markRedisUnavailable } from '../redis';
 import type { PaceControl, PaceLimitNotification } from '../types';
 
 export interface PaceCheckResult {
@@ -121,6 +121,9 @@ export class PaceController {
         paceLimit,
       };
     } catch (error) {
+      // 触发熔断：让后续请求在冷却窗口内直接走内存后端，
+      // 而不是每个请求都先等一次 Redis 超时（一次 Redis 故障不应拖慢整站）。
+      markRedisUnavailable(`pace.checkRateLimit: ${error instanceof Error ? error.message : String(error)}`);
       console.error('[PaceController] Redis error, allowing message (fail-open):', error);
       // Fail-open: if Redis is down, allow the message
       return {

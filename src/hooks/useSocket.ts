@@ -1,5 +1,13 @@
 "use client";
 
+/**
+ * ⚠️ [P1-6 TO-REMOVE — socket.io 实时通道] 本 hook 使用 socket.io 长连接，
+ * 在本项目的 serverless 部署链（Vercel → Netlify/Cloudflare）上不可靠。
+ *
+ * 方案 A 已确认（2026-09-27，见 docs/CHAT-MERGE-AUDIT.md §10）：终局实时方案是
+ * Pusher（hooks/use-im-pusher.ts）。本文件唯一引用方是未挂载的 chat-container.tsx。
+ * 计划在阶段 5 删除。即日起冻结：禁止把新功能接到 socket.io 上。
+ */
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import type { MessageBubbleProps } from "@/components/chat/message-bubble";

@@ -215,6 +215,7 @@ async function createMatchesForBots(
                 userBId: botUser.id,
                 initiatorId: botUser.id,
                 controllingUserId: userId,
+                matchId: match.id,
               },
             });
             conversationId = conv.id;
@@ -222,28 +223,7 @@ async function createMatchesForBots(
             conversationId = existingConv.id;
           }
 
-          // Check existing chat room
-          const existingChatRoom = await tx.chatRoom.findFirst({
-            where: { matchId: match.id },
-          });
-
-          let chatRoomId: string;
-          if (!existingChatRoom) {
-            const chatRoom = await tx.chatRoom.create({
-              data: { matchId: match.id, vaultExpiry: new Date(Date.now() + 48 * 60 * 60 * 1000) },
-            });
-            await tx.chatRoomMember.createMany({
-              data: [
-                { roomId: chatRoom.id, userId: userId },
-                { roomId: chatRoom.id, userId: botUser.id },
-              ],
-            });
-            chatRoomId = chatRoom.id;
-          } else {
-            chatRoomId = existingChatRoom.id;
-          }
-
-          return { matchId: match.id, conversationId, chatRoomId };
+          return { matchId: match.id, conversationId };
         });
 
         // Send welcome messages outside transaction (best effort)
@@ -284,13 +264,6 @@ async function createMatchesForBots(
             where: { id: result.conversationId },
             data: { lastMessageAt: new Date(), messageCount: { increment: 1 }, unreadCountA: { increment: 1 } },
           });
-          await tx.message.create({
-            data: { roomId: result.chatRoomId, senderId: botUser.id, content: welcomeMsg, messageType: "TEXT" },
-          });
-          await tx.chatRoom.update({
-            where: { id: result.chatRoomId },
-            data: { lastMessageAt: new Date() },
-          });
         });
 
         const botName = botUser.profile?.displayName || botUser.name || "Someone";
@@ -298,7 +271,6 @@ async function createMatchesForBots(
           botUserId: botUser.id, botName,
           matchId: result.matchId,
           conversationId: result.conversationId,
-          chatRoomId: result.chatRoomId,
           matchScore,
         };
       } catch (err) {

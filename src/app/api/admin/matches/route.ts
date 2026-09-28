@@ -94,9 +94,8 @@ export const GET = withPermission('match.view')(async (request: NextRequest, { u
             },
           },
         },
-        chatRoom: {
-          select: { id: true },
-        },
+        // P1-6 阶段 5：原 `chatRoom: { select: { id: true } }` include 随
+        // ChatRoom 表删除而移除（全仓无消费方）。
       },
       orderBy: { createdAt: "desc" },
       skip,

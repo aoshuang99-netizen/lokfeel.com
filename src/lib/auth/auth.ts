@@ -122,7 +122,8 @@ export async function getCurrentUser() {
         select: {
           sentMatches: true,
           receivedMatches: true,
-          messages: true,
+          // P1-6 阶段 5：原 `messages: true`（Legacy Message 计数）随表删除而移除，
+          // 全仓无任何消费方读取该键。
         },
       },
     },
@@ -198,7 +199,8 @@ export async function getUserById(id: string) {
         select: {
           sentMatches: true,
           receivedMatches: true,
-          messages: true,
+          // P1-6 阶段 5：原 `messages: true`（Legacy Message 计数）随表删除而移除，
+          // 全仓无任何消费方读取该键。
         },
       },
     },

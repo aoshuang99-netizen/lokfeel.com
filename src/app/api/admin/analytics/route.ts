@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { withPermission } from "@/lib/with-permission";
 import { db } from "@/lib/db";
+import { countMessages, countConversations, countDistinctMessageSenders } from "@/lib/im/stats";
 import { success, serverError } from "@/lib/api-response";
 import type { AdminAnalytics } from "@/types";
 import { subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
@@ -69,22 +70,19 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest,
     const mrr = (monthlyPlanCount * planPrices.PREMIUM_MONTHLY) + (yearlyPlanCount * planPrices.PREMIUM_YEARLY);
 
     // Activity metrics (simplified to avoid timeout)
-    const [messagesToday, chatCount, totalMessages] = await Promise.all([
-      db.message.count({ where: { createdAt: { gte: startOfDay(now), lte: endOfDay(now) } } }),
-      db.chatRoom.count(),
-      db.message.count(),
+    //
+    // P1-6 阶段 5：这里原本直接读 Legacy 的 `Message` / `ChatRoom` 表，是删表后的
+    // 🔴 阻断引用点。现改为走 `lib/im/stats` 的统一迁移安全口径（max(Legacy, IM)），
+    // 好处有两个：① 阶段 5 删表后本文件**零改动**（引用已收敛到 stats 模块）；
+    // ② 迁移窗口期内统计数字不再可能因换表而暴跌。
+    // 顺带把 `findMany + distinct` 的两个裸查询也换成同名封装，口径与其它看板一致。
+    const [messagesToday, chatCount, totalMessages, activeToday, activeThisWeek] = await Promise.all([
+      countMessages({ window: { gte: startOfDay(now), lte: endOfDay(now) } }),
+      countConversations(),
+      countMessages(),
+      countDistinctMessageSenders({ window: { gte: startOfDay(now) } }),
+      countDistinctMessageSenders({ window: { gte: weekStart } }),
     ]);
-    // NOTE: Using findMany+distinct instead of groupBy (Turso/libSQL incompatible)
-    const activeToday = await db.message.findMany({
-      where: { createdAt: { gte: startOfDay(now) } },
-      select: { senderId: true },
-      distinct: ['senderId'],
-    });
-    const activeThisWeek = await db.message.findMany({
-      where: { createdAt: { gte: weekStart } },
-      select: { senderId: true },
-      distinct: ['senderId'],
-    });
 
     const avgMessagesPerChat = chatCount > 0 ? totalMessages / chatCount : 0;
 
@@ -99,7 +97,7 @@ export const GET = withPermission('analytics.view')(async (request: NextRequest,
         mrr: Math.round(mrr * 100) / 100, activeSubscriptions,
       },
       activity: {
-        activeUsersToday: activeToday.length, activeUsersThisWeek: activeThisWeek.length,
+        activeUsersToday: activeToday, activeUsersThisWeek: activeThisWeek,
         messagesSentToday: messagesToday, avgMessagesPerChat: Math.round(avgMessagesPerChat * 10) / 10,
       },
     };

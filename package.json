@@ -31,7 +31,34 @@
     "test:e2e:api": "npx playwright test tests/e2e/api-health",
     "test:e2e:dashboard": "npx playwright test tests/e2e/dashboard-access",
     "test:e2e:debug": "npx playwright test --debug",
-    "test:e2e:report": "npx playwright show-report test-results/html"
+    "test:e2e:report": "npx playwright show-report test-results/html",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "chat:inventory": "npx tsx scripts/chat-merge/inventory.ts",
+    "chat:migrate": "npx tsx scripts/chat-merge/migrate-messages.ts",
+    "chat:migrate:apply": "npx tsx scripts/chat-merge/migrate-messages.ts --apply",
+    "chat:verify": "npx tsx scripts/chat-merge/verify-migration.ts",
+    "chat:backfill": "npx tsx scripts/chat-merge/migrate-messages.ts --backfill-conversations",
+    "chat:backfill:apply": "npx tsx scripts/chat-merge/migrate-messages.ts --backfill-conversations --apply",
+    "chat:vault": "npx tsx scripts/chat-merge/migrate-vault.ts",
+    "chat:vault:apply": "npx tsx scripts/chat-merge/migrate-vault.ts --apply",
+    "chat:vault:verify": "npx tsx scripts/chat-merge/migrate-vault.ts --verify",
+    "chat:retire": "npx tsx scripts/chat-merge/retire-legacy.ts",
+    "chat:retire:sql": "npx tsx scripts/chat-merge/retire-legacy.ts --sql",
+    "chat:receipts": "npx tsx scripts/chat-merge/migrate-receipts.ts",
+    "chat:receipts:apply": "npx tsx scripts/chat-merge/migrate-receipts.ts --apply",
+    "chat:receipts:verify": "npx tsx scripts/chat-merge/migrate-receipts.ts --verify",
+    "chat:repair": "npx tsx scripts/chat-merge/repair-im-native.ts",
+    "chat:repair:apply": "npx tsx scripts/chat-merge/repair-im-native.ts --apply",
+    "chat:refs": "npx tsx scripts/chat-merge/legacy-refs.ts",
+    "chat:refs:write": "npx tsx scripts/chat-merge/legacy-refs.ts --write",
+    "check:redis": "npx tsx scripts/check-redis-fallback.ts",
+    "verify:geo": "npx tsx scripts/verify-region-policy.ts",
+    "verify:bot": "npx tsx scripts/verify-bot-policy.ts",
+    "chat:invariants": "node scripts/chat-merge/check-invariants.js"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -56,7 +83,7 @@
     "framer-motion": "^12.38.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.7.0",
-    "next": "16.2.2",
+    "next": "16.2.8",
     "next-auth": "^5.0.0-beta.30",
     "nodemailer": "^7.0.7",
     "prisma": "^7.6.0",
@@ -78,6 +105,7 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "1.20.0",
     "@playwright/test": "^1.59.1",
     "@swc/core": "^1.15.24",
     "@swc/jest": "^0.2.39",
@@ -94,7 +122,7 @@
     "@types/ws": "^8.18.1",
     "dotenv": "^17.4.2",
     "eslint": "^9",
-    "eslint-config-next": "16.2.2",
+    "eslint-config-next": "16.2.8",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.4.1",
     "openai": "^6.34.0",
@@ -103,6 +131,7 @@
     "tailwindcss": "^4",
     "ts-jest": "^29.4.9",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.86.0"
   }
 }

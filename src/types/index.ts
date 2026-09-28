@@ -1,4 +1,4 @@
-import type { User, Profile, Match, Message, Notification, Subscription } from "@/generated/client"
+import type { User, Profile, Match, Notification, Subscription } from "@/generated/client"
 
 // ============================================================================
 // User & Profile Types
@@ -70,15 +70,23 @@ export interface WeeklyMatch {
 // Message Types
 // ============================================================================
 
-export interface ChatMessageWithSender extends Message {
+// P1-6 阶段 5：generated 客户端已无 Legacy `Message` model，
+// 改为**本地形状**（字段 = 原 Legacy Message 的 UI 消费子集：
+// id / content / isRead / readAt / createdAt / sender —— 见 use-realtime 等读取面）。
+export interface ChatMessageWithSender {
+  id: string
+  roomId: string
+  senderId: string
+  content: string
+  messageType: 'TEXT' | 'IMAGE' | 'VOICE' | 'SYSTEM' | 'FILE'
+  metadata: string | null
+  isRead: boolean
+  readAt: Date | null
+  createdAt: Date
   sender: Pick<User, 'id' | 'name' | 'image'>
 }
 
-export interface MessageWithReadStatus extends Message {
-  sender: Pick<User, 'id' | 'name' | 'image'>
-  isRead: boolean
-  readAt: Date | null
-}
+export interface MessageWithReadStatus extends ChatMessageWithSender {}
 
 export interface ChatRoom {
   id: string

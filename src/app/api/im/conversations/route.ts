@@ -1,8 +1,24 @@
+/**
+ * ✅ [P1-6 TARGET — KEEP] 统一会话列表接口（阶段 4 起为**唯一**列表数据源）。
+ *
+ * 方案 A（2026-09-27 确认，见 docs/CHAT-MERGE-AUDIT.md §4）：IM 为终局模型。
+ *
+ * 阶段 4 变更（2026-09-27）：
+ *   · GET 改为调用 `buildConversationList()`（`@/lib/im/list`）—— 与 `/api/chat` 共用同一实现，
+ *     消除两侧各自拼装导致的字段漂移。
+ *   · 列表项 `id` **恒为 Conversation.id**（历史遗留房间除外），修复 D1「同一会话两个主键」。
+ *     这是前端能够稳定走 IM 数据通路的**前提条件**。
+ *   · 补回改造前 IM 侧缺失的富化字段：`matchId`/`matchScore`/`age`/`isVault`/`vaultExpiresAt`/
+ *     `vaultStatus`。此前若前端改用本接口会**丢失匹配分徽章与 Vault 徽章**（功能回退）。
+ *
+ * ⚠️ 本文件此前标注为 "DEPRECATED: Use /api/chat instead"，该注释方向错误，已于
+ *    2026-09-27 移除。在本方案下 `/api/chat` 才是待废弃的兼容层，IM 侧为终局保留。
+ *    请勿据旧注释删除本文件。
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-// DEPRECATED: Use /api/chat instead (merged ChatRoom + IM chat list)
+import { buildConversationList, toPublicChatItems } from "@/lib/im/list";
 
 export const dynamic = "force-dynamic";
 
@@ -13,88 +29,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const items = await buildConversationList(session.user.id);
 
-    const conversations = await prisma.conversation.findMany({
-      where: {
-        OR: [{ userAId: userId }, { userBId: userId }],
-        state: { not: "ARCHIVED" },
-      },
-      include: {
-        userA: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            isBot: true,
-            profile: {
-              select: {
-                displayName: true,
-                avatar: true,
-              },
-            },
-          },
-        },
-        userB: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            isBot: true,
-            profile: {
-              select: {
-                displayName: true,
-                avatar: true,
-              },
-            },
-          },
-        },
-        imMessages: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: {
-            id: true,
-            payload: true,
-            msgType: true,
-            createdAt: true,
-            senderId: true,
-          },
-        },
-      },
-      orderBy: { lastMessageAt: "desc" },
-      take: 50, // H-02: Add pagination limit
+    // 同时返回 `conversations`（本接口的规范字段）与 `chats`（前端既有消费字段的别名）。
+    // 别名是为了让阶段 4 的前端切换可以"一个字段一个字段地"逐步验证，而非一次性跳变。
+    const payload = toPublicChatItems(items);
+    return NextResponse.json({
+      conversations: payload,
+      chats: payload,
+      count: payload.length,
     });
-
-    const formattedConversations = conversations.map((conv) => {
-      const otherUser = conv.userAId === userId ? conv.userB : conv.userA;
-      const unreadCount = conv.userAId === userId ? conv.unreadCountA : conv.unreadCountB;
-      const lastMessage = conv.imMessages[0];
-
-      return {
-        id: conv.id,
-        otherUser: {
-          id: otherUser.id,
-          name: otherUser.profile?.displayName || otherUser.name || "Unknown",
-          avatar: otherUser.profile?.avatar || otherUser.image || null,
-          isBot: otherUser.isBot || false,
-        },
-        lastMessage: lastMessage
-          ? {
-              id: lastMessage.id,
-              content: lastMessage.payload?.slice?.(0, 100) || '',
-              msgType: lastMessage.msgType,
-              type: lastMessage.msgType,
-              timestamp: lastMessage.createdAt,
-              createdAt: lastMessage.createdAt,
-              isFromMe: lastMessage.senderId === userId,
-            }
-          : null,
-        unreadCount,
-        updatedAt: conv.updatedAt,
-      };
-    });
-
-    return NextResponse.json({ conversations: formattedConversations });
   } catch (error) {
     console.error("[IM] Get conversations error:", error);
     return NextResponse.json(
@@ -132,7 +76,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingConv) {
-      return NextResponse.json({ conversation: existingConv });
+      return NextResponse.json({ conversation: existingConv, conversationId: existingConv.id });
     }
 
     // Create new conversation
@@ -145,7 +89,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ conversation });
+    return NextResponse.json({ conversation, conversationId: conversation.id });
   } catch (error) {
     console.error("[IM] Create conversation error:", error);
     return NextResponse.json(
