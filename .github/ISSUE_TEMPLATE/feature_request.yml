@@ -1,0 +1,101 @@
+name: ✨ 功能建议
+description: 提出一个新功能或改进建议
+title: '[Feature] '
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        在提交之前，请先阅读 `CONTRIBUTING.md` 第 2 节的**范围边界**。
+
+        以下内容不属于本项目范围，提交后会被关闭：
+        - 用户内容、成人内容素材
+        - 机器人 / 虚假用户体系
+        - 面向单一运营方的业务定制
+        - 特定支付通道的强绑定实现
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索过现有 Issue 与 Discussions，确认这不是重复建议
+          required: true
+        - label: 我已确认该建议不涉及 `CONTRIBUTING.md` 第 2 节列出的排除范围
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你遇到的问题
+      description: 请描述场景与痛点，而不是直接跳到解决方案。理解问题本身比理解方案更重要。
+      placeholder: |
+        当我作为……（角色）在做……（场景）时，因为……（原因）而无法……（结果）。
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你期望的方案
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你考虑过的替代方案
+      description: 现在你是怎么绕过这个问题的？其他项目是怎么做的？
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 涉及模块
+      multiple: true
+      options:
+        - 匹配引擎
+        - 实时通信（IM / 视频通话）
+        - 用户档案与资料
+        - 权限与后台管理
+        - 多租户 / 社群隔离
+        - 支付与订阅
+        - 通知
+        - 部署与运维
+        - 文档
+        - 插件 / 扩展机制
+        - 其他
+    validations:
+      required: true
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: 这个需求主要服务谁
+      options:
+        - 自托管部署者（运维/技术负责人）
+        - 社群运营者（非技术）
+        - 终端用户
+        - 插件开发者
+        - 企业采购方（合规/安全）
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 如果实现了，会带来什么变化
+      description: 例如：能替代某个现有工具、能解决某个合规要求、能降低部署门槛
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: 你是否愿意参与实现
+      options:
+        - label: 我愿意提交 PR 实现这个功能
+          required: false
+        - label: 我可以提供测试环境 / 反馈验证
+          required: false

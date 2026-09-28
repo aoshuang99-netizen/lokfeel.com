@@ -1,0 +1,100 @@
+# gitleaks 配置 —— 密钥扫描（P1-8）
+# 文档：https://github.com/gitleaks/gitleaks
+#
+# 目标：在任何凭证进入版本控制之前就把它拦下来。
+# 本仓库的历史提交中曾清理过硬编码密钥（见提交 b111e17），
+# 因此 enable-rule 与 allowlist 需要同时覆盖"新提交"与"历史扫描"。
+
+title = "LokFeel secret scanning policy"
+
+[extend]
+# 在 gitleaks 官方默认规则集之上扩展
+useDefault = true
+
+# ══════════════════════════════════════════════════════════════
+# 自定义规则：本仓库实际使用的服务商
+# ══════════════════════════════════════════════════════════════
+
+[[rules]]
+id = "lokfeel-creem-api-key"
+description = "Creem 支付 API Key"
+regex = '''(?i)creem[a-z_]*?(?:api[_-]?key|token|secret)["'\s:=]{1,6}([a-z0-9_\-]{20,})'''
+secretGroup = 1
+tags = ["payment", "creem"]
+
+[[rules]]
+id = "lokfeel-generic-webhook-secret"
+description = "通用 webhook signing secret（支付回调签名密钥）"
+regex = '''(?i)(?:webhook|signing)[_-]?secret["'\s:=]{1,6}([a-zA-Z0-9_\-]{16,})'''
+secretGroup = 1
+tags = ["payment", "webhook"]
+
+[[rules]]
+id = "lokfeel-turso-token"
+description = "Turso / libSQL 认证 token"
+regex = '''(?i)turso[a-z_]*?(?:auth[_-]?)?token["'\s:=]{1,6}([a-zA-Z0-9_.\-]{20,})'''
+secretGroup = 1
+tags = ["database", "turso"]
+
+[[rules]]
+id = "lokfeel-neon-connection-string"
+description = "含密码的 PostgreSQL 连接串（Neon 等）"
+regex = '''postgres(?:ql)?://[^:]+:([^@\s"']{8,})@[^\s"']+'''
+secretGroup = 1
+tags = ["database", "connection-string"]
+
+[[rules]]
+id = "lokfeel-nextauth-secret"
+description = "NextAuth / Auth.js 会话加密密钥"
+regex = '''(?i)(?:nextauth|auth)[_-]?secret["'\s:=]{1,6}([a-zA-Z0-9+/=_\-]{24,})'''
+secretGroup = 1
+tags = ["auth"]
+
+[[rules]]
+id = "lokfeel-vercel-oidc-token"
+description = "Vercel OIDC / 部署 token"
+regex = '''(?i)vercel[a-z_]*?(?:oidc[_-]?)?token["'\s:=]{1,6}([a-zA-Z0-9_.\-]{20,})'''
+secretGroup = 1
+tags = ["deploy", "vercel"]
+
+[[rules]]
+id = "lokfeel-cloudflare-api-token"
+description = "Cloudflare API Token"
+regex = '''(?i)(?:cloudflare|cf)[a-z_]*?(?:api[_-]?)?token["'\s:=]{1,6}([a-zA-Z0-9_\-]{30,})'''
+secretGroup = 1
+tags = ["deploy", "cloudflare"]
+
+[[rules]]
+id = "lokfeel-stripe-secret-key"
+description = "Stripe 密钥（live / test）"
+regex = '''(?:sk|rk)_(?:live|test)_[a-zA-Z0-9]{20,}'''
+tags = ["payment", "stripe"]
+
+# ══════════════════════════════════════════════════════════════
+# 白名单：这些路径/模式不是真实凭证，避免误报阻塞 CI
+# ══════════════════════════════════════════════════════════════
+
+[allowlist]
+description = "排除模板、示例、测试夹具与文档中的占位值"
+
+# 允许整类路径跳过扫描
+paths = [
+  '''\.env\.example$''',
+  '''\.env\.local\.template$''',
+  '''\.env\.template$''',
+  '''\.env\..*\.example$''',
+  '''^docs/''',
+  '''^tests/fixtures/''',
+  '''^prisma/migrations/''',
+  '''package-lock\.json$''',
+  '''^src/generated/''',
+  '''\.md$''',
+]
+
+# 允许特定"看起来像密钥但其实是占位符"的字符串
+regexes = [
+  '''(?i)(placeholder|example|changeme|your[_-]?key|dummy|fake|test[_-]?only|xxxx+|\*\*\*+)''',
+  '''(?i)ci-placeholder-secret-not-used-in-production''',
+  '''process\.env\.[A-Z_]+''',
+  '''sk_test_placeholder''',
+]

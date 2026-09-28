@@ -51,3 +51,16 @@ test-results/
 playwright/.cache/
 dev.db:*
 .env*.local
+
+# opennext / cloudflare workers
+/.open-next/
+.dev.vars
+cloudflare-env.d.ts
+.cf-secrets.json
+
+# chat-merge 门禁的合成正控夹具（运行期创建、finally 清理；进程被 kill 时可能残留）
+/.stage5-probe/
+
+# 生产数据备份（阶段 5 删表前的三表快照等）—— 绝不能进仓库
+/backups/
+/deploy-tasks/

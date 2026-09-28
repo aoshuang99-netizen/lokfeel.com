@@ -7,7 +7,6 @@ import { ImageResponse } from 'next/og'
  * Design: dark background, "LokFeel" in lime, tagline in white,
  * subtle purple gradient accent bar.
  */
-export const runtime = 'edge'
 export const alt = 'LokFeel — AI Relationship Matching Engine'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'

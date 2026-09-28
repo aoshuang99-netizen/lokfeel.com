@@ -1,0 +1,199 @@
+# ==============================================================================
+# LokFeel — 自托管一键部署（P1-1）
+# ==============================================================================
+# 目标：外部人员 30 分钟内跑起一个可用实例。
+#
+# 快速开始：
+#   1. cp .env.example .env
+#   2. 生成密钥并填入 .env：
+#        NEXTAUTH_SECRET  ->  openssl rand -base64 32
+#        POSTGRES_PASSWORD ->  openssl rand -base64 24
+#        MINIO_ROOT_PASSWORD -> openssl rand -base64 24
+#   3. docker compose up -d
+#   4. 打开 http://localhost:3000
+#
+# 说明：
+#   · 本编排**不包含**任何成人内容模块、机器人体系或运营数据。
+#   · 生产环境请务必修改所有默认密码，并在前面加反向代理（TLS）。
+#   · 详细部署与升级说明见 docs/SELF-HOSTING.md
+# ==============================================================================
+
+name: lokfeel
+
+services:
+  # ── 应用 ────────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    image: lokfeel:latest
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+
+      # 数据库（指向本编排内的 postgres 服务）
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lokfeel}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 必须设置}@postgres:5432/${POSTGRES_DB:-lokfeel}?schema=public
+      DATABASE_SSL: 'false' # 容器内网无需 TLS；托管数据库请设为 true
+
+      # 缓存 / 限流 / 实时消息广播
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD 必须设置}@redis:6379
+
+      # 认证
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET 必须设置，请用 openssl rand -base64 32 生成}
+
+      # 对象存储（S3 兼容 —— 默认指向本编排内的 MinIO）
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-lokfeel-media}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-lokfeel}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD 必须设置}
+      S3_FORCE_PATH_STYLE: 'true'
+
+      # 迁移策略：容器启动时自动执行 prisma migrate deploy
+      MIGRATE_ON_START: ${MIGRATE_ON_START:-deploy}
+
+      # 遥测：默认关闭。开源项目不应默认收集数据（见 docs/SELF-HOSTING.md）
+      TELEMETRY_ENABLED: 'false'
+
+      # Bot 演示模块（机器人体系）：默认关闭（P0-5）。
+      # 关闭后所有 /api/cron/bot-* 与 /api/bot-automation 返回 503。
+      # 仅供演示/压测时改为 'true'；生产环境启用前请阅读
+      # docs/OPEN-CORE-POSITIONING.md §4 关于信任风险的说明。
+      BOT_ENGINE_ENABLED: 'false'
+
+      # 邮件（可选；不配置则邮件通知不可用）
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@example.com}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:3000/ >/dev/null || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    networks:
+      - lokfeel
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lokfeel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 必须设置}
+      POSTGRES_DB: ${POSTGRES_DB:-lokfeel}
+      # 中文排序与大小写处理相关，按需调整
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-lokfeel} -d ${POSTGRES_DB:-lokfeel}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    # 默认不暴露到宿主机，避免误开放数据库端口。
+    # 需要本地用客户端连接时，取消下面两行注释。
+    # ports:
+    #   - '127.0.0.1:5432:5432'
+    networks:
+      - lokfeel
+
+  # ── Redis ───────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?REDIS_PASSWORD 必须设置}
+      - --maxmemory
+      - ${REDIS_MAXMEMORY:-256mb}
+      - --maxmemory-policy
+      - allkeys-lru
+      - --appendonly
+      - 'yes'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli -a "$$REDIS_PASSWORD" ping | grep -q PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD 必须设置}
+    networks:
+      - lokfeel
+
+  # ── MinIO（S3 兼容对象存储，用于头像与私密媒体）─────────────────────────
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-lokfeel}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD 必须设置}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'mc ready local || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    # 控制台端口仅在本地开放，方便初始化 bucket
+    ports:
+      - '127.0.0.1:9001:9001'
+    networks:
+      - lokfeel
+
+  # ── 一次性任务：创建 S3 bucket 并设置访问策略 ──────────────────────────
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: 'no'
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-lokfeel} ${MINIO_ROOT_PASSWORD} &&
+      mc mb --ignore-existing local/${S3_BUCKET:-lokfeel-media} &&
+      echo 'bucket ${S3_BUCKET:-lokfeel-media} 已就绪'
+      "
+    networks:
+      - lokfeel
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+
+networks:
+  lokfeel:
+    driver: bridge
+
+# ==============================================================================
+# 生产部署提醒
+# ==============================================================================
+# 1. 所有标记 `:?` 的变量必须显式设置，否则 compose 会拒绝启动（fail fast）
+# 2. 建议在 app 前面加一层反向代理（Caddy / Nginx / Traefik）处理 TLS
+# 3. 数据库与对象存储必须纳入备份策略（见 docs/SELF-HOSTING.md 第 6 节）
+# 4. 若使用托管数据库（Neon / RDS 等），把 DATABASE_URL 指向外部并设 DATABASE_SSL=true，
+#    同时可删除 postgres 服务
+# 5. 若使用外部 Redis（Upstash 等），设置 UPSTASH_REDIS_REST_URL 后可删除 redis 服务
+# ==============================================================================

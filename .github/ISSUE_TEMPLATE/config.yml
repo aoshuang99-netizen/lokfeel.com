@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 报告安全漏洞（私密）
+    url: https://github.com/OWNER/REPO/security/advisories/new
+    about: 请勿用公开 Issue 报告安全漏洞。详见 SECURITY.md。请把 URL 中的 OWNER/REPO 替换为仓库实际路径。
+
+  - name: 💬 使用问题与讨论
+    url: https://github.com/OWNER/REPO/discussions
+    about: 安装、配置、部署类问题请走 Discussions，不要开 Issue。
+
+  - name: 📖 自托管部署文档
+    url: https://github.com/OWNER/REPO/blob/main/docs/SELF-HOSTING.md
+    about: 部署前请先阅读自托管文档。
+
+  - name: 📜 贡献指南与范围边界
+    url: https://github.com/OWNER/REPO/blob/main/CONTRIBUTING.md
+    about: 提交 PR 前必读。第 2 节说明了哪些内容不会被合入。

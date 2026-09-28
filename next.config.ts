@@ -18,6 +18,13 @@ const CSP_VALUE = [
 ].join('; ')
 
 const nextConfig: NextConfig = {
+  // ─── 自托管构建产物（P1-1）───
+  // Docker 自托管需要 standalone 输出（自包含的 server.js + 精简 node_modules）。
+  // 用环境变量门控，避免影响现有云端部署链路（Vercel / Netlify / Cloudflare）。
+  //   · Docker 构建：BUILD_TARGET=standalone（见 Dockerfile）
+  //   · 云端部署：不设置该变量 → 保持 Next.js 默认输出
+  output: process.env.BUILD_TARGET === 'standalone' ? 'standalone' : undefined,
+
   // Turbopack config (Next.js 16 default bundler)
   turbopack: {
     root: __dirname,
@@ -56,8 +63,10 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     // Image sizes for avatar/detail views
     imageSizes: [32, 48, 64, 96, 128, 256, 384, 512, 768],
-    // Disable unoptimized images in production (always optimize)
-    unoptimized: false,
+    // Cloudflare Workers: next/image optimization requires the (paid) Cloudflare
+    // Images binding. On the Workers Free plan we serve images unoptimized —
+    // remote hosts (DiceBear/Google/Twitter) are already allowed by the CSP.
+    unoptimized: true,
     // Dangerously allow SVG — REQUIRED for DiceBear avatars
     // DiceBear returns SVG (Content-Type: image/svg+xml) which next/image
     // silently rejects when dangerouslyAllowSVG=false, causing blank avatars
@@ -308,3 +317,7 @@ const nextConfig: NextConfig = {
 export default withSentryConfig(nextConfig, {
   silent: !process.env.CI,
 })
+
+// OpenNext Cloudflare adapter: enables Cloudflare bindings during `next dev`.
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
+initOpenNextCloudflareForDev()

@@ -1,0 +1,102 @@
+name: 🐛 Bug 报告
+description: 报告一个可复现的缺陷
+title: '[Bug] '
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你花时间报告问题。请尽量提供完整信息 —— 缺少复现步骤的报告很难被处理。
+
+        ⚠️ **安全漏洞请勿在此提交**。请按 `SECURITY.md` 的流程私下披露。
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索过现有 Issue，确认这不是重复问题
+          required: true
+        - label: 我使用的是最新版本
+          required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 问题描述
+      description: 实际发生了什么？你期望发生什么？
+      placeholder: |
+        实际行为：……
+        期望行为：……
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请给出最小可复现步骤
+      placeholder: |
+        1. 以 某某角色 登录
+        2. 进入 某某页面
+        3. 点击 某某
+        4. 看到报错……
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 报错信息
+      description: 请粘贴服务端或浏览器控制台的报错。**请先删除其中的凭证、token、真实用户信息**
+      render: shell
+    validations:
+      required: false
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: 部署方式
+      options:
+        - 自托管（Docker / Compose）
+        - 自托管（其他方式）
+        - 云托管版
+        - 本地开发环境
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / 提交号
+      placeholder: 例如 v0.1.0 或 commit 的短 SHA
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 运行环境
+      placeholder: 例如 Node 22.22.2 / PostgreSQL 16 / Redis 7 / Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 影响程度
+      options:
+        - 阻塞 —— 无法使用核心功能
+        - 严重 —— 核心功能异常但有绕过方式
+        - 一般 —— 非核心功能异常
+        - 轻微 —— 体验问题
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: 是否涉及多租户数据隔离
+      options:
+        - label: 该问题涉及跨租户/跨社群的数据可见性（请在描述中详述）
+          required: false

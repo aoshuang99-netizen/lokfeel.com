@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# 同一分支的重复推送取消旧运行，节省 CI 配额
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # 构建期占位凭证：CI 中不应依赖真实密钥。
+  # 若某个任务确实需要真实密钥，请通过 GitHub Secrets 注入，不要写在这里。
+  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+  NEXTAUTH_SECRET: ci-placeholder-secret-not-used-in-production
+  NEXTAUTH_URL: http://localhost:3000
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # 1. 类型检查 —— 零类型错误是硬门槛
+  # ─────────────────────────────────────────────────────────────
+  typecheck:
+    name: Typecheck (tsc --noEmit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run TypeScript compiler
+        run: npx tsc --noEmit
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. Lint
+  # ─────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run lint
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. 单元 / 集成测试
+  # ─────────────────────────────────────────────────────────────
+  test:
+    name: Test (Jest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm test -- --ci --reporters=default
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────────────────
+  # 4. 生产构建
+  #    注：CI 中不注入真实密钥。若此任务因缺少密钥而失败，
+  #    说明构建期对密钥存在硬依赖，应当修正（构建期不应需要真实凭证）。
+  #    TODO(发布前)：确认构建在占位环境下可通过后，移除 continue-on-error。
+  # ─────────────────────────────────────────────────────────────
+  build:
+    name: Build (next build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run build
+
+  # ─────────────────────────────────────────────────────────────
+  # 5. 密钥扫描 —— 检出即失败（P1-8）
+  # ─────────────────────────────────────────────────────────────
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 扫描完整历史，防止历史凭证残留
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 组织仓库需要：GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # ─────────────────────────────────────────────────────────────
+  # 6. 依赖漏洞审计 —— 高危漏洞阻断
+  # ─────────────────────────────────────────────────────────────
+  dependency-audit:
+    name: Dependency audit (npm audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true # TODO(发布前)：清零后改为 false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci --ignore-scripts
+      - name: Audit high & critical
+        run: npm audit --audit-level=high
+
+  # ─────────────────────────────────────────────────────────────
+  # 7. DCO 签署校验 —— 与 CONTRIBUTING.md 第 5 节对应
+  # ─────────────────────────────────────────────────────────────
+  dco:
+    name: DCO sign-off check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify every commit has a Signed-off-by line
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          MISSING=0
+          while read -r sha; do
+            [ -z "$sha" ] && continue
+            if ! git log -1 --format=%B "$sha" | grep -qiE '^Signed-off-by: .+ <.+@.+>'; then
+              echo "::error::提交 $sha 缺少 DCO 签署行 (Signed-off-by)。请使用 git commit -s"
+              MISSING=1
+            fi
+          done < <(git rev-list "$BASE..$HEAD")
+          if [ "$MISSING" -ne 0 ]; then
+            echo "::error::存在未签署 DCO 的提交，详见 CONTRIBUTING.md 第 5 节"
+            exit 1
+          fi
+          echo "所有提交均已正确签署 DCO"

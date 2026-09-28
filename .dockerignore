@@ -1,0 +1,54 @@
+# ── 版本控制与本地环境 ────────────────────────────────────────────────
+.git
+.gitignore
+.github
+.gitattributes
+
+# ── 环境变量：绝不允许进入镜像 ────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.cf-secrets.json
+
+# ── 依赖与构建产物（镜像内会重新安装/构建）────────────────────────────
+node_modules
+.next
+out
+dist
+build
+coverage
+.vercel
+.netlify
+.wrangler
+.open-next
+
+# ── 测试与工具 ────────────────────────────────────────────────────────
+tests
+test-results
+playwright-report
+*.test.ts
+*.spec.ts
+jest.config.js
+playwright.config.ts
+
+# ── 文档（不需要进入运行时镜像）──────────────────────────────────────
+docs
+*.md
+!README.md
+
+# ── 编辑器与系统文件 ─────────────────────────────────────────────────
+.vscode
+.idea
+.DS_Store
+*.swp
+*.log
+npm-debug.log*
+
+# ── 备份与临时文件 ───────────────────────────────────────────────────
+*.bak
+*.backup-*
+*.backup
+*.old
+*.tmp

@@ -18,10 +18,21 @@
   package = "@netlify/plugin-nextjs"
 
 # ─── Geo / Security note ───
-# The CN region-block in src/proxy.ts reads x-vercel-ip-country first, then
-# falls back to cf-ipcountry (line 52-57). Since app.lokfeel.com sits behind
-# Cloudflare (orange-cloud), cf-ipcountry IS present, so the block works on
-# Netlify without any extra Edge Function.
+# The region/CORS policy lives in src/config/region-policy.ts and is executed by
+# the middleware at the REPO ROOT (`proxy.ts`) — Next.js 16 does not read
+# src/proxy.ts. It reads x-vercel-ip-country first, then falls back to
+# cf-ipcountry. Since app.lokfeel.com sits behind Cloudflare (orange-cloud),
+# cf-ipcountry IS present, so the block works on Netlify without any extra
+# Edge Function. Verify with `npm run verify:geo`.
+#
+# ─── Bot module note ───
+# The bot/demo-account system is a DEFAULT-OFF optional module (P0-5).
+# Since 2026-09-28 the CODE default is disabled (BOT_ENGINE_ENABLED unset = off),
+# matching the distribution default in .env.example / docker-compose.yml.
+# This C-end production deployment explicitly sets BOT_ENGINE_ENABLED=true
+# (Netlify site env, contexts: production / branch-deploy / deploy-preview)
+# so the demo-bot capability keeps running after the default flip.
+# Verify with `npm run verify:bot`; check status via /api/health → botModule.
 
 # ─── Scheduled cron runner (replaces Vercel Cron) ───
 # One hourly Netlify scheduled function (source: netlify/functions/cron-runner.ts)
