@@ -58,13 +58,20 @@ export async function POST(
       );
     }
 
+    // P0-5 schema 拆分：Profile 不再持有 botProfile 反向关系，改批量二次查询
+    const botInterestRows = await db.botProfile.findMany({
+      where: { profileId: { in: [senderProfile.id, receiverProfile.id] } },
+      select: { profileId: true, interests: true },
+    });
+    const botInterestsByProfileId = new Map(botInterestRows.map(b => [b.profileId, b.interests]));
+
     // 构建AI提示词
     const prompt = buildPitchPrompt({
       sender: {
         name: senderProfile.displayName,
         age: senderProfile.age,
         bio: senderProfile.bio,
-        interests: extractInterests(senderProfile),
+        interests: extractInterests(senderProfile, botInterestsByProfileId.get(senderProfile.id)),
         attachmentStyle: senderProfile.attachmentStyle,
         loveLanguage: senderProfile.loveLanguage,
         city: senderProfile.city,
@@ -74,7 +81,7 @@ export async function POST(
         name: receiverProfile.displayName,
         age: receiverProfile.age,
         bio: receiverProfile.bio,
-        interests: extractInterests(receiverProfile),
+        interests: extractInterests(receiverProfile, botInterestsByProfileId.get(receiverProfile.id)),
         attachmentStyle: receiverProfile.attachmentStyle,
         loveLanguage: receiverProfile.loveLanguage,
         city: receiverProfile.city,
@@ -222,12 +229,12 @@ Requirements:
 /**
  * 从Profile提取兴趣
  */
-function extractInterests(profile: any): string[] {
+function extractInterests(profile: any, botInterests?: string | null): string[] {
   const interests: string[] = [];
 
-  // 从BotProfile获取兴趣
-  if (profile.botProfile?.interests) {
-    interests.push(...jsonArr(profile.botProfile.interests));
+  // P0-5 拆分后由调用方按 profileId 二次查询传入（原 profile.botProfile.interests）
+  if (botInterests) {
+    interests.push(...jsonArr(botInterests));
   }
 
   // 从personalityData解析

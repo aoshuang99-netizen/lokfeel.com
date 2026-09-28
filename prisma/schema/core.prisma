@@ -1,0 +1,1531 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../src/generated"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH — NextAuth v5 compatible models
+// ═══════════════════════════════════════════════════════════════
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  
+  // Auth
+  password      String?
+  role          UserRole  @default(USER)
+  tokenVersion  Int       @default(0)  // bumped on password change/reset to invalidate all previously-issued JWT sessions
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Bot/Digital User Flags
+  isBot         Boolean   @default(false)  // 标记是否为数字用户
+  botType       String?                    // "simulation" | "training" | "seed"
+  botConfig     String?                    // 数字用户行为配置（JSON字符串存储）
+  
+  // Email Verification
+  verificationTokens VerificationToken[] @relation("UserVerificationTokens")
+  
+  // Profile
+  profile       Profile?
+  
+  // Matching
+  sentMatches     Match[]       @relation("SentMatches")
+  receivedMatches Match[]       @relation("ReceivedMatches")
+  matchReactions  MatchReaction[]
+  
+  // Chat
+  // P1-6 阶段 5：原 `chatRooms ChatRoomMember[]` / `messages Message[]` 关系
+  // 随 Legacy 三表删除而移除。
+  
+  // IM Module
+  conversationsA       Conversation[]       @relation("ConversationUserA")
+  conversationsB       Conversation[]       @relation("ConversationUserB")
+  imMessages           IMMessage[]          @relation("IMMessageSender")
+  messageReceipts      MessageReceipt[]
+  messageReactions     MessageReaction[]
+  imParticipants       ConversationParticipant[]
+  presence             UserPresence?
+  powerBoardRule       PowerBoardRule?
+  consentRequestsMade  ConsentRequest[]     @relation("ConsentRequester")
+  consentRequestsRecv  ConsentRequest[]     @relation("ConsentTarget")
+  consentGrantsMade    ConsentGrant[]       @relation("ConsentGranter")
+  consentGrantsRecv    ConsentGrant[]       @relation("ConsentGrantee")
+  auditLogs            AuditLog[]
+  
+  // Payments
+  subscriptions   Subscription[]
+  payments        Payment[]
+  
+  // Notifications
+  notifications   Notification[]
+  
+  // Admin
+  adminAudits     AdminAudit[]  @relation("AdminAuditActor")
+  
+  // RBAC — 管理角色关联
+  adminRoles      AdminUserRole[]
+  
+  // Analytics
+  analyticsEvents AnalyticsEvent[]
+
+  // Safety & Moderation
+  reportsMade     UserReport[]  @relation("ReportsMade")
+  reportsReceived UserReport[]  @relation("ReportsReceived")
+  
+  // Block List
+  blocksGiven    Block[]  @relation("BlockerRelations")
+  blocksReceived Block[]  @relation("BlockedRelations")
+
+  // Sincerity
+  sincerityWallet SincerityWallet?
+
+  // Credit Card Verification (age + identity proof, no charge)
+  cardVerified     Boolean       @default(false)
+  cardVerifiedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Soft delete (v3.0)
+  deletedAt  DateTime?
+
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([isBot])                     // P1: AutoMatch bot 查找
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String   // email address
+  token      String   @unique // the 6-digit code
+  expires    DateTime
+  userId     String?  // optional link to user
+  user       User?    @relation("UserVerificationTokens", fields: [userId], references: [id], onDelete: Cascade)
+  used       Boolean  @default(false)
+  useCount   Int      @default(0)  // Track usage count for replay attack prevention
+  maxUses    Int      @default(1)  // Maximum allowed uses (1 for one-time tokens)
+  lastUsedAt DateTime?             // Track when token was last used
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+  @@index([identifier])
+  @@index([userId])
+  @@index([expires])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// USER PROFILE — Relationship structure blueprint
+// ═══════════════════════════════════════════════════════════════
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Basic Info
+  displayName     String
+  age             Int
+  gender          Gender
+  genderIdentity  String?  // Free text for non-binary identification
+  sexuality       String   // "Straight", "Bisexual", "Pansexual", "Queer", "Lesbian", "Gay", "Fluid", etc.
+  bio             String?
+  avatar          String?  // Upload URL
+  avatarType      String?  // "photo" | "cartoon"
+  galleryPhotos   String   @default("[]")  // JSON: string[] - User photo album URLs
+  city            String?
+  country         String?  @default("US")
+  
+  // Relationship Blueprint (核心差异化数据)
+  relationshipGoal  RelationshipGoal @default(LONG_TERM)
+  attachmentStyle   String?           // "Secure", "Anxious-Preoccupied", "Dismissive-Avoidant", "Fearful-Avoidant"
+  communicationStyle String?          // "Direct", "Reflective", "Expressive", "Analytical"
+  conflictResolution String?          // "Collaborative", "Compromising", "Accommodating", "Competing", "Avoiding"
+  loveLanguage      String?          // "Words of Affirmation", "Quality Time", "Physical Touch", "Acts of Service", "Gifts"
+  boundaries        String?          // JSON array of boundary descriptions
+  dealbreakers      String?          // JSON array
+  lifePriorities    String?          // JSON array: "Career", "Family", "Adventure", "Stability", etc.
+  emotionalAvailability String?      // "Fully Available", "Building Trust", "Processing Past", "Needs Space"
+  
+  // ═══════════════════════════════════════════════════════════════
+  // NEW: User Preference Tags for Matching (最多5个)
+  // ═══════════════════════════════════════════════════════════════
+  selectedTags      String          @default("[]")  // JSON: string[] - 用户选择的标签
+
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE B: Kink & Power Dynamics Profile
+  // ═══════════════════════════════════════════════════════════════
+  domSubRole          DomSubRole?          // User's primary role identity
+  preferredRole       DomSubRole?          // Preferred role in a partner
+  kinkExperienceLevel KinkExperienceLevel?  // Experience level in kink dynamics
+  kinkInterests       String  @default("[]")  // JSON: string[] - selected kink categories
+  hardLimits          String  @default("[]")  // JSON: string[] - absolute boundaries
+  
+  // Preferences for matching
+  preferredAgeMin    Int?
+  preferredAgeMax    Int?
+  preferredGender    String?
+  preferredDistance   Int?            // Max distance in miles
+  preferredLocation  String?
+  
+  // Matching score cache (denormalized for performance)
+  compatibilityScore Int?            // 0-100 overall score
+  
+  // Status
+  profileStatus     ProfileStatus @default(DRAFT)
+  onboardingStep    Int           @default(0) // 0-5, tracks onboarding progress
+  isApproved        Boolean       @default(false)
+  isVerified        Boolean       @default(false)
+  
+  // Personality & Matching Data (for bot users)
+  personalityData   String?        // 完整人格数据存储（JSON字符串）
+  
+  // Admin notes
+  adminNotes        String?
+  
+  // Bot System Relation
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PRODUCT OPTIMIZATION: Elite Power Features
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Professional Info
+  occupation      String?       // Job title
+  company         String?       // Company name
+  industry        String?       // Industry sector
+  linkedInVerified Boolean      @default(false)
+  verificationBadge String?     // "VERIFIED", "ELITE", etc.
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([gender])
+  @@index([relationshipGoal])
+  @@index([profileStatus])
+  @@index([compatibilityScore])
+  @@index([linkedInVerified])
+  @@index([gender, profileStatus])
+  @@index([isApproved])
+  @@index([attachmentStyle])        // BUG-02 FIX: Discover API 过滤加速
+  @@index([city])                  // BUG-02 FIX: Discover API 城市过滤加速
+  // Discover API 加速索引
+  @@index([onboardingStep])          // P0: Discover/AutoMatch 核心过滤字段
+  @@index([age])                      // P0: 年龄范围查询
+  @@index([onboardingStep, gender])   // P0: 复合过滤 (step>=N + gender=G)
+  @@index([gender, age])              // P1: 先 gender 精确匹配再 age 范围查询
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MATCHING ENGINE — Core differentiation
+// ═══════════════════════════════════════════════════════════════
+
+model Match {
+  id              String         @id @default(cuid())
+  
+  // Participants
+  senderId        String
+  sender          User           @relation("SentMatches", fields: [senderId], references: [id])
+  receiverId      String
+  receiver        User           @relation("ReceivedMatches", fields: [receiverId], references: [id])
+  
+  // Matching Data
+  matchScore      Float          // 0-100 compatibility score
+  matchReason     String         // AI-generated explanation
+  conflictWarnings String?       // JSON array of potential conflicts
+  
+  // Compatibility breakdown (denormalized)
+  attachmentCompat   Float?      // 0-100
+  communicationCompat Float?     // 0-100
+  conflictCompat     Float?      // 0-100
+  valuesCompat       Float?      // 0-100
+  lifestyleCompat    Float?      // 0-100
+  
+  // Status
+  status          MatchStatus    @default(PENDING)
+  matchType       MatchType      @default(WEEKLY)
+  
+  // Reaction tracking
+  matchReactions  MatchReaction[]
+  senderAction      MatchAction?
+  receiverAction    MatchAction?
+  
+  // Connection
+  // P1-6 阶段 5：原 `chatRoom ChatRoom?` 关系随 ChatRoom 表删除而移除。
+  // 会话入口改由 Conversation.matchId 反查（见 api/matches/[id]/route.ts）。
+
+  // Admin
+  reviewedBy       String?
+  reviewNotes      String?
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PRODUCT OPTIMIZATION: Elite Power Features
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Pitch Message (申请信)
+  pitchMessage    String?         // 50-200字申请信
+  pitchTone       String?        // "casual", "sincere", "playful", "direct"
+  aiAssisted      Boolean        @default(false)  // 是否使用AI辅助
+  
+  // Sincerity Gift (诚意值附赠)
+  giftAmount      Int            @default(0)  // 附赠诚意值数量
+  
+  // Inbox Management (收件箱管理)
+  isUnread        Boolean        @default(true)  // 是否未读
+  inboxPriority   Float?         // 收件箱排序权重 (计算值)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt  DateTime?            // Auto-expire after 7 days if not acted on
+  
+  // Soft delete (v3.0)
+  deletedAt  DateTime?
+  
+  @@unique([senderId, receiverId], map: "unique_match_pair")
+  @@index([status])
+  @@index([matchScore])
+  @@index([matchType])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([senderId, receiverId])
+  @@index([receiverId, senderId])    // P2: OR 反向查询优化
+  @@index([isUnread])
+  @@index([inboxPriority])
+  @@index([deletedAt])
+}
+
+model MatchReaction {
+  id          String   @id @default(cuid())
+  matchId     String
+  match       Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  reaction    MatchAction
+  feedback    String?  // Optional feedback on why
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([matchId, userId])
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// P1-6 阶段 5（2026-09-28）：Legacy 三表 ChatRoom / ChatRoomMember / Message
+// 已从 schema 与数据库删除。血缘 126/126 已迁移至 IMMessage，门禁 GO。
+// 历史与执行手册：docs/CHAT-MERGE-RUNBOOK.md · docs/CHAT-MERGE-AUDIT.md
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// IM MODULE — Next-Gen Chat Infrastructure
+// ═══════════════════════════════════════════════════════════════
+
+// Conversation — logical session layer
+model Conversation {
+  id            String             @id @default(cuid())
+  
+  // Participants
+  userAId       String
+  userA         User               @relation("ConversationUserA", fields: [userAId], references: [id])
+  userBId       String
+  userB         User               @relation("ConversationUserB", fields: [userBId], references: [id])
+  initiatorId   String             // who started the conversation
+  
+  // Backlink to ChatRoom (migration bridge)
+  //
+  // ⚠️ 阶段 5 的 schema 编辑必须**保留 chatRoomId 标量列与唯一索引**，只删掉
+  //    `chatRoom` 关系字段（关系指向的 ChatRoom model 会被删除）。
+  //    原因：改造前 user 收藏的 /dashboard/chats/<ChatRoom.id> 旧链接里没有
+  //    Conversation.id，只能靠本列反查 —— 删掉它等于把老用户挡在"会话不存在"之外（G-8）。
+  //    `lib/im/resolve.ts` 的路径 2 就建立在本列的 @unique 索引上。
+  chatRoomId    String?            @unique
+  // P1-6 阶段 5：原 `chatRoom ChatRoom? @relation(...)` 关系随 ChatRoom 表删除而移除。
+  // 标量列 chatRoomId 与 @unique 索引**刻意保留**（G-8 旧书签别名回退，
+  // 见 lib/im/resolve.ts 路径 2）。数据库侧同步删掉了本列的外键约束。
+
+  // ═══════════════════════════════════════════════════════════════
+  // 匹配关联（G-10，阶段 5 前置修复）
+  //
+  // 发现路径：阶段 5 的 schema 清理清单原本只列了 Vault 字段。核对 `ChatRoom` 模型时
+  // 发现 `matchId` / `match.matchScore` **只存在于 ChatRoom**，而会话列表（`lib/im/list.ts`）
+  // 与会话详情都在向 UI 输出 matchScore —— 删表会让"匹配分"整块消失，属静默功能回退。
+  //
+  // 这里刻意**只加标量列、不加 relation**：relation 会要求 Match 侧反向声明字段，
+  // 扩大 schema 改动面；而 matchScore 只需要一次批量查询即可补齐（见 list.ts）。
+  // ═══════════════════════════════════════════════════════════════
+  matchId       String?
+  
+  // State
+  state         ConversationState  @default(ACTIVE)
+  stateReason   String?            // reason for state change
+  
+  // Female Control
+  controllingUserId String?        // who has control (usually female)
+  activeBoundaryVersion String?    // current Power Board version
+  
+  // Statistics (denormalized for performance)
+  lastMessageAt DateTime?
+  messageCount  Int                @default(0)
+  unreadCountA  Int                @default(0)
+  unreadCountB  Int                @default(0)
+  
+  // Per-user settings (JSON for flexibility)
+  settings      String?            // JSON: { userA: {muted, pinned}, userB: {muted, pinned} }
+  
+  // ═══════════════════════════════════════════════════════════════
+  // Vault —— 24h 限时对话
+  //
+  // P1-6 阶段 4（G-1 修复）：以下字段此前**只存在于 ChatRoom**。方案 A 确定 Conversation
+  // 为终局模型后，若不在删除 ChatRoom 前把它们迁移过来，阶段 5 会**整体丢失**：
+  //   · 女性用户的「终结对话」权限（vaultStatus / revokedAt / revokeReason）
+  //   · 24h 倒计时的延长审计（extensionCount / extendedAt / extendedBy）
+  //   · 截图防护的计数与取证（screenshotCount / lastScreenshotAt）
+  // 迁移脚本见 scripts/chat-merge/migrate-vault.ts（幂等 + dry-run）。
+  // ═══════════════════════════════════════════════════════════════
+
+  // Vault expiry timestamp (null = no Vault)
+  vaultExpiresAt DateTime?
+
+  // Vault 四态：ACTIVE / EXTENDED（已延长）/ REVOKED（被女性终止）/ EXPIRED（超时）
+  vaultStatus    VaultStatus @default(ACTIVE)
+
+  // 延长审计
+  extensionCount Int       @default(0)
+  extendedAt     DateTime?
+  extendedBy     String?
+
+  // 女性特权：终止对话
+  revokedAt      DateTime?
+  revokedBy      String?
+  revokeReason   String?
+
+  // 隐私防护
+  screenshotCount  Int       @default(0)
+  lastScreenshotAt DateTime?
+  
+  // Consent cache
+  cachedConsentState ConsentState   @default(CONSENT_NONE)
+  
+  // Relations
+  participants  ConversationParticipant[]
+  imMessages    IMMessage[]
+  receipts      MessageReceipt[]
+  consentRequests ConsentRequest[]
+  consentGrants ConsentGrant[]
+  
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  
+  // Soft delete (v3.0)
+  deletedAt     DateTime?
+  
+  @@unique([userAId, userBId], map: "unique_conversation_pair")
+  @@index([state])
+  @@index([lastMessageAt])
+  @@index([userAId])
+  @@index([userBId])
+  @@index([controllingUserId])
+  @@index([vaultExpiresAt])
+  // P1-6 阶段 4（G-1）：Vault 状态查询索引（与 ChatRoom 侧保持一致）
+  @@index([vaultStatus])
+  // P1-6 阶段 5（G-10）：匹配分补迁后按 matchId 反查
+  @@index([matchId])
+  @@index([deletedAt])
+}
+
+// ConversationParticipant — per-user conversation membership & state
+model ConversationParticipant {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Per-user state
+  isMuted         Boolean      @default(false)
+  isPinned        Boolean      @default(false)
+  isArchived      Boolean      @default(false)
+  lastReadSeq     Int          @default(0)    // last read sequence number
+  lastReadAt      DateTime?
+  
+  // Subscription
+  subscribedAt    DateTime     @default(now())
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([userId, isMuted])
+  @@index([userId, isPinned])
+}
+
+// IMMessage — next-gen message model
+model IMMessage {
+  id              String           @id @default(cuid())
+  conversationId  String
+  conversation    Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Core fields
+  clientMsgId     String?          @unique  // client-generated ID for dedup
+
+  // P1-6 阶段 3 迁移桥：指向被迁移的 Legacy Message.id。
+  // 幂等锚点 —— 迁移脚本以此字段判定"已迁/未迁"，绝不重复插入。
+  // 阶段 5（Legacy 表删除后）可安全移除本字段。
+  legacyMessageId String?          @unique
+
+  senderId        String
+  sender          User             @relation("IMMessageSender", fields: [senderId], references: [id])
+  receiverId      String
+  seq             Int              // server-assigned sequence number (monotonic per conversation)
+  
+  // Content
+  msgType         IMMessageType    @default(TEXT)
+  payload         String           // message content (plaintext or E2EE ciphertext)
+  metadata        String?          // JSON: media info, links, etc.
+  
+  // Encryption
+  encryptionMode  EncryptionMode   @default(SERVER)
+  ephemeralPublicKey String?       // for E2EE key exchange
+  
+  // Boundary & compliance
+  boundaryVersion String?          // current Power Board version
+  complianceTags  String           @default("[]")  // JSON: string[] - ["consent_granted", "media_level_2", "pace_ok"]
+  consentState    ConsentState     @default(CONSENT_NONE)
+  mediaLevel      MediaAccessLevel @default(L0_TEXT)
+  ruleResult      RuleEngineResult @default(PASS)
+  
+  // Reply
+  replyToMsgId    String?
+  replyToPreview  String?          // JSON: {msgId, senderId, previewText, mediaLevel}
+  
+  // Edit & Delete
+  isEdited        Boolean          @default(false)
+  editedAt        DateTime?
+  isDeleted       Boolean          @default(false)
+  deletedAt       DateTime?
+  deletedBy       String?          // who deleted (sender or admin)
+  
+  // Media metadata
+  mediaMetadata   String?          // JSON: {mediaId, level, mimeType, sizeBytes, width, height, durationMs, thumbnailUrl, watermarkHash, isExpiring, expiresAt}
+  
+  // Delivery status
+  status          MessageDeliveryStatus @default(SENT)
+
+  // Receipts
+  receipts        MessageReceipt[]
+
+  // Reactions
+  reactions       MessageReaction[]
+
+  createdAt       DateTime         @default(now())
+  
+  @@index([conversationId, seq])
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([clientMsgId])
+  @@index([createdAt])
+  @@index([msgType])
+  @@index([isDeleted])
+}
+
+// MessageReceipt — per-recipient delivery & read receipts
+model MessageReceipt {
+  id              String       @id @default(cuid())
+  messageId       String
+  message         IMMessage    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId          String       // who this receipt belongs to
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Receipt state
+  deliveredAt     DateTime?    // when message was delivered to this user
+  readAt          DateTime?    // when message was read by this user
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  @@unique([messageId, userId])
+  @@index([userId, readAt])
+  @@index([conversationId])
+}
+
+// MessageReaction — emoji reactions on messages
+model MessageReaction {
+  id          String    @id @default(cuid())
+  messageId   String
+  message     IMMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Emoji character
+  emoji       String
+
+  createdAt   DateTime  @default(now())
+
+  // Each user can only add one reaction per emoji per message
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
+}
+
+// UserPresence — online/offline status tracking
+model UserPresence {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Presence state
+  status          PresenceStatus  @default(OFFLINE)
+  statusMessage   String?         // custom status text
+  lastSeenAt      DateTime?       // last heartbeat / activity timestamp
+  
+  // Device info
+  deviceId        String?         // current active device
+  platform        String?         // "ios", "android", "web"
+  appVersion      String?         // client version
+  
+  // Connection
+  connectionId    String?         // WebSocket connection ID
+  connectedAt     DateTime?       // when current session started
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([status])
+  @@index([lastSeenAt])
+  @@index([userId, status])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONSENT MANAGEMENT — Granular permission control
+// ═══════════════════════════════════════════════════════════════
+
+model ConsentRequest {
+  id              String              @id @default(cuid())
+  requesterId     String
+  requester       User                @relation("ConsentRequester", fields: [requesterId], references: [id])
+  targetId        String
+  target          User                @relation("ConsentTarget", fields: [targetId], references: [id])
+  conversationId  String
+  conversation    Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Request details
+  consentType     ConsentRequestType  @default(MEDIA)
+  requestedLevel  MediaAccessLevel    @default(L0_TEXT)
+  contextMsgId    String?             // message that triggered this request
+  reason          String?             // user-visible reason
+  
+  // Preview (encrypted)
+  previewPayload  String?             // encrypted preview content
+  
+  // State
+  state           ConsentState        @default(CONSENT_PENDING)
+  respondedAt     DateTime?
+  responseNote    String?
+  grantToken      String?             @unique  // authorization token for verification
+  
+  // Validity
+  expiresAt       DateTime
+  
+  createdAt       DateTime            @default(now())
+  
+  @@index([requesterId])
+  @@index([targetId])
+  @@index([conversationId])
+  @@index([state])
+  @@index([expiresAt])
+  @@index([consentType])
+}
+
+model ConsentGrant {
+  id              String              @id @default(cuid())
+  granterId       String
+  granter         User                @relation("ConsentGranter", fields: [granterId], references: [id])
+  granteeId       String
+  grantee         User                @relation("ConsentGrantee", fields: [granteeId], references: [id])
+  conversationId  String
+  conversation    Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Grant details
+  consentType     ConsentRequestType  @default(MEDIA)
+  grantedLevel    MediaAccessLevel    @default(L0_TEXT)
+  
+  // Validity
+  grantedAt       DateTime            @default(now())
+  expiresAt       DateTime?           // null = permanent
+  
+  // Revocation
+  isRevoked       Boolean             @default(false)
+  revokedAt       DateTime?
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([granterId])
+  @@index([granteeId])
+  @@index([conversationId])
+  @@index([consentType])
+  @@index([isRevoked])
+  @@index([expiresAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POWER BOARD — Rule engine for boundary control
+// ═══════════════════════════════════════════════════════════════
+
+model PowerBoardRule {
+  id              String   @id @default(cuid())
+  userId          String   @unique  // each user has one active rule set
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Version control
+  version         String   @default("1.0.0")  // semantic versioning
+  isActive        Boolean  @default(true)
+  
+  // Pace Control (JSON)
+  paceConfig      String   // JSON: {maxMessagesPerHour, maxMessagesPerDay, responseWindowHours, enforceCooldown, cooldownMinutes, showRemainingQuota}
+  
+  // Media Policy (JSON)
+  mediaConfig     String   // JSON: {defaultLevel, perUserOverride, requireConsentForUpgrade, autoBlurImages, watermarkAllMedia}
+  
+  // Content Filter (JSON)
+  filterConfig    String   // JSON: {blockedKeywords, blockedPatterns, blockExplicitImages, autoFlagProfanity, blockUnsolicitedContact, sensitivityLevel}
+  
+  // Auto Response (JSON)
+  autoResponse    String?  // JSON: {enabled, messageTemplate, triggerAfterHours, onlyFirstMessage}
+  
+  // Privacy Settings (JSON)
+  privacyConfig   String   // JSON: {preferredEncryption, allowScreenshotNotifications, autoExpireMessages, expireAfterDays, hideOnlineStatus, hideReadReceipts}
+  
+  // Notification Preferences (JSON)
+  notifConfig     String?  // JSON: {pushEnabled, soundEnabled, previewEnabled, quietHoursEnabled, quietHoursStart, quietHoursEnd}
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([version])
+  @@index([isActive])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIT LOG — Immutable audit trail with hash chain
+// ═══════════════════════════════════════════════════════════════
+
+model AuditLog {
+  id              String   @id @default(cuid())
+  userId          String   // who this log belongs to
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId  String?  // related conversation
+  
+  // Action details
+  action          String   // "boundary_changed", "consent_granted", "message_blocked", "rule_violation", "security_event"
+  actorId         String?  // who performed the action
+  targetId        String?  // who was affected
+  
+  // Details (JSON - varies by action type)
+  details         String?  // JSON with full context
+  
+  // Hash chain (tamper detection)
+  prevHash        String?  // hash of previous entry
+  entryHash       String   // hash of this entry
+  
+  // Metadata
+  ipAddress       String?
+  userAgent       String?
+  deviceId        String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([conversationId])
+  @@index([action])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+
+model Notification {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        NotificationType
+  title       String
+  body        String
+  data        String?            // JSON payload for deep links
+  actionUrl   String?
+  
+  isRead      Boolean            @default(false)
+  readAt      DateTime?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, isRead, createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAYMENTS & SUBSCRIPTIONS
+// ═══════════════════════════════════════════════════════════════
+
+model Subscription {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  plan              SubscriptionPlan
+  status            SubscriptionStatus @default(ACTIVE)
+  
+  // Stripe
+  stripeCustomerId  String?           @unique
+  stripePriceId     String?
+  stripeSubscriptionId String?        @unique
+  stripeCurrentPeriodEnd DateTime?
+  
+  // Matching perks
+  weeklyMatchLimit  Int               @default(5)
+  canInitiateChat   Boolean           @default(true)
+  canViewFullProfile Boolean          @default(true)
+  
+  startsAt          DateTime          @default(now())
+  endsAt            DateTime?
+  cancelledAt       DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Soft delete (v3.0)
+  deletedAt  DateTime?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([userId, status])
+}
+
+model Payment {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  stripePaymentIntentId String?     @unique
+  amount          Float            // In USD
+  currency        String           @default("usd")
+  status          PaymentStatus    @default(PENDING)
+  
+  description     String?
+  metadata        String?          // JSON
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Soft delete (v3.0)
+  deletedAt  DateTime?
+  
+  @@index([userId])
+  @@index([deletedAt])
+  @@index([createdAt, status])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN & ANALYTICS
+// ═══════════════════════════════════════════════════════════════
+
+// 统一管理审计日志 (v3.0: 合并 AdminLog + AdminRoleAudit)
+model AdminAudit {
+  id           String        @id @default(cuid())
+  
+  // 操作者
+  actorId      String
+  actor        User          @relation("AdminAuditActor", fields: [actorId], references: [id])
+  
+  // 分类
+  category     AuditCategory  // "user" | "match" | "payment" | "rbac" | "system" | ...
+  
+  // 操作
+  action       String        // "create" | "update" | "delete" | "ban" | "grant_role" | ...
+  
+  // 目标对象
+  targetType   String?       // "User" | "Match" | "Payment" | "AdminRole" | ...
+  targetId     String?       // 目标记录 ID
+  
+  // 变更内容
+  changes      String?       // JSON: { before: {...}, after: {...} }
+  details      String?       // 额外上下文
+  
+  // 原因（RBAC 变更等需要理由的操作）
+  reason       String?
+  
+  // 元数据
+  ipAddress    String?
+  userAgent    String?
+  
+  createdAt    DateTime      @default(now())
+  
+  @@index([actorId])
+  @@index([category, createdAt])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+// 审计分类枚举 (v3.0)
+enum AuditCategory {
+  USER
+  MATCH
+  CHAT
+  PAYMENT
+  CONTENT
+  BOT
+  AI_CREATIVE
+  AI_SUPPORT
+  VIP
+  ANALYTICS
+  SYSTEM
+  RBAC
+}
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  event         String                     // "user.registered", "swipe.right", "message.sent", etc.
+  eventCategory String   @default("")      // "user"|"match"|"chat"|"revenue"|"admin"
+  properties    String?                    // JSON with event data
+  
+  sessionId     String?
+  deviceId      String   @default("")      // device fingerprint
+  pagePath      String   @default("")      // page path
+  platform      String   @default("web")   // web|ios|android
+  appVersion    String   @default("")      // app version
+  
+  ipAddress     String?
+  country       String?                    // GeoIP country
+  city          String?                    // GeoIP city
+  
+  // UTM tracking
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmContent    String?
+  utmTerm       String?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, event, createdAt])
+  @@index([event, createdAt])
+  @@index([eventCategory, createdAt])
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model SystemConfig {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RBAC — Role-Based Access Control (管理后台权限系统)
+// ═══════════════════════════════════════════════════════════════
+
+// 管理员角色枚举
+enum AdminRole {
+  SUPER_ADMIN   // 超级管理员：全部权限，可管理其他管理员和角色
+  ADMIN         // 管理员：用户/匹配/内容/支付全管理
+  MODERATOR     // 审核员：举报审核/内容审核/用户封禁
+  ANALYST       // 分析师：只读数据分析，可导出
+  SUPPORT       // 客服：用户查看+基础操作，举报处理
+  CREATIVE      // 创意运营：AI推广图全管理
+  VIP_AGENT     // VIP客服：VIP收件箱专属
+}
+
+// 权限分类
+enum PermissionCategory {
+  USER           // 用户管理
+  MATCHING       // 匹配管理
+  CHAT           // 聊天管理
+  PAYMENT        // 支付管理
+  CONTENT        // 内容审核
+  AI_CREATIVE    // AI推广图
+  AI_SUPPORT     // AI客服
+  VIP            // VIP管理
+  ANALYTICS      // 数据分析
+  SYSTEM         // 系统配置
+  RBAC           // 权限管理
+  BOT            // Bot系统
+}
+
+// 单个权限定义
+model AdminPermission {
+  id          String   @id @default(cuid())
+  code        String   @unique  // "user.view", "user.ban", "payment.refund"
+  name        String             // "查看用户", "封禁用户", "退款操作"
+  description String?
+  category    PermissionCategory
+  
+  // 元数据
+  isActive    Boolean  @default(true)
+  isDangerous Boolean  @default(false)  // 高危权限（如删除/退款）需二次确认
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // 关联
+  rolePermissions AdminRolePermission[]
+  
+  @@index([category])
+  @@index([isActive])
+}
+
+// 自定义角色 — 管理员可在 UI 中动态创建（v3.0+）
+model CustomRole {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  isSystem    Boolean    @default(false)  // 系统角色不可删除
+  permissions String                       // JSON数组: '["user.view","user.ban",...]'（SQLite不支持原生数组）
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  userRoles   AdminUserRole[]
+  
+  @@index([isSystem])
+}
+
+// 角色-权限关联（多对多）
+model AdminRolePermission {
+  id           String   @id @default(cuid())
+  role         AdminRole
+  permissionId String
+  permission   AdminPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  grantedAt    DateTime @default(now())
+  grantedBy    String?  // 授权人ID
+  
+  // 复合唯一约束
+  @@unique([role, permissionId])
+  @@index([role])
+}
+
+// 管理员-角色关联（多对多：一个管理员可有多个角色）
+model AdminUserRole {
+  id           String   @id @default(cuid())
+  
+  // 关联到 User 表（复用现有 User 模型）
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  role         AdminRole
+  
+  // 自定义角色扩展（v3.0+）：可选，叠加在系统角色之上
+  customRoleId String?
+  customRole   CustomRole? @relation(fields: [customRoleId], references: [id])
+  
+  // 管理员扩展信息
+  department   String?  // "operations", "safety", "growth", "creative", "vip", "finance"
+  title        String?  // "运营经理", "客服主管"
+  isActive     Boolean  @default(true)
+  
+  // 时间
+  grantedAt    DateTime @default(now())
+  grantedBy    String?  // 授权人ID
+  expiresAt    DateTime? // 过期时间（可选，用于临时权限）
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@unique([userId, role])
+  @@index([userId])
+  @@index([role])
+}
+
+// AdminRoleAudit 已合并到 AdminAudit (v3.0)
+
+// ═══════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE B: Expanded Identity & Relationship Enums
+// ═══════════════════════════════════════════════════════════════
+
+enum Gender {
+  // Core identities
+  MAN
+  WOMAN
+  NON_BINARY
+  // Trans identities
+  TRANSGENDER_MAN
+  TRANSGENDER_WOMAN
+  // Non-binary spectrum
+  GENDERQUEER
+  GENDERFLUID
+  AGENDER
+  BIGENDER
+  PANGENDER
+  ANDROGYNE
+  DEMIGENDER
+  NEUTROIS
+  TWO_SPIRIT
+  // Self-discovery
+  QUESTIONING
+  GENDER_NONCONFORMING
+  // Fallbacks
+  OTHER
+  PREFER_NOT_TO_SAY
+  // Legacy (backward compat)
+  MALE
+  FEMALE
+}
+
+enum DomSubRole {
+  // Core power dynamics
+  DOMINANT
+  SUBMISSIVE
+  SWITCH
+  // Positional
+  TOP
+  BOTTOM
+  // Specialized dynamics
+  BRAT
+  BRAT_TAMER
+  PRIMAL
+  RIGGER
+  ROPE_BUNNY
+  OWNER
+  PET
+  SADIST
+  MASOCHIST
+  DADDY_MOMMY
+  LITTLE
+  MASTEX
+  // Vanilla & exploring
+  VANILLA
+  EXPLORING
+  PREFER_NOT_TO_SAY
+}
+
+enum KinkExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  EXPERIENCED
+  EXPERT
+  PREFER_NOT_TO_SAY
+}
+
+enum RelationshipGoal {
+  // v3 onboarding standard values
+  MONOGAMY              // One & Only — committed exclusive connection
+  ETHICAL_NON_MONOGAMY  // Open Hearts — multiple connections, honest boundaries
+  POLYAMORY             // Many Loves — multiple meaningful relationships
+  CASUAL_DATING         // Go With Flow — no labels, see where it goes
+  FRIENDSHIP_FIRST      // Friends First — connection before romance
+  KINK_BDSM             // Power Play — exploring dynamics & desires
+  // Legacy values (kept for backward compat)
+  LONG_TERM
+  DATING
+  FRIENDSHIP
+  NOT_SURE
+}
+
+enum ProfileStatus {
+  DRAFT            // Onboarding in progress
+  PENDING_REVIEW   // Submitted, waiting for admin review
+  APPROVED         // Ready for matching
+  REJECTED         // Needs revision
+  DEACTIVATED      // User deactivated
+  BANNED           // Admin banned
+}
+
+enum MatchStatus {
+  PENDING          // Created, waiting for reactions
+  ACCEPTED         // Both accepted
+  REJECTED         // One or both rejected
+  EXPIRED          // Not acted upon within timeframe
+  CANCELLED        // Admin cancelled
+}
+
+enum MatchType {
+  WEEKLY           // Regular weekly match
+  BOOSTED          // Premium priority match
+  MANUAL           // Admin-curated match
+  AI_SUGGESTED     // AI recommendation (requires approval)
+}
+
+enum MatchAction {
+  INTERESTED       // "I'd like to connect"
+  PASS             // "Not for me right now"
+  MAYBE            // "Tell me more"
+  BLOCK            // "Don't match me with this person"
+  SUPER_LIKE      // "Super Like — highlight in recommendations"
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM           // Auto-generated messages
+  VOICE            // Future: voice notes
+}
+
+// IM Module Message Types
+enum IMMessageType {
+  TEXT
+  IMAGE
+  VOICE
+  FILE
+  SYSTEM
+  CONSENT_REQUEST
+  CONSENT_RESPONSE
+  RULE_UPDATE
+  TYPING
+  READ_RECEIPT
+}
+
+enum ConversationState {
+  ACTIVE
+  PAUSED         // one party paused
+  BLOCKED
+  EXPIRED        // auto-expired (e.g. Vault expired)
+  ARCHIVED
+}
+
+enum ConsentState {
+  CONSENT_NONE
+  CONSENT_PENDING
+  CONSENT_GRANTED
+  CONSENT_DENIED
+  CONSENT_EXPIRED
+}
+
+enum MediaAccessLevel {
+  L0_TEXT          // text only
+  L1_IMAGE         // static images
+  L2_VOICE         // voice messages
+  L3_VIDEO         // video / live calls
+  L4_LOCATION      // location sharing
+  L5_CONTACT       // contact info
+}
+
+enum RuleEngineResult {
+  PASS
+  SOFT_BLOCK      // suggest adjustment, can override
+  HARD_BLOCK      // forced block
+  PACE_LIMIT      // rate limit
+}
+
+enum EncryptionMode {
+  E2EE            // end-to-end encrypted
+  SERVER          // server-readable (safety mode)
+  HYBRID          // hybrid mode
+}
+
+enum MessageDeliveryStatus {
+  SENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum PresenceStatus {
+  ONLINE
+  AWAY
+  BUSY
+  OFFLINE
+}
+
+enum ConsentRequestType {
+  MEDIA
+  LOCATION
+  CONTACT
+  INTIMATE       // intimate content
+}
+
+enum NotificationType {
+  NEW_MATCH
+  MATCH_ACCEPTED
+  MATCH_REJECTED
+  NEW_MESSAGE
+  WEEKLY_DIGEST
+  PROFILE_APPROVED
+  PROFILE_REJECTED
+  SUBSCRIPTION_EXPIRED
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum SubscriptionPlan {
+  FREE
+  LADY_FREE
+  PREMIUM_MONTHLY
+  PREMIUM_YEARLY
+  LIFETIME
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PAST_DUE
+  TRIALING
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRODUCT OPTIMIZATION: Sincerity System & Vault
+// ═══════════════════════════════════════════════════════════════
+
+enum VaultStatus {
+  ACTIVE      // 正常进行中
+  EXTENDED    // 已延长
+  REVOKED     // 被女性终止
+  EXPIRED     // 时间到自动关闭
+}
+
+enum SincerityTransactionType {
+  EARN          // 赚取
+  SPEND         // 消费
+  RECEIVE_GIFT  // 收到礼物
+  SEND_GIFT     // 送出礼物
+  REFUND        // 退款
+}
+
+model SincerityWallet {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Balance
+  balance     Int      @default(0)      // 当前余额
+  totalEarned Int      @default(0)      // 累计获得
+  totalSpent  Int      @default(0)      // 累计消费
+  totalGifted Int      @default(0)      // 累计送出礼物
+  totalReceived Int    @default(0)      // 累计收到礼物
+  
+  // Tier System
+  tier        SincerityTier @default(BRONZE)
+  tierProgress Float     @default(0)    // 到下一级的进度 0-100
+  
+  // Stats
+  lastEarnedAt  DateTime?
+  lastSpentAt   DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  transactions SincerityTransaction[]
+  
+  @@index([tier])
+  @@index([balance])
+}
+
+model SincerityTransaction {
+  id          String   @id @default(cuid())
+  walletId    String
+  wallet      SincerityWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  
+  // Transaction Details
+  type        SincerityTransactionType
+  amount      Int
+  
+  // Source/Reason
+  source      String   // "PROFILE_COMPLETE", "DAILY_LOGIN", "MATCH_ACCEPTED", "PITCH_SEND", etc.
+  description String?  // 用户可见的描述
+  
+  // Related Entities
+  matchId     String?  // 关联的匹配
+  fromUserId  String?  // 送礼人
+  toUserId    String?  // 收礼人
+  message     String?  // 附言
+  
+  // Metadata
+  metadata    String?  // JSON for additional data
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([walletId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([source])
+}
+
+enum SincerityTier {
+  BRONZE      // 0-499
+  SILVER      // 500-1999
+  GOLD        // 2000-4999
+  PLATINUM    // 5000+
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAFETY & MODERATION — User Block List
+// ═══════════════════════════════════════════════════════════════
+
+model Block {
+  id          String   @id @default(cuid())
+  blockerId   String             // User who blocks
+  blocker     User   @relation("BlockerRelations", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId   String             // User who is blocked
+  blocked     User   @relation("BlockedRelations", fields: [blockedId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  // Prevent duplicate blocks
+  @@unique([blockerId, blockedId], name: "unique_block_pair")
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAFETY & MODERATION — User Reports
+// ═══════════════════════════════════════════════════════════════
+
+enum ReportReason {
+  INAPPROPRIATE_CONTENT
+  HARASSMENT
+  FAKE_PROFILE
+  SPAM
+  OFFENSIVE_BEHAVIOR
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED_NO_ACTION
+  RESOLVED_WARNING
+  RESOLVED_BANNED
+  DISMISSED
+}
+
+model UserReport {
+  id              String   @id @default(cuid())
+  
+  // Reporter (who made the report)
+  reporterId      String
+  reporter        User     @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  
+  // Reported user (who was reported)
+  reportedUserId  String
+  reportedUser    User     @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  
+  // Report details
+  reason          ReportReason
+  description     String?
+  
+  // Context (optional)
+  chatRoomId      String?
+  messageId       String?
+  
+  // Status tracking
+  status          ReportStatus @default(PENDING)
+  reviewedBy      String?  // Admin user ID
+  reviewedAt      DateTime?
+  adminNotes      String?
+  
+  // Resolution
+  actionTaken     String?  // "WARNING", "BAN", "NONE", etc.
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Soft delete (v3.0)
+  deletedAt       DateTime?
+  
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([deletedAt])
+  @@index([reporterId, reportedUserId, createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANALYTICS TRACKING — Event Definition & Aggregation
+// ═══════════════════════════════════════════════════════════════
+
+model AnalyticsEventDef {
+  id          String   @id @default(cuid())
+  name        String   @unique               // e.g. "user.registered"
+  category    String                         // "user"|"match"|"chat"|"revenue"|"admin"
+  description String   @default("")
+  properties  String   @default("{}")        // JSON Schema
+  isActive    Boolean  @default(true)
+  sampleRate  Float    @default(1.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AnalyticsDailyAgg {
+  id          String   @id @default(cuid())
+  date        DateTime                     // aggregation date
+  eventName   String                       // event name
+  metricName  String                       // "count"|"unique_users"|"avg_value"
+  value       Float                        // metric value
+  dimensions  String   @default("{}")      // JSON dimensions
+  createdAt   DateTime @default(now())
+
+  @@unique([date, eventName, metricName, dimensions])
+  @@index([date])
+  @@index([date, eventName])
+}

@@ -20,6 +20,11 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { evaluateOnlineTransition, createOnlineState } from '@/lib/bot-engine/modules/online-status';
 import { deserializeBotConfig } from '@/lib/bot-engine/config';
+import {
+  BOT_DISABLED_HTTP_STATUS,
+  botDisabledBody,
+  isBotEnabled,
+} from '@/config/bot-policy';
 
 export const dynamic = 'force-dynamic';
 // maxDuration is ignored on Vercel Hobby (hard limit: 10s)
@@ -73,6 +78,11 @@ export async function GET(request: Request) {
 
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // P0-5：Bot 模块总开关（默认关闭的可选模块）。鉴权之后判，避免匿名探测。
+  if (!isBotEnabled()) {
+    return NextResponse.json(botDisabledBody(), { status: BOT_DISABLED_HTTP_STATUS });
   }
 
   try {

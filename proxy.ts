@@ -1,171 +1,101 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import {
+  evaluateRegion,
+  getCountryFromHeaders,
+  getCacheControl,
+  isCorsAllowed,
+  isDebugPath,
+  SECURITY_HEADERS,
+} from './src/config/region-policy'
 
 /**
  * PROXY — Region Block + Security + CORS + Debug Endpoint Protection
  *
  * FEATURES:
- * 1. Block access from China (CN) mainland IP addresses on ALL pages
- *    (home, login, register, admin, dashboard, explore, etc.)
- * 2. Security headers on every response
- * 3. CORS restrictions for API routes
- * 4. Block debug/diagnostic endpoints from non-admin origins
+ * 1. 地域封禁（规则来自 `src/config/region-policy.ts`，**不再是本文件里的硬编码常量**）
+ * 2. 每个响应都带安全响应头
+ * 3. API 路由的 CORS 限制
+ * 4. 调试/诊断端点对外不可访问（要求 DEBUG_SECRET）
+ *
+ * P0-6（2026-09-28）：地域规则、CORS 白名单、缓存规则全部改为**配置驱动**
+ * （`GEO_*` / `CORS_*` 环境变量），使开源部署方能自定义而无需 fork 本文件。
+ * 默认值等于改造前的行为 —— 不设任何 env 时线上表现完全一致。
+ * 判定逻辑与策略解析在 `src/config/region-policy.ts`，那里有完整的
+ * "为什么"与可测试的纯函数；本文件只负责把请求接到判定上。
  *
  * NOTE: This replaces the deprecated `middleware.ts` file.
  * See: https://nextjs.org/docs/messages/middleware-to-proxy
  */
 
-// Blocked country codes — mainland China
-// NOTE: temporarily DISABLED (empty array) so the app is reachable from China
-// (owner access from GMT+8). Re-enable with ['CN'] ONLY after wiring IP_WHITELIST
-// into the check below (it is currently dead code) and adding the owner's static
-// IP, otherwise every CN visitor is redirected to /blocked. Compliance review
-// required before re-enabling a blanket CN region block.
-const BLOCKED_COUNTRIES: string[] = []
-
-// IP whitelist — always allow (add your home/office IPs here)
-const IP_WHITELIST: string[] = [
-  // Add Frank's IPs here to bypass geo-block
-  // Example: '123.456.789.0'
-]
-
-// Allowed paths (even from blocked regions)
-const ALLOWED_PATHS = [
-  '/blocked',
-  '/api/geo-check',
-  '/api/health',
-  '/_next/',
-  '/favicon',
-]
-
-// Debug/diagnostic paths — block external access entirely
-const BLOCKED_DEBUG_PATHS = [
-  '/api/debug-auth',
-  '/api/db-check',
-  '/api/diagnostic/',
-]
-
-function isAllowedPath(pathname: string): boolean {
-  // Exact match for /blocked (not /blocked-foo, /blocked-bar, etc.)
-  if (pathname === '/blocked') return true
-  // Prefix match for paths that have sub-paths
-  return ALLOWED_PATHS.filter(p => p !== '/blocked').some(allowed => pathname.startsWith(allowed))
-}
-
-function getCountry(request: NextRequest): string {
-  // 1. Vercel Edge header (Pro/Enterprise guaranteed, Hobby best-effort)
-  const vercelCountry = request.headers.get('x-vercel-ip-country')
-  if (vercelCountry && vercelCountry !== 'unknown') return vercelCountry
-
-  // 2. Cloudflare header (if behind CF)
-  const cfCountry = request.headers.get('cf-ipcountry')
-  if (cfCountry && cfCountry !== 'XX') return cfCountry
-
-  // 3. Fallback: read x-forwarded-for (limited accuracy)
-  // Future: integrate IP geolocation API for Hobby plans
-  return ''
-}
-
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const country = getCountry(request)
-  const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-               request.headers.get('x-real-ip') || 
-               ''
+  const country = getCountryFromHeaders(request.headers)
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    ''
 
-  // ─── 1. Region Block ───
-  // Skip geo-block for API routes — they return JSON, not HTML.
-  // Redirecting API calls to /blocked (an HTML page) causes
-  // "Unexpected end of JSON input" on the client when fetch().json() runs.
-  // API routes have their own auth/permission checks.
-  const isApiRoute = pathname.startsWith('/api')
-  
-  if (BLOCKED_COUNTRIES.includes(country) && !isAllowedPath(pathname) && !isApiRoute) {
+  // ─── 1. 地域判定 ───
+  // 说明：API 路由**不会**被 302 跳到 /blocked —— 那是个 HTML 页面，
+  // 会让客户端的 fetch().json() 报 "Unexpected end of JSON input"。
+  // API 在封禁地区返回 451 JSON；未封禁则照常走各自的鉴权。
+  const regionDecision = evaluateRegion({ country, clientIp, pathname })
+
+  if (regionDecision.action === 'redirect-blocked') {
     const blockedUrl = request.nextUrl.clone()
     blockedUrl.pathname = '/blocked'
     blockedUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(blockedUrl)
   }
-  
-  // For API routes from blocked regions, return a proper JSON error
-  if (BLOCKED_COUNTRIES.includes(country) && isApiRoute && !isAllowedPath(pathname)) {
+
+  if (regionDecision.action === 'json-451') {
     return new NextResponse(
       JSON.stringify({ error: 'Service not available in your region', code: 'REGION_BLOCKED' }),
-      { status: 451, headers: { 'Content-Type': 'application/json' } }
+      { status: 451, headers: { 'Content-Type': 'application/json' } },
     )
   }
 
-  // ─── 2. Block debug/diagnostic endpoints from external access ───
-  const isDebugPath = BLOCKED_DEBUG_PATHS.some(p => pathname.startsWith(p))
-  if (isDebugPath) {
-    // BUG-637: if DEBUG_SECRET is configured, require it (fails closed).
-    // Replaces the spoofable User-Agent check as the primary gate.
+  // ─── 2. 调试/诊断端点：对外不可访问 ───
+  if (isDebugPath(pathname)) {
+    // BUG-637: 配置了 DEBUG_SECRET 就强制校验（fail closed），
+    // 替代可伪造的 User-Agent 判定，作为主闸门。
     const debugSecret = process.env.DEBUG_SECRET
     if (debugSecret && request.headers.get('x-debug-secret') !== debugSecret) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Not Found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      )
+      return notFoundJson()
     }
-    // Allow Vercel internal requests (cron) but block external browser/API access
+    // 放行平台内部定时任务（cron），拒绝浏览器类 UA 的外部访问
+    // 注意：这里**只**保留改造前就存在的 `x-vercel-cron`。不要顺手加别的
+    // "平台内部"请求头 —— 这类头可被任意客户端伪造，在 DEBUG_SECRET 未配置时
+    // 等于给调试端点开了一个绕过口。
     const userAgent = request.headers.get('user-agent') || ''
-    const isVercelCron = request.headers.get('x-vercel-cron') === 'true'
-    // These endpoints have their own auth (requireAdminAuth), but we add
-    // an extra layer: reject requests with browser-like User-Agent
-    if (!isVercelCron && /mozilla|chrome|safari|firefox|edge/i.test(userAgent) && !pathname.startsWith('/api/health')) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Not Found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      )
+    const isPlatformCron = request.headers.get('x-vercel-cron') === 'true'
+    if (
+      !isPlatformCron &&
+      /mozilla|chrome|safari|firefox|edge/i.test(userAgent) &&
+      !pathname.startsWith('/api/health')
+    ) {
+      return notFoundJson()
     }
   }
 
-  // ─── 3. CORS for API routes ───
+  // ─── 3. API 路由 CORS ───
   const response = NextResponse.next()
 
   if (pathname.startsWith('/api')) {
     const origin = request.headers.get('origin')
-    // Allow same-origin requests (Origin matches the request host)
-    // This ensures all Vercel deployment URLs work automatically
-    const requestHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
-    // BUG-636: compare hosts properly instead of a fragile endsWith()
-    // (an attacker origin could otherwise suffix-match). Falls back to allowed
-    // origins / localhost / vercel-preview checks below.
-    const isSameOrigin = (() => {
-      if (!origin) return true
-      try {
-        return new URL(origin).host === requestHost
-      } catch {
-        return false
-      }
-    })()
-    
-    // Allowed CORS origins
-    const ALLOWED_ORIGINS = [
-      'https://app.lokfeel.com',
-      'https://lokfeel.com',
-      'https://admin.lokfeel.com',
-    ]
-    
-    function isLocalhostOrigin(origin: string): boolean {
-      return /^https?:\/\/localhost(:\d+)?$/.test(origin) || origin.startsWith('http://127.0.0.1')
+    const requestHost =
+      request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+
+    // BUG-636: 用 host 精确比较，替代脆弱的 endsWith()
+    //（否则攻击者的 origin 只要后缀匹配就能通过）
+    if (!isCorsAllowed(origin, requestHost)) {
+      return new NextResponse(JSON.stringify({ error: 'Forbidden: CORS policy' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
-    
-    function isVercelPreview(origin: string): boolean {
-      return /https:\/\/nexus-app-.*\.vercel\.app$/.test(origin)
-    }
-    
-    if (origin && !ALLOWED_ORIGINS.includes(origin) && !isSameOrigin && !isLocalhostOrigin(origin) && !isVercelPreview(origin)) {
-      // Block requests from unauthorized cross-origin sources
-      return new NextResponse(
-        JSON.stringify({ error: 'Forbidden: CORS policy' }),
-        {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    }
-    // Add CORS headers for allowed origins
+
     if (origin) {
       response.headers.set('Access-Control-Allow-Origin', origin)
       response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
@@ -173,44 +103,36 @@ export default async function middleware(request: NextRequest) {
       response.headers.set('Access-Control-Max-Age', '86400')
       response.headers.set('Vary', 'Origin')
     }
-    
-    // Handle preflight
+
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, { status: 204, headers: response.headers })
     }
   }
 
-  // ─── 4. Security + Cache headers on all responses ───
-  response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-Frame-Options', 'DENY')
-  response.headers.set('X-XSS-Protection', '1; mode=block')
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)')
-
-  // ─── 5. CDN cache headers for public pages ───
-  // next.config.ts headers() may not apply when middleware is present,
-  // so we explicitly set s-maxage here for Cloudflare to cache.
-  const publicPaths = ['/', '/login', '/register']
-  const staticPublicPaths = ['/terms', '/privacy', '/about', '/faq', '/contact', '/community-guidelines', '/safety-tips', '/cookies', '/dmca', '/18-usc-2257', '/cancellations-policy', '/refunds', '/press', '/careers', '/support']
-  if (publicPaths.includes(pathname) || pathname === '/') {
-    // s-maxage=300: CDN caches for 5 min
-    // stale-while-revalidate=86400: serve stale for up to 24h while revalidating
-    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400')
-  } else if (staticPublicPaths.includes(pathname)) {
-    // Static legal/info pages: cache for 2 hours, serve stale for 24h
-    response.headers.set('Cache-Control', 'public, s-maxage=7200, stale-while-revalidate=86400')
-  } else if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
-    // Sitemap & robots: cache for 1 hour, serve stale for 24h
-    response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+  // ─── 4. 所有响应都带安全头 ───
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(key, value)
   }
+
+  // ─── 5. 公开页面的 CDN 缓存头 ───
+  // 中间件存在时 next.config.ts 的 headers() 可能不生效，故在此显式设置
+  // 供 Cloudflare / 其它 CDN 使用（规则见 region-policy.ts 的 getCacheControl）。
+  const cacheControl = getCacheControl(pathname)
+  if (cacheControl) response.headers.set('Cache-Control', cacheControl)
 
   return response
 }
 
+function notFoundJson(): NextResponse {
+  return new NextResponse(JSON.stringify({ error: 'Not Found' }), {
+    status: 404,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
 export const config = {
-  // Explicitly list all paths that need middleware processing.
-  // Next.js middleware matcher: negative lookahead was incorrectly excluding /login etc.
-  // Using positive match list instead for reliability.
+  // Next.js 要求 matcher **静态可解析**，因此保留在这里（不可从外部模块导入）。
+  // 正向列出所有需要处理的路径：负向 lookahead 曾误排除 /login。
   matcher: [
     '/',
     '/login',

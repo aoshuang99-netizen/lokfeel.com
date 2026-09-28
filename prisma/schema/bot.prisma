@@ -1,0 +1,242 @@
+// ═══════════════════════════════════════════════════════════════
+// P0-5 · Bot 可选模块 schema（2026-09-28 从核心 schema 移出）
+//
+// 本文件与 core.prisma 一起参与 prisma generate（同一 client、同一次生成），
+// 因此**业务代码零改动**。它的意义：
+//   · 多租户 / 开源核心改造只面对 core.prisma，6 张 Bot 表 + 4 个 Bot 枚举
+//     不再进入改造面（原估可减少约 14% 多租户改造量）
+//   · 开源发行构建可在打包时排除本文件（配合「默认关闭的可选模块」定位，
+//     见 docs/OPEN-CORE-POSITIONING.md §4；届时需同时移除 Bot 代码路径）
+//
+// 注意：User.isBot / botType / botConfig 是 User 表的列（核心侧），
+// 属数据列而非表，本阶段不迁移 —— 迁移它们需要破坏性 DB 变更。
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// BOT SYSTEM — Digital User Models
+// ═══════════════════════════════════════════════════════════════
+
+enum BotType {
+  SEED          // 种子用户，冷启动用
+  SIMULATION    // 行为模拟用户
+  TRAINING      // 训练数据生成
+  ACTIVE        // 活跃参与匹配
+}
+
+enum BotActivityLevel {
+  GHOST         // 隐身，仅匹配不可见
+  LOW           // 低活跃度 (10% 在线时间)
+  MEDIUM        // 中活跃度 (30% 在线时间)
+  HIGH          // 高活跃度 (60% 在线时间)
+  FULL          // 全天候在线
+}
+
+enum Ethnicity {
+  CAUCASIAN
+  AFRICAN_AMERICAN
+  HISPANIC_LATINO
+  ASIAN
+  SOUTH_ASIAN
+  MIDDLE_EASTERN
+  MIXED
+  OTHER
+}
+
+enum OnlinePattern {
+  MORNING        // 6AM-12PM
+  AFTERNOON      // 12PM-6PM
+  EVENING        // 6PM-12AM
+  NIGHT          // 12AM-6AM
+  RANDOM
+  WORK_HOURS     // 9AM-5PM
+  AFTER_WORK     // 5PM-10PM
+}
+
+// Bot扩展资料 - 数字用户详细信息
+model BotProfile {
+  id              String   @id @default(cuid())
+  // P0-5 拆分说明：与核心 Profile 的关联降级为普通列（DB 侧 FK 保留不变）。
+  // 跨文件 Prisma 关系要求 core.prisma 声明反向字段（P1012），会让核心 schema
+  // 重新引用 Bot 类型 —— 违背本拆分的目的。查询路径：先按 userId 查 Profile.id，
+  // 再按 profileId 查本表（见 src/lib/bot-automation.ts 的 findBotProfileByUserId）。
+  profileId       String   @unique
+  
+  // 基础配置
+  botType         BotType        @default(SEED)
+  activityLevel   BotActivityLevel @default(LOW)
+  
+  // 人口统计扩展
+  ethnicity       Ethnicity?
+  occupation      String?        // "Software Engineer", "Teacher", etc.
+  industry        String?        // "Tech", "Healthcare", "Finance", etc.
+  educationLevel  String?        // "High School", "Bachelor's", "Master's", "PhD"
+  incomeRange     String?        // "$30k-50k", "$50k-100k", etc.
+  
+  // 兴趣与偏好 (JSON arrays - SQLite compatible)
+  interests       String         @default("[]")  // JSON: ["hiking", "cooking", "photography"]
+  hobbies         String         @default("[]")  // JSON: ["gaming", "yoga", "reading"]
+  musicGenres     String         @default("[]")  // JSON: ["rock", "jazz", "electronic"]
+  movieGenres     String         @default("[]")  // JSON: ["thriller", "romance", "sci-fi"]
+  
+  // 行为模拟配置
+  onlinePattern   OnlinePattern  @default(EVENING)
+  avgResponseTime Int           @default(30)  // 平均响应时间（分钟）
+  maxDailyMatches Int           @default(3)   // 每日最大匹配数
+  
+  // 行为概率配置（JSON）
+  behaviorConfig String?
+  
+  // 匹配偏好（扩展 Profile 的 preferred* 字段）(JSON arrays)
+  preferredEthnicities  String   @default("[]")  // JSON: Ethnicity[]
+  preferredOccupations  String   @default("[]")  // JSON: string[]
+  preferredEducation   String    @default("[]")  // JSON: string[]
+  
+  // 学习状态
+  totalInteractions   Int       @default(0)
+  successfulMatches   Int       @default(0)
+  avgEngagementScore  Float     @default(0)   // 0-100
+  
+  // 学习数据（JSON）
+  learningData String?
+  
+  // 头像配置
+  avatarStyle    String?         // "professional", "casual", "artistic"
+  avatarSource  String?          // "generated", "stock", "ai_avatar"
+  
+  // 状态
+  isActive      Boolean         @default(true)
+  lastActiveAt  DateTime?
+  sleepUntil    DateTime?       // 暂停到指定时间
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([botType])
+  @@index([activityLevel])
+  @@index([isActive])
+}
+
+// Bot行为交互日志
+model BotInteractionLog {
+  id              String   @id @default(cuid())
+  botUserId       String
+  targetUserId    String?
+  matchId         String?
+  
+  // 交互类型
+  interactionType String   // "match_received", "match_reacted", "message_sent", "message_received", "profile_viewed"
+  
+  // 行为详情
+  action          String   // "accept", "pass", "respond", "initiate"
+  responseDelay   Int?     // 响应延迟（秒）
+  
+  // 结果
+  outcome         String?  // "success", "rejected", "no_response", "blocked"
+  engagementScore Int?     // 0-100 参与度评分
+  
+  // 上下文
+  context         String?  // JSON: {matchScore, matchReason, etc.}
+
+  createdAt DateTime @default(now())
+  
+  @@index([botUserId, createdAt])
+  @@index([interactionType])
+  @@index([outcome])
+}
+
+// Bot学习批次
+model BotLearningBatch {
+  id              String   @id @default(cuid())
+  
+  // 批次信息
+  batchNumber     Int
+  status          String   @default("pending")  // pending, running, completed, failed
+  
+  // 数据范围
+  startDate       DateTime
+  endDate         DateTime
+  
+  // 统计数据
+  totalInteractions Int   @default(0)
+  avgEngagement   Float     @default(0)
+  successRate     Float     @default(0)
+  
+  // 更新的偏好配置
+  preferenceUpdates String?  // JSON array of changes
+  
+  // 执行日志
+  executionLog    String?
+
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  
+  @@index([status])
+  @@index([batchNumber])
+}
+
+// Bot学习记录 - 实时交互数据
+model BotLearningRecord {
+  id              String   @id @default(cuid())
+  botId           String
+  userId          String   // 交互对象用户ID
+  
+  // 交互类型
+  interactionType String   // MATCH_REQUEST, MATCH_ACCEPT, CHAT_MESSAGE, etc.
+  outcome         String   // POSITIVE, NEUTRAL, NEGATIVE
+  
+  // 上下文数据
+  context         String?    // JSON string (SQLite compatible)
+  
+  // 处理状态
+  processed       Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([botId])
+  @@index([processed])
+  @@index([createdAt])
+  @@index([interactionType])
+}
+
+// Bot偏好向量 - 学习结果
+model BotPreference {
+  id                    String   @id @default(cuid())
+  botId                 String   @unique
+  
+  // 五维偏好 (0-1)
+  relationshipStructure Float    @default(0.5)
+  communicationStyle    Float    @default(0.5)
+  interests             Float    @default(0.5)
+  values                Float    @default(0.5)
+  lifestyle             Float    @default(0.5)
+  
+  // 元数据
+  confidence            Float    @default(0.1)  // 置信度 (0-1)
+  sampleSize            Int      @default(0)    // 样本数量
+  
+  createdAt             DateTime @default(now())
+  lastUpdated           DateTime @updatedAt
+  
+  @@index([botId])
+}
+
+// Bot头像管理
+model BotAvatar {
+  id          String   @id @default(cuid())
+  botId       String   @unique
+  originalUrl String?
+  processedUrl String? // 处理后（压缩、优化）的URL
+  
+  style       String   // 原始风格
+  ethnicity   String   // 原始种族标签
+  
+  status      String   @default("pending") // pending, active, failed, retired
+  useCount    Int      @default(0)    // 使用次数
+  
+  generatedAt DateTime @default(now())
+  lastUsedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

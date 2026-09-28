@@ -9,6 +9,9 @@
  */
 
 import { db } from '@/lib/db';
+// 阶段 5 前置：本调度器已迁到 IM 终局模型（原本建 Legacy ChatRoom + Message）。
+// `createConversation` 是幂等 upsert；`createMessage` 在事务内分配 seq 并同步未读数。
+import { createConversation, createMessage } from '@/lib/im/queries';
 import { recordInteraction, InteractionType, InteractionOutcome, getBotStrategy, getCollectiveWisdom } from './engine';
 
 // 调度配置
@@ -152,38 +155,44 @@ async function simulateChatBehavior(): Promise<void> {
       
       if (!isSenderBot && !isReceiverBot) continue;
       
-      // 获取或创建聊天室
-      let chatRoom = await db.chatRoom.findFirst({
-        where: {
-          matchId: match.id,
-        },
+      // 获取或创建会话
+      //
+      // ── 阶段 5 前置修复：这里过去建的是 **Legacy `ChatRoom`** ──
+      // 两个后果都是静默的：
+      //   1. 阶段 4 之后前端只读 IM，为合成匹配建 Legacy 房等于建一间**没人看得见**的房间；
+      //   2. 该房没有对应 Conversation，于是 `mirror.ts` 的解析桥找不到落点，
+      //      消息镜像被 skip（reason=no-conversation）—— 只有 Legacy 侧有数据。
+      // 改为只建 Conversation：消息直接落在用户实际读的那张表里。
+      let conversationId: string;
+      const existingConversation = await db.conversation.findFirst({
+        where: { matchId: match.id },
+        select: { id: true },
       });
-      
-      if (!chatRoom) {
-        chatRoom = await db.chatRoom.create({
-          data: {
+
+      if (existingConversation) {
+        conversationId = existingConversation.id;
+      } else {
+        // Vault 语义与原先建 Legacy 房时保持一致（24h 倒计时、ACTIVE）
+        const created = await createConversation(
+          match.senderId,
+          match.receiverId,
+          match.senderId,
+          {
             matchId: match.id,
             vaultStatus: 'ACTIVE',
-            vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          },
-        });
-        
-        // 添加成员
-        await db.chatRoomMember.createMany({
-          data: [
-            { roomId: chatRoom.id, userId: match.senderId },
-            { roomId: chatRoom.id, userId: match.receiverId },
-          ],
-        });
+            vaultExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          }
+        );
+        conversationId = created.convId;
       }
-      
+
       // Bot发送消息
       if (isSenderBot && Math.random() < SCHEDULER_CONFIG.CHAT_REPLY_PROBABILITY) {
-        await simulateBotMessage(match.senderId, chatRoom.id, match.receiverId);
+        await simulateBotMessage(match.senderId, conversationId, match.receiverId);
       }
-      
+
       if (isReceiverBot && Math.random() < SCHEDULER_CONFIG.CHAT_REPLY_PROBABILITY) {
-        await simulateBotMessage(match.receiverId, chatRoom.id, match.senderId);
+        await simulateBotMessage(match.receiverId, conversationId, match.senderId);
       }
     } catch (error) {
       console.error('[BotScheduler] Chat behavior error:', error);
@@ -193,10 +202,14 @@ async function simulateChatBehavior(): Promise<void> {
 
 /**
  * 模拟Bot发送消息
+ *
+ * 参数由 Legacy `ChatRoom.id` 改为 IM `Conversation.id`（终局模型）。
+ * 写入走 `createMessage`：它在一个事务里分配 seq 并同步 `lastMessageAt` /
+ * `messageCount` / 对方未读数 —— 这三项漏一个都会让会话列表排序或未读徽章出错。
  */
 async function simulateBotMessage(
   botId: string,
-  chatRoomId: string,
+  conversationId: string,
   recipientId: string
 ): Promise<void> {
   // 获取Bot策略
@@ -218,15 +231,8 @@ async function simulateBotMessage(
     ? greetings[Math.floor(Math.random() * greetings.length)]
     : questions[Math.floor(Math.random() * questions.length)];
   
-  // 创建消息
-  await db.message.create({
-    data: {
-      roomId: chatRoomId,
-      senderId: botId,
-      content,
-      isRead: false,
-    },
-  });
+  // 创建消息（IM 终局侧）
+  await createMessage(conversationId, botId, recipientId, content);
   
   // 记录交互
   await recordInteraction(

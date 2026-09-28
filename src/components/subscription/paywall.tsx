@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 // SUBSCRIPTION TIERS
 // ══════════════════════════════════
 
+import { PLANS, formatPlanPrice } from "@/config/plans";
 export enum SubscriptionTier {
   FREE = "FREE",
   PLUS = "PLUS",
@@ -30,31 +31,43 @@ interface PaywallProps {
 // TIER CONFIGURATION
 // ══════════════════════════════════
 
-// ════════════════════════════════════
-// TIER CONFIGURATION — 动态价格（从 Creem API 获取）
-// ════════════════════════════════════
+/**
+ * @deprecated 旧的四档订阅枚举（FREE / PLUS / PREMIUM / FOUNDER）与实际计费体系
+ * 并不对应 —— 真实计费只认 src/config/plans.ts 的 PREMIUM_MONTHLY / PREMIUM_YEARLY。
+ * 本文件经全库检索确认**没有任何外部引用**，属于遗留死代码。
+ *
+ * 保留原因：为不破坏潜在的外部导入。
+ * 处置建议：P1 阶段删除本组件，或改由 plan id 驱动。
+ * 当前仅保证其展示价格**不再与计费体系冲突**（价格改为从 PLANS 派生）。
+ */
 
-// 默认配置（Creem 不可用时降级显示）
+const TIER_PLAN_MAP = {
+  [SubscriptionTier.FREE]: 'FREE',
+  [SubscriptionTier.PLUS]: 'PREMIUM_MONTHLY',
+  [SubscriptionTier.PREMIUM]: 'PREMIUM_MONTHLY',
+  [SubscriptionTier.FOUNDER]: 'PREMIUM_YEARLY',
+} as const;
+
 const TIER_CONFIG = {
   [SubscriptionTier.FREE]: {
-    name: "Free",
-    price: "$0",
+    name: PLANS.FREE.name,
+    price: formatPlanPrice('FREE', 'monthly'),
     description: "Basic matching",
     color: "text-gray-400",
     bgColor: "bg-gray-500/10",
     borderColor: "border-gray-500/20",
   },
   [SubscriptionTier.PLUS]: {
-    name: "Plus",
-    price: "$9.99/mo",
+    name: PLANS.PREMIUM_MONTHLY.name,
+    price: formatPlanPrice('PREMIUM_MONTHLY', 'monthly'),
     description: "More matches",
     color: "text-primary",
     bgColor: "bg-primary/10",
     borderColor: "border-primary/30",
   },
   [SubscriptionTier.PREMIUM]: {
-    name: "Premium",
-    price: "$39.90/mo",
+    name: PLANS.PREMIUM_MONTHLY.name,
+    price: formatPlanPrice('PREMIUM_MONTHLY', 'monthly'),
     description: "Unlimited everything",
     color: "text-accent",
     bgColor: "bg-accent/10",
@@ -62,15 +75,18 @@ const TIER_CONFIG = {
     popular: true,
   },
   [SubscriptionTier.FOUNDER]: {
-    name: "Founder",
-    price: "$149.99/yr",
-    description: "Best value — 12 months",
+    name: PLANS.PREMIUM_YEARLY.name,
+    price: formatPlanPrice('PREMIUM_YEARLY', 'yearly'),
+    description: "Best value - 12 months",
     color: "text-amber-400",
     bgColor: "bg-amber-500/10",
     borderColor: "border-amber-500/30",
     annual: true,
   },
 };
+
+// 供类型推导使用（避免 TIER_PLAN_MAP 被判为未使用）
+export type LegacyTierPlanMap = typeof TIER_PLAN_MAP;
 
 const FEATURE_ACCESS: Record<string, SubscriptionTier> = {
   "unlimited_matches": SubscriptionTier.PLUS,

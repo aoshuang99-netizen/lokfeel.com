@@ -17,6 +17,12 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { createPrismaAdapter } from '@/lib/bot-engine/schedulers/prisma-adapter';
 import { BotEngine, DEFAULT_ENGINE_CONFIG } from '@/lib/bot-engine';
+import {
+  BOT_DISABLED_HTTP_STATUS,
+  botDisabledBody,
+  getBotEngineTunables,
+  isBotEnabled,
+} from '@/config/bot-policy';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Vercel Hobby: 10s, Pro: 60s, Enterprise: 300s
@@ -28,13 +34,12 @@ let lastTickTime = 0;
 function getEngine(): BotEngine {
   if (!engineInstance) {
     const adapter = createPrismaAdapter(db);
+    // P0-5：运行参数从 bot-policy 单一配置源取（改造前是这里写死的 60s/50/30s/1x）。
+    // 默认值与旧实现逐字段相同，改动只影响"由谁决定"，不影响线上行为。
     engineInstance = new BotEngine(adapter, {
       ...DEFAULT_ENGINE_CONFIG,
-      tickIntervalMs: 60_000,
-      speedMultiplier: 1,
+      ...getBotEngineTunables(),
       enableLogging: false, // Disable logging in production for performance
-      maxActionsPerTick: 50,
-      minActionIntervalMs: 30_000, // 30s minimum between actions
     });
     console.log('[Cron] BotEngine instance created');
   }
@@ -54,6 +59,12 @@ export async function GET(request: Request) {
       { error: 'Unauthorized' },
       { status: 401 }
     );
+  }
+
+  // P0-5：Bot 模块总开关。鉴权**之后**再判 —— 匿名请求不应从状态码差异
+  // 推断出模块是否启用（否则等于免费暴露部署配置）。
+  if (!isBotEnabled()) {
+    return NextResponse.json(botDisabledBody(), { status: BOT_DISABLED_HTTP_STATUS });
   }
 
   // Rate limiting: ensure minimum 50s between ticks

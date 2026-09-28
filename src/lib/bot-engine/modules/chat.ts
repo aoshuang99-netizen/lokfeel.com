@@ -124,7 +124,12 @@ export function generateResponse(
   context: ChatMessageContext,
 ): GeneratedMessage {
   const { chat, seed, personalityType } = config;
-  const random = createSeededRandom(seed + context.chatRoomId.length + Date.now() / 60000);
+  // 注：这里只拿会话 id 的**长度**参与种子扰动，不关心具体值。
+  // 更名 `chatRoomId` → `conversationId` 后种子会变（两侧 id 长度不保证相同），
+  // 但本函数本身也混入了 `Date.now()/60000`，每次调用都不确定 ——
+  // 即"种子可复现"从来不是这里的设计目标，只是为了让同一分钟内
+  // 同一条会话的多次生成不要落在同一个模板上。
+  const random = createSeededRandom(seed + context.conversationId.length + Date.now() / 60000);
 
   if (context.isInitiating) {
     return generateInitMessage(config, context, random);
@@ -445,7 +450,7 @@ export function shouldEndConversation(
  */
 export function createChatMessageEvent(
   botUserId: string,
-  chatRoomId: string,
+  conversationId: string,
   content: string,
   messageType: GeneratedMessage['type'],
 ): BehaviorEvent {
@@ -455,7 +460,7 @@ export function createChatMessageEvent(
     type: 'chat_message_sent',
     timestamp: new Date(),
     data: {
-      chatRoomId,
+      conversationId,
       content,
       messageType,
     },

@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { countMessages, countActiveBotChats } from '@/lib/im/stats';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,22 +43,14 @@ export async function GET(request: Request) {
     });
 
     // Get active chat rooms with bots
-    const activeBotChats = await db.chatRoomMember.count({
-      where: {
-        user: { isBot: { not: false } },
-        room: {
-          isArchived: false,
-          lastMessageAt: { gte: oneHourAgo },
-        },
-      },
-    });
+    // P1-6 阶段 5：两处均改走 stats 统一口径（原直读 Legacy `ChatRoomMember` / `Message`）。
+    //   ActiveBotChats 的归档语义在 IM 侧是 per-participant（见 stats 内注释）。
+    const activeBotChats = await countActiveBotChats(oneHourAgo);
 
     // Get recent messages from bots
-    const recentBotMessages = await db.message.count({
-      where: {
-        sender: { isBot: true },
-        createdAt: { gte: oneHourAgo },
-      },
+    const recentBotMessages = await countMessages({
+      window: { gte: oneHourAgo },
+      sender: { isBot: true },
     });
 
     return NextResponse.json({

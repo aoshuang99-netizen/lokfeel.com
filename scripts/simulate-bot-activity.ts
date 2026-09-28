@@ -8,9 +8,20 @@
  * - 模拟聊天回复
  * 
  * Usage: npx ts-node scripts/simulate-bot-activity.ts
+ *
+ * ── P1-6 阶段 5 迁移说明（2026-09-28）────────────────────────────────────
+ * 本脚本原先只读写 Legacy 三表（`ChatRoom` / `ChatRoomMember` / `Message`）。
+ * 阶段 4 前端换源后聊天页只读 IM，因此它模拟出来的活动**用户在界面上看不到**。
+ * 现改为走生产路径（`createConversation` / `createMessage` / `markMessagesAsRead`），
+ * 与 `/api/matches/*`、`/api/im/send` 行为一致。
  */
 
 import { PrismaClient, MatchStatus, NotificationType } from '../src/generated';
+import {
+  createConversation,
+  createMessage,
+  markMessagesAsRead,
+} from '../src/lib/im/queries';
 
 const prisma = new PrismaClient();
 
@@ -163,27 +174,23 @@ async function simulateMatchResponses(botUserId: string, botDisplayName: string)
         data: { status: 'ACCEPTED' },
       });
 
-      // Create chat room
-      const chatRoom = await prisma.chatRoom.create({
-        data: {
-          matchId: match.id,
-          members: {
-            create: [
-              { userId: match.senderId },
-              { userId: botUserId },
-            ],
-          },
-        },
+      // 创建会话（IM 终局模型）+ 欢迎消息，走与生产一致的两个入口。
+      // 旧版这里只建 Legacy `ChatRoom` + `Message` —— 阶段 4 之后那样建出来的
+      // 会话在聊天页里根本不存在（前端只读 Conversation）。
+      const conv = await createConversation(match.senderId, botUserId, botUserId, {
+        matchId: match.id,
       });
 
-      // Send welcome message
-      await prisma.message.create({
-        data: {
-          roomId: chatRoom.id,
-          senderId: botUserId,
-          content: generateWelcomeMessage(match.sender.profile!),
-        },
-      });
+      // 幂等：同一匹配被反复接受时不重复发欢迎语
+      const existing = await prisma.iMMessage.count({ where: { conversationId: conv.convId } });
+      if (existing === 0) {
+        await createMessage(
+          conv.convId,
+          botUserId,
+          match.senderId,
+          generateWelcomeMessage(match.sender.profile!),
+        );
+      }
 
       // Notify sender
       await prisma.notification.create({
@@ -213,36 +220,50 @@ async function simulateMatchResponses(botUserId: string, botDisplayName: string)
  * Simulate bot chat responses
  */
 async function simulateChatResponses(botUserId: string): Promise<void> {
-  // Get unread messages
-  const unreadMessages = await prisma.message.findMany({
+  // 找出 bot 参与、且有未读的会话。
+  // 未读数由 `Conversation.unreadCountA/B` 维护（与 UI 徽章同源），
+  // 而不是像旧版那样去筛 Legacy `Message.isRead` —— 后者在阶段 4 之后
+  // 与用户实际看到的状态已经脱节。
+  const botConversations = await prisma.conversation.findMany({
     where: {
-      room: {
-        members: {
-          some: { userId: botUserId },
-        },
-      },
-      senderId: { not: botUserId },
-      isRead: false,
+      state: { in: ['ACTIVE', 'PAUSED'] },
+      OR: [{ userAId: botUserId }, { userBId: botUserId }],
     },
-    include: {
-      sender: { include: { profile: true } },
-      room: true,
+    select: {
+      id: true,
+      userAId: true,
+      userBId: true,
+      unreadCountA: true,
+      unreadCountB: true,
     },
-    take: 5,
   });
 
-  for (const message of unreadMessages) {
+  const pending = botConversations
+    .filter((c) => (c.userAId === botUserId ? c.unreadCountA : c.unreadCountB) > 0)
+    .slice(0, 5);
+
+  for (const conv of pending) {
     // Simulate reading delay
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Mark as read
-    await prisma.message.update({
-      where: { id: message.id },
-      data: {
-        isRead: true,
-        readAt: new Date(),
+    // 取该会话中"对方发给 bot 的"最新一条。选它（而非盲发）的原因：
+    // 回复需要有上下文，且 `markMessagesAsRead` 需要一个 upToSeq 边界。
+    const lastIncoming = await prisma.iMMessage.findFirst({
+      where: {
+        conversationId: conv.id,
+        senderId: { not: botUserId },
+        isDeleted: false,
+      },
+      orderBy: { seq: 'desc' },
+      include: {
+        sender: { include: { profile: true } },
       },
     });
+
+    if (!lastIncoming) continue;
+
+    // Mark as read（回执 + 未读计数归零，与 /api/im/read 同一实现）
+    await markMessagesAsRead(conv.id, botUserId, lastIncoming.seq);
 
     // Decide whether to reply
     if (Math.random() < CONFIG.MESSAGE_REPLY_RATE) {
@@ -251,29 +272,26 @@ async function simulateChatResponses(botUserId: string): Promise<void> {
       await new Promise(resolve => setTimeout(resolve, responseTime * 100));
 
       // Generate reply
-      const replyContent = generateReply(message.content, message.sender.profile!);
+      const replyContent = generateReply(lastIncoming.payload, lastIncoming.sender.profile!);
 
-      // Send reply
-      await prisma.message.create({
-        data: {
-          roomId: message.roomId,
-          senderId: botUserId,
-          content: replyContent,
-        },
-      });
+      // Send reply（走 createMessage，保证 seq 与未读自增）
+      await createMessage(conv.id, botUserId, lastIncoming.senderId, replyContent);
 
       // Create notification
       await prisma.notification.create({
         data: {
-          userId: message.senderId,
+          userId: lastIncoming.senderId,
           type: 'NEW_MESSAGE' as any,
           title: 'New Message',
           body: `You have a new message`,
-          data: JSON.stringify({ roomId: message.roomId }),
+          // Deep link 用终局模型 id：/dashboard/chats/[roomId] 同时接受
+          // Conversation.id 与历史 ChatRoom.id（见 lib/im/resolve.ts）。
+          data: JSON.stringify({ conversationId: conv.id }),
+          actionUrl: `/dashboard/chats/${conv.id}`,
         },
       });
 
-      console.log(`  💬 Replied to ${message.sender.profile?.displayName}: "${replyContent.substring(0, 50)}..."`);
+      console.log(`  💬 Replied to ${lastIncoming.sender.profile?.displayName}: "${replyContent.substring(0, 50)}..."`);
     }
   }
 }

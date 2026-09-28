@@ -364,53 +364,13 @@ exports.Prisma.MatchReactionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.ChatRoomScalarFieldEnum = {
-  id: 'id',
-  matchId: 'matchId',
-  lastMessageAt: 'lastMessageAt',
-  isArchived: 'isArchived',
-  vaultStatus: 'vaultStatus',
-  vaultExpiry: 'vaultExpiry',
-  extendedAt: 'extendedAt',
-  extendedBy: 'extendedBy',
-  extensionCount: 'extensionCount',
-  revokedAt: 'revokedAt',
-  revokedBy: 'revokedBy',
-  revokeReason: 'revokeReason',
-  screenshotCount: 'screenshotCount',
-  lastScreenshotAt: 'lastScreenshotAt',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  deletedAt: 'deletedAt'
-};
-
-exports.Prisma.ChatRoomMemberScalarFieldEnum = {
-  id: 'id',
-  roomId: 'roomId',
-  userId: 'userId',
-  lastReadAt: 'lastReadAt',
-  isMuted: 'isMuted',
-  joinedAt: 'joinedAt'
-};
-
-exports.Prisma.MessageScalarFieldEnum = {
-  id: 'id',
-  roomId: 'roomId',
-  senderId: 'senderId',
-  content: 'content',
-  messageType: 'messageType',
-  metadata: 'metadata',
-  isRead: 'isRead',
-  readAt: 'readAt',
-  createdAt: 'createdAt'
-};
-
 exports.Prisma.ConversationScalarFieldEnum = {
   id: 'id',
   userAId: 'userAId',
   userBId: 'userBId',
   initiatorId: 'initiatorId',
   chatRoomId: 'chatRoomId',
+  matchId: 'matchId',
   state: 'state',
   stateReason: 'stateReason',
   controllingUserId: 'controllingUserId',
@@ -421,6 +381,15 @@ exports.Prisma.ConversationScalarFieldEnum = {
   unreadCountB: 'unreadCountB',
   settings: 'settings',
   vaultExpiresAt: 'vaultExpiresAt',
+  vaultStatus: 'vaultStatus',
+  extensionCount: 'extensionCount',
+  extendedAt: 'extendedAt',
+  extendedBy: 'extendedBy',
+  revokedAt: 'revokedAt',
+  revokedBy: 'revokedBy',
+  revokeReason: 'revokeReason',
+  screenshotCount: 'screenshotCount',
+  lastScreenshotAt: 'lastScreenshotAt',
   cachedConsentState: 'cachedConsentState',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -443,6 +412,7 @@ exports.Prisma.IMMessageScalarFieldEnum = {
   id: 'id',
   conversationId: 'conversationId',
   clientMsgId: 'clientMsgId',
+  legacyMessageId: 'legacyMessageId',
   senderId: 'senderId',
   receiverId: 'receiverId',
   seq: 'seq',
@@ -931,26 +901,19 @@ exports.MatchAction = exports.$Enums.MatchAction = {
   SUPER_LIKE: 'SUPER_LIKE'
 };
 
-exports.VaultStatus = exports.$Enums.VaultStatus = {
-  ACTIVE: 'ACTIVE',
-  EXTENDED: 'EXTENDED',
-  REVOKED: 'REVOKED',
-  EXPIRED: 'EXPIRED'
-};
-
-exports.MessageType = exports.$Enums.MessageType = {
-  TEXT: 'TEXT',
-  IMAGE: 'IMAGE',
-  SYSTEM: 'SYSTEM',
-  VOICE: 'VOICE'
-};
-
 exports.ConversationState = exports.$Enums.ConversationState = {
   ACTIVE: 'ACTIVE',
   PAUSED: 'PAUSED',
   BLOCKED: 'BLOCKED',
   EXPIRED: 'EXPIRED',
   ARCHIVED: 'ARCHIVED'
+};
+
+exports.VaultStatus = exports.$Enums.VaultStatus = {
+  ACTIVE: 'ACTIVE',
+  EXTENDED: 'EXTENDED',
+  REVOKED: 'REVOKED',
+  EXPIRED: 'EXPIRED'
 };
 
 exports.ConsentState = exports.$Enums.ConsentState = {
@@ -1140,9 +1103,6 @@ exports.Prisma.ModelName = {
   Profile: 'Profile',
   Match: 'Match',
   MatchReaction: 'MatchReaction',
-  ChatRoom: 'ChatRoom',
-  ChatRoomMember: 'ChatRoomMember',
-  Message: 'Message',
   Conversation: 'Conversation',
   ConversationParticipant: 'ConversationParticipant',
   IMMessage: 'IMMessage',

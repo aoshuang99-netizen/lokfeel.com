@@ -4,6 +4,8 @@
  */
 
 import { getDb } from '@/lib/db';
+import { createMessage, markMessagesAsRead } from '@/lib/im/queries';
+import { assertBotEnabled } from '@/config/bot-policy';
 
 const prisma = getDb();
 
@@ -34,13 +36,18 @@ export class BotBehaviorEngine {
    */
   async start(): Promise<void> {
     if (this.isRunning) return;
-    
+
+    // P0-5：引擎级守卫（与 BotEngine.start 一致，见 src/config/bot-policy.ts）
+    assertBotEnabled();
+
     console.log('🤖 BotBehaviorEngine 启动中...');
     
     // 加载所有活跃的Bot
     const bots = await prisma.botProfile.findMany({
       where: { isActive: true },
-      include: { profile: { include: { user: true } } }
+      // P0-5 schema 拆分：BotProfile 不再有 profile 关系；本函数只消费
+      // BotProfile 顶层字段（profileId / onlinePattern / behaviorConfig 等），
+      // 原 `include: { profile: { include: { user: true } } }` 为死重，已移除。
     });
     
     for (const bot of bots) {
@@ -278,22 +285,37 @@ export class BotBehaviorEngine {
    * 模拟消息回复
    */
   private async simulateMessageResponse(profileId: string): Promise<void> {
-    // 获取未读消息 - 通过ChatRoomMember找到用户参与的聊天室
-    const userRooms = await prisma.chatRoomMember.findMany({
-      where: { userId: profileId },
-      select: { roomId: true }
-    });
-    const roomIds = userRooms.map(r => r.roomId);
-    
-    const unreadMessage = await prisma.message.findFirst({
+    // 找出该 Bot 参与、且**自己有未读**的会话。
+    // P1-6 阶段 5：原先经 `ChatRoomMember` → `Message.isRead` 两步找未读（B9 阻断点）。
+    // 现改用终局模型：未读判据是 `Conversation.unreadCountA/B`（与前端徽章同源），
+    // 一次查询即可定位，不必先取房间列表再做 `roomId: { in: [...] }` 过滤。
+    // ⚠️ 未读必须**按角色**判定：同一会话里 Bot 可能是 userA 也可能是 userB，
+    //    直接 `OR: [{unreadCountA:{gt:0}}, {unreadCountB:{gt:0}}]` 会把
+    //    "只有对方有未读"的会话也选进来，导致 Bot 抢答自己没读过的消息。
+    const convs = await prisma.conversation.findMany({
       where: {
-        roomId: { in: roomIds },
-        senderId: { not: profileId },
-        isRead: false
+        state: { in: ['ACTIVE', 'PAUSED'] },
+        OR: [
+          { userAId: profileId, unreadCountA: { gt: 0 } },
+          { userBId: profileId, unreadCountB: { gt: 0 } },
+        ],
       },
-      include: { room: true }
+      select: { id: true },
+      take: 20,
     });
-    
+
+    const conv = convs[0];
+    if (!conv) return;
+
+    const unreadMessage = await prisma.iMMessage.findFirst({
+      where: {
+        conversationId: conv.id,
+        senderId: { not: profileId },
+        isDeleted: false,
+      },
+      orderBy: { seq: 'desc' },
+    });
+
     if (!unreadMessage) return;
     
     // 获取Bot的行为配置
@@ -327,20 +349,11 @@ export class BotBehaviorEngine {
     const delayMs = (bot?.avgResponseTime || 10) * 60 * 1000; // 转换为毫秒
     await new Promise(resolve => setTimeout(resolve, Math.min(delayMs, 5000))); // 最多等待5秒
     
-    // 发送回复
-    await prisma.message.create({
-      data: {
-        roomId: unreadMessage.roomId,
-        senderId: profileId,
-        content: responseText,
-      }
-    });
-    
-    // 标记原消息为已读
-    await prisma.message.update({
-      where: { id: unreadMessage.id },
-      data: { isRead: true, readAt: new Date() }
-    });
+    // 发送回复（IM 终局模型：`createMessage` 同时处理 seq 与未读计数）
+    await createMessage(conv.id, profileId, unreadMessage.senderId, responseText);
+
+    // 标记原消息为已读（写回执 + 未读计数归零，与 /api/im/read 同一实现）
+    await markMessagesAsRead(conv.id, profileId, unreadMessage.seq);
     
     // 记录日志
     await prisma.botInteractionLog.create({

@@ -17,6 +17,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processLearningBatch, getLearningStats } from '@/lib/bot-learning/engine';
 import { simulateMatchBehavior, simulateChatBehavior, updateBotProfiles } from '@/lib/bot-learning/scheduler';
+import {
+  BOT_DISABLED_HTTP_STATUS,
+  botDisabledBody,
+  isBotEnabled,
+} from '@/config/bot-policy';
 
 export const dynamic = 'force-dynamic';
 // maxDuration is ignored on Vercel Hobby (hard limit: 10s)
@@ -49,6 +54,12 @@ export async function GET(request: NextRequest) {
   // Verify cron secret
   if (!verifyCronAuth(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // P0-5：Bot 模块总开关（默认关闭的可选模块）。鉴权之后判，避免匿名探测。
+  // POST 处理器复用本函数，因此这一个判定同时覆盖两个入口。
+  if (!isBotEnabled()) {
+    return NextResponse.json(botDisabledBody(), { status: BOT_DISABLED_HTTP_STATUS });
   }
 
   const startTime = Date.now();

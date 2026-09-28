@@ -48,8 +48,12 @@ async function main() {
   const rejectedMatches = await prisma.match.count({ where: { status: 'REJECTED' } })
 
   // ─── 5. 聊天统计 ───
-  const totalChatRooms = await prisma.chatRoom.count()
-  const totalMessages = await prisma.message.count()
+  // P1-6 阶段 5：原为 `chatRoom.count()` / `message.count()`（Legacy 三表）。
+  // 阶段 4 前端换源后，**用户实际看到的聊天数据在 IM 两表里**，
+  // 继续统计 Legacy 会得到一份"看起来有数据、但与产品现状无关"的报告
+  // （尤其是删表后会直接报错）。这里改读终局模型。
+  const totalConversations = await prisma.conversation.count()
+  const totalMessages = await prisma.iMMessage.count()
 
   // ─── 6. 订阅统计 ───
   const ladyFreeSubs = await prisma.subscription.count({ where: { plan: 'LADY_FREE' } })
@@ -127,7 +131,7 @@ async function main() {
 
 | 指标 | 数值 |
 |------|------|
-| 聊天室 | ${totalChatRooms.toLocaleString()} |
+| 会话数 | ${totalConversations.toLocaleString()} |
 | 消息总数 | ${totalMessages.toLocaleString()} |
 
 ---

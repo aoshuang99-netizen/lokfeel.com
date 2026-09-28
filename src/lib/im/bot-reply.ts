@@ -1,153 +1,31 @@
 /**
- * Bot Auto-Reply System for IM
- * 
- * Handles automatic responses from bot users when they receive messages.
+ * Bot Auto-Reply System for IM（IM 终局侧写入实现）
+ *
+ * ✅ [P1-6 阶段 5] 本文件已完成去重（G-3 / G-6）：
+ *   · 文案模板与分类逻辑 → 抽取到 `lib/im/bot-templates.ts`（单一数据源）
+ *   · 准入判定（isBot / sleepUntil / isActive） → 抽取到 `lib/im/bot-gate.ts`（单一数据源）
+ *   本文件从此**只负责写入**，不再持有任何模板或判定文案。
+ *
+ * 改造前的问题（记录于此以免回退）：
+ *   同一套模板在本文件、分发器 Legacy 分支、分发器 IM 分支各有一份逐字副本；
+ *   准入判定则有"本文件有 / 分发器没有"的分歧 —— 休眠或被停用的 Bot
+ *   在 Legacy 路径上仍会回复用户。
+ *
  * IMPORTANT: Vercel Serverless kills the process after response is sent,
  * so we CANNOT use setTimeout. Bot replies are written synchronously to DB,
  * and the frontend polling mechanism will pick them up.
  */
 
 import { prisma } from "@/lib/prisma";
+import { generateBotResponse } from "@/lib/im/bot-templates";
+import { checkBotReplyEligibility } from "@/lib/im/bot-gate";
 
 // Pusher is optional - only push if available
 import { getPusherServer } from "@/lib/pusher";
 
-// Bot response templates by category
-const BOT_RESPONSES: Record<string, string[]> = {
-  greeting: [
-    "Hey! 👋 Nice to hear from you!",
-    "Hi there! How's your day going?",
-    "Hello! 😊 Thanks for reaching out!",
-    "Hey! Great to match with you!",
-    "Hi! I was hoping you'd message me!",
-  ],
-  question: [
-    "That's a great question! Let me think...",
-    "Hmm, interesting! I'd say...",
-    "Good point! I think...",
-    "Oh, I love that question! ",
-    "You know, I've been wondering about that too!",
-  ],
-  interest: [
-    "That sounds amazing! Tell me more! ✨",
-    "Wow, I'm really interested in that too!",
-    "No way! I love that as well!",
-    "We should definitely talk more about this!",
-    "You're speaking my language! 😄",
-  ],
-  casual: [
-    "Haha, totally! 😄",
-    "I know what you mean!",
-    "Right? I was just thinking that!",
-    "Exactly! Couldn't agree more.",
-    "For sure! 💯",
-  ],
-  weekend: [
-    "I'm thinking of checking out some local spots. You?",
-    "Probably going to relax and maybe grab coffee with friends. How about you?",
-    "I might go hiking if the weather's nice! 🥾",
-    "There's a new restaurant I've been wanting to try!",
-    "Just taking it easy, maybe some Netflix and wine. 🍷",
-  ],
-  food: [
-    "I love trying new cuisines! Any recommendations? 🍜",
-    "Italian is my weakness, especially pasta!",
-    "I'm always down for good sushi! 🍣",
-    "Have you tried that new place downtown?",
-    "I'm a bit of a foodie, always hunting for hidden gems!",
-  ],
-  travel: [
-    "I just got back from a trip actually! ✈️",
-    "Japan is at the top of my bucket list!",
-    "I love spontaneous weekend getaways!",
-    "Beach or mountains? I'm a beach person! 🏖️",
-    "Traveling is my favorite thing to do when I have time off!",
-  ],
-  fallback: [
-    "That's interesting! Tell me more about yourself?",
-    "I'd love to hear more about what you're into!",
-    "So what brings you to this app? 😊",
-    "I'm curious, what's your ideal weekend like?",
-    "What kind of things are you passionate about?",
-  ],
-};
-
-// Keywords to categorize incoming messages
-const KEYWORDS: Record<string, string[]> = {
-  greeting: ["hi", "hello", "hey", "howdy", "good morning", "good evening", "what's up", "sup"],
-  question: ["?", "what", "how", "why", "when", "where", "who", "which", "can you", "do you"],
-  interest: ["love", "like", "enjoy", "favorite", "into", "passion", "hobby", "hobbies"],
-  weekend: ["weekend", "saturday", "sunday", "plans", "doing this weekend", "free time"],
-  food: ["food", "eat", "restaurant", "cooking", "dinner", "lunch", "breakfast", "cuisine", "sushi", "pizza"],
-  travel: ["travel", "trip", "vacation", "country", "place", "visited", "going to", "flying"],
-};
-
-/**
- * Categorize an incoming message
- */
-function categorizeMessage(content: string): string {
-  const lower = content.toLowerCase();
-  
-  for (const [category, words] of Object.entries(KEYWORDS)) {
-    if (words.some(word => lower.includes(word))) {
-      return category;
-    }
-  }
-  
-  return "fallback";
-}
-
-/**
- * Get a random response from a category
- */
-function getRandomResponse(category: string): string {
-  const responses = BOT_RESPONSES[category] || BOT_RESPONSES.fallback;
-  return responses[Math.floor(Math.random() * responses.length)];
-}
-
-/**
- * Check if a user is a bot and should auto-reply.
- * Simplified: only checks User.isBot flag.
- * BotProfile is optional — many bots (DEMO, imported) don't have one.
- */
-export async function shouldBotReply(userId: string): Promise<{
-  shouldReply: boolean;
-  botType: string | null;
-}> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { isBot: true, botType: true },
-  });
-
-  if (!user?.isBot) {
-    return { shouldReply: false, botType: null };
-  }
-
-  // Optionally check BotProfile if it exists (for fine-grained control)
-  try {
-    const botProfile = await prisma.botProfile.findFirst({
-      where: { profile: { userId } },
-      select: { sleepUntil: true, isActive: true },
-    });
-
-    if (botProfile?.sleepUntil && botProfile.sleepUntil > new Date()) {
-      console.log(`[Bot Reply] Bot ${userId} is sleeping until ${botProfile.sleepUntil}`);
-      return { shouldReply: false, botType: user.botType };
-    }
-
-    if (botProfile?.isActive === false) {
-      console.log(`[Bot Reply] Bot ${userId} is inactive`);
-      return { shouldReply: false, botType: user.botType };
-    }
-  } catch {
-    // BotProfile doesn't exist for this user — that's fine, proceed with reply
-  }
-
-  return {
-    shouldReply: true,
-    botType: user.botType,
-  };
-}
+// 兼容旧调用点：`shouldBotReply` 的权威实现已迁至 `lib/im/bot-gate`。
+// 这里只做转出，不再保留第二份判定逻辑。
+export { shouldBotReply, checkBotReplyEligibility } from "@/lib/im/bot-gate";
 
 /**
  * Generate and send bot reply — SYNCHRONOUSLY (no setTimeout!)
@@ -161,9 +39,8 @@ export async function sendBotReply(
   incomingMessage: string
 ): Promise<void> {
   try {
-    // Categorize and generate response
-    const category = categorizeMessage(incomingMessage);
-    const responseContent = getRandomResponse(category);
+    // Categorize and generate response（单一模板源）
+    const { content: responseContent, category } = generateBotResponse(incomingMessage);
 
     // Get next sequence number
     const lastMessage = await prisma.iMMessage.findFirst({
@@ -306,6 +183,9 @@ export async function sendBotReply(
  * Handle incoming message — check if bot should reply and send immediately.
  * NO setTimeout: Vercel Serverless terminates after response.
  * Bot reply is written to DB before API returns; frontend polls and displays it.
+ *
+ * 这是 IM 侧**唯一**的 Bot 回复入口。分发器的 IM 分支也应当调用本函数，
+ * 而不是自己 dup 一份写入逻辑（G-6）。
  */
 export async function handleBotReply(
   conversationId: string,
@@ -313,10 +193,12 @@ export async function handleBotReply(
   receiverId: string,
   messageContent: string
 ): Promise<void> {
-  const { shouldReply, botType } = await shouldBotReply(receiverId);
-  
+  const { shouldReply, botType, reason } = await checkBotReplyEligibility(receiverId);
+
   if (!shouldReply) {
-    console.log(`[Bot Reply] Receiver ${receiverId} is not a bot or is inactive. Skipping.`);
+    console.log(
+      `[Bot Reply] Receiver ${receiverId} will not reply (reason: ${reason ?? "unknown"}). Skipping.`
+    );
     return;
   }
 

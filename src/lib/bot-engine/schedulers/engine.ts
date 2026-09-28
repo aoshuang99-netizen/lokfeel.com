@@ -42,6 +42,7 @@ import {
   shouldEndConversation,
   createChatMessageEvent,
 } from '../modules/chat';
+import { assertBotEnabled } from '@/config/bot-policy';
 
 // ═══════════════════════════════════════════════════════════════
 // Bot Engine Class
@@ -100,6 +101,11 @@ export class BotEngine {
    */
   async start(): Promise<void> {
     if (this.state.isRunning) return;
+
+    // P0-5：引擎级守卫。路由层已经拦了一道，这里再拦一道 ——
+    // cron / 脚本 / 任何 `new BotEngine(...).start()` 都必须经过同一个开关，
+    // 否则"模块已关闭"只是一句在路由上生效的口号。
+    assertBotEnabled();
 
     console.log('[BotEngine] Starting...');
     await this.loadBotUsers();
@@ -366,7 +372,7 @@ export class BotEngine {
                 actionType: 'chat_message_sent',
                 scheduledFor: new Date(now.getTime() + delayMs),
                 payload: {
-                  chatRoomId: chatRoom.chatRoomId,
+                  chatRoomId: chatRoom.conversationId,
                   content: closingMessage.content,
                   messageType: closingMessage.type,
                 },
@@ -398,7 +404,7 @@ export class BotEngine {
                 actionType: 'chat_message_sent',
                 scheduledFor: new Date(now.getTime() + delayMs),
                 payload: {
-                  chatRoomId: chatRoom.chatRoomId,
+                  chatRoomId: chatRoom.conversationId,
                   content: initMessage.content,
                   messageType: initMessage.type,
                 },
@@ -427,7 +433,7 @@ export class BotEngine {
             actionType: 'chat_message_sent',
             scheduledFor: new Date(now.getTime() + delayMs),
             payload: {
-              chatRoomId: chatRoom.chatRoomId,
+              chatRoomId: chatRoom.conversationId,
               content: responseMessage.content,
               messageType: responseMessage.type,
             },
@@ -523,15 +529,17 @@ export class BotEngine {
       }
 
       case 'chat_message_sent': {
-        const { chatRoomId, content, messageType } = action.payload as {
-          chatRoomId: string;
+        // 阶段 5：payload 键随接口一起更名（`chatRoomId` → `conversationId`）。
+        // 队列是**进程内内存**的，不存在"重启后读到旧键"的兼容问题。
+        const { conversationId, content, messageType } = action.payload as {
+          conversationId: string;
           content: string;
           messageType: string;
         };
 
         await this.dbAdapter.sendChatMessage(
           action.botUserId,
-          chatRoomId,
+          conversationId,
           content,
         );
 
@@ -540,7 +548,7 @@ export class BotEngine {
           botUserId: action.botUserId,
           type: 'chat_message_sent',
           timestamp: new Date(),
-          data: { chatRoomId, content, messageType },
+          data: { conversationId, content, messageType },
           metadata: { executedAt: new Date() },
         });
         break;
@@ -708,18 +716,25 @@ export interface BotEngineDbAdapter {
 
   // ─── Chat ──────────────────────────────────────────────
 
-  /** Get chat rooms where bot needs to respond */
+  /**
+   * 取出需要 Bot 回应的会话。
+   *
+   * P1-6 阶段 5：本接口的会话 id 字段已**更名为 `conversationId`** —— 阶段 4 之后
+   * Bot 的读写都应落在终局模型（`Conversation` / `IMMessage`）上，
+   * 沿用旧名会让"这个 id 到底是哪套系统的"变成一个必须靠上下文猜的问题，
+   * 而猜错的后果是消息写进一张用户读不到的表（G-11）。
+   */
   getPendingChatResponses(botUserId: string): Promise<Array<ChatMessageContext & {
-    chatRoomId: string;
+    conversationId: string;
     isReceiver: boolean;
     matchScore: number;
     minutesSinceLastMessage: number;
   }>>;
 
-  /** Send a chat message via the existing chat API */
+  /** 发送一条会话消息（写入 IM 终局模型） */
   sendChatMessage(
     botUserId: string,
-    chatRoomId: string,
+    conversationId: string,
     content: string,
   ): Promise<void>;
 }

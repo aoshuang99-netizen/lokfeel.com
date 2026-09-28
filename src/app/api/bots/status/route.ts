@@ -6,13 +6,24 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { countMessages } from '@/lib/im/stats';
 import { requireAdminAuth } from '@/lib/auth';
+import {
+  BOT_DISABLED_HTTP_STATUS,
+  botDisabledBody,
+  isBotEnabled,
+} from '@/config/bot-policy';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
     await requireAdminAuth();
+
+    // P0-5：Bot 模块总开关（鉴权之后判，避免匿名探测部署配置）
+    if (!isBotEnabled()) {
+      return NextResponse.json(botDisabledBody(), { status: BOT_DISABLED_HTTP_STATUS });
+    }
 
     // 统计数字用户信息
     const [totalBots, totalMatches, totalMessages] = await Promise.all([
@@ -30,10 +41,10 @@ export async function GET(req: NextRequest) {
       }),
 
       // Bot发送的消息数
-      db.message.count({
-        where: {
-          sender: { email: { endsWith: '@lokfeel.bot' } }
-        }
+      // P1-6 阶段 5：改走 stats 统一口径（原直读 Legacy `Message`，是删表阻断点）。
+      // 该函数在 IM 侧同样按 `sender` 关联过滤，因此 Bot 消息在迁移前后计数一致。
+      countMessages({
+        sender: { email: { endsWith: '@lokfeel.bot' } }
       })
     ]);
 

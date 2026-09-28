@@ -9,6 +9,11 @@
 import { Creem } from "creem";
 import crypto from "crypto";
 import { db } from "./db";
+// 套餐配置的**单一数据源**（src/config/plans.ts）。
+// ⚠️ 这三个符号原先在本文件被使用但**从未 import** —— 类型检查会直接报
+//    TS2304（找不到名称），而运行时是 `ReferenceError`，即模块加载即崩溃。
+//    改动价格/套餐请只改 src/config/plans.ts，不要在此另起一份。
+import { PLANS, RECURRING_PLAN_IDS, getPlanPriceCents } from "@/config/plans";
 
 // ── Configuration ──────────────────────────────────────
 
@@ -42,26 +47,51 @@ export function getCreemClient(): InstanceType<typeof Creem> {
   return _creemClient;
 }
 
-// ── Plan Config (aligned with existing Stripe plan amounts) ──
+/**
+ * Creem 套餐配置 —— 从单一配置源派生（src/config/plans.ts）。
+ *
+ * ⚠️ 不要在此硬编码金额。改价格请改 '@/config/plans' 的 PLANS。
+ *
+ * ⚠️ 合规提示（P0-1）：Creem 的服务条款禁止一切色情/成人内容，
+ *    并禁止「交友网站服务」类业务。因此本通道仅可用于**内容中立**的
+ *    社群平台场景；成人向场景必须走高风险支付通道。
+ *    详见 docs/PAYMENT-COMPLIANCE.md。
+ */
 
-export const CREEM_PLAN_CONFIG = {
-  PREMIUM_MONTHLY: {
-    name: "LokFeel Premium Monthly",
-    description: "Full power for serious seekers — monthly billing",
-    price: 1999,        // $19.99 (Creem API 字段名是 price，单位：分)
-    currency: "usd",
-    billingPeriod: "monthly" as const,  // Creem API 字段名是 billing_period
-    perks: { weeklyLimit: 999, canInitiateChat: true, canViewFullProfile: true },
-  },
-  PREMIUM_YEARLY: {
-    name: "LokFeel Premium Yearly",
-    description: "Full power for serious seekers — yearly billing (save 37%)",
-    price: 14999,       // $149.99/year (Creem API 字段名是 price，单位：分)
-    currency: "usd",
-    billingPeriod: "yearly" as const,
-    perks: { weeklyLimit: 999, canInitiateChat: true, canViewFullProfile: true },
-  },
+const CREEM_PERKS = {
+  weeklyLimit: 999,
+  canInitiateChat: true,
+  canViewFullProfile: true,
 } as const;
+
+type CreemPlanShape = {
+  name: string;
+  description: string;
+  /** 单位：分 */
+  price: number;
+  currency: 'usd';
+  billingPeriod: 'monthly' | 'yearly';
+  perks: typeof CREEM_PERKS;
+};
+
+export const CREEM_PLAN_CONFIG = RECURRING_PLAN_IDS.reduce(
+  (acc, id) => {
+    const plan = PLANS[id];
+    const billingPeriod: 'monthly' | 'yearly' =
+      plan.priceCents.yearly > 0 ? 'yearly' : 'monthly';
+
+    acc[id] = {
+      name: `LokFeel ${plan.name}`,
+      description: plan.description,
+      price: getPlanPriceCents(id, billingPeriod),
+      currency: 'usd',
+      billingPeriod,
+      perks: CREEM_PERKS,
+    };
+    return acc;
+  },
+  {} as Record<(typeof RECURRING_PLAN_IDS)[number], CreemPlanShape>,
+);
 
 export type CreemPlan = keyof typeof CREEM_PLAN_CONFIG;
 

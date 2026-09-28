@@ -224,7 +224,8 @@ export interface MatchReactionResult {
 
 export interface ChatMessageContext {
   botUserId: string;
-  chatRoomId: string;
+  /** 终局模型会话 id（P1-6 阶段 5 前为 Legacy `ChatRoom.id`） */
+  conversationId: string;
   partnerId: string;
   partnerName: string;
   partnerPersonality?: PersonalityType;

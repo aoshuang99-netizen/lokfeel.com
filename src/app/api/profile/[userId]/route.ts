@@ -39,9 +39,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             },
           },
         },
-        botProfile: true,
       },
     });
+
+    // P0-5 schema 拆分：Profile 不再持有 botProfile 反向关系，改单独查询。
+    // （include 中的 botProfile 已失效，为保持下方 profile.botProfile?.interests
+    //  的读取语义不变，此处按 profileId 补挂。）
+    const botProfileRow = profile
+      ? await db.botProfile.findUnique({ where: { profileId: profile.id } })
+      : null;
 
     if (!profile) {
       return NextResponse.json(
@@ -198,7 +204,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       boundaries: profile.boundaries ? JSON.parse(profile.boundaries) : [],
       dealbreakers: profile.dealbreakers ? JSON.parse(profile.dealbreakers) : [],
       emotionalAvailability: profile.emotionalAvailability,
-      interests: jsonArr(profile.botProfile?.interests),
+      interests: jsonArr(botProfileRow?.interests),
       photos: profile.avatar ? [profile.avatar] : [],
     };
 

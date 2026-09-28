@@ -408,10 +408,14 @@ async function main() {
   console.log(`📋 Loaded ${allUsers.length} users from JSON (${femaleData.users.length}F + ${maleData.users.length}M)`);
   
   // 2. Get all bot profiles from DB
-  const botProfiles: DbProfile[] = await db.profile.findMany({
+  // P0-5 schema 拆分后 Profile 不再持有 botProfile 反向关系，
+  // 「尚无 BotProfile 的 Profile」改两步：先取已占用的 profileId 集合再排除。
+  const existingBotProfileIds = new Set(
+    (await db.botProfile.findMany({ select: { profileId: true } })).map(b => b.profileId),
+  );
+  const allBotUserProfiles: DbProfile[] = await db.profile.findMany({
     where: {
       user: { isBot: true },
-      botProfile: null, // Only profiles without existing BotProfile
     },
     select: {
       id: true,
@@ -421,7 +425,8 @@ async function main() {
       user: { select: { email: true } },
     },
   });
-  
+  const botProfiles = allBotUserProfiles.filter(p => !existingBotProfileIds.has(p.id));
+
   console.log(`📊 Found ${botProfiles.length} bot profiles needing BotProfile`);
   
   if (botProfiles.length === 0) {
@@ -629,10 +634,10 @@ async function main() {
   }
   
   // 6. Verify final count
+  // P0-5 拆分后无反向关系：原 `profile.count({ where: { botProfile: { id: { not: undefined } } } })`
+  // 的过滤条件是 no-op，语义 = 持有 BotProfile 的 Profile 数 = BotProfile 行数。
   const finalCount = await db.botProfile.count();
-  const linkedCount = await db.profile.count({
-    where: { botProfile: { id: { not: undefined } } }
-  });
+  const linkedCount = finalCount;
   console.log(`\n✅ Total BotProfiles in DB: ${finalCount}`);
   console.log(`✅ Profiles with BotProfile: ${linkedCount}`);
   

@@ -7,6 +7,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
+import { countMessages } from "@/lib/im/stats";
+import {
+  BOT_DISABLED_HTTP_STATUS,
+  botDisabledBody,
+  isBotEnabled,
+} from "@/config/bot-policy";
 import { 
   botNeuralNetwork, 
   batchAssignTagsToAllBots,
@@ -37,18 +43,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 
+    // P0-5：Bot 模块总开关。放在鉴权之后 —— 非管理员不应从状态码差异
+    // 推断出部署是否启用了 Bot 体系。
+    if (!isBotEnabled()) {
+      return NextResponse.json(botDisabledBody(), { status: BOT_DISABLED_HTTP_STATUS });
+    }
+
     // 获取统计数据
     const totalBots = await prisma.botProfile.count();
     const activeBots = await prisma.botProfile.count({ where: { isActive: true } });
-    const botsWithTags = await prisma.profile.count({
-      where: {
-        botProfile: { isNot: null },
-        NOT: { relationshipGoal: undefined },
-      },
-    });
+    // P0-5 schema 拆分后 Profile 不再持有 botProfile 反向关系。
+    // 原查询为 `prisma.profile.count({ where: { botProfile: { isNot: null }, ... } })`，
+    // 其中 `NOT: { relationshipGoal: undefined }` 是 no-op 过滤器，
+    // 故语义等价于「持有 BotProfile 行的 Profile 数」= BotProfile 行数（profileId 唯一）。
+    const botsWithTags = await prisma.botProfile.count();
 
     const totalMatches = await prisma.match.count();
-    const totalMessages = await prisma.message.count();
+    // P1-6 阶段 5：原为 `prisma.message.count()`（Legacy 裸查，B9 阻断点）→
+    // 收敛到统计单一数据源（口径 max(Legacy, IM)，删表后自动退化为纯 IM）。
+    const totalMessages = await countMessages();
 
     const recentInteractions = await prisma.botInteractionLog.findMany({
       orderBy: { createdAt: "desc" },
@@ -97,6 +110,12 @@ export async function POST(request: NextRequest) {
     });
     if (user?.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+    }
+
+    // P0-5：Bot 模块总开关。**变更类操作尤其需要这道闸** ——
+    // 否则 `reset-learning` 这类会删数据的动作在模块已关闭时仍可执行。
+    if (!isBotEnabled()) {
+      return NextResponse.json(botDisabledBody(), { status: BOT_DISABLED_HTTP_STATUS });
     }
 
     const body = await request.json();

@@ -4,7 +4,10 @@ import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  // P0-5（2026-09-28）：多文件 schema —— core.prisma（核心）+ bot.prisma（Bot 可选模块，
+  // 见 docs/OPEN-CORE-POSITIONING.md §4）。目录形式下两个文件共同参与 generate，
+  // client 与生成产物不变；开源发行构建可单独排除 bot.prisma。
+  schema: "prisma/schema",
   migrations: {
     path: "prisma/migrations",
   },

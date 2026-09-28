@@ -2,6 +2,13 @@
 // App Configuration
 // ============================================================================
 
+import {
+  PLANS,
+  PLAN_IDS,
+  getPlanPriceDollars,
+  type PlanId,
+} from '@/config/plans'
+
 export const APP_CONFIG = {
   name: 'LokFee!',
   company: 'LokFee! Inc.',
@@ -31,6 +38,8 @@ export const APP_CONFIG = {
 
 export const MATCH_CONFIG = {
   // Weekly match limits by plan
+  // ⚠️ 必须与 src/config/plans.ts 的 PLANS[].features.weeklyMatches 保持一致，
+  //    由 tests/plans-consistency.test.ts 强制校验。改配额请改 PLANS。
   weeklyMatches: {
     FREE: 3,
     LADY_FREE: 5,
@@ -63,107 +72,35 @@ export const MATCH_CONFIG = {
 } as const
 
 // ============================================================================
-// Subscription Plans
+// Subscription Plans —— 从单一配置源派生（勿在此硬编码价格）
 // ============================================================================
+//
+// ⚠️ 真实定义在 src/config/plans.ts 的 PLANS。
+// 本导出仅为向后兼容保留旧的对象形状（含 price.monthly 美元数值）。
+// 新增代码请直接从 '@/config/plans' 引入，不要依赖此兼容层。
 
-export const SUBSCRIPTION_PLANS = {
-  FREE: {
-    id: 'FREE',
-    name: 'Free',
-    description: 'Get started with basic matching',
-    price: {
-      monthly: 0,
-      yearly: 0,
-    },
-    features: {
-      weeklyMatches: 3,
-      messagesPerMatch: 2,
-      canSeeWhoLikedMe: false,
-      canRematch: false,
-      advancedFilters: false,
-      prioritySupport: false,
-      incognitoMode: false,
-      readReceipts: false,
-      vaultControl: 'readonly',
-      matchExplanation: 'basic',
-      priorityMatching: false,
-      travelMode: false,
-      premiumBadge: false,
-    },
+export interface LegacySubscriptionPlanShape {
+  id: PlanId
+  name: string
+  description: string
+  price: { monthly: number; yearly: number }
+  features: (typeof PLANS)[PlanId]['features']
+}
+
+export const SUBSCRIPTION_PLANS = PLAN_IDS.reduce(
+  (acc, id) => {
+    const plan = PLANS[id]
+    acc[id] = {
+      id: plan.id,
+      name: plan.name,
+      description: plan.description,
+      price: getPlanPriceDollars(id),
+      features: plan.features,
+    }
+    return acc
   },
-  LADY_FREE: {
-    id: 'LADY_FREE',
-    name: 'Lady Free',
-    description: 'Because you deserve the best — always free for women',
-    price: {
-      monthly: 0,
-      yearly: 0,
-    },
-    features: {
-      weeklyMatches: 5,
-      messagesPerMatch: -1, // unlimited
-      canSeeWhoLikedMe: true,
-      canRematch: false,
-      advancedFilters: true,
-      prioritySupport: false,
-      incognitoMode: true,
-      readReceipts: true,
-      vaultControl: 'full',
-      matchExplanation: 'full',
-      priorityMatching: false,
-      travelMode: false,
-      premiumBadge: false,
-    },
-  },
-  PREMIUM_MONTHLY: {
-    id: 'PREMIUM_MONTHLY',
-    name: 'Premium Monthly',
-    description: 'Unlock full matching potential',
-    price: {
-      monthly: 19.99,
-      yearly: 0,
-    },
-    features: {
-      weeklyMatches: 5,
-      messagesPerMatch: -1, // unlimited
-      canSeeWhoLikedMe: true,
-      canRematch: true,
-      advancedFilters: true,
-      prioritySupport: true,
-      incognitoMode: true,
-      readReceipts: true,
-      vaultControl: 'readonly',
-      matchExplanation: 'full',
-      priorityMatching: true,
-      travelMode: true,
-      premiumBadge: true,
-    },
-  },
-  PREMIUM_YEARLY: {
-    id: 'PREMIUM_YEARLY',
-    name: 'Premium Yearly',
-    description: 'Best value for serious seekers',
-    price: {
-      monthly: 0,
-      yearly: 149.99, // ~$12.50/month, 37% savings
-    },
-    features: {
-      weeklyMatches: 5,
-      messagesPerMatch: -1, // unlimited
-      canSeeWhoLikedMe: true,
-      canRematch: true,
-      advancedFilters: true,
-      prioritySupport: true,
-      incognitoMode: true,
-      readReceipts: true,
-      vaultControl: 'readonly',
-      matchExplanation: 'full',
-      priorityMatching: true,
-      travelMode: true,
-      premiumBadge: true,
-    },
-  },
-} as const
+  {} as Record<PlanId, LegacySubscriptionPlanShape>,
+)
 
 // ============================================================================
 // Notification Types

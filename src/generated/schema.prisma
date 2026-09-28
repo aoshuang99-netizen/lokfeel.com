@@ -1,14 +1,16 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated"
-}
-
-datasource db {
-  provider = "sqlite"
-}
+// ═══════════════════════════════════════════════════════════════
+// P0-5 · Bot 可选模块 schema（2026-09-28 从核心 schema 移出）
+//
+// 本文件与 core.prisma 一起参与 prisma generate（同一 client、同一次生成），
+// 因此**业务代码零改动**。它的意义：
+//   · 多租户 / 开源核心改造只面对 core.prisma，6 张 Bot 表 + 4 个 Bot 枚举
+//     不再进入改造面（原估可减少约 14% 多租户改造量）
+//   · 开源发行构建可在打包时排除本文件（配合「默认关闭的可选模块」定位，
+//     见 docs/OPEN-CORE-POSITIONING.md §4；届时需同时移除 Bot 代码路径）
+//
+// 注意：User.isBot / botType / botConfig 是 User 表的列（核心侧），
+// 属数据列而非表，本阶段不迁移 —— 迁移它们需要破坏性 DB 变更。
+// ═══════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════
 // BOT SYSTEM — Digital User Models
@@ -52,9 +54,12 @@ enum OnlinePattern {
 
 // Bot扩展资料 - 数字用户详细信息
 model BotProfile {
-  id        String  @id @default(cuid())
-  profileId String  @unique
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id        String @id @default(cuid())
+  // P0-5 拆分说明：与核心 Profile 的关联降级为普通列（DB 侧 FK 保留不变）。
+  // 跨文件 Prisma 关系要求 core.prisma 声明反向字段（P1012），会让核心 schema
+  // 重新引用 Bot 类型 —— 违背本拆分的目的。查询路径：先按 userId 查 Profile.id，
+  // 再按 profileId 查本表（见 src/lib/bot-automation.ts 的 findBotProfileByUserId）。
+  profileId String @unique
 
   // 基础配置
   botType       BotType          @default(SEED)
@@ -236,6 +241,18 @@ model BotAvatar {
   updatedAt DateTime @updatedAt
 }
 
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../src/generated"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
 // ═══════════════════════════════════════════════════════════════
 // AUTH — NextAuth v5 compatible models
 // ═══════════════════════════════════════════════════════════════
@@ -271,8 +288,8 @@ model User {
   matchReactions  MatchReaction[]
 
   // Chat
-  chatRooms ChatRoomMember[]
-  messages  Message[]
+  // P1-6 阶段 5：原 `chatRooms ChatRoomMember[]` / `messages Message[]` 关系
+  // 随 Legacy 三表删除而移除。
 
   // IM Module
   conversationsA      Conversation[]            @relation("ConversationUserA")
@@ -450,7 +467,6 @@ model Profile {
   adminNotes String?
 
   // Bot System Relation
-  botProfile BotProfile?
 
   // ═══════════════════════════════════════════════════════════════
   // PRODUCT OPTIMIZATION: Elite Power Features
@@ -517,7 +533,8 @@ model Match {
   receiverAction MatchAction?
 
   // Connection
-  chatRoom ChatRoom?
+  // P1-6 阶段 5：原 `chatRoom ChatRoom?` 关系随 ChatRoom 表删除而移除。
+  // 会话入口改由 Conversation.matchId 反查（见 api/matches/[id]/route.ts）。
 
   // Admin
   reviewedBy  String?
@@ -578,92 +595,10 @@ model MatchReaction {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// REAL-TIME CHAT (Legacy - backwards compatible)
+// P1-6 阶段 5（2026-09-28）：Legacy 三表 ChatRoom / ChatRoomMember / Message
+// 已从 schema 与数据库删除。血缘 126/126 已迁移至 IMMessage，门禁 GO。
+// 历史与执行手册：docs/CHAT-MERGE-RUNBOOK.md · docs/CHAT-MERGE-AUDIT.md
 // ═══════════════════════════════════════════════════════════════
-
-model ChatRoom {
-  id String @id @default(cuid())
-
-  match   Match?  @relation(fields: [matchId], references: [id])
-  matchId String? @unique
-
-  members  ChatRoomMember[]
-  messages Message[]
-
-  lastMessageAt DateTime?
-  isArchived    Boolean   @default(false)
-
-  // ═══════════════════════════════════════════════════════════════
-  // PRODUCT OPTIMIZATION: The 24h Vault
-  // ═══════════════════════════════════════════════════════════════
-
-  // Vault Status
-  vaultStatus VaultStatus @default(ACTIVE) // ACTIVE, EXTENDED, REVOKED, EXPIRED
-
-  // Vault Timer
-  vaultExpiry    DateTime? // 24h倒计时过期时间
-  extendedAt     DateTime? // 延长时间点
-  extendedBy     String? // 谁延长了
-  extensionCount Int       @default(0) // 延长次数
-
-  // Female Controls (女性特权)
-  revokedAt    DateTime? // 被终止时间
-  revokedBy    String? // 谁终止了
-  revokeReason String? // 终止原因
-
-  // Privacy Protection
-  screenshotCount  Int       @default(0) // 检测到的截图次数
-  lastScreenshotAt DateTime? // 最后一次截图时间
-
-  // IM Module: link to Conversation (1:1)
-  conversation Conversation?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Soft delete (v3.0)
-  deletedAt DateTime?
-
-  @@index([vaultStatus])
-  @@index([vaultExpiry])
-  @@index([deletedAt])
-}
-
-model ChatRoomMember {
-  id     String   @id @default(cuid())
-  roomId String
-  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  userId String
-  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  lastReadAt DateTime?
-  isMuted    Boolean   @default(false)
-
-  joinedAt DateTime @default(now())
-
-  @@unique([roomId, userId])
-  @@index([userId])
-}
-
-model Message {
-  id       String   @id @default(cuid())
-  roomId   String
-  room     ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  senderId String
-  sender   User     @relation(fields: [senderId], references: [id])
-
-  content     String
-  messageType MessageType @default(TEXT)
-  metadata    String? // JSON for rich content (images, links, etc.)
-
-  isRead Boolean   @default(false)
-  readAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([roomId, createdAt])
-  @@index([senderId])
-}
 
 // ═══════════════════════════════════════════════════════════════
 // IM MODULE — Next-Gen Chat Infrastructure
@@ -681,8 +616,28 @@ model Conversation {
   initiatorId String // who started the conversation
 
   // Backlink to ChatRoom (migration bridge)
-  chatRoomId String?   @unique
-  chatRoom   ChatRoom? @relation(fields: [chatRoomId], references: [id])
+  //
+  // ⚠️ 阶段 5 的 schema 编辑必须**保留 chatRoomId 标量列与唯一索引**，只删掉
+  //    `chatRoom` 关系字段（关系指向的 ChatRoom model 会被删除）。
+  //    原因：改造前 user 收藏的 /dashboard/chats/<ChatRoom.id> 旧链接里没有
+  //    Conversation.id，只能靠本列反查 —— 删掉它等于把老用户挡在"会话不存在"之外（G-8）。
+  //    `lib/im/resolve.ts` 的路径 2 就建立在本列的 @unique 索引上。
+  chatRoomId String? @unique
+  // P1-6 阶段 5：原 `chatRoom ChatRoom? @relation(...)` 关系随 ChatRoom 表删除而移除。
+  // 标量列 chatRoomId 与 @unique 索引**刻意保留**（G-8 旧书签别名回退，
+  // 见 lib/im/resolve.ts 路径 2）。数据库侧同步删掉了本列的外键约束。
+
+  // ═══════════════════════════════════════════════════════════════
+  // 匹配关联（G-10，阶段 5 前置修复）
+  //
+  // 发现路径：阶段 5 的 schema 清理清单原本只列了 Vault 字段。核对 `ChatRoom` 模型时
+  // 发现 `matchId` / `match.matchScore` **只存在于 ChatRoom**，而会话列表（`lib/im/list.ts`）
+  // 与会话详情都在向 UI 输出 matchScore —— 删表会让"匹配分"整块消失，属静默功能回退。
+  //
+  // 这里刻意**只加标量列、不加 relation**：relation 会要求 Match 侧反向声明字段，
+  // 扩大 schema 改动面；而 matchScore 只需要一次批量查询即可补齐（见 list.ts）。
+  // ═══════════════════════════════════════════════════════════════
+  matchId String?
 
   // State
   state       ConversationState @default(ACTIVE)
@@ -701,8 +656,36 @@ model Conversation {
   // Per-user settings (JSON for flexibility)
   settings String? // JSON: { userA: {muted, pinned}, userB: {muted, pinned} }
 
-  // Vault
-  vaultExpiresAt DateTime? // Vault expiry timestamp (null = no Vault)
+  // ═══════════════════════════════════════════════════════════════
+  // Vault —— 24h 限时对话
+  //
+  // P1-6 阶段 4（G-1 修复）：以下字段此前**只存在于 ChatRoom**。方案 A 确定 Conversation
+  // 为终局模型后，若不在删除 ChatRoom 前把它们迁移过来，阶段 5 会**整体丢失**：
+  //   · 女性用户的「终结对话」权限（vaultStatus / revokedAt / revokeReason）
+  //   · 24h 倒计时的延长审计（extensionCount / extendedAt / extendedBy）
+  //   · 截图防护的计数与取证（screenshotCount / lastScreenshotAt）
+  // 迁移脚本见 scripts/chat-merge/migrate-vault.ts（幂等 + dry-run）。
+  // ═══════════════════════════════════════════════════════════════
+
+  // Vault expiry timestamp (null = no Vault)
+  vaultExpiresAt DateTime?
+
+  // Vault 四态：ACTIVE / EXTENDED（已延长）/ REVOKED（被女性终止）/ EXPIRED（超时）
+  vaultStatus VaultStatus @default(ACTIVE)
+
+  // 延长审计
+  extensionCount Int       @default(0)
+  extendedAt     DateTime?
+  extendedBy     String?
+
+  // 女性特权：终止对话
+  revokedAt    DateTime?
+  revokedBy    String?
+  revokeReason String?
+
+  // 隐私防护
+  screenshotCount  Int       @default(0)
+  lastScreenshotAt DateTime?
 
   // Consent cache
   cachedConsentState ConsentState @default(CONSENT_NONE)
@@ -727,6 +710,10 @@ model Conversation {
   @@index([userBId])
   @@index([controllingUserId])
   @@index([vaultExpiresAt])
+  // P1-6 阶段 4（G-1）：Vault 状态查询索引（与 ChatRoom 侧保持一致）
+  @@index([vaultStatus])
+  // P1-6 阶段 5（G-10）：匹配分补迁后按 matchId 反查
+  @@index([matchId])
   @@index([deletedAt])
 }
 
@@ -762,10 +749,16 @@ model IMMessage {
 
   // Core fields
   clientMsgId String? @unique // client-generated ID for dedup
-  senderId    String
-  sender      User    @relation("IMMessageSender", fields: [senderId], references: [id])
-  receiverId  String
-  seq         Int // server-assigned sequence number (monotonic per conversation)
+
+  // P1-6 阶段 3 迁移桥：指向被迁移的 Legacy Message.id。
+  // 幂等锚点 —— 迁移脚本以此字段判定"已迁/未迁"，绝不重复插入。
+  // 阶段 5（Legacy 表删除后）可安全移除本字段。
+  legacyMessageId String? @unique
+
+  senderId   String
+  sender     User   @relation("IMMessageSender", fields: [senderId], references: [id])
+  receiverId String
+  seq        Int // server-assigned sequence number (monotonic per conversation)
 
   // Content
   msgType  IMMessageType @default(TEXT)

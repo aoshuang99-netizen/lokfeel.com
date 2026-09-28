@@ -192,17 +192,22 @@ async function generateRecommendations(
           },
         },
       },
-      botProfile: {
-        select: {
-          botType: true,
-          activityLevel: true,
-          interests: true,
-        },
-      },
     },
     orderBy: { compatibilityScore: 'desc' },
     take: limit + offset + 10,
   });
+
+  // P0-5 schema 拆分：Profile 不再持有 botProfile 反向关系，改批量二次查询
+  const botProfileRows = await db.botProfile.findMany({
+    where: { profileId: { in: candidates.map(c => c.id) } },
+    select: {
+      profileId: true,
+      botType: true,
+      activityLevel: true,
+      interests: true,
+    },
+  });
+  const botProfileByProfileId = new Map(botProfileRows.map(b => [b.profileId, b]));
 
   const scoredCandidates = candidates.map(candidate => {
     const candidateTags = jsonArr(candidate.selectedTags);
@@ -235,6 +240,7 @@ async function generateRecommendations(
     
     return {
       ...candidate,
+      botProfile: botProfileByProfileId.get(candidate.id) ?? null,
       completion,
       matchScore,
       matchReason,

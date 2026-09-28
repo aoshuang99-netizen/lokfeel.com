@@ -12,10 +12,25 @@ import { jsonArr } from '@/lib/json-helpers';
  */
 
 import { db as prisma } from "./db";
+import { createConversation, createMessage } from "./im/queries";
+import { assertBotEnabled, isBotEnabled } from '@/config/bot-policy';
 
 // ═══════════════════════════════════════════════════════════════
 // 1. 自动标签分发系统
 // ═══════════════════════════════════════════════════════════════
+
+/**
+ * P0-5 schema 拆分后 BotProfile 不再持有对 Profile 的 Prisma 关系
+ * （profileId 为普通列），按 userId 反查 BotProfile 改两步走。
+ */
+async function findBotProfileByUserId(userId: string) {
+  const profile = await prisma.profile.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+  if (!profile) return null;
+  return prisma.botProfile.findFirst({ where: { profileId: profile.id } });
+}
 
 export const RELATIONSHIP_TAGS = {
   // 关系类型标签 - 匹配 v3 onboarding enum
@@ -119,21 +134,29 @@ export async function assignTagsToBot(userId: string) {
 export async function batchAssignTagsToAllBots() {
   console.log("[Bot Automation] Starting batch tag assignment...");
   
-  // 获取所有数字用户
-  const botProfiles = await prisma.botProfile.findMany({
+  // 获取所有数字用户（P0-5 拆分后无 profile 关系，改两步批量查询）
+  const activeBots = await prisma.botProfile.findMany({
     where: { isActive: true },
-    include: { profile: true },
+    select: { profileId: true },
   });
-  
+  const profiles = await prisma.profile.findMany({
+    where: { id: { in: activeBots.map(b => b.profileId) } },
+    select: { id: true, userId: true },
+  });
+  const userIdByProfileId = new Map(profiles.map(p => [p.id, p.userId]));
+  const botProfiles = activeBots
+    .map(b => ({ profileId: b.profileId, userId: userIdByProfileId.get(b.profileId) }))
+    .filter((b): b is { profileId: string; userId: string } => Boolean(b.userId));
+
   console.log(`[Bot Automation] Found ${botProfiles.length} bot profiles`);
-  
+
   const results = [];
   for (const bot of botProfiles) {
     try {
-      const result = await assignTagsToBot(bot.profile.userId);
+      const result = await assignTagsToBot(bot.userId);
       results.push(result);
     } catch (error) {
-      console.error(`[Bot Automation] Failed to assign tags to ${bot.profile.userId}:`, error);
+      console.error(`[Bot Automation] Failed to assign tags to ${bot.userId}:`, error);
     }
   }
   
@@ -348,28 +371,39 @@ export function generateResponse(botProfile: any, lastMessage: string, conversat
 }
 
 /**
- * 发送AI消息
+ * 发送 AI 消息。
+ *
+ * P1-6 阶段 5：本函数原先**只写 Legacy `Message`**（B9 阻断点），
+ * 而阶段 4 之后用户读的是 IM —— 也就是说这些 Bot 消息用户一条都看不到。
+ * 现改为走终局模型（`createMessage` 同时维护 seq 与未读计数），
+ * 第二个参数语义由 `chatRoomId` 变为 `conversationId`。
+ *
+ * `receiverId` 不在入参里：它可以从会话双方推导（本产品会话恒为 1:1），
+ * 比要求调用方额外传一个"对方是谁"更不容易传错。
  */
-export async function sendBotMessage(botUserId: string, chatRoomId: string, content: string) {
-  const message = await prisma.message.create({
-    data: {
-      roomId: chatRoomId,
-      senderId: botUserId,
-      content,
-      isRead: false,
-    },
+export async function sendBotMessage(botUserId: string, conversationId: string, content: string) {
+  const conv = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { userAId: true, userBId: true },
   });
-  
+
+  if (!conv) {
+    throw new Error(`[bot-automation] conversation not found: ${conversationId}`);
+  }
+
+  const receiverId = conv.userAId === botUserId ? conv.userBId : conv.userAId;
+  const message = await createMessage(conversationId, botUserId, receiverId, content);
+
   // 记录交互日志
   await prisma.botInteractionLog.create({
     data: {
       botUserId,
       interactionType: "message_sent",
       action: "initiate",
-      context: JSON.stringify({ chatRoomId, messageId: message.id }),
+      context: JSON.stringify({ conversationId, messageId: message.msgId }),
     },
   });
-  
+
   return message;
 }
 
@@ -402,9 +436,7 @@ export async function recordInteractionFeedback(feedback: InteractionFeedback) {
   });
   
   // 更新bot统计
-  const bot = await prisma.botProfile.findFirst({
-    where: { profile: { userId: feedback.botId } },
-  });
+  const bot = await findBotProfileByUserId(feedback.botId);
   
   if (bot) {
     await prisma.botProfile.update({
@@ -441,9 +473,7 @@ export async function evolveBotPreferences(botId: string) {
   const failurePatterns = extractPatterns(negativeRecords);
   
   // 更新bot偏好
-  const bot = await prisma.botProfile.findFirst({
-    where: { profile: { userId: botId } },
-  });
+  const bot = await findBotProfileByUserId(botId);
   
   if (bot) {
     const currentLearningData = bot.learningData ? JSON.parse(bot.learningData) : {};
@@ -481,7 +511,10 @@ export class BotNeuralNetwork {
    */
   async start() {
     if (this.isRunning) return;
-    
+
+    // P0-5：引擎级守卫（同 BotEngine / BotBehaviorEngine，见 src/config/bot-policy.ts）
+    assertBotEnabled();
+
     console.log("[Bot Neural Network] Starting self-loop...");
     this.isRunning = true;
     
@@ -510,6 +543,14 @@ export class BotNeuralNetwork {
    * 执行一个完整周期
    */
   private async executeCycle() {
+    // P0-5：纵深防御。本方法可被 `botNeuralNetwork["executeCycle"]()` 直接调用，
+    // 也可能在模块被关闭后仍被既有的 setInterval 触及 —— 所以这里**静默跳过**而不是抛错，
+    // 避免在定时器回调里制造未处理的 Promise rejection。
+    if (!isBotEnabled()) {
+      console.warn("[Bot Neural Network] Bot 模块已关闭（BOT_ENGINE_ENABLED=false），跳过本周期。");
+      return;
+    }
+
     console.log("[Bot Neural Network] Executing cycle...", new Date().toISOString());
     
     try {
@@ -604,24 +645,19 @@ export class BotNeuralNetwork {
       const botProfile = match.sender.profile;
       const targetProfile = match.receiver.profile;
       
-      // 创建聊天室
-      const chatRoom = await prisma.chatRoom.create({
-        data: {
-          matchId: match.id,
-          vaultExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24小时
-          members: {
-            create: [
-              { userId: match.senderId },
-              { userId: match.receiverId },
-            ],
-          },
-        },
+      // 创建会话（IM 终局模型）。
+      // P1-6 阶段 5：原先只建 Legacy `ChatRoom` —— 阶段 4 前端换源后这种会话
+      // 在聊天页里不存在，且它**从不写 Conversation.chatRoomId**，
+      // 因此每跑一次就多一个"有房间没挂上会话"的孤儿房（B3 门禁会报）。
+      const conversation = await createConversation(match.senderId, match.receiverId, match.senderId, {
+        matchId: match.id,
+        vaultExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24小时
       });
       
       // 发送破冰消息
       if (!botProfile) continue;
       const icebreaker = generateIcebreaker(botProfile, targetProfile);
-      await sendBotMessage(botProfile.userId, chatRoom.id, icebreaker);
+      await sendBotMessage(botProfile.userId, conversation.convId, icebreaker);
       
       // 更新匹配状态
       await prisma.match.update({
@@ -634,24 +670,23 @@ export class BotNeuralNetwork {
   }
   
   private async step4_ContinueConversations() {
-    // 找到有未读消息的聊天室
-    const activeChats = await prisma.chatRoom.findMany({
+    // 找到有未读消息的会话。
+    // P1-6 阶段 5：改用终局模型 —— 未读判据由 Legacy 的 `Message.isRead` 改为
+    // `Conversation.unreadCountA/B`（与前端徽章同源），消息体从 `IMMessage` 读取。
+    const activeChats = await prisma.conversation.findMany({
       where: {
-        messages: {
-          some: {
-            isRead: false,
-          },
-        },
+        state: { in: ['ACTIVE', 'PAUSED'] },
+        OR: [{ unreadCountA: { gt: 0 } }, { unreadCountB: { gt: 0 } }],
       },
       include: {
-        messages: {
-          orderBy: { createdAt: "desc" },
-          take: 5,
-        },
-        members: {
+        participants: {
           include: {
             user: { include: { profile: true } },
           },
+        },
+        imMessages: {
+          orderBy: { seq: 'desc' },
+          take: 5,
         },
       },
       take: 10,
@@ -659,15 +694,17 @@ export class BotNeuralNetwork {
     
     for (const chat of activeChats) {
       // 简化处理
-      const botParticipant = chat.members[0]?.user;
-      const humanParticipant = chat.members[1]?.user;
+      const botParticipant = chat.participants[0]?.user;
+      const humanParticipant = chat.participants[1]?.user;
       
-      if (!botParticipant?.profile) continue;
+      if (!botParticipant?.profile || !humanParticipant) continue;
       
-      const lastMessage = chat.messages[0];
-      const history = chat.messages.map(m => m.content).reverse();
+      const lastMessage = chat.imMessages[0];
+      if (!lastMessage) continue;
       
-      const response = generateResponse(botParticipant.profile, lastMessage.content, history);
+      const history = chat.imMessages.map(m => m.payload).reverse();
+      
+      const response = generateResponse(botParticipant.profile, lastMessage.payload, history);
       
       // 模拟打字延迟
       await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
@@ -681,7 +718,7 @@ export class BotNeuralNetwork {
         interactionType: "chat_response",
         outcome: "positive",
         engagementScore: 75,
-        context: { chatRoomId: chat.id, messageLength: response.length },
+        context: { conversationId: chat.id, messageLength: response.length },
       });
     }
     
