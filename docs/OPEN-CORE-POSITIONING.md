@@ -124,7 +124,7 @@
 |---|---|---|
 | ① 从核心 schema 移出（6 张表） | ✅ **已完成** | schema 拆分为多文件目录 `prisma/schema/`（`core.prisma` 42 张核心表 + `bot.prisma` 6 张 Bot 表 + 4 个 Bot 枚举），同一 Prisma client、业务代码零改动。**注意**：`BotProfile.profileId` 降级为普通列（DB 侧 FK 保留），核心 `Profile` 不再声明反向关系 —— 这是拆分的必要代价，按 userId 反查 BotProfile 改两步查询（`bot-gate.ts` / `bot-automation.ts` 已重写）。DB 侧建表走 `prisma migrate diff` + 差集同步（`db push` 对远程 libSQL 不可用） |
 | ② 改为默认关闭的可选模块 | ✅ **已完成** | `src/config/bot-policy.ts` 单一配置源 + `npm run verify:bot` **109 项通过**。改造前**没有任何总开关** —— 想关掉只能去各部署平台逐条删定时任务，删漏一条 Bot 就继续写库 |
-| ③ 不携带任何 Bot 生成数据 | ⬜ 待检查 | 需在发布前核对镜像与仓库内不含 Bot 数据（`scripts/import-bot-*.mjs` 等导入脚本**应在发布物中移除或标注**） |
+| ③ 不携带任何 Bot 生成数据 | ✅ **已完成（2026-09-28）** | `public/bot-avatars/`（1219 张 / 9.3MB）已移出仓库（`.gitignore` + `git rm --cached`，本地保留供维护脚本）；DB 复核 0 个用户指向该目录；`.dockerignore` 显式排除 `backups/` 与 `public/bot-avatars/`；`prisma/seed.ts` 清理列表移除已删除的 Legacy 三表。`scripts/import-bot-*.mjs` 不存在（历史记录有误） |
 | ④ 文档明确用途与信任风险 | ✅ 已完成 | `docs/SELF-HOSTING.md` §5.6；本节即风险说明 |
 
 **关于默认值的最终状态（2026-09-28 翻转，必须写清楚，否则下一个人会改错）**：

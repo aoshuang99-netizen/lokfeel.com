@@ -20,10 +20,11 @@ async function main() {
 
   // Clean up existing data (in order due to foreign keys)
   console.log('🧹 Cleaning existing data...')
+  // P1-6 阶段 5：Legacy 三表（Message/ChatRoomMember/ChatRoom）已删除，不再列入清理
   const tablenames = [
-    'AnalyticsEvent', 'AdminLog', 'Payment', 'Message', 'ChatRoomMember',
-    'ChatRoom', 'MatchReaction', 'Match', 'Notification', 'Subscription',
-    'Profile', 'Session', 'Account', 'VerificationToken', 'SystemConfig', 'User',
+    'AnalyticsEvent', 'AdminLog', 'Payment', 'MatchReaction', 'Match',
+    'Notification', 'Subscription', 'Profile', 'Session', 'Account',
+    'VerificationToken', 'SystemConfig', 'User',
   ]
 
   for (const tablename of tablenames) {

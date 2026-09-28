@@ -52,3 +52,5 @@ npm-debug.log*
 *.backup
 *.old
 *.tmp
+# 生产数据备份（阶段 5 三表快照等）—— 绝不允许进入镜像
+backups

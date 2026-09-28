@@ -64,3 +64,6 @@ cloudflare-env.d.ts
 # 生产数据备份（阶段 5 删表前的三表快照等）—— 绝不能进仓库
 /backups/
 /deploy-tasks/
+
+# Bot 生成数据不入仓库（定位 ③）；本地保留仅供维护脚本使用
+/public/bot-avatars/
