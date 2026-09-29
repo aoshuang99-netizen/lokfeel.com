@@ -57,6 +57,17 @@ updates:
       # @types/bcryptjs 是已废弃的 stub（bcryptjs@3 自带类型定义），已从依赖中移除，
       # 防止 dependabot 依据 lock 残留再次提案。
       - dependency-name: '@types/bcryptjs'
+      # typescript 大版本：TS 7 是 Go 原生重写版，但 @typescript-eslint/eslint-plugin
+      # (8.58.x) 的 peer 是 ">=4.8.4 <6.1.0"，装上 TS 7 会被 npm 直接移除该插件，
+      # `npm run lint` 随之报废（eslint-config-next 依赖它）。
+      # 待 @typescript-eslint 官方声明支持后，再人工评估升级。
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      # nodemailer 大版本：@auth/core 0.41.3 的 peer 是 "^7.0.7 || ^8.0.5"，
+      # nodemailer 10 超出上限会让 npm 在 next-auth 下再嵌一份 @auth/core（peer 冲突信号），
+      # 且上游只跟到 nodemailer 8。等 @auth/core 放宽范围后再升。
+      - dependency-name: 'nodemailer'
+        update-types: ['version-update:semver-major']
 
   # ── GitHub Actions 自身 ────────────────────────────────────
   - package-ecosystem: github-actions

@@ -814,3 +814,96 @@ curl -s https://app.lokfeel.com/api/health | grep -o '"botModule":{[^}]*}'      
 
 剩余 4 个主版本 PR 需逐个隔离验证：`#8 zustand 5`、`#9 openai 7`、`#10 @types/bcryptjs 3`、
 `#11 next-auth beta`。合并前各自跑 `tsc` + 相关功能回归。
+
+---
+
+# 依赖治理批次④⑤ + firebase-admin v14 迁移（2026-09-29 下午）
+
+## 结论速览
+
+| PR | 包 | 处置 | 关键依据 |
+|---|---|---|---|
+| #8 | zustand 4.5.7 → 5.0.15 | ✅ 采纳 | 全仓库仅 1 处使用，已是 v5 命名导入；选择器全返回原始值/稳定引用 |
+| #9 | openai 6.34.0 → 7.23.0 | ✅ 采纳 | 仅 1 处 `require()` 且 try/catch 兜底；**连带把构建 Node 20 升到 22** |
+| #10 | @types/bcryptjs 2.4.6 → 3.0.0 | ✅ 改为**整个移除** | 3.0.0 是 deprecated stub；bcryptjs@3 自带类型 |
+| #11 | next-auth beta.31 → beta.32 | ✅ 采纳 | 连带 @auth/core 0.41.2 → 0.41.3 |
+| #13 | zod→4.6.5 + pusher-js→8.6.0 | ❌ **拒绝** | 会重新引入静默类型回归（见上文批次①第 2 条） |
+| #14 | typescript 5.9.3 → 7.0.2 | ⛔ 暂缓 | `@typescript-eslint/eslint-plugin@8.58.x` 的 peer 是 `>=4.8.4 <6.1.0`，装 TS 7 会被 npm 直接删掉该插件 → `npm run lint` 报废 |
+| #15 | firebase-admin 13.9.0 → 14.5.0 | ✅ 采纳（**需改代码**） | 根入口导出被大幅收窄，详见下节 |
+| #16 | nodemailer 7.0.13 → 10.0.10 | ⛔ 暂缓 | `@auth/core@0.41.3` 的 peer 是 `^7.0.7 \|\| ^8.0.5`，10 超范围；上游只跟到 nodemailer 8 |
+
+处置完的 5 个 PR 已逐个评论并关闭；#14/#16 的结论同时写进了 `.github/dependabot.yml` 的
+`ignore` 段，避免下周一再次生成同类 PR（typescript / nodemailer 的 semver-major）。
+
+## ⚠️ firebase-admin v14 的破坏性变更（本次最需要记住的坑）
+
+v14 把根入口 `firebase-admin` 的导出**收窄到 11 个成员**：
+`initializeApp, getApp, getApps, deleteApp, applicationDefault, cert, refreshToken,
+FirebaseError, FirebaseAppError, AppErrorCode, SDK_VERSION`。
+
+于是 v13 的这些写法在 v14 下**全部失效，且是运行时才炸**（`tsc` 能抓到类型错误，但
+如果调用点被 `any` 包裹就会静默溜过）：
+
+| v13 | v14 |
+|---|---|
+| `admin.apps` | `getApps()`（根入口） |
+| `admin.credential.cert({...})` | `cert({...})`（**已提升为根入口顶层函数**） |
+| `admin.auth()` | `getAuth()`，来自子路径 `firebase-admin/auth` |
+| `admin.auth.DecodedIdToken` | 从 `firebase-admin/auth` 具名导入 `DecodedIdToken` |
+| `admin.auth.UserRecord` | 从 `firebase-admin/auth` 具名导入 `UserRecord` |
+| `admin.firestore()` / `admin.messaging()` … | 各自子路径的 `getFirestore()` / `getMessaging()` |
+
+**为什么危险**：`src/lib/firebase/admin.ts` 在**模块顶层**就调用 `initFirebaseAdmin()`，
+而它被 `src/app/api/diagnostic/firebase/route.ts` 直接 import（无 try/catch）。
+任何一处用法没改，整个模块在 import 阶段就 `TypeError`，该路由直接 500。
+`next.config.ts` 里 `firebase-admin` 在 `serverExternalPackages` 中（不进打包器），
+所以**构建期不会报错**，只有运行时才暴露 —— 属于典型的"发版才炸"。
+
+**本次迁移**（2 个文件）：
+- `src/lib/firebase/admin.ts`：改用 `getApps()` / `cert` / `getAuth()`，并把
+  `isFirebaseAdminInitialized()`、`getFirebaseAdminAppCount()` 作为唯一对外口径，
+  移除 `export const firebaseAdmin = admin`（避免调用方再去碰已删掉的根成员）。
+- `src/app/api/diagnostic/firebase/route.ts`：`firebaseAdmin.apps.length` → `getFirebaseAdminAppCount()`。
+
+**验证方式（可复用）**：`firebase-admin` 的初始化依赖真实凭证，但 `cert()` 只做结构校验，
+因此可以用**一次性 RSA 私钥**跑通初始化链路：
+
+```bash
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out node_modules/.fb-test-key.pem
+FIREBASE_PROJECT_ID=smoke-test-project \
+FIREBASE_CLIENT_EMAIL=smoke@smoke-test-project.iam.gserviceaccount.com \
+FIREBASE_PRIVATE_KEY="$(cat node_modules/.fb-test-key.pem)" \
+  ./node_modules/.bin/tsx <冒烟脚本>
+rm -f node_modules/.fb-test-key.pem   # 用完立刻删
+```
+
+实测结果：未配置 env → 优雅降级（两个函数各返回 `null`，与 v13 一致）；
+配置齐备 → `isInitialized() === true`、`getAuth().verifyIdToken()` 会真的发起网络请求
+（沙箱内超时但被 catch 住，返回 `null`）—— 证明 `cert()+initializeApp()+getAuth()` 链路可用。
+
+## 构建 Node 版本对齐（本次唯一影响部署环境的改动）
+
+`netlify.toml` 的 `NODE_VERSION` 由 `"20"` 升到 `"22"`：
+
+- Node 20 已于 **2026-04-30 结束维护期（EOL）**
+- 仓库根 `.nvmrc` 是 `22`，CI 的 `node-version-file` 也读它；`Dockerfile` 用 `node:26-alpine`
+  —— 三处里只有 `netlify.toml` 停在 20，属 Vercel 迁移遗留
+- `openai@7` / `firebase-admin@14` 的 `engines` 都要求 `node >=22`
+
+## 三个升级包的运行时冒烟（低成本、建议保留为习惯）
+
+`require()` 形态是最容易被"只跑 tsc"漏掉的一环（TS 能过、运行时不认）：
+
+```bash
+node -e "console.log(typeof require('openai').default, typeof require('zustand').default)"
+```
+
+- `openai@7`：仍提供 CJS 入口（`exports['.'].require`），`chat.completions.create` 是函数 ✅
+- `zustand@5`：**默认导出已移除**（`default === undefined`），必须用命名导入 `{ create }` ✅（本仓库写法正确）
+- `bcryptjs@3`：自带 `index.d.ts` ✅（所以 `@types/bcryptjs` 可以整个删掉）
+
+## 本次验证基线
+
+- `tsc --noEmit` 退出码 0、0 错误
+- `chat:invariants` 222 / `chat:refs` GO（阻断 0）/ `verify:bot` 111 / `verify:geo` 67 / `check:redis` 17
+- 生产：deploy ready、首页 200、`/api/health` `status=healthy`、`botModule.enabled=true (env)`

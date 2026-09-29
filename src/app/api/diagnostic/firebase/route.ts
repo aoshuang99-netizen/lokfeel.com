@@ -10,7 +10,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { firebaseAdmin } from "@/lib/firebase/admin";
+import { getFirebaseAdminAppCount } from "@/lib/firebase/admin";
 import { requireAdminAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -29,10 +29,12 @@ export async function GET() {
   };
 
   // Check 1: Firebase Admin SDK initialization
-  const adminInitialized = firebaseAdmin.apps.length > 0;
+  // firebase-admin v14 移除了根入口的 `admin.apps`，改用 getApps()（封装在下面的 helper 里）
+  const appCount = getFirebaseAdminAppCount();
+  const adminInitialized = appCount > 0;
   results.checks.adminSDK = {
     status: adminInitialized ? "OK" : "NOT_INITIALIZED",
-    appCount: firebaseAdmin.apps.length,
+    appCount,
   };
 
   // Check 2: Environment variables (masked)
