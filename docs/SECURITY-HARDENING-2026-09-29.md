@@ -253,11 +253,41 @@ NETLIFY_AUTH_TOKEN=nfp_xxx npm run netlify:credits
 **验证闭环**：开完后告诉我，我读 `GET /accounts/aoshuang99` 确认 `auto_topup_enabled`
 已变 `true` —— **你不需要自己判断是否成功**。
 
-### D2 · 泄漏凭证吊销（只能由你操作）
+### D2 · 泄漏凭证处置（2026-09-29 晚取证收口）
 
-- **Vercel token** —— 合并 `drag-19` 时被 GitHub Push Protection 拦下的那个（提交 `3829146`，
-  已随压缩提交从历史移除，但 token 本身应视为已泄漏）
-- **只读 fine-grained PAT** —— `github_pat_11B7FHZ…`（已验证只读、无法推送，但仍在流通）
+#### Vercel token —— ✅ **风险关闭（取证证据，无需任何操作）**
+
+对本地与远端历史做了全量考古，"泄漏的 Vercel token" 真身为 **Vercel OIDC 短时令牌**（不是
+控制台里的 Personal Access Token，后者从始至终未进过任何提交）：
+
+| 证据 | 结果 |
+|---|---|
+| 承载文件 | `.env.vercel` / `.env.check` / `.env.pull` / `.env.prod`（共 2 个真实 JWT 实例） |
+| `iss` | `https://oidc.vercel.com/aoshuang99-2649s-projects`（OIDC 签发方，自动短时轮换） |
+| 过期时间 | **2026-05-25** 与 **2026-05-28**（解码 `exp` 实证），现均已过期 4 个月 |
+| 是否上过远端 | **没有** —— 携带真值的提交 `3829146` 经 `git merge-base --is-ancestor` 验证**不在** `origin/main`（Push Protection 拦下后压缩，真值只存在于本地对象） |
+| 远端历史上 | `.env.prod` 的历史版本（`3ec8d8b`）确实含一枚真 JWT，但即上表中已过期那枚 |
+| 远端 HEAD | `.env.*` 全部为 `""` 占位符（54 键逐一核过值长度） |
+
+结论：OIDC 令牌按设计 24h 过期、不可续用，**无需吊销，Vercel 控制台也无从吊销**。
+原"应视为已泄漏"的保守假设可以撤销。
+
+#### `.env.test` 与全历史扫尾 —— ✅ 干净
+
+- 远端 HEAD 的 `.env.test` 15 项"真实形态"值全为测试夹具：`sk-test-ope…`、`re_test_key…`、
+  `test-secret…`、`test-linked…`、本地 postgres URL —— **零活凭证，无需轮换**
+- 全历史 env/pem/credential 类文件逐一核对：无任何未过期真实密钥
+- `src/app/api/test-credentials` 路由已从远端 HEAD 删除
+- 唯一公开的 `secret scanning` 告警仍是 #1（Google API Key，公开设计 → 见 1.3 的 key 限制方案）
+
+#### 只读 fine-grained PAT `github_pat_11B7FHZ…` —— ⚠️ **唯一剩余项（30 秒，只能你操作）**
+
+- 全值不在本仓库、不在本地磁盘、不在 git 历史（仅为历史会话中出现）—— **无法替你吊销**
+- GitHub **不允许 PAT 通过 API 自吊销**（已确认无此端点）
+- **操作**：github.com → Settings → **Developer settings** → **Personal access tokens →
+  Fine-grained tokens** → 找到前缀 `github_pat_11B7FHZ` 的条目 → **Delete**
+- 顺带检查该页是否有其他遗忘的 token，一并清理
+- 若列表里找不到该前缀（可能已过期/已删），D2 即全部收口，无需任何操作
 
 ### D3 · 安全响应头 —— ❌ 曾误判，实际情况相反
 
