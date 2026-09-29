@@ -713,3 +713,49 @@ npx tsx scripts/chat-merge/drop-legacy-tables.ts --apply  # ③ 重建 Conversat
   `POST /accounts/{slug}/env?site_id={id}`，body 为数组、**省略 scopes**（granular scopes 是 Pro 特性）。
 - 自托管部署：`.env.example` / `docker-compose.yml` 默认即关闭，无需动作；
   需要 Bot 的自托管者显式设 `BOT_ENGINE_ENABLED=true`。
+
+## 部署链路事件与恢复（2026-09-29 实测）
+
+### 现象
+
+推送 `main` 后 **Netlify 未触发任何构建**（最新部署仍停在 2026-09-06 的 `c4cee76`）。
+
+### 排查结论（按顺序排除）
+
+1. **不是 webhook 丢失** —— 站点用的是 **Netlify GitHub App**（`build_settings.installation_id = 158423064`），
+   推送事件走 App 级投递，**repo 级 webhook 数量为 0 是正常的**。手工补建 repo webhook 反而会重复构建，已删除。
+2. **不是分支过滤** —— `allowed_branches=["main"]`、`stop_builds=false`、`skip_automatic_builds=null`。
+3. **真正原因：账户构建额度耗尽**。直接调用
+   `POST /api/v1/sites/{site_id}/deploys` 返回：
+   ```
+   403 {"error":"Account credit usage exceeded - new deploys are blocked until credits are added"}
+   ```
+   连锁表现为 `POST /sites/{id}/builds` 与 build hook POST 都返回 404（而非正常 200/201）。
+
+### 恢复步骤（额度重置后，约 2026-10-01）
+
+```bash
+# 1) 确认额度已恢复（应返回 200 而非 403）
+curl -s -X POST "https://api.netlify.com/api/v1/sites/c46478e9-7ac8-4bcf-9052-7638b04fef83/deploys" \
+  -H "Authorization: Bearer $NETLIFY_TOKEN" -H "Content-Type: application/json" \
+  -d '{"deploy_to_production":true,"clear_cache":"full"}'
+
+# 2) 或直接用 build hook 触发（额度正常时返回 200）
+curl -s -X POST "https://api.netlify.com/build_hooks/6abafe94bc35e370fa85e400"
+
+# 3) 盯构建并验收
+curl -s "https://api.netlify.com/api/v1/sites/c46478e9-.../deploys?per_page=1"   # state=ready
+curl -s https://app.lokfeel.com/api/health | grep -o '"botModule":{[^}]*}'      # enabled=true
+```
+
+若 10/1 后仍不自动构建，再在 Netlify UI 检查 **GitHub App 安装是否仍授权该仓库**
+（App-based 链路没有 deploy key，密钥丢失不会导致 clone 失败）。
+
+### 本次已完成、与额度无关的部分
+
+- 4 个 commit 已推送 `main`（`c4cee76..6668a01`）：阶段 5 删表 / 配置化收口 / 开源化 / 发布物去 Bot 数据
+- **GitHub push 凭据链修复**：keychain 无存档、历史 token 已失效、SSH key 未注册 →
+  用户提供 classic PAT（`repo` scope）后写入 keychain（`git credential approve`）。
+  ⚠️ 踩坑：fine-grained PAT 必须显式给 **Contents: Read and write**，只给读权限时
+  API 读正常但 `git push` 报 `403 Permission denied`；且 `credential approve` 不会覆盖
+  keychain 里的旧条目（需先 `security delete-internet-password -s github.com`）。
