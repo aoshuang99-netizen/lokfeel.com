@@ -881,6 +881,68 @@ rm -f node_modules/.fb-test-key.pem   # 用完立刻删
 配置齐备 → `isInitialized() === true`、`getAuth().verifyIdToken()` 会真的发起网络请求
 （沙箱内超时但被 catch 住，返回 `null`）—— 证明 `cert()+initializeApp()+getAuth()` 链路可用。
 
+### 🚨 但上面这些证据**不足以放行**——发版后真的 500 了（重要教训）
+
+上面三项验证（`tsc` 0 错误 / 未配置降级 / **用 Netlify 上真实凭证**跑通初始化）全部通过，
+于是发了版。结果生产上：
+
+| 部署 | commit | `/api/diagnostic/firebase` |
+|---|---|---|
+| 上一版 | `96f03f5` | **403**（模块加载正常，被管理员鉴权挡下） |
+| 本次 | `3e9b642` | **500**（稳定复现，多次请求均 500） |
+
+同一次部署里 `/api/health` 200、首页 200、`/api/matches` 401、`/api/bots/status` 403 —— 即
+**只有这一条路由坏了**，且**构建成功、deploy=ready**。
+
+排除过程（都不便宜，记录以免重走）：
+
+- 不是代码/类型问题：`tsc --noEmit` 退出码 0；本地用**生产真实凭证**（从 Netlify env API 取，未落盘）
+  跑冒烟，`initializeApp` + `getAuth()` 全通
+- 不是 CJS/ESM 互操作：本地 `require('firebase-admin/auth')` 与
+  `await import('firebase-admin/auth')`（走 exports 的 `import` 条件 → `lib/esm/**`）都正常
+- 不是 Node 版本：上一版部署（`96f03f5`）同样是 `NODE_VERSION=22` 且该路由 403 正常
+- 拿不到运行时堆栈：Netlify 公开 API **没有**函数日志端点
+  （`/deploys/{id}/log`、`/builds/{id}/log`、`/sites/{id}/functions/{f}/logs` 全 404），
+  函数调用日志只能在 app.netlify.com 面板看
+
+结论：属于 **serverless 函数包层面的加载失败**，构建期不可见。`firebase-admin` 被列在
+`serverExternalPackages`（不进打包器），其文件依赖 nft 追踪进函数包 —— v13 的根入口会把
+所有子模块 require 一遍、顺带带走整包；**v14 收窄根入口后，我们改为显式引入子路径
+`firebase-admin/auth`，追踪很可能没有覆盖它的完整依赖树**。
+
+### 修复（三项，属结构性加固，不只是补丁）
+
+1. **模块改惰性加载**（`src/lib/firebase/admin.ts`）：
+   顶层不再 `import`，改为在调用期 `await import()`；类型用 `import type`（编译后擦除）。
+   于是"包能否加载"从**模块加载期**移到**调用期**，并收敛成显式状态
+   `FirebaseAdminStatus { sdkLoaded, configured, initialized, appCount, error? }`。
+   → **这类"依赖把整条路由拖成 500"的故障从此不可能再发生**。
+2. **显式声明文件包含**（`next.config.ts`）：
+   ```ts
+   outputFileTracingIncludes: {
+     '/api/diagnostic/firebase': ['./node_modules/firebase-admin/**/*'],
+     '/api/health': ['./node_modules/firebase-admin/**/*'],
+   }
+   ```
+   该包仅 1.9MB / 244 文件，代价可忽略；只影响这两条路由。
+3. **把状态暴露到 `/api/health`**（新增 `firebaseAdmin` 字段，只有布尔/数字，无凭证无错误文本）：
+   起因就是"这条路由坏了但探活看不见"。现在 `sdkLoaded:false` 可一眼区分
+   「函数包里缺包」与「没配环境变量」。
+
+**教训（写进纪律）**：
+> 对 `serverExternalPackages` 里那种"不参与打包"的依赖，**`tsc` 通过 + 本地运行时冒烟通过，
+> 都不能证明它在 serverless 里能加载**。改动这类依赖后，要在**发版后用公开探活端点**回确认，
+> 或者事先准备一条不依赖管理员鉴权的状态出口。
+
+## 附：本次依赖治理的时间线（同一天两次发版）
+
+1. 批次④ `96f03f5`：zustand 5 / openai 7 / 移除 @types/bcryptjs / next-auth b32 / Node 20→22
+   → 发版后 `/api/diagnostic/firebase` = **403**（正常）
+2. 批次⑤ `3e9b642`：firebase-admin 13→14（含代码迁移）
+   → 发版后同端点 = **500**（回归，上节已修复）
+3. 修复部署：惰性加载 + tracing include + health 字段
+   → 以 `/api/health` 的 `firebaseAdmin.sdkLoaded` 作为放行判据
+
 ## 构建 Node 版本对齐（本次唯一影响部署环境的改动）
 
 `netlify.toml` 的 `NODE_VERSION` 由 `"20"` 升到 `"22"`：
@@ -907,3 +969,10 @@ node -e "console.log(typeof require('openai').default, typeof require('zustand')
 - `tsc --noEmit` 退出码 0、0 错误
 - `chat:invariants` 222 / `chat:refs` GO（阻断 0）/ `verify:bot` 111 / `verify:geo` 67 / `check:redis` 17
 - 生产：deploy ready、首页 200、`/api/health` `status=healthy`、`botModule.enabled=true (env)`
+
+⚠️ **这套基线是有盲区的**：它完全没覆盖"某条非健康检查路由在函数包层面加载失败"，
+而本次事故恰好落在盲区里（见上文 🚨 小节）。补盲手段已加：`/api/health` 现在会回报
+`firebaseAdmin.sdkLoaded`。以后改动 `serverExternalPackages` 里的依赖后，
+**必须**在发版后回看这条字段，并把目标路由的 HTTP 码与上一版部署做对照
+（`https://<完整 deploy id>--lokfeel.netlify.app/<路径>` 可访问历史部署，是零成本的
+"回滚对照"手段 —— 本次正是靠它定位出 403→500 的回归）。

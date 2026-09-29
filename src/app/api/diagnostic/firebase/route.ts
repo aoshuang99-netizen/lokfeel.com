@@ -10,7 +10,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { getFirebaseAdminAppCount } from "@/lib/firebase/admin";
+import { getFirebaseAdminStatus } from "@/lib/firebase/admin";
 import { requireAdminAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -29,12 +29,18 @@ export async function GET() {
   };
 
   // Check 1: Firebase Admin SDK initialization
-  // firebase-admin v14 移除了根入口的 `admin.apps`，改用 getApps()（封装在下面的 helper 里）
-  const appCount = getFirebaseAdminAppCount();
-  const adminInitialized = appCount > 0;
+  // firebase-admin v14 移除了根入口的 `admin.apps`，改用 getApps()——统一封装在
+  // lib/firebase/admin.ts 的 getFirebaseAdminStatus() 里。该函数把"包能否加载"与
+  // "凭证是否齐备"分开汇报，便于区分「依赖装丢了」和「没配环境变量」两种情况。
+  const adminStatus = await getFirebaseAdminStatus();
+  const adminInitialized = adminStatus.initialized;
   results.checks.adminSDK = {
     status: adminInitialized ? "OK" : "NOT_INITIALIZED",
-    appCount,
+    sdkLoaded: adminStatus.sdkLoaded,
+    configured: adminStatus.configured,
+    appCount: adminStatus.appCount,
+    // 仅在加载/初始化失败时出现，便于排查函数包里缺包的情况
+    ...(adminStatus.error ? { error: adminStatus.error } : {}),
   };
 
   // Check 2: Environment variables (masked)

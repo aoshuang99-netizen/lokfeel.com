@@ -39,6 +39,7 @@ import { db } from "@/lib/db";
 import { getCacheStats } from "@/lib/redis-cache";
 import { getRedisStatus } from "@/lib/im/redis";
 import { describeBotPolicy } from "@/config/bot-policy";
+import { getFirebaseAdminStatus } from "@/lib/firebase/admin";
 
 /**
  * GET /api/health
@@ -71,6 +72,15 @@ export async function GET(): Promise<NextResponse> {
     //   · enabledSource='invalid'        → 取值写错了，已按 fail-closed 关闭
     const botDesc = describeBotPolicy();
 
+    // firebase-admin 状态（惰性加载，失败会收敛成 sdkLoaded=false，不会抛）
+    const fb = await getFirebaseAdminStatus();
+    const firebaseStatus = {
+      sdkLoaded: fb.sdkLoaded,
+      configured: fb.configured,
+      initialized: fb.initialized,
+      appCount: fb.appCount,
+    };
+
     // Build healthy response
     const healthData = {
       status: "healthy" as const,
@@ -86,6 +96,12 @@ export async function GET(): Promise<NextResponse> {
         ...botDesc.summary,
         warnings: botDesc.warnings,
       },
+      // firebase-admin（Auth 桥）状态。加这个字段的起因是一次线上事故：
+      // 2026-09-29 firebase-admin 13→14 后 /api/diagnostic/firebase 由 403 变 500，
+      // 但该端点是管理员专用的，普通探活看不到，导致"发版即坏"却不易察觉。
+      // 这里只暴露布尔/数字（不含任何凭证、也不回传错误文本），
+      // 于是 sdkLoaded=false 就能一眼看出"函数包里缺包/包加载失败"。
+      firebaseAdmin: firebaseStatus,
       // Add version from package.json (optional)
       version: process.env.npm_package_version || "unknown",
     };

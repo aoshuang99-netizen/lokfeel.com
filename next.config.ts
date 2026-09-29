@@ -293,6 +293,18 @@ const nextConfig: NextConfig = {
   // Keep heavy server-only packages out of client bundle
   serverExternalPackages: ['@prisma/client', '@prisma/adapter-libsql', '@libsql/client', 'libsql', 'bcryptjs', 'stripe', 'firebase-admin'],
 
+  // ─── 强制把 firebase-admin 整包纳入这两条路由的函数包 ───
+  // 背景（2026-09-29 线上事故）：firebase-admin 在 serverExternalPackages 里，**不参与打包**，
+  // 它的文件只能靠 Next 的文件追踪（nft）被带进 serverless bundle。v13 的根入口 index 会把
+  // 所有子模块 require 一遍，于是追踪顺带带走了整包；v14 把根入口收窄成只有 app 层导出，
+  // 我们改为显式引入子路径 `firebase-admin/auth` 之后，就出现了"包在本地存在、函数包里却加载
+  // 失败"的情况 —— 表现为 /api/diagnostic/firebase 从 403 变 500，且**构建期不报错**。
+  // 这里显式声明包含（该包仅 1.9MB / 244 个文件，代价可忽略）。
+  outputFileTracingIncludes: {
+    '/api/diagnostic/firebase': ['./node_modules/firebase-admin/**/*'],
+    '/api/health': ['./node_modules/firebase-admin/**/*'],
+  },
+
   // ─── Tree-shaking for heavy UI/utility libraries ───
   experimental: {
     optimizePackageImports: [
