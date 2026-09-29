@@ -79,7 +79,7 @@
     "creem": "^1.13.0",
     "date-fns": "^4.4.0",
     "firebase": "^12.19.0",
-    "firebase-admin": "^13.9.0",
+    "firebase-admin": "^14.5.0",
     "framer-motion": "^12.38.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.48.0",
