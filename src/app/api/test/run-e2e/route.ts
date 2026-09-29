@@ -49,6 +49,18 @@ interface TestReport {
 }
 
 export async function POST(request: NextRequest) {
+  // ── Step -1: 生产环境硬闸（D6，2026-09-29）────────────────
+  // 本端点会向真实数据库写入订阅/支付记录（模拟 checkout.completed webhook）。
+  // 即便有 CRON_SECRET，也不该在生产环境跑——测试写入与清理一旦中途失败，
+  // 生产库就会留下脏数据。与 mock-checkout 同款模式（三处 NODE_ENV 守卫）。
+  // GET 委托本函数，一道闸即覆盖两个方法。
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Not Found" },
+      { status: 404 }
+    );
+  }
+
   const t0 = performance.now();
   const steps: StepResult[] = [];
   let testUserId = "";

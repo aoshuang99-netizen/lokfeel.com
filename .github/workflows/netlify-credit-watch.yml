@@ -1,8 +1,9 @@
 name: Netlify credit watch
 
-# Netlify 额度看护：每日自动巡检构建额度，异常时开 Issue 告警，恢复后自动关闭。
+# 生产看护：每日自动巡检构建额度 + 生产健康 + 安全响应头。
+# 异常时开 Issue 告警，恢复后自动关闭。
 # 背景：auto recharge 未开启时，额度耗尽会导致整站 503（2026-09-29 真实事故）。
-# 本工作流只读 Netlify API，不做任何写操作。token 存于仓库 Secret NETLIFY_AUTH_TOKEN。
+# 对 Netlify API 只读；对生产站点只发 GET。
 
 on:
   schedule:
@@ -38,41 +39,67 @@ jobs:
           echo "exitcode=$rc" >> "$GITHUB_OUTPUT"
           echo "watchdog exit code: $rc"
 
+      - name: Production health & security headers
+        id: prod
+        run: |
+          set +e
+          {
+            echo "── 生产健康检查（app.lokfeel.com）──"
+            health=$(curl -s --max-time 30 https://app.lokfeel.com/api/health)
+            echo "$health"
+            status=$(echo "$health" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).status||'missing')}catch{console.log('parse-error')}})")
+            echo ""
+            echo "── 安全响应头检查 ──"
+            hdrs=$(curl -sI --max-time 30 https://app.lokfeel.com/)
+            echo "$hdrs" | grep -iE 'permissions-policy|x-frame-options|x-content-type-options|referrer-policy' || echo "(未取到安全头)"
+            pp=$(echo "$hdrs" | grep -i 'permissions-policy' || true)
+            rc=0
+            [ "$status" = "healthy" ] || { echo "❌ /api/health status=$status（期望 healthy）"; rc=2; }
+            echo "$pp" | grep -q 'camera=(self)' || { echo "❌ Permissions-Policy 未放行 camera=(self)（2026-09-29 P0 回归哨兵）"; rc=2; }
+            echo ""
+            echo "生产检查退出码: $rc"
+            echo "exitcode=$rc" >> "$GITHUB_OUTPUT"
+            exit 0
+          } | tee production-output.txt
+
       - name: Alert (create or update issue)
-        if: steps.watch.outputs.exitcode != '0'
+        if: steps.watch.outputs.exitcode != '0' || steps.prod.outputs.exitcode != '0'
         env:
           GH_TOKEN: ${{ github.token }}
-          EXITCODE: ${{ steps.watch.outputs.exitcode }}
+          WATCH_RC: ${{ steps.watch.outputs.exitcode }}
+          PROD_RC: ${{ steps.prod.outputs.exitcode }}
         run: |
           gh label create netlify-credits --color D93F0B --description "Netlify 构建额度看护告警" --force
           {
-            echo "## Netlify 额度看护告警（退出码 $EXITCODE，1=告警 2=危急）"
+            echo "## 生产看护告警（额度退出码 $WATCH_RC：1=告警 2=危急；生产检查退出码 $PROD_RC：2=异常）"
             echo
             echo '```'
             cat watchdog-output.txt
+            echo
+            cat production-output.txt
             echo '```'
             echo "- 巡检时间: $(date -u '+%F %T') UTC"
             echo "- 运行记录: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "- 修复路径见输出末尾（需 Team Owner 在控制台开启 credit auto recharge）"
+            echo "- 额度修复路径见输出末尾（需 Team Owner 在控制台开启 credit auto recharge）"
           } > body.md
           existing=$(gh issue list --label netlify-credits --state open --json number --jq '.[0].number')
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body-file body.md
             echo "已更新既有告警 Issue #$existing"
           else
-            gh issue create --title "🟡 Netlify 额度看护告警（lokfeel.com）" --body-file body.md --label netlify-credits
+            gh issue create --title "🟡 生产看护告警（lokfeel.com）" --body-file body.md --label netlify-credits
             echo "已新建告警 Issue"
           fi
 
       - name: Resolve (auto-close alert issue)
-        if: steps.watch.outputs.exitcode == '0'
+        if: steps.watch.outputs.exitcode == '0' && steps.prod.outputs.exitcode == '0'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           existing=$(gh issue list --label netlify-credits --state open --json number --jq '.[0].number')
           if [ -n "$existing" ]; then
-            gh issue close "$existing" --comment "✅ 额度状态恢复正常（退出码 0，auto recharge 已开启），本告警自动关闭。"
+            gh issue close "$existing" --comment "✅ 额度与生产检查均恢复正常，本告警自动关闭。"
             echo "已自动关闭告警 Issue #$existing"
           else
-            echo "额度正常，且无待关闭的告警 Issue"
+            echo "全部正常，且无待关闭的告警 Issue"
           fi
