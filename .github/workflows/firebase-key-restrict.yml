@@ -1,0 +1,33 @@
+name: Firebase key restrict (1.3)
+
+# 给 Firebase Web API key 加 HTTP referrer + Google API 双限制（幂等，可重复执行）。
+# 冒烟验证：Auth API 对 app.lokfeel.com 放行、对陌生 referer 拒绝。
+# 凭证走仓库 Secret（FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY / FIREBASE_PROJECT_ID），
+# 即生产 firebase-admin 同一服务账号；脚本只改 restrictions，不创建/删除 key。
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-key-restrict
+  cancel-in-progress: false
+
+jobs:
+  restrict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Apply restrictions & smoke-test
+        env:
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: node scripts/firebase-restrict-key.mjs
