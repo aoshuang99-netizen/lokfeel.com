@@ -759,3 +759,19 @@ curl -s https://app.lokfeel.com/api/health | grep -o '"botModule":{[^}]*}'      
   ⚠️ 踩坑：fine-grained PAT 必须显式给 **Contents: Read and write**，只给读权限时
   API 读正常但 `git push` 报 `403 Permission denied`；且 `credential approve` 不会覆盖
   keychain 里的旧条目（需先 `security delete-internet-password -s github.com`）。
+
+### 恢复完成（2026-09-29 12:40 实测）
+
+用户升级 **Personal（$9/月，1000 credits）** 后站点立即恢复：
+
+| 验证项 | 结果 |
+|---|---|
+| 站点 disabled | `false`（升级即时生效，无需等 10/4） |
+| 构建 | build hook 触发 → deploy `6abb4069` **ready**（commit `11edf07`） |
+| 首页 | HTTP 200（2.8s） |
+| `/api/health` | `status: healthy`、`dbLatency: 841ms`、`botModule.enabled=true (enabledSource=env)` |
+| Redis | `backend: memory, configured: false` —— **预存在状态**（生产未配 Upstash 变量，走内存降级），非本次引入 |
+
+⚠️ **遗留提醒**：
+1. **必须开通 auto recharge**（Usage & billing 页）——免费版 300 credits 一个月即耗尽整站暂停的教训；1000 credits ≈ 50GB 带宽，有真实流量后仍可能触顶。
+2. 生产 Redis 未配置（`configured:false`）→ 多实例能力/队列退化，按需补 Upstash 变量。
