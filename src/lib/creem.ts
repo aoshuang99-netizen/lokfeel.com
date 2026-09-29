@@ -25,8 +25,8 @@ interface CreemConfig {
 }
 
 // ── Singleton Creem SDK instance ────────────────────────────
-// Creem class constructor: new Creem({ apiKey, serverIdx })
-//   serverIdx: 0 = production, 1 = test
+// Creem class constructor: new Creem({ apiKey, server })
+//   server: 'prod' = production, 'test' = sandbox（v1.13 起取代 serverIdx: 0/1）
 
 let _creemClient: InstanceType<typeof Creem> | null = null;
 
@@ -37,11 +37,10 @@ export function getCreemClient(): InstanceType<typeof Creem> {
   if (!apiKey) throw new Error("CREEM_API_KEY is not configured");
 
   const env = (process.env.CREEM_ENV ?? "production") as "production" | "test";
-  const serverIdx = env === "test" ? 1 : 0;
-
   _creemClient = new Creem({
     apiKey,
-    serverIdx, // 0 = production, 1 = test
+    // creem SDK v1.13+ 用 server 取代 serverIdx（取值 'prod' | 'test'）
+    server: env === "test" ? "test" : "prod",
   });
 
   return _creemClient;

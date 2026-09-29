@@ -11,10 +11,13 @@ export async function GET(_req: NextRequest) {
   try {
     const creem = getCreemClient();
     // ✅ 正确用法：search(page_number, page_size)
-    const products = await creem.products.search(1, 100);
+    // creem SDK v1.13 起返回 PageIterator<{ result: ProductListEntity }>，
+    // 商品数组在 `.result.items`（旧版直接挂在返回值上）。
+    const page = await creem.products.search(1, 100);
+    const products = page.result;
 
     // 格式化为前端友好的结构
-    const formatted = (products.items || []).map((p: any) => ({
+    const formatted = (products?.items || []).map((p: any) => ({
       id: p.id,
       name: p.name,
       price: p.price,           // 单位：分

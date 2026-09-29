@@ -29,16 +29,16 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           # security-extended 覆盖更多安全规则；如需更严格可换 security-and-quality
           queries: security-extended
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -50,6 +50,6 @@ jobs:
         run: npx prisma generate
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: '/language:javascript-typescript'

@@ -45,10 +45,9 @@ export async function GET() {
   if (process.env.CREEM_API_KEY) {
     try {
       const env = (process.env.CREEM_ENV || "test") as "production" | "test";
-      const serverIdx = env === "test" ? 1 : 0;
       const creem = new Creem({
         apiKey: process.env.CREEM_API_KEY,
-        serverIdx,
+        server: env === "test" ? "test" : "prod",
       });
 
       const products = await creem.products.search(1, 20);
@@ -76,10 +75,9 @@ export async function GET() {
   if (process.env.CREEM_API_KEY && process.env.CREEM_MONTHLY_PRODUCT_ID) {
     try {
       const env = (process.env.CREEM_ENV || "test") as "production" | "test";
-      const serverIdx = env === "test" ? 1 : 0;
       const creem = new Creem({
         apiKey: process.env.CREEM_API_KEY,
-        serverIdx,
+        server: env === "test" ? "test" : "prod",
       });
 
       // Just verify the product exists
@@ -95,10 +93,9 @@ export async function GET() {
   if (process.env.CREEM_API_KEY && process.env.CREEM_YEARLY_PRODUCT_ID) {
     try {
       const env = (process.env.CREEM_ENV || "test") as "production" | "test";
-      const serverIdx = env === "test" ? 1 : 0;
       const creem = new Creem({
         apiKey: process.env.CREEM_API_KEY,
-        serverIdx,
+        server: env === "test" ? "test" : "prod",
       });
 
       const product = await creem.products.get(

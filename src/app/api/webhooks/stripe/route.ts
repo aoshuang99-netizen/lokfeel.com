@@ -7,7 +7,7 @@ import { isFemaleGender } from "@/lib/gender-utils";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-    apiVersion: "2026-03-25.dahlia",
+    apiVersion: "2026-08-26.dahlia",
   });
 }
 
