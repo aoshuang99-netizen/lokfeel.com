@@ -190,22 +190,68 @@ stick during reentry"，仍然保留该特性包；并无"把 drag 移出 domAni
 | 证据字段 | 实测值 | 含义 |
 |---|---|---|
 | `auto_topup_enabled` | **False** | 额度耗尽仍会**整站 503**（2026-09-29 真实事故的根因，**尚未消除**） |
-| `credit_alert_percentage` | **None** | 无额度告警 |
+| `credit_alert_percentage` | **None** | 自定义额度告警阈值未设 |
+| `role` | **Owner** | ✅ 你有权自行开启（官方要求 Team Owner） |
+| `has_stripe_payment_method` | **True** | 已绑卡，具备开自动充值条件 |
 | `plan_credits` / `credits.used` | 1000 / **0** | 当前周期 9/29→10/29，满额 |
-| `has_stripe_payment_method` | **True** | 已绑支付方式，具备开自动充值条件 |
-| `plan_auto_topup_amount` / `per_unit_cost` | 500.00 / 0.01 | 触发即充 500 credits（≈$5） |
+| `plan_auto_topup_amount` / `per_unit_cost` | 500.00 / 0.01 | 触发即充 500 credits（= $5.00） |
+| `capabilities.auto_topup_threshold` | "10.00" | 余额跌破 10 credits 即触发充值 |
 | `lifecycle_state` / `usages_exceeded` | active / `[]` | 当前健康 |
 
-**❌ 已尝试并排除的路径（不要重试）**：Netlify **公开 API 不支持**这两个字段。
-`PATCH` 与 `PUT /accounts/{id}` 带 `auto_topup_enabled` / `credit_alert_percentage` 均被**静默忽略**
-（返回 200 但值不变）；官方 OpenAPI 规范（346KB）里完全没有这两个字段，也没有任何 topup/credit
-设置端点；`/accounts/{id}/billing|usage|credits|credit-settings|auto-topup` 全部 404。
-**结论：必须走 UI。**
+#### ❌ 已穷尽排除的 API 路径（**不要再试**）
 
-**你的操作**：Netlify 控制台 → Team `aoshuang99` 的 **Billing / Usage & billing** 页 →
-找到 **Credits / auto-recharge** 区块 → 打开自动充值 + 设使用量告警。
-（对应 API 上的 `auto_topup_enabled: true`、`credit_alert_percentage: 80`。）
-**验证闭环**：开完后告诉我，我读 `GET /accounts/69f8632e05fab5f2becc5407` 确认字段已变——你不需要自己判断。
+这轮把 API 可能性彻底排除了，证据链如下（每一步都**回读真实值**校验，不信任 200 回执）：
+
+| 尝试 | 结果 |
+|---|---|
+| `PATCH /accounts/{slug}` 布尔 `true` | HTTP 200，**回执原样返回旧值 `false`** → 服务端根本未接受 |
+| `PATCH /accounts/{slug}` 字符串 `"true"` | HTTP 200，值不变 |
+| `PATCH /accounts/{slug}` 数字 `1` | HTTP 200，值不变 |
+| `PUT /accounts/{slug}` 完整对象（剔除只读嵌套） | **HTTP 422** 直接拒绝 |
+| `PATCH` / `PUT /sites/{id}` | HTTP 200 但回执 `{}` → 站点层无此字段 |
+| `/accounts/{slug}/{billing,usage,credits,billing_settings,auto_topup,subscriptions,credits_balance,settings,billing_plan}` | **全部 404** |
+| `api.netlify.com/api/v2/accounts/{slug}`、`/teams/{slug}` | **404** |
+| 官方 OpenAPI 规范（346KB）全文检索 | **完全没有** `auto_topup_enabled` / `credit_alert_percentage`，也无任何 topup 端点 |
+
+**结论：不存在 API 通路，必须走 UI。**（"返回 200 但值不变"是最容易误判的一类——
+只看状态码会以为成功了，所以本仓库的规范是**写后必回读**。）
+
+#### ✅ 你的操作（官方准确路径）
+
+Netlify 官方把这个功能命名为 **"credit auto recharge"**（不是 "auto top-up"）：
+
+1. 打开 Team dashboard（Team: `aoshuang99’s team`）
+2. 进入 **Usage & billing**
+3. 在 **Current services** / **Credit balance** 区块内选 **Configure auto recharge**
+4. 选 **Enabled** 并确认
+
+官方文档：<https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/configure-auto-recharge/>
+
+**四个容易误判的官方行为**（避免你以为"已经安全了"）：
+- Personal 档费率**固定** 500 credits / $5 —— 与本账户 `plan_auto_topup_*` 完全一致
+- **免费档不支持 auto recharge**，只有 Personal/Pro 可开（本账户是 Personal ✅）
+- 额度耗尽时**该 team 下所有项目一起被暂停**（不只是占满额度的那个）；访客看到
+  "Site not available"，且**所有部署停摆**（含 Deploy Preview 与分支部署）
+- Netlify 在用量 50% / 75% / 100% 时**会自动**发邮件 + 站内通知；而
+  `credit_alert_percentage` 是**另一个**可自定义的阈值字段（当前未设，两者别混为一谈）
+
+#### 兜底：自建额度看门狗
+
+既然官方告警开关写不进去，就自己轮询——**只读、不改动任何东西，可反复安全运行**：
+
+```bash
+NETLIFY_AUTH_TOKEN=nfp_xxx npm run netlify:credits
+```
+
+脚本：`scripts/netlify-credit-watch.mjs`。输出额度/周期/账号状态/自动充值/告警阈值/绑卡情况，
+并按阈值给结论：用量 ≥80% 告警、≥95% 危急；`lifecycle_state ≠ active` 或 `usages_exceeded` 非空
+则直接判危急（说明**已经停机**）。退出码 `0=正常 / 1=告警 / 2=危急`，可直接接进 CI 或定时任务。
+
+⚠️ **本仓库是 public，脚本只从环境变量 `NETLIFY_AUTH_TOKEN` 读取 token，绝不落盘**
+（已用 `git grep` 核实：仓库内无任何 `nfp_...` 字样）。
+
+**验证闭环**：开完后告诉我，我读 `GET /accounts/aoshuang99` 确认 `auto_topup_enabled`
+已变 `true` —— **你不需要自己判断是否成功**。
 
 ### D2 · 泄漏凭证吊销（只能由你操作）
 

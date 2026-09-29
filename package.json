@@ -58,7 +58,8 @@
     "check:redis": "npx tsx scripts/check-redis-fallback.ts",
     "verify:geo": "npx tsx scripts/verify-region-policy.ts",
     "verify:bot": "npx tsx scripts/verify-bot-policy.ts",
-    "chat:invariants": "node scripts/chat-merge/check-invariants.js"
+    "chat:invariants": "node scripts/chat-merge/check-invariants.js",
+    "netlify:credits": "node scripts/netlify-credit-watch.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
