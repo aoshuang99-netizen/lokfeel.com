@@ -67,7 +67,7 @@ async function main() {
   console.log('  周期结束前剩余 ' + Math.max(0, included - used) + ' credits');
   console.log('  账号状态      ' + lifecycle);
   console.log('  自动充值      ' + (autoTopup ? '已开启 ✅' : '**未开启 ❌**'));
-  console.log('  额度告警阈值  ' + (alertPct == null ? '**未设置 ❌**' : alertPct + '%'));
+  console.log('  额度告警阈值  ' + (alertPct == null ? '未设置（非必需）' : alertPct + '%'));
   console.log('  已绑支付方式  ' + (acc.has_stripe_payment_method ? '是 ✅' : '否（自动充值无法生效）'));
   if (acc.plan_auto_topup_amount) {
     const amt = Number(acc.plan_auto_topup_amount);
@@ -101,8 +101,10 @@ async function main() {
   if (!autoTopup) {
     warn.push('auto_topup_enabled = false —— 额度一旦耗尽会**整站 503**（2026-09-29 已发生过）');
   }
+  // credit_alert_percentage 只是"自定义阈值"字段：Netlify 在 50/75/100% 本就自动通知，
+  // 且本脚本每日巡检就是告警机制 —— 未设置只提示，不作为告警（2026-09-29 D1 完成后调整）。
   if (alertPct == null) {
-    warn.push('credit_alert_percentage 未设置 —— 收不到自定义阈值的额度告警邮件');
+    console.log('  （提示：credit_alert_percentage 未设置自定义阈值 —— 非必需，官方 50/75/100% 自动通知 + 本脚本巡检已覆盖）');
   }
   // 当前凭证对应角色：非 Owner 则无法自行开启 auto recharge
   if (String(acc.role).toLowerCase() !== 'owner') {
