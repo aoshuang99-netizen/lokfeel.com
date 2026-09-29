@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 import path from 'path'
-import { withSentryConfig } from '@sentry/nextjs'
+// @sentry/nextjs v11 破坏性变更：withSentryConfig 从包根迁移到 "@sentry/nextjs/config"
+// （sentry-javascript #23628 `ref(nextjs)!: Move withSentryConfig to @sentry/nextjs/config`）
+// 根入口不再导出该符号，旧写法会让 tsc 报 TS2305。
+import { withSentryConfig } from '@sentry/nextjs/config'
 
 const CSP_VALUE = [
   "default-src 'self'",
@@ -177,7 +180,14 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          // 2026-09-29 修复：原值 `camera=(), microphone=(), geolocation=()` 是**空允许列表**，
+          // 语义是"对所有来源（含 self）一律禁用"—— 不是"不限制"。
+          // 实测（Playwright 在 app.lokfeel.com 页面上下文 + 已自动授权 + 合成摄像头）：
+          //   document.featurePolicy.allowsFeature('camera') === false
+          //   navigator.mediaDevices.getUserMedia({video,audio}) → NotAllowedError
+          // 即 WebRTC 视频通话与定位功能在线上被这条响应头**整体禁掉**。
+          // 改为 (self)：仅本域可用，跨域嵌入方仍被拒绝。
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(self)' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           {

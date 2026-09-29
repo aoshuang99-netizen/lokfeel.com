@@ -63,6 +63,19 @@ updates:
       # 待 @typescript-eslint 官方声明支持后，再人工评估升级。
       - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
+      # @types/node 的大版本必须**跟随运行时 Node 主版本**，不是越新越好：
+      # 构建/运行环境是 Node 22（netlify.toml NODE_VERSION、.nvmrc、CI 三处已对齐），
+      # 而 dependabot 会按"最新可用"提 26.x —— 那会让 TS 认为能用 Node 24/26 才有的 API，
+      # 编译期通过、运行期才炸。只允许 22.x 内的小版本更新。
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      # eslint 大版本：ESLint 10 移除了 context.getFilename()，而 eslint-config-next@16.3.6
+      # 内嵌的 eslint-plugin-react@7.x 仍在调用它 —— 实测 `npm run lint` 在**任何文件**上
+      # 都直接崩（TypeError: contextOrFilename.getFilename is not a function，
+      # 连 .ts 非 React 文件也一样），lint 从此报废。注意 tsc 完全看不到这个问题。
+      # 待 eslint-config-next 换用兼容 ESLint 10 的 eslint-plugin-react 后再人工评估。
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
       # nodemailer 大版本：@auth/core 0.41.3 的 peer 是 "^7.0.7 || ^8.0.5"，
       # nodemailer 10 超出上限会让 npm 在 next-auth 下再嵌一份 @auth/core（peer 冲突信号），
       # 且上游只跟到 nodemailer 8。等 @auth/core 放宽范围后再升。
