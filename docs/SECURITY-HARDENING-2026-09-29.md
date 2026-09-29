@@ -79,9 +79,21 @@ mock-checkout 的 POST/GET/PATCH **三者都有** `NODE_ENV==="production"` 守�
 - **关键判断**：该 key 本来就是**公开的** —— `/api/config/firebase`（未鉴权，实测 200）
   主动把同一份 `apiKey/authDomain/projectId/appId` 下发给浏览器。重点不是"撤 key"，而是**给 key 加限制**。
 - 已做：删除仓库中该文件（唯一的硬编码副本）。
-- 待用户操作：Google Cloud Console 中为该 key 加 **API 限制**（Identity Toolkit、Token Service 等）
-  + **HTTP referrer 限制**（`https://app.lokfeel.com/*`、`https://lokfeel.com/*`）。
-  完成后可将告警 #1 标记为 resolved（删除 HEAD 不影响历史 blob）。
+- **2026-09-29 晚：限制已全自动化**（`scripts/firebase-restrict-key.mjs` +
+  `.github/workflows/firebase-key-restrict.yml`，dispatch 即执行）：
+  - 幂等脚本：服务账号(firebase-adminsdk) → OAuth → API Keys API，从线上
+    `/api/config/firebase` 动态取 keyString 匹配目标 key
+  - `browserKeyRestrictions`：`app.lokfeel.com/*`、`lokfeel.netlify.app/*`、
+    `*.lokfeel.netlify.app/*`（preview）、`localhost:3000`（开发）
+  - `apiTargets`：identitytoolkit / securetoken / firebaseinstallations
+    （客户端只用 firebase/auth，无 Firestore，集合最小化）
+  - PATCH → LRO → 冒烟：Auth API 对 app 域 200、对 evil referer 403 才算成功
+- **唯一前置（30 秒，须 Owner 手动）**：项目的 **API Keys API 未启用**，
+  firebase-adminsdk 服务账号无启用服务的权限（实测 403 PERMISSION_DENIED，
+  这是 Google 的权限设计，自动化绕不过）。启用链接（项目 185541962106）：
+  https://console.developers.google.com/apis/api/apikeys.googleapis.com/overview?project=185541962106
+  → 点 Enable → 回来说一声，重新 dispatch workflow 即完成全部验证。
+- 完成后可将告警 #1 标记为 resolved（删除 HEAD 不影响历史 blob）。
 
 ### 1.4 "git push 全败"是误判 —— 真因是**本地代理挂了**，绕过即解决
 
