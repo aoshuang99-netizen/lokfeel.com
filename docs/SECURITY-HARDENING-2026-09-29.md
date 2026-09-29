@@ -83,21 +83,48 @@ mock-checkout 的 POST/GET/PATCH **三者都有** `NODE_ENV==="production"` 守�
   + **HTTP referrer 限制**（`https://app.lokfeel.com/*`、`https://lokfeel.com/*`）。
   完成后可将告警 #1 标记为 resolved（删除 HEAD 不影响历史 blob）。
 
-### 1.4 "git push 全败"是误判 —— 实为间歇性网络
+### 1.4 "git push 全败"是误判 —— 真因是**本地代理挂了**，绕过即解决
 
-| 证据 | 结果 |
+这个结论本轮被**推翻并升级过两次**，最终证据如下（按时间顺序）：
+
+**第一版（错误）**：认为 CN 网络对 GitHub 间歇性干扰。依据是 `GIT_CURL_VERBOSE` 显示
+CONNECT 隧道 200、TLS 1.3 握手成功、请求已发出，然后 79 秒后 `Empty reply from server`；
+同 URL 两轮探测一轮 `000`、一轮 `200`。
+
+**第二版（仍不完整）**：认为"间歇性、重试即可"。但当重试循环跑到 **10/10 全败**、
+且错误从 `Empty reply from server` 稳定变成 `CONNECT tunnel failed, response 502` 时，
+"间歇"这个解释已经不成立了 —— 间歇不会连续 10 次同向失败。
+
+**第三版（定论）**：**把"经代理"与"绕过代理"两条路分开测**，差别是决定性的：
+
+| 路径 | 结果 |
 |---|---|
-| `GIT_CURL_VERBOSE=1 git ls-remote` | CONNECT 隧道 **200**、TLS 1.3 握手**成功**、请求已发出 → 79 秒后 `Empty reply from server` |
-| 同 URL 两轮探测 | 第 1 轮 `000`(10s) / 第 2 轮 **`200`(0.87s)** |
-| `github.com/git/git.git/info/refs`（公开仓库） | 同样超时 → **非本仓库问题** |
-| 其他主机 | `api.github.com` 200、`codeload.github.com` 301、`raw.githubusercontent.com` **000** |
+| `curl https://github.com`（走沙箱代理 `127.0.0.1:54407`） | **HTTP 000**（10s 超时，从未成功） |
+| `curl https://github.com`（`env -u *_PROXY`，直连） | **HTTP 200，5.06s** |
+| `env -u *_PROXY … git push origin HEAD:main` | ✅ **一次成功**：`80e21a4..82d68b4 HEAD -> main` |
 
-结论：CN 网络对 GitHub 特定路径的**间歇性干扰**。
-**对策 = 重试**：`for i in 1 2 3 …; do git fetch && break; sleep 4; done` —— 实测一次即成功。
+即：**`HTTPS_PROXY` 指向的沙箱代理进程当时是坏的**，而网络本身通畅。
+Git 默认尊重 `HTTP(S)_PROXY` 环境变量，所以所有 git 操作都被导向了这条死路；
+`502 CONNECT tunnel failed` 正是**代理侧**的报错，与 GitHub 无关。
 
-**副作用修正**：此前为绕开该问题改走 Git Data API 推送，代价是 GitHub 规范化时区（`+0800`→`+0000`）
-并去掉消息尾换行，导致本地/远端 **sha 分叉（树一致）**。现已 `git fetch` 成功并对齐，
-`origin/main = 本地 HEAD`、`git diff` 为空。**Git Data API 兜底路径废弃**（得不偿失）。
+**正确处置**：
+
+```bash
+env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy git push origin HEAD:main
+```
+
+**判据（下次直接照做，别再走弯路）**：一旦 git 报 `CONNECT tunnel failed` 或
+`Empty reply from server`，**先做一次 A/B**：`curl -s -o /dev/null -w '%{http_code}' https://github.com`
+分别**带**和**不带** `*_PROXY` 各跑一次。
+- 带代理失败 / 直连成功 → **代理问题，`env -u` 绕过**（本次即此类）
+- 两者都失败 → 才是网络问题，此时才轮到重试
+
+**同时修正的两条早期结论**：
+1. 之前"CN 网络干扰 GitHub"的判断**证据不足** —— 当时没有做 A/B，无法区分代理与网络。
+   这条现已降级为"未证实"。
+2. 为绕开该问题曾改走 Git Data API 推送，代价是 GitHub 规范化时区（`+0800`→`+0000`）
+   并去掉消息尾换行，导致本地/远端 **sha 分叉（树一致）**。该兜底路径**废弃** ——
+   根因既非网络也不是 GitHub，用 API 是治错了病。
 
 ---
 
