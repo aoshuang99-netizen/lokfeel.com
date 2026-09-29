@@ -43,6 +43,20 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: 'next-auth'
         update-types: ['version-update:semver-major']
+      # ── 已人工固定版本，禁止 dependabot 再提 PR ──────────────────
+      # 这两个包的更高版本会引入**静默的类型安全回归**（编译通过但类型失效），
+      # 不是"越新越好"，必须锁定：
+      #   · zod 4.6.x：z.infer / safeParse 的推断退化为 any，
+      #     `instanceof z.ZodError` 不再收窄 —— 错误处理逻辑会静默失去类型保护
+      #   · pusher-js 8.6.x：package.json 不再声明 types 字段，TS 找不到类型定义
+      # 升级前必须先补齐仓库内所有调用点的显式类型标注，并逐处复核。
+      - dependency-name: 'zod'
+        update-types: ['version-update:semver-minor', 'version-update:semver-major']
+      - dependency-name: 'pusher-js'
+        update-types: ['version-update:semver-minor', 'version-update:semver-major']
+      # @types/bcryptjs 是已废弃的 stub（bcryptjs@3 自带类型定义），已从依赖中移除，
+      # 防止 dependabot 依据 lock 残留再次提案。
+      - dependency-name: '@types/bcryptjs'
 
   # ── GitHub Actions 自身 ────────────────────────────────────
   - package-ecosystem: github-actions

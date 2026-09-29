@@ -7,7 +7,10 @@
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "20"
+  # Node 22 —— 与仓库根 .nvmrc（CI 的 node-version-file 也读它）保持一致。
+  # 此前这里是 "20"（Vercel 迁移遗留），而 Node 20 已于 2026-04-30 结束
+  # 维护期 EOL，且 openai@7 的 engines 要求 node >=22.0.0，故统一升到 22。
+  NODE_VERSION = "22"
   NEXT_TELEMETRY_DISABLED = "1"
 
 # Next.js on Netlify (handles server functions, proxy.ts, rewrites, ISR).
