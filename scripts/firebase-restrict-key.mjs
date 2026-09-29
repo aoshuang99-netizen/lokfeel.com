@@ -51,7 +51,30 @@ if (!tok.access_token) { console.error('OAuth 失败:', JSON.stringify(tok).slic
 console.log('OAuth      : OK（firebase-adminsdk 服务账号，cloud-platform scope）');
 const AUTH = tok.access_token;
 
-// ── 2) 列 keys，按 keyString 精确匹配目标 ────────────────────────────
+// ── 2) 确保 API Keys API 已启用（首次使用会 403 提示未启用）─────────
+const svcUrl = `https://serviceusage.googleapis.com/v1/projects/${PROJECT_ID}/services/apikeys.googleapis.com:enable`;
+const en = gcurl(svcUrl, 'POST', '{}', AUTH, 'application/json');
+try {
+  const ej = JSON.parse(en);
+  if (ej.error) {
+    console.error('启用 API Keys API 失败:', JSON.stringify(ej.error).slice(0, 300));
+    process.exit(2);
+  }
+  if (ej.name) {
+    // LRO，轮询到完成
+    for (let i = 0; i < 30; i++) {
+      const r = gcurl(`https://serviceusage.googleapis.com/v1/${ej.name}`, 'GET', null, AUTH);
+      try { if (JSON.parse(r).done) break; } catch {}
+      await new Promise((res) => setTimeout(res, 3000));
+    }
+    console.log('API Keys API: 已启用（首次）');
+    await new Promise((res) => setTimeout(res, 5000)); // 传播缓冲
+  } else {
+    console.log('API Keys API: 已处于启用状态');
+  }
+} catch { console.error('启用响应异常:', en.slice(0, 200)); process.exit(2); }
+
+// ── 3) 列 keys，按 keyString 精确匹配目标 ────────────────────────────
 const keysRaw = gcurl(`https://apikeys.googleapis.com/v2/projects/${PROJECT_ID}/locations/global/keys`, 'GET', null, AUTH);
 let keys; try { keys = JSON.parse(keysRaw); } catch { console.error('keys 响应异常:', keysRaw.slice(0, 200)); process.exit(2); }
 if (!keys.keys?.length) { console.error('项目内无 API key 或无权限:', JSON.stringify(keys).slice(0, 300)); process.exit(2); }
