@@ -164,53 +164,95 @@ const dump = (name, r) => {
     const nearTable = async () => {
       const t = await bodyText();
       const i = t.indexOf('网站限制');
-      return i >= 0 ? t.slice(i, i + 1200) : t.slice(0, 1200);
+      return i >= 0 ? t.slice(i, i + 1400) : t.slice(0, 1400);
     };
     const norm = (s) => s.trim().replace(/^https?:\/\//i, '').replace(/\/\*?$/, '').toLowerCase();
 
-    // 目标引荐来源列表（应用限制 = 网站）
-    // 依据页面自带示例：不含子域的单个网域 = https://example.com（即覆盖该主机任意网址）；
-    // 通配子域需 https://*.example.com。为兼容旧数据保留 lokfeel.com / www。
-    const VALUES = [
+    // 会话恢复：被踢到 accounts.google.com 时尝试重选账号并回到目标页
+    const ensureOnConsole = async () => {
+      for (let k = 0; k < 2 && /accounts\.google\.com/.test(page.url()); k++) {
+        log('[reauth] 被跳到账号选择页，尝试恢复:', page.url().slice(0, 90));
+        await shot('reauth-' + k);
+        const cand = [
+          page.locator('[data-identifier]').first(),
+          page.locator('[role=link], [role=button], li, div').filter({ hasText: /@(gmail|googlemail)\.com/i }).first(),
+        ];
+        for (const c of cand) {
+          if (await c.count().catch(() => 0)) { await c.click({ timeout: 8000 }).catch(() => {}); break; }
+        }
+        await page.waitForTimeout(7000);
+        if (/accounts\.google\.com\/(v3\/signin|signin\/)|ServiceLogin/.test(page.url())) {
+          await shot('abort-reauth-password');
+          throw new Error('会话已失效且需要密码，自动化无法继续（未保存，线上不受影响）');
+        }
+        await page.goto(TARGET_URL, { waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {});
+        try { await page.waitForLoadState('networkidle', { timeout: 30000 }); } catch {}
+        await page.waitForTimeout(5000);
+      }
+      if (/accounts\.google\.com/.test(page.url())) throw new Error('无法回到控制台（未保存）');
+    };
+
+    // 新增引荐来源（应用限制 = 网站）。lokfeel.com / www.lokfeel.com 已存在，不重复添加。
+    // 依据页面自带示例：不含子域的单个网域 = https://example.com（覆盖该主机任意网址）。
+    const ADD_VALUES = [
       'https://app.lokfeel.com',
-      'https://lokfeel.com',
-      'https://www.lokfeel.com',
       'https://lokfeel.netlify.app',
       'https://*.lokfeel.netlify.app',
       'http://localhost:3000',
       'http://127.0.0.1:3000',
     ];
-    const MUST_DROP = ['app.lofeel.com']; // 拼写错误（缺 k），且域名归属不明，必须移除
+    const EXPECT = ['app.lokfeel.com', 'lokfeel.netlify.app', '*.lokfeel.netlify.app', 'localhost:3000', '127.0.0.1:3000', 'lokfeel.com', 'www.lokfeel.com'];
+    const MUST_DROP = ['app.lofeel.com']; // 拼写错误（缺 k），域名归属不明，必须移除
 
-    log('\n===== 1) 全选现有行并删除 =====');
-    await page.locator('mat-checkbox, [role=checkbox]').first().click().catch((e) => log('勾选失败', e.message.slice(0, 80)));
-    await page.waitForTimeout(1500);
-    const selTxt = (await bodyText()).match(/已选中\s*\d+\s*行|Selected\s+\d+\s+items?/i)?.[0] || '';
+    await ensureOnConsole();
+    log('初始表格：\n' + (await nearTable()));
+    await shot('start');
+
+    // 1) 只删拼写错误那一行（其余保留，避免误删）
+    log('\n===== 1) 删除错误行: app.lofeel.com =====');
+    const row = page.locator('tr, [role=row], mat-row, .mat-mdc-row').filter({ hasText: 'app.lofeel.com' }).first();
+    if (await row.count().catch(() => 0)) {
+      const cb = row.locator('mat-checkbox, [role=checkbox], input[type=checkbox]').first();
+      if (await cb.count().catch(() => 0)) {
+        await cb.click({ timeout: 10000 }).catch((e) => log('勾选失败', e.message.slice(0, 80)));
+        log('已按行文本勾选');
+      }
+    }
+    let selTxt = (await bodyText()).match(/已选中\s*\d+\s*行|Selected\s+\d+\s+items?/i)?.[0] || '';
     log('选择状态:', selTxt || '(未见选中提示)');
-    const selN = parseInt((selTxt.match(/\d+/) || ['0'])[0], 10);
-    if (!selN) { await shot('abort-no-selection'); throw new Error('未能选中任何行，中止（未做任何修改）'); }
+    if ((parseInt((selTxt.match(/\d+/) || ['0'])[0], 10) || 0) !== 1) {
+      // 兜底：实测行复选框索引 1..3（0 是表头全选），第 1 行即 app.lofeel.com
+      log('回退：按索引勾选第 1 个行复选框');
+      const boxes = page.locator('mat-checkbox, [role=checkbox]');
+      const n = await boxes.count();
+      if (n < 2) { await shot('abort-no-row-checkbox'); throw new Error('找不到行复选框，中止'); }
+      await boxes.nth(1).click({ timeout: 10000 }).catch(() => {});
+      await page.waitForTimeout(1500);
+      selTxt = (await bodyText()).match(/已选中\s*\d+\s*行/i)?.[0] || '';
+      log('选择状态(回退后):', selTxt);
+      if ((parseInt((selTxt.match(/\d+/) || ['0'])[0], 10) || 0) !== 1) {
+        await shot('abort-selection'); throw new Error('无法精确选中 1 行，中止（未做修改）');
+      }
+    }
     await shot('selected');
-
-    // ⚠️ 页面有两个"删除"：顶部"删除"会删除整把 API 密钥；
-    //    行删除按钮的可点击文本是英文 "Delete"。用文本精确匹配，绝不用 accessible name。
+    // ⚠️ 页面有两个"删除"：顶部"删除"会删除整把密钥；行删除按钮文本是英文 "Delete"。
     const delBtn = page.locator('button', { hasText: 'Delete' }).first();
     if (!(await delBtn.count())) { await shot('abort-no-delete-btn'); throw new Error('找不到行删除按钮，中止'); }
     await delBtn.click({ timeout: 10000 });
     await page.waitForTimeout(2500);
-
-    const dialogOpen = await page.locator('mat-dialog-container, [role=dialog]').count();
-    if (dialogOpen) { await shot('abort-delete-dialog'); throw new Error('删除出现确认对话框，为安全起见中止（未保存）'); }
+    if (await page.locator('mat-dialog-container, [role=dialog]').count()) { await shot('abort-delete-dialog'); throw new Error('删除出现确认对话框，中止（未保存）'); }
     log('删除后表格：\n' + (await nearTable()));
     await shot('after-delete');
 
+    // 2) 逐条添加
     log('\n===== 2) 逐条添加目标引荐来源 =====');
-    const addBtn = page.getByRole('button', { name: /^Add$/i }).first();
-    const inputSel = 'input[placeholder*="example.com"], input[placeholder*="/*"]';
-    for (const v of VALUES) {
-      await addBtn.click({ timeout: 15000 });
+    for (const v of ADD_VALUES) {
+      if (/accounts\.google\.com/.test(page.url())) await ensureOnConsole();
+      const addBtn = page.getByRole('button', { name: /^Add$/i }).first();
+      await addBtn.click({ timeout: 20000 });
       await page.waitForTimeout(1200);
-      const inp = page.locator(inputSel).first();
-      if (!(await inp.count())) { await shot('abort-no-input'); throw new Error('Add 后找不到输入框，中止（已删除未保存）'); }
+      const inp = page.locator('input[placeholder*="example.com"], input[placeholder*="/*"]').first();
+      if (!(await inp.count())) { await shot('abort-no-input'); throw new Error('Add 后找不到输入框，中止（未保存）'); }
       await inp.fill(v);
       await page.waitForTimeout(400);
       await page.getByRole('button', { name: /^完成$/ }).first().click({ timeout: 10000 });
@@ -218,26 +260,27 @@ const dump = (name, r) => {
       log('  + 已添加', v);
     }
     await shot('after-add-all');
+    log('添加后表格：\n' + (await nearTable()));
 
+    // 3) 保存前校验
     log('\n===== 3) 保存前校验 =====');
     const table = await nearTable();
-    log('表格内容：\n' + table);
     const flat = norm(table);
-    const missing = VALUES.filter((v) => !flat.includes(norm(v)));
+    const missing = EXPECT.filter((v) => !flat.includes(v.toLowerCase()));
     const leftover = MUST_DROP.filter((d) => table.toLowerCase().includes(d.toLowerCase()));
     log('缺失:', JSON.stringify(missing), '| 仍存在(需清除):', JSON.stringify(leftover));
-    if (missing.length || leftover.length) {
-      await shot('abort-verify-failed');
-      throw new Error(`保存前校验未通过（缺失 ${missing.length} 项 / 残留 ${leftover.length} 项），未保存`);
-    }
+    if (missing.length || leftover.length) { await shot('abort-verify-failed'); throw new Error(`保存前校验未通过（缺失 ${missing.length} / 残留 ${leftover.length}），未保存`); }
 
+    // 4) 保存
     log('\n===== 4) 保存 =====');
-    await page.getByRole('button', { name: /^保存$/ }).first().click({ timeout: 15000 });
-    await page.waitForTimeout(8000);
+    await page.getByRole('button', { name: /^保存$/ }).first().click({ timeout: 20000 });
+    await page.waitForTimeout(9000);
     await shot('after-save');
+    if (/accounts\.google\.com/.test(page.url())) { await shot('abort-save-bounce'); throw new Error('保存时会话被弹走，需人工确认是否生效'); }
     const after = await bodyText();
-    log('保存后提示片段:', (after.match(/已更新|已保存|更新失败|错误|[\w ]*error[\w ]*/i) || ['(未见明确提示)'])[0]);
-    summary('## 1.3 引荐来源限制已提交\n\n目标 7 条全部写入并通过保存前校验，已点击保存。等待 5 分钟后进行冒烟验证。');
+    log('保存后提示片段:', (after.match(/已更新|已保存|更新失败|错误|error/i) || ['(未见明确提示)'])[0]);
+    log('保存后表格：\n' + (await nearTable()));
+    summary('## 1.3 引荐来源限制已提交\n\n- 删除拼写错误行 `app.lofeel.com`\n- 新增 5 条：app.lokfeel.com / lokfeel.netlify.app / *.lokfeel.netlify.app / localhost:3000 / 127.0.0.1:3000\n- 保存前强校验通过，已点击保存；生效最长需 5 分钟，随后跑 verify 冒烟。');
   }
 
 
