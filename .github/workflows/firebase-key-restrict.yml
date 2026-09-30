@@ -4,17 +4,22 @@ name: Firebase key restrict (1.3)
 # 冒烟验证：Auth API 对 app.lokfeel.com 放行、对陌生 referer 拒绝。
 # 凭证走仓库 Secret（FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY / FIREBASE_PROJECT_ID），
 # 即生产 firebase-admin 同一服务账号；脚本只改 restrictions，不创建/删除 key。
+#
+# 2026-09-30 补强：API Keys API 不可用时（线上当前即如此），脚本改为**照跑冒烟哨兵**
+# 并以退出码表达结论。因此本任务不再是"空跑"，而是一个真正能发现
+# "限制被改动/丢失"的哨兵；异常时开 Issue 告警，恢复后自动关闭。
 
 on:
   workflow_dispatch: {}
   # 每日自动重试：唯一前置是项目 Owner 在控制台启用 API Keys API（服务账号无权启用）。
-  # 启用前本任务以 ⏳ 形式正常结束（不报错）；启用后自动完成限制应用与冒烟验证。
-  # 完成后继续每日运行，兼作限制被改动的回归哨兵（脚本幂等）。
+  # 启用前：脚本跳过 API 写路径，但仍执行 Referer 冒烟哨兵并据此定退出码。
+  # 启用后：自动完成限制应用与冒烟验证；此后继续每日运行，兼作回归哨兵（幂等）。
   schedule:
     - cron: '0 3 * * *' # 每日 03:00 UTC（北京 11:00）
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: firebase-key-restrict
@@ -31,8 +36,59 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Apply restrictions & smoke-test
+        id: restrict
         env:
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-        run: node scripts/firebase-restrict-key.mjs
+        run: |
+          set +e
+          node scripts/firebase-restrict-key.mjs 2>&1 | tee restrict-output.txt
+          rc=${PIPESTATUS[0]}
+          echo "exitcode=$rc" >> "$GITHUB_OUTPUT"
+          echo "restrict exit code: $rc（0=正常 1=冒烟异常 2=真实错误）"
+          exit 0
+
+      - name: Alert (create or update issue)
+        if: steps.restrict.outputs.exitcode != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RC: ${{ steps.restrict.outputs.exitcode }}
+        run: |
+          gh label create firebase-key-restrict --color D93F0B --description "1.3 Firebase key 限制哨兵告警" --force
+          {
+            echo "## 🚨 1.3 Firebase key 限制哨兵告警（退出码 $RC）"
+            echo
+            echo '```'
+            cat restrict-output.txt
+            echo '```'
+            echo "- 巡检时间: $(date -u '+%F %T') UTC"
+            echo "- 运行记录: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo
+            echo "退出码含义：\`1\` = Referer 冒烟存在不符项（限制可能被改动/丢失）；\`2\` = 脚本真实错误（凭证/接口）。"
+            echo
+            echo "处置：到 Cloud Console → APIs & Services → Credentials 核对该 Web key 的"
+            echo "Application restrictions（应含 7 条：app.lokfeel.com / lokfeel.com / www.lokfeel.com /"
+            echo "lokfeel.netlify.app / *.lokfeel.netlify.app / localhost:3000 / 127.0.0.1:3000）与 API restrictions。"
+          } > body.md
+          existing=$(gh issue list --label firebase-key-restrict --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file body.md
+            echo "已更新既有告警 Issue #$existing"
+          else
+            gh issue create --title "🚨 1.3 Firebase key 限制哨兵告警（lokfeel.com）" --body-file body.md --label firebase-key-restrict
+            echo "已新建告警 Issue"
+          fi
+
+      - name: Resolve (auto-close alert issue)
+        if: steps.restrict.outputs.exitcode == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          existing=$(gh issue list --label firebase-key-restrict --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --comment "✅ Firebase key 限制冒烟恢复正常，本告警自动关闭。"
+            echo "已自动关闭告警 Issue #$existing"
+          else
+            echo "全部正常，且无待关闭的告警 Issue"
+          fi

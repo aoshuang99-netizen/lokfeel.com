@@ -40,6 +40,80 @@ const gcurl = (url, method = 'GET', body = null, auth = null, ct = null) => {
   }
 };
 
+// ══ 冒烟矩阵：本脚本唯一**不依赖任何 Google API 权限**的判据 ══════════
+// 为什么必须有它：API Keys API 不可用时（线上当前即如此，实测 apikeys.keys.list
+// 报 PERMISSION_DENIED），凡是以 API 读写为前提的校验都跑不起来 —— "每日哨兵"
+// 就成了摆设（实测 2026-09-30 的 cron 每次都以"前置未满足"空跑退出，什么都没验）。
+// 而 Referer 拦截是**外部可观测**的：用公开的 Auth 端点带不同 Referer 打一遍，
+// 就能独立验证限制是否仍然生效。因此把它做成任何分支都能调用的函数。
+//
+// 判据取响应正文语义而不是状态码：identitytoolkit 对无鉴权请求本就可能返回 403，
+// 单看状态码分不清"被 referrer 拦"与"缺身份"。
+function httpProbe(referer) {
+  const args = ['-sS', '--max-time', '30', '-w', '\n__CODE__%{http_code}'];
+  if (referer) args.push('-H', `Referer: ${referer}`);
+  args.push(`https://identitytoolkit.googleapis.com/v1/projects?key=${apiKey}`);
+  let out = '';
+  try {
+    out = execFileSync('curl', args, { maxBuffer: 1024 * 1024 }).toString();
+  } catch (e) {
+    out = String(e.stdout || '') + '\n__CODE__000';
+  }
+  const m = out.match(/__CODE__(\d{3})\s*$/);
+  return { code: m ? m[1] : '000', body: out.replace(/\n?__CODE__\d{3}\s*$/, '') };
+}
+function isBlocked(r) {
+  return /API_KEY_HTTP_REFERRER_BLOCKED|requests-from-referer|referer[^"]*blocked/i.test(r.body);
+}
+
+// 逐条断言"该放行的放行、该拦的拦住"。任一条不符即整体失败 → 工作流变红。
+function smokeMatrix() {
+  const cases = [
+    { ref: APP_ORIGIN + '/', want: 'allow', why: '生产主域' },
+    { ref: 'https://lokfeel.com/', want: 'allow', why: '营销域' },
+    { ref: 'https://www.lokfeel.com/', want: 'allow', why: '营销域 www' },
+    { ref: 'https://lokfeel.netlify.app/', want: 'allow', why: 'Netlify 主域' },
+    { ref: 'https://demo.lokfeel.netlify.app/', want: 'allow', why: 'Netlify 预览通配' },
+    { ref: 'http://localhost:3000/', want: 'allow', why: '本地开发' },
+    { ref: 'http://127.0.0.1:3000/', want: 'allow', why: '本地开发 127' },
+    { ref: 'https://app.lofeel.com/', want: 'block', why: '第三方错拼抢注域（lofeel 缺 k）' },
+    { ref: 'https://evil.example.com/', want: 'block', why: '陌生域（对照）' },
+    { ref: null, want: 'block', why: '无 Referer（对照）' },
+  ];
+  const rows = [];
+  let ok = true;
+  for (const c of cases) {
+    const r = httpProbe(c.ref);
+    const blocked = isBlocked(r);
+    const pass = c.want === 'block' ? blocked : !blocked;
+    if (!pass) ok = false;
+    rows.push({ ...c, code: r.code, blocked, pass, body: r.body });
+  }
+  return { ok, rows };
+}
+function reportSmoke(sm) {
+  console.log('\n── 冒烟矩阵（Referer 拦截，外部可观测）──');
+  for (const r of sm.rows) {
+    const mark = r.pass ? '✅' : '❌';
+    console.log(`  ${mark} ${String(r.ref || '（无 Referer）').padEnd(38)} HTTP ${r.code}  ${r.blocked ? '被拦' : '放行'}  [期望${r.want === 'block' ? '拦住' : '放行'}] ${r.why}`);
+  }
+  if (!sm.ok) {
+    for (const r of sm.rows.filter((x) => !x.pass)) {
+      console.log(`   样本(${r.ref || 'none'}): ${String(r.body).replace(/\s+/g, ' ').slice(0, 200)}`);
+    }
+  }
+  console.log(sm.ok ? '  → 冒烟全部符合预期 ✅' : '  → 冒烟存在不符项 ❌（限制可能被改动或丢失）');
+  return sm.ok;
+}
+function smokeSummaryMd(sm, title) {
+  const lines = [`## ${title}`, '', '| Referer | HTTP | 实测 | 期望 | 结论 |', '|---|---|---|---|---|'];
+  for (const r of sm.rows) {
+    lines.push(`| \`${r.ref || '(无)'}\` | ${r.code} | ${r.blocked ? '被拦' : '放行'} | ${r.want === 'block' ? '拦住' : '放行'} | ${r.pass ? '✅' : '❌'} |`);
+  }
+  lines.push('', sm.ok ? '**结论：限制仍然生效。**' : '**结论：存在不符项，限制可能被改动或丢失，请立即核对。**');
+  return lines.join('\n');
+}
+
 // Google 对"服务未启用"的两种返回形态：
 //  ① 标准文案 "…has not been used in project … before or it is disabled…/overview…"
 //  ② 简写形如 Permission 'apikeys.keys.list' denied on resource 'projects/N/locations/global'
@@ -78,7 +152,10 @@ const pending = (detail) => {
   console.log('   ② 直接在控制台改 key 限制（不需要启用任何 API，最稳）：');
   console.log('      https://console.cloud.google.com/apis/credentials?project=' + PROJECT_ID);
   console.log('      → 点该 Web key（AIzaSyBq2gPa…）→ Edit → Application restrictions 选 "Websites"');
-  console.log('        添加：https://app.lokfeel.com/* 、https://lokfeel.netlify.app/* 、http://localhost:3000/*');
+  console.log('        添加（共 7 条，务必与本脚本 REQUIRED_REFERRERS 一致，否则下次运行会再补）：');
+  console.log('          https://app.lokfeel.com/* 、https://lokfeel.com/* 、https://www.lokfeel.com/*');
+  console.log('          https://lokfeel.netlify.app/* 、https://*.lokfeel.netlify.app/*');
+  console.log('          http://localhost:3000/* 、http://127.0.0.1:3000/*');
   console.log('      → API restrictions 选 "Restrict key" → 勾 identitytoolkit / securetoken / firebaseinstallations → Save');
   console.log('   两种做法本工作流都会自动验证：已达标则打印「✅ 限制已就绪」，未达标则每日重试。');
   if (detail) console.log('   原始响应:', String(detail).replace(/\s+/g, ' ').slice(0, 1200));
@@ -93,8 +170,9 @@ const pending = (detail) => {
     `\n${url}\n`,
     '**② 不启用 API，直接在控制台改 key 限制**（最稳，不依赖任何 API 权限）',
     `\nhttps://console.cloud.google.com/apis/credentials?project=${PROJECT_ID}\n`,
-    '- Application restrictions → Websites：`https://app.lokfeel.com/*`、`https://lokfeel.netlify.app/*`、`http://localhost:3000/*`',
+    '- Application restrictions → Websites（共 7 条）：`https://app.lokfeel.com/*`、`https://lokfeel.com/*`、`https://www.lokfeel.com/*`、`https://lokfeel.netlify.app/*`、`https://*.lokfeel.netlify.app/*`、`http://localhost:3000/*`、`http://127.0.0.1:3000/*`',
     '- API restrictions → Restrict key：`identitytoolkit`、`securetoken`、`firebaseinstallations`',
+    '- ⚠️ 不要勾「Don\'t restrict key」以外的缩减：本脚本按"只增不减"校验，删掉必需项会被判为未达标',
     '',
     '两种做法之后，本工作流每日自动运行都会做一次幂等校验：已达标打印「✅ 限制已就绪」，未达标继续等待。',
     '',
@@ -105,7 +183,19 @@ const pending = (detail) => {
     '```',
     '</details>',
   ].join('\n'));
-  process.exit(0);
+
+  // 关键补强：API 走不通 ≠ 什么都没法验。
+  // Referer 拦截是**外部可观测**的（见文件顶部 smokeMatrix），所以这里照跑冒烟哨兵，
+  // 让每日任务真正具备"限制被改动/丢失"的发现能力 —— 原先它每天只是空跑退出。
+  const sm = smokeMatrix();
+  const smokeOk = reportSmoke(sm);
+  if (!smokeOk) {
+    console.log('   ⚠️ API 不可用期间仍检测到限制异常：请优先按上面 ② 到控制台核对。');
+  }
+  summary(smokeSummaryMd(sm, smokeOk
+    ? '🛡️ 1.3 哨兵（API 不可用，仅冒烟）：限制仍然生效'
+    : '🚨 1.3 哨兵告警：限制可能已被改动或丢失'));
+  process.exit(smokeOk ? 0 : 1);
 };
 
 // ── 0) 从公开配置端点取当前 key（自更新，避免硬编码）──────────────────
@@ -180,37 +270,72 @@ if (!target) { console.error('未找到与线上配置匹配的 key（可能 key
 console.log('匹配 key   :', target.name, '| displayName:', target.displayName || '(none)');
 
 // ── 4) 计算目标限制，幂等检查 ────────────────────────────────────────
-const ALLOWED_REFERRERS = [
+// ⚠️ 达标判据必须是「只增不减」，绝不能用"精确相等"。这里踩过两个真实陷阱：
+//   ① API 轴：本 key 由 Firebase 自动创建，Google 已替它填了一大票服务（实测线上 25 个）。
+//      若以"精确相等"判为未达标再 PATCH，就会把 25 个削成下面的 3 个 → 直接打断线上。
+//   ② 引荐来源轴：线上存在我们没列出的**合法**域（营销域 lokfeel.com / www.lokfeel.com，
+//      2026-09-30 实测确实在列）。精确相等会把它们一并删掉。
+// 因此：达标 = 必需项全部在 + 没有禁用项；PATCH 时写「并集」，永不删除未知条目。
+const REQUIRED_REFERRERS = [
   'https://app.lokfeel.com/*',
+  'https://lokfeel.com/*',
+  'https://www.lokfeel.com/*',
   'https://lokfeel.netlify.app/*',
   'https://*.lokfeel.netlify.app/*',
   'http://localhost:3000/*',
   'http://127.0.0.1:3000/*',
 ];
-const API_TARGETS = [
-  { service: 'identitytoolkit.googleapis.com' },
-  { service: 'securetoken.googleapis.com' },
-  { service: 'firebaseinstallations.googleapis.com' },
+const REQUIRED_API_TARGETS = [
+  'identitytoolkit.googleapis.com',
+  'securetoken.googleapis.com',
+  'firebaseinstallations.googleapis.com',
 ];
+// 禁用项：1.3 要清掉的第三方错拼抢注域（lokfeel 少一个 k；实测由他人持有且网站在线）
+const DENIED_REFERRER_HOSTS = ['app.lofeel.com', 'lofeel.com', 'www.lofeel.com'];
+
+// 归一化后比较：控制台常把条目存成裸主机名，API 则给完整 URL，
+// 不做归一化就会把 "app.lokfeel.com" 与 "https://app.lokfeel.com/*" 当成两条。
+const normRef = (r) => String(r || '').trim().toLowerCase()
+  .replace(/^https?:\/\//, '').replace(/\/\*+$/, '').replace(/\/+$/, '');
+
 const cur = target.restrictions || {};
 const curRefs = (cur.browserKeyRestrictions?.allowedReferrers) || [];
-const curTargets = (cur.apiTargets || []).map((t) => t.service).sort().join(',');
-const wantTargets = API_TARGETS.map((t) => t.service).sort().join(',');
-const refsOk = JSON.stringify([...curRefs].sort()) === JSON.stringify([...ALLOWED_REFERRERS].sort());
-const targetsOk = curTargets === wantTargets;
+const curSvc = (cur.apiTargets || []).map((t) => t.service);
+const curRefN = curRefs.map(normRef);
+const reqRefN = REQUIRED_REFERRERS.map(normRef);
+
+console.log('线上 referrers :', curRefs.length ? JSON.stringify(curRefs) : '(无)');
+console.log('线上 apiTargets:', curSvc.length ? `${curSvc.length} 个 → ${curSvc.join(', ')}` : '(无)');
+
+const missingRef = reqRefN.filter((h) => !curRefN.includes(h));
+const junkRef = curRefN.filter((h) => DENIED_REFERRER_HOSTS.includes(h));
+const missingSvc = REQUIRED_API_TARGETS.filter((s) => !curSvc.includes(s));
+const refsOk = missingRef.length === 0 && junkRef.length === 0;
+const targetsOk = missingSvc.length === 0;
 const alreadyDone = refsOk && targetsOk && !!cur.browserKeyRestrictions;
 if (alreadyDone) {
-  console.log('✅ 限制已就绪（幂等跳过）：referrers 与 apiTargets 均匹配');
+  console.log('✅ 限制已就绪（幂等跳过）：必需 referrers 全在、无禁用域、必需 API 全在');
 } else {
-  console.log('当前限制   :', JSON.stringify(cur).slice(0, 300) || '(无)');
+  if (missingRef.length) console.log('缺 referrer   :', JSON.stringify(missingRef));
+  if (junkRef.length) console.log('需清除的禁用域:', JSON.stringify(junkRef));
+  if (missingSvc.length) console.log('缺 API 服务   :', JSON.stringify(missingSvc));
 }
 
-// ── 5) PATCH 限制 ────────────────────────────────────────────────────
+// ── 5) PATCH 限制（写并集：保留线上已有的合法条目，只补必需项、只删禁用项）──
 if (!alreadyDone) {
+  const reqSet = new Set(reqRefN);
+  const extras = curRefs.filter((r) => {
+    const n = normRef(r);
+    return !DENIED_REFERRER_HOSTS.includes(n) && !reqSet.has(n);
+  });
+  const nextReferrers = [...extras, ...REQUIRED_REFERRERS];
+  const nextServices = [...curSvc.filter((s) => !REQUIRED_API_TARGETS.includes(s)), ...REQUIRED_API_TARGETS];
+  if (extras.length) console.log('保留线上额外条目:', JSON.stringify(extras), '（不删：可能是合法消费方，删掉会打断它）');
+  console.log(`PATCH       : referrers ${curRefs.length} → ${nextReferrers.length} 条；apiTargets ${curSvc.length} → ${nextServices.length} 个`);
   const patchBody = JSON.stringify({
     restrictions: {
-      browserKeyRestrictions: { allowedReferrers: ALLOWED_REFERRERS },
-      apiTargets: API_TARGETS,
+      browserKeyRestrictions: { allowedReferrers: nextReferrers },
+      apiTargets: nextServices.map((service) => ({ service })),
     },
   });
   const patchUrl = `https://apikeys.googleapis.com/v2/${target.name}?updateMask=restrictions`;
@@ -235,39 +360,11 @@ if (!alreadyDone) {
   await new Promise((r) => setTimeout(r, 5000)); // 限制传播缓冲
 }
 
-// ── 7) 冒烟验证：按错误正文判定，而不是只比 HTTP 码 ──────────────────
-// 关键：identitytoolkit 对无鉴权请求本来可能返回 403 PERMISSION_DENIED，
-// 单看状态码无法区分"被 referrer 拦"与"缺身份"。判据取响应正文里的
-// referer-blocked 语义（API_KEY_HTTP_REFERRER_BLOCKED / requests-from-referer…）。
-const httpProbe = (referer) => {
-  const args = ['-sS', '--max-time', '30', '-w', '\n__CODE__%{http_code}'];
-  if (referer) args.push('-H', `Referer: ${referer}`);
-  args.push(`https://identitytoolkit.googleapis.com/v1/projects?key=${apiKey}`);
-  let out = '';
-  try {
-    out = execFileSync('curl', args, { maxBuffer: 1024 * 1024 }).toString();
-  } catch (e) {
-    out = String(e.stdout || '') + '\n__CODE__000';
-  }
-  const m = out.match(/__CODE__(\d{3})\s*$/);
-  return { code: m ? m[1] : '000', body: out.replace(/\n?__CODE__\d{3}\s*$/, '') };
-};
-const isBlocked = (r) => /API_KEY_HTTP_REFERRER_BLOCKED|requests-from-referer|referer[^"]*blocked/i.test(r.body);
-
-const app = httpProbe(APP_ORIGIN + '/');
-const none = httpProbe(null);
-const evil = httpProbe('https://evil.example.com/');
-const appOk = !isBlocked(app);
-const evilOk = isBlocked(evil);
-console.log(`冒烟（Referer=${APP_ORIGIN}/）: HTTP ${app.code}  ${appOk ? '✅ 未被 referrer 拦' : '❌ 被拦'}`);
-console.log(`冒烟（无 Referer）           : HTTP ${none.code}  ${isBlocked(none) ? '（被拦：属正常收紧）' : '（放行）'}`);
-console.log(`冒烟（Referer=evil.example） : HTTP ${evil.code}  ${evilOk ? '✅ 已拒绝' : '❌ 未拒绝'}`);
-if (!appOk || !evilOk) {
-  console.log('   样本正文:', `app=${app.body.replace(/\s+/g, ' ').slice(0, 160)} | evil=${evil.body.replace(/\s+/g, ' ').slice(0, 160)}`);
-}
-const allGood = appOk && evilOk;
+// ── 7) 冒烟验证 ──────────────────────────────────────────────────────
+// 实现见文件顶部（smokeMatrix / reportSmoke）：那是一段**不依赖任何 Google API
+// 权限**的检测，因此本步在"API 可用"与"API 不可用"两条路径上都会执行。
+const sm = smokeMatrix();
+const allGood = reportSmoke(sm);
 console.log(allGood ? '\n🎉 1.3 完成：referrer + API 双限制生效，线上 Auth 冒烟通过' : '\n⚠️ 限制已应用但冒烟有异常，需人工核对');
-summary(allGood
-  ? `## 🎉 1.3 完成\n\nFirebase Web key 已加 HTTP referrer + Google API 双限制。\n\n| 探针 | HTTP | 结论 |\n|---|---|---|\n| ${APP_ORIGIN}/ | ${app.code} | ${appOk ? '放行' : '被拦'} |\n| 无 Referer | ${none.code} | ${isBlocked(none) ? '被拦' : '放行'} |\n| evil.example.com | ${evil.code} | ${evilOk ? '已拒绝' : '未拒绝'} |\n`
-  : `## ⚠️ 1.3 限制已应用，但冒烟异常，需人工核对\n\napp=${app.code}、none=${none.code}、evil=${evil.code}\n`);
+summary(smokeSummaryMd(sm, allGood ? '🎉 1.3 完成：referrer + API 双限制生效' : '⚠️ 1.3 冒烟异常，需人工核对'));
 process.exit(allGood ? 0 : 1);
