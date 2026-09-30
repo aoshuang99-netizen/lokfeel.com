@@ -170,24 +170,34 @@ const dump = (name, r) => {
 
     // 会话恢复：被踢到 accounts.google.com 时尝试重选账号并回到目标页
     const ensureOnConsole = async () => {
-      for (let k = 0; k < 2 && /accounts\.google\.com/.test(page.url()); k++) {
-        log('[reauth] 被跳到账号选择页，尝试恢复:', page.url().slice(0, 90));
+      for (let k = 0; k < 3 && /accounts\.google\.com/.test(page.url()); k++) {
+        log(`[reauth] 账号选择页，尝试选择账号…(第 ${k + 1} 次)`);
         await shot('reauth-' + k);
-        const cand = [
+        let clicked = false;
+        const cands = [
+          page.getByText(/@(gmail|googlemail)\.com/i).first(),
           page.locator('[data-identifier]').first(),
           page.locator('[role=link], [role=button], li, div').filter({ hasText: /@(gmail|googlemail)\.com/i }).first(),
         ];
-        for (const c of cand) {
-          if (await c.count().catch(() => 0)) { await c.click({ timeout: 8000 }).catch(() => {}); break; }
+        for (const c of cands) {
+          if (await c.count().catch(() => 0)) {
+            await c.click({ timeout: 8000 }).then(() => { clicked = true; }).catch(() => {});
+            if (clicked) break;
+          }
         }
-        await page.waitForTimeout(7000);
-        if (/accounts\.google\.com\/(v3\/signin|signin\/)|ServiceLogin/.test(page.url())) {
-          await shot('abort-reauth-password');
-          throw new Error('会话已失效且需要密码，自动化无法继续（未保存，线上不受影响）');
-        }
+        log('[reauth] 账号点击 =', clicked);
+        await page.waitForTimeout(8000);
+        await shot('reauth-after-' + k);
+        // 判据必须是页面内容：出现密码输入框 = 需要人工登录
+        // （URL 含 ServiceLogin 字样不能作为判据 —— 账号选择页的 continue 参数里就带它）
+        const pwd = await page.locator('input[type=password]').count().catch(() => 0);
+        log('[reauth] 密码框可见数 =', pwd, '| 当前URL =', page.url().slice(0, 90));
+        if (pwd) { await shot('abort-need-password'); throw new Error('需要输入密码（自动化无法继续；未保存，线上不受影响）'); }
+      }
+      if (/accounts\.google\.com/.test(page.url())) {
         await page.goto(TARGET_URL, { waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {});
         try { await page.waitForLoadState('networkidle', { timeout: 30000 }); } catch {}
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(6000);
       }
       if (/accounts\.google\.com/.test(page.url())) throw new Error('无法回到控制台（未保存）');
     };
