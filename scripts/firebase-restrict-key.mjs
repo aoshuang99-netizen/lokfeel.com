@@ -48,23 +48,55 @@ const gcurl = (url, method = 'GET', body = null, auth = null, ct = null) => {
 const DISABLED_SIGNATURE = /has not been used in project|is disabled|SERVICE_DISABLED|apikeys\.googleapis\.com\/overview|google\.rpc\.PreconditionFailure/i;
 const looksDisabled = (raw) => /apikeys\.keys\./i.test(raw) && DISABLED_SIGNATURE.test(raw);
 
+// 自诊断：向 Service Usage API 询问 apikeys 服务的真实状态（ENABLED / DISABLED）。
+// 目的：把"是没启用 API"还是"启用了但服务账号缺 IAM 角色"这两种长得几乎一样的
+// 403（都可能是 Permission 'apikeys.keys.list' denied）区分开，避免用户点错地方。
+const diagnose = () => {
+  const url = `https://serviceusage.googleapis.com/v1/projects/${PROJECT_ID}/services/apikeys.googleapis.com`;
+  const r = gcurl(url, 'GET', null, AUTH);
+  const m = r.match(/"state"\s*:\s*"([A-Z_]+)"/);
+  if (m) {
+    console.log('诊断       : apikeys.googleapis.com 服务状态 =', m[1]);
+    return `serviceState=${m[1]}`;
+  }
+  console.log('诊断       : 服务状态查询未获得结论 →', r.replace(/\s+/g, ' ').slice(0, 200));
+  return `serviceState=UNKNOWN（查询响应：${r.replace(/\s+/g, ' ').slice(0, 200)}）`;
+};
+
 // 前置未满足（API Keys API 未启用）：不报错，留待定时任务自动重试
 const pending = (detail) => {
   const url = `https://console.developers.google.com/apis/api/apikeys.googleapis.com/overview?project=${PROJECT_ID}`;
-  console.log('\n⏳ 1.3 前置未满足：API Keys API 尚未在项目内启用');
-  console.log('   需项目 Owner 在控制台点一次 Enable：');
-  console.log('   ' + url);
-  console.log('   本工作流已设为每日自动重试 —— 点击后无需任何后续操作。');
+  const diag = diagnose();
+  const why = diag === 'serviceState=ENABLED'
+    ? '（服务已启用 → 阻塞在服务账号 IAM 权限）'
+    : diag === 'serviceState=DISABLED'
+      ? '（apikeys 服务未启用）'
+      : '（服务状态未知，可能是权限不足）';
+  console.log('\n⏳ 1.3 前置未满足：无法通过 API 读写 API key 限制' + why);
+  console.log('   需项目 Owner 在控制台操作（任选其一，推荐 ②）：');
+  console.log('   ① 启用 API Keys API：' + url);
+  console.log('   ② 直接在控制台改 key 限制（不需要启用任何 API，最稳）：');
+  console.log('      https://console.cloud.google.com/apis/credentials?project=' + PROJECT_ID);
+  console.log('      → 点该 Web key（AIzaSyBq2gPa…）→ Edit → Application restrictions 选 "Websites"');
+  console.log('        添加：https://app.lokfeel.com/* 、https://lokfeel.netlify.app/* 、http://localhost:3000/*');
+  console.log('      → API restrictions 选 "Restrict key" → 勾 identitytoolkit / securetoken / firebaseinstallations → Save');
+  console.log('   两种做法本工作流都会自动验证：已达标则打印「✅ 限制已就绪」，未达标则每日重试。');
   if (detail) console.log('   原始响应:', String(detail).replace(/\s+/g, ' ').slice(0, 1200));
   summary([
-    '## ⏳ 1.3 待前置：Owner 启用 API Keys API',
+    '## ⏳ 1.3 待前置：API Keys API 未启用（或服务账号缺 IAM 角色）',
     '',
-    `控制台入口：${url}`,
+    `**自诊断**：\`${diag}\``,
     '',
-    '启用后本工作流每日自动重试，会自动完成"应用双限制 → 轮询生效 → 冒烟验证"，无需人工再触发。',
+    '需 Owner 在控制台操作，任选其一：',
     '',
-    '> 若该 API 已显示 Enabled 而本任务仍停在此处，则剩余阻塞是服务账号缺少 `apikeys.keys.list`/`apikeys.keys.update` 权限，',
-    '> 届时按运行日志中的原始响应在 IAM 里补角色即可（脚本无需改动）。',
+    '**① 启用 API Keys API**（之后本脚本可全自动完成）',
+    `\n${url}\n`,
+    '**② 不启用 API，直接在控制台改 key 限制**（最稳，不依赖任何 API 权限）',
+    `\nhttps://console.cloud.google.com/apis/credentials?project=${PROJECT_ID}\n`,
+    '- Application restrictions → Websites：`https://app.lokfeel.com/*`、`https://lokfeel.netlify.app/*`、`http://localhost:3000/*`',
+    '- API restrictions → Restrict key：`identitytoolkit`、`securetoken`、`firebaseinstallations`',
+    '',
+    '两种做法之后，本工作流每日自动运行都会做一次幂等校验：已达标打印「✅ 限制已就绪」，未达标继续等待。',
     '',
     '<details><summary>原始响应</summary>',
     '',
