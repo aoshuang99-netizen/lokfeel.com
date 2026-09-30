@@ -112,9 +112,72 @@ const dump = (name, r) => {
   dump('radio', await grab(page, 'mat-radio-button, [role=radio], input[type=radio]'));
   dump('checkbox', await grab(page, 'mat-checkbox, [role=checkbox], input[type=checkbox]'));
   dump('textarea', await grab(page, 'textarea'));
-  dump('text-input', await grab(page, 'input[type=text], input:not([type])'));
+  dump('text-input', await grab(page, 'input[type=text], input:not([type]), input[type=url]'));
   dump('select/combobox', await grab(page, 'mat-select, [role=combobox]'));
   dump('button', await grab(page, 'button, [role=button]', 60));
+
+  if (MODE === 'explore') {
+    // 交互探测：看清 Add 与行内编辑的控件形态（不保存任何东西）
+    const shot = (n) => page.screenshot({ path: path.join(SHOTS, `explore-${n}.png`) }).catch(() => {});
+    const dumpNow = async (label) => {
+      dump(`text-input@${label}`, await grab(page, 'input[type=text], input:not([type]), input[type=url], textarea'));
+      dump(`button@${label}`, await grab(page, 'button, [role=button]', 40));
+      const body2 = await page.evaluate(() => document.body.innerText.replace(/\n{3,}/g, '\n\n')).catch(() => '');
+      const i = body2.indexOf('网站限制');
+      log(`\n[BODY@${label}] 网站限制 附近：\n` + (i >= 0 ? body2.slice(i, i + 900) : body2.slice(0, 900)));
+    };
+
+    // 1) 点 Add
+    log('\n===== 点击 Add =====');
+    const addBtn = page.getByRole('button', { name: /^Add$/i }).first();
+    const addBtn2 = page.getByText('Add', { exact: true }).first();
+    let clicked = false;
+    for (const b of [addBtn, addBtn2]) {
+      if (await b.count().catch(() => 0)) { await b.click({ timeout: 15000 }).then(() => { clicked = true; }).catch((e) => log('click err', e.message.slice(0, 100))); if (clicked) break; }
+    }
+    log('Add clicked =', clicked);
+    await page.waitForTimeout(2500);
+    await shot('add');
+    await dumpNow('after-add');
+
+    // 2) 取消/关闭
+    for (const name of ['取消', 'Cancel', '关闭']) {
+      const c = page.getByRole('button', { name }).first();
+      if (await c.count().catch(() => 0)) { await c.click({ timeout: 8000 }).catch(() => {}); break; }
+    }
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForTimeout(1500);
+
+    // 3) 勾选第一行复选框，看是否出现删除按钮
+    log('\n===== 勾选行复选框 =====');
+    const cb = page.locator('mat-checkbox, [role=checkbox], input[type=checkbox]').first();
+    if (await cb.count().catch(() => 0)) {
+      await cb.click({ timeout: 10000 }).catch((e) => log('cb err', e.message.slice(0, 80)));
+      await page.waitForTimeout(1500);
+      await shot('row-check');
+      await dumpNow('after-check');
+      await cb.click({ timeout: 8000 }).catch(() => {}); // 还原
+      await page.waitForTimeout(800);
+    }
+
+    // 4) 点第一行的行内"修改"(铅笔)
+    log('\n===== 点击行内修改 =====');
+    const editSel = ['[aria-label=修改]', 'button:has(mat-icon)', '[data-icon=edit]', 'td button', 'tr button'];
+    let edited = false;
+    for (const s of editSel) {
+      const l = page.locator(s);
+      const n = await l.count().catch(() => 0);
+      if (n > 0) {
+        log(`尝试选择器 ${s} (匹配 ${n})`);
+        await l.first().click({ timeout: 8000 }).then(() => { edited = true; }).catch((e) => log('err', e.message.slice(0, 80)));
+        if (edited) break;
+      }
+    }
+    log('edit clicked =', edited);
+    await page.waitForTimeout(2500);
+    await shot('row-edit');
+    await dumpNow('after-edit');
+  }
 
   // 内层滚动 + 分屏截图（GCP 控制台是内层滚动，fullPage 无效）
   const heights = await page.evaluate(() => {
