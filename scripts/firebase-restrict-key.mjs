@@ -40,6 +40,14 @@ const gcurl = (url, method = 'GET', body = null, auth = null, ct = null) => {
   }
 };
 
+// Google 对"服务未启用"的两种返回形态：
+//  ① 标准文案 "…has not been used in project … before or it is disabled…/overview…"
+//  ② 简写形如 Permission 'apikeys.keys.list' denied on resource 'projects/N/locations/global'
+//     —— 不带 disable 字样，但 details 里带 google.rpc.PreconditionFailure（实测为本项目形态）。
+// ②必须靠 PreconditionFailure 认出来，否则会被误判成"真实错误"而中断自动重试。
+const DISABLED_SIGNATURE = /has not been used in project|is disabled|SERVICE_DISABLED|apikeys\.googleapis\.com\/overview|google\.rpc\.PreconditionFailure/i;
+const looksDisabled = (raw) => /apikeys\.keys\./i.test(raw) && DISABLED_SIGNATURE.test(raw);
+
 // 前置未满足（API Keys API 未启用）：不报错，留待定时任务自动重试
 const pending = (detail) => {
   const url = `https://console.developers.google.com/apis/api/apikeys.googleapis.com/overview?project=${PROJECT_ID}`;
@@ -47,8 +55,24 @@ const pending = (detail) => {
   console.log('   需项目 Owner 在控制台点一次 Enable：');
   console.log('   ' + url);
   console.log('   本工作流已设为每日自动重试 —— 点击后无需任何后续操作。');
-  if (detail) console.log('   原始响应:', String(detail).replace(/\s+/g, ' ').slice(0, 240));
-  summary(`## ⏳ 1.3 待前置：Owner 启用 API Keys API\n\n控制台入口：${url}\n\n每日自动重试；启用后本工作流会自动完成限制应用与冒烟验证，无需人工再触发。\n`);
+  if (detail) console.log('   原始响应:', String(detail).replace(/\s+/g, ' ').slice(0, 1200));
+  summary([
+    '## ⏳ 1.3 待前置：Owner 启用 API Keys API',
+    '',
+    `控制台入口：${url}`,
+    '',
+    '启用后本工作流每日自动重试，会自动完成"应用双限制 → 轮询生效 → 冒烟验证"，无需人工再触发。',
+    '',
+    '> 若该 API 已显示 Enabled 而本任务仍停在此处，则剩余阻塞是服务账号缺少 `apikeys.keys.list`/`apikeys.keys.update` 权限，',
+    '> 届时按运行日志中的原始响应在 IAM 里补角色即可（脚本无需改动）。',
+    '',
+    '<details><summary>原始响应</summary>',
+    '',
+    '```',
+    String(detail || '').replace(/\s+/g, ' ').slice(0, 1200),
+    '```',
+    '</details>',
+  ].join('\n'));
   process.exit(0);
 };
 
@@ -108,13 +132,13 @@ const keysUrl = `https://apikeys.googleapis.com/v2/projects/${PROJECT_ID}/locati
 const keysRaw = gcurl(keysUrl, 'GET', null, AUTH);
 let keys;
 try { keys = JSON.parse(keysRaw); } catch {
-  if (/has not been used in project|is disabled|SERVICE_DISABLED|apikeys\.googleapis\.com\/overview/i.test(keysRaw)) pending(keysRaw);
-  console.error('keys 响应异常:', keysRaw.slice(0, 300));
+  if (looksDisabled(keysRaw)) pending(keysRaw);
+  console.error('keys 响应异常:', keysRaw.slice(0, 400));
   process.exit(2);
 }
 if (keys.error) {
   const msg = JSON.stringify(keys.error);
-  if (/has not been used in project|is disabled|SERVICE_DISABLED|apikeys\.googleapis\.com\/overview/i.test(msg)) pending(msg);
+  if (looksDisabled(msg)) pending(msg);
   console.error('列取 key 失败:', msg.slice(0, 400));
   process.exit(2);
 }
