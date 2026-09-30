@@ -485,7 +485,62 @@ Referer 拦截是外部可观测的，无需读 API 就能验证限制是否仍�
 | `/api/health` | `healthy`；`redis.backend=memory, configured=false`（D5 仍开放） |
 | 依赖批次（#17–#21） | `package.json` 已与 `origin/main` 一致 → **已发版** ✅（sentry 11 / framer 13.4.4 / @types/node 22 / eslint 9 / webrtc-adapter 9.0.6） |
 
-### 6.6 仍未闭合
+### 6.6 遗留分支 `work/perf-security-drag-19` 处置结论：**废弃，不合并**
+
+该分支相对 `main` 有 19 个提交，曾被记为"待合并"（任务 #49 一度标为已完成，实际**从未并入**）。
+逐条核实后结论是**不要合并**，理由分三类：
+
+**① 它的安全修复早已在 main 上（逐项实测，非推断）**
+
+| 分支提交声称的修复 | main 实测 |
+|---|---|
+| prod-gate mock-checkout | ✅ `src/app/api/test/mock-checkout/route.ts` 三处 `NODE_ENV==='production'` |
+| Stripe webhook fail-closed | ✅ `src/app/api/webhooks/stripe/route.ts` 有 `STRIPE_WEBHOOK_SECRET` 校验 + 缺失时报错 |
+| 剥离 `/api/users/[userId]` 敏感字段 | ✅ 该路由有 `kinkInterests` 等字段黑名单与 owner 判定 |
+| IM 反应/输入态的会话成员校验 | ✅ `src/app/api/im/reactions/route.ts` 有 `requireMessageParticipant` + `OR[userAId,userBId]` |
+| 开放重定向（guest / OAuth 回调）+ 登录 CSRF | ✅ `src/lib/auth/safe-redirect.ts` 存在，且被 guest / login / google / twitter 四处回调引用 |
+| 清理 VERCEL_ENV_TEMPLATE 里的真实 Turso token | ✅ 该文件在 main 上已不存在 |
+| 移除测试脚本里的明文管理员口令 | ✅ 已搜不到明文口令 |
+
+**② 它的结构改动是"反向"的，合并即事故**
+
+- 分支**删除**根 `proxy.ts`、**新增** `src/proxy.ts`。
+  而现行架构是**根 `proxy.ts` 才是 Next 16 真正加载的中间件**（`src/proxy.ts` 是死文件，
+  曾导致 CN 访客继续被误封，见提交 `2f10625`）。合并 = 直接复现该事故。
+- 分支**重新加入** `src/app/api/chat/[id]/*`、`src/app/api/chat/route.ts`、`src/app/api/chats/route.ts`
+  —— 这些正是 P1-6 已删除的 Legacy 聊天路由。合并 = 把双聊天系统重新引回来。
+
+**③ 它的基线过于陈旧**
+
+`git diff --stat main..work/perf-security-drag-19` = **1422 个文件、+48414 / −61085 行**。
+性能意图（聊天列表窗口化、framer-motion 懒加载）在 main 上已有**不同实现**
+（`src/components/chat/use-message-windowing.ts`、`src/components/ui/motion-lazy.tsx`）。
+
+**处置**：保持分支原样（不删，留证），**任何情况下不要合并**；若要回收其独特改动，
+必须**在当前 main 上重新实现**，而不是 merge。
+
+> 方法论：判定"某分支还能不能合"时，不要看提交标题，要看
+> ①它的**基线**离 main 多远（`git diff --stat`）②它的改动是否**已经以别的形式**在 main 上
+> ③它有没有**反向**的结构改动。<br>
+> 另外：`git cherry` 全显示 `+`（无等价补丁）**不等于**"这些修复缺失" ——
+> 重新实现过的补丁 patch-id 本来就不同，此例即是（7 项修复实际全在 main 上）。
+
+### 6.7 仍未闭合
+
+**本轮新发现（低危，知情保留）**：`/api/geo-check` 未鉴权即返回地域策略详情
+（实测 200，正文含 `country` / `blocked` / `blockedCountries:["CN"]` / `hint`）。
+它是**有意**被放进地域豁免名单的诊断探针（让被封地区的运营者能自检），
+且封锁了哪些国家并非秘密（试访问即可推断），故**不作为漏洞处理**。
+但两点已知：① 它注释里引用的 `proxy.ts ALLOWED_PATHS` 已迁到 `src/config/region-policy.ts`；
+② 其声明用途（验证 Vercel `x-vercel-ip-country`）在迁到 Netlify 后已失效（该头恒为 null）。
+若日后要收紧，删掉正文里的 `blockedCountries`/`hint` 即可，不影响诊断价值。
+
+**顺带核验**：地域豁免名单（`DEFAULT_ALLOWED_PATHS`）为
+`/blocked`、`/api/geo-check`、`/api/health`、`/_next/`、`/favicon` —— **不含任何敏感路径**，无问题。
+
+**其他未列出的诊断端点实测**（加固文档原先只列了 15 条，这里补查了 5 条）：
+`/api/admin-check`、`/api/db-check`、`/api/debug-auth` 均 **403**（admin 守卫）；
+`/api/test-panel` **307**；`/api/geo/ip` **401**。均无未授权可利用面。
 
 | 项 | 归属 |
 |---|---|
