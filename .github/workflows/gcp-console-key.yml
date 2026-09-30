@@ -10,11 +10,11 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'probe = 只探测登录态与页面结构；apply = 执行限制修改'
+        description: 'probe=页面结构 explore=交互控件形态 apply=执行修改'
         required: true
         default: 'probe'
         type: choice
-        options: [probe, apply]
+        options: [probe, explore, apply]
       target_url:
         description: 'Cloud Console 目标页 URL'
         required: true
