@@ -401,3 +401,96 @@ vercel.json.bak
 
 **纪律**：任何 `Permissions-Policy` / CSP 改动，发版后都要补这一步页面级探测。
 
+---
+
+## 六、2026-09-30 增量收口
+
+本轮起因是"1.3 收口"时发现**自动化本身带着会静默破坏线上配置的地雷**，以及
+**所谓的安全洞其实不存在**。逐条记录，因为它们比结论更值钱。
+
+### 6.1 1.3 收口 —— 并更正两处误判
+
+**误判 ①：「名单里的 `app.lofeel.com` 是安全洞」。** 实测它**从未生效**（一直 403）。
+根因是当时把「控制台里看到的那把 key」当成了「生产在用的那把」——
+项目里有 **3 把 Browser key**（`fec2e2a4` 05-08 / `2b6e641d` 05-06 / `2c5fe33d` 09-04），
+带 `app.lofeel.com`（缺 k）的是 `2b6e641d`，而生产用的是 `fec2e2a4`。
+判定方法：用线上 `/api/config/firebase` 下发的 `apiKey` 做 Referer 冒烟，与各 key 的
+应用限制列表对照 —— 只有 `fec2e2a4` 完全吻合。
+**教训：先确定"哪个对象"（哪把 key / 哪个环境），再谈它有什么问题。**
+
+**误判 ②：「必须用户按 passkey 才能改」。** 真正的阻塞是自动化实例用了
+`--use-mock-keychain`（Playwright 默认注入），mock 钥匙串**摸不到系统通行密钥**，
+所以指纹永远不可能成功。改用真实 profile 最小副本自启 Chrome 后，Google 会话
+原生有效，**全程零 passkey**。
+
+**已完成**：`fec2e2a4` 的引荐来源限制扩到 7 条（app / 营销域 ×2 / netlify 主域 /
+netlify 通配 / localhost / 127.0.0.1），API 轴保持原有 25 个。独立冒烟（10 探针）全绿。
+
+**已知限制**：Google 通配符标签有长度上限（9 字符 ✅ / 15 字符 ❌），
+Netlify PR 预览域（25 字符）无法通配放行 → 预览验证改用 `localhost:3000`。
+
+### 6.2 【新发现，已修】幂等脚本的两颗"静默回退"地雷
+
+`scripts/firebase-restrict-key.mjs` 用**精确相等**做达标判据，于是：
+
+| 地雷 | 一旦触发（前置满足后 PATCH）的后果 |
+|---|---|
+| `ALLOWED_REFERRERS` 5 条 < 线上 7 条（缺 `lokfeel.com` / `www.lokfeel.com`） | 把这两个营销域**删掉** |
+| `API_TARGETS` 3 个 ≪ 线上 25 个 | 把 25 个 API **削成 3 个**，打断线上 |
+
+**这是本类脚本的通用陷阱**：把"目标态"写成"完整态"，"幂等"就变成了"每次运行都把
+现状拉平到目标态" —— 目标态一旦比现状窄，就是破坏而非收敛。
+**正确语义是"只增不减"**：达标 = 必需项全部在 + 没有禁用项；写回取**并集**。
+
+**证据（回归夹具 20 项断言全绿）**：`backups/check-restrict-logic.mjs` 逐字抽取脚本
+第 4/5 节源码求值，覆盖 8 个场景 —— 其中最关键的一条是
+「线上当前形态（7 条 + 25 API）⇒ 判为已就绪、**不写回**」。
+
+**当前状态**：API Keys API 未启用（实测 `apikeys.keys.list` → PERMISSION_DENIED），
+每日任务**不执行写入**，地雷休眠；修复后即使将来启用也不会踩。
+
+### 6.3 【新发现，已修】"每日哨兵"其实每天空跑
+
+实测该 workflow 2026-09-30 的 cron 运行日志：以「⏳ 前置未满足」退出，**什么都没验**。
+一个永远不报警的哨兵比没有哨兵更危险 —— 它给人以安全感。
+
+**修复**：把 Referer 冒烟矩阵做成**不依赖任何 Google API 权限**的检测，两条路径都跑。
+Referer 拦截是外部可观测的，无需读 API 就能验证限制是否仍在生效。
+异常时工作流转红并**开 Issue**（对齐 `netlify-credit-watch.yml` 的既有范式），恢复后自动关闭。
+
+**自测证据**：`backups/check-smoke-matrix.mjs` 用线上真实 key 跑 10 个探针，
+全部符合预期（7 个放行域 200、lofeel/evil/无 Referer 403）。这同时也**独立复证了
+1.3 的 7 条白名单确实在线生效**。
+
+### 6.4 D7 仓库卫生 —— 收口
+
+四个残留文件（`prisma/schema.prisma.backup-*`、`onboarding/page.tsx.backup-*`、
+`page.tsx.bak`、`vercel.json.bak`）此前**已从索引移除**且被 `.gitignore` 覆盖
+（见 `.gitignore` 的 D7 注释）。本次把本地文件移入仓库既有的忽略归档目录
+`backups/d7-local-residual/`，源码树归清、内容不销毁（可随时整体删除 `backups/`）。
+
+> 注：文档早期写的"`git ls-files` 中有 4 个残留文件"**已不成立** —— 它们当时已被
+> `git rm --cached`。**否定性结论必须复核**（见 5.1 的纪律）。
+
+### 6.5 生产实时核验（2026-09-30 实测）
+
+| 项 | 结果 |
+|---|---|
+| `permissions-policy` | `camera=(self), microphone=(self), geolocation=(self)` ✅ 1.1 修复在线生效 |
+| 其余 6 个安全头（CSP / XFO / nosniff / referrer / HSTS / x-xss） | 全部存在 ✅ |
+| 7 个已删调试页 | 全部 **404** ✅ |
+| `/debug/google-oauth`、`/admin-test` | **307 → /admin-login** ✅ |
+| `/test/mock-payment.html` | 200（有意保留）✅ |
+| `/api/diagnostic/firebase` | **403** ✅ |
+| `/api/health` | `healthy`；`redis.backend=memory, configured=false`（D5 仍开放） |
+| 依赖批次（#17–#21） | `package.json` 已与 `origin/main` 一致 → **已发版** ✅（sentry 11 / framer 13.4.4 / @types/node 22 / eslint 9 / webrtc-adapter 9.0.6） |
+
+### 6.6 仍未闭合
+
+| 项 | 归属 |
+|---|---|
+| D2 吊销只读 PAT `github_pat_11B7FHZ…` | 只能用户操作（GitHub 无自吊销端点） |
+| 两把遗留 key：`2c5fe33d`（无网站限制）/ `2b6e641d`（含 lofeel） | 需用户确认消费方后处置 |
+| D1 Netlify `auto_topup_enabled=false` | 仅控制台 UI 可开 |
+| D5 生产 Redis 未配置 | 需 Upstash 凭证 |
+
