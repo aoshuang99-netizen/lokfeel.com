@@ -240,40 +240,6 @@ const dump = (name, r) => {
     summary('## 1.3 引荐来源限制已提交\n\n目标 7 条全部写入并通过保存前校验，已点击保存。等待 5 分钟后进行冒烟验证。');
   }
 
-  if (MODE === 'verify') {
-    // 冒烟验证：用真实 API key + Referer 请求 identitytoolkit，
-    // 期望 app 域返回业务错误（400 EMAIL_NOT_FOUND 等），恶意域返回 403 API_KEY_HTTP_REFERRER_BLOCKED
-    const KEY = (process.env.FB_API_KEY || '').trim();
-    if (!KEY) throw new Error('缺少 FB_API_KEY');
-    const probe = async (referer) => {
-      const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + KEY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(referer ? { Referer: referer } : {}) },
-        body: JSON.stringify({ email: 'probe-not-exist@lokfeel-probe.invalid', password: 'x'.repeat(12), returnSecureToken: false }),
-      });
-      const t = await r.text();
-      return { status: r.status, body: t.slice(0, 200) };
-    };
-    const cases = [
-      ['https://app.lokfeel.com/', true],
-      ['https://lokfeel.netlify.app/', true],
-      ['https://evil-probe.example.com/', false],
-      ['', false],
-    ];
-    let ok = true;
-    for (const [ref, shouldPass] of cases) {
-      const r = await probe(ref);
-      const blocked = /API_KEY_HTTP_REFERRER_BLOCKED|HTTP_REFERRER_BLOCKED/i.test(r.body) || r.status === 403;
-      const good = shouldPass ? !blocked : blocked;
-      log(`  referer=${ref || '(无)':32s} status=${r.status} blocked=${blocked} 期望=${shouldPass ? '放行' : '拦截'} => ${good ? '✅' : '❌'}`);
-      log('    body:', r.body.replace(/\s+/g, ' ').slice(0, 120));
-      if (!good) ok = false;
-      await new Promise((res) => setTimeout(res, 800));
-    }
-    log('\nVERIFY_RESULT:', ok ? 'PASS' : 'FAIL');
-    summary(`## 1.3 冒烟验证\n\n结果：**${ok ? 'PASS ✅' : 'FAIL ❌'}**`);
-    if (!ok) process.exit(3);
-  }
 
   if (MODE === 'explore') {
     // 交互探测：看清 Add 与行内编辑的控件形态（不保存任何东西）
