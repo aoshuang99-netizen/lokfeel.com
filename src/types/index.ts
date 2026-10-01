@@ -72,7 +72,7 @@ export interface WeeklyMatch {
 
 // P1-6 阶段 5：generated 客户端已无 Legacy `Message` model，
 // 改为**本地形状**（字段 = 原 Legacy Message 的 UI 消费子集：
-// id / content / isRead / readAt / createdAt / sender —— 见 use-realtime 等读取面）。
+// id / content / isRead / readAt / createdAt / sender —— 读取面见 useIM 等 hook）。
 export interface ChatMessageWithSender {
   id: string
   roomId: string
