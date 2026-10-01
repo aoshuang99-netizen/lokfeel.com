@@ -72,3 +72,7 @@ cloudflare-env.d.ts
 *.backup
 *.backup-*
 *.bak
+
+# QA 测试账号凭据（本地专用，public 仓库绝不入库）
+.qa-credentials.local.json
+.wrangler/
