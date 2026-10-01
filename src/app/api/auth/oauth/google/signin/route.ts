@@ -27,19 +27,23 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getGoogleConfig, generateCodeVerifier, generateCodeChallenge, generateOAuthState, buildGoogleAuthorizationUrl } from "@/lib/auth/google-oauth";
+import { publicOriginOf } from "@/lib/http/public-origin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   // Step 1: Validate Google OAuth config
   const config = getGoogleConfig();
+  // 对外跳转/redirect_uri 一律使用公开 origin：生产实测 request.url 指向平台部署专用域名。
+  // 见 lib/http/public-origin.ts
+  const publicOrigin = publicOriginOf(request) || new URL(request.url).origin;
 
   console.log("[Google OAuth Signin] Config valid:", config.valid);
   console.log("[Google OAuth Signin] Client ID (first 10 chars):", config.clientId.substring(0, 10) + "...");
 
   if (!config.valid) {
     console.error("[Google OAuth Signin] Google OAuth not configured — missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET");
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/login", publicOrigin);
     loginUrl.searchParams.set("error", "Google OAuth not configured. Please contact support.");
     return NextResponse.redirect(loginUrl);
   }
@@ -67,7 +71,7 @@ export async function GET(request: NextRequest) {
   // Google Cloud Console has: /api/auth/callback/google (the old NextAuth path).
   // The [...nextauth] interceptor bridges this to our actual handler at /api/auth/oauth/google/callback.
   // Use NEXT_PUBLIC_APP_URL to ensure correct domain in production
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+  const baseUrl = publicOrigin;
   const redirectUri = `${baseUrl}/api/auth/callback/google`;
 
   console.log("[Google OAuth Signin] Redirect URI (for Google):", redirectUri);

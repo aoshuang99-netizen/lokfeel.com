@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
+import { publicOriginOf } from '@/lib/http/public-origin';
 
 /**
  * Admin Test Panel V3.6
@@ -115,7 +116,10 @@ export async function GET(request: NextRequest) {
     await requireAdminAuth();
   } catch {
     // Redirect to admin login if not authenticated
-    return NextResponse.redirect(new URL('/admin/login', request.url));
+    // ⚠️ 用公开 origin：生产实测 request.url 指向平台部署专用域名（见 lib/http/public-origin.ts）
+    return NextResponse.redirect(
+      new URL('/admin/login', publicOriginOf(request) || new URL(request.url).origin),
+    );
   }
 
   return new NextResponse(HTML, {

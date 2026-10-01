@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
-# P1-c 本地验证：Google OAuth 的 state / PKCE 强制校验
-# 用法: bash scripts/qa/verify-oauth-local.sh   （需本地 dev server 运行于 :3099）
+# P1-c 验证：Google OAuth 的 state / PKCE 强制校验
+#
+# 用法:
+#   本地  bash scripts/qa/verify-oauth-local.sh                （需 dev server 于 :3099）
+#   生产  QA_BASE_URL=https://app.lokfeel.com bash scripts/qa/verify-oauth-local.sh
+#
+# 说明: 生产复验无需真实 Google 账号 —— 本脚本只验证两道安全关卡（state 绑定、PKCE 强制），
+#       第 5 项刻意使用伪造 code，期望失败点推进到 token exchange，以证明合法流程未被误伤。
 set -uo pipefail
-B="http://localhost:3099"
+B="${QA_BASE_URL:-http://localhost:3099}"
 pass=0; fail=0
 ck() { if [ "$2" = "1" ]; then pass=$((pass+1)); echo "  ✅ $1"; else fail=$((fail+1)); echo "  ❌ $1"; fi; }
 

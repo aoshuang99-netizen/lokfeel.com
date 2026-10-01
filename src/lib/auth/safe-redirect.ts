@@ -3,7 +3,9 @@
  *
  * WHY: Credentials login (/api/auth/login) and the OAuth callbacks
  * (Google / Twitter) all read a `callbackUrl` from a cookie and then
- * `NextResponse.redirect(new URL(destination, request.url))`. If that
+ * `NextResponse.redirect(new URL(destination, publicOrigin))` — 注意基址必须取自
+ * `@/lib/http/public-origin`（公开 origin），不要用 `request.url`：生产实测
+ * `request.url` 会指向平台部署专用域名。If that
  * value is attacker-controlled (e.g. a crafted cookie or a cookie planted
  * by a third-party sub-resource), an absolute external URL would redirect
  * the freshly-authenticated victim to a phishing origin.

@@ -1,5 +1,6 @@
 import { handlers } from '@/lib/auth/auth'
 import { NextRequest, NextResponse } from 'next/server'
+import { publicOriginOf } from '@/lib/http/public-origin'
 
 // Force dynamic rendering for auth routes
 export const dynamic = 'force-dynamic'
@@ -25,13 +26,16 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // ⚠️ 对外跳转必须用公开 origin：生产实测 request.url 指向平台部署专用域名
+  // （<deploy-id>--<site>.netlify.app）。见 lib/http/public-origin.ts
+  const publicOrigin = publicOriginOf(request) || new URL(request.url).origin;
 
   // ─── Intercept Google signin ───
   // Redirect to our custom PKCE handler instead of NextAuth's built-in
   // Using /api/auth/oauth/google/signin to avoid [...nextauth] catch-all 404
   if (pathname.match(/^\/api\/auth\/signin\/google$/)) {
     const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/dashboard";
-    const customSigninUrl = new URL('/api/auth/oauth/google/signin', request.url);
+    const customSigninUrl = new URL('/api/auth/oauth/google/signin', publicOrigin);
     customSigninUrl.searchParams.set('callbackUrl', callbackUrl);
     return NextResponse.redirect(customSigninUrl);
   }
@@ -39,7 +43,7 @@ export async function GET(request: NextRequest) {
   // ─── Intercept Google callback ───
   // Redirect to our custom callback handler
   if (pathname.match(/^\/api\/auth\/callback\/google$/)) {
-    const customCallbackUrl = new URL('/api/auth/oauth/google/callback', request.url);
+    const customCallbackUrl = new URL('/api/auth/oauth/google/callback', publicOrigin);
     // Preserve query params (code, state, error, etc.)
     request.nextUrl.searchParams.forEach((value, key) => {
       customCallbackUrl.searchParams.set(key, value);
@@ -52,7 +56,7 @@ export async function GET(request: NextRequest) {
   if (signinMatch) {
     const providerId = signinMatch[1];
     if (providerId === "twitter" || providerId === "x") {
-      return NextResponse.redirect(new URL('/api/auth/twitter/signin', request.url));
+      return NextResponse.redirect(new URL('/api/auth/twitter/signin', publicOrigin));
     }
   }
 
@@ -62,7 +66,7 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     console.error('[NextAuth] GET handler error:', err.message, err.stack);
     // Return the actual error message for debugging, not a generic "Configuration"
-    const errorUrl = new URL('/login', request.url);
+    const errorUrl = new URL('/login', publicOrigin);
     errorUrl.searchParams.set("error", `NextAuth Error: ${err.message?.substring(0, 60) || 'Unknown'}`);
     return NextResponse.redirect(errorUrl);
   }
@@ -70,6 +74,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const publicOrigin = publicOriginOf(request) || new URL(request.url).origin;
 
   // ─── Intercept Google POST signin ───
   // NextAuth's built-in Google signin generates JWE-encrypted PKCE cookies
@@ -81,7 +86,7 @@ export async function POST(request: NextRequest) {
       callbackUrl = (formData.get("callbackUrl") as string) || "/dashboard";
     } catch {}
 
-    const customSigninUrl = new URL('/api/auth/oauth/google/signin', request.url);
+    const customSigninUrl = new URL('/api/auth/oauth/google/signin', publicOrigin);
     customSigninUrl.searchParams.set('callbackUrl', callbackUrl);
     return NextResponse.redirect(customSigninUrl);
   }
@@ -102,7 +107,7 @@ export async function POST(request: NextRequest) {
       } catch {}
 
       // Redirect to our custom Twitter PKCE signin endpoint
-      const twitterSigninUrl = new URL('/api/auth/twitter/signin', request.url);
+      const twitterSigninUrl = new URL('/api/auth/twitter/signin', publicOrigin);
       twitterSigninUrl.searchParams.set('callbackUrl', callbackUrl);
       return NextResponse.redirect(twitterSigninUrl);
     }
@@ -112,7 +117,7 @@ export async function POST(request: NextRequest) {
     return await handlers.POST(request);
   } catch (err: any) {
     console.error('[NextAuth] POST handler error:', err.message, err.stack);
-    const errorUrl = new URL('/login', request.url);
+    const errorUrl = new URL('/login', publicOrigin);
     errorUrl.searchParams.set("error", `NextAuth Error: ${err.message?.substring(0, 60) || 'Unknown'}`);
     return NextResponse.redirect(errorUrl);
   }

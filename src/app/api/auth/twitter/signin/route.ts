@@ -18,11 +18,15 @@ import {
   generateCodeVerifier,
   getTwitterConfig,
 } from "@/lib/auth/twitter-oauth";
+import { publicOriginOf } from "@/lib/http/public-origin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const config = getTwitterConfig();
+  // 对外跳转/redirect_uri 一律使用公开 origin：生产实测 request.url 指向平台部署专用域名。
+  // 见 lib/http/public-origin.ts
+  const publicOrigin = publicOriginOf(request) || new URL(request.url).origin;
 
   console.log("[Twitter OAuth Signin] Config valid:", config.valid);
   console.log("[Twitter OAuth Signin] Client ID (first 10 chars):", config.clientId.substring(0, 10) + "...");
@@ -30,7 +34,7 @@ export async function GET(request: NextRequest) {
   if (!config.valid) {
     // Twitter OAuth not configured — redirect to login with error
     console.error("[Twitter OAuth Signin] Twitter OAuth not configured — missing TWITTER_CLIENT_ID or TWITTER_CLIENT_SECRET");
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/login", publicOrigin);
     loginUrl.searchParams.set(
       "error",
       "Twitter OAuth 未配置。请在 Vercel 环境变量中设置 TWITTER_CLIENT_ID 和 TWITTER_CLIENT_SECRET。"
@@ -42,7 +46,7 @@ export async function GET(request: NextRequest) {
   const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/dashboard";
 
   console.log("[Twitter OAuth Signin] Callback URL:", callbackUrl);
-  console.log("[Twitter OAuth Signin] Redirect URI (for Twitter):", `${request.nextUrl.origin}/api/auth/twitter/callback`);
+  console.log("[Twitter OAuth Signin] Redirect URI (for Twitter):", `${publicOrigin}/api/auth/twitter/callback`);
 
   // Generate PKCE
   const codeVerifier = generateCodeVerifier();
@@ -58,7 +62,7 @@ export async function GET(request: NextRequest) {
   // Build the redirect URI (where Twitter will send the user back)
   // This MUST match the actual route path and Twitter Developer Portal configuration
   // Use NEXT_PUBLIC_APP_URL to ensure correct domain in production
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+  const baseUrl = publicOrigin;
   const redirectUri = `${baseUrl}/api/auth/oauth/twitter/callback`;
 
   // Build Twitter authorization URL

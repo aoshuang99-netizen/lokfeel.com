@@ -22,10 +22,14 @@ import {
 import { db } from "@/lib/db";
 import { encode } from "next-auth/jwt";
 import { isSafeRedirect } from "@/lib/auth/safe-redirect";
+import { publicOriginOf } from "@/lib/http/public-origin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  // 对外跳转一律使用公开 origin：实测刚发布后的一段时间里 request.url 会指向平台部署
+  // 专用域名。见 lib/http/public-origin.ts。声明在 try 之外，供末尾 catch 复用。
+  const publicOrigin = publicOriginOf(request) || new URL(request.url).origin;
   try {
     const config = getTwitterConfig();
 
@@ -47,14 +51,14 @@ export async function GET(request: NextRequest) {
     if (error) {
       const errorDesc = searchParams.get("error_description") || error;
       console.error("[Twitter OAuth Callback] Authorization error:", error, errorDesc);
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", `Twitter 授权失败: ${errorDesc}`);
       return NextResponse.redirect(loginUrl);
     }
 
     if (!code || !state) {
       console.error("[Twitter OAuth Callback] Missing code or state");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Twitter 回调缺少必要参数");
       return NextResponse.redirect(loginUrl);
     }
@@ -66,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     if (!savedState || savedState !== state) {
       console.error("[Twitter OAuth Callback] State mismatch — possible CSRF attack");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "安全验证失败，请重试");
       return NextResponse.redirect(loginUrl);
     }
@@ -77,13 +81,13 @@ export async function GET(request: NextRequest) {
 
     if (!codeVerifier) {
       console.error("[Twitter OAuth Callback] Missing PKCE code_verifier");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "PKCE 验证失败，请重试");
       return NextResponse.redirect(loginUrl);
     }
 
     // Step 4: Exchange code for access token
-    const redirectUri = `${request.nextUrl.origin}/api/auth/twitter/callback`;
+    const redirectUri = `${publicOrigin}/api/auth/twitter/callback`;
 
     console.log("[Twitter OAuth Callback] Redirect URI (for token exchange):", redirectUri);
 
@@ -100,7 +104,7 @@ export async function GET(request: NextRequest) {
       console.log("[Twitter OAuth Callback] Token exchange successful, got access_token:", !!tokenResponse.access_token);
     } catch (err: any) {
       console.error("[Twitter OAuth Callback] Token exchange error:", err.message);
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Twitter 令牌交换失败");
       return NextResponse.redirect(loginUrl);
     }
@@ -111,7 +115,7 @@ export async function GET(request: NextRequest) {
       twitterUser = await fetchUserInfo(tokenResponse.access_token);
     } catch (err: any) {
       console.error("[Twitter OAuth] User info fetch error:", err.message);
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "获取 Twitter 用户信息失败");
       return NextResponse.redirect(loginUrl);
     }
@@ -214,7 +218,7 @@ export async function GET(request: NextRequest) {
     const secret = process.env.AUTH_SECRET;
     if (!secret) {
       console.error("[Twitter OAuth] AUTH_SECRET not configured");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "服务器配置错误");
       return NextResponse.redirect(loginUrl);
     }
@@ -249,7 +253,8 @@ export async function GET(request: NextRequest) {
         ? "/admin"
         : callbackUrl;
 
-    const response = NextResponse.redirect(new URL(destination, request.url));
+    // ⚠️ 用 request.url 会把刚登录的用户送到平台部署专用域名，会话 cookie 不会带过去。
+    const response = NextResponse.redirect(new URL(destination, publicOrigin));
 
     const isSecure = process.env.NODE_ENV === "production";
     response.cookies.set(COOKIE_NAME, sessionToken, {
@@ -293,7 +298,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 重定向到登录页面，附带错误信息和错误ID
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/login", publicOrigin);
     loginUrl.searchParams.set("error", userMessage);
     loginUrl.searchParams.set("errorId", errorId);
     

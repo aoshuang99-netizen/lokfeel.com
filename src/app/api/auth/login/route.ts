@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { verifyPassword } from "@/lib/auth/auth"
 import { encode } from "next-auth/jwt"
 import { isSafeRedirect } from "@/lib/auth/safe-redirect"
+import { isSameSiteRequest, resolveSiteHosts } from "@/lib/http/public-origin"
 
 /**
  * POST /api/auth/login
@@ -42,16 +43,16 @@ export async function POST(request: NextRequest) {
     // same-origin SPA login always sends one of the two).
     const origin = request.headers.get("origin")
     const referer = request.headers.get("referer")
-    const siteHost = request.nextUrl.host
-    const hostMatches = (h?: string | null) => {
-      if (!h) return false
-      try {
-        return new URL(h).host === siteHost
-      } catch {
-        return false
-      }
-    }
-    const csrfOk = origin ? hostMatches(origin) : hostMatches(referer)
+    // ⚠️ 判定「可接受站点 host」时不能只用 request.nextUrl.host：实测部署刚发布后的
+    // 一段时间里它会被解析成平台部署专用域名（<deploy-id>--<site>.netlify.app），
+    // 只拿它比对会让**所有真实登录在这段时间内 403**。改为取多个来源的并集
+    // （Host / X-Forwarded-Host / nextUrl / 配置的公开域名）。见 lib/http/public-origin.ts。
+    const allowedHosts = resolveSiteHosts({
+      host: request.headers.get("host"),
+      forwardedHost: request.headers.get("x-forwarded-host"),
+      nextUrlOrigin: request.nextUrl.origin,
+    })
+    const csrfOk = isSameSiteRequest(origin || referer, allowedHosts)
     if (!csrfOk) {
       return NextResponse.json(
         { error: "Cross-origin request blocked. Please log in from the app." },

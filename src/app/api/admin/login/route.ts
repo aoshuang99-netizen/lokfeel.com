@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { compare } from "bcryptjs";
 import { createAdminSession } from "@/lib/admin-auth";
+import { publicOriginOf } from "@/lib/http/public-origin";
 
 // Admin credentials are NOT hardcoded in source (previously a hardcoded
 // backdoor: admin/Admin@2026!, etc.). A single optional env-backed admin
@@ -57,6 +58,9 @@ function createLoginResponse(
 
 export async function POST(request: NextRequest) {
   try {
+    // ⚠️ 对外跳转必须用公开 origin：生产实测 request.url 指向平台部署专用域名。
+    // 见 lib/http/public-origin.ts
+    const publicOrigin = publicOriginOf(request) || new URL(request.url).origin;
     const contentType = request.headers.get("content-type") || "";
     let username: string | undefined;
     let password: string | undefined;
@@ -82,7 +86,7 @@ export async function POST(request: NextRequest) {
     if (!loginId || !password) {
       if (isFormSubmit) {
         // Redirect back to login with error
-        const url = new URL("/admin-login", request.url);
+        const url = new URL("/admin-login", publicOrigin);
         url.searchParams.set("error", "missing_fields");
         return NextResponse.redirect(url, 302);
       }
@@ -98,7 +102,7 @@ export async function POST(request: NextRequest) {
       : null;
 
     if (demoAdmin) {
-      return createLoginResponse(demoAdmin.username, demoAdmin.role, isFormSubmit, request.url);
+      return createLoginResponse(demoAdmin.username, demoAdmin.role, isFormSubmit, publicOrigin);
     }
 
     // Check database for admin users
@@ -122,13 +126,13 @@ export async function POST(request: NextRequest) {
       if (isValid) {
         const role = user.adminRoles?.[0]?.role || "ADMIN";
         const username = user.name || user.email;
-        return createLoginResponse(username, role, isFormSubmit, request.url);
+        return createLoginResponse(username, role, isFormSubmit, publicOrigin);
       }
     }
 
     // Invalid credentials
     if (isFormSubmit) {
-      const url = new URL("/admin-login", request.url);
+      const url = new URL("/admin-login", publicOrigin);
       url.searchParams.set("error", "invalid_credentials");
       return NextResponse.redirect(url, 302);
     }

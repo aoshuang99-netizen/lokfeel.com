@@ -28,10 +28,16 @@ import { exchangeCodeForTokens, decodeIdToken, getGoogleConfig } from "@/lib/aut
 import { db } from "@/lib/db";
 import { encode } from "next-auth/jwt";
 import { isSafeRedirect } from "@/lib/auth/safe-redirect";
+import { publicOriginOf } from "@/lib/http/public-origin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  // 对外跳转一律使用公开 origin：实测刚发布后的一段时间里 request.url 会指向平台
+  // 部署专用域名（<deploy-id>--<site>.netlify.app），用它拼跳转会丢会话 cookie。
+  // 见 lib/http/public-origin.ts。声明在 try 之外，供末尾 catch 复用。
+  // 末尾兜底保证非空，使下方 new URL(path, publicOrigin) 永不抛错。
+  const publicOrigin = publicOriginOf(request) || new URL(request.url).origin;
   try {
     const config = getGoogleConfig();
 
@@ -42,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     if (!config.valid) {
       console.error("[Google OAuth Callback] Google OAuth not configured");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Google OAuth not configured. Please contact support.");
       return NextResponse.redirect(loginUrl);
     }
@@ -60,14 +66,14 @@ export async function GET(request: NextRequest) {
     if (error) {
       const errorDesc = searchParams.get("error_description") || error;
       console.error("[Google OAuth Callback] Authorization error:", error, errorDesc);
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", `Google authorization failed: ${errorDesc}`);
       return NextResponse.redirect(loginUrl);
     }
 
     if (!code) {
       console.error("[Google OAuth Callback] Missing authorization code");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Google callback missing authorization code");
       return NextResponse.redirect(loginUrl);
     }
@@ -85,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     if (!state || !savedState || savedState !== state) {
       console.error("[Google OAuth Callback] State verification failed — rejecting (possible CSRF)");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Security check failed. Please start the sign-in again.");
       const failure = NextResponse.redirect(loginUrl);
       failure.cookies.set("google-oauth-state", "", { maxAge: 0, path: "/" });
@@ -105,7 +111,7 @@ export async function GET(request: NextRequest) {
     // 伪造回调 —— 三种情况都应该拒绝而不是静默降级。
     if (!codeVerifier) {
       console.error("[Google OAuth Callback] Missing PKCE code_verifier cookie — rejecting");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Sign-in session expired. Please try again.");
       return NextResponse.redirect(loginUrl);
     }
@@ -114,7 +120,7 @@ export async function GET(request: NextRequest) {
     // NOTE: The redirect_uri MUST match what was used in the authorization request.
     // The signin handler sends /api/auth/callback/google (matching Google Cloud Console).
     // Token exchange MUST use the same redirect_uri.
-    const redirectUri = `${request.nextUrl.origin}/api/auth/callback/google`;
+    const redirectUri = `${publicOrigin}/api/auth/callback/google`;
 
     console.log("[Google OAuth Callback] Redirect URI (for token exchange):", redirectUri);
 
@@ -131,7 +137,7 @@ export async function GET(request: NextRequest) {
       console.log("[Google OAuth Callback] Token exchange successful, got id_token:", !!tokenResponse.id_token);
     } catch (err: any) {
       console.error("[Google OAuth Callback] Token exchange error:", err.message);
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Google token exchange failed. Please try again.");
       return NextResponse.redirect(loginUrl);
     }
@@ -142,7 +148,7 @@ export async function GET(request: NextRequest) {
       googleUser = decodeIdToken(tokenResponse.id_token);
     } catch (err: any) {
       console.error("[Google OAuth Callback] ID token decode error:", err.message);
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Google token decode failed");
       return NextResponse.redirect(loginUrl);
     }
@@ -249,7 +255,7 @@ export async function GET(request: NextRequest) {
     const secret = process.env.AUTH_SECRET;
     if (!secret) {
       console.error("[Google OAuth Callback] AUTH_SECRET not configured");
-      const loginUrl = new URL("/login", request.url);
+      const loginUrl = new URL("/login", publicOrigin);
       loginUrl.searchParams.set("error", "Server configuration error");
       return NextResponse.redirect(loginUrl);
     }
@@ -287,7 +293,9 @@ export async function GET(request: NextRequest) {
         ? "/admin"
         : callbackUrl;
 
-    const response = NextResponse.redirect(new URL(destination, request.url));
+    // ⚠️ 必须用 publicOrigin：用 request.url 会把刚登录的用户送到平台部署专用域名，
+    // 会话 cookie 不会带过去 → 用户表现为"登录成功却仍是未登录"。
+    const response = NextResponse.redirect(new URL(destination, publicOrigin));
 
     const isSecure = process.env.NODE_ENV === "production";
     response.cookies.set(COOKIE_NAME, sessionToken, {
@@ -339,7 +347,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 重定向到登录页面，附带错误信息和错误ID
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/login", publicOrigin);
     loginUrl.searchParams.set("error", userMessage);
     loginUrl.searchParams.set("errorId", errorId);
     
