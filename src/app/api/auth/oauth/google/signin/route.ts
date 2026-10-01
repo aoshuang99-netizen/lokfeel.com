@@ -26,7 +26,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getGoogleConfig, generateCodeVerifier, generateCodeChallenge, buildGoogleAuthorizationUrl } from "@/lib/auth/google-oauth";
+import { getGoogleConfig, generateCodeVerifier, generateCodeChallenge, generateOAuthState, buildGoogleAuthorizationUrl } from "@/lib/auth/google-oauth";
 
 export const dynamic = "force-dynamic";
 
@@ -53,8 +53,14 @@ export async function GET(request: NextRequest) {
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
 
+  // Step 2b: Generate the CSRF `state` (RFC 6749 §10.12).
+  // 与 Twitter 流程完全一致：随机值同时进「授权 URL」与「httpOnly cookie」，
+  // 回调侧比对两者，把"发起请求的浏览器"与"回调"绑定起来。
+  const state = generateOAuthState();
+
   console.log("[Google OAuth Signin] Generated PKCE code_verifier (length):", codeVerifier.length);
   console.log("[Google OAuth Signin] Generated PKCE code_challenge (length):", codeChallenge.length);
+  console.log("[Google OAuth Signin] Generated state (length):", state.length);
 
   // Build the redirect URI (where Google will send the user back)
   // This MUST match Google Cloud Console's Authorized Redirect URIs.
@@ -71,6 +77,7 @@ export async function GET(request: NextRequest) {
     clientId: config.clientId,
     redirectUri,
     codeChallenge,
+    state,
   });
 
   console.log("[Google OAuth Signin] Google authorization URL:", googleAuthUrl.substring(0, 100) + "...");
@@ -93,6 +100,15 @@ export async function GET(request: NextRequest) {
     secure: isSecure,  // Dynamic based on environment
     sameSite: "lax",
     maxAge: 1800, // 30 minutes (was 600 = 10 min)
+    path: "/",
+  });
+
+  // CSRF state (compared against ?state= in the callback) — 30 min timeout
+  response.cookies.set("google-oauth-state", state, {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite: "lax",
+    maxAge: 1800, // 30 minutes — 与 code_verifier 同步过期
     path: "/",
   });
 

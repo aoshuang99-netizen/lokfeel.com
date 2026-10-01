@@ -40,15 +40,35 @@ export function generateCodeChallenge(verifier: string): string {
   return createHash("sha256").update(verifier).digest("base64url");
 }
 
+/**
+ * Generate an OAuth 2.0 `state` value (CSRF binding between browser ↔ callback).
+ *
+ * WHY (2026-10-01 QA finding): the Google flow previously sent NO `state`, so the
+ * callback could not tell "this code was requested by *this* browser" from
+ * "someone replayed a code into my browser". RFC 6749 §10.12 requires `state`
+ * for CSRF protection; RFC 9700 §4.1 only allows PKCE to substitute for it when
+ * PKCE is **mandatory** — ours was best-effort, hence this explicit fix.
+ *
+ * Uses `randomUUID()` for parity with the Twitter flow, which already does this.
+ */
+export function generateOAuthState(): string {
+  return randomBytes(32).toString("base64url");
+}
+
 // ─── Authorization URL ───
 
 /**
- * Build the Google OAuth 2.0 authorization URL with PKCE
+ * Build the Google OAuth 2.0 authorization URL with PKCE **and `state`**.
+ *
+ * `state` is REQUIRED (not optional) on purpose: making it a required field
+ * means a future caller cannot silently reintroduce the missing-CSRF-token
+ * defect — the type checker will stop them.
  */
 export function buildGoogleAuthorizationUrl(options: {
   clientId: string;
   redirectUri: string;
   codeChallenge: string;
+  state: string;
   scopes?: string[];
 }): string {
   const scopes = options.scopes || ["openid", "email", "profile"];
@@ -60,6 +80,7 @@ export function buildGoogleAuthorizationUrl(options: {
     scope: scopes.join(" "),
     code_challenge: options.codeChallenge,
     code_challenge_method: "S256",
+    state: options.state,
     access_type: "offline",
     prompt: "consent",
   });

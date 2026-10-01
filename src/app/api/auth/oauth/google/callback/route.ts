@@ -13,13 +13,14 @@
  * cookie ("google-pkce-verifier"), which this callback can read and use correctly.
  *
  * Flow:
- * 1. Extract authorization code from query params
- * 2. Read PKCE code_verifier from our custom cookie
- * 3. Exchange code + code_verifier + client_secret for Google tokens
- * 4. Decode id_token to get user profile
- * 5. Find or create user in database
- * 6. Create NextAuth JWT session token directly
- * 7. Redirect to dashboard with session cookie
+ * 1. Extract authorization code + state from query params
+ * 2. Verify `state` against the httpOnly cookie (CSRF binding — MANDATORY)
+ * 3. Read PKCE code_verifier from our custom cookie (MANDATORY — no silent fallback)
+ * 4. Exchange code + code_verifier + client_secret for Google tokens
+ * 5. Decode id_token to get user profile
+ * 6. Find or create user in database
+ * 7. Create NextAuth JWT session token directly
+ * 8. Redirect to dashboard with session cookie
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -46,12 +47,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Step 1: Extract code from query params
+    // Step 1: Extract code + state from query params
     const { searchParams } = request.nextUrl;
     const code = searchParams.get("code");
+    const state = searchParams.get("state");
     const error = searchParams.get("error");
 
     console.log("[Google OAuth Callback] Authorization code present:", !!code);
+    console.log("[Google OAuth Callback] State present:", !!state);
     console.log("[Google OAuth Callback] Error from Google:", error || "none");
 
     if (error) {
@@ -69,15 +72,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
+    // Step 1b: Verify `state` — CSRF binding between the browser that STARTED
+    // the flow and this callback. Mirrors the Twitter callback implementation.
+    //
+    // 安全说明（2026-10-01 修复）：此前完全不带 state，回调也不校验，
+    // 因此若 PKCE cookie 恰好缺失（下面的 fallback 曾允许"无 PKCE 继续"），
+    // 就存在登录 CSRF / 会话混淆的空间。现在 state 是**强制**的：
+    // cookie 不存在或不一致一律拒绝，不再有"仅告警继续"的路径。
+    const savedState = request.cookies.get("google-oauth-state")?.value;
+    console.log("[Google OAuth Callback] Saved state present:", !!savedState);
+    console.log("[Google OAuth Callback] State match:", !!savedState && savedState === state);
+
+    if (!state || !savedState || savedState !== state) {
+      console.error("[Google OAuth Callback] State verification failed — rejecting (possible CSRF)");
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("error", "Security check failed. Please start the sign-in again.");
+      const failure = NextResponse.redirect(loginUrl);
+      failure.cookies.set("google-oauth-state", "", { maxAge: 0, path: "/" });
+      failure.cookies.set("google-pkce-verifier", "", { maxAge: 0, path: "/" });
+      return failure;
+    }
+
     // Step 2: Read PKCE code_verifier from our custom cookie
     // Set by /api/auth/oauth/google/signin (plain-text, NOT JWE-encrypted like NextAuth's)
     const codeVerifier = request.cookies.get("google-pkce-verifier")?.value;
-    
-    console.log("[Google OAuth Callback] 🔍 All Cookies:", request.cookies.getAll().map(c => `${c.name}=${c.value.substring(0, 20)}...`));
+
     console.log("[Google OAuth Callback] 🔍 code_verifier present:", !!codeVerifier, "length:", codeVerifier?.length || 0);
 
+    // ⚠️ PKCE 现在是强制的。此前这里只 console.warn 然后继续，
+    // 使 code_challenge 形同装饰。signin 端点在同一响应里就写下了 cookie，
+    // 因此"读不到"只可能意味着：浏览器禁用了 cookie、超过 30 分钟、或有人在
+    // 伪造回调 —— 三种情况都应该拒绝而不是静默降级。
     if (!codeVerifier) {
-      console.warn("[Google OAuth Callback] Missing google-pkce-verifier cookie — attempting without PKCE");
+      console.error("[Google OAuth Callback] Missing PKCE code_verifier cookie — rejecting");
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("error", "Sign-in session expired. Please try again.");
+      return NextResponse.redirect(loginUrl);
     }
 
     // Step 3: Exchange code for tokens
@@ -96,7 +126,7 @@ export async function GET(request: NextRequest) {
         clientSecret: config.clientSecret,
         redirectUri,
         code,
-        codeVerifier: codeVerifier || undefined,
+        codeVerifier,
       });
       console.log("[Google OAuth Callback] Token exchange successful, got id_token:", !!tokenResponse.id_token);
     } catch (err: any) {
@@ -270,6 +300,7 @@ export async function GET(request: NextRequest) {
 
     // Clear OAuth cookies (both our custom ones and NextAuth's)
     response.cookies.set("google-pkce-verifier", "", { maxAge: 0, path: "/" });
+    response.cookies.set("google-oauth-state", "", { maxAge: 0, path: "/" });
     response.cookies.set("google-callback-url", "", { maxAge: 0, path: "/" });
     response.cookies.set("__Secure-authjs.pkce.code_verifier", "", { maxAge: 0, path: "/" });
     response.cookies.set("authjs.pkce.code_verifier", "", { maxAge: 0, path: "/" });
