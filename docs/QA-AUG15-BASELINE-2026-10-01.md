@@ -283,21 +283,20 @@ RFC 9700 §4.1 允许**由 PKCE 承担** CSRF 防护 —— 前提是 PKCE **强
    `:29` 用 `/api/pusher/auth`，而仓库只有 `/api/im/pusher/auth`（实测该路径 404）。
    其订阅的 `private-chat-{roomId}` 已是 Chat 合并前的遗留命名。全仓库**无任何文件 import 它** → 休眠缺陷，建议删除。
 
-3. **Bot 模块在生产实际处于开启状态**
+3. **Bot 模块在生产实际处于开启状态** —— ✅ **已于 2026-10-01 经用户确认：有意保留**
    代码默认已翻 `false`（P0-5/6），但生产 env `BOT_ENGINE_ENABLED=true`（production 上下文），
    `/api/health` 自报 `botModule.enabled=true, enabledSource="env"`。
-   → 若"生产保留 Bot 提升内容密度"是有意为之，请确认；否则属配置覆盖了代码意图。
+   → 结论：**生产需 Bot 提升内容密度，属有意配置**，非配置覆盖事故。后续审查不必再报此项。
 
-4. **Twitter OAuth 未注册为 provider**
-   生产 `/api/auth/providers` 仅返回 `credentials` / `google` / `firebase-token`，
-   尽管 `TWITTER_CLIENT_ID` 已配置且有 `api/auth/twitter/callback` 等路由存在。需确认是否需要对外提供。
+4. **Twitter OAuth 未注册为 provider** —— ✅ **已于 2026-10-01 经用户确认：不对外提供**
+   生产 `/api/auth/providers` 仅返回 `credentials` / `google` / `firebase-token`。
+   → 自定义路由（`oauth/twitter/*`，**已实现 `state` + PKCE**）保留备用，不注册 provider。
 
-5. **注册流程的性别词表与全库主流不一致（新增，低危）**
+5. **注册流程的性别词表与全库主流不一致（新增，低危）** —— 🔎 **已于 2026-10-01 修正定性，见 §11.6**
    `api/auth/register/route.ts:29-39` `mapGender('female')` → **`WOMAN`**，`'male'` → **`MAN`**；
-   而全库 `Profile.gender` 分布为 `MALE` 8254 / `FEMALE` 3624 / `OTHER` 7 / `MAN` 1 / **`WOMAN` 0**。
-   系统有 `lib/gender-utils.ts` 统一兼容两种词表，故**当前不产生功能故障**；
-   但注册用户会以"少数派词表"落库，任何**未走 gender-utils** 的性别判断（如 `assign-lady-free/route.ts:16`
-   直接 `where: { gender: 'FEMALE' }`）都会漏掉这批用户。建议统一到单一词表。
+   而全库 `Profile.gender` 分布为 `MALE` 8255 / `FEMALE` 3625 / `OTHER` 7 / `MAN` 1 / **`WOMAN` 0**。
+   `lib/gender-utils.ts` 明确**现代约定就是 `MAN/WOMAN`**、`MALE/FEMALE` 才是历史值 ——
+   故这不是"写错词表"，而是"存量数据未迁移"。真正的缺陷是 `assign-lady-free` 只查 `'FEMALE'`，**已修**。
 
 6. **Redis 未配置（D5，已知）**
    `/api/health` 报 `redis.backend="memory", configured=false, degraded=false`。生产多实例下
@@ -339,8 +338,8 @@ IM 收发与已读**本轮已用测试账号闭合**（§2.4）。剩余：
 | **P1** | 删除死代码：`payments/checkout/route.ts`、`use-realtime.ts` | 我可以直接改 | ✅ **已完成**（§11.4） |
 | **P2** | 裁决 LADY_FREE 是否需要卡片验证（§6.2） | —— | ✅ **已按三处一致的证据对齐**（§11.5），一行可回滚 |
 | **P2** | 统一性别词表（`MAN/WOMAN` vs `MALE/FEMALE`） | 需你确认 | ⏳ **范围已澄清**（§11.6）：非字符串笔误，而是 1.19 万行数据迁移决策 |
-| **P2** | 确认 `BOT_ENGINE_ENABLED=true` 是否有意 | 需你确认 | ⏳ 待确认 |
-| **P2** | 确认 Twitter OAuth 是否需要对外 | 需你确认 | ⏳ 待确认 |
+| **P2** | 确认 `BOT_ENGINE_ENABLED=true` 是否有意 | —— | ✅ **用户确认：有意保留**（生产需 Bot 提升内容密度） |
+| **P2** | 确认 Twitter OAuth 是否需要对外 | —— | ✅ **用户确认：不对外**，自定义路由保留备用（含 state，安全） |
 | **P2** | TURN 凭据（决定视频通话可用率） | 需你申请 | ⏳ 待采购 |
 | **P3** | 测试账号去留：QA 完成后按 `qa.` 前缀清理 | 我可以代为执行 | ⏳ 待 QA 收尾 |
 
@@ -479,15 +478,19 @@ IM 收发与已读**本轮已用测试账号闭合**（§2.4）。剩余：
 ✅ 真实守门函数判定男号可继续发送
 ```
 
-### 11.4 ✅ 删除两处死代码
+### 11.4 ✅ 删除四处零引用死代码
 
 | 文件 | 判据 |
 |---|---|
-| `src/app/api/payments/checkout/route.ts` | 内联第二份定价（1999/14999）违反 P0-7；**全仓零调用方**（前端只走 creem） |
-| `src/hooks/use-realtime.ts` | 全仓零 `import`；其 `authEndpoint` 指向不存在的 `/api/pusher/auth`；订阅 `private-chat-{roomId}` 为 Chat 合并前命名 |
+| `src/app/api/payments/checkout/route.ts` | Stripe 遗留；内联第二份定价（1999/14999）违反 P0-7；**全仓零调用方**（前端只走 creem） |
+| `src/hooks/use-realtime.ts` | 全仓零 `import`；`authEndpoint` 指向不存在的 `/api/pusher/auth`；订阅 `private-chat-{roomId}` 为 Chat 合并前命名 |
+| `src/app/api/payments/pingpong/checkout/route.ts` | 全仓零调用方；**同样内联了一份 `PLAN_CONFIG`（1999）** —— 第二处 P0-7 回归源 |
+| `src/app/api/payments/portal/route.ts` | Stripe Billing Portal，全仓零调用方 |
 
 删前用 Grep 工具二次核验引用（shell `grep` 本仓会假阴性）；`types/index.ts` 中悬空的注释引用一并更新。
-另：`/api/payments/pingpong/checkout`、`/api/payments/portal` 同样零引用，**本轮未动**，留待一并裁决。
+保留 `src/lib/pingpong.ts`（`api/webhooks/pingpong` 仍在引用）与 `payments/verify-card`（`CardVerificationWall` 仍在调用）。
+
+**删除后支付域只剩三条真实链路**：`creem/products`、`creem/checkout`（订阅）、`verify-card` + `confirm-verification`（验卡）。
 
 ### 11.5 🟠→✅ LADY_FREE 与「验卡墙」的矛盾（§6.2）
 
