@@ -24,8 +24,10 @@
 | Stripe 遗留路由 / `use-realtime` 死代码 | ✅ **已删除** | ~~P1~~ → 已闭合 |
 | LADY_FREE 女性触发卡片验证墙 | ✅ **已对齐**（豁免名单改由定价源派生 + 性别兜底） | ~~需产品确认~~ → 已闭合 |
 | Redis 降级 | 🟡 仍走 memory 后端（D5 未闭合，已知） | 观察 |
+| 对外跳转误用 `request.url`（部署专用域名） | ✅ **已修复**：发布窗口期内所有跳转/登录守卫不再受部署域名污染 | ~~P0~~ → 已闭合 |
 
-> **本轮修复明细与复现证据见 §十一。** 修复未发版上线前，生产仍运行旧代码。
+> **本轮修复明细与复现证据见 §十一；发版与上线后复验见 §十三。**
+> 发版状态：`afc18c7`（P1/P2 四项修复）→ `859ee35`（公开 origin 修复），均已上线生产并实测复验。
 
 ---
 
@@ -576,5 +578,98 @@ IM 收发与已读**本轮已用测试账号闭合**（§2.4）。剩余：
 | `scripts/qa/probe-msgtype-distribution.mjs` | 只读：IMMessage 的 `msgType` 分布（决定配额该排除哪些类型） |
 | `scripts/qa/probe-lady-free-coverage.mjs` | 只读：女性 LADY_FREE 覆盖 / cardVerified / 订阅分布 |
 | `scripts/qa/verify-guards-fixed.mts` | **用真实守门模块**对生产库跑修复前/后 A/B（§11.3、§11.5） |
-| `scripts/qa/verify-oauth-local.sh` | 本地验证 OAuth `state`/PKCE 强制（5 场景，§11.2） |
-| `scripts/qa/verify-open-redirect-e2e.mjs` | **真实登录**验证开放重定向已封堵（6 载荷，§11.1） |
+| `scripts/qa/verify-oauth-local.sh` | 验证 OAuth `state`/PKCE 强制（5 场景，§11.2）。支持 `QA_BASE_URL` → **可直接打生产** |
+| `scripts/qa/verify-open-redirect-e2e.mjs` | **真实登录**验证开放重定向已封堵（6 载荷，§11.1）。支持 `QA_BASE_URL` |
+| `scripts/qa/verify-public-origin.mjs` | **对外跳转公开域名 + 部署域名泄漏总扫描**（13 断言，§13） |
+
+---
+
+## 十三、发版与上线后复验（2026-10-01 当日完成）
+
+### 13.1 发版记录
+
+| 次序 | 提交 | 内容 | 生产部署 | 触发 |
+|---|---|---|---|---|
+| 1 | `afc18c7` | P1 四项 + P2 两项修复；删除 4 处死代码 | `6abe6a55`（14:14 发布） | 推 `main` |
+| 2 | `859ee35` | 对外跳转改用公开 origin；登录同源判定加固 | `6abe704a`（14:38 发布） | 推 `main` |
+
+回滚锚点：`safety/pre-p1p2-20260930` = `0163134`（发版前 `origin/main`）；
+对应最后一次正常生产部署 `6abbadb3`（commit `bc56fa14`）。
+
+### 13.2 上线后生产复验（全部在 `859ee35` 部署上实测）
+
+| 项 | 结果 |
+|---|---|
+| 首页 / 健康检查 | HTTP 200；`/api/health` → `healthy`，DB 1260ms，bot 模块 on（符合预期保留） |
+| 已删端点 | `/api/payments/checkout`、`/api/payments/portal`、`/api/payments/pingpong/checkout` 均 404 |
+| 开放重定向（真实登录） | **6/6**：正常 `callbackUrl` 放行；5 种绕过写法全部落回 `/dashboard` |
+| OAuth 关卡（生产） | **7/7**：state 缺失/不匹配拒绝；缺 PKCE 拒绝（不再静默降级）；两道关卡通过后失败点推进到 token exchange |
+| 对外跳转公开域名 | **13/13**：所有 `Location` 落在 `app.lokfeel.com`；部署专用域名泄漏扫描 0 处 |
+| 配额修复（对生产库 A/B） | **7/7**：SYSTEM 不再占配额（2→1）；LADY_FREE 不再撞验卡墙；免费男 2 条上限未被取消 |
+
+### 13.3 🔴 本次发现并已修复：发布窗口期内 `request.url` 指向部署专用域名
+
+**现象（实测时间线）**：
+
+```
+14:14:08  部署 6abe6a55 发布
+14:15     POST /api/auth/login（Origin: https://app.lokfeel.com）→ 全部 403
+14:18     GET  /api/auth/oauth/google/callback
+            → Location: https://6abe6a55…--lokfeel.netlify.app/login?error=…
+14:35     同样两个请求 → Location: https://app.lokfeel.com/login?error=…  （自行恢复）
+```
+
+**判据取证**：`Origin: https://app.lokfeel.com` 在 14:15 得 403、在 14:35 得 401
+（`Invalid email or password`，即已进入凭据校验）；`/api/auth/signin/google`
+的 `Location` 从部署域名变为公开域名。→ 部署刚发布后的一段窗口期内，
+边缘域名别名尚未传播完成，函数拿到的 `request.url` / `request.nextUrl` 是
+**部署专用域名** `<deploy-id>--<site>.netlify.app`。
+
+**两个用户可见后果**：
+
+1. `new URL(dest, request.url)` 把已登录用户重定向到内部域名 —— 会话 cookie 是
+   host-only、存在公开域名下，跳过去浏览器不带 cookie → **「刚登录成功又变回未登录」**，
+   并把内部部署地址泄漏给用户。
+2. 拿 `nextUrl.host` 与 `Origin` 做同源比较的 CSRF 守卫，在这段时间里
+   **拒绝所有真实邮箱密码登录**（窗口期内的登录不可用）。
+
+> 关键点：**该窗口期与本次 P1/P2 修复无关**。对照验证 —— 发版前的旧部署
+> `6abbadb3` 用同样的请求打到它自己的部署域名，同样返回该部署域名，行为一致。
+> 因此这是平台迁移带来的既有问题，只是本轮才被量化确认。
+
+**修复**（`src/lib/http/public-origin.ts`，见 §13.4 设计）：
+
+- `publicOriginOf(request)` 作为**所有对外绝对跳转与 OAuth `redirect_uri`** 的基址，
+  优先级 `NEXT_PUBLIC_APP_URL → AUTH_URL → NEXTAUTH_URL → nextUrl.origin → request.url`，
+  **刻意不读请求头**（避免被伪造头牵引跳转）。
+- `resolveSiteHosts()` / `isSameSiteRequest()` 供**同源判定**使用，取
+  `Host` / `X-Forwarded-Host` / `nextUrl` / 配置域名的并集 —— 浏览器无法跨站设置
+  `Host` 与 `X-Forwarded-Host`（二者属禁止头），故不引入浏览器侧 CSRF 绕道。
+- 替换 11 处路由的跳转基址：`auth/login`、google/twitter 的 signin+callback
+  （含 `oauth/` 与旧的非 `oauth/` 重复路由）、`[...nextauth]` 拦截、
+  `admin/login`、`test-panel`。
+
+**附带确认（非缺陷）**：直接访问 Netlify 子域时，`Location` 会带上该部署的
+专用域名 —— 这是平台按请求 host 路由的正常表现；经 `app.lokfeel.com` 访问时
+一律为公开域名。另外观察到：当 `Location` 本身不带查询串时，Netlify 边缘会把
+原始查询串追加回去（旧部署同样如此），属平台既有行为，结果正确。
+
+### 13.4 验证方法与门禁
+
+| 层 | 内容 | 结果 |
+|---|---|---|
+| 单测 | 新增 `tests/public-origin.test.ts` 20 项（含「发布窗口期真实域名必须通过」回归） | 全绿 |
+| 类型 | `tsc --noEmit` | exit=0，零输出 |
+| 全量单测 | `jest` | 2 failed / 268 passed（两项为 `origin/main` 既有失败，已用 worktree 基线对照） |
+| 门禁 | `verify:geo` / `verify:bot` / `check:redis` | 67 / 111 / 17，exit=0 |
+| 本地端到端 | dev server：开放重定向 6/6、公开 origin 13/13、OAuth 关卡 7/7 | 全绿 |
+| 生产端到端 | 开放重定向 6/6、OAuth 关卡 7/7、公开 origin 13/13、配额 A/B 7/7 | 全绿 |
+
+### 13.5 仍未闭合（需用户输入或第三方）
+
+- **P0-1 支付**：仍缺 `CREEM_API_KEY` / `CREEM_WEBHOOK_SECRET` / 两个 `PRODUCT_ID`
+- **P0-2 WebRTC**：开关未开 + `NEXT_PUBLIC_USE_PUSHER` 未设 + 频道前缀不一致 + 无 TURN
+- **待真机/第三方**：WebRTC 双端、Creem 支付、Google OAuth 回跳、移动端手势
+- **待产品决策**：性别词表「统一」实为数据迁移（存量 `MALE/FEMALE` 11880 行 vs 代码现代约定 `MAN/WOMAN`）
+- **待清理**：`scripts/qa` 下 QA 测试账号（`qa.` 前缀）在 QA 收尾时一并删除；
+  `/api/auth/twitter/callback` 与 `/api/auth/twitter/signin` 为旧的非 `oauth/` 重复路由（无调用方）
