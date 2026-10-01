@@ -16,6 +16,16 @@
  *    "//evil.com" which resolves to an external origin.
  *  - Absolute URLs are only allowed when their host matches an app host
  *    (production + configured NEXT_PUBLIC_APP_URL / NEXTAUTH_URL + localhost).
+ *
+ * ⚠️ Normalization (regression fix, 2026-10-01):
+ *   The WHATWG URL parser treats "\" exactly like "/" for special schemes
+ *   (http/https), and strips ASCII tab/newline/CR before parsing. So the raw
+ *   spellings "/\evil.com" and "\t//evil.com" **resolve to https://evil.com/**
+ *   even though neither starts with "//" — the old prefix check let them through
+ *   and this was reproducible end-to-end in production (a crafted callbackUrl
+ *   was stored verbatim in the google-callback-url cookie and then honoured).
+ *   We therefore normalize those synonyms BEFORE any prefix comparison, so a
+ *   URL is judged by its effective destination rather than its spelling.
  */
 
 const ALLOWED_REDIRECT_HOSTS = [
@@ -36,14 +46,30 @@ const ALLOWED_REDIRECT_HOSTS = [
   .filter(Boolean)
 
 /**
+ * Normalize a candidate redirect target into its effective canonical spelling.
+ *
+ * WHY: the browser's URL parser (`new URL`) applies these transformations
+ * anyway; doing it ourselves first means the allow-list sees the same string
+ * the redirect will actually use.
+ *   - `\` → `/`   (WHATWG: backslash is a path separator for http/https)
+ *   - strip ASCII tab / newline / CR (WHATWG removes them before parsing)
+ */
+function normalizeRedirectTarget(url: string): string {
+  return url.replace(/\\/g, "/").replace(/[\t\n\r]/g, "")
+}
+
+/**
  * Returns true when `url` is safe to redirect to after authentication.
  */
 export function isSafeRedirect(url?: string): boolean {
   if (!url) return false
-  // Relative path is safe — but reject protocol-relative "//evil.com"
-  if (url.startsWith("/") && !url.startsWith("//")) return true
+  const normalized = normalizeRedirectTarget(url)
+  if (!normalized) return false
+  // Relative path is safe — but reject protocol-relative "//evil.com".
+  // Checked AFTER normalization so "/\evil.com" (→ "//evil.com") is rejected too.
+  if (normalized.startsWith("/") && !normalized.startsWith("//")) return true
   try {
-    const u = new URL(url)
+    const u = new URL(normalized)
     return ALLOWED_REDIRECT_HOSTS.includes(u.host)
   } catch {
     return false
