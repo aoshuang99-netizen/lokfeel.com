@@ -48,9 +48,12 @@ export async function GET(request: NextRequest) {
     const activeChats = await countUserActiveConversations(userId, sevenDaysAgo);
 
     // Count total messages sent by user in all conversations
+    // excludeSystem：匹配成功时插入的 SYSTEM 通知把 senderId 记为发起人，
+    // 若计入会让用户"没发也显示已发 1 条"。面向用户的用量数字一律排除。
     const messagesSent = await countMessages({
       senderId: userId,
       window: { gte: sevenDaysAgo },
+      excludeSystem: true,
     });
 
     // Count Super Likes used this week (senderAction = SUPER_LIKE in last 7 days)

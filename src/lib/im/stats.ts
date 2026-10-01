@@ -38,6 +38,17 @@ export interface MessageCountOptions {
   sender?: Prisma.UserWhereInput;
   /** 限定到单个会话（`IMMessage.conversationId`） */
   conversationId?: string | null;
+  /**
+   * 只统计"用户产出"的消息（排除 `msgType = SYSTEM`）。
+   *
+   * WHY：匹配成功时 `matches/react` 插入的 SYSTEM 通知把 `senderId` 记为
+   * **匹配发起人**，于是该用户"什么都没发"却已计 1 条。凡是要展示给用户看
+   * 的"我发了几条"，都必须打开这个开关，否则数字虚高、且与真实发信门禁
+   * （`lib/im/message-guards.ts` 已排除 SYSTEM）口径不一致。
+   *
+   * 面向运营的总量/分析类统计**不要**打开 —— 那些场景要的是消息总量。
+   */
+  excludeSystem?: boolean;
 }
 
 /** 活跃发送者统计的过滤条件 */
@@ -78,6 +89,7 @@ export async function countMessages(opts: MessageCountOptions = {}): Promise<num
   if (opts.senderId) imWhere.senderId = opts.senderId;
   if (opts.sender) imWhere.sender = opts.sender;
   if (opts.conversationId) imWhere.conversationId = opts.conversationId;
+  if (opts.excludeSystem) imWhere.msgType = { not: 'SYSTEM' };
 
   return db.iMMessage.count({ where: imWhere });
 }
