@@ -14,8 +14,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '../..');
-function parseEnv(f) {
-  const o = {};
+
+/** 极简 dotenv：解析 `KEY=value`（值两端引号会被剥掉）。 */
+function parseEnv(f: string): Record<string, string> {
+  const o: Record<string, string> = {};
   if (!fs.existsSync(f)) return o;
   for (const line of fs.readFileSync(f, 'utf8').split('\n')) {
     const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
@@ -23,7 +25,10 @@ function parseEnv(f) {
   }
   return o;
 }
-const env = { ...parseEnv(path.join(root, '.env')), ...parseEnv(path.join(root, '.env.local')) };
+const env: Record<string, string> = {
+  ...parseEnv(path.join(root, '.env')),
+  ...parseEnv(path.join(root, '.env.local')),
+};
 for (const [k, v] of Object.entries(env)) if (!process.env[k]) process.env[k] = v;
 if (!process.env.DATABASE_URL) {
   console.error('缺少 DATABASE_URL（检查 .env / .env.local）');
@@ -42,7 +47,10 @@ if (!male || !female) {
 console.log(`male=${male.id}\nfemale=${female.id}`);
 
 const conv = await createConversation(male.id, female.id, male.id);
-const conversationId = conv.convId ?? conv.id ?? conv.conversationId ?? (conv.conversation && conv.conversation.id);
+// `ConversationPayload.convId` 类型上是必填 string —— 之前的
+// `?? conv.id ?? conv.conversationId ?? conv.conversation.id` 全是无效兜底
+// （那些属性不存在，TS 直接报 2339）。留一个运行期兜底即可。
+const conversationId: string | undefined = conv.convId;
 if (!conversationId) {
   console.error('未能取得会话 id：', JSON.stringify(conv).slice(0, 300));
   process.exit(3);
@@ -50,10 +58,11 @@ if (!conversationId) {
 console.log(`会话 id：${conversationId}`);
 
 // 会话列表与聊天页通常需要至少有 1 条消息才会正常渲染
-const msgModel = db.iMMessage ?? db.message;
+// ⚠️ 只有 IMMessage 这一张表（`db.message` 是 Legacy 表，模型已不存在，
+//    写 `db.iMMessage ?? db.message` 会直接报 TS2551）。
 let existing = 0;
 try {
-  existing = await msgModel.count({ where: { conversationId } });
+  existing = await db.iMMessage.count({ where: { conversationId } });
 } catch {
   existing = 0;
 }

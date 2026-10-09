@@ -13,29 +13,47 @@ echo "📌 应用 URL: $APP_URL"
 echo ""
 
 # 检查函数
+#
+# ⚠️ 期望值写成**管道分隔的候选集合**，不是单个码。原因：
+# Next.js 的 `NextResponse.redirect()` **默认返回 307**（保留方法与请求体），
+# 而不是 302。以前这里写死 "302"，导致三个 OAuth 端点明明工作正常却全报 ❌
+# （2026-10-09 生产实测：Google / Twitter signin 均为 307）。
+# 307 与 302 对"是否发生了重定向"等价，因此两者都接受。
+#
+# ⚠️ 调用方必须用 `if check_endpoint ...; then` 形式。本脚本开头有 `set -e`，
+# 且 check_endpoint 失败时 `return 1` —— 若按 `check_endpoint ...` 直接调用，
+# 脚本会在**第一次不匹配时直接中止**，后续检查全部静默跳过（也是既有缺陷）。
 check_endpoint() {
   local name="$1"
   local url="$2"
-  local expected_status="$3"
-  
+  local ok_pattern="$3"   # 例如 "302|307"
+
   echo -n "  检查 $name... "
-  
+
   # 发送请求，获取 HTTP 状态码
   local status_code=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
-  
-  if [ "$status_code" = "$expected_status" ]; then
+
+  # ⚠️ 不能用 `case "$status_code" in $ok_pattern)` —— `|` 从变量展开时**不是"或"**，
+  #    只是字面字符，永远不会匹配。必须显式按 | 拆分后逐个比较。
+  local matched=0 code
+  local IFS='|'
+  for code in $ok_pattern; do
+    if [ "$status_code" = "$code" ]; then matched=1; fi
+  done
+  unset IFS
+
+  if [ "$matched" = "1" ]; then
     echo "✅ 正常 (HTTP $status_code)"
     return 0
   else
-    echo "❌ 异常 (HTTP $status_code, 期望 $expected_status)"
+    echo "❌ 异常 (HTTP $status_code, 期望 $ok_pattern)"
     return 1
   fi
 }
 
 # 1. 检查 Google OAuth signin 端点
 echo "1️⃣ Google OAuth 端点检查"
-check_endpoint "Google Signin 端点" "$APP_URL/api/auth/oauth/google/signin" "302"
-if [ $? -eq 0 ]; then
+if check_endpoint "Google Signin 端点" "$APP_URL/api/auth/oauth/google/signin" "302|307"; then
   # 检查是否重定向到 Google
   redirect_url=$(curl -s -I "$APP_URL/api/auth/oauth/google/signin" 2>/dev/null | grep -i "location:" | cut -d' ' -f2 | tr -d '\r')
   if echo "$redirect_url" | grep -q "accounts.google.com"; then
@@ -48,11 +66,12 @@ echo ""
 
 # 2. 检查 Twitter OAuth signin 端点
 echo "2️⃣ Twitter OAuth 端点检查"
-check_endpoint "Twitter Signin 端点" "$APP_URL/api/auth/twitter/signin" "302"
-if [ $? -eq 0 ]; then
+if check_endpoint "Twitter Signin 端点" "$APP_URL/api/auth/twitter/signin" "302|307"; then
   # 检查是否重定向到 Twitter
   redirect_url=$(curl -s -I "$APP_URL/api/auth/twitter/signin" 2>/dev/null | grep -i "location:" | cut -d' ' -f2 | tr -d '\r')
-  if echo "$redirect_url" | grep -q "twitter.com\|x.com"; then
+  # ⚠️ 必须用 `grep -E`：`\|` 是 GNU BRE 扩展，macOS/BSD grep 不把 `\|` 当"或"，
+  #    会去找字面量 "twitter.com|x.com" → 明明重定向正确也报"目标异常"。
+  if echo "$redirect_url" | grep -qE "twitter\.com|x\.com"; then
     echo "    ✅ 正确重定向到 Twitter OAuth"
   else
     echo "    ⚠️  重定向目标异常: $redirect_url"
