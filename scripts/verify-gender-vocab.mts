@@ -200,6 +200,22 @@ if (fs.existsSync(PRISMA_DIR)) {
 }
 ok('prisma/ 种子与初始化脚本使用现行词表（重建库不回退）', seedOffenders.length === 0, seedOffenders.join(', '));
 
+// scripts/qa 的造数/夹具脚本同样是"活跃写入口"：QA 账号建出来是历史写法，
+// 之后任何按现行词表的断言都会被带偏（且会重新污染迁移成果）。
+const QA_DIR = path.join(ROOT, 'scripts', 'qa');
+const qaOffenders: string[] = [];
+if (fs.existsSync(QA_DIR)) {
+  for (const file of fs.readdirSync(QA_DIR)) {
+    if (!/\.(mjs|mts|ts|js)$/.test(file)) continue;
+    const text = fs
+      .readFileSync(path.join(QA_DIR, file), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+    if (WRITE_LEGACY.test(text) || TERNARY_LEGACY.test(text)) qaOffenders.push(path.join('scripts', 'qa', file));
+  }
+}
+ok('scripts/qa 夹具脚本使用现行词表（造数不回退）', qaOffenders.length === 0, qaOffenders.join(', '));
+
 ok('（自检）三条写侧检测式均可命中', 
   WRITE_LEGACY.test("data: { gender: 'FEMALE' }") &&
   OPTION_LEGACY.test('<option value="MALE">Male</option>') &&

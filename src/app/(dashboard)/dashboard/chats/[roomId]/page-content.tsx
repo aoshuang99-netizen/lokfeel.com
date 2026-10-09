@@ -650,8 +650,8 @@ export default function ChatRoomPage() {
    *    早期版本在此直接调 `useVideoCallStore.getState().initiateCall()` —— 该 store 方法
    *    只把 callState 置为 CALLING、**不发任何信令**，导致点按钮后对方永远收不到呼叫。
    *
-   * 默认关闭：见文件顶部 VIDEO_CALL_ENABLED 的说明。开启方式为设置
-   * `NEXT_PUBLIC_ENABLE_VIDEO_CALL=1`（前端可见变量，需重新构建）。
+   * 开关：自 2026-10-09 起为 opt-out（见文件顶部 VIDEO_CALL_ENABLED），默认启用；
+   * 需要停用时设 `NEXT_PUBLIC_ENABLE_VIDEO_CALL=0`（前端可见变量，需重新构建）。
    * 信令走服务端中继 `/api/im/call/signal`（与项目 serverless 部署链兼容）；
    * 未配置 Pusher 时会话无法建立，但不会影响消息收发。
    */

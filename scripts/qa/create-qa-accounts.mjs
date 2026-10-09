@@ -36,7 +36,9 @@ const PASSWORD = QA_PASSWORD
 const now = new Date().toISOString()
 
 function dicebear(gender, seed) {
-  const bg = gender === 'FEMALE' ? 'f3a8f9,ec4899,f472b6' : '3b82f6,6366f1,06b6d4'
+  // 现行词表是 MAN/WOMAN（历史 MALE/FEMALE 已于 2026-10 迁移）
+  const isFemale = ['FEMALE', 'WOMAN', 'TRANSGENDER_WOMAN'].includes((gender || '').toUpperCase())
+  const bg = isFemale ? 'f3a8f9,ec4899,f472b6' : '3b82f6,6366f1,06b6d4'
   return `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${bg}&radius=50`
 }
 
@@ -44,10 +46,10 @@ const ACCOUNTS = [
   {
     email: 'qa.male@lokfeel.com',
     name: 'Ethan Brooks',
-    gender: 'MALE',
+    gender: 'MAN',
     age: 31,
     sexuality: 'STRAIGHT',
-    preferredGender: 'FEMALE',
+    preferredGender: 'WOMAN',
     relationshipGoal: 'MONOGAMY',
     occupation: 'Software Engineer',
     city: 'San Francisco, CA',
@@ -58,10 +60,10 @@ const ACCOUNTS = [
   {
     email: 'qa.female@lokfeel.com',
     name: 'Sophie Bennett',
-    gender: 'FEMALE',
+    gender: 'WOMAN',
     age: 28,
     sexuality: 'STRAIGHT',
-    preferredGender: 'MALE',
+    preferredGender: 'MAN',
     relationshipGoal: 'MONOGAMY',
     occupation: 'Product Designer',
     city: 'New York, NY',
