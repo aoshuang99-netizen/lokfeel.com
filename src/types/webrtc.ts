@@ -238,6 +238,15 @@ export interface UseMediaDevicesResult {
 export interface VideoCallModalProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * 打开时立即呼叫的目标用户 ID。
+   *
+   * 为什么需要它：发起通话真正要做的是 `getUserMedia → createOffer → 发 offer`，
+   * 这套逻辑住在 `useWebRTC()` 里；而 `useVideoCallStore.initiateCall()` 只改状态、
+   * 不发信令。通话界面由本组件持有 `useWebRTC()`，所以「呼叫谁」必须传进来，
+   * 由本组件在打开时调用真正的 `initiateCall(calleeId)`。
+   */
+  initialCalleeId?: string | null;
 }
 
 /** IncomingCallModal 组件 Props */

@@ -214,6 +214,45 @@ ok(
   !/NEXT_PUBLIC_USE_PUSHER\s*===\s*["']true["']/.test(pusherHook)
 );
 
+// ─── E. 鉴权请求编码（客户端不得覆盖 Content-Type / 服务端须兼容多编码）──
+
+console.log('\nE. Pusher 鉴权请求编码');
+
+// 历史缺陷（2026-10）：客户端把 auth.headers["Content-Type"] 覆盖成 application/json，
+// 而 pusher-js 默认授权器发的是 urlencoded 体 → 服务端 request.formData() 抛错 → 500
+// → **所有私有频道订阅失败**（实时消息 / 通话信令静默降级为轮询），且无任何报错。
+ok(
+  'use-im-pusher.ts 未覆盖 auth 请求的 Content-Type',
+  !/auth\s*:\s*\{[\s\S]*?Content-Type[\s\S]*?\}/.test(pusherHook),
+  '覆盖 Content-Type 会让 /api/im/pusher/auth 解析失败并返回 500'
+);
+
+const authRoute = fs.readFileSync(
+  path.join(SRC, 'app', 'api', 'im', 'pusher', 'auth', 'route.ts'),
+  'utf8'
+);
+
+ok(
+  'auth 路由先读 content-type 再选择解析方式',
+  /headers\.get\(\s*['"]content-type['"]\s*\)/.test(authRoute),
+  '不看 Content-Type 直接用单一解析方式，遇到其它编码就会 500'
+);
+
+ok(
+  'auth 路由兼容 application/json',
+  /application\/json/.test(authRoute)
+);
+
+ok(
+  'auth 路由兼容 application/x-www-form-urlencoded',
+  /application\/x-www-form-urlencoded/.test(authRoute)
+);
+
+ok(
+  'auth 路由兼容 multipart/form-data',
+  /multipart\/form-data/.test(authRoute)
+);
+
 // ─── 汇总 ─────────────────────────────────────────────────────────
 
 console.log(`\n结果：${pass} 通过 / ${fail} 失败`);

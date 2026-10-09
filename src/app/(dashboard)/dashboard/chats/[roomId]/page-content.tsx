@@ -31,7 +31,6 @@ import { toast } from "sonner";
 import { CardVerificationWall } from "@/components/payment/CardVerificationWall";
 import { toUiMessage, toUiMessages, maxSeq } from "@/lib/chat/adapter";
 import { VideoCallModal } from "@/components/video-call/VideoCallModal";
-import { useVideoCallStore } from "@/store/videoCallStore";
 import {
   ArrowLeft,
   MoreVertical,
@@ -260,6 +259,8 @@ export default function ChatRoomPage() {
   /** 阶段 4：会话统一 id（Conversation.id），由 /api/im/conversations/[id] 解析得到 */
   const [conversationId, setConversationId] = useState<string>("");
   const [showVideoCall, setShowVideoCall] = useState(false);
+  /** 待呼叫对象：仅在「发起通话」时设置，供 VideoCallModal 打开后真正发起呼叫 */
+  const [pendingCalleeId, setPendingCalleeId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -638,14 +639,15 @@ export default function ChatRoomPage() {
   /**
    * 发起视频通话。
    *
-   * 说明：这一步是**功能补全**，不只是"合并" —— WebRTC 全套实现
-   * （useWebRTC / usePusherSignaling / VideoCallModal / videoCallStore）此前从未接线到
-   * 任何线上页面（审计缺陷 D5），唯一引用方是不曾上线的 chat-container.tsx。
+   * ⚠️ 这里只负责「打开通话界面 + 记录呼叫目标」，真正的 getUserMedia / createOffer /
+   *    发信令由 `VideoCallModal` 内部的 `useWebRTC().initiateCall()` 完成。
+   *    早期版本在此直接调 `useVideoCallStore.getState().initiateCall()` —— 该 store 方法
+   *    只把 callState 置为 CALLING、**不发任何信令**，导致点按钮后对方永远收不到呼叫。
    *
    * 默认关闭：见文件顶部 VIDEO_CALL_ENABLED 的说明。开启方式为设置
    * `NEXT_PUBLIC_ENABLE_VIDEO_CALL=1`（前端可见变量，需重新构建）。
-   * 信令走 Pusher（与项目 serverless 部署链兼容）；未配置 Pusher 时会话无法建立，
-   * 但不会影响消息收发。
+   * 信令走服务端中继 `/api/im/call/signal`（与项目 serverless 部署链兼容）；
+   * 未配置 Pusher 时会话无法建立，但不会影响消息收发。
    */
   const startVideoCall = useCallback(() => {
     const targetId = roomInfoRef.current?.otherUser?.id;
@@ -653,9 +655,8 @@ export default function ChatRoomPage() {
       toast.error("Unable to start call: unknown recipient");
       return;
     }
+    setPendingCalleeId(targetId);
     setShowVideoCall(true);
-    // store 负责 getUserMedia、创建 offer 并发信令
-    void useVideoCallStore.getState().initiateCall(targetId);
   }, []);
 
   const formatTime = (dateStr: string) => {
@@ -1311,7 +1312,11 @@ export default function ChatRoomPage() {
       {VIDEO_CALL_ENABLED && (
         <VideoCallModal
           open={showVideoCall}
-          onClose={() => setShowVideoCall(false)}
+          initialCalleeId={pendingCalleeId}
+          onClose={() => {
+            setShowVideoCall(false);
+            setPendingCalleeId(null);
+          }}
         />
       )}
     </div>

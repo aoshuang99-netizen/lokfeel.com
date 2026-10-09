@@ -1,106 +1,168 @@
-# WebRTC 信令 / Twitter OAuth / 性别词表：三处静默失效的根因修复
+# WebRTC 通话 / 实时通道 / OAuth / 性别词表：静默失效的根因修复
 
-> 2026-10-09 · 基线 `13e8c2d` · 同类文档见 `SECURITY-HARDENING-2026-09-29.md`
+> 2026-10-09 · 基线 `13e8c2d` → 本文件所记改动为第二批
+> 同类文档见 `SECURITY-HARDENING-2026-09-29.md`
 >
-> 三个缺陷的共同特征是 **不报错、不崩溃、只是静默不工作**——因此都不会被常规冒烟测试发现。
-> 本文记录实测证据、根因、修复与防复发门禁。
+> 这些缺陷的共同特征是 **不报错、不崩溃、只是静默不工作**，
+> 因此都不会被常规冒烟测试发现。本文记录实测证据、根因、修复与防复发门禁。
 
 ---
 
 ## 摘要
 
-| # | 缺陷 | 表现 | 根因 | 修复 |
-|---|------|------|------|------|
-| 1 | 视频通话信令 403 | 通话永远停在"呼叫中" | ①频道前缀与鉴权白名单差 3 字符；②跨用户信令走了客户端 `channel.trigger`（机制上不可能） | 频道命名单一来源 + 服务端中继端点 |
-| 2 | Twitter OAuth 换不到令牌 | 授权后回跳失败 | 授权请求与换令牌用的 `redirect_uri` 不一致（RFC 6749 §4.1.3 要求逐字符一致） | `twitterCallbackUrl()` 单一来源 + env 可覆盖 |
-| 3 | 匹配结果静默丢人 | 符合偏好的候选人被过滤/扣分 | 性别词表双约定并存（`MALE/FEMALE` vs `MAN/WOMAN`），比较前未归一化 | 统一走 `normalizeGender()` |
+| # | 缺陷 | 表现 | 根因 |
+|---|------|------|------|
+| 1 | 频道前缀与鉴权白名单不一致 | 通话订阅 403 | 订阅构造 `private-user-{id}`，鉴权只放行 `private-im-` |
+| 2 | 跨用户信令用客户端事件 | 机制上不可能送达 | Pusher `client-` 事件只能发到**自己**已授权的频道 |
+| 3 | 实时开关是 opt-in | 生产漏设变量 → 整体静默失效 | `NEXT_PUBLIC_USE_PUSHER === "true"` 才启用 |
+| 4 | **鉴权请求 Content-Type 被覆盖** | **所有私有频道订阅 500 失败** | 客户端声明 `application/json`，pusher-js 实发 urlencoded 体 |
+| 5 | 发起通话调用了 store 的同名方法 | 点按钮不发任何信令 | store 的 `initiateCall` 只改状态；真正实现在 `useWebRTC` |
+| 6 | `usePusherSignaling(undefined, …)` | 被叫方订阅永不建立 | userId 传 `undefined`，钩子首行即 `if (!userId) return` |
+| 7 | 来电 UI 在 `if (!open) return null` 之后 | 弹窗关闭时永远看不到来电 | 通话界面未打开正是被叫方的常态 |
+| 8 | **清理 effect 依赖 `[localStream]`** | **PeerConnection 刚建好就被关掉** | 每拿到本地流即触发上一次的 cleanup |
+| 9 | Twitter OAuth redirect_uri 不一致 | 永远换不到令牌 | 违反 RFC 6749 §4.1.3 逐字符一致 |
+| 10 | 匹配引擎原始性别字符串比较 | 符合偏好的候选人被静默过滤/扣分 | `MALE/FEMALE` 与 `MAN/WOMAN` 双词表未归一化 |
+
+> **1–8 全部集中在视频通话链路上，且是叠加的**：修掉任何一两个都不足以让通话跑通。
+> 这也解释了为什么该功能「接线完成」在文档里写了三轮，实际从未在线上工作过。
 
 ---
 
-## 一、视频通话信令 403（P0）
+## 一、实时通道：订阅从未成功（缺陷 1–4）
 
-### 1.1 根因 A：频道前缀与鉴权白名单不一致
+### 1.1 前缀不一致（缺陷 1）
 
-- 订阅侧构造的频道名是 `private-user-{id}`；
-- 鉴权端点 `/api/im/pusher/auth` 只放行 `private-im-` 前缀。
+订阅侧构造 `private-user-{id}`，鉴权端点 `/api/im/pusher/auth` 只放行 `private-im-` 前缀 → 403。
+**Pusher 不会因此报错，只会静默不投递。**
 
-两者相差 3 个字符 → 订阅一律 403。**Pusher 不会因此报错，只会静默不投递。**
+**修复**：频道命名收敛为单一来源 `src/lib/im/channels.ts`
+（`userChannel()` / `conversationChannel()` / `isAllowedImChannel()` / 反向解析），
+订阅侧与鉴权侧全部从这里取名。
 
-### 1.2 根因 B：跨用户信令根本无法用客户端事件
+### 1.2 客户端事件机制上不可能跨频道（缺陷 2）
 
-Pusher 的 `client-` 前缀事件**只能发往调用方自己已被授权的频道**。通话双方是两个人，
-两个不同的频道，因此 `calleeChannel.trigger('client-offer', ...)` 在任何配置下都不可能送达。
-这不是配置问题，是机制限制。
+Pusher 的 `client-` 前缀事件只能发往调用方**自己已被授权**的频道。通话双方是两个频道，
+因此 `calleeChannel.trigger('client-offer', ...)` 在任何配置下都不可能送达。
 
-### 1.3 修复
-
-**① 频道命名收敛为单一来源** — `src/lib/im/channels.ts`
-
-```
-IM_CHANNEL_PREFIX = 'private-im'
-userChannel(userId)          → 'private-im-user-{id}'
-conversationChannel(convId)  → 'private-im-conversation-{id}'
-isAllowedImChannel()         → 白名单判定
-parseUserChannel/parseConversationChannel → 反向解析
-```
-
-订阅侧（`use-im-pusher.ts`、`webrtc.config.ts`、`pusher-bridge.ts`）与鉴权侧全部从这里取名。
-
-**② 信令改走服务端中继** — `src/app/api/im/call/signal/route.ts`
-
-客户端 `call-signal-client.ts` 的所有 `sendXxxSignal()` 改为
-`fetch('/api/im/call/signal')`，由服务端 `pushCallSignal()` 投递到目标
-`private-im-user-{id}`。守卫链条：
-
+**修复**：新增服务端中继 `POST /api/im/call/signal`（`src/app/api/im/call/signal/route.ts`），
+守卫链条：
 ```
 requireAuth → 限流 300/min → 事件白名单 → payload 含 callerId/calleeId
-→ 请求方须是通话一方 → to 须恰是另一方 → 双方须已存在会话 → 投递
+→ 请求方须是通话一方 → to 须恰是另一方 → 双方须已存在会话 → pushCallSignal 投递
+```
+客户端发送侧 `src/lib/im/call-signal-client.ts` 全部改走该端点。
+
+### 1.3 开关语义（缺陷 3）
+
+`NEXT_PUBLIC_USE_PUSHER` 原为 opt-in（必须显式 `"true"`），生产漏设即整体失效。
+**修复**：改 opt-out（`!== "false"`），真正的判据是「Pusher key 是否为空」。
+
+### 1.4 【最隐蔽】鉴权请求编码（缺陷 4）
+
+客户端构造 Pusher 时写了：
+
+```ts
+auth: { headers: { "Content-Type": "application/json" } }
 ```
 
-Pusher 不可用时返回 503，客户端返回 `false`（不抛异常，避免打断通话 UI）。
+而 pusher-js 的默认授权器发送的是 **urlencoded 请求体**（`socket_id=…&channel_name=…`），
+只是被这行覆盖成了 JSON 头。服务端 `request.formData()` 遇到 `application/json` 会直接抛：
 
-### 1.4 顺带修复的开关语义
+```
+Content-Type was not one of "multipart/form-data" or "application/x-www-form-urlencoded"
+```
 
-`NEXT_PUBLIC_USE_PUSHER` 原为 **opt-in**（必须显式 `"true"` 才启用），
-生产漏设该变量 → 客户端 `pusher` 恒为 `null` → 实时消息与通话整体静默失效。
+→ `/api/im/pusher/auth` 返回 **500** → **所有私有频道订阅失败**，
+且 pusher-js 默认不打印订阅错误 → **完全静默**。
 
-改为 **opt-out**：`process.env.NEXT_PUBLIC_USE_PUSHER !== "false"`。
-真正的判据是「Pusher key 是否为空」——key 为空时客户端自动禁用，无需额外信号。
-这样默认即开启，不会因为漏配一个变量而整体失效。
+> 为什么一直没被发现：`useIM.ts` 里 `ENABLE_POLLING = true`。
+> 轮询兜底让「消息还能收到」，于是实时通道坏了一年也没人注意；
+> 但通话信令没有轮询兜底，所以视频通话彻底不通。
+
+**实测证据**（Playwright 抓浏览器真实响应）：
+```
+[A] pusher/auth 响应: POST 500 {"message":"Content-Type was not one of \"multipart/form-data\" or \"application/x-www-form-urlencoded\"."}
+[B] pusher/auth 响应: POST 500 （同上）
+```
+
+**修复（两侧都改）**：
+1. 客户端删除该 `auth.headers` 覆盖，使用 pusher-js 默认行为；
+2. 服务端 `readAuthParams()` 兼容 `application/json` /
+   `application/x-www-form-urlencoded` / `multipart/form-data` 三种编码，
+   并保留「声明 JSON、实为 urlencoded」这类历史错配的兜底。
 
 ---
 
-## 二、Twitter OAuth 换不到令牌（P1）
+## 二、视频通话接线（缺陷 5–8）
 
-### 2.1 根因
+### 2.1 点按钮调用了不发信令的那个 `initiateCall`（缺陷 5）
+
+`page-content.tsx` 原本调用的是 **zustand store** 的 `initiateCall`，它只把
+`callState` 置为 `CALLING`；真正 `getUserMedia → createOffer → 发 offer` 的实现住在
+`useWebRTC()` 里，**从没有人调用过**。
+
+**修复**：聊天页只负责「打开通话界面 + 记录呼叫目标」，
+由 `VideoCallModal` 在打开时调用 `useWebRTC().initiateCall(calleeId)`。
+
+### 2.2 失效的第二份订阅（缺陷 6）
+
+`VideoCallModal` 里 `usePusherSignaling(undefined, …)` 把 userId 传成了 `undefined`
+（源码注释写着「应该从 auth store 获取」），而该钩子首行就是 `if (!userId) return;`
+→ 永不订阅 → 它唯一的副作用 `setShowIncomingCall(true)` 永不触发。
+
+而 `useWebRTC()` 内部已经用真实 userId 订阅了同一频道并绑定全部信令 ——
+这处是重复且失效的第二份订阅，已删除。
+
+### 2.3 来电 UI 放在了提前 return 之后（缺陷 7）
+
+`IncomingCallModal` 渲染在 `if (!open) return null` **之后**。
+而被叫方收到 offer 时通话界面恰恰是关闭的 → 即使状态正确也永远看不到来电。
+
+**修复**：来电弹窗改为由 store 的 `callState === CallState.RINGING` 驱动，
+在 `open` 判定**之前**渲染；通话主界面仅在 `open || CONNECTING || CONNECTED` 时铺满。
+来电者姓名/头像由 `/api/users/{callerId}` 现取（offer 载荷里只有 id）。
+
+### 2.4 【元凶】清理 effect 依赖 `[localStream]`（缺陷 8）
+
+```ts
+useEffect(() => {
+  return () => {
+    closeConnection(peerConnectionRef.current);
+    if (localStream) stopMediaStream(localStream);
+  };
+}, [localStream]);   // ← 错
+```
+
+`initiateCall` 里 `setLocalStream(stream)` 会让依赖变化 →
+React 先执行**上一次的清理** → 把**刚创建**的 PeerConnection 关掉 →
+`createOffer` 还没返回，连接已被销毁。
+
+**实测日志**（修复前）：
+```
+[useWebRTC] PeerConnection initialized
+[WebRTC] Added audio track to peer connection
+[WebRTC] Added video track to peer connection
+[useWebRTC] Cleaning up          ← 刚建好就被拆
+[WebRTC] Connection closed
+（之后再无 Sending offer）
+```
+
+**修复**：清理只在**卸载**时执行（依赖数组为空），本地流用 ref 跟踪供卸载清理使用。
+
+---
+
+## 三、Twitter OAuth 换不到令牌（缺陷 9）
 
 授权请求声明 `redirect_uri=/api/auth/oauth/twitter/callback`，
-而换取令牌时提交的是 `/api/auth/twitter/callback`。
+而换取令牌时提交的是 `/api/auth/twitter/callback`。RFC 6749 §4.1.3 要求两者逐字符一致。
 
-RFC 6749 §4.1.3 要求两者**逐字符一致**，否则令牌端点直接拒绝。
-历史原因是 `/api/auth/twitter/*` 与 `/api/auth/oauth/twitter/*` 两套路由各自拼 URL。
-
-### 2.2 修复
-
-`src/lib/auth/twitter-oauth.ts` 新增单一来源：
-
-```
-DEFAULT_TWITTER_CALLBACK_PATH = '/api/auth/oauth/twitter/callback'
-twitterCallbackPath()          ← env TWITTER_OAUTH_CALLBACK_PATH 可覆盖，非法值回落默认
-twitterCallbackUrl(baseUrl)    ← 用 publicOrigin 拼接，绝不读 request.url
-```
-
-4 个路由（signin/callback × 两套路径）全部改为调用 `twitterCallbackUrl(publicOrigin)`。
-
-> ⚠️ 这里必须用 `publicOriginOf()` 而非 `request.url`——发布窗口期内
-> `request.url` 会变成部署专用域名，会把 `redirect_uri` 也污染成内部域名。
-> 详见 `SECURITY-HARDENING-2026-09-29.md` §13。
+**修复**：`src/lib/auth/twitter-oauth.ts` 提供单一来源
+`twitterCallbackUrl(baseUrl)`（`TWITTER_OAUTH_CALLBACK_PATH` 可覆盖，非法值回落默认），
+4 个路由统一调用，且经 `publicOriginOf()` 避免发布窗口期污染。
 
 ---
 
-## 三、匹配引擎性别静默丢人（P1）
-
-### 3.1 根因
+## 四、匹配引擎性别静默丢人（缺陷 10）
 
 生产库 `Profile.gender` 实测分布：
 
@@ -108,64 +170,79 @@ twitterCallbackUrl(baseUrl)    ← 用 publicOrigin 拼接，绝不读 request.u
 MALE 8254 | FEMALE 3624 | OTHER 7 | MAN 1 | NON_BINARY 1
 ```
 
-**双词表并存**，但代码有两套约定：
+双词表并存，而 `enhanced-engine.ts` / `engine.ts` 直接用 `toUpperCase()` 比较：
+`FEMALE ≠ WOMAN` → 符合偏好的候选人被**静默过滤**（enhanced）或**错误扣分**（engine），全程无日志。
 
-- 历史：`MALE` / `FEMALE`
-- 现行：`MAN` / `WOMAN`
-
-`enhanced-engine.ts` 与 `engine.ts` 里直接用 `pref.toUpperCase() === target.gender.toUpperCase()` 比较。
-`FEMALE ≠ WOMAN` → 符合偏好的候选人被 **静默过滤**（enhanced）或 **错误扣分**（engine），
-全程无任何报错日志。
-
-### 3.2 修复
-
-- `findTopEnhancedMatches`：`normalizeGender(pref) === normalizeGender(target)`
-- `scoreLifestyle`：同样经 `normalizeGender()` 归一化后再比
-
-`src/lib/gender-utils.ts` 已正确覆盖双词表；`src/lib/avatar-utils.ts` 亦以
-`gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN'` 形式完整覆盖，无需改动。
-
-### 3.3 关于"统一词表"
-
-代码层已通过 `normalizeGender()` 兼容双词表，**不需要改数据**。
-是否把存量 1.19 万行 `MALE/FEMALE` 迁移为 `MAN/WOMAN` 属产品决策，待定。
+**修复**：统一经 `normalizeGender()` 归一化。
+存量数据**无需迁移**——是否统一词表属产品决策，待定。
 
 ---
 
-## 四、防复发门禁
-
-三道门禁已接入 `package.json`，且**都带「自检」**（对历史坏写法注入后必须能被抓到）：
+## 五、防复发门禁
 
 | 命令 | 断言 | 结果 |
 |------|------|------|
-| `npm run verify:pusher` | 构造器产物命中白名单；静态扫描 `subscription` 实参；事件名无 `client-`；开关为 opt-out | 43 / 0 |
-| `npm run verify:oauth` | `twitterCallbackUrl()` 行为与 env 覆盖；静态禁止其它文件手拼回调 URL | 9 / 0 |
-| `npm run verify:gender` | 判别函数覆盖双词表；`normalizeGender` 跨词表等价；静态禁止原始性别字符串比较 | 27 / 0 |
+| `npm run verify:pusher` | 构造器产物命中白名单；静态扫描订阅实参；事件名无 `client-`；开关为 opt-out；**未覆盖鉴权 Content-Type**；**鉴权路由兼容三种编码** | 48 / 0 |
+| `npm run verify:oauth` | `twitterCallbackUrl()` 行为与 env 覆盖；禁止手拼回调 URL | 9 / 0 |
+| `npm run verify:gender` | 判别函数覆盖双词表；`normalizeGender` 跨词表等价；禁止原始性别比较 | 27 / 0 |
+| `npm run verify:geo` | 地域/CORS/缓存策略配置驱动 | 67 / 0 |
+| `npm run verify:bot` | Bot 模块可被单一变量关闭 | 111 / 0 |
+| `npm run check:redis` | Redis 降级路径 | 17 / 0 |
 
-另有既有门禁：geo 67 / bot 111 / redis 17。
+以上门禁**均带自检**：注入历史坏写法后必须能被抓到。
 
 ---
 
-## 五、验证结果
+## 六、端到端验证（`scripts/qa/verify-video-call-signaling.mjs`）
+
+双浏览器上下文 + 假摄像头 + **真实生产 Pusher**，16 项断言全过：
+
+```
+✅ 自己的个人频道 → 200（前缀白名单命中）
+✅ 他人的个人频道 → 403（不可越权订阅）
+✅ 旧前缀 private-user- → 403（历史 403 根因已不会复发）
+✅ 呼叫方/被叫方 均已订阅个人频道
+✅ 呼叫方/被叫方 Pusher 连接就绪
+✅ 隔离测试：被叫方能收到服务端直投的 offer（收路径正常）
+✅ 呼叫方进入通话主界面
+✅ 被叫方弹出「来电」界面
+✅ 来电弹窗展示了来电者名字 → Ethan Brooks
+✅ 接听后进入通话主界面
+✅ 呼叫方仍在通话主界面
+```
+
+被叫方截图可见通话计时器已在走（0:00:22）、远端视频在播放、本地画中画与控制栏齐备
+—— **真实通话已建立**。
+
+> 运行注意：Playwright 1.63 不支持 macOS 13 的内置 Chromium
+> （报 `does not support chromium on mac13`），脚本会自动退回系统 Google Chrome
+> （`channel: 'chrome'`）。本地需先以 `NEXT_PUBLIC_ENABLE_VIDEO_CALL=1` 与 Pusher 变量起服务。
+
+---
+
+## 七、验证结果汇总
 
 | 项 | 结果 |
 |----|------|
 | `tsc --noEmit` | 0 错误 |
 | `jest` | 17 suites / 292 tests 全过 |
-| 门禁 | 上表 6 道全过 |
-| 新增单测 | `tests/im-call-signaling.test.ts`（16）、`tests/oauth-redirect-uri.test.ts`（5） |
-| 测试基建 | `tests/mocks/next-auth-react.ts` 桩（next-auth@5 纯 ESM，CJS 下不可直接 require）；jest 排除 `tests/e2e/` |
+| 6 道门禁 | 全过（见上表） |
+| 视频通话 E2E | 16 / 0 |
+| 生产公开 origin 复验 | 13 / 0（发布窗口期内） |
 
-## 六、生产库清理
+## 八、生产库清理
 
-删除 `qa.male@lokfeel.com` / `qa.female@lokfeel.com` 两个测试账号及其关联数据
-（1 会话 / 11 消息 / 5 回执 / 1 Match）。脚本 `scripts/qa/cleanup-qa-accounts.mjs` **默认 dry-run**，
-`--apply` 才执行；命中行先备份到 `.qa-cleanup-backup-*.json`（已 gitignore）；
-遇「仅一方是 QA 的会话」主动中止，避免破坏真实用户数据。
+删除 `qa.male@` / `qa.female@` 测试账号及其关联数据（1 会话 / 8 消息 / 13 回执 / 1 Match）。
+`scripts/qa/cleanup-qa-accounts.mjs` **默认 dry-run**，`--apply` 才执行；
+命中行先备份到 `.qa-cleanup-backup-*.json`（已 gitignore）；
+遇「仅一方是 QA 的会话」主动中止。清理后剩余 `qa.` 账号：**0**。
 
-## 七、发版后仍需复验（需真实环境 / 第三方）
+## 九、仍未闭合（需用户决策）
 
-1. 双端视频通话全链路（信令经 `/api/im/call/signal`，需真机）
-2. Twitter OAuth 登录回跳（需真实 Twitter 应用）
-3. 发现页性别偏好筛选的实际可见性
-4. 发布窗口期内 `publicOriginOf()` 是否正确——**推 main 后立即复验**，窗口期会自愈
+1. **视频通话总开关**：生产 `NEXT_PUBLIC_ENABLE_VIDEO_CALL` 未设为 `1`，
+   即按钮不渲染。链路本身已端到端验证通过，是否对用户开放属产品决策
+   （源码注释明确标注「阶段 4 唯一需要产品决策的项」）。
+2. **TURN 未采购**：代码已支持 `NEXT_PUBLIC_USE_TURN` / `NEXT_PUBLIC_TURN_URLS` 等覆盖，
+   但未配置 TURN 时对称 NAT 下的通话仍可能失败（当前仅公共 STUN）。
+3. **支付生产不可用**：缺 `CREEM_API_KEY` / `CREEM_WEBHOOK_SECRET` / 两个 `PRODUCT_ID`。
+4. **性别词表统一**：属数据迁移决策（存量约 1.19 万行），代码层已兼容，无需改数据。

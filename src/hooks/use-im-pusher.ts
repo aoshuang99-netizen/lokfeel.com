@@ -73,11 +73,14 @@ export function getIMPusherClient(): Pusher | null {
     pusherClient = new Pusher(PUSHER_KEY, {
       cluster: PUSHER_CLUSTER,
       authEndpoint: "/api/im/pusher/auth",
-      auth: {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
+      // ⚠️ 不要在这里设置 auth.headers["Content-Type"]。
+      //    pusher-js 的默认授权器发送的是 `application/x-www-form-urlencoded` 请求体
+      //    （socket_id=...&channel_name=...），若把 Content-Type 覆盖成 application/json，
+      //    服务端的 request.formData() 会直接抛
+      //    "Content-Type was not one of multipart/form-data or application/x-www-form-urlencoded"
+      //    → /api/im/pusher/auth 返回 500 → **所有私有频道订阅失败**（实时消息、通话信令
+      //    全部静默失效，只剩轮询兜底）。服务端已兼容 JSON/urlencoded/multipart 三种编码，
+      //    但客户端保持默认即可，不要覆盖。
     });
 
     pusherClient.connection.bind("connected", () => {

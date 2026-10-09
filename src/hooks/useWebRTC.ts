@@ -616,15 +616,31 @@ export function useWebRTC(): UseWebRTCResult {
   // 清理
   // ============================================================================
 
+  // 用 ref 跟踪「当前本地流」，仅供卸载清理使用。
+  // 注意：**不能**把它作为下面清理 effect 的依赖 —— 见下方说明。
+  const localStreamRef = useRef<MediaStream | null>(null);
+  useEffect(() => {
+    localStreamRef.current = localStream;
+  }, [localStream]);
+
+  /**
+   * ⚠️ 仅在**组件卸载**时清理，依赖数组必须为空。
+   *
+   * 历史缺陷：这里原写作 `}, [localStream]);`。依赖变化会让 React 先执行**上一次的清理**，
+   * 于是每拿到一次本地媒体流（initiateCall 里 `setLocalStream(stream)`），
+   * 就立刻 `closeConnection(peerConnectionRef.current)` 把**刚创建**的 PeerConnection 关掉，
+   * `createOffer` 还没返回连接就已被销毁 —— 通话永远建立不起来，且不报错
+   * （实测日志：`PeerConnection initialized` → `Added video track` → `Cleaning up` → `Connection closed`）。
+   */
   useEffect(() => {
     return () => {
-      console.log('[useWebRTC] Cleaning up');
+      console.log('[useWebRTC] Cleaning up (unmount)');
       closeConnection(peerConnectionRef.current);
-      if (localStream) {
-        stopMediaStream(localStream);
+      if (localStreamRef.current) {
+        stopMediaStream(localStreamRef.current);
       }
     };
-  }, [localStream]);
+  }, []);
 
   // ============================================================================
   // 返回值
