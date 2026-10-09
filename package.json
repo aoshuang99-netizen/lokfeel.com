@@ -64,6 +64,8 @@
     "verify:oauth": "npx tsx scripts/verify-oauth-redirect-uri.mts",
     "verify:gender": "npx tsx scripts/verify-gender-vocab.mts",
     "verify:ice": "npx tsx scripts/verify-webrtc-ice.mts",
+    "verify:turn:candidate": "node scripts/qa/verify-turn-candidate.mjs",
+    "verify:turn:prod": "node scripts/qa/verify-turn-prod.mjs",
     "gender:migrate": "node scripts/qa/migrate-gender-vocab.mjs",
     "gender:migrate:apply": "node scripts/qa/migrate-gender-vocab.mjs --apply"
   },

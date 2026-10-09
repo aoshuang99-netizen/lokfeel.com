@@ -76,6 +76,9 @@ const iceServers = iceBody.iceServers || [];
 console.log(`    source=${iceBody.source}  组数=${iceServers.length}`);
 const turnEntry = iceServers.find((s) => JSON.stringify(s.urls).includes('turn'));
 check('来源不是 stun-only', iceBody.source && iceBody.source !== 'stun-only', iceBody.source);
+if (EXPECT_SOURCE) {
+  check(`下发来源符合预期（${EXPECT_SOURCE}）`, iceBody.source === EXPECT_SOURCE, String(iceBody.source));
+}
 check('包含 TURN 条目', !!turnEntry, turnEntry ? JSON.stringify(turnEntry.urls) : 'none');
 check('TURN 条目带 username + credential',
   !!turnEntry?.username && !!turnEntry?.credential,
