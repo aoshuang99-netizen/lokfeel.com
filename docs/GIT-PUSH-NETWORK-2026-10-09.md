@@ -2,7 +2,9 @@
 
 > **一句话**：本机代理**一直是好的**（`v2rayN` → `127.0.0.1:10808`，境外出口）。`git push` 失败的真凶是
 > **WorkBuddy 沙箱给 shell 注入了显式 `HTTP_PROXY=127.0.0.1:<随机端口>`**，git 继承后写操作被拒。
-> 一句话修复：**清掉那些变量**。
+> 一句话修复：**`git -c http.proxy=http://127.0.0.1:10808 push`**
+> （`-c` 的优先级**高于**环境变量，所以不必先清变量，也是最稳的一条）；
+> "清掉那些变量"只作为**兜底**。
 
 ---
 
@@ -57,13 +59,17 @@ git push
                 写 POST 上传被拒 → Empty reply / 502
 ```
 
-对照实验（10-09 实测）：
+对照实验（10-09 复测，含一次"清空变量"失败样本）：
 
 | 通道 | 命令 | 只读 `ls-remote` | 真实 `push` |
 |---|---|---|---|
-| ① 清空注入变量后直连 | `env -u HTTP_PROXY … git push` | ✅ | ✅ **成功**（`c4645b0..f3467d5`） |
-| ② 显式走 v2rayN | `git -c http.proxy=http://127.0.0.1:10808 push` | ✅ | ✅ |
-| ③ 继承沙箱变量 | `git push`（裸跑） | ✅ | ❌ 失败 |
+| ① 显式走 v2rayN | `git -c http.proxy=http://127.0.0.1:10808 push` | ✅ | ✅ **稳定成功**（多轮复跑均 `exit=0`） |
+| ② 清空注入变量后直连 | `env -u HTTP_PROXY … git push` | ✅ | ⚠️ **时通时断**（曾成功，也曾 `Empty reply from server`） |
+| ③ 继承沙箱变量 | `git push`（裸跑） | ✅ | ❌ 稳定失败（`CONNECT tunnel failed`） |
+
+**关键性质**：`git -c http.proxy=…` 的优先级**高于**环境变量 ——
+所以通道①在"沙箱变量仍在"的情况下也能成功（B 组实测 `exit=0`），
+**不需要先清变量**。这正是把①列为首选的原因。
 
 ---
 
@@ -79,7 +85,19 @@ bash scripts/push-main.sh my-branch  # 推指定分支
 
 脚本内部就是下面两条通道的顺序尝试，任一成功即退出。
 
-### 解法 B：手动一行（清掉注入变量后直连）
+### 解法 B：手动一行（显式走 v2rayN，**首选**）
+
+```bash
+git -c http.proxy=http://127.0.0.1:10808 push origin main
+```
+
+**为什么首选它**：`-c http.proxy` 覆盖环境变量，**不必**先清沙箱注入的变量；
+且 10-09 复测中它是唯一**稳定**的通道。
+
+用 `-c` 是**一次性**生效，不写进 `~/.gitconfig`（避免以后换客户端端口时又踩坑）。
+**不要**用 `git config --global http.proxy …`。
+
+### 解法 C：兜底（清掉注入变量后直连）
 
 ```bash
 env -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY \
@@ -87,14 +105,7 @@ env -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY \
     git push origin main
 ```
 
-### 解法 C：手动指定走 v2rayN
-
-```bash
-git -c http.proxy=http://127.0.0.1:10808 push origin main
-```
-
-用 `-c` 是**一次性**生效，不写进 `~/.gitconfig`（避免以后换客户端端口时又踩坑）。
-**不要**用 `git config --global http.proxy …`。
+仅当 `10808` 没在监听时用；实测**时通时断**，不要当主力。
 
 > 若用 ClashX Pro / Clash Verge，端口分别是 **7890** / **7897**：
 > `LOKFEEL_PROXY_PORT=7890 bash scripts/push-main.sh`
@@ -142,9 +153,14 @@ env | grep -i proxy        # 看到 127.0.0.1:5xxxx 的随机端口 = 沙箱注�
 ## 7 · 需要长期注意的两点
 
 1. **沙箱注入的端口每次会话都变**（`56834` 只是本次的值）——
-   所以不要试图"记住那个端口然后加例外"，一律用 `env -u` 清干净再走，或显式 `-c http.proxy`。
+   不要试图"记住那个端口然后加例外"；一律**显式 `-c http.proxy=http://127.0.0.1:10808`**，
+   或（兜底）`env -u` 清干净再走。
 2. **`[skip netlify]` 与网络无关**：免构建靠提交信息里的标记；
    推送成功本身**不会**消耗 Netlify 构建额度（`allowed_branches=['main']`，推分支不构建）。
+3. 🔴 **发布提交的信息里绝不要出现那个跳过关键字 —— 哪怕是在解释它**。
+   Netlify 原生的跳过判定扫描**整个提交信息**（含 body），所以"说明本次没带 XX"
+   这种写法会**自伤**，构建被静默跳过。10-09 实测：推 `4aa4c61` 后等 9 分钟无任何新 deploy 记录。
+   中招补救：补一个**信息干净的空提交**（`git commit --allow-empty`）再推，**不要**改历史。
 
 ---
 
