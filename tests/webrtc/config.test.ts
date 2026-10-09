@@ -14,6 +14,8 @@ import {
   NETWORK_QUALITY_THRESHOLDS,
 } from '@/config/webrtc.config';
 import { CameraFacingMode } from '@/types/webrtc';
+import { CALL_SIGNAL_EVENTS } from '@/lib/im/call-signal';
+import { isAllowedImChannel } from '@/lib/im/channels';
 
 // ============================================================================
 // getIceServers 函数测试
@@ -158,19 +160,23 @@ describe('PUSHER_EVENTS', () => {
     expect(PUSHER_EVENTS.VIDEO_CALL_TIMEOUT).toBeDefined();
   });
 
-  it('所有事件名称应该以 client- 开头', () => {
+  it('事件名不得使用 client- 前缀（那是 Pusher 的客户端事件专用）', () => {
+    // 本项目的通话信令必须由**服务端**中继投递：Pusher 的客户端事件只能
+    // 发到自己已授权的频道，而鉴权端点只为「自己的个人频道」签发授权，
+    // 所以「呼叫方 trigger 到被叫方频道」机制上不可能成立。
+    // 一旦这里又出现 client- 前缀，说明有人把信令改回了客户端直发。
     Object.values(PUSHER_EVENTS).forEach((eventName) => {
-      expect(eventName).toMatch(/^client-/);
+      expect(eventName).not.toMatch(/^client-/);
     });
   });
 
-  it('应该有以下具体的事件名称', () => {
-    expect(PUSHER_EVENTS.VIDEO_CALL_OFFER).toBe('client-video-call-offer');
-    expect(PUSHER_EVENTS.VIDEO_CALL_ANSWER).toBe('client-video-call-answer');
-    expect(PUSHER_EVENTS.VIDEO_CALL_DECLINE).toBe('client-video-call-decline');
-    expect(PUSHER_EVENTS.ICE_CANDIDATE).toBe('client-ice-candidate');
-    expect(PUSHER_EVENTS.VIDEO_CALL_HANGUP).toBe('client-video-call-hangup');
-    expect(PUSHER_EVENTS.VIDEO_CALL_TIMEOUT).toBe('client-video-call-timeout');
+  it('事件名必须与 lib/im/call-signal 的协议常量一致', () => {
+    expect(PUSHER_EVENTS.VIDEO_CALL_OFFER).toBe(CALL_SIGNAL_EVENTS.OFFER);
+    expect(PUSHER_EVENTS.VIDEO_CALL_ANSWER).toBe(CALL_SIGNAL_EVENTS.ANSWER);
+    expect(PUSHER_EVENTS.VIDEO_CALL_DECLINE).toBe(CALL_SIGNAL_EVENTS.DECLINE);
+    expect(PUSHER_EVENTS.ICE_CANDIDATE).toBe(CALL_SIGNAL_EVENTS.ICE_CANDIDATE);
+    expect(PUSHER_EVENTS.VIDEO_CALL_HANGUP).toBe(CALL_SIGNAL_EVENTS.HANGUP);
+    expect(PUSHER_EVENTS.VIDEO_CALL_TIMEOUT).toBe(CALL_SIGNAL_EVENTS.TIMEOUT);
   });
 });
 
@@ -183,26 +189,34 @@ describe('getUserChannel', () => {
     const userId = 'user123';
     const channelName = getUserChannel(userId);
 
-    expect(channelName).toBe('private-user-user123');
+    expect(channelName).toBe('private-im-user-user123');
   });
 
   it('应该正确处理空字符串', () => {
     const channelName = getUserChannel('');
 
-    expect(channelName).toBe('private-user-');
+    expect(channelName).toBe('private-im-user-');
   });
 
   it('应该正确处理包含特殊字符的用户 ID', () => {
     const userId = 'user-123@example.com';
     const channelName = getUserChannel(userId);
 
-    expect(channelName).toBe(`private-user-${userId}`);
+    expect(channelName).toBe(`private-im-user-${userId}`);
+  });
+
+  it('🔴 频道名必须命中 Pusher 鉴权白名单（历史缺陷：曾是 private-user-）', () => {
+    // 回归守卫：此处曾写成 private-user-{id}，与鉴权端点的 private-im- 白名单
+    // 只差 3 个字符，静态审查几乎发现不了，线上表现为信令订阅 403、通话不可用。
+    for (const userId of ['u1', 'user-123@example.com', '', '中文 id']) {
+      expect(isAllowedImChannel(getUserChannel(userId))).toBe(true);
+    }
   });
 });
 
 describe('CHANNEL_PREFIX', () => {
-  it('应该是 private-user', () => {
-    expect(CHANNEL_PREFIX).toBe('private-user');
+  it('应该是 private-im-user（与 IM 侧同源）', () => {
+    expect(CHANNEL_PREFIX).toBe('private-im-user');
   });
 });
 

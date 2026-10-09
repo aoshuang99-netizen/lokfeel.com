@@ -8,6 +8,12 @@
 
 import Pusher from 'pusher';
 import type { ServerEvent, ServerEventType } from '../types';
+import {
+  userChannel,
+  conversationChannel,
+  parseConversationChannel,
+} from '../channels';
+import type { CallSignalEvent } from '../call-signal';
 
 // ─── Pusher Client Singleton ──────────────────────────────────
 
@@ -37,22 +43,7 @@ export function getPusher(): Pusher | null {
 }
 
 // ─── Channel & Event Mapping ──────────────────────────────────
-
-const CHANNEL_PREFIX = 'private-im';
-
-/**
- * Get Pusher channel name for a user
- */
-function userChannel(userId: string): string {
-  return `${CHANNEL_PREFIX}-user-${userId}`;
-}
-
-/**
- * Get Pusher channel name for a conversation
- */
-function conversationChannel(convId: string): string {
-  return `${CHANNEL_PREFIX}-conv-${convId}`;
-}
+// 频道名一律来自 lib/im/channels.ts 的单一来源，勿在本文件另起前缀常量。
 
 /**
  * Map server event type to Pusher event name
@@ -118,9 +109,8 @@ export async function authorizePusherSubscription(
   }
 
   // Conversation channel — verify participation
-  const convMatch = channelName.match(/^private-im-conv-(.+)$/);
-  if (convMatch) {
-    const convId = convMatch[1];
+  const convId = parseConversationChannel(channelName);
+  if (convId) {
     const { db } = await import('@/lib/db');
     const participant = await db.conversationParticipant.findUnique({
       where: { conversationId_userId: { conversationId: convId, userId } },
@@ -133,4 +123,39 @@ export async function authorizePusherSubscription(
   }
 
   return null; // Deny
+}
+
+// ─── WebRTC 信令中继 ──────────────────────────────────────────
+
+/**
+ * 把一条 WebRTC 信令投递到**目标用户**的个人频道。
+ *
+ * 为什么必须走服务端：Pusher 的客户端事件（`channel.trigger`）只能发到
+ * **自己已授权**的频道，而鉴权端点只放行「自己的个人频道」这一种自有频道，
+ * 所以「呼叫方 trigger 到被叫方频道」在机制上不可能成立（实测 403）。
+ * 跨用户信令只能由服务端发起 —— 与 IM 消息走 `/api/im/send` 是同一个道理。
+ *
+ * @returns 是否投递成功（Pusher 未配置时返回 false，调用方可据此降级）
+ */
+export async function pushCallSignal(
+  toUserId: string,
+  event: CallSignalEvent,
+  payload: Record<string, unknown>
+): Promise<boolean> {
+  const pusher = getPusher();
+  if (!pusher) {
+    console.warn('[Pusher] Not configured, call signal dropped');
+    return false;
+  }
+
+  try {
+    await pusher.trigger(userChannel(toUserId), event, payload);
+    return true;
+  } catch (error) {
+    console.error(
+      `[Pusher] Failed to push call signal ${event} to ${toUserId}:`,
+      error
+    );
+    return false;
+  }
 }

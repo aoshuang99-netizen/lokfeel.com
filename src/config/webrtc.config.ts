@@ -4,10 +4,47 @@
  */
 
 import { CameraFacingMode } from '@/types/webrtc';
+import { userChannel } from '@/lib/im/channels';
+import { CALL_SIGNAL_EVENTS } from '@/lib/im/call-signal';
 
 // ============================================================================
 // STUN/TURN 服务器配置
 // ============================================================================
+
+/**
+ * 默认 STUN（Google 公共）。可用 `NEXT_PUBLIC_STUN_URLS`（逗号分隔）覆盖。
+ */
+function getStunUrls(): string[] {
+  const override = process.env.NEXT_PUBLIC_STUN_URLS;
+  if (override) {
+    const list = override
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (list.length > 0) return list;
+  }
+  return ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'];
+}
+
+/**
+ * 默认 TURN 端点。可用 `NEXT_PUBLIC_TURN_URLS`（逗号分隔）覆盖，
+ * 便于在不改代码的前提下换用自建 TURN。
+ */
+function getTurnUrls(): string[] {
+  const override = process.env.NEXT_PUBLIC_TURN_URLS;
+  if (override) {
+    const list = override
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (list.length > 0) return list;
+  }
+  return [
+    'turn:turn.metered.ca:80',
+    'turn:turn.metered.ca:443',
+    'turns:turn.metered.ca:443',
+  ];
+}
 
 /**
  * 获取 ICE 服务器配置
@@ -18,20 +55,12 @@ export function getIceServers(): RTCIceServer[] {
   const turnUsername = process.env.NEXT_PUBLIC_TURN_USERNAME || '';
   const turnCredential = process.env.NEXT_PUBLIC_TURN_CREDENTIAL || '';
 
-  const iceServers: RTCIceServer[] = [
-    // Google 公共 STUN 服务器
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-  ];
+  const iceServers: RTCIceServer[] = getStunUrls().map((urls) => ({ urls }));
 
-  // 如果配置了 TURN 服务器，添加到列表
+  // 只有三项都齐备时才追加 TURN —— 缺凭据的 TURN 条目会让 ICE 收集白等一轮。
   if (useTurn && turnUsername && turnCredential) {
     iceServers.push({
-      urls: [
-        'turn:turn.metered.ca:80',
-        'turn:turn.metered.ca:443',
-        'turns:turn.metered.ca:443',
-      ],
+      urls: getTurnUrls(),
       username: turnUsername,
       credential: turnCredential,
     });
@@ -72,22 +101,33 @@ export const VIDEO_CALL_CONFIG = {
 // ============================================================================
 
 export const PUSHER_EVENTS = {
-  VIDEO_CALL_OFFER: 'client-video-call-offer',
-  VIDEO_CALL_ANSWER: 'client-video-call-answer',
-  VIDEO_CALL_DECLINE: 'client-video-call-decline',
-  ICE_CANDIDATE: 'client-ice-candidate',
-  VIDEO_CALL_HANGUP: 'client-video-call-hangup',
-  VIDEO_CALL_TIMEOUT: 'client-video-call-timeout',
+  VIDEO_CALL_OFFER: CALL_SIGNAL_EVENTS.OFFER,
+  VIDEO_CALL_ANSWER: CALL_SIGNAL_EVENTS.ANSWER,
+  VIDEO_CALL_DECLINE: CALL_SIGNAL_EVENTS.DECLINE,
+  ICE_CANDIDATE: CALL_SIGNAL_EVENTS.ICE_CANDIDATE,
+  VIDEO_CALL_HANGUP: CALL_SIGNAL_EVENTS.HANGUP,
+  VIDEO_CALL_TIMEOUT: CALL_SIGNAL_EVENTS.TIMEOUT,
 } as const;
 
 // ============================================================================
 // 频道命名
 // ============================================================================
 
-export const CHANNEL_PREFIX = 'private-user';
+/**
+ * ⚠️ 必须与 Pusher **鉴权白名单**一致，否则订阅会拿到 403。
+ *
+ * 历史缺陷：这里曾是 `'private-user'`，而鉴权端点只放行
+ * `private-im-` 前缀 —— 只差 3 个字符，静态审查极难发现，
+ * 线上表现为视频通话信令频道订阅被拒、通话完全不可用。
+ *
+ * 现在统一从 `lib/im/channels.ts` 取名；该常量保留仅为兼容既有引用，
+ * 取的是完整频道名前缀（含 `-user` 段）。
+ */
+export const CHANNEL_PREFIX = 'private-im-user';
 
+/** 用户个人频道，与 IM 侧 `lib/im/channels.ts` 的 `userChannel` 同源。 */
 export function getUserChannel(userId: string): string {
-  return `${CHANNEL_PREFIX}-${userId}`;
+  return userChannel(userId);
 }
 
 // ============================================================================

@@ -32,6 +32,13 @@ import {
 import { getLocalStream, stopMediaStream } from '@/utils/mediaStream';
 import { PUSHER_EVENTS, getUserChannel } from '@/config/webrtc.config';
 import { getIMPusherClient } from './use-im-pusher';
+import {
+  sendOfferSignal,
+  sendAnswerSignal,
+  sendDeclineSignal,
+  sendIceCandidateSignal,
+  sendHangupSignal,
+} from '@/lib/im/call-signal-client';
 import { useCurrentUser } from '@/hooks/use-auth';
 
 // ============================================================================
@@ -159,87 +166,58 @@ export function useWebRTC(): UseWebRTCResult {
 
   /**
    * 发送 Offer
+   *
+   * ⚠️ 一律走服务端中继 `/api/im/call/signal`，**不要**改回 `channel.trigger`：
+   *    Pusher 客户端事件只能发到自己已授权的频道，而 `/api/im/pusher/auth`
+   *    只为「自己的个人频道」签发授权，因此「呼叫方 trigger 到被叫方频道」
+   *    必然 403（这正是本模块此前通话完全不可用的原因之一）。
    */
-  const sendOfferViaPusher = useCallback(
-    (offer: VideoCallOffer) => {
-      const channel = channelRef.current;
-      if (!channel) {
-        console.error('[useWebRTC] Pusher channel not available');
-        return;
-      }
-
-      console.log('[useWebRTC] Sending offer to:', offer.calleeId);
-      channel.trigger(PUSHER_EVENTS.VIDEO_CALL_OFFER, offer);
-    },
-    []
-  );
+  const sendOfferViaPusher = useCallback((offer: VideoCallOffer) => {
+    console.log('[useWebRTC] Sending offer to:', offer.calleeId);
+    void sendOfferSignal(offer);
+  }, []);
 
   /**
    * 发送 Answer
    */
-  const sendAnswerViaPusher = useCallback(
-    (answer: VideoCallAnswer) => {
-      const channel = channelRef.current;
-      if (!channel) {
-        console.error('[useWebRTC] Pusher channel not available');
-        return;
-      }
-
-      console.log('[useWebRTC] Sending answer to:', answer.callerId);
-      channel.trigger(PUSHER_EVENTS.VIDEO_CALL_ANSWER, answer);
-    },
-    []
-  );
+  const sendAnswerViaPusher = useCallback((answer: VideoCallAnswer) => {
+    console.log('[useWebRTC] Sending answer to:', answer.callerId);
+    void sendAnswerSignal(answer);
+  }, []);
 
   /**
    * 发送 ICE 候选
    */
   const sendIceCandidateViaPusher = useCallback(
     (message: ICECandidateMessage) => {
-      const channel = channelRef.current;
-      if (!channel) {
-        console.error('[useWebRTC] Pusher channel not available');
-        return;
-      }
-
+      if (!userId) return;
       console.log('[useWebRTC] Sending ICE candidate');
-      channel.trigger(PUSHER_EVENTS.ICE_CANDIDATE, message);
+      void sendIceCandidateSignal(message, userId);
     },
-    []
+    [userId]
   );
 
   /**
    * 发送拒绝
    */
-  const sendDeclineViaPusher = useCallback(
-    (decline: VideoCallDecline) => {
-      const channel = channelRef.current;
-      if (!channel) {
-        console.error('[useWebRTC] Pusher channel not available');
-        return;
-      }
-
-      console.log('[useWebRTC] Sending decline to:', decline.callerId);
-      channel.trigger(PUSHER_EVENTS.VIDEO_CALL_DECLINE, decline);
-    },
-    []
-  );
+  const sendDeclineViaPusher = useCallback((decline: VideoCallDecline) => {
+    console.log('[useWebRTC] Sending decline to:', decline.callerId);
+    void sendDeclineSignal(decline);
+  }, []);
 
   /**
    * 发送挂断
    */
   const sendHangupViaPusher = useCallback(
     (hangup: VideoCallHangup) => {
-      const channel = channelRef.current;
-      if (!channel) {
-        console.error('[useWebRTC] Pusher channel not available');
+      if (!userId) {
+        console.warn('[useWebRTC] No current user, hangup not relayed');
         return;
       }
-
       console.log('[useWebRTC] Sending hangup');
-      channel.trigger(PUSHER_EVENTS.VIDEO_CALL_HANGUP, hangup);
+      void sendHangupSignal(hangup, userId);
     },
-    []
+    [userId]
   );
 
   // ============================================================================

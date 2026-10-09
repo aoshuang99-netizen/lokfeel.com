@@ -39,6 +39,27 @@ import { SUBSCRIPTION_PLANS, MATCH_CONFIG } from '@/constants';
 const ROOT = path.resolve(__dirname, '..');
 const read = (rel: string) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
+/**
+ * 读取 Prisma schema 全文。
+ *
+ * schema 已从单文件 `prisma/schema.prisma` 拆分为 `prisma/schema/*.prisma`
+ * （core / bot）。这里读整个目录再拼接：既兼容两种布局，也不会在后续继续
+ * 拆分时静默漏读 —— 漏读的表现是"enum 比对失败"，很容易被误判成
+ * 计划定义本身出了问题，而不是测试读错了文件。
+ */
+const readSchema = (): string => {
+  const dir = path.join(ROOT, 'prisma', 'schema');
+  if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
+    return fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith('.prisma'))
+      .sort()
+      .map((f) => fs.readFileSync(path.join(dir, f), 'utf8'))
+      .join('\n');
+  }
+  return read('prisma/schema.prisma');
+};
+
 /** 历史上三处冲突的定义位置，改造后都必须从单一配置源派生 */
 const DERIVED_SOURCES = [
   'src/constants/index.ts',
@@ -50,7 +71,7 @@ describe('P0-7 订阅计划单一配置源', () => {
   // ── 1. 与数据库枚举对齐 ─────────────────────────────────────────────
   describe('与 prisma schema 的 enum 对齐', () => {
     it('PLAN_IDS 必须与 prisma enum SubscriptionPlan 完全一致', () => {
-      const schema = read('prisma/schema.prisma');
+      const schema = readSchema();
       const matched = schema.match(/enum\s+SubscriptionPlan\s*\{([\s\S]*?)\}/);
       expect(matched).not.toBeNull();
 

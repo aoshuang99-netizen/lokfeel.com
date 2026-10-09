@@ -12,6 +12,8 @@
  * 5. Lifestyle & Logistics Compatibility (15%)
  */
 
+import { normalizeGender } from '@/lib/gender-utils'
+
 // ─── Type Definitions ───────────────────────────────────────────────
 
 interface UserProfile {
@@ -307,10 +309,19 @@ function scoreLifestyle(userA: UserProfile, userB: UserProfile): number {
   if (userB.preferredAgeMin && userA.age < userB.preferredAgeMin) score -= 20;
   if (userB.preferredAgeMax && userA.age > userB.preferredAgeMax) score -= 20;
 
-  // Gender preference check (case-insensitive)
+  // Gender preference check
+  //
+  // ⚠️ 必须经 normalizeGender 归一到同一套词表：库里并存历史 MALE/FEMALE 与
+  // 现行 MAN/WOMAN 两套写法，只做大小写归一的话 `FEMALE` 与 `WOMAN` 会被判为
+  // 不匹配，于是**明明符合偏好的候选人被错误扣 30 分**（静默降权，无报错）。
   if (userA.preferredGender) {
     const pref = userA.preferredGender.toUpperCase();
-    if (pref !== 'ANY' && pref !== 'EVERYONE' && userB.gender && pref !== userB.gender.toUpperCase()) {
+    const isOpenPreference = pref === 'ANY' || pref === 'EVERYONE' || pref === 'ALL';
+    if (
+      !isOpenPreference &&
+      userB.gender &&
+      normalizeGender(userA.preferredGender) !== normalizeGender(userB.gender)
+    ) {
       score -= 30;
     }
   }

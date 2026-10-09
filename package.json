@@ -59,7 +59,10 @@
     "verify:geo": "npx tsx scripts/verify-region-policy.ts",
     "verify:bot": "npx tsx scripts/verify-bot-policy.ts",
     "chat:invariants": "node scripts/chat-merge/check-invariants.js",
-    "netlify:credits": "node scripts/netlify-credit-watch.mjs"
+    "netlify:credits": "node scripts/netlify-credit-watch.mjs",
+    "verify:pusher": "npx tsx scripts/verify-pusher-channels.mts",
+    "verify:oauth": "npx tsx scripts/verify-oauth-redirect-uri.mts",
+    "verify:gender": "npx tsx scripts/verify-gender-vocab.mts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

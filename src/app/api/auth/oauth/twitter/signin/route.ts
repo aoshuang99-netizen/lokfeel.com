@@ -17,6 +17,7 @@ import {
   generateCodeChallenge,
   generateCodeVerifier,
   getTwitterConfig,
+  twitterCallbackUrl,
 } from "@/lib/auth/twitter-oauth";
 import { publicOriginOf } from "@/lib/http/public-origin";
 
@@ -46,7 +47,6 @@ export async function GET(request: NextRequest) {
   const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/dashboard";
 
   console.log("[Twitter OAuth Signin] Callback URL:", callbackUrl);
-  console.log("[Twitter OAuth Signin] Redirect URI (for Twitter):", `${publicOrigin}/api/auth/twitter/callback`);
 
   // Generate PKCE
   const codeVerifier = generateCodeVerifier();
@@ -59,11 +59,11 @@ export async function GET(request: NextRequest) {
 
   console.log("[Twitter OAuth Signin] Generated state:", state);
 
-  // Build the redirect URI (where Twitter will send the user back)
-  // This MUST match the actual route path and Twitter Developer Portal configuration
-  // Use NEXT_PUBLIC_APP_URL to ensure correct domain in production
-  const baseUrl = publicOrigin;
-  const redirectUri = `${baseUrl}/api/auth/oauth/twitter/callback`;
+  // Build the redirect URI (where Twitter will send the user back).
+  // ⚠️ 必须与回调侧换取令牌时使用的 redirect_uri **完全一致**（RFC 6749 §4.1.3），
+  //    因此两侧都经 twitterCallbackUrl() 取值，切勿在此手拼路径。
+  const redirectUri = twitterCallbackUrl(publicOrigin);
+  console.log("[Twitter OAuth Signin] Redirect URI (for Twitter):", redirectUri);
 
   // Build Twitter authorization URL
   const twitterAuthUrl = buildAuthorizationUrl({

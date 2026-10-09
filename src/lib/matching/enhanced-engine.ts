@@ -21,7 +21,7 @@
  */
 
 import { calculateMatchScore as baseCalculateMatchScore, UserProfile as BaseUserProfile, MatchScore as BaseMatchScore } from './engine'
-import { isMaleGender, isFemaleGender } from '@/lib/gender-utils'
+import { isMaleGender, isFemaleGender, normalizeGender } from '@/lib/gender-utils'
 
 // ═══════════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
@@ -870,11 +870,21 @@ export function findTopEnhancedMatches(
   botPrefs?: BotPreferenceVector,
   collectiveIntel?: CollectiveIntelligenceStore
 ): Array<{ profile: EnhancedUserProfile; score: EnhancedMatchScore }> {
-  // Normalize preferredGender for case-insensitive comparison
-  const normalizeGenderPref = (g: string | null | undefined, target: string | null | undefined): boolean => {
-    if (!g || g.toUpperCase() === 'ANY' || g.toUpperCase() === 'EVERYONE') return true;
-    if (!target) return true;
-    return g.toUpperCase() === target.toUpperCase();
+  // 性别偏好过滤。
+  //
+  // ⚠️ 必须经 `normalizeGender` 归一到同一套词表再比，**不能**只做大小写归一：
+  // 库里并存两套词表（历史 MALE/FEMALE 与现行 MAN/WOMAN），
+  // 直接比较会让 `FEMALE` 与 `WOMAN` 判定为不同 → 候选人被**静默丢弃**，
+  // 表现为"明明符合偏好的人却不出现在发现页"，且全程没有任何报错。
+  const normalizeGenderPref = (
+    pref: string | null | undefined,
+    target: string | null | undefined
+  ): boolean => {
+    if (!pref) return true
+    const p = pref.toUpperCase()
+    if (p === 'ANY' || p === 'EVERYONE' || p === 'ALL') return true
+    if (!target) return true
+    return normalizeGender(pref) === normalizeGender(target)
   };
 
   const scored = candidates

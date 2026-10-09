@@ -19,6 +19,14 @@ import {
 } from '@/types/webrtc';
 import { PUSHER_EVENTS, getUserChannel } from '@/config/webrtc.config';
 import { getIMPusherClient } from './use-im-pusher';
+import {
+  sendOfferSignal,
+  sendAnswerSignal,
+  sendDeclineSignal,
+  sendIceCandidateSignal,
+  sendHangupSignal,
+  sendTimeoutSignal,
+} from '@/lib/im/call-signal-client';
 
 // ============================================================================
 // Pusher 客户端（复用现有的 IM Pusher 客户端）
@@ -214,108 +222,50 @@ export function usePusherSignaling(
 
   // ============================================================================
   // 发送信令
+  //
+  // ⚠️ 一律走服务端中继 `/api/im/call/signal`，**不要**改回 `channel.trigger`：
+  //    Pusher 客户端事件只能发到自己已授权的频道，而鉴权端点只为「自己的个人
+  //    频道」签发授权，所以「呼叫方 trigger 到被叫方频道」必然 403。
   // ============================================================================
 
-  /**
-   * 发送 Offer
-   */
   const sendOffer = useCallback((offer: VideoCallOffer) => {
-    const pusher = pusherRef.current;
-    if (!pusher) {
-      console.error('[PusherSignaling] Pusher not connected');
-      return;
-    }
-
     console.log('[PusherSignaling] Sending offer to:', offer.calleeId);
-    
-    // 通过对方的频道发送（trigger 到 private-user-{calleeId}）
-    // 注意：Pusher 客户端事件只能发送到同一频道，所以需要对方也订阅自己的频道
-    // 简化方案：双方都订阅 private-user-{userId}，通过事件 payload 中的 calleeId 来区分接收方
-    const channel = pusher.channel(getVideoCallChannel(offer.calleeId));
-    if (channel) {
-      channel.trigger(PUSHER_EVENTS.VIDEO_CALL_OFFER, offer);
-    } else {
-      console.warn('[PusherSignaling] Target channel not found, using current channel');
-      userChannelRef.current?.trigger(PUSHER_EVENTS.VIDEO_CALL_OFFER, offer);
-    }
+    void sendOfferSignal(offer);
   }, []);
 
-  /**
-   * 发送 Answer
-   */
   const sendAnswer = useCallback((answer: VideoCallAnswer) => {
-    const pusher = pusherRef.current;
-    if (!pusher) {
-      console.error('[PusherSignaling] Pusher not connected');
-      return;
-    }
-
     console.log('[PusherSignaling] Sending answer to:', answer.callerId);
-    
-    userChannelRef.current?.trigger(PUSHER_EVENTS.VIDEO_CALL_ANSWER, answer);
+    void sendAnswerSignal(answer);
   }, []);
 
-  /**
-   * 发送拒绝
-   */
   const sendDecline = useCallback((decline: VideoCallDecline) => {
-    const pusher = pusherRef.current;
-    if (!pusher) {
-      console.error('[PusherSignaling] Pusher not connected');
-      return;
-    }
-
     console.log('[PusherSignaling] Sending decline to:', decline.callerId);
-    
-    userChannelRef.current?.trigger(PUSHER_EVENTS.VIDEO_CALL_DECLINE, decline);
+    void sendDeclineSignal(decline);
   }, []);
 
-  /**
-   * 发送 ICE 候选
-   */
-  const sendIceCandidate = useCallback((message: ICECandidateMessage) => {
-    const pusher = pusherRef.current;
-    if (!pusher) {
-      console.error('[PusherSignaling] Pusher not connected');
-      return;
-    }
+  const sendIceCandidate = useCallback(
+    (message: ICECandidateMessage) => {
+      if (!userId) return;
+      void sendIceCandidateSignal(message, userId);
+    },
+    [userId]
+  );
 
-    // 判断是发起方还是接收方
-    const targetUserId = message.callerId === userId ? message.calleeId : message.callerId;
-    
-    console.log('[PusherSignaling] Sending ICE candidate to:', targetUserId);
-    
-    userChannelRef.current?.trigger(PUSHER_EVENTS.ICE_CANDIDATE, message);
-  }, [userId]);
+  const sendHangup = useCallback(
+    (hangup: VideoCallHangup) => {
+      if (!userId) {
+        console.warn('[PusherSignaling] No current user, hangup not relayed');
+        return;
+      }
+      console.log('[PusherSignaling] Sending hangup');
+      void sendHangupSignal(hangup, userId);
+    },
+    [userId]
+  );
 
-  /**
-   * 发送挂断
-   */
-  const sendHangup = useCallback((hangup: VideoCallHangup) => {
-    const pusher = pusherRef.current;
-    if (!pusher) {
-      console.error('[PusherSignaling] Pusher not connected');
-      return;
-    }
-
-    console.log('[PusherSignaling] Sending hangup');
-    
-    userChannelRef.current?.trigger(PUSHER_EVENTS.VIDEO_CALL_HANGUP, hangup);
-  }, []);
-
-  /**
-   * 发送超时
-   */
   const sendTimeout = useCallback((timeout: VideoCallTimeout) => {
-    const pusher = pusherRef.current;
-    if (!pusher) {
-      console.error('[PusherSignaling] Pusher not connected');
-      return;
-    }
-
     console.log('[PusherSignaling] Sending timeout');
-    
-    userChannelRef.current?.trigger(PUSHER_EVENTS.VIDEO_CALL_TIMEOUT, timeout);
+    void sendTimeoutSignal(timeout);
   }, []);
 
   // ============================================================================

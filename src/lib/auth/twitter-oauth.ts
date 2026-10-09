@@ -180,6 +180,42 @@ export async function fetchUserInfo(accessToken: string): Promise<TwitterUserInf
   };
 }
 
+// ─── Callback URL（单一来源） ───
+
+/**
+ * Twitter 回调路径的**单一来源**。
+ *
+ * 为什么必须收敛：授权请求里的 `redirect_uri` 与换取令牌时的 `redirect_uri`
+ * 按 RFC 6749 §4.1.3 **必须完全一致**，否则 Twitter 会拒绝换取令牌，
+ * 而且报错发生在用户**已经点完授权之后** —— 表现为"授权成功却登录失败"，
+ * 极易被误判成网络或 scope 问题。
+ *
+ * 本仓库历史上有多处各自拼接 `redirect_uri`，其中
+ * `/api/auth/twitter/signin` 授权时声明的是 `/api/auth/oauth/twitter/callback`，
+ * 而它最终落到的那条回调换取令牌时却用了 `/api/auth/twitter/callback`
+ * —— 两者不一致，该链路**永远换不到令牌**。
+ *
+ * 现在所有拼接都经本函数。若要与 Twitter 开发者后台登记的地址对齐，
+ * 只需设置环境变量 `TWITTER_OAUTH_CALLBACK_PATH`（例如
+ * `/api/auth/twitter/callback`），无需改代码。
+ */
+export const DEFAULT_TWITTER_CALLBACK_PATH = '/api/auth/oauth/twitter/callback';
+
+/** 解析当前生效的 Twitter 回调路径（env 优先；非法值静默回落默认）。 */
+export function twitterCallbackPath(): string {
+  const raw = process.env.TWITTER_OAUTH_CALLBACK_PATH?.trim();
+  if (raw && raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  return DEFAULT_TWITTER_CALLBACK_PATH;
+}
+
+/**
+ * 拼出完整的 Twitter 回调 URL。
+ * 授权请求与换取令牌**都必须**用这一个函数的结果。
+ */
+export function twitterCallbackUrl(baseUrl: string): string {
+  return `${baseUrl.replace(/\/+$/, '')}${twitterCallbackPath()}`;
+}
+
 // ─── Config validation ───
 
 export function getTwitterConfig(): { clientId: string; clientSecret: string; valid: boolean } {

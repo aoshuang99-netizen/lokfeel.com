@@ -23,6 +23,7 @@ import { db } from "@/lib/db";
 import { encode } from "next-auth/jwt";
 import { isSafeRedirect } from "@/lib/auth/safe-redirect";
 import { publicOriginOf } from "@/lib/http/public-origin";
+import { twitterCallbackUrl } from "@/lib/auth/twitter-oauth";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +88,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Step 4: Exchange code for access token
-    const redirectUri = `${publicOrigin}/api/auth/twitter/callback`;
+    // ⚠️ 必须与授权请求里的 redirect_uri **完全一致**（RFC 6749 §4.1.3），
+    //    否则 Twitter 拒绝换取令牌。两侧统一经 twitterCallbackUrl() 取值。
+    const redirectUri = twitterCallbackUrl(publicOrigin);
 
     console.log("[Twitter OAuth Callback] Redirect URI (for token exchange):", redirectUri);
 

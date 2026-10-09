@@ -30,21 +30,30 @@ import type {
 
 const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY || "";
 const PUSHER_CLUSTER = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "us3"; // BUG-627: align default with server (pusher.ts)
-const USE_PUSHER = process.env.NEXT_PUBLIC_USE_PUSHER === "true";
+
+/**
+ * 实时通道总开关 —— 语义是**可关闭（opt-out）**，不是「可选开启」。
+ *
+ * 唯一真实判据是「Pusher 是否已配置」：下面 `getIMPusherClient()` 里
+ * `PUSHER_KEY` 为空时本来就会返回 null，所以这里不需要再做一次 opt-in。
+ *
+ * ⚠️ 历史缺陷（2026-10 修复）：曾经必须显式设 `NEXT_PUBLIC_USE_PUSHER=true`
+ * 才启用。生产上 Pusher 四个变量（APP_ID/KEY/SECRET/CLUSTER）全都在、
+ * **单单漏了这一个开关**，于是 `getIMPusherClient()` 恒返回 null ——
+ * IM 实时消息与视频通话信令一起静默失效，而且因为"Pusher 变量都在"，
+ * 很容易被误判成"已配置"。
+ *
+ * 把「是否已配置」和「是否启用」拆成两个独立判据，只会制造这种不一致。
+ * 需要临时关停（自托管、排障、控制 Pusher 用量）时，显式设
+ * `NEXT_PUBLIC_USE_PUSHER=false` 即可。
+ */
+const USE_PUSHER = process.env.NEXT_PUBLIC_USE_PUSHER !== "false";
 
 // ============================================================================
-// Channel Naming
+// Channel Naming —— 唯一来源见 lib/im/channels.ts，勿在此另起前缀常量
 // ============================================================================
 
-const CHANNEL_PREFIX = "private-im";
-
-function userChannel(userId: string): string {
-  return `${CHANNEL_PREFIX}-user-${userId}`;
-}
-
-function conversationChannel(convId: string): string {
-  return `${CHANNEL_PREFIX}-conv-${convId}`;
-}
+import { userChannel, conversationChannel } from "@/lib/im/channels";
 
 // ============================================================================
 // Pusher Client Singleton
