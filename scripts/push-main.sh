@@ -9,9 +9,15 @@
 #       ls-remote（只读 GET）却成功
 #   于是表现为「能拉不能推」这种极具迷惑性的现象，容易被误判成「本机没代理/被墙」。
 #
-# 本脚本依次尝试两条通道，任一成功即退出：
-#   ① 清掉沙箱注入的 proxy 变量后直连（已实测可推）
-#   ② 回退到本机代理客户端（默认 10808 = v2rayN 内嵌 xray 的混合端口）
+# 本脚本依次尝试两条通道，任一成功即退出（顺序由 10-09 四组对照实测确定）：
+#   ① 走本机代理客户端（默认 10808 = v2rayN 内嵌 xray 的混合端口）
+#      —— `git -c http.proxy=...` **优先于**环境变量，无需清变量，实测稳定 exit=0
+#   ② 代理未监听时回退直连（清掉沙箱注入的 proxy 变量）
+#      —— 实测时通时断（Empty reply from server），仅作兜底
+#
+# 实测对照（10-09）：
+#   A 继承沙箱 56834、不带 -c              → ❌ CONNECT tunnel failed
+#   B 继承沙箱 56834 + -c http.proxy=10808 → ✅ exit=0  ← 证明 config 覆盖 env
 #
 # 注意：本脚本只做推送，不修改提交内容；推送是否触发 Netlify 构建取决于
 #       提交信息里有没有 [skip netlify]。
@@ -37,28 +43,29 @@ clean_env() {
 echo "== 推送 origin/${BRANCH} =="
 echo
 
-echo "① 直连（清掉沙箱注入的 HTTP(S)_PROXY）…"
+if nc -z -G 2 127.0.0.1 "$PORT" 2>/dev/null; then
+  echo "① 走本机代理 127.0.0.1:${PORT}（-c http.proxy 覆盖环境变量）…"
+  git -c "http.proxy=http://127.0.0.1:${PORT}" push origin "$BRANCH" > "$LOG" 2>&1
+  rc=$?
+  tail -6 "$LOG"
+  if [ "$rc" -eq 0 ]; then
+    echo "✅ 通道① 经代理推送成功"
+    exit 0
+  fi
+  echo
+else
+  echo "① 本机 127.0.0.1:${PORT} 无监听 → 跳过代理通道"
+  echo "   （启动 v2rayN / Clash Verge；或用 LOKFEEL_PROXY_PORT 指定实际端口）"
+  echo
+fi
+
+echo "② 回退：清掉沙箱注入的 HTTP(S)_PROXY 后直连…"
 clean_env git push origin "$BRANCH" > "$LOG" 2>&1
 rc=$?
 tail -6 "$LOG"
 if [ "$rc" -eq 0 ]; then
-  echo "✅ 通道① 直连推送成功"
+  echo "✅ 通道② 直连推送成功"
   exit 0
-fi
-
-echo
-if nc -z -G 2 127.0.0.1 "$PORT" 2>/dev/null; then
-  echo "② 直连失败，回退走本机代理 127.0.0.1:${PORT} …"
-  clean_env git -c "http.proxy=http://127.0.0.1:${PORT}" push origin "$BRANCH" > "$LOG" 2>&1
-  rc=$?
-  tail -6 "$LOG"
-  if [ "$rc" -eq 0 ]; then
-    echo "✅ 通道② 经代理推送成功"
-    exit 0
-  fi
-else
-  echo "② 本机 127.0.0.1:${PORT} 无监听 → 代理客户端未启动，跳过回退"
-  echo "   （启动 v2rayN / Clash Verge 后重跑本脚本，或用 LOKFEEL_PROXY_PORT 指定实际端口）"
 fi
 
 echo
