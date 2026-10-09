@@ -83,3 +83,8 @@ cloudflare-env.d.ts
 
 # QA 清理脚本的自动备份（含用户数据，不入库）
 .qa-cleanup-backup-*.json
+
+# Cloudflare Realtime TURN Key 备份（正常运行落在 ~/.lokfeel-turn-keys/，
+# 这里防的是有人误把它拷进仓库 —— 含机密，一旦入库等于永久泄露）
+.lokfeel-turn-keys/
+.turn-key-*.json

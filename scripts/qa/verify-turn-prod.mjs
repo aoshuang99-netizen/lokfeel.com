@@ -21,6 +21,12 @@ import { QA_PASSWORD } from './qa-credentials.mjs';
 const BASE = process.env.QA_BASE || 'https://app.lokfeel.com';
 const CONV = process.env.QA_CONV;
 const MALE = 'qa.male@lokfeel.com';
+/**
+ * 期望的下发来源（可选）。**不设 = 跳过该断言**（向后兼容，不改变既有行为）。
+ * 例：路径 C 激活后 `QA_EXPECT_ICE_SOURCE=cloudflare-realtime`，
+ * 用于确认新来源真的生效，而不是仍在吃兜底。
+ */
+const EXPECT_SOURCE = process.env.QA_EXPECT_ICE_SOURCE || '';
 
 const results = [];
 function check(name, ok, detail = '') {

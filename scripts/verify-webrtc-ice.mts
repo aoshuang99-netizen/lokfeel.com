@@ -46,6 +46,7 @@ function ok(name: string, cond: boolean, extra?: unknown): void {
 const read = (rel: string) => fs.readFileSync(path.join(SRC, rel), 'utf8');
 
 const ROUTE = 'app/api/rtc/ice-servers/route.ts';
+const SOURCES = 'lib/rtc/ice-sources.ts';
 const CLIENT = 'lib/rtc/ice-servers-client.ts';
 const CONFIG = 'config/webrtc.config.ts';
 const UTILS = 'utils/webrtc.ts';
@@ -55,24 +56,88 @@ const HOOK = 'hooks/useWebRTC.ts';
 
 console.log('\nA. 关键文件存在');
 
-for (const rel of [ROUTE, CLIENT, CONFIG, UTILS, HOOK]) {
+for (const rel of [ROUTE, SOURCES, CLIENT, CONFIG, UTILS, HOOK]) {
   ok(`${rel} 存在`, fs.existsSync(path.join(SRC, rel)));
 }
 
-// ─── B. 服务端端点：鉴权 / 超时 / 形状校验 / 三级降级 / 缓存 ──────────
+// ─── B. 路由：薄层（鉴权 / 缓存 / 委派） ─────────────────────────────
 
-console.log('\nB. 服务端端点结构（/api/rtc/ice-servers）');
+console.log('\nB. 路由结构（/api/rtc/ice-servers，应只是薄层）');
 
 const route = read(ROUTE);
 
 ok('需要登录态（requireAuth）', /requireAuth\(\)/.test(route));
 ok('未登录返回 401', /status:\s*401/.test(route));
-ok('上游请求有超时（AbortSignal.timeout）', /AbortSignal\.timeout\(\s*\d+\s*\)/.test(route));
-ok('上游响应做形状校验（宁退 STUN 不喂坏配置）', /function parseCloudflare/.test(route) && /typeof o\.username !== 'string'/.test(route));
-ok('三级来源：静态覆写 / Cloudflare / 仅 STUN', /'static'/.test(route) && /'cloudflare'/.test(route) && /'stun-only'/.test(route));
-ok('上游异常被吞掉并降级（不冒泡成 500）', /catch\s*\(err\)/.test(route) && /stun-only/.test(route));
-ok('有服务端缓存（避免每次通话都打上游）', /CACHE_TTL_MS/.test(route) && /cache\s*=\s*\{\s*at:/.test(route));
-ok('static 覆写读的是服务端变量（TURN_*，非 NEXT_PUBLIC_*）', /process\.env\.TURN_URLS/.test(route) && !/NEXT_PUBLIC_TURN_CREDENTIAL/.test(route));
+ok('有服务端缓存（避免每次通话都打上游）', /cache\s*=\s*\{\s*at:/.test(route) && /Date\.now\(\)\s*<\s*cache\.at/.test(route));
+ok('缓存命中/未命中可观测（x-ice-cache）', /x-ice-cache/.test(route) && /'hit'/.test(route) && /'miss'/.test(route));
+ok('来源解析已委派给 lib/rtc/ice-sources（路由不再内联上游逻辑）',
+  /resolveIceServers/.test(route) && !/speed\.cloudflare\.com/.test(route));
+
+// ─── B2. 来源模块：四级优先级 / 超时 / 形状校验 / 降级 ────────────────
+
+console.log('\nB2. 来源模块结构（lib/rtc/ice-sources.ts）');
+
+const sources = read(SOURCES);
+
+ok('上游请求有超时（AbortSignal.timeout）', /AbortSignal\.timeout\(\s*[\w.]+\s*\)/.test(sources));
+ok('四个来源齐备：static / cloudflare-realtime / cloudflare / stun-only',
+  /'static'/.test(sources) &&
+    /'cloudflare-realtime'/.test(sources) &&
+    /'cloudflare'/.test(sources) &&
+    /'stun-only'/.test(sources));
+ok('上游异常被吞掉并降级（不冒泡成 500）', (sources.match(/catch\s*\(err\)/g) || []).length >= 2 && /stun-only/.test(sources));
+ok('static 覆写读的是服务端变量（TURN_*，非 NEXT_PUBLIC_*）',
+  /process\.env\.TURN_URLS/.test(sources) && !/NEXT_PUBLIC_TURN_CREDENTIAL/.test(sources));
+ok('Realtime 读的是服务端变量（TURN_TOKEN_ID / TURN_API_TOKEN）',
+  /process\.env\.TURN_TOKEN_ID/.test(sources) && /process\.env\.TURN_API_TOKEN/.test(sources) &&
+    !/NEXT_PUBLIC_TURN_TOKEN/.test(sources) && !/NEXT_PUBLIC_TURN_API_TOKEN/.test(sources));
+/**
+ * 端点归属：签发走 Realtime 数据面（rtc.live.cloudflare.com），
+ * 而不是控制面 api.cloudflare.com —— 后者只在**一次性创建 Key** 时用
+ * （`scripts/setup-cloudflare-turn.mjs`），绝不该出现在运行时热路径上。
+ * 断言精确匹配常量与 fetch 实参，避免被注释里的域名误命中。
+ */
+const realtimeUrl = sources.match(/CF_REALTIME_KEYS_URL\s*=\s*'([^']+)'/);
+ok('Realtime 签发端点指向 rtc.live.cloudflare.com（数据面）',
+  !!realtimeUrl && realtimeUrl[1].startsWith('https://rtc.live.cloudflare.com/'),
+  realtimeUrl ? realtimeUrl[1] : '(未找到常量)');
+ok('控制面 api.cloudflare.com 未出现在运行时 fetch 路径上',
+  !/fetch\(\s*[`'"]https:\/\/api\.cloudflare\.com/.test(sources));
+ok('签发请求走 POST 且带 ttl', /method:\s*'POST'/.test(sources) && /ttl:\s*CF_REALTIME_TTL_SECONDS/.test(sources));
+
+/**
+ * 优先级顺序：static → cloudflare-realtime → cloudflare(speed) → stun-only。
+ *
+ * 机械判据：在 `resolveIceServers` 的**函数体内**，三个来源调用的出现次序
+ * 必须与上面一致。重排会静默降级（上游挂了就不再看静态配置），必须钉死。
+ */
+const resolveBody = sources.slice(sources.indexOf('export async function resolveIceServers'));
+const iStatic = resolveBody.indexOf('staticTurn()');
+const iRealtime = resolveBody.indexOf('cloudflareRealtimeTurn()');
+const iSpeed = resolveBody.indexOf('cloudflareSpeedTurn()');
+ok('来源优先级为 static → cloudflare-realtime → cloudflare(speed) → stun-only',
+  iStatic > -1 && iRealtime > iStatic && iSpeed > iRealtime,
+  `static@${iStatic} realtime@${iRealtime} speed@${iSpeed}`);
+ok('resolveIceServers 放在文件末尾（保证上面的顺序断言只看函数体）',
+  sources.lastIndexOf('export async function resolveIceServers') > sources.lastIndexOf('async function cloudflareSpeedTurn'));
+
+/**
+ * 凭据 TTL 必须明显大于缓存期，否则「缓存命中的客户端拿到已失效凭据」→
+ * 配置里有 TURN 却拿不到 relay，且无任何报错。
+ */
+const ttlMatch = sources.match(/CF_REALTIME_TTL_SECONDS\s*=\s*(\d+)/);
+const cacheMatch = sources.match(/CACHE_TTL_MS\s*=\s*(\d+(?:\s*\*\s*\d+)*)/);
+ok('凭据 TTL 与缓存期均被显式定义', !!ttlMatch && !!cacheMatch);
+if (ttlMatch && cacheMatch) {
+  const ttlSec = Number(ttlMatch[1]);
+  const cacheMs = cacheMatch[1]
+    .split('*')
+    .map((s) => Number(s.trim()))
+    .reduce((a, b) => a * b, 1);
+  ok('凭据 TTL > 2× 缓存期（防「缓存命中却凭据失效」）',
+    ttlSec * 1000 > cacheMs * 2,
+    `${ttlSec}s vs ${cacheMs}ms`);
+}
 
 // ─── C. 客户端加载器：并发合并 / 兜底 / 形状清洗 ────────────────────
 
@@ -109,6 +174,29 @@ const publicTurnCred = /NEXT_PUBLIC_TURN_(USERNAME|CREDENTIAL)\s*!==?\s*['"]/;
 ok('配置里没有把 TURN 凭据当默认方案（仅作兼容注释保留）',
   !/process\.env\.NEXT_PUBLIC_TURN_CREDENTIAL\s*\|\|\s*['"][^'"]+['"]/.test(read(CONFIG)));
 ok('（自检）凭据隔离检测式可用', publicTurnCred.test("process.env.NEXT_PUBLIC_TURN_USERNAME !== ''"));
+
+/** 递归拼接 src 下所有 TS 文件内容，用于**跨文件**扫描（单文件正则会被搬到别处绕过）。 */
+function readAll(dir: string): string {
+  const out: string[] = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) out.push(readAll(p));
+    else if (/\.(ts|tsx)$/.test(e.name)) out.push(fs.readFileSync(p, 'utf8'));
+  }
+  return out.join('\n');
+}
+
+const allSrc = readAll(SRC);
+
+/**
+ * 本轮新引入的两个机密（TURN_TOKEN_ID / TURN_API_TOKEN）**只允许**走服务端命名空间。
+ * 一旦有人图省事写成 NEXT_PUBLIC_*，凭据会永久内联进前端 bundle：
+ * 任何人打开 DevTools 都能拿到，中继账单变成别人在花，且**改 env 也撤不回已发布的包**。
+ */
+ok('Realtime 机密未进入 NEXT_PUBLIC_* 命名空间（全 src 扫描）',
+  !/NEXT_PUBLIC_TURN_(API_TOKEN|TOKEN_ID)/.test(allSrc));
+ok('签发端点未出现在任何客户端模块（只允许留在服务端来源模块）',
+  ![CLIENT, CONFIG, UTILS, HOOK].some((f) => /rtc\.live\.cloudflare\.com/.test(read(f))));
 
 // ─── F. 运行时：失败路径必须降级，不得抛错 ──────────────────────────
 

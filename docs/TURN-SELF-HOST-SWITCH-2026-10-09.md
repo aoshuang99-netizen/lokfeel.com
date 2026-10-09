@@ -13,6 +13,7 @@
 | Netlify account slug | `aoshuang99`（环境变量全部为 **site 级**，账户级 0 条） |
 | `NEXT_PUBLIC_ENABLE_VIDEO_CALL` | `1` ✓（视频通话入口已开放） |
 | `TURN_URLS` / `TURN_USERNAME` / `TURN_CREDENTIAL` | **未设** → 当前 `source = 'cloudflare'` |
+| `TURN_TOKEN_ID` / `TURN_API_TOKEN` | **未设**（路径 C 代码已就位但休眠中）；配置后 `source` 变为 `'cloudflare-realtime'` |
 | 兜底端点 | `speed.cloudflare.com/turn-creds`（免凭据，1000 GB/月免费） |
 | 链路 | `GET /api/rtc/ice-servers`（登录态签发）→ 前端 `loadIceServers()` 预取缓存 |
 
@@ -27,10 +28,10 @@
 | **现状** Cloudflare speed 端点 | 免费 1000 GB/月 | ✗ | 短时（10 min 缓存） | 当前，够用但无合同保障 |
 | **A. 自建 coturn** | VPS 包月带宽（Hetzner/OVH 系 ~$5–50/月含数十 TB） | ✗ | 长期静态 | 量大、且愿意运维 |
 | **B. 托管静态凭据** Metered / Xirsys / Twilio NTS | Metered ~$99/150 GB；Twilio NTS ~$0.40/GB | ✗ | 长期静态 | 量小、不想运维 |
-| **C. Cloudflare Realtime TURN** | **$0.05/GB，前 1000 GB/月免费** | ✅ 约 30 行 | 短时（API 签发） | **推荐终局**：最省 + 有合同 + 全球 anycast |
+| **C. Cloudflare Realtime TURN** | **$0.05/GB，前 1000 GB/月免费** | ✅ **已实现**（2026-10-09） | 短时（API 签发） | **推荐终局**：最省 + 有合同 + 全球 anycast |
 
 > A / B 走**现成的三条 env**，零代码改动 → 本文档第 3、4 节。
-> C 需要一小段代码（第 5 节），但成本与稳定性都优于 A/B。
+> C 的代码已在仓库中且已发布（第 5 节），**激活只需配置一个 Key（一条命令）**。
 
 ---
 
@@ -174,40 +175,69 @@ done
 
 ---
 
-## 5. 路径 C：Cloudflare Realtime TURN（推荐终局，需 ~30 行代码）
+## 5. 路径 C：Cloudflare Realtime TURN（推荐终局 —— **代码已就位，只差一个 Key**）
 
-### 5.1 控制台准备
+> **2026-10-09 更新**：来源分支与一键开通脚本已落地并发布。生产当前处于
+> 「未配置 → 自动降级到 speed 兜底」的**休眠态**，对外行为与改造前逐字一致。
+> 激活只需 §5.1 一条命令 —— **不需要再改任何代码、也不需要再改任何测试**。
 
-Cloudflare Dashboard → **Realtime** → **TURN** → 新建 TURN Key，得到：
-- `TURN_TOKEN_ID`（Key ID，非机密）
-- `TURN_API_TOKEN`（API Token，**机密**）
+### 5.1 开通（一条命令）
 
-### 5.2 凭据签发接口
+前置：CF 面板建一个 API Token，权限 **Account → Cloudflare Calls: Edit**；
+Account ID 在 CF 面板右侧栏可见。
 
-```
-POST https://rtc.live.cloudflare.com/v1/turn/keys/{TURN_TOKEN_ID}/credentials/generate
-Authorization: Bearer {TURN_API_TOKEN}
-Content-Type: application/json
+```bash
+cd nexus-app
 
-{"ttl": 86400}
-```
+# ① 干跑：验证权限 + 试签发 + 真实 Chrome relay 验证，**不写任何生产配置**
+CF_ACCOUNT_ID=<id> CF_API_TOKEN=<token> npm run turn:setup:dry
 
-返回体形状与现有 `IceServersResponse` 兼容（`{ iceServers: { urls, username, credential } }`，注意**不是数组**，需要适配）。
+# ② 正式：创建 Key → 预检 → 写生产 env → 回读
+CF_ACCOUNT_ID=<id> CF_API_TOKEN=<token> NETLIFY_TOKEN=<ntoken> npm run turn:setup
 
-### 5.3 代码改动点（唯一一处）
-
-`src/app/api/rtc/ice-servers/route.ts` 的 `build()`，在 `staticTurn()` 之后、Cloudflare speed 端点之前插入一级来源：
-
-```
-1.   staticTurn()                        ← TURN_URLS 三条 env（路径 A/B）
-1.5  cloudflareRealtimeTurn()   ← 【新增】TURN_TOKEN_ID + TURN_API_TOKEN
-2.   speed.cloudflare.com/turn-creds     ← 现有兜底
-3.   仅 STUN                             ← 不失败
+# ③ 回滚（删除两个 env，自动回到 speed 兜底，代码不用动）
+NETLIFY_TOKEN=<ntoken> npm run turn:rollback
 ```
 
-新增 env：`TURN_TOKEN_ID`、`TURN_API_TOKEN`（均为**服务端**，不带 `NEXT_PUBLIC_`）。给出凭据时应把 `ttl` 设到与 `CACHE_TTL_MS` 匹配或更长，避免缓存期外凭据失效。
+脚本的**强制顺序**：创建 Key → 真实签发凭据 → 喂给 `verify-turn-candidate.mjs`
+（真实 Chrome，必须收集到 `relay`）→ **通过才写 Netlify env**。理由见 §5.3。
 
-### 5.4 端口（Cloudflare Realtime TURN）
+Key 的 API Token 只在创建时返回一次，脚本会落盘到 `~/.lokfeel-turn-keys/<uid>.json`（600 权限）。
+
+### 5.2 已实现的代码位置
+
+| 位置 | 内容 |
+|---|---|
+| `src/lib/rtc/ice-sources.ts` | `cloudflareRealtimeTurn()` + `parseCfRealtime()`，四级来源汇总 `resolveIceServers()` |
+| `src/app/api/rtc/ice-servers/route.ts` | 薄层：鉴权 → 缓存 → 委派（上游逻辑已全部下沉） |
+| `tests/webrtc/ice-sources.test.ts` | 31 条单测：四级优先级、全部降级路径、三种响应形态 |
+| `scripts/verify-webrtc-ice.mts` | 门禁 42 条（含「优先级顺序」与「凭据不进 bundle」的机械断言） |
+| `scripts/setup-cloudflare-turn.mjs` | 一键开通 / 干跑 / 回滚 |
+
+**优先级（顺序即不变量，勿重排）**：
+
+```
+1. staticTurn()              ← TURN_URLS 三条 env（路径 A/B），代表运维显式意图
+2. cloudflareRealtimeTurn()  ← TURN_TOKEN_ID + TURN_API_TOKEN     【路径 C】
+3. cloudflareSpeedTurn()     ← speed.cloudflare.com/turn-creds     免注册兜底
+4. 仅 STUN                   ← 上游全挂也不失败
+```
+
+`parseCfRealtime()` 兼容三种响应形态（`{iceServers:{…}}` / `{iceServers:[…]}` / `{…}`），
+并**保留混入的 `stun:` 条目** —— WebRTC 允许一个 `iceServer` 混合 stun/turn，凭据只作用于 turn 那几条。
+
+### 5.3 为什么开通脚本必须先跑预检
+
+TURN 在 ICE 里的语义是「**有则用、无则降级**」，但这个降级只对**上游调用失败**成立。
+一旦把值配错（Key 失效 / 账号未开通 Realtime / 形状不符），得到的是一个
+**语法正确、语义无效**的配置 —— 它会顶掉当前可用的 speed 兜底，
+把「部分场景能连」换成「更差」，而且**没有任何报错**。
+
+同理，`CF_REALTIME_TTL_SECONDS`(3600s) 必须**明显大于** `CACHE_TTL_MS`(10min)：
+否则服务端缓存里那份凭据已过期，客户端却仍在缓存期外拿到它 → 同样静默失效。
+门禁里有一条专门钉这个比例（`TTL > 2× 缓存期`）。
+
+### 5.4 端口与限额（Cloudflare Realtime TURN）
 
 | 服务 | 地址 | 主端口 | 备用端口 |
 |---|---|---|---|
@@ -248,4 +278,8 @@ Content-Type: application/json
 
 ## 8. 一句话版本
 
-**现在不用换。** 若哪天 `speed.cloudflare.com/turn-creds` 失效，按**路径 C** 接 Cloudflare Realtime TURN（$0.05/GB + 1 TB 免费、代码仅一处、凭据短时）；若必须自持中继，按**路径 A** 起 coturn，**切换前务必先跑 `verify:turn:candidate` 拿到 16/0** —— 因为它优先级高于兜底，配错会把可用状态换成不可用状态。
+**现在不用换，但代码已就位。** 路径 C（Cloudflare Realtime TURN）的实现与一键开通脚本
+已于 2026-10-09 发版，生产处于**休眠态**（未配 Key → 行为与改造前逐字一致）。
+要激活：拿一个 CF API Token → `npm run turn:setup:dry`（干跑验证）→ `npm run turn:setup`。
+若必须自持中继，按**路径 A** 起 coturn，**切换前务必先跑 `verify:turn:candidate` 拿到 16/0**
+—— 因为它优先级高于兜底，配错会把可用状态换成不可用状态。

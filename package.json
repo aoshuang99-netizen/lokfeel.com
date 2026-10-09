@@ -64,8 +64,12 @@
     "verify:oauth": "npx tsx scripts/verify-oauth-redirect-uri.mts",
     "verify:gender": "npx tsx scripts/verify-gender-vocab.mts",
     "verify:ice": "npx tsx scripts/verify-webrtc-ice.mts",
+    "check:script-decls": "node scripts/check-script-decls.mjs",
     "verify:turn:candidate": "node scripts/qa/verify-turn-candidate.mjs",
     "verify:turn:prod": "node scripts/qa/verify-turn-prod.mjs",
+    "turn:setup": "node scripts/setup-cloudflare-turn.mjs",
+    "turn:setup:dry": "node scripts/setup-cloudflare-turn.mjs --dry-run",
+    "turn:rollback": "node scripts/setup-cloudflare-turn.mjs --rollback",
     "gender:migrate": "node scripts/qa/migrate-gender-vocab.mjs",
     "gender:migrate:apply": "node scripts/qa/migrate-gender-vocab.mjs --apply"
   },
