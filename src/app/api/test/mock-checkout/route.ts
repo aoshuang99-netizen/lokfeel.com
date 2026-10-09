@@ -17,6 +17,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, badRequest } from "@/lib/api-response";
+import { isFemaleGender } from "@/lib/gender-utils";
 
 const checkoutSchema = z.object({
   plan: z.enum(["PREMIUM_MONTHLY", "PREMIUM_YEARLY"]),
@@ -61,11 +62,13 @@ export async function POST(request: NextRequest) {
     const { plan } = parseResult.data;
 
     // 2. Guard: Female users
+    // ⚠️ 必须走 isFemaleGender()：库里并存 MAN/WOMAN 与历史 MALE/FEMALE，
+    //    直接比较 "FEMALE" 会漏掉全部 WOMAN 用户，让她们绕过 Lady Free 免费权益去付费。
     const userProfile = await db.profile.findFirst({
       where: { userId: user.id },
       select: { gender: true },
     });
-    if (userProfile?.gender === "FEMALE") {
+    if (isFemaleGender(userProfile?.gender)) {
       return NextResponse.json(
         { error: "Women already have premium-level access for free via Lady Free plan" },
         { status: 403 },

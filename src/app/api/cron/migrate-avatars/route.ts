@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { isMaleGender, isFemaleGender } from '@/lib/gender-utils';
 
 export const maxDuration = 10; // 10s timeout (Hobby plan max)
 export const preferredRegion = 'iad1';
@@ -50,9 +51,9 @@ export async function POST(request: NextRequest) {
     let migrated = 0;
     for (const p of profiles) {
       const g = p.gender?.toUpperCase() || '';
-      const bgColor = g === 'FEMALE' || g === 'WOMAN'
+      const bgColor = isFemaleGender(g)
         ? 'fce7f3,fbcfe8,f9a8d4'
-        : g === 'MALE' || g === 'MAN'
+        : isMaleGender(g)
         ? 'dbeafe,bfdbfe,93c5fd'
         : 'f3e8ff,e9d5ff,d8b4fe';
       const seed = `${p.displayName}-${p.gender}-lorelei`;

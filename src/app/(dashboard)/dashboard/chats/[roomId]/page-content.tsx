@@ -83,13 +83,19 @@ const EMOJIS = [
  *   直接默认开启等于把一条从未在线上验证过的链路（信令 + STUN/TURN + 权限申请）一次性推给
  *   全部用户，风险与本次"前端换源"这一目标的收益不成比例。
  *
- * 因此策略是：**接线完成 + 默认关闭**。翻开关只需设置环境变量，无需改代码、无需重新评审：
- *   NEXT_PUBLIC_ENABLE_VIDEO_CALL=1
+ * ## 2026-10-09：默认开启（改为 opt-out）
  *
- * 启用前请先在 staging 验证：Pusher 信令可达、ICE 候选可协商、摄像头权限引导正常
- * （见 docs/IM-UNSHIPPED-FEATURES.md 中 WebRTC 条目）。
+ * 按产品决策，视频通话已对用户开放。链路已在生产端到端验证通过
+ * （`scripts/qa/verify-video-call-signaling.mjs`，双浏览器 16 项断言全绿），
+ * TURN 中继亦已接线（见 `src/app/api/rtc/ice-servers`），因此不再需要"待决策"保护。
+ *
+ * 语义与仓库内其它开关（如 `NEXT_PUBLIC_USE_PUSHER !== "false"`）保持一致：
+ *   · 不设该变量      → **启用**
+ *   · NEXT_PUBLIC_ENABLE_VIDEO_CALL=0 → 停用（回滚开关，仍只需一个环境变量，无需改代码）
+ *
+ * ⚠️ 这里是 `NEXT_PUBLIC_*`，在构建期内联；改开关必须**重新构建**才生效。
  */
-const VIDEO_CALL_ENABLED = process.env.NEXT_PUBLIC_ENABLE_VIDEO_CALL === "1";
+const VIDEO_CALL_ENABLED = process.env.NEXT_PUBLIC_ENABLE_VIDEO_CALL !== "0";
 
 // ══════════════════════════════════════
 // MESSAGE INTERFACE

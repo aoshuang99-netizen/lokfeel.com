@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { success, serverError, badRequest } from '@/lib/api-response'
 import { withPermission } from '@/lib/with-permission'
+import { isFemaleGender } from '@/lib/gender-utils'
 
 /**
  * POST /api/admin/fix-null-avatars
@@ -38,7 +39,7 @@ function isBrokenUrl(url: string | null | undefined): boolean {
 }
 
 function generateDiceBearUrl(seed: string, gender?: string | null): string {
-  const isFemale = (gender || '').toUpperCase() === 'FEMALE' || (gender || '').toUpperCase() === 'WOMAN'
+  const isFemale = isFemaleGender(gender)
   const bgColor = isFemale
     ? 'f3a8f9,ec4899,f472b6'
     : '3b82f6,6366f1,06b6d4'

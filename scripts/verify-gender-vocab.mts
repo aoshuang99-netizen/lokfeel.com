@@ -156,6 +156,81 @@ ok(
   RAW_COMPARE.test('if (pref !== userB.gender.toUpperCase()) score -= 30;')
 );
 
+// ─── E. 写入口不得再产出历史写法 ──────────────────────────────────────
+//
+// D 节只拦"原始比较"（读取侧）。但即使读取侧全都归化了，只要**写入侧**还在往
+// 库里写 MALE/FEMALE，双词表就会持续再生 —— 数据迁移（scripts/qa/migrate-gender-vocab.mjs）
+// 会被下一次注册/导入/后台操作重新污染。所以写入侧必须单独钉住。
+
+console.log('\nE. 写入口不得再产出历史写法');
+
+/** 直接往 gender/preferredGender 字段写历史字面量 */
+const WRITE_LEGACY = /(?:gender|preferredGender)\s*:\s*['"](?:MALE|FEMALE)['"]/;
+/** 把历史字面量作为表单选项暴露出去（用户选中后即落库） */
+const OPTION_LEGACY = /value\s*=\s*['"](?:MALE|FEMALE)['"]/;
+/** 三元表达式成对产出历史值：cond ? 'FEMALE' : 'MALE' */
+const TERNARY_LEGACY = /\?\s*['"](?:MALE|FEMALE)['"]\s*:\s*['"](?:MALE|FEMALE)['"]/;
+
+const writeOffenders: string[] = [];
+for (const file of walk(SRC)) {
+  const rel = path.relative(ROOT, file);
+  const text = fs
+    .readFileSync(file, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+  if (WRITE_LEGACY.test(text) || OPTION_LEGACY.test(text) || TERNARY_LEGACY.test(text)) {
+    writeOffenders.push(rel);
+  }
+}
+ok('src 内没有代码往性别字段写历史写法 MALE/FEMALE', writeOffenders.length === 0, writeOffenders.join(', '));
+
+// 冷启动写入路径（prisma/seed.ts、prisma/init-admin.ts）同样必须用现行词表：
+// 否则"重建库 / 初始化管理员"会把双词表原样种回去，迁移成果被下一次 seed 抹掉。
+const PRISMA_DIR = path.join(ROOT, 'prisma');
+const seedOffenders: string[] = [];
+if (fs.existsSync(PRISMA_DIR)) {
+  for (const file of walk(PRISMA_DIR)) {
+    const rel = path.relative(ROOT, file);
+    const text = fs
+      .readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+    if (WRITE_LEGACY.test(text) || TERNARY_LEGACY.test(text)) seedOffenders.push(rel);
+  }
+}
+ok('prisma/ 种子与初始化脚本使用现行词表（重建库不回退）', seedOffenders.length === 0, seedOffenders.join(', '));
+
+ok('（自检）三条写侧检测式均可命中', 
+  WRITE_LEGACY.test("data: { gender: 'FEMALE' }") &&
+  OPTION_LEGACY.test('<option value="MALE">Male</option>') &&
+  TERNARY_LEGACY.test("const g = r < 0.6 ? 'FEMALE' : 'MALE'")
+);
+
+// 标签映射必须认得现行写法（迁移后数据是 MAN/WOMAN，只列历史写法会显示原始枚举值）
+const profileDetail = fs.readFileSync(
+  path.join(SRC, 'app', '(dashboard)', 'dashboard', 'profile', '[id]', 'page.tsx'),
+  'utf8'
+);
+ok(
+  'getGenderLabel 的标签表含现行写法 WOMAN/MAN',
+  /labels[\s\S]{0,200}WOMAN/.test(profileDetail) && /labels[\s\S]{0,200}MAN/.test(profileDetail)
+);
+
+// ─── F. 数据迁移脚本必须存在且默认 dry-run ────────────────────────────
+
+console.log('\nF. 数据迁移脚本约束');
+
+const migrationPath = path.join(ROOT, 'scripts', 'qa', 'migrate-gender-vocab.mjs');
+ok('迁移脚本存在', fs.existsSync(migrationPath));
+
+if (fs.existsSync(migrationPath)) {
+  const mig = fs.readFileSync(migrationPath, 'utf8');
+  ok('默认 dry-run（必须显式 --apply 才落库）', /APPLY\s*=\s*process\.argv\.includes\('--apply'\)/.test(mig) && /if \(!APPLY\)/.test(mig));
+  ok('落库前先备份受影响行', /backup|\.json/.test(mig) && /writeFileSync/.test(mig));
+  ok('幂等：只匹配 IN (\'MALE\',\'FEMALE\')', /gender IN \('MALE','FEMALE'\)/.test(mig));
+  ok('不触碰 updatedAt（避免污染"最近更新"语义）', !/updatedAt\s*=/.test(mig));
+}
+
 // ─── 汇总 ─────────────────────────────────────────────────────────
 
 console.log(`\n结果：${pass} 通过 / ${fail} 失败`);

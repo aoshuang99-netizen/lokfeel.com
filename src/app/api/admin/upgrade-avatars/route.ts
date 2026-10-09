@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { success, unauthorized, serverError } from '@/lib/api-response'
 import { withPermission } from '@/lib/with-permission'
+import { isFemaleGender } from '@/lib/gender-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -113,7 +114,7 @@ export const POST = withPermission('user.edit')(async (request: NextRequest) => 
         }
 
         const displayName = user.profile?.displayName || user.name || user.id
-        const gender = user.profile?.gender || 'FEMALE'
+        const gender = user.profile?.gender || 'WOMAN'
         const avatarUrl = generateDiceBearUrl(displayName, gender)
 
         await db.profile.update({

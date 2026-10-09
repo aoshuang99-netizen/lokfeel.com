@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { success, serverError } from '@/lib/api-response'
 import { withPermission } from '@/lib/with-permission'
+import { isFemaleGender } from '@/lib/gender-utils'
 
 /**
  * POST /api/admin/assign-real-photos
@@ -19,7 +20,7 @@ import { withPermission } from '@/lib/with-permission'
 const RANDOMUSER_BASE = 'https://randomuser.me/api/portraits'
 
 function generateRealPhotoUrl(seed: string, gender?: string | null): string {
-  const isFemale = (gender || '').toUpperCase() === 'FEMALE' || (gender || '').toUpperCase() === 'WOMAN'
+  const isFemale = isFemaleGender(gender)
   const hash = Math.abs(seed.split('').reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0))
   const index = (hash % 99) + 1  // 1-99
   const folder = isFemale ? 'women' : 'men'

@@ -8,6 +8,7 @@
 import type { BotEngineDbAdapter } from '../schedulers/engine';
 import type { PersonalityType } from '../types';
 import { createMessage } from '@/lib/im/queries';
+import { isMaleGender, isFemaleGender } from '@/lib/gender-utils';
 
 export interface PrismaDbAdapterConfig {
   /** Custom Prisma client instance (for testing or DI) */
@@ -52,12 +53,16 @@ export function createPrismaAdapter(
       });
 
       return bots.map((bot: any) => {
-        const genderMap: Record<string, 'male' | 'female' | 'non_binary'> = {
-          MALE: 'male',
-          FEMALE: 'female',
-          NON_BINARY: 'non_binary',
-          OTHER: 'non_binary',
-        };
+        // ⚠️ 不要退回成只列 MALE/FEMALE 的查表：
+        //    Profile.gender 的现行词表是 MAN/WOMAN（历史 MALE/FEMALE 已于 2026-10 迁移），
+        //    只列历史写法会让**全部 bot** 落到 `non_binary` 兜底，
+        //    人设/语气/匹配策略整体静默改变。
+        const g = bot.profile?.gender
+        const gender: 'male' | 'female' | 'non_binary' = isFemaleGender(g)
+          ? 'female'
+          : isMaleGender(g)
+          ? 'male'
+          : 'non_binary'
 
         // Extract personality from botConfig JSON or default
         let personalityType: PersonalityType = 'passive';
@@ -79,7 +84,7 @@ export function createPrismaAdapter(
         return {
           userId: bot.id,
           personalityType,
-          gender: genderMap[bot.profile?.gender] || 'non_binary',
+          gender,
           timezone,
           botConfig: bot.botConfig,
           createdAt: bot.createdAt,

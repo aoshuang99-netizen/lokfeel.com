@@ -30,6 +30,7 @@ import {
   generateCallId,
 } from '@/utils/webrtc';
 import { getLocalStream, stopMediaStream } from '@/utils/mediaStream';
+import { loadIceServers } from '@/lib/rtc/ice-servers-client';
 import { PUSHER_EVENTS, getUserChannel } from '@/config/webrtc.config';
 import { getIMPusherClient } from './use-im-pusher';
 import {
@@ -401,6 +402,18 @@ export function useWebRTC(): UseWebRTCResult {
   }, [userId, initPusherSignaling]);
 
   // ============================================================================
+  // 预取 ICE 配置（STUN + TURN 短时凭据）
+  // ============================================================================
+  //
+  // 挂载即拉一次，等用户点「通话」时配置已经热好，避免把一次网络往返塞进
+  // 建连关键路径（`initiateCall`/`acceptCall` 里仍会 await 一次做兜底）。
+  useEffect(() => {
+    if (userId) {
+      void loadIceServers();
+    }
+  }, [userId]);
+
+  // ============================================================================
   // 发起通话
   // ============================================================================
 
@@ -422,6 +435,9 @@ export function useWebRTC(): UseWebRTCResult {
         _setLocalStream(stream);
 
         // 3. 初始化 PeerConnection
+        // ⚠️ 必须先 await ICE 配置（含 TURN 短时凭据）再建连：
+        //    没热好时 createPeerConnection 会用 STUN-only 兜底，对称 NAT 下会直接连不上。
+        await loadIceServers();
         const pc = initPeerConnection();
 
         // 4. 添加本地流
@@ -483,6 +499,9 @@ export function useWebRTC(): UseWebRTCResult {
         _setLocalStream(stream);
 
         // 3. 初始化 PeerConnection
+        // ⚠️ 必须先 await ICE 配置（含 TURN 短时凭据）再建连：
+        //    没热好时 createPeerConnection 会用 STUN-only 兜底，对称 NAT 下会直接连不上。
+        await loadIceServers();
         const pc = initPeerConnection();
 
         // 4. 添加本地流

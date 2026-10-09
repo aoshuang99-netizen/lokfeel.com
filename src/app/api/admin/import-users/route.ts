@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { toJson } from "@/lib/json-helpers";
 import { withPermission } from "@/lib/with-permission";
+import { normalizeGender } from "@/lib/gender-utils";
 
 // C-03 fix: Use lazy Proxy `db` instead of module-level `getDb()`
 import { hash } from "bcryptjs";
@@ -130,7 +131,8 @@ async function createBotUser(
       userId: userId,
       displayName: userData.profile.firstName,
       age: userData.profile.age,
-      gender: userData.gender.toUpperCase() as 'MALE' | 'FEMALE',
+      // 归一化到现行词表（MAN/WOMAN）：导入源可能是 male/female/MALE/FEMALE 任意写法
+      gender: normalizeGender(userData.gender) as any,
       sexuality: 'Straight',
       bio: userData.profile.bio,
       avatar: avatarUrl,

@@ -11,6 +11,9 @@
  * DiceBear is open-source, free, and NOT blocked in China.
  */
 
+// 性别判定统一走 lib/gender-utils（同时兼容现行 MAN/WOMAN 与历史 MALE/FEMALE）
+import { isMaleGender, isFemaleGender } from '@/lib/gender-utils';
+
 // ═════════════════════════════════════════════════════════════
 // DICEBEAR CDN — Reliable, open-source avatar API
 // ═════════════════════════════════════════════════════════════
@@ -28,9 +31,9 @@ const DICEBEAR_STYLE = 'lorelei';
  */
 function getDiceBearUrl(seed: string, gender?: string, age?: number): string {
   // Gender-aware background color — softer, more natural palette
-  const bgColor = gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN'
+  const bgColor = isFemaleGender(gender)
     ? 'fce7f3,fbcfe8,f9a8d4' // Soft pink for female
-    : gender === 'male' || gender === 'MALE' || gender === 'MAN'
+    : isMaleGender(gender)
     ? 'dbeafe,bfdbfe,93c5fd' // Soft blue for male
     : 'f3e8ff,e9d5ff,d8b4fe'; // Soft purple for others
 
@@ -175,7 +178,7 @@ export function getRealPhotoAvatarUrl(
   // Use local HD photos (mirrored from i.pravatar.cc, 800×800)
   // i.pravatar.cc only has 70 photos (img=1..70)
   // men/1..50 (50 photos), women/51..70 (20 photos)
-  const isFemale = gender === 'female' || gender === 'FEMALE' || gender === 'WOMAN';
+  const isFemale = isFemaleGender(gender);
   const hash = hashSeed(seed);
   const totalPhotos = isFemale ? 20 : 50;
   const offset = isFemale ? 50 : 0; // women start at 51

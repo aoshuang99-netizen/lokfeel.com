@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { success, serverError } from '@/lib/api-response'
 import { withPermission } from '@/lib/with-permission'
+import { isFemaleGender, isMaleGender } from '@/lib/gender-utils'
 
 /**
  * POST /api/admin/cleanup-avatars
@@ -16,7 +17,7 @@ import { withPermission } from '@/lib/with-permission'
 
 // 使用 DiceBear API（可靠、免费、不被墙）
 function generateDiceBearUrl(gender: string, index: number): string {
-  const isFemale = (gender || '').toUpperCase() === 'FEMALE' || (gender || '').toUpperCase() === 'WOMAN'
+  const isFemale = isFemaleGender(gender)
   const bgColor = isFemale
     ? 'f3a8f9,ec4899,f472b6'
     : '3b82f6,6366f1,06b6d4'
@@ -79,7 +80,7 @@ export const POST = withPermission('bot.edit', { dangerous: true })(
         if (!user.profile?.id) continue
 
         const profileGender = (user.profile?.gender || '').toUpperCase()
-        const gender = (profileGender === 'MALE' || profileGender === 'MAN') ? 'men' : 'women'
+        const gender = isMaleGender(profileGender) ? 'men' : 'women'
         const imgId = (cleaned % 99) + 1
         const avatarUrl = generateDiceBearUrl(profileGender, cleaned)
 

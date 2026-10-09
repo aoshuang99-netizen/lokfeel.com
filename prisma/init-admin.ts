@@ -80,7 +80,7 @@ async function main() {
           create: {
             displayName: ADMIN_CONFIG.name,
             age: 30,
-            gender: 'FEMALE',
+            gender: 'WOMAN',
             sexuality: 'Straight',
             bio: 'System Administrator',
           },

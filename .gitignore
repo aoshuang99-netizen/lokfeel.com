@@ -73,6 +73,10 @@ cloudflare-env.d.ts
 *.backup-*
 *.bak
 
+# 数据迁移回滚快照（scripts/qa/*-migration / *-vocab --apply 产出）—— 含生产用户数据，绝不能进仓库
+.gender-migration-backup-*.json
+*-migration-backup-*.json
+
 # QA 测试账号凭据（本地专用，public 仓库绝不入库）
 .qa-credentials.local.json
 .wrangler/

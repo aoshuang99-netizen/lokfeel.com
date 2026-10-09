@@ -3,7 +3,7 @@
  * 封装 RTCPeerConnection 相关操作
  */
 
-import { getIceServers } from '@/config/webrtc.config';
+import { getIceServersCached } from '@/lib/rtc/ice-servers-client';
 import { VideoCallOffer, VideoCallAnswer, ICECandidateMessage } from '@/types/webrtc';
 
 // ============================================================================
@@ -12,6 +12,11 @@ import { VideoCallOffer, VideoCallAnswer, ICECandidateMessage } from '@/types/we
 
 /**
  * 创建 RTCPeerConnection 实例
+ *
+ * ⚠️ ICE 配置取 `getIceServersCached()`（运行时由 `/api/rtc/ice-servers` 下发的
+ * STUN+TURN，含**短时 TURN 凭据**）。调用方应在此之前 `await loadIceServers()`
+ * 把配置热好；未热好时该函数返回静态 STUN 兜底，不会抛错。
+ *
  * @param onIceCandidate - ICE 候选回调
  * @param onTrack - 远程轨道回调
  * @param onConnectionStateChange - 连接状态变化回调
@@ -23,7 +28,7 @@ export function createPeerConnection(
   onConnectionStateChange: (state: RTCPeerConnectionState) => void
 ): RTCPeerConnection {
   const peerConnection = new RTCPeerConnection({
-    iceServers: getIceServers(),
+    iceServers: getIceServersCached(),
   });
 
   // 处理 ICE 候选

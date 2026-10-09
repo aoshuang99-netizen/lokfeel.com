@@ -547,12 +547,18 @@ async function main() {
       const preferredEducation = EDUCATION_LEVELS.filter((_, idx) => Math.abs(idx - eduOrder) <= 2);
       
       // Avatar style
-      const avatarStyle = gender === 'MALE' 
+      // ⚠️ 必须同时覆盖两套词表：库里现行写法是 MAN/WOMAN（历史 MALE/FEMALE 已于 2026-10 迁移），
+      //    直接比 'MALE' 会让**所有** bot 都走女性分支。
+      //    （本脚本走 require 直连老 PrismaClient，不引 @/ 别名，故就地判定。）
+      const genderUpper = (gender || '').toUpperCase();
+      const isMale = genderUpper === 'MALE' || genderUpper === 'MAN' || genderUpper === 'TRANSGENDER_MAN';
+      const isFemale = genderUpper === 'FEMALE' || genderUpper === 'WOMAN' || genderUpper === 'TRANSGENDER_WOMAN';
+      const avatarStyle = isMale
         ? pickRandomOne(AVATAR_STYLES_MALE, rng)
         : pickRandomOne(AVATAR_STYLES_FEMALE, rng);
       
       // Avatar source
-      const avatarSource = gender === 'FEMALE' ? 'ai_avatar' : (rng() > 0.5 ? 'generated' : 'ai_avatar');
+      const avatarSource = isFemale ? 'ai_avatar' : (rng() > 0.5 ? 'generated' : 'ai_avatar');
       
       // Initial engagement score from metadata
       const initialEngagement = Math.min(100, Math.max(0, engagementScore));

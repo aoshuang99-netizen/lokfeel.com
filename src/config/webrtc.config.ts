@@ -13,8 +13,11 @@ import { CALL_SIGNAL_EVENTS } from '@/lib/im/call-signal';
 
 /**
  * 默认 STUN（Google 公共）。可用 `NEXT_PUBLIC_STUN_URLS`（逗号分隔）覆盖。
+ *
+ * ⚠️ 该函数是**同步静态兜底**。真正下发的 ICE 配置走 `GET /api/rtc/ice-servers`
+ *    （服务端签发，含 TURN 短时凭据）；见 `src/lib/rtc/ice-servers-client.ts`。
  */
-function getStunUrls(): string[] {
+export function getStunUrls(): string[] {
   const override = process.env.NEXT_PUBLIC_STUN_URLS;
   if (override) {
     const list = override
@@ -47,8 +50,16 @@ function getTurnUrls(): string[] {
 }
 
 /**
- * 获取 ICE 服务器配置
- * 优先使用环境变量中的 TURN 服务器配置，否则使用默认值
+ * 获取 ICE 服务器配置（**静态兜底**，仅 STUN + 可选的 NEXT_PUBLIC_TURN_*）。
+ *
+ * ## 2026-10-09 起的实际链路
+ *
+ * 生产不再依赖这个同步函数拿 TURN：
+ *   · 优先 `GET /api/rtc/ice-servers`（服务端签发，TURN 凭据不进前端 bundle）
+ *   · 该端点不可达/未登录时，才退回本函数（STUN-only，保证不失败）
+ *
+ * `NEXT_PUBLIC_TURN_*` 三个变量保留仅为兼容自建 TURN 的临时开关；**不建议**在生产使用
+ * ——`NEXT_PUBLIC_*` 会被内联进 bundle，长期凭据等于公开。
  */
 export function getIceServers(): RTCIceServer[] {
   const useTurn = process.env.NEXT_PUBLIC_USE_TURN === 'true';

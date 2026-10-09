@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Skeleton, LoadingScreen, InlineError } from "@/components/ui";
 import { toast } from "sonner";
-import { isMaleGender, isFemaleGender } from "@/lib/gender-utils";
+import { isMaleGender, isFemaleGender, normalizeGender } from "@/lib/gender-utils";
 
 // LinkedIn icon component
 function LinkedinIcon({ className }: { className?: string }) {
@@ -201,12 +201,15 @@ export default function UserProfilePage() {
   };
 
   const getGenderLabel = (gender: string) => {
+    // ⚠️ 先归一化再查表：库里现行写法是 MAN/WOMAN（历史 MALE/FEMALE 已于 2026-10 迁移），
+    //    只列历史写法会直接显示成 "WOMAN" 这种原始枚举值。
     const labels: Record<string, string> = {
-      MALE: 'He/Him',
-      FEMALE: 'She/Her',
+      MAN: 'He/Him',
+      WOMAN: 'She/Her',
       NON_BINARY: 'They/Them',
     };
-    return labels[gender] || gender;
+    const key = normalizeGender(gender);
+    return labels[key] || key;
   };
 
   const getRelationshipGoalLabel = (goal?: string) => {

@@ -4,6 +4,7 @@ import { success, badRequest, unauthorized, serverError } from '@/lib/api-respon
 import { withPermission } from '@/lib/with-permission'
 import { hash } from 'bcryptjs'
 import { toJson } from '@/lib/json-helpers'
+import { isFemaleGender } from '@/lib/gender-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,8 +27,7 @@ export const dynamic = 'force-dynamic'
 
 // DiceBear 头像 URL 生成（确定性，不被墙）
 function randomAvatarUrl(gender: string, seed: string): string {
-  const genderUpper = (gender || '').toUpperCase()
-  const isFemale = genderUpper === 'FEMALE' || genderUpper === 'WOMAN'
+  const isFemale = isFemaleGender(gender)
   const bgColor = isFemale
     ? 'f3a8f9,ec4899,f472b6'
     : '3b82f6,6366f1,06b6d4'
@@ -144,8 +144,9 @@ export const POST = withPermission('user.create', { dangerous: true })(async (re
     const timestamp = Date.now()
 
     for (let i = 0; i < count; i++) {
-      const gender = Math.random() < genderRatio ? 'FEMALE' : 'MALE'
-      const names = gender === 'FEMALE' ? FEMALE_NAMES : MALE_NAMES
+      // ⚠️ 落库必须用现行词表（MAN/WOMAN）：写历史写法会重新引入双词表并存。
+      const gender = Math.random() < genderRatio ? 'WOMAN' : 'MAN'
+      const names = isFemaleGender(gender) ? FEMALE_NAMES : MALE_NAMES
       const displayName = randomFrom(names)
       const email = `${prefix}-${timestamp}-${i}@test.lokfeel.com`
       const age = randomBetween(22, 38)
@@ -191,7 +192,7 @@ export const POST = withPermission('user.create', { dangerous: true })(async (re
           })
 
           // 女性用户自动分配LADY_FREE订阅
-          if (gender === 'FEMALE') {
+          if (isFemaleGender(gender)) {
             await db.subscription.create({
               data: {
                 userId: user.id,
@@ -221,8 +222,8 @@ export const POST = withPermission('user.create', { dangerous: true })(async (re
       requested: count,
       users: results,
       summary: {
-        female: results.filter(r => r.gender === 'FEMALE').length,
-        male: results.filter(r => r.gender === 'MALE').length,
+        female: results.filter(r => isFemaleGender(r.gender)).length,
+        male: results.filter(r => !isFemaleGender(r.gender)).length,
         withProfile: withProfile ? results.length : 0,
         withAvatar: withAvatar ? results.length : 0,
       },

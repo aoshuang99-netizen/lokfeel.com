@@ -577,8 +577,8 @@ export default function SettingsPage() {
                 className="input-feeld w-full"
               >
                 <option value="Any">Any</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
+                <option value="MAN">Male</option>
+                <option value="WOMAN">Female</option>
                 <option value="NON_BINARY">Non-binary</option>
               </select>
             </div>

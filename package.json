@@ -62,7 +62,10 @@
     "netlify:credits": "node scripts/netlify-credit-watch.mjs",
     "verify:pusher": "npx tsx scripts/verify-pusher-channels.mts",
     "verify:oauth": "npx tsx scripts/verify-oauth-redirect-uri.mts",
-    "verify:gender": "npx tsx scripts/verify-gender-vocab.mts"
+    "verify:gender": "npx tsx scripts/verify-gender-vocab.mts",
+    "verify:ice": "npx tsx scripts/verify-webrtc-ice.mts",
+    "gender:migrate": "node scripts/qa/migrate-gender-vocab.mjs",
+    "gender:migrate:apply": "node scripts/qa/migrate-gender-vocab.mjs --apply"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
