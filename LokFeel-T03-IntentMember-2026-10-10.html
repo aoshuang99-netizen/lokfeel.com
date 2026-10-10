@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T03 · Intent / Member 交付报告 — LokFeel Connection OS</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#111827; --ink-2:#374151; --ink-3:#6b7280;
+    --line:#e5e7eb; --accent:#1d4ed8; --ok:#047857; --ok-bg:#ecfdf5; --warn:#b45309;
+    --warn-bg:#fffbeb; --bad:#b91c1c; --bad-bg:#fef2f2; --code:#f3f4f6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 80px}
+  header{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;border-radius:16px;padding:28px 30px;box-shadow:0 10px 30px rgba(29,78,216,.18)}
+  header .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+  header h1{margin:8px 0 6px;font-size:27px;line-height:1.3}
+  header p{margin:0;opacity:.92;font-size:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .meta span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 12px;font-size:12.5px}
+  .badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+  .b-ok{background:var(--ok-bg);color:var(--ok);border:1px solid #a7f3d0}
+  .b-warn{background:var(--warn-bg);color:var(--warn);border:1px solid #fde68a}
+  .b-bad{background:var(--bad-bg);color:var(--bad);border:1px solid #fecaca}
+  h2{font-size:18px;margin:34px 0 12px;padding-left:11px;border-left:4px solid var(--accent)}
+  h3{font-size:15px;margin:22px 0 8px;color:var(--ink-2)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .n{font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .kpi .l{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+  .kpi.ok .n{color:var(--ok)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:12px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px}
+  caption{caption-side:top;text-align:left;font-size:12.5px;color:var(--ink-3);padding:0 0 8px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#f9fafb;font-weight:700;color:var(--ink-2);font-size:12.5px;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  code{background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.6}
+  ul{margin:8px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+  .node{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+  .arrow{color:var(--ink-3);font-weight:700}
+  .note{background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:8px;padding:12px 14px;font-size:13.5px}
+  .danger{background:var(--bad-bg);border:1px solid #fecaca;border-left:4px solid var(--bad);border-radius:8px;padding:12px 14px;font-size:13.5px}
+  footer{margin-top:40px;color:var(--ink-3);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">LokFeel · Connection OS · 交付报告</div>
+  <h1>T03 · Intent / Member — 成员意图与逐字段披露</h1>
+  <p>成员自己决定「说什么」和「给谁看」：意图提交 → 逐字段授权 → 披露预览 → 编辑/撤销</p>
+  <div class="meta">
+    <span>代码提交 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">877878e</code></span>
+    <span>基线 c0904e6</span>
+    <span>2026-10-10</span>
+    <span>分支 main（未推送）</span>
+    <span>AC-03 <b>通过</b> · AC-12 <b>通过</b></span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi ok"><div class="n">2/2</div><div class="l">移动端 E2E（真实 Chrome + Pixel 5）</div></div>
+  <div class="kpi ok"><div class="n">241/241</div><div class="l">connection 用例（T02 130 + T03 111）</div></div>
+  <div class="kpi ok"><div class="n">620/620</div><div class="l">全量 jest 回归</div></div>
+  <div class="kpi ok"><div class="n">0</div><div class="l">tsc 类型错误</div></div>
+  <div class="kpi ok"><div class="n">42/42</div><div class="l">生产库迁移对账</div></div>
+</div>
+
+<h2>1. 交付了什么</h2>
+<div class="flow">
+  <span class="node">SocialIntent 模型</span><span class="arrow">→</span>
+  <span class="node">/api/v1/intents CRUD</span><span class="arrow">→</span>
+  <span class="node">逐字段披露矩阵</span><span class="arrow">→</span>
+  <span class="node">披露预览（真实投影）</span><span class="arrow">→</span>
+  <span class="node">编辑 / 撤销 / 有效期</span><span class="arrow">→</span>
+  <span class="node">组织者视角（白名单）</span>
+</div>
+
+<table style="margin-top:14px">
+  <caption>四层改动 · 手写新增约 <b>4,692 行</b>（另 Prisma 生成物 3,445 行）</caption>
+  <tr><th>层</th><th>内容</th><th>规模</th></tr>
+  <tr><td>Schema</td><td><code>SocialIntent</code>（13 列）+ <code>IntentStatus</code> / <code>DisclosureAudience</code> 枚举；方言无关，无 <code>@db.*</code></td><td>3 文件 / +96 行</td></tr>
+  <tr><td>服务层</td><td>field-catalog · disclosure · input-helpers · intent-import · intent-input · subject-profile · intents</td><td>新增 7 文件 / 1,567 行</td></tr>
+  <tr><td>API</td><td><code>/api/v1/intents</code>（POST 幂等 + GET）、<code>/[intentId]</code>（GET/PATCH）、<code>/status</code>、<code>/disclosure</code>、<code>/fields</code>、<code>/missions/[missionId]/intents</code></td><td>6 路由 / 296 行</td></tr>
+  <tr><td>前端</td><td><code>/m/[token]/intent</code> RSC + 客户端披露矩阵表单（移动优先）</td><td>2 文件 / 539 行</td></tr>
+  <tr><td>迁移</td><td><code>migrate.mjs</code> 升级为 C0/C1 双批次（apply 正序、rollback 逆序）</td><td>604 行（+271）</td></tr>
+  <tr><td>测试</td><td>6 单测套件 + SW 策略守卫 + 移动端 E2E + 夹具脚本</td><td>1,776 行</td></tr>
+</table>
+
+<h2>2. 逐字段披露的四个结构性约束（本任务的核心）</h2>
+<div class="note">
+  把「不要泄露未授权字段」从一条<b>编码纪律</b>变成一组<b>结构性约束</b>——违反它需要主动绕过三道防线，而不是忘记写一行过滤。
+</div>
+<table style="margin-top:12px">
+  <tr><th>#</th><th>约束</th><th>实现</th><th>违反时会怎样</th></tr>
+  <tr>
+    <td>①</td><td><b>缺省 fail-closed</b></td>
+    <td>字段未出现在披露表 → 视为 <code>SELF</code>（不对外）</td>
+    <td>不会"忘了授权就默认公开"，只可能"忘了授权就看不到"</td>
+  </tr>
+  <tr>
+    <td>②</td><td><b>白名单投影</b></td>
+    <td>未授权字段的<b>键在响应对象上根本不存在</b>（不是 <code>undefined</code>）</td>
+    <td><code>JSON.stringify</code> / 展开 / 深拷贝都不会把它带出去</td>
+  </tr>
+  <tr>
+    <td>③</td><td><b><code>SELF</code> 不可能被当成"全量"</b></td>
+    <td><code>audienceCanSee(viewer='SELF')</code> 恒 <code>false</code>；<code>ExternalAudience</code> 类型在<b>编译期</b>排除 <code>SELF</code></td>
+    <td>误传 <code>SELF</code> 直接 <code>tsc</code> 失败——不依赖运行期测试覆盖</td>
+  </tr>
+  <tr>
+    <td>④</td><td><b>受保护字段结构性不可授权</b></td>
+    <td><code>email</code> 等标记 <code>disclosable:false</code> + <code>importable:false</code></td>
+    <td>写路径 <code>normalizeDisclosure</code> 直接 400，不给"手滑放开"的机会</td>
+  </tr>
+</table>
+
+<h3>受众档位是「包含式」的（写反会造成静默的权限反转）</h3>
+<pre>DisclosureAudience:  SELF  &lt;  ORGANIZER  &lt;  COUNTERPARTY
+                    仅本人   本人+组织者   本人+组织者+对手方（最宽）
+
+推论：组织者视角 ⊇ 对手方视角
+—— 选 COUNTERPARTY 意味着"组织者也能看到"。这条方向写反，就成了
+   「更宽的档位反而更保密」，属静默的权限反转，已用矩阵用例锁死。</pre>
+
+<h2>3. AC-03 / AC-12 逐条验收</h2>
+<table>
+  <tr><th>验收</th><th>要求</th><th>结论</th><th>证据</th></tr>
+  <tr>
+    <td rowspan="4"><b>AC-12</b><br>意图提交<br><span class="badge b-bad">P0</span></td>
+    <td>Intent / Offer / 约束 / 有效期可提交</td>
+    <td><span class="badge b-ok">通过</span></td>
+    <td>E2E 步骤 ⑤ 提交成功、状态 <code>ACTIVE</code>；有效期落库并参与状态派生</td>
+  </tr>
+  <tr>
+    <td>可编辑（改动真实落库）</td>
+    <td><span class="badge b-ok">通过</span></td>
+    <td>E2E 步骤 ⑧⑨：改正文 → 刷新页面输入框仍是改后内容</td>
+  </tr>
+  <tr>
+    <td>字段校验</td>
+    <td><span class="badge b-ok">通过</span></td>
+    <td><code>intent-input.test.ts</code> 20 条：need/offer 长度边界；不可变字段出现即 400</td>
+  </tr>
+  <tr>
+    <td><b>用户主动授权</b>（非默认同意）</td>
+    <td><span class="badge b-ok">通过</span></td>
+    <td>缺省全 <code>SELF</code>；E2E 主动把「年龄」扩大为组织者可见 → 预览立刻出现，再收紧 → 立刻消失</td>
+  </tr>
+  <tr>
+    <td rowspan="4"><b>AC-03</b><br>逐字段披露<br><span class="badge b-bad">BLOCKER</span></td>
+    <td>未授权字段<b>不进入 API 响应</b></td>
+    <td><span class="badge b-ok">通过</span></td>
+    <td><code>disclosure.test.ts</code> 19 条断言"键<b>不存在</b>"；<code>intent-api.test.ts</code> 19 条端到端扫描 <code>age</code>/<code>bio</code>/<code>email</code> 的<b>值</b>不出现</td>
+  </tr>
+  <tr>
+    <td>未授权字段不进入<b>向量索引</b></td>
+    <td><span class="badge b-warn">无落点</span></td>
+    <td>T03 无向量索引（pgvector 未上）→ 归 <b>M6 / T04</b>，见风险 R1</td>
+  </tr>
+  <tr>
+    <td>未授权字段不进入<b>Agent 上下文</b></td>
+    <td><span class="badge b-warn">无落点</span></td>
+    <td>T03 无 Agent 上下文装配点 → 归 <b>T09</b>，见风险 R1</td>
+  </tr>
+  <tr>
+    <td>撤销/过期后立即不再披露</td>
+    <td><span class="badge b-ok">通过</span></td>
+    <td>披露<b>实时读</b> Profile，不做副本；<code>liveDisclosureOf</code> 在撤销/过期后归零（单测 + E2E 步骤 ⑩）</td>
+  </tr>
+</table>
+<div class="danger" style="margin-top:12px">
+  <b>关于两个「无落点」</b>：AC-03 的三条下游里，只有「API 响应」在 T03 有实现面。
+  向量索引与 Agent 上下文当前<b>在代码里根本不存在</b>——没有可泄露的通道，也就没有可测的对象。
+  这里如实标 <span class="badge b-warn">无落点</span> 而非「通过」，并在 <code>risks.md</code> R1 里登记：
+  <b>谁先建这两条通道，谁负责接上 <code>discloseSubject()</code> 这个唯一出口</b>。
+</div>
+
+<h2>4. 移动端 E2E（AC-12 + AC-03 的浏览器证据）</h2>
+<table>
+  <caption>2 passed / 2 · 真实 Chrome + Pixel 5 视口 · 全链路真实写 + 真实读回</caption>
+  <tr><th>#</th><th>用例</th><th>结果</th></tr>
+  <tr><td>1</td><td>🔒 匿名访问意图页 → 重定向登录且带回跳；<b>表单不在 DOM 中</b></td><td>✅</td></tr>
+  <tr><td>2</td><td>登录后完整闭环：加入 → 提交 → 披露预览 → 编辑 → 撤销</td><td>✅</td></tr>
+</table>
+<table style="margin-top:12px">
+  <caption>用例 2 的 11 步</caption>
+  <tr><th>步骤</th><th>断言</th><th>验收</th></tr>
+  <tr><td>① 真实登录</td><td>拿到 <code>session-token</code> cookie</td><td>敏感动作需身份验证</td></tr>
+  <tr><td>② 加入任务</td><td><code>mission-joined</code> 可见（父锚点建立）</td><td>意图的前置条件</td></tr>
+  <tr><td>③ 进入意图页</td><td>表单可见；不出现"需要先加入"</td><td>—</td></tr>
+  <tr><td>④ 填写 + <b>主动把「年龄」扩大为组织者可见</b></td><td><code>intent-aud-age-ORGANIZER</code> 为 checked；<b>受保护字段「邮箱」没有开关、只有说明</b></td><td><b>AC-12</b></td></tr>
+  <tr><td>⑤ 提交</td><td>"已提交"；状态 <code>ACTIVE</code></td><td><b>AC-12</b></td></tr>
+  <tr><td>⑥ 披露预览</td><td>组织者视角<b>含</b>「昵称：林晓」与「年龄」（扩大的确生效）</td><td><b>AC-03</b> 正证</td></tr>
+  <tr><td>⑦ 整页 HTML 扫描</td><td><b>不含成员邮箱的值</b></td><td><b>AC-03</b></td></tr>
+  <tr><td>⑧ 编辑：改正文 + <b>把「年龄」收紧回「仅自己」</b></td><td>"已更新"；预览<b>立刻不再含「年龄」</b></td><td><b>AC-12</b> + <b>AC-03</b> 可撤回</td></tr>
+  <tr><td>⑨ 刷新页面</td><td>输入框仍是改后正文（<b>真实落库</b>）</td><td><b>AC-12</b></td></tr>
+  <tr><td>⑩ 撤销</td><td>状态 <code>WITHDRAWN</code>；组织者预览变「（无）」</td><td>撤销后不再披露</td></tr>
+  <tr><td>⑪ 移动端布局</td><td>横向溢出 ≤ 1px</td><td>移动端可用</td></tr>
+</table>
+<div class="note" style="margin-top:12px">
+  <b>步骤 ⑧ 是本任务最有价值的一条断言</b>——它抓出了一个真实缺陷（Service Worker 缓存 <code>/api/</code>，
+  导致"收紧后预览仍是旧范围"，反向则"放开后界面不更新，用户以为没生效"）。详见 §5 与 <code>risks.md</code> R12。
+</div>
+
+<h2>5. 顺带修掉的真实缺陷（都不是"改一行就好了"的那种）</h2>
+<div class="danger">
+  <b>最值得记的一处：Service Worker 在缓存个人数据，而且"写完立刻读"必然读到旧值。</b><br>
+  <code>public/sw.js</code> 对所有 <code>/api/</code> 的 GET 使用 <code>stale-while-revalidate</code> ——
+  语义是<b>立即返回缓存副本、后台再更新</b>。于是用户把字段从「组织者」收紧为「仅自己」后，
+  库里已确认写入 <code>SELF</code>，界面却仍显示「年龄：32」对组织者可见。<br>
+  <b>为什么难发现</b>：服务端日志里<b>有</b>那次请求且返回 200（SW 确实转发了网络请求），
+  单测 / 集成测试 / 类型检查全部正常。<b>只有真实浏览器 + 真实 SW + 连续两次读才暴露。</b><br>
+  已修：<code>/api/*</code> 一律不拦截（服务端本就有的 <code>Cache-Control: no-store</code> 这才真正生效）；
+  默认分支缓存改名 <code>API_CACHE</code> → <code>PAGE_CACHE</code> 消除后门；
+  <code>CACHE_VERSION</code> v3→v4 且 <b>activate 继续清理 <code>api-</code> 前缀</b>
+  （否则"不再写新缓存"只对新请求生效，设备上旧的那份个人数据副本会永远留着）；
+  新增 <code>tests/sw-cache-policy.test.ts</code> 7 条源码断言把它钉死。
+</div>
+<table style="margin-top:12px">
+  <tr><th>#</th><th>缺陷</th><th>发现方式</th><th>修复</th></tr>
+  <tr>
+    <td>D1</td>
+    <td><code>stableStringify</code> 把 <code>Date</code> 序列化成 <code>{}</code> → 不同 <code>expiresAt</code> 指纹相同 → <b>幂等误判重放</b></td>
+    <td>写 <code>expiresAt</code> 用例时</td>
+    <td>显式 <code>instanceof Date → toISOString()</code>；补 1 条指纹用例</td>
+  </tr>
+  <tr>
+    <td>D2</td>
+    <td><b>SW 缓存 <code>/api/</code> 响应</b>（写完读到旧值 + 个人数据落盘）</td>
+    <td>移动端 E2E 步骤 ⑧</td>
+    <td>API 不拦截 + 缓存改名 + 清 <code>api-</code> + 7 条源码守卫</td>
+  </tr>
+  <tr>
+    <td>D3</td>
+    <td><code>--reset</code> 删库文件与 dev server 句柄冲突 → <code>SQLITE_READONLY</code>（读全对、写全挂）</td>
+    <td>E2E 提交步骤 500</td>
+    <td>改为同连接 <code>DROP</code> 全表重建，inode 不变</td>
+  </tr>
+  <tr>
+    <td>D4</td>
+    <td>受众档位方向<b>曾实现反了</b>（<code>COUNTERPARTY</code> 只对手方可见）</td>
+    <td>写包含式语义用例时</td>
+    <td>统一为包含式；<code>///</code> 注释固化；矩阵用例锁死</td>
+  </tr>
+  <tr>
+    <td>D5</td>
+    <td><code>reactivate</code> 缺过期前置检查 → "复活即过期"空操作</td>
+    <td>状态派生用例</td>
+    <td><code>reactivate</code> 且已过期 → 409</td>
+  </tr>
+</table>
+
+<h2>6. 迁移与回滚（均已实测）</h2>
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">生产库 C1 —— 已执行</h3>
+    <ul>
+      <li><code>SocialIntent</code> 建成，<code>verify</code> <b>42/42</b>；全库 <b>49 张表</b></li>
+      <li>断言含：关键列 <code>NOT NULL</code>、默认值、<b>三路孤儿</b>（org/mission/user）均为 0、唯一约束、三个索引</li>
+      <li>既有 48 表<b>零列改动</b> → 零停机零回归</li>
+      <li>当前 <code>SocialIntent</code> <b>0 行</b>（功能刚上线，尚无真实意图）</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">回滚演练 —— 本地副本实测</h3>
+    <ul>
+      <li>有数据先落 JSON 备份（463 B）再删表</li>
+      <li><code>rollback --batch=C1</code> → <code>verify</code> <b>25/35</b>，真实 <code>exit=1</code></li>
+      <li>既有业务数据 <b>零丢失</b>：<code>Organization</code> 1 · <code>User</code> 2 · <code>Membership</code> 2 · <code>Mission</code> 2 · <code>MissionParticipation</code> 1</li>
+      <li><code>apply --batch=C1</code> → 复原 <b>42/42</b></li>
+      <li>批次方向：apply <b>C0→C1</b>，rollback <b>C1→C0</b>（外键依赖方向）</li>
+    </ul>
+  </div>
+</div>
+
+<h2>7. 残留风险（不假装消除）</h2>
+<table>
+  <tr><th>ID</th><th>风险</th><th>等级</th><th>缓解 / 消除归属</th></tr>
+  <tr><td>R1</td><td>AC-03 的另两个下游（向量索引、Agent 上下文）尚未接线</td><td><span class="badge b-bad">高</span></td><td>登记交接：谁先建通道谁接 <code>discloseSubject()</code>｜T04 / T09</td></tr>
+  <tr><td>R2</td><td>隔离仍是<b>应用级</b>，不是数据库级（libSQL 无 RLS）</td><td><span class="badge b-bad">高</span></td><td>三重谓词防回归锁 + 跨租户负测｜M6（PG + RLS）</td></tr>
+  <tr><td>R3</td><td><code>constraints</code>/<code>disclosure</code> 是 String 存的 JSON</td><td><span class="badge b-warn">中</span></td><td>codec 单点统一（写 fail loud / 读 fail silent）｜M6 <code>jsonb</code></td></tr>
+  <tr><td>R4</td><td>幂等指纹同类风险（非 <code>Date</code> 的自定义对象仍可能被压平）</td><td><span class="badge b-warn">中</span></td><td>已修 <code>Date</code>；其余需按需补显式分支</td></tr>
+  <tr><td>R5</td><td>过期是<b>派生</b>的，依赖查询时刻的 <code>now</code></td><td><span class="badge b-warn">中</span></td><td>无定时任务依赖；查询口径统一走 DB 条件</td></tr>
+  <tr><td>R6</td><td>撤销/过期后"披露归零"是读时判定</td><td><span class="badge b-warn">中</span></td><td>将来加缓存<b>必须同步失效</b></td></tr>
+  <tr><td>R7</td><td>字段 label 有第二份定义（前端分组标题）</td><td><span class="badge b-warn">中</span></td><td>目录为单一事实来源，前端标题待收编</td></tr>
+  <tr><td>R8</td><td>E2E 依赖本机真实 Chrome 与 dev server，未接 CI</td><td><span class="badge b-warn">中</span></td><td>归 T12 交付流水线</td></tr>
+  <tr><td>R9–R11</td><td>Turbopack dev 路由缓存伪装 404；受众方向曾反；<code>SELF</code> 曾能返回全量</td><td><span class="badge b-ok">已消解</span></td><td>见 <code>risks.md</code>（R11 有两层是<b>编译期</b>防线）</td></tr>
+  <tr><td>R12</td><td>SW 曾缓存 <code>/api/</code>（已修，且已上锁）</td><td><span class="badge b-ok">已消解</span></td><td>残留：页面导航分支仍写 Cache Storage，需产品确认离线取舍</td></tr>
+  <tr><td>R13–R14</td><td>夹具库 <code>--reset</code> 句柄冲突（已修）；<code>update</code> 只带 <code>id</code> 谓词</td><td><span class="badge b-warn">中</span></td><td>R14 根治待 M6（<code>updateMany</code> + 断言 count）</td></tr>
+</table>
+
+<h2>8. 下一步</h2>
+<div class="note">
+  <b>T04 · Reciprocal Match</b> —— 双向检索与可解释排序（依赖 T03 的 Intent 数据面，现已就位）。<br>
+  开工前先读 <code>docs/implementation/T03/risks.md</code> 的 <b>R1</b>（披露唯一出口）与 <b>R2</b>（应用级隔离），
+  以及 <code>T02/risks.md</code> 的 <b>R4</b>（<code>candidates: never[]</code> 的编译期紧约束必须同批改造）。<br>
+  T04 的硬门控必须在<b>召回与排序之前</b>，不是之后筛掉。<br>
+  <span style="color:#6b7280">推送仍需你的决定：本提交含披露模型、受保护字段清单与生产迁移记录，且 <code>nexus-app</code> 是公开仓库。</span>
+</div>
+
+<footer>
+  LokFeel Connection OS · T03 Intent / Member · 代码 <code>877878e</code> · 2026-10-10<br>
+  文档：docs/implementation/T03/{changes,tests,risks,rollback}.md
+</footer>
+
+</div>
+</body>
+</html>
