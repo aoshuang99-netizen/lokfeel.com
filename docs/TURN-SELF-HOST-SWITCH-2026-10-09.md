@@ -180,6 +180,11 @@ done
 > **2026-10-09 更新**：来源分支与一键开通脚本已落地并发布。生产当前处于
 > 「未配置 → 自动降级到 speed 兜底」的**休眠态**，对外行为与改造前逐字一致。
 > 激活只需 §5.1 一条命令 —— **不需要再改任何代码、也不需要再改任何测试**。
+>
+> **2026-10-10 更新（已激活）**：路径 C 已开通，`TURN_TOKEN_ID` + `TURN_API_TOKEN`
+> 已写入 Netlify 生产 env，ICE 来源切换为 `cloudflare-realtime`（自此不再吃 speed 兜底）。
+> 开通中踩到的 Netlify 免费计划与 CF 响应字段两个坑见 §5.1.1；受限网络下预检的
+> 间歇假失败与容忍开关见 §5.1.2。
 
 ### 5.1 开通（一条命令）
 
@@ -203,6 +208,41 @@ NETLIFY_TOKEN=<ntoken> npm run turn:rollback
 （真实 Chrome，必须收集到 `relay`）→ **通过才写 Netlify env**。理由见 §5.3。
 
 Key 的 API Token 只在创建时返回一次，脚本会落盘到 `~/.lokfeel-turn-keys/<uid>.json`（600 权限）。
+
+#### 5.1.1 Netlify 免费计划的三个硬约束（2026-10-10 实测）
+
+写 env 这一步在免费计划上有三条**与文档不符、且报错信息不直观**的限制，逐条踩过：
+
+| 尝试 | 结果 | 含义 |
+|---|---|---|
+| 带 `scopes: ['builds','functions','runtime']` | `403 Upgrade your Netlify account to set specific scopes` | 免费计划**不能**指定 scopes，只能用默认值 |
+| 省掉 `scopes` + `is_secret: true` | `422 Secrets are not allowed to run in 'post_processing' scopes` | 默认 scopes 含 `post_processing`，与 secret **互斥** |
+| 打账户级端点（不带 `site_id`） | `403 … to set shared environment variables` | 账户级 env 同样需升级 |
+| `values: ["字符串"]` | `500 wrong number of arguments (given 4, expected 1..2)` | `values` 必须是**对象数组** `[{ context, value }]` |
+
+结论：免费计划下走「站点级 + 无 `scopes` + `is_secret:false`」。
+安全上无实际损失 —— 变量的名字没有 `NEXT_PUBLIC_` 前缀，**不会进前端 bundle**，
+差别仅是 Netlify 面板不掩码。付费计划后置 `NETLIFY_ENV_SECRET=1` 即可恢复掩码。
+
+另一个易踩点：CF 创建 TURN Key 的响应字段是 **`secret`**，不是 `key`
+（`{ result: { uid, name, secret, … } }`）。只认 `key` 会把「创建成功」误判为失败，
+而那个 secret **只返回一次、无法再取**。脚本现已两者都接受，并会在 `result` 有 `uid`
+却无凭据字段时明确提示「Key 可能已创建，勿重复创建」。
+
+#### 5.1.2 受限网络下预检会间歇性假失败
+
+`verify-turn-candidate.mjs` 的 [B] 节逐条 URL 探针是**诊断**，但同样受本机网络影响：
+被审查网络里 UDP/3478 的 DNS 解析（`701 STUN host lookup received error`）会**间歇**失败，
+而 TCP/3478 与 TLS/5349 稳定可用。2026-10-10 实测：同一条 UDP URL 三次里两成两败。
+
+这类失败**不是配置缺陷** —— 客户端会在候选里自动挑能用的那条，多列一条被拦的 UDP 无害。
+故新增显式开关（**默认关闭**，硬门槛「至少一条可分配中继」永远生效）：
+
+```bash
+QA_ALLOW_PARTIAL_RELAY=1 node scripts/setup-cloudflare-turn.mjs --reuse-key <uid>:<secret>
+```
+
+打开后逐条失败降级为 ⚠️ 并打印降级清单；全挂仍然 ❌。
 
 ### 5.2 已实现的代码位置
 

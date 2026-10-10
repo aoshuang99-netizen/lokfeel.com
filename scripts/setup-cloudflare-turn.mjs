@@ -30,6 +30,8 @@
  *   CF_ACCOUNT_ID    Cloudflare Account ID（CF 面板右侧栏可见）
  *   CF_API_TOKEN     需权限 **Account → Cloudflare Calls:Edit**
  *   NETLIFY_TOKEN    写入/回滚生产 env 时需要（干跑不需要）
+ *   NETLIFY_ENV_SECRET=1  付费计划专用：把 TURN_API_TOKEN 标为 secret
+ *                         （免费计划开了会 403/422，见 writeNetlifyEnvs 注释）
  *
  * 选项
  *   --dry-run             不写生产配置（仍会创建 Key，因为签发凭据必须有 Key）
@@ -134,18 +136,42 @@ async function readNetlifyTurnEnvs() {
 }
 
 async function writeNetlifyEnvs(uid, apiToken) {
-  const body = [
-    { key: ENV_TOKEN_ID, values: [uid], is_secret: false, scopes: ['builds', 'functions', 'runtime'] },
-    { key: ENV_API_TOKEN, values: [apiToken], is_secret: true, scopes: ['builds', 'functions', 'runtime'] },
-  ];
+  // Netlify（免费计划）实测约束（2026-10-10）：
+  //   ① 显式带 `scopes` → 403 "Upgrade your Netlify account to set specific scopes"
+  //      ⇒ 不能指定 scopes，只能用默认值 [builds, functions, post_processing, runtime]
+  //   ② 默认 scopes 含 post_processing，而 `is_secret:true` 与之互斥 → 422
+  //      "Secrets are not allowed to run in 'post_processing' scopes"
+  //      ⇒ 免费计划**无法**通过 API 创建 secret 变量
+  //   ③ 账户级 env → 403 "Upgrade … to set shared environment variables"
+  //   ④ `values` 必须是**对象数组** [{ context, value }]，传字符串数组会 500
+  //
+  // 因此默认走"非 secret + 无 scopes"：值依然只在服务端（名字无 NEXT_PUBLIC_ 前缀，
+  // 不会内联进前端 bundle），差别仅仅是 Netlify 面板不掩码。
+  // 付费计划下可置 NETLIFY_ENV_SECRET=1 恢复掩码（会自动带上排除了 post_processing 的 scopes）。
+  const asSecret = process.env.NETLIFY_ENV_SECRET === '1';
+  const mk = (key, value) => ({
+    key,
+    values: [{ context: 'all', value }],
+    ...(asSecret
+      ? { is_secret: true, scopes: ['builds', 'functions', 'runtime'] }
+      : { is_secret: false }),
+  });
+  const body = [mk(ENV_TOKEN_ID, uid), mk(ENV_API_TOKEN, apiToken)];
+
   const r = await fetch(netlifyEnvUrl(), {
     method: 'POST',
     headers: { Authorization: `Bearer ${NETLIFY_TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   const text = await r.text();
-  if (!r.ok) die(`写入 Netlify env 失败 HTTP ${r.status}：${text.slice(0, 300)}`);
+  if (!r.ok) {
+    die(
+      `写入 Netlify env 失败 HTTP ${r.status}：${text.slice(0, 300)}\n` +
+        '  免费计划常见：不能带 scopes（403）、secret 与默认 post_processing 互斥（422）。'
+    );
+  }
   say(`  POST env → HTTP ${r.status}（写入 201 ≠ 写成功，下面必须回读核对）`);
+  say(`  模式：${asSecret ? 'is_secret=true + 显式 scopes（付费计划）' : 'is_secret=false + 无 scopes（免费计划兼容）'}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -173,13 +199,24 @@ async function createTurnKey() {
     );
   }
 
-  const { uid, key } = data.result || {};
-  if (!uid || !key) die(`响应缺少 uid/key：${JSON.stringify(data).slice(0, 300)}`);
+  // CF Realtime 创建 Key 的响应字段是 `secret`（不是 `key`）：
+  //   { result: { uid, name, secret, created, modified }, success: true }
+  // 2026-10-10 实测 —— 曾因只认 `key` 而把「创建成功」误判为失败，
+  // 白白丢掉只返回一次、无法再取的 secret。故两个字段都接受。
+  const { uid, key, secret } = data.result || {};
+  const apiToken = key || secret;
+  if (!uid || !apiToken) {
+    die(
+      `响应缺少 uid/secret：${JSON.stringify(data).slice(0, 300)}\n` +
+        '  ⚠️ 若 result 里出现 uid 但无 secret/key，Key 可能已创建成功；' +
+        '请到 CF 面板 → Realtime → TURN Keys 核对，勿重复创建。'
+    );
+  }
 
-  saveKeyLocally(uid, key);
-  say(`  ✅ Key 已创建：uid=${uid}`);
-  say('  ⚠️ API Token 只在此刻返回一次，已存到本机（见下），请勿提交进仓库。');
-  return { uid, apiToken: key };
+  saveKeyLocally(uid, apiToken);
+  say(`  ✅ Key 已创建：uid=${uid}（凭据字段来源：${key ? 'key' : 'secret'}）`);
+  say('  ⚠️ 该 secret 只在此刻返回一次，已存到本机（见下），请勿提交进仓库。');
+  return { uid, apiToken };
 }
 
 /** 把 Key 落盘到 ~/.lokfeel-turn-keys/（600 权限，不在仓库内）。 */

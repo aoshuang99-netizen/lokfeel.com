@@ -30,11 +30,28 @@
  * 可选：
  *   QA_BASE=https://app.lokfeel.com   用于 bundle 泄露检查与 RTCPeerConnection 兜底页
  *   QA_SKIP_BUNDLE=1                  跳过第 4 节（离线环境用）
+ *   QA_ALLOW_PARTIAL_RELAY=1          逐条 URL 失败降级为 ⚠️（受限网络里 UDP 常被拦），
+ *                                     硬门槛「至少一条可分配中继」仍然生效
  */
 import { chromium } from 'playwright';
 
 const BASE = process.env.QA_BASE || 'https://app.lokfeel.com';
 const SKIP_BUNDLE = process.env.QA_SKIP_BUNDLE === '1';
+/**
+ * 允许"部分传输方式不可用"仍判通过（**默认关闭**）。
+ *
+ * 为什么需要：本节[B]的逐条 URL 探针是**诊断**（"哪一个传输方式挂了"），
+ * 但它同时受**本机网络**影响。在被审查/受限网络里，UDP 3478 的 DNS 解析
+ * （`701 STUN host lookup received error`）会**间歇**失败，而 TCP/5349 稳定可用
+ * —— 2026-10-10 实测：同一条 UDP URL 三次里两成两通过、一次挂。
+ * 这种失败**不是配置缺陷**（Chrome 会自动从候选里挑能用的那条，多列一条被拦的
+ * UDP 无害），把它当硬失败会让"配好了却永远过不了预检"。
+ *
+ * 真正的硬门槛是下面那条聚合断言「至少一条 URL 可分配中继」——**它永远生效**。
+ * 打开本开关 = 逐条失败降级为 ⚠️ 并列出降级清单；全挂仍然 ❌。
+ * 用法：`QA_ALLOW_PARTIAL_RELAY=1 node scripts/qa/verify-turn-candidate.mjs`
+ */
+const ALLOW_PARTIAL = process.env.QA_ALLOW_PARTIAL_RELAY === '1';
 
 const URLS_RAW = process.env.TURN_URLS || '';
 const USERNAME = process.env.TURN_USERNAME || '';
@@ -225,6 +242,7 @@ async function gatherOne(server, waitMs = 9000) {
 console.log('\n[B] 真实 Chrome 中继分配（逐条 URL）');
 
 const perUrl = [];
+const degraded = [];
 for (const p of parsed) {
   const t0 = Date.now();
   const r = await gatherOne({ urls: p.raw, username: USERNAME, credential: CREDENTIAL });
@@ -232,11 +250,14 @@ for (const p of parsed) {
   const relay = r.cands.filter((c) => c.typ === 'relay');
   perUrl.push({ raw: p.raw, relay: relay.length, ms, errors: r.errors, fatal: r.fatal });
   const label = `${p.raw}  (relay=${relay.length}, ${ms}ms)`;
+  const why = r.fatal ? `FATAL ${r.fatal}` : r.errors[0] || '无 relay 候选，凭据或防火墙有问题';
   if (relay.length > 0) {
     check(`可分配中继：${label}`, true, relay.map((c) => c.proto).join('/'));
+  } else if (ALLOW_PARTIAL) {
+    warn(`未分配中继（已容忍，QA_ALLOW_PARTIAL_RELAY=1）：${label} — ${why}`);
+    degraded.push(p.raw);
   } else {
-    check(`可分配中继：${label}`, false,
-      r.fatal ? `FATAL ${r.fatal}` : (r.errors[0] || '无 relay 候选，凭据或防火墙有问题'));
+    check(`可分配中继：${label}`, false, why);
   }
 }
 
@@ -315,6 +336,14 @@ if (SKIP_BUNDLE) {
 // ═══════════════════════════════════════════════════════════════════
 const failed = results.filter((r) => !r.ok);
 console.log(`\n════════ 结果：${results.length - failed.length} 通过 / ${failed.length} 失败 ════════`);
+if (degraded.length > 0) {
+  console.log(
+    `\n⚠️  容忍了 ${degraded.length} 条不可用传输方式（QA_ALLOW_PARTIAL_RELAY=1）：\n` +
+      degraded.map((u) => `     · ${u}`).join('\n') +
+      '\n   → 不影响可用性：客户端会在候选里自动挑能用的那条；' +
+      '\n     但请确认这些失败是**本机网络**所致（如 UDP 被拦/ DNS 污染），而非凭据或端口配置错。'
+  );
+}
 if (failed.length === 0) {
   console.log('\n✅ 可以切换：3 个 env 写入生产后，跑 scripts/qa/verify-turn-prod.mjs 复核\n');
 } else {
