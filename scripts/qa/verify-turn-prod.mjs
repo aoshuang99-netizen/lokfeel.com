@@ -92,7 +92,17 @@ check('TURN 条目带 username + credential',
 
 // ─── 3. 真实 ICE 收集：必须拿到 relay ──────────────────────────────
 console.log('\n[3] 真实浏览器 ICE 收集（TURN relay）');
-await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
+// ⚠️ 不要用 `${BASE}/login` 作为探针页：本脚本已在上一步登录，登录页检测到会话后
+//    会**客户端跳转**到 /dashboard —— 跳转会销毁执行上下文，让下面的 evaluate
+//    以 "Execution context was destroyed" 崩溃（2026-10-10 实测）。
+//    about:blank 无跳转，且 RTCPeerConnection 可用（非安全上下文也允许，只有
+//    getUserMedia 才要求 https）。
+await page.goto('about:blank');
+const hasRtcProbe = await page.evaluate(() => typeof RTCPeerConnection !== 'undefined');
+if (!hasRtcProbe) {
+  console.log('    about:blank 下无 RTCPeerConnection，退回真实站点');
+  await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
+}
 const ice = await page.evaluate(async (servers) => {
   const out = { cands: [], errors: [] };
   const pc = new RTCPeerConnection({ iceServers: servers });
