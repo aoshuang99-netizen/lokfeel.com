@@ -71,7 +71,13 @@
     "turn:setup:dry": "node scripts/setup-cloudflare-turn.mjs --dry-run",
     "turn:rollback": "node scripts/setup-cloudflare-turn.mjs --rollback",
     "gender:migrate": "node scripts/qa/migrate-gender-vocab.mjs",
-    "gender:migrate:apply": "node scripts/qa/migrate-gender-vocab.mjs --apply"
+    "gender:migrate:apply": "node scripts/qa/migrate-gender-vocab.mjs --apply",
+    "tenancy:probe": "node scripts/tenancy/migrate.mjs probe",
+    "tenancy:plan": "node scripts/tenancy/migrate.mjs plan",
+    "tenancy:migrate": "node scripts/tenancy/migrate.mjs apply",
+    "tenancy:rollback": "node scripts/tenancy/migrate.mjs rollback",
+    "tenancy:verify": "node scripts/tenancy/migrate.mjs verify",
+    "test:tenancy": "jest tests/tenancy"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

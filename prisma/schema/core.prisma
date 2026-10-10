@@ -76,6 +76,9 @@ model User {
   
   // RBAC — 管理角色关联
   adminRoles      AdminUserRole[]
+
+  // T01 多租户 — 成员关系（模型定义见 prisma/schema/tenancy.prisma）
+  memberships     Membership[]          @relation("UserMemberships")
   
   // Analytics
   analyticsEvents AnalyticsEvent[]

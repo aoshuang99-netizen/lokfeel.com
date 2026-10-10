@@ -751,6 +751,36 @@ exports.Prisma.AnalyticsDailyAggScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.OrganizationScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MembershipScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  userId: 'userId',
+  role: 'role',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.TenantAuditEventScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  actorId: 'actorId',
+  eventType: 'eventType',
+  resourceType: 'resourceType',
+  resourceId: 'resourceId',
+  safeMetadata: 'safeMetadata',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1089,6 +1119,24 @@ exports.ReportStatus = exports.$Enums.ReportStatus = {
   DISMISSED: 'DISMISSED'
 };
 
+exports.OrganizationStatus = exports.$Enums.OrganizationStatus = {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED'
+};
+
+exports.MembershipRole = exports.$Enums.MembershipRole = {
+  OWNER: 'OWNER',
+  ADMIN: 'ADMIN',
+  OPERATOR: 'OPERATOR',
+  MEMBER: 'MEMBER'
+};
+
+exports.MembershipStatus = exports.$Enums.MembershipStatus = {
+  ACTIVE: 'ACTIVE',
+  INVITED: 'INVITED',
+  SUSPENDED: 'SUSPENDED'
+};
+
 exports.Prisma.ModelName = {
   BotProfile: 'BotProfile',
   BotInteractionLog: 'BotInteractionLog',
@@ -1128,7 +1176,10 @@ exports.Prisma.ModelName = {
   Block: 'Block',
   UserReport: 'UserReport',
   AnalyticsEventDef: 'AnalyticsEventDef',
-  AnalyticsDailyAgg: 'AnalyticsDailyAgg'
+  AnalyticsDailyAgg: 'AnalyticsDailyAgg',
+  Organization: 'Organization',
+  Membership: 'Membership',
+  TenantAuditEvent: 'TenantAuditEvent'
 };
 
 /**

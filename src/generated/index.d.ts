@@ -208,6 +208,29 @@ export type AnalyticsEventDef = $Result.DefaultSelection<Prisma.$AnalyticsEventD
  * 
  */
 export type AnalyticsDailyAgg = $Result.DefaultSelection<Prisma.$AnalyticsDailyAggPayload>
+/**
+ * Model Organization
+ * 租户（组织）。对应契约 organizations 表。
+ */
+export type Organization = $Result.DefaultSelection<Prisma.$OrganizationPayload>
+/**
+ * Model Membership
+ * 成员关系（用户 × 租户）。对应契约 memberships 表。
+ * 契约用复合主键 (organization_id, person_id)；Prisma 用代理主键 + 唯一约束表达，
+ * 语义等价且便于后续扩展（如软删除、审计字段）。
+ */
+export type Membership = $Result.DefaultSelection<Prisma.$MembershipPayload>
+/**
+ * Model TenantAuditEvent
+ * 租户级审计事件。对应契约 audit_events 表。
+ * 
+ * 与既有 `AuditLog`（core.prisma 哈希链审计）**并存**，分工如下：
+ * - `AuditLog`      ：既有产品行为的不可抵赖链（保留 prevHash/entryHash），不动。
+ * - `TenantAuditEvent`：闭环的**安全事件流**（租户/成员/授权/越权尝试），
+ * 可写 `safeMetadata`（脱敏，禁止放 PII 明文）。
+ * 收敛计划见 REUSE_MATRIX.md B5（M5 之后）。
+ */
+export type TenantAuditEvent = $Result.DefaultSelection<Prisma.$TenantAuditEventPayload>
 
 /**
  * Enums
@@ -653,6 +676,33 @@ export const ReportStatus: {
 
 export type ReportStatus = (typeof ReportStatus)[keyof typeof ReportStatus]
 
+
+export const MembershipRole: {
+  OWNER: 'OWNER',
+  ADMIN: 'ADMIN',
+  OPERATOR: 'OPERATOR',
+  MEMBER: 'MEMBER'
+};
+
+export type MembershipRole = (typeof MembershipRole)[keyof typeof MembershipRole]
+
+
+export const OrganizationStatus: {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED'
+};
+
+export type OrganizationStatus = (typeof OrganizationStatus)[keyof typeof OrganizationStatus]
+
+
+export const MembershipStatus: {
+  ACTIVE: 'ACTIVE',
+  INVITED: 'INVITED',
+  SUSPENDED: 'SUSPENDED'
+};
+
+export type MembershipStatus = (typeof MembershipStatus)[keyof typeof MembershipStatus]
+
 }
 
 export type BotType = $Enums.BotType
@@ -794,6 +844,18 @@ export const ReportReason: typeof $Enums.ReportReason
 export type ReportStatus = $Enums.ReportStatus
 
 export const ReportStatus: typeof $Enums.ReportStatus
+
+export type MembershipRole = $Enums.MembershipRole
+
+export const MembershipRole: typeof $Enums.MembershipRole
+
+export type OrganizationStatus = $Enums.OrganizationStatus
+
+export const OrganizationStatus: typeof $Enums.OrganizationStatus
+
+export type MembershipStatus = $Enums.MembershipStatus
+
+export const MembershipStatus: typeof $Enums.MembershipStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -1305,6 +1367,36 @@ export class PrismaClient<
     * ```
     */
   get analyticsDailyAgg(): Prisma.AnalyticsDailyAggDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.organization`: Exposes CRUD operations for the **Organization** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Organizations
+    * const organizations = await prisma.organization.findMany()
+    * ```
+    */
+  get organization(): Prisma.OrganizationDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.membership`: Exposes CRUD operations for the **Membership** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Memberships
+    * const memberships = await prisma.membership.findMany()
+    * ```
+    */
+  get membership(): Prisma.MembershipDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.tenantAuditEvent`: Exposes CRUD operations for the **TenantAuditEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TenantAuditEvents
+    * const tenantAuditEvents = await prisma.tenantAuditEvent.findMany()
+    * ```
+    */
+  get tenantAuditEvent(): Prisma.TenantAuditEventDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1790,7 +1882,10 @@ export namespace Prisma {
     Block: 'Block',
     UserReport: 'UserReport',
     AnalyticsEventDef: 'AnalyticsEventDef',
-    AnalyticsDailyAgg: 'AnalyticsDailyAgg'
+    AnalyticsDailyAgg: 'AnalyticsDailyAgg',
+    Organization: 'Organization',
+    Membership: 'Membership',
+    TenantAuditEvent: 'TenantAuditEvent'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1806,7 +1901,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg"
+      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -4696,6 +4791,228 @@ export namespace Prisma {
           }
         }
       }
+      Organization: {
+        payload: Prisma.$OrganizationPayload<ExtArgs>
+        fields: Prisma.OrganizationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.OrganizationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.OrganizationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>
+          }
+          findFirst: {
+            args: Prisma.OrganizationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.OrganizationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>
+          }
+          findMany: {
+            args: Prisma.OrganizationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>[]
+          }
+          create: {
+            args: Prisma.OrganizationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>
+          }
+          createMany: {
+            args: Prisma.OrganizationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.OrganizationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>[]
+          }
+          delete: {
+            args: Prisma.OrganizationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>
+          }
+          update: {
+            args: Prisma.OrganizationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>
+          }
+          deleteMany: {
+            args: Prisma.OrganizationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.OrganizationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.OrganizationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>[]
+          }
+          upsert: {
+            args: Prisma.OrganizationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrganizationPayload>
+          }
+          aggregate: {
+            args: Prisma.OrganizationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOrganization>
+          }
+          groupBy: {
+            args: Prisma.OrganizationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OrganizationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.OrganizationCountArgs<ExtArgs>
+            result: $Utils.Optional<OrganizationCountAggregateOutputType> | number
+          }
+        }
+      }
+      Membership: {
+        payload: Prisma.$MembershipPayload<ExtArgs>
+        fields: Prisma.MembershipFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MembershipFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MembershipFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          findFirst: {
+            args: Prisma.MembershipFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MembershipFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          findMany: {
+            args: Prisma.MembershipFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          create: {
+            args: Prisma.MembershipCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          createMany: {
+            args: Prisma.MembershipCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MembershipCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          delete: {
+            args: Prisma.MembershipDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          update: {
+            args: Prisma.MembershipUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          deleteMany: {
+            args: Prisma.MembershipDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MembershipUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MembershipUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          upsert: {
+            args: Prisma.MembershipUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          aggregate: {
+            args: Prisma.MembershipAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMembership>
+          }
+          groupBy: {
+            args: Prisma.MembershipGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MembershipGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MembershipCountArgs<ExtArgs>
+            result: $Utils.Optional<MembershipCountAggregateOutputType> | number
+          }
+        }
+      }
+      TenantAuditEvent: {
+        payload: Prisma.$TenantAuditEventPayload<ExtArgs>
+        fields: Prisma.TenantAuditEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TenantAuditEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TenantAuditEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>
+          }
+          findFirst: {
+            args: Prisma.TenantAuditEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TenantAuditEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>
+          }
+          findMany: {
+            args: Prisma.TenantAuditEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>[]
+          }
+          create: {
+            args: Prisma.TenantAuditEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>
+          }
+          createMany: {
+            args: Prisma.TenantAuditEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TenantAuditEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>[]
+          }
+          delete: {
+            args: Prisma.TenantAuditEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>
+          }
+          update: {
+            args: Prisma.TenantAuditEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.TenantAuditEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TenantAuditEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TenantAuditEventUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>[]
+          }
+          upsert: {
+            args: Prisma.TenantAuditEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantAuditEventPayload>
+          }
+          aggregate: {
+            args: Prisma.TenantAuditEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTenantAuditEvent>
+          }
+          groupBy: {
+            args: Prisma.TenantAuditEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TenantAuditEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TenantAuditEventCountArgs<ExtArgs>
+            result: $Utils.Optional<TenantAuditEventCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -4858,6 +5175,9 @@ export namespace Prisma {
     userReport?: UserReportOmit
     analyticsEventDef?: AnalyticsEventDefOmit
     analyticsDailyAgg?: AnalyticsDailyAggOmit
+    organization?: OrganizationOmit
+    membership?: MembershipOmit
+    tenantAuditEvent?: TenantAuditEventOmit
   }
 
   /* Types for Logging */
@@ -4960,6 +5280,7 @@ export namespace Prisma {
     notifications: number
     adminAudits: number
     adminRoles: number
+    memberships: number
     analyticsEvents: number
     reportsMade: number
     reportsReceived: number
@@ -4990,6 +5311,7 @@ export namespace Prisma {
     notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
     adminAudits?: boolean | UserCountOutputTypeCountAdminAuditsArgs
     adminRoles?: boolean | UserCountOutputTypeCountAdminRolesArgs
+    memberships?: boolean | UserCountOutputTypeCountMembershipsArgs
     analyticsEvents?: boolean | UserCountOutputTypeCountAnalyticsEventsArgs
     reportsMade?: boolean | UserCountOutputTypeCountReportsMadeArgs
     reportsReceived?: boolean | UserCountOutputTypeCountReportsReceivedArgs
@@ -5160,6 +5482,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountAdminRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AdminUserRoleWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountMembershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
   }
 
   /**
@@ -5426,6 +5755,46 @@ export namespace Prisma {
    */
   export type SincerityWalletCountOutputTypeCountTransactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SincerityTransactionWhereInput
+  }
+
+
+  /**
+   * Count Type OrganizationCountOutputType
+   */
+
+  export type OrganizationCountOutputType = {
+    memberships: number
+    auditEvents: number
+  }
+
+  export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    memberships?: boolean | OrganizationCountOutputTypeCountMembershipsArgs
+    auditEvents?: boolean | OrganizationCountOutputTypeCountAuditEventsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrganizationCountOutputType
+     */
+    select?: OrganizationCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountMembershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountAuditEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TenantAuditEventWhereInput
   }
 
 
@@ -12686,6 +13055,7 @@ export namespace Prisma {
     notifications?: boolean | User$notificationsArgs<ExtArgs>
     adminAudits?: boolean | User$adminAuditsArgs<ExtArgs>
     adminRoles?: boolean | User$adminRolesArgs<ExtArgs>
+    memberships?: boolean | User$membershipsArgs<ExtArgs>
     analyticsEvents?: boolean | User$analyticsEventsArgs<ExtArgs>
     reportsMade?: boolean | User$reportsMadeArgs<ExtArgs>
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
@@ -12779,6 +13149,7 @@ export namespace Prisma {
     notifications?: boolean | User$notificationsArgs<ExtArgs>
     adminAudits?: boolean | User$adminAuditsArgs<ExtArgs>
     adminRoles?: boolean | User$adminRolesArgs<ExtArgs>
+    memberships?: boolean | User$membershipsArgs<ExtArgs>
     analyticsEvents?: boolean | User$analyticsEventsArgs<ExtArgs>
     reportsMade?: boolean | User$reportsMadeArgs<ExtArgs>
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
@@ -12818,6 +13189,7 @@ export namespace Prisma {
       notifications: Prisma.$NotificationPayload<ExtArgs>[]
       adminAudits: Prisma.$AdminAuditPayload<ExtArgs>[]
       adminRoles: Prisma.$AdminUserRolePayload<ExtArgs>[]
+      memberships: Prisma.$MembershipPayload<ExtArgs>[]
       analyticsEvents: Prisma.$AnalyticsEventPayload<ExtArgs>[]
       reportsMade: Prisma.$UserReportPayload<ExtArgs>[]
       reportsReceived: Prisma.$UserReportPayload<ExtArgs>[]
@@ -13261,6 +13633,7 @@ export namespace Prisma {
     notifications<T extends User$notificationsArgs<ExtArgs> = {}>(args?: Subset<T, User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     adminAudits<T extends User$adminAuditsArgs<ExtArgs> = {}>(args?: Subset<T, User$adminAuditsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminAuditPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     adminRoles<T extends User$adminRolesArgs<ExtArgs> = {}>(args?: Subset<T, User$adminRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminUserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    memberships<T extends User$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, User$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     analyticsEvents<T extends User$analyticsEventsArgs<ExtArgs> = {}>(args?: Subset<T, User$analyticsEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reportsMade<T extends User$reportsMadeArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsMadeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reportsReceived<T extends User$reportsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -14285,6 +14658,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AdminUserRoleScalarFieldEnum | AdminUserRoleScalarFieldEnum[]
+  }
+
+  /**
+   * User.memberships
+   */
+  export type User$membershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    cursor?: MembershipWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
   }
 
   /**
@@ -52515,6 +52912,3330 @@ export namespace Prisma {
 
 
   /**
+   * Model Organization
+   */
+
+  export type AggregateOrganization = {
+    _count: OrganizationCountAggregateOutputType | null
+    _min: OrganizationMinAggregateOutputType | null
+    _max: OrganizationMaxAggregateOutputType | null
+  }
+
+  export type OrganizationMinAggregateOutputType = {
+    id: string | null
+    name: string | null
+    slug: string | null
+    status: $Enums.OrganizationStatus | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OrganizationMaxAggregateOutputType = {
+    id: string | null
+    name: string | null
+    slug: string | null
+    status: $Enums.OrganizationStatus | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OrganizationCountAggregateOutputType = {
+    id: number
+    name: number
+    slug: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type OrganizationMinAggregateInputType = {
+    id?: true
+    name?: true
+    slug?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OrganizationMaxAggregateInputType = {
+    id?: true
+    name?: true
+    slug?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OrganizationCountAggregateInputType = {
+    id?: true
+    name?: true
+    slug?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type OrganizationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Organization to aggregate.
+     */
+    where?: OrganizationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Organizations to fetch.
+     */
+    orderBy?: OrganizationOrderByWithRelationInput | OrganizationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: OrganizationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Organizations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Organizations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Organizations
+    **/
+    _count?: true | OrganizationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OrganizationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OrganizationMaxAggregateInputType
+  }
+
+  export type GetOrganizationAggregateType<T extends OrganizationAggregateArgs> = {
+        [P in keyof T & keyof AggregateOrganization]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOrganization[P]>
+      : GetScalarType<T[P], AggregateOrganization[P]>
+  }
+
+
+
+
+  export type OrganizationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OrganizationWhereInput
+    orderBy?: OrganizationOrderByWithAggregationInput | OrganizationOrderByWithAggregationInput[]
+    by: OrganizationScalarFieldEnum[] | OrganizationScalarFieldEnum
+    having?: OrganizationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OrganizationCountAggregateInputType | true
+    _min?: OrganizationMinAggregateInputType
+    _max?: OrganizationMaxAggregateInputType
+  }
+
+  export type OrganizationGroupByOutputType = {
+    id: string
+    name: string
+    slug: string
+    status: $Enums.OrganizationStatus
+    createdAt: Date
+    updatedAt: Date
+    _count: OrganizationCountAggregateOutputType | null
+    _min: OrganizationMinAggregateOutputType | null
+    _max: OrganizationMaxAggregateOutputType | null
+  }
+
+  type GetOrganizationGroupByPayload<T extends OrganizationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OrganizationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OrganizationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OrganizationGroupByOutputType[P]>
+            : GetScalarType<T[P], OrganizationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type OrganizationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    slug?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    memberships?: boolean | Organization$membershipsArgs<ExtArgs>
+    auditEvents?: boolean | Organization$auditEventsArgs<ExtArgs>
+    _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["organization"]>
+
+  export type OrganizationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    slug?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["organization"]>
+
+  export type OrganizationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    slug?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["organization"]>
+
+  export type OrganizationSelectScalar = {
+    id?: boolean
+    name?: boolean
+    slug?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type OrganizationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["organization"]>
+  export type OrganizationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    memberships?: boolean | Organization$membershipsArgs<ExtArgs>
+    auditEvents?: boolean | Organization$auditEventsArgs<ExtArgs>
+    _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type OrganizationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $OrganizationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Organization"
+    objects: {
+      memberships: Prisma.$MembershipPayload<ExtArgs>[]
+      auditEvents: Prisma.$TenantAuditEventPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      name: string
+      /**
+       * 对外可读标识，用于 URL 与分享页；唯一。
+       */
+      slug: string
+      status: $Enums.OrganizationStatus
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["organization"]>
+    composites: {}
+  }
+
+  type OrganizationGetPayload<S extends boolean | null | undefined | OrganizationDefaultArgs> = $Result.GetResult<Prisma.$OrganizationPayload, S>
+
+  type OrganizationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<OrganizationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OrganizationCountAggregateInputType | true
+    }
+
+  export interface OrganizationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Organization'], meta: { name: 'Organization' } }
+    /**
+     * Find zero or one Organization that matches the filter.
+     * @param {OrganizationFindUniqueArgs} args - Arguments to find a Organization
+     * @example
+     * // Get one Organization
+     * const organization = await prisma.organization.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends OrganizationFindUniqueArgs>(args: SelectSubset<T, OrganizationFindUniqueArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Organization that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {OrganizationFindUniqueOrThrowArgs} args - Arguments to find a Organization
+     * @example
+     * // Get one Organization
+     * const organization = await prisma.organization.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends OrganizationFindUniqueOrThrowArgs>(args: SelectSubset<T, OrganizationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Organization that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrganizationFindFirstArgs} args - Arguments to find a Organization
+     * @example
+     * // Get one Organization
+     * const organization = await prisma.organization.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends OrganizationFindFirstArgs>(args?: SelectSubset<T, OrganizationFindFirstArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Organization that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrganizationFindFirstOrThrowArgs} args - Arguments to find a Organization
+     * @example
+     * // Get one Organization
+     * const organization = await prisma.organization.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends OrganizationFindFirstOrThrowArgs>(args?: SelectSubset<T, OrganizationFindFirstOrThrowArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Organizations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrganizationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Organizations
+     * const organizations = await prisma.organization.findMany()
+     * 
+     * // Get first 10 Organizations
+     * const organizations = await prisma.organization.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const organizationWithIdOnly = await prisma.organization.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends OrganizationFindManyArgs>(args?: SelectSubset<T, OrganizationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Organization.
+     * @param {OrganizationCreateArgs} args - Arguments to create a Organization.
+     * @example
+     * // Create one Organization
+     * const Organization = await prisma.organization.create({
+     *   data: {
+     *     // ... data to create a Organization
+     *   }
+     * })
+     * 
+     */
+    create<T extends OrganizationCreateArgs>(args: SelectSubset<T, OrganizationCreateArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Organizations.
+     * @param {OrganizationCreateManyArgs} args - Arguments to create many Organizations.
+     * @example
+     * // Create many Organizations
+     * const organization = await prisma.organization.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends OrganizationCreateManyArgs>(args?: SelectSubset<T, OrganizationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Organizations and returns the data saved in the database.
+     * @param {OrganizationCreateManyAndReturnArgs} args - Arguments to create many Organizations.
+     * @example
+     * // Create many Organizations
+     * const organization = await prisma.organization.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Organizations and only return the `id`
+     * const organizationWithIdOnly = await prisma.organization.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends OrganizationCreateManyAndReturnArgs>(args?: SelectSubset<T, OrganizationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Organization.
+     * @param {OrganizationDeleteArgs} args - Arguments to delete one Organization.
+     * @example
+     * // Delete one Organization
+     * const Organization = await prisma.organization.delete({
+     *   where: {
+     *     // ... filter to delete one Organization
+     *   }
+     * })
+     * 
+     */
+    delete<T extends OrganizationDeleteArgs>(args: SelectSubset<T, OrganizationDeleteArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Organization.
+     * @param {OrganizationUpdateArgs} args - Arguments to update one Organization.
+     * @example
+     * // Update one Organization
+     * const organization = await prisma.organization.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends OrganizationUpdateArgs>(args: SelectSubset<T, OrganizationUpdateArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Organizations.
+     * @param {OrganizationDeleteManyArgs} args - Arguments to filter Organizations to delete.
+     * @example
+     * // Delete a few Organizations
+     * const { count } = await prisma.organization.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends OrganizationDeleteManyArgs>(args?: SelectSubset<T, OrganizationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Organizations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrganizationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Organizations
+     * const organization = await prisma.organization.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends OrganizationUpdateManyArgs>(args: SelectSubset<T, OrganizationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Organizations and returns the data updated in the database.
+     * @param {OrganizationUpdateManyAndReturnArgs} args - Arguments to update many Organizations.
+     * @example
+     * // Update many Organizations
+     * const organization = await prisma.organization.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Organizations and only return the `id`
+     * const organizationWithIdOnly = await prisma.organization.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends OrganizationUpdateManyAndReturnArgs>(args: SelectSubset<T, OrganizationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Organization.
+     * @param {OrganizationUpsertArgs} args - Arguments to update or create a Organization.
+     * @example
+     * // Update or create a Organization
+     * const organization = await prisma.organization.upsert({
+     *   create: {
+     *     // ... data to create a Organization
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Organization we want to update
+     *   }
+     * })
+     */
+    upsert<T extends OrganizationUpsertArgs>(args: SelectSubset<T, OrganizationUpsertArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Organizations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrganizationCountArgs} args - Arguments to filter Organizations to count.
+     * @example
+     * // Count the number of Organizations
+     * const count = await prisma.organization.count({
+     *   where: {
+     *     // ... the filter for the Organizations we want to count
+     *   }
+     * })
+    **/
+    count<T extends OrganizationCountArgs>(
+      args?: Subset<T, OrganizationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OrganizationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Organization.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrganizationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OrganizationAggregateArgs>(args: Subset<T, OrganizationAggregateArgs>): Prisma.PrismaPromise<GetOrganizationAggregateType<T>>
+
+    /**
+     * Group by Organization.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrganizationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends OrganizationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: OrganizationGroupByArgs['orderBy'] }
+        : { orderBy?: OrganizationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, OrganizationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOrganizationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Organization model
+   */
+  readonly fields: OrganizationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Organization.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__OrganizationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    memberships<T extends Organization$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    auditEvents<T extends Organization$auditEventsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$auditEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Organization model
+   */
+  interface OrganizationFieldRefs {
+    readonly id: FieldRef<"Organization", 'String'>
+    readonly name: FieldRef<"Organization", 'String'>
+    readonly slug: FieldRef<"Organization", 'String'>
+    readonly status: FieldRef<"Organization", 'OrganizationStatus'>
+    readonly createdAt: FieldRef<"Organization", 'DateTime'>
+    readonly updatedAt: FieldRef<"Organization", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Organization findUnique
+   */
+  export type OrganizationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * Filter, which Organization to fetch.
+     */
+    where: OrganizationWhereUniqueInput
+  }
+
+  /**
+   * Organization findUniqueOrThrow
+   */
+  export type OrganizationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * Filter, which Organization to fetch.
+     */
+    where: OrganizationWhereUniqueInput
+  }
+
+  /**
+   * Organization findFirst
+   */
+  export type OrganizationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * Filter, which Organization to fetch.
+     */
+    where?: OrganizationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Organizations to fetch.
+     */
+    orderBy?: OrganizationOrderByWithRelationInput | OrganizationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Organizations.
+     */
+    cursor?: OrganizationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Organizations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Organizations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Organizations.
+     */
+    distinct?: OrganizationScalarFieldEnum | OrganizationScalarFieldEnum[]
+  }
+
+  /**
+   * Organization findFirstOrThrow
+   */
+  export type OrganizationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * Filter, which Organization to fetch.
+     */
+    where?: OrganizationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Organizations to fetch.
+     */
+    orderBy?: OrganizationOrderByWithRelationInput | OrganizationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Organizations.
+     */
+    cursor?: OrganizationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Organizations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Organizations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Organizations.
+     */
+    distinct?: OrganizationScalarFieldEnum | OrganizationScalarFieldEnum[]
+  }
+
+  /**
+   * Organization findMany
+   */
+  export type OrganizationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * Filter, which Organizations to fetch.
+     */
+    where?: OrganizationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Organizations to fetch.
+     */
+    orderBy?: OrganizationOrderByWithRelationInput | OrganizationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Organizations.
+     */
+    cursor?: OrganizationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Organizations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Organizations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Organizations.
+     */
+    distinct?: OrganizationScalarFieldEnum | OrganizationScalarFieldEnum[]
+  }
+
+  /**
+   * Organization create
+   */
+  export type OrganizationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Organization.
+     */
+    data: XOR<OrganizationCreateInput, OrganizationUncheckedCreateInput>
+  }
+
+  /**
+   * Organization createMany
+   */
+  export type OrganizationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Organizations.
+     */
+    data: OrganizationCreateManyInput | OrganizationCreateManyInput[]
+  }
+
+  /**
+   * Organization createManyAndReturn
+   */
+  export type OrganizationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * The data used to create many Organizations.
+     */
+    data: OrganizationCreateManyInput | OrganizationCreateManyInput[]
+  }
+
+  /**
+   * Organization update
+   */
+  export type OrganizationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Organization.
+     */
+    data: XOR<OrganizationUpdateInput, OrganizationUncheckedUpdateInput>
+    /**
+     * Choose, which Organization to update.
+     */
+    where: OrganizationWhereUniqueInput
+  }
+
+  /**
+   * Organization updateMany
+   */
+  export type OrganizationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Organizations.
+     */
+    data: XOR<OrganizationUpdateManyMutationInput, OrganizationUncheckedUpdateManyInput>
+    /**
+     * Filter which Organizations to update
+     */
+    where?: OrganizationWhereInput
+    /**
+     * Limit how many Organizations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Organization updateManyAndReturn
+   */
+  export type OrganizationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * The data used to update Organizations.
+     */
+    data: XOR<OrganizationUpdateManyMutationInput, OrganizationUncheckedUpdateManyInput>
+    /**
+     * Filter which Organizations to update
+     */
+    where?: OrganizationWhereInput
+    /**
+     * Limit how many Organizations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Organization upsert
+   */
+  export type OrganizationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Organization to update in case it exists.
+     */
+    where: OrganizationWhereUniqueInput
+    /**
+     * In case the Organization found by the `where` argument doesn't exist, create a new Organization with this data.
+     */
+    create: XOR<OrganizationCreateInput, OrganizationUncheckedCreateInput>
+    /**
+     * In case the Organization was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<OrganizationUpdateInput, OrganizationUncheckedUpdateInput>
+  }
+
+  /**
+   * Organization delete
+   */
+  export type OrganizationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+    /**
+     * Filter which Organization to delete.
+     */
+    where: OrganizationWhereUniqueInput
+  }
+
+  /**
+   * Organization deleteMany
+   */
+  export type OrganizationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Organizations to delete
+     */
+    where?: OrganizationWhereInput
+    /**
+     * Limit how many Organizations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Organization.memberships
+   */
+  export type Organization$membershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    cursor?: MembershipWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.auditEvents
+   */
+  export type Organization$auditEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    where?: TenantAuditEventWhereInput
+    orderBy?: TenantAuditEventOrderByWithRelationInput | TenantAuditEventOrderByWithRelationInput[]
+    cursor?: TenantAuditEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TenantAuditEventScalarFieldEnum | TenantAuditEventScalarFieldEnum[]
+  }
+
+  /**
+   * Organization without action
+   */
+  export type OrganizationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Organization
+     */
+    select?: OrganizationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Organization
+     */
+    omit?: OrganizationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrganizationInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Membership
+   */
+
+  export type AggregateMembership = {
+    _count: MembershipCountAggregateOutputType | null
+    _min: MembershipMinAggregateOutputType | null
+    _max: MembershipMaxAggregateOutputType | null
+  }
+
+  export type MembershipMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    userId: string | null
+    role: $Enums.MembershipRole | null
+    status: $Enums.MembershipStatus | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MembershipMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    userId: string | null
+    role: $Enums.MembershipRole | null
+    status: $Enums.MembershipStatus | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MembershipCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    userId: number
+    role: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type MembershipMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    userId?: true
+    role?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MembershipMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    userId?: true
+    role?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MembershipCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    userId?: true
+    role?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type MembershipAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Membership to aggregate.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Memberships
+    **/
+    _count?: true | MembershipCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MembershipMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MembershipMaxAggregateInputType
+  }
+
+  export type GetMembershipAggregateType<T extends MembershipAggregateArgs> = {
+        [P in keyof T & keyof AggregateMembership]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMembership[P]>
+      : GetScalarType<T[P], AggregateMembership[P]>
+  }
+
+
+
+
+  export type MembershipGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithAggregationInput | MembershipOrderByWithAggregationInput[]
+    by: MembershipScalarFieldEnum[] | MembershipScalarFieldEnum
+    having?: MembershipScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MembershipCountAggregateInputType | true
+    _min?: MembershipMinAggregateInputType
+    _max?: MembershipMaxAggregateInputType
+  }
+
+  export type MembershipGroupByOutputType = {
+    id: string
+    organizationId: string
+    userId: string
+    role: $Enums.MembershipRole
+    status: $Enums.MembershipStatus
+    createdAt: Date
+    updatedAt: Date
+    _count: MembershipCountAggregateOutputType | null
+    _min: MembershipMinAggregateOutputType | null
+    _max: MembershipMaxAggregateOutputType | null
+  }
+
+  type GetMembershipGroupByPayload<T extends MembershipGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MembershipGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MembershipGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MembershipGroupByOutputType[P]>
+            : GetScalarType<T[P], MembershipGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MembershipSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    userId?: boolean
+    role?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    userId?: boolean
+    role?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    userId?: boolean
+    role?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    userId?: boolean
+    role?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type MembershipOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "userId" | "role" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["membership"]>
+  export type MembershipInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type MembershipIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type MembershipIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $MembershipPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Membership"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      userId: string
+      role: $Enums.MembershipRole
+      status: $Enums.MembershipStatus
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["membership"]>
+    composites: {}
+  }
+
+  type MembershipGetPayload<S extends boolean | null | undefined | MembershipDefaultArgs> = $Result.GetResult<Prisma.$MembershipPayload, S>
+
+  type MembershipCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MembershipFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MembershipCountAggregateInputType | true
+    }
+
+  export interface MembershipDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Membership'], meta: { name: 'Membership' } }
+    /**
+     * Find zero or one Membership that matches the filter.
+     * @param {MembershipFindUniqueArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MembershipFindUniqueArgs>(args: SelectSubset<T, MembershipFindUniqueArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Membership that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MembershipFindUniqueOrThrowArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MembershipFindUniqueOrThrowArgs>(args: SelectSubset<T, MembershipFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Membership that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindFirstArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MembershipFindFirstArgs>(args?: SelectSubset<T, MembershipFindFirstArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Membership that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindFirstOrThrowArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MembershipFindFirstOrThrowArgs>(args?: SelectSubset<T, MembershipFindFirstOrThrowArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Memberships that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Memberships
+     * const memberships = await prisma.membership.findMany()
+     * 
+     * // Get first 10 Memberships
+     * const memberships = await prisma.membership.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const membershipWithIdOnly = await prisma.membership.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MembershipFindManyArgs>(args?: SelectSubset<T, MembershipFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Membership.
+     * @param {MembershipCreateArgs} args - Arguments to create a Membership.
+     * @example
+     * // Create one Membership
+     * const Membership = await prisma.membership.create({
+     *   data: {
+     *     // ... data to create a Membership
+     *   }
+     * })
+     * 
+     */
+    create<T extends MembershipCreateArgs>(args: SelectSubset<T, MembershipCreateArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Memberships.
+     * @param {MembershipCreateManyArgs} args - Arguments to create many Memberships.
+     * @example
+     * // Create many Memberships
+     * const membership = await prisma.membership.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MembershipCreateManyArgs>(args?: SelectSubset<T, MembershipCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Memberships and returns the data saved in the database.
+     * @param {MembershipCreateManyAndReturnArgs} args - Arguments to create many Memberships.
+     * @example
+     * // Create many Memberships
+     * const membership = await prisma.membership.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Memberships and only return the `id`
+     * const membershipWithIdOnly = await prisma.membership.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MembershipCreateManyAndReturnArgs>(args?: SelectSubset<T, MembershipCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Membership.
+     * @param {MembershipDeleteArgs} args - Arguments to delete one Membership.
+     * @example
+     * // Delete one Membership
+     * const Membership = await prisma.membership.delete({
+     *   where: {
+     *     // ... filter to delete one Membership
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MembershipDeleteArgs>(args: SelectSubset<T, MembershipDeleteArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Membership.
+     * @param {MembershipUpdateArgs} args - Arguments to update one Membership.
+     * @example
+     * // Update one Membership
+     * const membership = await prisma.membership.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MembershipUpdateArgs>(args: SelectSubset<T, MembershipUpdateArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Memberships.
+     * @param {MembershipDeleteManyArgs} args - Arguments to filter Memberships to delete.
+     * @example
+     * // Delete a few Memberships
+     * const { count } = await prisma.membership.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MembershipDeleteManyArgs>(args?: SelectSubset<T, MembershipDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Memberships.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Memberships
+     * const membership = await prisma.membership.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MembershipUpdateManyArgs>(args: SelectSubset<T, MembershipUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Memberships and returns the data updated in the database.
+     * @param {MembershipUpdateManyAndReturnArgs} args - Arguments to update many Memberships.
+     * @example
+     * // Update many Memberships
+     * const membership = await prisma.membership.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Memberships and only return the `id`
+     * const membershipWithIdOnly = await prisma.membership.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MembershipUpdateManyAndReturnArgs>(args: SelectSubset<T, MembershipUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Membership.
+     * @param {MembershipUpsertArgs} args - Arguments to update or create a Membership.
+     * @example
+     * // Update or create a Membership
+     * const membership = await prisma.membership.upsert({
+     *   create: {
+     *     // ... data to create a Membership
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Membership we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MembershipUpsertArgs>(args: SelectSubset<T, MembershipUpsertArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Memberships.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipCountArgs} args - Arguments to filter Memberships to count.
+     * @example
+     * // Count the number of Memberships
+     * const count = await prisma.membership.count({
+     *   where: {
+     *     // ... the filter for the Memberships we want to count
+     *   }
+     * })
+    **/
+    count<T extends MembershipCountArgs>(
+      args?: Subset<T, MembershipCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MembershipCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Membership.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MembershipAggregateArgs>(args: Subset<T, MembershipAggregateArgs>): Prisma.PrismaPromise<GetMembershipAggregateType<T>>
+
+    /**
+     * Group by Membership.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MembershipGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MembershipGroupByArgs['orderBy'] }
+        : { orderBy?: MembershipGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MembershipGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMembershipGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Membership model
+   */
+  readonly fields: MembershipFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Membership.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MembershipClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Membership model
+   */
+  interface MembershipFieldRefs {
+    readonly id: FieldRef<"Membership", 'String'>
+    readonly organizationId: FieldRef<"Membership", 'String'>
+    readonly userId: FieldRef<"Membership", 'String'>
+    readonly role: FieldRef<"Membership", 'MembershipRole'>
+    readonly status: FieldRef<"Membership", 'MembershipStatus'>
+    readonly createdAt: FieldRef<"Membership", 'DateTime'>
+    readonly updatedAt: FieldRef<"Membership", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Membership findUnique
+   */
+  export type MembershipFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership findUniqueOrThrow
+   */
+  export type MembershipFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership findFirst
+   */
+  export type MembershipFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Memberships.
+     */
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership findFirstOrThrow
+   */
+  export type MembershipFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Memberships.
+     */
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership findMany
+   */
+  export type MembershipFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Memberships to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Memberships.
+     */
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership create
+   */
+  export type MembershipCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Membership.
+     */
+    data: XOR<MembershipCreateInput, MembershipUncheckedCreateInput>
+  }
+
+  /**
+   * Membership createMany
+   */
+  export type MembershipCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Memberships.
+     */
+    data: MembershipCreateManyInput | MembershipCreateManyInput[]
+  }
+
+  /**
+   * Membership createManyAndReturn
+   */
+  export type MembershipCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * The data used to create many Memberships.
+     */
+    data: MembershipCreateManyInput | MembershipCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Membership update
+   */
+  export type MembershipUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Membership.
+     */
+    data: XOR<MembershipUpdateInput, MembershipUncheckedUpdateInput>
+    /**
+     * Choose, which Membership to update.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership updateMany
+   */
+  export type MembershipUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Memberships.
+     */
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyInput>
+    /**
+     * Filter which Memberships to update
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Membership updateManyAndReturn
+   */
+  export type MembershipUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * The data used to update Memberships.
+     */
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyInput>
+    /**
+     * Filter which Memberships to update
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Membership upsert
+   */
+  export type MembershipUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Membership to update in case it exists.
+     */
+    where: MembershipWhereUniqueInput
+    /**
+     * In case the Membership found by the `where` argument doesn't exist, create a new Membership with this data.
+     */
+    create: XOR<MembershipCreateInput, MembershipUncheckedCreateInput>
+    /**
+     * In case the Membership was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MembershipUpdateInput, MembershipUncheckedUpdateInput>
+  }
+
+  /**
+   * Membership delete
+   */
+  export type MembershipDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter which Membership to delete.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership deleteMany
+   */
+  export type MembershipDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Memberships to delete
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Membership without action
+   */
+  export type MembershipDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TenantAuditEvent
+   */
+
+  export type AggregateTenantAuditEvent = {
+    _count: TenantAuditEventCountAggregateOutputType | null
+    _min: TenantAuditEventMinAggregateOutputType | null
+    _max: TenantAuditEventMaxAggregateOutputType | null
+  }
+
+  export type TenantAuditEventMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    actorId: string | null
+    eventType: string | null
+    resourceType: string | null
+    resourceId: string | null
+    safeMetadata: string | null
+    createdAt: Date | null
+  }
+
+  export type TenantAuditEventMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    actorId: string | null
+    eventType: string | null
+    resourceType: string | null
+    resourceId: string | null
+    safeMetadata: string | null
+    createdAt: Date | null
+  }
+
+  export type TenantAuditEventCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    actorId: number
+    eventType: number
+    resourceType: number
+    resourceId: number
+    safeMetadata: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type TenantAuditEventMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    actorId?: true
+    eventType?: true
+    resourceType?: true
+    resourceId?: true
+    safeMetadata?: true
+    createdAt?: true
+  }
+
+  export type TenantAuditEventMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    actorId?: true
+    eventType?: true
+    resourceType?: true
+    resourceId?: true
+    safeMetadata?: true
+    createdAt?: true
+  }
+
+  export type TenantAuditEventCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    actorId?: true
+    eventType?: true
+    resourceType?: true
+    resourceId?: true
+    safeMetadata?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type TenantAuditEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TenantAuditEvent to aggregate.
+     */
+    where?: TenantAuditEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TenantAuditEvents to fetch.
+     */
+    orderBy?: TenantAuditEventOrderByWithRelationInput | TenantAuditEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TenantAuditEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TenantAuditEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TenantAuditEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TenantAuditEvents
+    **/
+    _count?: true | TenantAuditEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TenantAuditEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TenantAuditEventMaxAggregateInputType
+  }
+
+  export type GetTenantAuditEventAggregateType<T extends TenantAuditEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateTenantAuditEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTenantAuditEvent[P]>
+      : GetScalarType<T[P], AggregateTenantAuditEvent[P]>
+  }
+
+
+
+
+  export type TenantAuditEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TenantAuditEventWhereInput
+    orderBy?: TenantAuditEventOrderByWithAggregationInput | TenantAuditEventOrderByWithAggregationInput[]
+    by: TenantAuditEventScalarFieldEnum[] | TenantAuditEventScalarFieldEnum
+    having?: TenantAuditEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TenantAuditEventCountAggregateInputType | true
+    _min?: TenantAuditEventMinAggregateInputType
+    _max?: TenantAuditEventMaxAggregateInputType
+  }
+
+  export type TenantAuditEventGroupByOutputType = {
+    id: string
+    organizationId: string
+    actorId: string | null
+    eventType: string
+    resourceType: string
+    resourceId: string | null
+    safeMetadata: string | null
+    createdAt: Date
+    _count: TenantAuditEventCountAggregateOutputType | null
+    _min: TenantAuditEventMinAggregateOutputType | null
+    _max: TenantAuditEventMaxAggregateOutputType | null
+  }
+
+  type GetTenantAuditEventGroupByPayload<T extends TenantAuditEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TenantAuditEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TenantAuditEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TenantAuditEventGroupByOutputType[P]>
+            : GetScalarType<T[P], TenantAuditEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TenantAuditEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    actorId?: boolean
+    eventType?: boolean
+    resourceType?: boolean
+    resourceId?: boolean
+    safeMetadata?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["tenantAuditEvent"]>
+
+  export type TenantAuditEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    actorId?: boolean
+    eventType?: boolean
+    resourceType?: boolean
+    resourceId?: boolean
+    safeMetadata?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["tenantAuditEvent"]>
+
+  export type TenantAuditEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    actorId?: boolean
+    eventType?: boolean
+    resourceType?: boolean
+    resourceId?: boolean
+    safeMetadata?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["tenantAuditEvent"]>
+
+  export type TenantAuditEventSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    actorId?: boolean
+    eventType?: boolean
+    resourceType?: boolean
+    resourceId?: boolean
+    safeMetadata?: boolean
+    createdAt?: boolean
+  }
+
+  export type TenantAuditEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "actorId" | "eventType" | "resourceType" | "resourceId" | "safeMetadata" | "createdAt", ExtArgs["result"]["tenantAuditEvent"]>
+  export type TenantAuditEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type TenantAuditEventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type TenantAuditEventIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+
+  export type $TenantAuditEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TenantAuditEvent"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      /**
+       * 触发者；系统触发时为 null（例如定时任务、迁移）。
+       */
+      actorId: string | null
+      /**
+       * 事件类型，命名规范：`<domain>.<action>`，如 `membership.role_changed`。
+       */
+      eventType: string
+      /**
+       * 资源类型，如 `membership` / `mission` / `proposal`。
+       */
+      resourceType: string
+      resourceId: string | null
+      /**
+       * 脱敏元数据（JSON 文本）。**禁止**写入密码、令牌、完整邮箱等 PII。
+       */
+      safeMetadata: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["tenantAuditEvent"]>
+    composites: {}
+  }
+
+  type TenantAuditEventGetPayload<S extends boolean | null | undefined | TenantAuditEventDefaultArgs> = $Result.GetResult<Prisma.$TenantAuditEventPayload, S>
+
+  type TenantAuditEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TenantAuditEventFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TenantAuditEventCountAggregateInputType | true
+    }
+
+  export interface TenantAuditEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TenantAuditEvent'], meta: { name: 'TenantAuditEvent' } }
+    /**
+     * Find zero or one TenantAuditEvent that matches the filter.
+     * @param {TenantAuditEventFindUniqueArgs} args - Arguments to find a TenantAuditEvent
+     * @example
+     * // Get one TenantAuditEvent
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TenantAuditEventFindUniqueArgs>(args: SelectSubset<T, TenantAuditEventFindUniqueArgs<ExtArgs>>): Prisma__TenantAuditEventClient<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TenantAuditEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TenantAuditEventFindUniqueOrThrowArgs} args - Arguments to find a TenantAuditEvent
+     * @example
+     * // Get one TenantAuditEvent
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TenantAuditEventFindUniqueOrThrowArgs>(args: SelectSubset<T, TenantAuditEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TenantAuditEventClient<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TenantAuditEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantAuditEventFindFirstArgs} args - Arguments to find a TenantAuditEvent
+     * @example
+     * // Get one TenantAuditEvent
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TenantAuditEventFindFirstArgs>(args?: SelectSubset<T, TenantAuditEventFindFirstArgs<ExtArgs>>): Prisma__TenantAuditEventClient<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TenantAuditEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantAuditEventFindFirstOrThrowArgs} args - Arguments to find a TenantAuditEvent
+     * @example
+     * // Get one TenantAuditEvent
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TenantAuditEventFindFirstOrThrowArgs>(args?: SelectSubset<T, TenantAuditEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__TenantAuditEventClient<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TenantAuditEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantAuditEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TenantAuditEvents
+     * const tenantAuditEvents = await prisma.tenantAuditEvent.findMany()
+     * 
+     * // Get first 10 TenantAuditEvents
+     * const tenantAuditEvents = await prisma.tenantAuditEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const tenantAuditEventWithIdOnly = await prisma.tenantAuditEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TenantAuditEventFindManyArgs>(args?: SelectSubset<T, TenantAuditEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TenantAuditEvent.
+     * @param {TenantAuditEventCreateArgs} args - Arguments to create a TenantAuditEvent.
+     * @example
+     * // Create one TenantAuditEvent
+     * const TenantAuditEvent = await prisma.tenantAuditEvent.create({
+     *   data: {
+     *     // ... data to create a TenantAuditEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends TenantAuditEventCreateArgs>(args: SelectSubset<T, TenantAuditEventCreateArgs<ExtArgs>>): Prisma__TenantAuditEventClient<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TenantAuditEvents.
+     * @param {TenantAuditEventCreateManyArgs} args - Arguments to create many TenantAuditEvents.
+     * @example
+     * // Create many TenantAuditEvents
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TenantAuditEventCreateManyArgs>(args?: SelectSubset<T, TenantAuditEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TenantAuditEvents and returns the data saved in the database.
+     * @param {TenantAuditEventCreateManyAndReturnArgs} args - Arguments to create many TenantAuditEvents.
+     * @example
+     * // Create many TenantAuditEvents
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TenantAuditEvents and only return the `id`
+     * const tenantAuditEventWithIdOnly = await prisma.tenantAuditEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TenantAuditEventCreateManyAndReturnArgs>(args?: SelectSubset<T, TenantAuditEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TenantAuditEvent.
+     * @param {TenantAuditEventDeleteArgs} args - Arguments to delete one TenantAuditEvent.
+     * @example
+     * // Delete one TenantAuditEvent
+     * const TenantAuditEvent = await prisma.tenantAuditEvent.delete({
+     *   where: {
+     *     // ... filter to delete one TenantAuditEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TenantAuditEventDeleteArgs>(args: SelectSubset<T, TenantAuditEventDeleteArgs<ExtArgs>>): Prisma__TenantAuditEventClient<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TenantAuditEvent.
+     * @param {TenantAuditEventUpdateArgs} args - Arguments to update one TenantAuditEvent.
+     * @example
+     * // Update one TenantAuditEvent
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TenantAuditEventUpdateArgs>(args: SelectSubset<T, TenantAuditEventUpdateArgs<ExtArgs>>): Prisma__TenantAuditEventClient<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TenantAuditEvents.
+     * @param {TenantAuditEventDeleteManyArgs} args - Arguments to filter TenantAuditEvents to delete.
+     * @example
+     * // Delete a few TenantAuditEvents
+     * const { count } = await prisma.tenantAuditEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TenantAuditEventDeleteManyArgs>(args?: SelectSubset<T, TenantAuditEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TenantAuditEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantAuditEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TenantAuditEvents
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TenantAuditEventUpdateManyArgs>(args: SelectSubset<T, TenantAuditEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TenantAuditEvents and returns the data updated in the database.
+     * @param {TenantAuditEventUpdateManyAndReturnArgs} args - Arguments to update many TenantAuditEvents.
+     * @example
+     * // Update many TenantAuditEvents
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TenantAuditEvents and only return the `id`
+     * const tenantAuditEventWithIdOnly = await prisma.tenantAuditEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TenantAuditEventUpdateManyAndReturnArgs>(args: SelectSubset<T, TenantAuditEventUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TenantAuditEvent.
+     * @param {TenantAuditEventUpsertArgs} args - Arguments to update or create a TenantAuditEvent.
+     * @example
+     * // Update or create a TenantAuditEvent
+     * const tenantAuditEvent = await prisma.tenantAuditEvent.upsert({
+     *   create: {
+     *     // ... data to create a TenantAuditEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TenantAuditEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TenantAuditEventUpsertArgs>(args: SelectSubset<T, TenantAuditEventUpsertArgs<ExtArgs>>): Prisma__TenantAuditEventClient<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TenantAuditEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantAuditEventCountArgs} args - Arguments to filter TenantAuditEvents to count.
+     * @example
+     * // Count the number of TenantAuditEvents
+     * const count = await prisma.tenantAuditEvent.count({
+     *   where: {
+     *     // ... the filter for the TenantAuditEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends TenantAuditEventCountArgs>(
+      args?: Subset<T, TenantAuditEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TenantAuditEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TenantAuditEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantAuditEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TenantAuditEventAggregateArgs>(args: Subset<T, TenantAuditEventAggregateArgs>): Prisma.PrismaPromise<GetTenantAuditEventAggregateType<T>>
+
+    /**
+     * Group by TenantAuditEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantAuditEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TenantAuditEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TenantAuditEventGroupByArgs['orderBy'] }
+        : { orderBy?: TenantAuditEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TenantAuditEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTenantAuditEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TenantAuditEvent model
+   */
+  readonly fields: TenantAuditEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TenantAuditEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TenantAuditEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TenantAuditEvent model
+   */
+  interface TenantAuditEventFieldRefs {
+    readonly id: FieldRef<"TenantAuditEvent", 'String'>
+    readonly organizationId: FieldRef<"TenantAuditEvent", 'String'>
+    readonly actorId: FieldRef<"TenantAuditEvent", 'String'>
+    readonly eventType: FieldRef<"TenantAuditEvent", 'String'>
+    readonly resourceType: FieldRef<"TenantAuditEvent", 'String'>
+    readonly resourceId: FieldRef<"TenantAuditEvent", 'String'>
+    readonly safeMetadata: FieldRef<"TenantAuditEvent", 'String'>
+    readonly createdAt: FieldRef<"TenantAuditEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TenantAuditEvent findUnique
+   */
+  export type TenantAuditEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TenantAuditEvent to fetch.
+     */
+    where: TenantAuditEventWhereUniqueInput
+  }
+
+  /**
+   * TenantAuditEvent findUniqueOrThrow
+   */
+  export type TenantAuditEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TenantAuditEvent to fetch.
+     */
+    where: TenantAuditEventWhereUniqueInput
+  }
+
+  /**
+   * TenantAuditEvent findFirst
+   */
+  export type TenantAuditEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TenantAuditEvent to fetch.
+     */
+    where?: TenantAuditEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TenantAuditEvents to fetch.
+     */
+    orderBy?: TenantAuditEventOrderByWithRelationInput | TenantAuditEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TenantAuditEvents.
+     */
+    cursor?: TenantAuditEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TenantAuditEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TenantAuditEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TenantAuditEvents.
+     */
+    distinct?: TenantAuditEventScalarFieldEnum | TenantAuditEventScalarFieldEnum[]
+  }
+
+  /**
+   * TenantAuditEvent findFirstOrThrow
+   */
+  export type TenantAuditEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TenantAuditEvent to fetch.
+     */
+    where?: TenantAuditEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TenantAuditEvents to fetch.
+     */
+    orderBy?: TenantAuditEventOrderByWithRelationInput | TenantAuditEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TenantAuditEvents.
+     */
+    cursor?: TenantAuditEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TenantAuditEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TenantAuditEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TenantAuditEvents.
+     */
+    distinct?: TenantAuditEventScalarFieldEnum | TenantAuditEventScalarFieldEnum[]
+  }
+
+  /**
+   * TenantAuditEvent findMany
+   */
+  export type TenantAuditEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * Filter, which TenantAuditEvents to fetch.
+     */
+    where?: TenantAuditEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TenantAuditEvents to fetch.
+     */
+    orderBy?: TenantAuditEventOrderByWithRelationInput | TenantAuditEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TenantAuditEvents.
+     */
+    cursor?: TenantAuditEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TenantAuditEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TenantAuditEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TenantAuditEvents.
+     */
+    distinct?: TenantAuditEventScalarFieldEnum | TenantAuditEventScalarFieldEnum[]
+  }
+
+  /**
+   * TenantAuditEvent create
+   */
+  export type TenantAuditEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * The data needed to create a TenantAuditEvent.
+     */
+    data: XOR<TenantAuditEventCreateInput, TenantAuditEventUncheckedCreateInput>
+  }
+
+  /**
+   * TenantAuditEvent createMany
+   */
+  export type TenantAuditEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TenantAuditEvents.
+     */
+    data: TenantAuditEventCreateManyInput | TenantAuditEventCreateManyInput[]
+  }
+
+  /**
+   * TenantAuditEvent createManyAndReturn
+   */
+  export type TenantAuditEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * The data used to create many TenantAuditEvents.
+     */
+    data: TenantAuditEventCreateManyInput | TenantAuditEventCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TenantAuditEvent update
+   */
+  export type TenantAuditEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TenantAuditEvent.
+     */
+    data: XOR<TenantAuditEventUpdateInput, TenantAuditEventUncheckedUpdateInput>
+    /**
+     * Choose, which TenantAuditEvent to update.
+     */
+    where: TenantAuditEventWhereUniqueInput
+  }
+
+  /**
+   * TenantAuditEvent updateMany
+   */
+  export type TenantAuditEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TenantAuditEvents.
+     */
+    data: XOR<TenantAuditEventUpdateManyMutationInput, TenantAuditEventUncheckedUpdateManyInput>
+    /**
+     * Filter which TenantAuditEvents to update
+     */
+    where?: TenantAuditEventWhereInput
+    /**
+     * Limit how many TenantAuditEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TenantAuditEvent updateManyAndReturn
+   */
+  export type TenantAuditEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * The data used to update TenantAuditEvents.
+     */
+    data: XOR<TenantAuditEventUpdateManyMutationInput, TenantAuditEventUncheckedUpdateManyInput>
+    /**
+     * Filter which TenantAuditEvents to update
+     */
+    where?: TenantAuditEventWhereInput
+    /**
+     * Limit how many TenantAuditEvents to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TenantAuditEvent upsert
+   */
+  export type TenantAuditEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TenantAuditEvent to update in case it exists.
+     */
+    where: TenantAuditEventWhereUniqueInput
+    /**
+     * In case the TenantAuditEvent found by the `where` argument doesn't exist, create a new TenantAuditEvent with this data.
+     */
+    create: XOR<TenantAuditEventCreateInput, TenantAuditEventUncheckedCreateInput>
+    /**
+     * In case the TenantAuditEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TenantAuditEventUpdateInput, TenantAuditEventUncheckedUpdateInput>
+  }
+
+  /**
+   * TenantAuditEvent delete
+   */
+  export type TenantAuditEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+    /**
+     * Filter which TenantAuditEvent to delete.
+     */
+    where: TenantAuditEventWhereUniqueInput
+  }
+
+  /**
+   * TenantAuditEvent deleteMany
+   */
+  export type TenantAuditEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TenantAuditEvents to delete
+     */
+    where?: TenantAuditEventWhereInput
+    /**
+     * Limit how many TenantAuditEvents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TenantAuditEvent without action
+   */
+  export type TenantAuditEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantAuditEvent
+     */
+    select?: TenantAuditEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TenantAuditEvent
+     */
+    omit?: TenantAuditEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TenantAuditEventInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -53276,6 +56997,45 @@ export namespace Prisma {
   export type AnalyticsDailyAggScalarFieldEnum = (typeof AnalyticsDailyAggScalarFieldEnum)[keyof typeof AnalyticsDailyAggScalarFieldEnum]
 
 
+  export const OrganizationScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    slug: 'slug',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]
+
+
+  export const MembershipScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    userId: 'userId',
+    role: 'role',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type MembershipScalarFieldEnum = (typeof MembershipScalarFieldEnum)[keyof typeof MembershipScalarFieldEnum]
+
+
+  export const TenantAuditEventScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    actorId: 'actorId',
+    eventType: 'eventType',
+    resourceType: 'resourceType',
+    resourceId: 'resourceId',
+    safeMetadata: 'safeMetadata',
+    createdAt: 'createdAt'
+  };
+
+  export type TenantAuditEventScalarFieldEnum = (typeof TenantAuditEventScalarFieldEnum)[keyof typeof TenantAuditEventScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -53567,6 +57327,27 @@ export namespace Prisma {
    * Reference to a field of type 'ReportStatus'
    */
   export type EnumReportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReportStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'OrganizationStatus'
+   */
+  export type EnumOrganizationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrganizationStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'MembershipRole'
+   */
+  export type EnumMembershipRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipRole'>
+    
+
+
+  /**
+   * Reference to a field of type 'MembershipStatus'
+   */
+  export type EnumMembershipStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipStatus'>
     
   /**
    * Deep Input Types
@@ -54220,6 +58001,7 @@ export namespace Prisma {
     notifications?: NotificationListRelationFilter
     adminAudits?: AdminAuditListRelationFilter
     adminRoles?: AdminUserRoleListRelationFilter
+    memberships?: MembershipListRelationFilter
     analyticsEvents?: AnalyticsEventListRelationFilter
     reportsMade?: UserReportListRelationFilter
     reportsReceived?: UserReportListRelationFilter
@@ -54270,6 +58052,7 @@ export namespace Prisma {
     notifications?: NotificationOrderByRelationAggregateInput
     adminAudits?: AdminAuditOrderByRelationAggregateInput
     adminRoles?: AdminUserRoleOrderByRelationAggregateInput
+    memberships?: MembershipOrderByRelationAggregateInput
     analyticsEvents?: AnalyticsEventOrderByRelationAggregateInput
     reportsMade?: UserReportOrderByRelationAggregateInput
     reportsReceived?: UserReportOrderByRelationAggregateInput
@@ -54323,6 +58106,7 @@ export namespace Prisma {
     notifications?: NotificationListRelationFilter
     adminAudits?: AdminAuditListRelationFilter
     adminRoles?: AdminUserRoleListRelationFilter
+    memberships?: MembershipListRelationFilter
     analyticsEvents?: AnalyticsEventListRelationFilter
     reportsMade?: UserReportListRelationFilter
     reportsReceived?: UserReportListRelationFilter
@@ -57513,6 +61297,208 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"AnalyticsDailyAgg"> | Date | string
   }
 
+  export type OrganizationWhereInput = {
+    AND?: OrganizationWhereInput | OrganizationWhereInput[]
+    OR?: OrganizationWhereInput[]
+    NOT?: OrganizationWhereInput | OrganizationWhereInput[]
+    id?: StringFilter<"Organization"> | string
+    name?: StringFilter<"Organization"> | string
+    slug?: StringFilter<"Organization"> | string
+    status?: EnumOrganizationStatusFilter<"Organization"> | $Enums.OrganizationStatus
+    createdAt?: DateTimeFilter<"Organization"> | Date | string
+    updatedAt?: DateTimeFilter<"Organization"> | Date | string
+    memberships?: MembershipListRelationFilter
+    auditEvents?: TenantAuditEventListRelationFilter
+  }
+
+  export type OrganizationOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    memberships?: MembershipOrderByRelationAggregateInput
+    auditEvents?: TenantAuditEventOrderByRelationAggregateInput
+  }
+
+  export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug?: string
+    AND?: OrganizationWhereInput | OrganizationWhereInput[]
+    OR?: OrganizationWhereInput[]
+    NOT?: OrganizationWhereInput | OrganizationWhereInput[]
+    name?: StringFilter<"Organization"> | string
+    status?: EnumOrganizationStatusFilter<"Organization"> | $Enums.OrganizationStatus
+    createdAt?: DateTimeFilter<"Organization"> | Date | string
+    updatedAt?: DateTimeFilter<"Organization"> | Date | string
+    memberships?: MembershipListRelationFilter
+    auditEvents?: TenantAuditEventListRelationFilter
+  }, "id" | "slug">
+
+  export type OrganizationOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: OrganizationCountOrderByAggregateInput
+    _max?: OrganizationMaxOrderByAggregateInput
+    _min?: OrganizationMinOrderByAggregateInput
+  }
+
+  export type OrganizationScalarWhereWithAggregatesInput = {
+    AND?: OrganizationScalarWhereWithAggregatesInput | OrganizationScalarWhereWithAggregatesInput[]
+    OR?: OrganizationScalarWhereWithAggregatesInput[]
+    NOT?: OrganizationScalarWhereWithAggregatesInput | OrganizationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Organization"> | string
+    name?: StringWithAggregatesFilter<"Organization"> | string
+    slug?: StringWithAggregatesFilter<"Organization"> | string
+    status?: EnumOrganizationStatusWithAggregatesFilter<"Organization"> | $Enums.OrganizationStatus
+    createdAt?: DateTimeWithAggregatesFilter<"Organization"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Organization"> | Date | string
+  }
+
+  export type MembershipWhereInput = {
+    AND?: MembershipWhereInput | MembershipWhereInput[]
+    OR?: MembershipWhereInput[]
+    NOT?: MembershipWhereInput | MembershipWhereInput[]
+    id?: StringFilter<"Membership"> | string
+    organizationId?: StringFilter<"Membership"> | string
+    userId?: StringFilter<"Membership"> | string
+    role?: EnumMembershipRoleFilter<"Membership"> | $Enums.MembershipRole
+    status?: EnumMembershipStatusFilter<"Membership"> | $Enums.MembershipStatus
+    createdAt?: DateTimeFilter<"Membership"> | Date | string
+    updatedAt?: DateTimeFilter<"Membership"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type MembershipOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    role?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type MembershipWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    organizationId_userId?: MembershipOrganizationIdUserIdCompoundUniqueInput
+    AND?: MembershipWhereInput | MembershipWhereInput[]
+    OR?: MembershipWhereInput[]
+    NOT?: MembershipWhereInput | MembershipWhereInput[]
+    organizationId?: StringFilter<"Membership"> | string
+    userId?: StringFilter<"Membership"> | string
+    role?: EnumMembershipRoleFilter<"Membership"> | $Enums.MembershipRole
+    status?: EnumMembershipStatusFilter<"Membership"> | $Enums.MembershipStatus
+    createdAt?: DateTimeFilter<"Membership"> | Date | string
+    updatedAt?: DateTimeFilter<"Membership"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "organizationId_userId">
+
+  export type MembershipOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    role?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: MembershipCountOrderByAggregateInput
+    _max?: MembershipMaxOrderByAggregateInput
+    _min?: MembershipMinOrderByAggregateInput
+  }
+
+  export type MembershipScalarWhereWithAggregatesInput = {
+    AND?: MembershipScalarWhereWithAggregatesInput | MembershipScalarWhereWithAggregatesInput[]
+    OR?: MembershipScalarWhereWithAggregatesInput[]
+    NOT?: MembershipScalarWhereWithAggregatesInput | MembershipScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Membership"> | string
+    organizationId?: StringWithAggregatesFilter<"Membership"> | string
+    userId?: StringWithAggregatesFilter<"Membership"> | string
+    role?: EnumMembershipRoleWithAggregatesFilter<"Membership"> | $Enums.MembershipRole
+    status?: EnumMembershipStatusWithAggregatesFilter<"Membership"> | $Enums.MembershipStatus
+    createdAt?: DateTimeWithAggregatesFilter<"Membership"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Membership"> | Date | string
+  }
+
+  export type TenantAuditEventWhereInput = {
+    AND?: TenantAuditEventWhereInput | TenantAuditEventWhereInput[]
+    OR?: TenantAuditEventWhereInput[]
+    NOT?: TenantAuditEventWhereInput | TenantAuditEventWhereInput[]
+    id?: StringFilter<"TenantAuditEvent"> | string
+    organizationId?: StringFilter<"TenantAuditEvent"> | string
+    actorId?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    eventType?: StringFilter<"TenantAuditEvent"> | string
+    resourceType?: StringFilter<"TenantAuditEvent"> | string
+    resourceId?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    safeMetadata?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    createdAt?: DateTimeFilter<"TenantAuditEvent"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }
+
+  export type TenantAuditEventOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    actorId?: SortOrderInput | SortOrder
+    eventType?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrderInput | SortOrder
+    safeMetadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+  }
+
+  export type TenantAuditEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: TenantAuditEventWhereInput | TenantAuditEventWhereInput[]
+    OR?: TenantAuditEventWhereInput[]
+    NOT?: TenantAuditEventWhereInput | TenantAuditEventWhereInput[]
+    organizationId?: StringFilter<"TenantAuditEvent"> | string
+    actorId?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    eventType?: StringFilter<"TenantAuditEvent"> | string
+    resourceType?: StringFilter<"TenantAuditEvent"> | string
+    resourceId?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    safeMetadata?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    createdAt?: DateTimeFilter<"TenantAuditEvent"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }, "id">
+
+  export type TenantAuditEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    actorId?: SortOrderInput | SortOrder
+    eventType?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrderInput | SortOrder
+    safeMetadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: TenantAuditEventCountOrderByAggregateInput
+    _max?: TenantAuditEventMaxOrderByAggregateInput
+    _min?: TenantAuditEventMinOrderByAggregateInput
+  }
+
+  export type TenantAuditEventScalarWhereWithAggregatesInput = {
+    AND?: TenantAuditEventScalarWhereWithAggregatesInput | TenantAuditEventScalarWhereWithAggregatesInput[]
+    OR?: TenantAuditEventScalarWhereWithAggregatesInput[]
+    NOT?: TenantAuditEventScalarWhereWithAggregatesInput | TenantAuditEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TenantAuditEvent"> | string
+    organizationId?: StringWithAggregatesFilter<"TenantAuditEvent"> | string
+    actorId?: StringNullableWithAggregatesFilter<"TenantAuditEvent"> | string | null
+    eventType?: StringWithAggregatesFilter<"TenantAuditEvent"> | string
+    resourceType?: StringWithAggregatesFilter<"TenantAuditEvent"> | string
+    resourceId?: StringNullableWithAggregatesFilter<"TenantAuditEvent"> | string | null
+    safeMetadata?: StringNullableWithAggregatesFilter<"TenantAuditEvent"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"TenantAuditEvent"> | Date | string
+  }
+
   export type BotProfileCreateInput = {
     id?: string
     profileId: string
@@ -58283,6 +62269,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -58333,6 +62320,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -58383,6 +62371,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -58433,6 +62422,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -62077,6 +66067,221 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type OrganizationCreateInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationCreateManyInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OrganizationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OrganizationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipCreateInput = {
+    id?: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMembershipsInput
+    user: UserCreateNestedOneWithoutMembershipsInput
+  }
+
+  export type MembershipUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMembershipsNestedInput
+    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+  }
+
+  export type MembershipUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipCreateManyInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantAuditEventCreateInput = {
+    id?: string
+    actorId?: string | null
+    eventType: string
+    resourceType: string
+    resourceId?: string | null
+    safeMetadata?: string | null
+    createdAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutAuditEventsInput
+  }
+
+  export type TenantAuditEventUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    actorId?: string | null
+    eventType: string
+    resourceType: string
+    resourceId?: string | null
+    safeMetadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TenantAuditEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    safeMetadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutAuditEventsNestedInput
+  }
+
+  export type TenantAuditEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    safeMetadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantAuditEventCreateManyInput = {
+    id?: string
+    organizationId: string
+    actorId?: string | null
+    eventType: string
+    resourceType: string
+    resourceId?: string | null
+    safeMetadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TenantAuditEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    safeMetadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantAuditEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    safeMetadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -62866,6 +67071,12 @@ export namespace Prisma {
     none?: AdminUserRoleWhereInput
   }
 
+  export type MembershipListRelationFilter = {
+    every?: MembershipWhereInput
+    some?: MembershipWhereInput
+    none?: MembershipWhereInput
+  }
+
   export type AnalyticsEventListRelationFilter = {
     every?: AnalyticsEventWhereInput
     some?: AnalyticsEventWhereInput
@@ -62958,6 +67169,10 @@ export namespace Prisma {
   }
 
   export type AdminUserRoleOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MembershipOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -65389,6 +69604,167 @@ export namespace Prisma {
     value?: SortOrder
   }
 
+  export type EnumOrganizationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrganizationStatus | EnumOrganizationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrganizationStatus[]
+    notIn?: $Enums.OrganizationStatus[]
+    not?: NestedEnumOrganizationStatusFilter<$PrismaModel> | $Enums.OrganizationStatus
+  }
+
+  export type TenantAuditEventListRelationFilter = {
+    every?: TenantAuditEventWhereInput
+    some?: TenantAuditEventWhereInput
+    none?: TenantAuditEventWhereInput
+  }
+
+  export type TenantAuditEventOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type OrganizationCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OrganizationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OrganizationMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumOrganizationStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrganizationStatus | EnumOrganizationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrganizationStatus[]
+    notIn?: $Enums.OrganizationStatus[]
+    not?: NestedEnumOrganizationStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrganizationStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOrganizationStatusFilter<$PrismaModel>
+    _max?: NestedEnumOrganizationStatusFilter<$PrismaModel>
+  }
+
+  export type EnumMembershipRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipRole | EnumMembershipRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipRole[]
+    notIn?: $Enums.MembershipRole[]
+    not?: NestedEnumMembershipRoleFilter<$PrismaModel> | $Enums.MembershipRole
+  }
+
+  export type EnumMembershipStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipStatus | EnumMembershipStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipStatus[]
+    notIn?: $Enums.MembershipStatus[]
+    not?: NestedEnumMembershipStatusFilter<$PrismaModel> | $Enums.MembershipStatus
+  }
+
+  export type OrganizationScalarRelationFilter = {
+    is?: OrganizationWhereInput
+    isNot?: OrganizationWhereInput
+  }
+
+  export type MembershipOrganizationIdUserIdCompoundUniqueInput = {
+    organizationId: string
+    userId: string
+  }
+
+  export type MembershipCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    role?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    role?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    role?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumMembershipRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipRole | EnumMembershipRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipRole[]
+    notIn?: $Enums.MembershipRole[]
+    not?: NestedEnumMembershipRoleWithAggregatesFilter<$PrismaModel> | $Enums.MembershipRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipRoleFilter<$PrismaModel>
+    _max?: NestedEnumMembershipRoleFilter<$PrismaModel>
+  }
+
+  export type EnumMembershipStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipStatus | EnumMembershipStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipStatus[]
+    notIn?: $Enums.MembershipStatus[]
+    not?: NestedEnumMembershipStatusWithAggregatesFilter<$PrismaModel> | $Enums.MembershipStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipStatusFilter<$PrismaModel>
+    _max?: NestedEnumMembershipStatusFilter<$PrismaModel>
+  }
+
+  export type TenantAuditEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    actorId?: SortOrder
+    eventType?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrder
+    safeMetadata?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TenantAuditEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    actorId?: SortOrder
+    eventType?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrder
+    safeMetadata?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TenantAuditEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    actorId?: SortOrder
+    eventType?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrder
+    safeMetadata?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -65621,6 +69997,13 @@ export namespace Prisma {
     connect?: AdminUserRoleWhereUniqueInput | AdminUserRoleWhereUniqueInput[]
   }
 
+  export type MembershipCreateNestedManyWithoutUserInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
   export type AnalyticsEventCreateNestedManyWithoutUserInput = {
     create?: XOR<AnalyticsEventCreateWithoutUserInput, AnalyticsEventUncheckedCreateWithoutUserInput> | AnalyticsEventCreateWithoutUserInput[] | AnalyticsEventUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AnalyticsEventCreateOrConnectWithoutUserInput | AnalyticsEventCreateOrConnectWithoutUserInput[]
@@ -65832,6 +70215,13 @@ export namespace Prisma {
     connectOrCreate?: AdminUserRoleCreateOrConnectWithoutUserInput | AdminUserRoleCreateOrConnectWithoutUserInput[]
     createMany?: AdminUserRoleCreateManyUserInputEnvelope
     connect?: AdminUserRoleWhereUniqueInput | AdminUserRoleWhereUniqueInput[]
+  }
+
+  export type MembershipUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
   }
 
   export type AnalyticsEventUncheckedCreateNestedManyWithoutUserInput = {
@@ -66215,6 +70605,20 @@ export namespace Prisma {
     update?: AdminUserRoleUpdateWithWhereUniqueWithoutUserInput | AdminUserRoleUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: AdminUserRoleUpdateManyWithWhereWithoutUserInput | AdminUserRoleUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: AdminUserRoleScalarWhereInput | AdminUserRoleScalarWhereInput[]
+  }
+
+  export type MembershipUpdateManyWithoutUserNestedInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutUserInput | MembershipUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutUserInput | MembershipUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutUserInput | MembershipUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
   }
 
   export type AnalyticsEventUpdateManyWithoutUserNestedInput = {
@@ -66633,6 +71037,20 @@ export namespace Prisma {
     update?: AdminUserRoleUpdateWithWhereUniqueWithoutUserInput | AdminUserRoleUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: AdminUserRoleUpdateManyWithWhereWithoutUserInput | AdminUserRoleUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: AdminUserRoleScalarWhereInput | AdminUserRoleScalarWhereInput[]
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutUserInput | MembershipUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutUserInput | MembershipUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutUserInput | MembershipUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
   }
 
   export type AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput = {
@@ -67899,6 +72317,144 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReportsReceivedInput, UserUpdateWithoutReportsReceivedInput>, UserUncheckedUpdateWithoutReportsReceivedInput>
   }
 
+  export type MembershipCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
+    createMany?: MembershipCreateManyOrganizationInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
+  export type TenantAuditEventCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<TenantAuditEventCreateWithoutOrganizationInput, TenantAuditEventUncheckedCreateWithoutOrganizationInput> | TenantAuditEventCreateWithoutOrganizationInput[] | TenantAuditEventUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: TenantAuditEventCreateOrConnectWithoutOrganizationInput | TenantAuditEventCreateOrConnectWithoutOrganizationInput[]
+    createMany?: TenantAuditEventCreateManyOrganizationInputEnvelope
+    connect?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+  }
+
+  export type MembershipUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
+    createMany?: MembershipCreateManyOrganizationInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
+  export type TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<TenantAuditEventCreateWithoutOrganizationInput, TenantAuditEventUncheckedCreateWithoutOrganizationInput> | TenantAuditEventCreateWithoutOrganizationInput[] | TenantAuditEventUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: TenantAuditEventCreateOrConnectWithoutOrganizationInput | TenantAuditEventCreateOrConnectWithoutOrganizationInput[]
+    createMany?: TenantAuditEventCreateManyOrganizationInputEnvelope
+    connect?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+  }
+
+  export type EnumOrganizationStatusFieldUpdateOperationsInput = {
+    set?: $Enums.OrganizationStatus
+  }
+
+  export type MembershipUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutOrganizationInput | MembershipUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: MembershipCreateManyOrganizationInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutOrganizationInput | MembershipUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutOrganizationInput | MembershipUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+  }
+
+  export type TenantAuditEventUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<TenantAuditEventCreateWithoutOrganizationInput, TenantAuditEventUncheckedCreateWithoutOrganizationInput> | TenantAuditEventCreateWithoutOrganizationInput[] | TenantAuditEventUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: TenantAuditEventCreateOrConnectWithoutOrganizationInput | TenantAuditEventCreateOrConnectWithoutOrganizationInput[]
+    upsert?: TenantAuditEventUpsertWithWhereUniqueWithoutOrganizationInput | TenantAuditEventUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: TenantAuditEventCreateManyOrganizationInputEnvelope
+    set?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+    disconnect?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+    delete?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+    connect?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+    update?: TenantAuditEventUpdateWithWhereUniqueWithoutOrganizationInput | TenantAuditEventUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: TenantAuditEventUpdateManyWithWhereWithoutOrganizationInput | TenantAuditEventUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: TenantAuditEventScalarWhereInput | TenantAuditEventScalarWhereInput[]
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutOrganizationInput | MembershipUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: MembershipCreateManyOrganizationInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutOrganizationInput | MembershipUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutOrganizationInput | MembershipUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+  }
+
+  export type TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<TenantAuditEventCreateWithoutOrganizationInput, TenantAuditEventUncheckedCreateWithoutOrganizationInput> | TenantAuditEventCreateWithoutOrganizationInput[] | TenantAuditEventUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: TenantAuditEventCreateOrConnectWithoutOrganizationInput | TenantAuditEventCreateOrConnectWithoutOrganizationInput[]
+    upsert?: TenantAuditEventUpsertWithWhereUniqueWithoutOrganizationInput | TenantAuditEventUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: TenantAuditEventCreateManyOrganizationInputEnvelope
+    set?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+    disconnect?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+    delete?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+    connect?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+    update?: TenantAuditEventUpdateWithWhereUniqueWithoutOrganizationInput | TenantAuditEventUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: TenantAuditEventUpdateManyWithWhereWithoutOrganizationInput | TenantAuditEventUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: TenantAuditEventScalarWhereInput | TenantAuditEventScalarWhereInput[]
+  }
+
+  export type OrganizationCreateNestedOneWithoutMembershipsInput = {
+    create?: XOR<OrganizationCreateWithoutMembershipsInput, OrganizationUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutMembershipsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutMembershipsInput = {
+    create?: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembershipsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type EnumMembershipRoleFieldUpdateOperationsInput = {
+    set?: $Enums.MembershipRole
+  }
+
+  export type EnumMembershipStatusFieldUpdateOperationsInput = {
+    set?: $Enums.MembershipStatus
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutMembershipsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutMembershipsInput, OrganizationUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutMembershipsInput
+    upsert?: OrganizationUpsertWithoutMembershipsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutMembershipsInput, OrganizationUpdateWithoutMembershipsInput>, OrganizationUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutMembershipsNestedInput = {
+    create?: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembershipsInput
+    upsert?: UserUpsertWithoutMembershipsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMembershipsInput, UserUpdateWithoutMembershipsInput>, UserUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutAuditEventsInput = {
+    create?: XOR<OrganizationCreateWithoutAuditEventsInput, OrganizationUncheckedCreateWithoutAuditEventsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutAuditEventsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutAuditEventsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutAuditEventsInput, OrganizationUncheckedCreateWithoutAuditEventsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutAuditEventsInput
+    upsert?: OrganizationUpsertWithoutAuditEventsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutAuditEventsInput, OrganizationUpdateWithoutAuditEventsInput>, OrganizationUncheckedUpdateWithoutAuditEventsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -68725,6 +73281,57 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumReportStatusFilter<$PrismaModel>
     _max?: NestedEnumReportStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumOrganizationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrganizationStatus | EnumOrganizationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrganizationStatus[]
+    notIn?: $Enums.OrganizationStatus[]
+    not?: NestedEnumOrganizationStatusFilter<$PrismaModel> | $Enums.OrganizationStatus
+  }
+
+  export type NestedEnumOrganizationStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrganizationStatus | EnumOrganizationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrganizationStatus[]
+    notIn?: $Enums.OrganizationStatus[]
+    not?: NestedEnumOrganizationStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrganizationStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOrganizationStatusFilter<$PrismaModel>
+    _max?: NestedEnumOrganizationStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMembershipRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipRole | EnumMembershipRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipRole[]
+    notIn?: $Enums.MembershipRole[]
+    not?: NestedEnumMembershipRoleFilter<$PrismaModel> | $Enums.MembershipRole
+  }
+
+  export type NestedEnumMembershipStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipStatus | EnumMembershipStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipStatus[]
+    notIn?: $Enums.MembershipStatus[]
+    not?: NestedEnumMembershipStatusFilter<$PrismaModel> | $Enums.MembershipStatus
+  }
+
+  export type NestedEnumMembershipRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipRole | EnumMembershipRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipRole[]
+    notIn?: $Enums.MembershipRole[]
+    not?: NestedEnumMembershipRoleWithAggregatesFilter<$PrismaModel> | $Enums.MembershipRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipRoleFilter<$PrismaModel>
+    _max?: NestedEnumMembershipRoleFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMembershipStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipStatus | EnumMembershipStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipStatus[]
+    notIn?: $Enums.MembershipStatus[]
+    not?: NestedEnumMembershipStatusWithAggregatesFilter<$PrismaModel> | $Enums.MembershipStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipStatusFilter<$PrismaModel>
+    _max?: NestedEnumMembershipStatusFilter<$PrismaModel>
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -69854,6 +74461,33 @@ export namespace Prisma {
     data: AdminUserRoleCreateManyUserInput | AdminUserRoleCreateManyUserInput[]
   }
 
+  export type MembershipCreateWithoutUserInput = {
+    id?: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMembershipsInput
+  }
+
+  export type MembershipUncheckedCreateWithoutUserInput = {
+    id?: string
+    organizationId: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipCreateOrConnectWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    create: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput>
+  }
+
+  export type MembershipCreateManyUserInputEnvelope = {
+    data: MembershipCreateManyUserInput | MembershipCreateManyUserInput[]
+  }
+
   export type AnalyticsEventCreateWithoutUserInput = {
     id?: string
     event: string
@@ -70956,6 +75590,35 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"AdminUserRole"> | Date | string
   }
 
+  export type MembershipUpsertWithWhereUniqueWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    update: XOR<MembershipUpdateWithoutUserInput, MembershipUncheckedUpdateWithoutUserInput>
+    create: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput>
+  }
+
+  export type MembershipUpdateWithWhereUniqueWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    data: XOR<MembershipUpdateWithoutUserInput, MembershipUncheckedUpdateWithoutUserInput>
+  }
+
+  export type MembershipUpdateManyWithWhereWithoutUserInput = {
+    where: MembershipScalarWhereInput
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type MembershipScalarWhereInput = {
+    AND?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+    OR?: MembershipScalarWhereInput[]
+    NOT?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+    id?: StringFilter<"Membership"> | string
+    organizationId?: StringFilter<"Membership"> | string
+    userId?: StringFilter<"Membership"> | string
+    role?: EnumMembershipRoleFilter<"Membership"> | $Enums.MembershipRole
+    status?: EnumMembershipStatusFilter<"Membership"> | $Enums.MembershipStatus
+    createdAt?: DateTimeFilter<"Membership"> | Date | string
+    updatedAt?: DateTimeFilter<"Membership"> | Date | string
+  }
+
   export type AnalyticsEventUpsertWithWhereUniqueWithoutUserInput = {
     where: AnalyticsEventWhereUniqueInput
     update: XOR<AnalyticsEventUpdateWithoutUserInput, AnalyticsEventUncheckedUpdateWithoutUserInput>
@@ -71176,6 +75839,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -71225,6 +75889,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -71290,6 +75955,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -71339,6 +76005,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -71388,6 +76055,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -71437,6 +76105,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -71502,6 +76171,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -71551,6 +76221,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -71600,6 +76271,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -71649,6 +76321,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -71714,6 +76387,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -71763,6 +76437,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -71812,6 +76487,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -71861,6 +76537,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -71926,6 +76603,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -71975,6 +76653,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -72024,6 +76703,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -72073,6 +76753,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -72127,6 +76808,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -72176,6 +76858,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -72266,6 +76949,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -72315,6 +76999,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -72375,6 +77060,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -72424,6 +77110,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -72554,6 +77241,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -72603,6 +77291,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -72739,6 +77428,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -72788,6 +77478,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -72837,6 +77528,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -72886,6 +77578,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -72940,6 +77633,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -72989,6 +77683,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -73265,6 +77960,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -73314,6 +78010,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -73374,6 +78071,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -73423,6 +78121,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -73629,6 +78328,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -73678,6 +78378,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -73826,6 +78527,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -73875,6 +78577,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -74001,6 +78704,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -74050,6 +78754,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -74250,6 +78955,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -74299,6 +79005,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -74524,6 +79231,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -74573,6 +79281,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -74794,6 +79503,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -74843,6 +79553,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -74959,6 +79670,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -75008,6 +79720,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -75146,6 +79859,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -75195,6 +79909,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -75244,6 +79959,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -75293,6 +80009,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -75358,6 +80075,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -75407,6 +80125,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -75456,6 +80175,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -75505,6 +80225,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -75559,6 +80280,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -75608,6 +80330,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -75750,6 +80473,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -75799,6 +80523,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -75859,6 +80584,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -75908,6 +80634,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -76040,6 +80767,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76089,6 +80817,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76143,6 +80872,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76192,6 +80922,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76334,6 +81065,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -76383,6 +81115,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -76443,6 +81176,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -76492,6 +81226,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -76624,6 +81359,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76673,6 +81409,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76738,6 +81475,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -76787,6 +81525,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -76836,6 +81575,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76885,6 +81625,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76950,6 +81691,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -76999,6 +81741,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -77048,6 +81791,7 @@ export namespace Prisma {
     payments?: PaymentCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -77097,6 +81841,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -77162,6 +81907,7 @@ export namespace Prisma {
     payments?: PaymentUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -77211,6 +81957,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -77260,6 +82007,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -77309,6 +82057,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -77374,6 +82123,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -77423,6 +82173,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -77472,6 +82223,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -77521,6 +82273,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -77586,6 +82339,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -77635,6 +82389,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -77684,6 +82439,7 @@ export namespace Prisma {
     payments?: PaymentCreateNestedManyWithoutUserInput
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -77733,6 +82489,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -77798,6 +82555,7 @@ export namespace Prisma {
     payments?: PaymentUpdateManyWithoutUserNestedInput
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -77847,6 +82605,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -77897,6 +82656,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -77946,6 +82706,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -78011,6 +82772,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -78060,6 +82822,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -78275,6 +83038,7 @@ export namespace Prisma {
     payments?: PaymentCreateNestedManyWithoutUserInput
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -78324,6 +83088,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -78414,6 +83179,7 @@ export namespace Prisma {
     payments?: PaymentUpdateManyWithoutUserNestedInput
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -78463,6 +83229,7 @@ export namespace Prisma {
     payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -78544,6 +83311,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -78593,6 +83361,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -78695,6 +83464,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -78744,6 +83514,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -78907,6 +83678,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -78956,6 +83728,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -79010,6 +83783,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -79059,6 +83833,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -79124,6 +83899,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -79173,6 +83949,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -79233,6 +84010,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -79282,6 +84060,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -79331,6 +84110,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -79380,6 +84160,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -79434,6 +84215,7 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -79483,6 +84265,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -79548,6 +84331,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -79597,6 +84381,7 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -79657,6 +84442,7 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -79706,11 +84492,442 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
     sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type MembershipCreateWithoutOrganizationInput = {
+    id?: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutMembershipsInput
+  }
+
+  export type MembershipUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    userId: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipCreateOrConnectWithoutOrganizationInput = {
+    where: MembershipWhereUniqueInput
+    create: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type MembershipCreateManyOrganizationInputEnvelope = {
+    data: MembershipCreateManyOrganizationInput | MembershipCreateManyOrganizationInput[]
+  }
+
+  export type TenantAuditEventCreateWithoutOrganizationInput = {
+    id?: string
+    actorId?: string | null
+    eventType: string
+    resourceType: string
+    resourceId?: string | null
+    safeMetadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TenantAuditEventUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    actorId?: string | null
+    eventType: string
+    resourceType: string
+    resourceId?: string | null
+    safeMetadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type TenantAuditEventCreateOrConnectWithoutOrganizationInput = {
+    where: TenantAuditEventWhereUniqueInput
+    create: XOR<TenantAuditEventCreateWithoutOrganizationInput, TenantAuditEventUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type TenantAuditEventCreateManyOrganizationInputEnvelope = {
+    data: TenantAuditEventCreateManyOrganizationInput | TenantAuditEventCreateManyOrganizationInput[]
+  }
+
+  export type MembershipUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: MembershipWhereUniqueInput
+    update: XOR<MembershipUpdateWithoutOrganizationInput, MembershipUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type MembershipUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: MembershipWhereUniqueInput
+    data: XOR<MembershipUpdateWithoutOrganizationInput, MembershipUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type MembershipUpdateManyWithWhereWithoutOrganizationInput = {
+    where: MembershipScalarWhereInput
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type TenantAuditEventUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: TenantAuditEventWhereUniqueInput
+    update: XOR<TenantAuditEventUpdateWithoutOrganizationInput, TenantAuditEventUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<TenantAuditEventCreateWithoutOrganizationInput, TenantAuditEventUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type TenantAuditEventUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: TenantAuditEventWhereUniqueInput
+    data: XOR<TenantAuditEventUpdateWithoutOrganizationInput, TenantAuditEventUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type TenantAuditEventUpdateManyWithWhereWithoutOrganizationInput = {
+    where: TenantAuditEventScalarWhereInput
+    data: XOR<TenantAuditEventUpdateManyMutationInput, TenantAuditEventUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type TenantAuditEventScalarWhereInput = {
+    AND?: TenantAuditEventScalarWhereInput | TenantAuditEventScalarWhereInput[]
+    OR?: TenantAuditEventScalarWhereInput[]
+    NOT?: TenantAuditEventScalarWhereInput | TenantAuditEventScalarWhereInput[]
+    id?: StringFilter<"TenantAuditEvent"> | string
+    organizationId?: StringFilter<"TenantAuditEvent"> | string
+    actorId?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    eventType?: StringFilter<"TenantAuditEvent"> | string
+    resourceType?: StringFilter<"TenantAuditEvent"> | string
+    resourceId?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    safeMetadata?: StringNullableFilter<"TenantAuditEvent"> | string | null
+    createdAt?: DateTimeFilter<"TenantAuditEvent"> | Date | string
+  }
+
+  export type OrganizationCreateWithoutMembershipsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutMembershipsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutMembershipsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutMembershipsInput, OrganizationUncheckedCreateWithoutMembershipsInput>
+  }
+
+  export type UserCreateWithoutMembershipsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutMembershipsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationUncheckedCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationUncheckedCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageUncheckedCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptUncheckedCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionUncheckedCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleUncheckedCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestUncheckedCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestUncheckedCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantUncheckedCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantUncheckedCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutMembershipsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+  }
+
+  export type OrganizationUpsertWithoutMembershipsInput = {
+    update: XOR<OrganizationUpdateWithoutMembershipsInput, OrganizationUncheckedUpdateWithoutMembershipsInput>
+    create: XOR<OrganizationCreateWithoutMembershipsInput, OrganizationUncheckedCreateWithoutMembershipsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutMembershipsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutMembershipsInput, OrganizationUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type OrganizationUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type UserUpsertWithoutMembershipsInput = {
+    update: XOR<UserUpdateWithoutMembershipsInput, UserUncheckedUpdateWithoutMembershipsInput>
+    create: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutMembershipsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutMembershipsInput, UserUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type UserUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUncheckedUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUncheckedUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUncheckedUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUncheckedUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUncheckedUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUncheckedUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUncheckedUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUncheckedUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUncheckedUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type OrganizationCreateWithoutAuditEventsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutAuditEventsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutAuditEventsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutAuditEventsInput, OrganizationUncheckedCreateWithoutAuditEventsInput>
+  }
+
+  export type OrganizationUpsertWithoutAuditEventsInput = {
+    update: XOR<OrganizationUpdateWithoutAuditEventsInput, OrganizationUncheckedUpdateWithoutAuditEventsInput>
+    create: XOR<OrganizationCreateWithoutAuditEventsInput, OrganizationUncheckedCreateWithoutAuditEventsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutAuditEventsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutAuditEventsInput, OrganizationUncheckedUpdateWithoutAuditEventsInput>
+  }
+
+  export type OrganizationUpdateWithoutAuditEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutAuditEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AccountCreateManyUserInput = {
@@ -80075,6 +85292,15 @@ export namespace Prisma {
     grantedAt?: Date | string
     grantedBy?: string | null
     expiresAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipCreateManyUserInput = {
+    id?: string
+    organizationId: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -81272,6 +86498,33 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type MembershipUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMembershipsNestedInput
+  }
+
+  export type MembershipUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AnalyticsEventUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     event?: StringFieldUpdateOperationsInput | string
@@ -82038,6 +87291,82 @@ export namespace Prisma {
     toUserId?: NullableStringFieldUpdateOperationsInput | string | null
     message?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipCreateManyOrganizationInput = {
+    id?: string
+    userId: string
+    role?: $Enums.MembershipRole
+    status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TenantAuditEventCreateManyOrganizationInput = {
+    id?: string
+    actorId?: string | null
+    eventType: string
+    resourceType: string
+    resourceId?: string | null
+    safeMetadata?: string | null
+    createdAt?: Date | string
+  }
+
+  export type MembershipUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+  }
+
+  export type MembershipUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantAuditEventUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    safeMetadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantAuditEventUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    safeMetadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantAuditEventUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    eventType?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    safeMetadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

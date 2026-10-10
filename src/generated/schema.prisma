@@ -319,6 +319,9 @@ model User {
   // RBAC — 管理角色关联
   adminRoles AdminUserRole[]
 
+  // T01 多租户 — 成员关系（模型定义见 prisma/schema/tenancy.prisma）
+  memberships Membership[] @relation("UserMemberships")
+
   // Analytics
   analyticsEvents AnalyticsEvent[]
 
@@ -1770,4 +1773,107 @@ model AnalyticsDailyAgg {
   @@unique([date, eventName, metricName, dimensions])
   @@index([date])
   @@index([date, eventName])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TENANCY — T01 身份与多租户底座
+//
+// 对齐契约：contracts/schema.sql:4-14 (organizations / memberships / persons)
+// 与 schema.sql:55-59 (audit_events)。
+//
+// 设计约束（来自 MIGRATION_PLAN.md §2）：
+//   1. 加列优先（Additive-first）—— 本文件**全部为新增模型**，不改动既有 39 个模型
+//      的任何列语义，因此可先于任何数据回填独立上线，零停机、零回归。
+//   2. `User` ↔ 契约的 `persons` 同义。为避免全站重命名（P1-6 阶段已清理过一轮
+//      Legacy 命名），保持 `User` 不动，仅在语义层建立映射。
+//   3. 方言无关：本文件不包含任何 `@db.*` 原生类型标注，同一份定义可同时为
+//      libSQL（当前生产）与 PostgreSQL（M6 目标）生成；差异只体现在迁移 SQL。
+//   4. 绝不信任客户端传入的 organizationId —— 解析逻辑见 src/lib/tenancy/。
+// ═══════════════════════════════════════════════════════════════
+
+/// 租户角色。取值与 contracts/schema.sql:12 的 CHECK 约束逐字一致。
+enum MembershipRole {
+  OWNER // 租户所有者：可转让、可删除租户
+  ADMIN // 管理员：可管理成员与全部业务资源
+  OPERATOR // 运营：可创建/执行 Mission 与连接，不可管理成员
+  MEMBER // 成员：仅可操作自己的 Intent / Consent
+}
+
+/// 租户状态。
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED // 停用：可读不可写，用于风控与欠费
+}
+
+/// 成员状态。
+enum MembershipStatus {
+  ACTIVE
+  INVITED // 已邀请未接受：不产生任何租户内权限
+  SUSPENDED // 已停用：保留数据，权限立即失效
+}
+
+/// 租户（组织）。对应契约 organizations 表。
+model Organization {
+  id        String             @id @default(cuid())
+  name      String
+  /// 对外可读标识，用于 URL 与分享页；唯一。
+  slug      String             @unique
+  status    OrganizationStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  memberships Membership[]
+  auditEvents TenantAuditEvent[]
+
+  @@index([status])
+}
+
+/// 成员关系（用户 × 租户）。对应契约 memberships 表。
+/// 契约用复合主键 (organization_id, person_id)；Prisma 用代理主键 + 唯一约束表达，
+/// 语义等价且便于后续扩展（如软删除、审计字段）。
+model Membership {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MembershipRole   @default(MEMBER)
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 同一租户内同一用户只能有一条成员关系。
+  @@unique([organizationId, userId])
+  /// 反查「我属于哪些租户」是每次会话建立时的热路径。
+  @@index([userId, status])
+  @@index([organizationId, role])
+}
+
+/// 租户级审计事件。对应契约 audit_events 表。
+///
+/// 与既有 `AuditLog`（core.prisma 哈希链审计）**并存**，分工如下：
+///   - `AuditLog`      ：既有产品行为的不可抵赖链（保留 prevHash/entryHash），不动。
+///   - `TenantAuditEvent`：闭环的**安全事件流**（租户/成员/授权/越权尝试），
+///                        可写 `safeMetadata`（脱敏，禁止放 PII 明文）。
+/// 收敛计划见 REUSE_MATRIX.md B5（M5 之后）。
+model TenantAuditEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  /// 触发者；系统触发时为 null（例如定时任务、迁移）。
+  actorId        String?
+  /// 事件类型，命名规范：`<domain>.<action>`，如 `membership.role_changed`。
+  eventType      String
+  /// 资源类型，如 `membership` / `mission` / `proposal`。
+  resourceType   String
+  resourceId     String?
+  /// 脱敏元数据（JSON 文本）。**禁止**写入密码、令牌、完整邮箱等 PII。
+  safeMetadata   String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, eventType])
+  @@index([resourceType, resourceId])
 }
