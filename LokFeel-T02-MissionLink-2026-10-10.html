@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T02 · Mission Link 交付报告 — LokFeel Connection OS</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#111827; --ink-2:#374151; --ink-3:#6b7280;
+    --line:#e5e7eb; --accent:#1d4ed8; --ok:#047857; --ok-bg:#ecfdf5; --warn:#b45309;
+    --warn-bg:#fffbeb; --bad:#b91c1c; --bad-bg:#fef2f2; --code:#f3f4f6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 80px}
+  header{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;border-radius:16px;padding:28px 30px;box-shadow:0 10px 30px rgba(29,78,216,.18)}
+  header .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+  header h1{margin:8px 0 6px;font-size:27px;line-height:1.3}
+  header p{margin:0;opacity:.92;font-size:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .meta span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 12px;font-size:12.5px}
+  .badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+  .b-ok{background:var(--ok-bg);color:var(--ok);border:1px solid #a7f3d0}
+  .b-warn{background:var(--warn-bg);color:var(--warn);border:1px solid #fde68a}
+  .b-bad{background:var(--bad-bg);color:var(--bad);border:1px solid #fecaca}
+  h2{font-size:18px;margin:34px 0 12px;padding-left:11px;border-left:4px solid var(--accent)}
+  h3{font-size:15px;margin:22px 0 8px;color:var(--ink-2)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .n{font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .kpi .l{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+  .kpi.ok .n{color:var(--ok)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:12px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px}
+  caption{caption-side:top;text-align:left;font-size:12.5px;color:var(--ink-3);padding:0 0 8px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#f9fafb;font-weight:700;color:var(--ink-2);font-size:12.5px;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  code{background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.6}
+  ul{margin:8px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+  .node{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+  .arrow{color:var(--ink-3);font-weight:700}
+  .note{background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:8px;padding:12px 14px;font-size:13.5px}
+  .danger{background:var(--bad-bg);border:1px solid #fecaca;border-left:4px solid var(--bad);border-radius:8px;padding:12px 14px;font-size:13.5px}
+  footer{margin-top:40px;color:var(--ink-3);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">LokFeel · Connection OS · 交付报告</div>
+  <h1>T02 · Mission Link — 免安装连接任务与分享</h1>
+  <p>本仓第一个「匿名可达面」：建任务 → 发分享链接 → 未注册可预览 → 登录后加入</p>
+  <div class="meta">
+    <span>代码提交 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">49ee97d</code></span>
+    <span>基线 7988de4</span>
+    <span>2026-10-10</span>
+    <span>分支 main（未推送）</span>
+    <span>AC-11 <b>通过</b></span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi ok"><div class="n">8/8</div><div class="l">移动端 E2E（真实 Chrome + Pixel 5）</div></div>
+  <div class="kpi ok"><div class="n">130/130</div><div class="l">T02 单元/集成用例</div></div>
+  <div class="kpi ok"><div class="n">502/502</div><div class="l">全量 jest 回归</div></div>
+  <div class="kpi ok"><div class="n">0</div><div class="l">tsc 类型错误</div></div>
+  <div class="kpi ok"><div class="n">25/25</div><div class="l">生产库迁移对账</div></div>
+</div>
+
+<h2>1. 交付了什么</h2>
+<div class="flow">
+  <span class="node">Mission CRUD</span><span class="arrow">→</span>
+  <span class="node">分享令牌 /m/&lt;token&gt;</span><span class="arrow">→</span>
+  <span class="node">匿名预览（最小披露）</span><span class="arrow">→</span>
+  <span class="node">登录后加入（幂等）</span><span class="arrow">→</span>
+  <span class="node">名额真实计数</span>
+</div>
+
+<table style="margin-top:14px">
+  <caption>三层改动 · 新增约 4,800 行（不含生成物）</caption>
+  <tr><th>层</th><th>内容</th><th>规模</th></tr>
+  <tr><td>Schema</td><td><code>Mission</code> · <code>MissionParticipation</code> · <code>IdempotencyRecord</code>（+2 枚举，方言无关，无 <code>@db.*</code>）</td><td>1 文件 / 3 模型</td></tr>
+  <tr><td>服务层</td><td>json-codec · share-token · idempotency · mission-input · public-view · missions</td><td>7 文件 / 1,424 行</td></tr>
+  <tr><td>API</td><td><code>/api/v1/missions</code>（CRUD + pause）、<code>/api/v1/public/missions/[token]</code>（+join）</td><td>5 路由 / 320 行</td></tr>
+  <tr><td>前端</td><td><code>/m/[token]</code> RSC 分享页 + 客户端加入按钮</td><td>2 文件 / 340 行</td></tr>
+  <tr><td>迁移</td><td><code>connection:{probe,plan,migrate,rollback,verify}</code>（C0 幂等，回滚先备份）</td><td>458 行 + 记录</td></tr>
+  <tr><td>测试</td><td>6 单测套件 + 移动端 E2E + 隔离夹具脚本</td><td>1,669 + 218 行</td></tr>
+</table>
+
+<h2>2. AC-11 逐条验收</h2>
+<table>
+  <tr><th>要求</th><th>结论</th><th>证据</th></tr>
+  <tr><td>移动端可访问</td><td><span class="badge b-ok">通过</span></td><td>Pixel 5 视口（393×851）无横向滚动；CTA 完全落在视口内可点</td></tr>
+  <tr><td>未注册可预览</td><td><span class="badge b-ok">通过</span></td><td>匿名 200，标题/目标/Offer/成功标准可见；<b>无</b>「加入」按钮，只有「登录后加入」</td></tr>
+  <tr><td>敏感动作需身份验证</td><td><span class="badge b-ok">通过</span></td><td>匿名打 join → 401；未登录点击 → 跳 <code>/login</code> 并带 <code>callbackUrl</code>；<b>真实登录后</b>加入成功并落库</td></tr>
+  <tr><td>铁律：无候选不伪造</td><td><span class="badge b-ok">通过</span></td><td>渲染显式空态；<code>candidates: never[]</code> 让伪造在<b>编译期</b>就写不出来</td></tr>
+  <tr><td>不泄露内部标识</td><td><span class="badge b-ok">通过</span></td><td>整页 HTML 不含 <code>organizationId</code>/<code>ownerId</code>/<code>shareToken</code>；白名单投影 + <code>no-store</code></td></tr>
+  <tr><td>幂等（AC-07 局部）</td><td><span class="badge b-warn">部分</span></td><td>同键同体回放 / 同键异体 409 / 并发孤儿回收；全量闭环归 T06/T12</td></tr>
+</table>
+
+<h2>3. 移动端 E2E 8 例</h2>
+<table>
+  <tr><th>#</th><th>用例</th><th>结果</th></tr>
+  <tr><td>1</td><td>匿名可预览：最小披露内容可见，且不出现「加入」按钮</td><td>✅</td></tr>
+  <tr><td>2</td><td>匿名预览不泄露任何内部标识（源码级）</td><td>✅</td></tr>
+  <tr><td>3</td><td>无候选时不伪造 —— 显式空态而非占位候选</td><td>✅</td></tr>
+  <tr><td>4</td><td>移动端布局：无横向滚动 + 按钮拇指可达</td><td>✅</td></tr>
+  <tr><td>5</td><td>不存在的令牌 → 404</td><td>✅</td></tr>
+  <tr><td>6</td><td>暂停中的任务：给出确定原因，不显示「登录后加入」</td><td>✅</td></tr>
+  <tr><td>7</td><td>未登录点击 → 跳登录并带回跳地址</td><td>✅</td></tr>
+  <tr><td>8</td><td><b>真实登录 → 真实加入 → 刷新仍已加入（幂等）→ 名额 1/5</b></td><td>✅</td></tr>
+</table>
+
+<h2>4. 顺带修掉的真实缺陷</h2>
+<div class="danger">
+  <b>最值得记的一处：校验器自己坏了，会同时产生假绿与假红。</b><br>
+  <code>verify</code> 的「孤儿行」断言其实一直在数<b>全表行数</b> —— <code>countRows()</code> 漏了第三个 <code>where</code> 形参，
+  参数被静默丢弃，于是 <code>SELECT COUNT(*) FROM "Mission"</code> 的返回值被当成「孤儿数」。
+  空库恰好为 0（<b>假绿</b>，生产库当时正是 0 行，所以首轮 25/25 看不出来）；非空库则稳定误报（<b>假红</b>）。
+  <br>已补形参，并用「注入一行孤儿 → 精确报出 → 清理复原」完成<b>负向自证</b>。
+</div>
+<table style="margin-top:12px">
+  <tr><th>#</th><th>缺陷</th><th>发现方式</th><th>修复</th></tr>
+  <tr><td>B1</td><td>幂等并发<b>漏回收孤儿资源</b>（胜者 requestHash 不同时）</td><td>单测失败</td><td>改为「总是先 compensate 再判定胜者」</td></tr>
+  <tr><td>B2</td><td>json-codec 把对象 JSON 当单元素数组</td><td>单测失败</td><td><code>{</code> 开头直接返回 <code>[]</code></td></tr>
+  <tr><td>B3</td><td><b>verify 孤儿断言形同虚设</b>（用全表行数冒充孤儿数）</td><td>非空夹具库跑 verify</td><td>补 <code>where</code> 形参 + 负向自证</td></tr>
+  <tr><td>B4</td><td><code>page.tsx</code> 渲染 <code>never[]</code> 类型冲突</td><td><code>tsc --noEmit</code></td><td>只渲染空态分支</td></tr>
+  <tr><td>B5</td><td>E2E 加入用例因 hydration 延迟点击静默无效</td><td>E2E 首跑</td><td><code>networkidle</code> + 容错重试</td></tr>
+</table>
+
+<h2>5. 迁移与回滚（均已实测）</h2>
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">生产库 C0 —— 已执行</h3>
+    <ul>
+      <li>三表建成：<b>17 / 8 / 8 列</b>，9 索引 + 6 外键</li>
+      <li><code>verify</code> <b>25/25</b>；重跑全为 <code>IF NOT EXISTS</code> 空操作</li>
+      <li>全库 <b>48 张表</b>；既有 48 表<b>零列改动</b> → 零停机零回归</li>
+      <li>迁移后 <code>/api/health</code> 200</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">回滚演练 —— 本地副本实测</h3>
+    <ul>
+      <li>45 → <b>42 张表</b>（恰好减 C0 三张）</li>
+      <li>有数据的表<b>先落 JSON 备份再删</b>（不静默丢数据）</li>
+      <li><code>verify</code> 变 <b>0/19</b>，真实 <code>exit=1</code>（= 已回到迁移前）</li>
+      <li>既有业务数据 <b>零丢失</b>：Organization 1 · User 2 · Membership 2</li>
+    </ul>
+  </div>
+</div>
+
+<h2>6. 残留风险（不假装消除）</h2>
+<table>
+  <tr><th>风险</th><th>等级</th><th>缓解</th><th>消除归属</th></tr>
+  <tr><td>令牌即能力凭证，泄露后无法在 URL 层撤销</td><td><span class="badge b-bad">高</span></td><td>高熵 + 形状预检 + 限流 + no-store + 白名单投影 + 可暂停/关闭</td><td>T05/T10</td></tr>
+  <tr><td>隔离仍是<b>应用级</b>（无 DB 级 RLS）</td><td><span class="badge b-bad">高</span></td><td>跨租户负测 + 查询谓词防回归锁</td><td>M6（PG）</td></tr>
+  <tr><td>限流在 Redis 未配置时退化为<b>进程内计数</b></td><td><span class="badge b-warn">中</span></td><td>令牌不可枚举兜底</td><td>配置 Redis</td></tr>
+  <tr><td><code>candidates: never[]</code> 是编译期紧约束</td><td><span class="badge b-warn">中</span></td><td>已显式登记交接 T04（须同批改造投影+页面+E2E）</td><td>T04</td></tr>
+  <tr><td>幂等表无 TTL / 无清理</td><td><span class="badge b-warn">低</span></td><td>—</td><td>AC-10 / T12</td></tr>
+</table>
+
+<h2>7. 下一步</h2>
+<div class="note">
+  <b>T03 · Intent / Member</b> —— 成员意图与逐字段披露（依赖 T02 的 <code>mission_id</code>，父锚点已就位）。<br>
+  开工前先读 <code>docs/implementation/T02/risks.md</code> 的 <b>R4</b> 与 <code>BACKLOG.md</code> 的 T03 卡片；
+  收尾按同样口径回填 SHA + AC 结论。<br>
+  <span style="color:#6b7280">推送仍需你的决定：本提交含令牌策略/限流阈值/匿名面防护清单与生产迁移记录，且 <code>nexus-app</code> 是公开仓库。</span>
+</div>
+
+<footer>
+  LokFeel Connection OS · T02 Mission Link · 代码 <code>49ee97d</code> · 2026-10-10<br>
+  文档：docs/implementation/T02/{changes,tests,risks,rollback}.md
+</footer>
+
+</div>
+</body>
+</html>

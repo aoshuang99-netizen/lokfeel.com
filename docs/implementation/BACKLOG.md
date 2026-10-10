@@ -5,9 +5,9 @@
 >
 > | 项 | 值 |
 > |---|---|
-> | 真实仓库基线 | `20519cc`（`docs/implementation` 所在分支 `main`，**未推送**） |
-> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`） |
-> | 剩余 | **T02–T12，共 11 个任务** |
+> | 真实仓库基线 | `49ee97d`（`main`，**未推送**） |
+> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`） |
+> | 剩余 | **T03–T12，共 10 个任务** |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
 > | 规划背景 | 《LokFeel SaaS 核心功能架构与开源技术集成方案 V1.0》：10 大模块 / 6 个自研引擎 / P0–P3 / 12 项 Codex 实施清单 |
 
@@ -21,7 +21,7 @@
 |---|---|---|---|---|
 | 1 | 审计现有仓库与数据库，生成复用矩阵 | **T00** | — | ✅ 完成 |
 | 2 | 建立 SaaS 多租户与角色权限 | **T01** | 09 Trust | ✅ 完成 |
-| 3 | 实现 Mission / Intent / Offer 领域模型 | **T02 + T03** | 01 Mission Studio · 02 Member Intel | ⬜ |
+| 3 | 实现 Mission / Intent / Offer 领域模型 | **T02 + T03** | 01 Mission Studio · 02 Member Intel | 🟡 T02 ✅ / T03 ⬜ |
 | 4 | 实现双向匹配与候选解释 | **T04** | 03 Connection Engine | ⬜ |
 | 5 | 实现 Consent / Approval / Revocation | **T05** | 09 Trust | ⬜ |
 | 6 | 实现介绍工作流与任务恢复 | **T06** | 07 Workflow · 06 Comm Hub | ⬜ |
@@ -65,13 +65,22 @@
 
 > 每张卡片：**目标 · 依赖 · 验收 · 交付物 · 主要风险**。验收列括号内为 `ACCEPTANCE_MATRIX.md` 编号。
 
-### T02 · Mission Link — 连接任务与免安装分享
+### T02 · Mission Link — 连接任务与免安装分享  ✅ **已交付**
 - **目标**：Mission CRUD（目标/Offer/约束/成功标准/截止/限额）+ 移动优先分享页 + 未注册可预览、敏感动作需身份验证。
 - **依赖**：T01 ✅（`organizationId` 第一天就带上，不再走加列批次）
 - **验收**：**AC-11**
 - **交付**：`Mission` 模型 → `/api/v1/missions`（POST/GET/PATCH/pause，带 `Idempotency-Key`）→ `/m/[token]` 分享页 → 加入动作
 - **风险**：🔴 分享页是**匿名可达面**，必须限流 + 最小披露；RLS 未上，隔离只能靠应用层
 - **铁律**：**无候选时不得伪造候选**（PRD 明确）
+
+> **交付记录**（代码 `49ee97d` · 2026-10-10）
+> - **三表已上生产**：`Mission` / `MissionParticipation` / `IdempotencyRecord`（C0，纯新增，`verify` **25/25**，全库 48 张表）
+> - **回滚已实测**：一条命令，本地演练 45 → 42 表、既有业务数据**零丢失**（`T02/rollback.md` §3）
+> - **测试**：`tests/connection` **130/130** ｜全量 jest **502/502** ｜ `tsc` **0 错误** ｜ 门禁全绿（geo 69 / pusher 48 / oauth 21 / gender 37 / ice 42）
+> - **AC-11 ✅ 通过**：移动端 E2E（真实 Chrome + Pixel 5）**8/8**，含**真实登录 → 真实加入 → 刷新幂等（名额 1/5）**
+> - 文档：`docs/implementation/T02/{changes,tests,risks,rollback}.md`
+> - 🔧 顺带修复：`verify` 的孤儿断言此前用**全表行数**冒充孤儿数（空库假绿 / 非空库假红）→ 已补 `where` 形参并做「注入孤儿 → 精确报出 → 清理复原」负向自证
+> - ⚠️ **交接 T04**：`candidates: never[]` 是**编译期**铁律保证；T04 返回真实候选时**必须同批**改造投影 + 页面分支 + E2E 断言
 
 ### T03 · Intent / Member — 成员意图与逐字段披露
 - **目标**：成员自主提交/编辑/撤销 Intent·Offer·约束·有效期；逐字段选择可见范围；数据最小化。
