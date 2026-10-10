@@ -241,6 +241,24 @@ exports.Prisma.MissionScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.SocialIntentScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  missionId: 'missionId',
+  userId: 'userId',
+  need: 'need',
+  offer: 'offer',
+  constraints: 'constraints',
+  disclosure: 'disclosure',
+  status: 'status',
+  expiresAt: 'expiresAt',
+  withdrawnAt: 'withdrawnAt',
+  importConsentAt: 'importConsentAt',
+  importedFields: 'importedFields',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.MissionParticipationScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -875,6 +893,11 @@ exports.MissionStatus = exports.$Enums.MissionStatus = {
   CLOSED: 'CLOSED'
 };
 
+exports.IntentStatus = exports.$Enums.IntentStatus = {
+  ACTIVE: 'ACTIVE',
+  WITHDRAWN: 'WITHDRAWN'
+};
+
 exports.MissionParticipationStatus = exports.$Enums.MissionParticipationStatus = {
   INTERESTED: 'INTERESTED',
   WITHDRAWN: 'WITHDRAWN',
@@ -1200,6 +1223,7 @@ exports.Prisma.ModelName = {
   BotPreference: 'BotPreference',
   BotAvatar: 'BotAvatar',
   Mission: 'Mission',
+  SocialIntent: 'SocialIntent',
   MissionParticipation: 'MissionParticipation',
   IdempotencyRecord: 'IdempotencyRecord',
   User: 'User',

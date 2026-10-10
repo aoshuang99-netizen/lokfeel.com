@@ -53,6 +53,9 @@ model Organization {
   missionParticipations MissionParticipation[]
   idempotencyRecords    IdempotencyRecord[]
 
+  // ── T03 Connection OS 反向关系（connection.prisma）──
+  socialIntents SocialIntent[]
+
   @@index([status])
 }
 

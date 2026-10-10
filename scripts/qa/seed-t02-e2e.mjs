@@ -73,12 +73,36 @@ function splitStatements(sql) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
-  if (args.reset && fs.existsSync(DB_FILE)) {
-    fs.unlinkSync(DB_FILE)
-  }
 
   const ddl = fs.existsSync(DDL_FILE) && !args.regenerate ? fs.readFileSync(DDL_FILE, 'utf8') : generateDdl()
   const client = createClient({ url: DB_URL })
+
+  // ── 0. `--reset`：**删掉全部表**，而不是删库文件 ──
+  //
+  // 为什么不删文件：E2E 期间 dev server 很可能已经打开着这个库。删文件再重建会让
+  // 服务端那个**已有的文件句柄指向被 unlink 的旧 inode**，而 SQLite 的 `-wal`/`-shm`
+  // 是按**路径**打开的 —— 主库 fd 与 wal 文件对不上，SQLite 判定状态不一致，直接报
+  // `SQLITE_READONLY: attempt to write a readonly database`。
+  //
+  // 症状极具误导性：**读全对、写全挂**（页面能渲染出夹具数据，一提交就 500），
+  // 且报错是 "readonly" 而文件权限其实是 `rw-r--r--`。第一次遇到极易误判为权限问题。
+  //
+  // 在同一连接里 DROP ALL 再重建，文件 inode 不变 → dev server 无需重启，可反复重跑。
+  if (args.reset) {
+    const before = (
+      await client.execute(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`
+      )
+    ).rows
+    if (before.length) {
+      await client.execute('PRAGMA foreign_keys=OFF')
+      for (const r of before) {
+        await client.execute(`DROP TABLE IF EXISTS "${r.name}"`)
+      }
+      await client.execute('PRAGMA foreign_keys=ON')
+    }
+    console.log(`🧹 --reset：已清空 ${before.length} 张表（保留库文件，服务无需重启）`)
+  }
 
   // ── 1. 建表（DDL 全是 CREATE TABLE/INDEX，无 IF NOT EXISTS，因此只在空库上跑一次）──
   const existing = await client.execute(
@@ -183,10 +207,47 @@ async function main() {
     })
   }
 
-  // 清掉可能残留的加入记录，保证每次 E2E 从"未加入"开始
+  // ── 5. member 的 Profile（T03 的披露投影依赖它）──
+  // 为什么必须造档案：披露投影的**值**全部来自 User + Profile。若 member 没有 Profile，
+  // 投影结果必然为空，于是「组织者能看到昵称」这类断言会因为"没数据"而不是"功能对"失败 ——
+  // 那是 QA 里最容易被误读成功能缺陷的一类假失败（T02 已经踩过一次同类坑）。
+  await client.execute({
+    sql: `INSERT INTO "Profile" (
+            "id","userId","displayName","age","gender","sexuality","bio","city",
+            "occupation","company","profileStatus","onboardingStep","isApproved","createdAt","updatedAt")
+          VALUES (?,?,?,?,?,?,?,?,?,?, 'APPROVED', 9, 1, ?, ?)
+          ON CONFLICT("userId") DO UPDATE SET
+            "displayName"=excluded."displayName","age"=excluded."age","bio"=excluded."bio",
+            "city"=excluded."city","occupation"=excluded."occupation","company"=excluded."company",
+            "profileStatus"='APPROVED'`,
+    args: [
+      'pf_e2e_member',
+      E2E.memberId,
+      '林晓',
+      32,
+      'WOMAN',
+      'Straight',
+      '八年跨境供应链经验，做过印尼与越南市场的落地。',
+      '上海',
+      '供应链负责人',
+      '启航贸易',
+      now,
+      now,
+    ],
+  })
+
+  // 清掉可能残留的加入记录与意图，保证每次 E2E 从"未加入 / 未提交"开始
   await client.execute(
     `DELETE FROM "MissionParticipation" WHERE "missionId" IN ('mission_e2e_active','mission_e2e_paused')`
   )
+  try {
+    await client.execute(
+      `DELETE FROM "SocialIntent" WHERE "missionId" IN ('mission_e2e_active','mission_e2e_paused')`
+    )
+  } catch (err) {
+    // 旧版缓存 DDL（不含 SocialIntent）时跳过 —— 用 --regenerate 可重建。
+    console.warn('⚠️  清理 SocialIntent 跳过（表不存在？请加 --regenerate）:', err?.message)
+  }
 
   const tables = await client.execute(`SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table'`)
   console.log(`\n✅ E2E 夹具就绪：${DB_FILE}（${tables.rows[0].n} 张表）`)

@@ -105,3 +105,97 @@ export {
   type JoinResult,
   type SharePageResult,
 } from './missions'
+
+// ── T03 · 披露字段目录（单一事实来源）──
+export {
+  DISCLOSURE_AUDIENCES,
+  AUDIENCE_ORDER,
+  DISCLOSURE_FIELDS,
+  DISCLOSURE_FIELD_KEYS,
+  IMPORTABLE_FIELD_KEYS,
+  PROTECTED_FIELD_KEYS,
+  SENSITIVE_FIELD_KEYS,
+  MISSING_FIELD_AUDIENCE,
+  audienceCanSee,
+  audienceRank,
+  auditCatalog,
+  fieldSpec,
+  isAudience,
+  isFieldKey,
+  suggestedDisclosure,
+  type DisclosureAudience,
+  type DisclosureFieldKey,
+  type FieldGroup,
+  type FieldSpec,
+} from './field-catalog'
+
+// ── T03 · 逐字段披露（AC-03 的唯一执法点）──
+export {
+  decodeDisclosure,
+  describeDisclosure,
+  discloseSubject,
+  effectiveDisclosure,
+  encodeDisclosure,
+  fieldsVisibleTo,
+  grantedAudience,
+  normalizeDisclosure,
+  type DisclosedProfile,
+  type DisclosureEntry,
+  type DisclosureMap,
+  type DisclosureSummary,
+  type SubjectFieldValue,
+  type SubjectProfile,
+} from './disclosure'
+
+// ── T03 · 档案导入许可 ──
+export {
+  MAX_IMPORT_FIELDS,
+  assertImportPlanAllAccepted,
+  parseImportFields,
+  planProfileImport,
+  type ImportPlan,
+  type ImportRejectReason,
+} from './intent-import'
+
+// ── T03 · 意图输入校验 ──
+export {
+  INTENT_LIMITS,
+  INTENT_STATUS_ACTIONS,
+  parseIntentCreate,
+  parseIntentPatch,
+  parseIntentStatusAction,
+  parseWithdrawReason,
+  type IntentStatusAction,
+  type ParsedIntentCreate,
+  type ParsedIntentPatch,
+} from './intent-input'
+
+// ── T03 · 主体档案（披露投影的数据源）──
+export {
+  SUBJECT_PROFILE_SELECT,
+  loadSubjectProfile,
+  loadSubjectProfiles,
+  mapProfileRow,
+} from './subject-profile'
+
+// ── T03 · Intent 服务 ──
+export {
+  createIntent,
+  deriveIntentStatus,
+  getIntent,
+  getIntentById,
+  getMyIntentByShareToken,
+  hardDeleteIntent,
+  listMissionIntentsForOrganizer,
+  listMyIntents,
+  liveDisclosureOf,
+  previewDisclosure,
+  toIntentDto,
+  transitionIntent,
+  updateIntent,
+  type DisclosurePreview,
+  type IntentDto,
+  type IntentStatusView,
+  type ListIntentsOptions,
+  type OrganizerIntentView,
+} from './intents'

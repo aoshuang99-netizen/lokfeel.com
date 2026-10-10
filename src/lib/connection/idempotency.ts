@@ -22,9 +22,17 @@ import { ConflictError, ValidationError } from '@/lib/errors'
 /** 键的最大长度（防止把超长串写库；`Idempotency-Key` 是 header，通常很短）。 */
 export const MAX_IDEMPOTENCY_KEY_LENGTH = 200
 
-/** 稳定序列化：递归按键名排序，使 `{a:1,b:2}` 与 `{b:2,a:1}` 得到同一指纹。 */
+/**
+ * 稳定序列化：递归按键名排序，使 `{a:1,b:2}` 与 `{b:2,a:1}` 得到同一指纹。
+ *
+ * ⚠️ `Date` **必须显式处理**：它 `typeof === 'object'` 且非数组，若落到下面的
+ * `Object.entries()` 分支会得到**空对象** —— 于是 `expiresAt: 2026-01-01` 与
+ * `expiresAt: 2030-01-01` 指纹相同。后果是"同一把键、不同截止时间"被判为同体、
+ * 静默返回首次结果（而不是 409），即幂等的语义被悄悄放宽。
+ */
 export function stableStringify(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null'
+  if (value instanceof Date) return JSON.stringify(value.toISOString())
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`
   const entries = Object.entries(value as Record<string, unknown>)
     .filter(([, v]) => v !== undefined)

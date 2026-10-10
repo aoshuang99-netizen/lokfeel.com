@@ -49,6 +49,12 @@ export type BotAvatar = $Result.DefaultSelection<Prisma.$BotAvatarPayload>
  */
 export type Mission = $Result.DefaultSelection<Prisma.$MissionPayload>
 /**
+ * Model SocialIntent
+ * 成员意图。对应契约 social_intents 表的语义（契约挂在 organization 上，
+ * 本仓显式挂到 Mission —— 意图脱离具体任务没有业务含义，且 mission 级才能做名额/披露判定）。
+ */
+export type SocialIntent = $Result.DefaultSelection<Prisma.$SocialIntentPayload>
+/**
  * Model MissionParticipation
  * 成员 × Mission 的加入关系。契约中没有独立表（契约把 memberships 与
  * social_intents 直接挂 organization），这里显式建模是为了：
@@ -324,6 +330,23 @@ export const MissionParticipationStatus: {
 };
 
 export type MissionParticipationStatus = (typeof MissionParticipationStatus)[keyof typeof MissionParticipationStatus]
+
+
+export const IntentStatus: {
+  ACTIVE: 'ACTIVE',
+  WITHDRAWN: 'WITHDRAWN'
+};
+
+export type IntentStatus = (typeof IntentStatus)[keyof typeof IntentStatus]
+
+
+export const DisclosureAudience: {
+  SELF: 'SELF',
+  ORGANIZER: 'ORGANIZER',
+  COUNTERPARTY: 'COUNTERPARTY'
+};
+
+export type DisclosureAudience = (typeof DisclosureAudience)[keyof typeof DisclosureAudience]
 
 
 export const AuditCategory: {
@@ -771,6 +794,14 @@ export type MissionParticipationStatus = $Enums.MissionParticipationStatus
 
 export const MissionParticipationStatus: typeof $Enums.MissionParticipationStatus
 
+export type IntentStatus = $Enums.IntentStatus
+
+export const IntentStatus: typeof $Enums.IntentStatus
+
+export type DisclosureAudience = $Enums.DisclosureAudience
+
+export const DisclosureAudience: typeof $Enums.DisclosureAudience
+
 export type AuditCategory = $Enums.AuditCategory
 
 export const AuditCategory: typeof $Enums.AuditCategory
@@ -1097,6 +1128,16 @@ export class PrismaClient<
     * ```
     */
   get mission(): Prisma.MissionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.socialIntent`: Exposes CRUD operations for the **SocialIntent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SocialIntents
+    * const socialIntents = await prisma.socialIntent.findMany()
+    * ```
+    */
+  get socialIntent(): Prisma.SocialIntentDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.missionParticipation`: Exposes CRUD operations for the **MissionParticipation** model.
@@ -1931,6 +1972,7 @@ export namespace Prisma {
     BotPreference: 'BotPreference',
     BotAvatar: 'BotAvatar',
     Mission: 'Mission',
+    SocialIntent: 'SocialIntent',
     MissionParticipation: 'MissionParticipation',
     IdempotencyRecord: 'IdempotencyRecord',
     User: 'User',
@@ -1984,7 +2026,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "missionParticipation" | "idempotencyRecord" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
+      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2503,6 +2545,80 @@ export namespace Prisma {
           count: {
             args: Prisma.MissionCountArgs<ExtArgs>
             result: $Utils.Optional<MissionCountAggregateOutputType> | number
+          }
+        }
+      }
+      SocialIntent: {
+        payload: Prisma.$SocialIntentPayload<ExtArgs>
+        fields: Prisma.SocialIntentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SocialIntentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SocialIntentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>
+          }
+          findFirst: {
+            args: Prisma.SocialIntentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SocialIntentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>
+          }
+          findMany: {
+            args: Prisma.SocialIntentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>[]
+          }
+          create: {
+            args: Prisma.SocialIntentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>
+          }
+          createMany: {
+            args: Prisma.SocialIntentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SocialIntentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>[]
+          }
+          delete: {
+            args: Prisma.SocialIntentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>
+          }
+          update: {
+            args: Prisma.SocialIntentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>
+          }
+          deleteMany: {
+            args: Prisma.SocialIntentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SocialIntentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SocialIntentUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>[]
+          }
+          upsert: {
+            args: Prisma.SocialIntentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SocialIntentPayload>
+          }
+          aggregate: {
+            args: Prisma.SocialIntentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSocialIntent>
+          }
+          groupBy: {
+            args: Prisma.SocialIntentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SocialIntentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SocialIntentCountArgs<ExtArgs>
+            result: $Utils.Optional<SocialIntentCountAggregateOutputType> | number
           }
         }
       }
@@ -5448,6 +5564,7 @@ export namespace Prisma {
     botPreference?: BotPreferenceOmit
     botAvatar?: BotAvatarOmit
     mission?: MissionOmit
+    socialIntent?: SocialIntentOmit
     missionParticipation?: MissionParticipationOmit
     idempotencyRecord?: IdempotencyRecordOmit
     user?: UserOmit
@@ -5567,10 +5684,12 @@ export namespace Prisma {
 
   export type MissionCountOutputType = {
     participations: number
+    socialIntents: number
   }
 
   export type MissionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     participations?: boolean | MissionCountOutputTypeCountParticipationsArgs
+    socialIntents?: boolean | MissionCountOutputTypeCountSocialIntentsArgs
   }
 
   // Custom InputTypes
@@ -5589,6 +5708,13 @@ export namespace Prisma {
    */
   export type MissionCountOutputTypeCountParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MissionParticipationWhereInput
+  }
+
+  /**
+   * MissionCountOutputType without action
+   */
+  export type MissionCountOutputTypeCountSocialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SocialIntentWhereInput
   }
 
 
@@ -5622,6 +5748,7 @@ export namespace Prisma {
     memberships: number
     missions: number
     missionParticipations: number
+    socialIntents: number
     analyticsEvents: number
     reportsMade: number
     reportsReceived: number
@@ -5655,6 +5782,7 @@ export namespace Prisma {
     memberships?: boolean | UserCountOutputTypeCountMembershipsArgs
     missions?: boolean | UserCountOutputTypeCountMissionsArgs
     missionParticipations?: boolean | UserCountOutputTypeCountMissionParticipationsArgs
+    socialIntents?: boolean | UserCountOutputTypeCountSocialIntentsArgs
     analyticsEvents?: boolean | UserCountOutputTypeCountAnalyticsEventsArgs
     reportsMade?: boolean | UserCountOutputTypeCountReportsMadeArgs
     reportsReceived?: boolean | UserCountOutputTypeCountReportsReceivedArgs
@@ -5846,6 +5974,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountMissionParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MissionParticipationWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountSocialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SocialIntentWhereInput
   }
 
   /**
@@ -6125,6 +6260,7 @@ export namespace Prisma {
     missions: number
     missionParticipations: number
     idempotencyRecords: number
+    socialIntents: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6133,6 +6269,7 @@ export namespace Prisma {
     missions?: boolean | OrganizationCountOutputTypeCountMissionsArgs
     missionParticipations?: boolean | OrganizationCountOutputTypeCountMissionParticipationsArgs
     idempotencyRecords?: boolean | OrganizationCountOutputTypeCountIdempotencyRecordsArgs
+    socialIntents?: boolean | OrganizationCountOutputTypeCountSocialIntentsArgs
   }
 
   // Custom InputTypes
@@ -6179,6 +6316,13 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountIdempotencyRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: IdempotencyRecordWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountSocialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SocialIntentWhereInput
   }
 
 
@@ -13425,6 +13569,7 @@ export namespace Prisma {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     owner?: boolean | UserDefaultArgs<ExtArgs>
     participations?: boolean | Mission$participationsArgs<ExtArgs>
+    socialIntents?: boolean | Mission$socialIntentsArgs<ExtArgs>
     _count?: boolean | MissionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["mission"]>
 
@@ -13497,6 +13642,7 @@ export namespace Prisma {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     owner?: boolean | UserDefaultArgs<ExtArgs>
     participations?: boolean | Mission$participationsArgs<ExtArgs>
+    socialIntents?: boolean | Mission$socialIntentsArgs<ExtArgs>
     _count?: boolean | MissionCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MissionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -13514,6 +13660,7 @@ export namespace Prisma {
       organization: Prisma.$OrganizationPayload<ExtArgs>
       owner: Prisma.$UserPayload<ExtArgs>
       participations: Prisma.$MissionParticipationPayload<ExtArgs>[]
+      socialIntents: Prisma.$SocialIntentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -13952,6 +14099,7 @@ export namespace Prisma {
     organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     participations<T extends Mission$participationsArgs<ExtArgs> = {}>(args?: Subset<T, Mission$participationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    socialIntents<T extends Mission$socialIntentsArgs<ExtArgs> = {}>(args?: Subset<T, Mission$socialIntentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14421,6 +14569,30 @@ export namespace Prisma {
   }
 
   /**
+   * Mission.socialIntents
+   */
+  export type Mission$socialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    where?: SocialIntentWhereInput
+    orderBy?: SocialIntentOrderByWithRelationInput | SocialIntentOrderByWithRelationInput[]
+    cursor?: SocialIntentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
+  }
+
+  /**
    * Mission without action
    */
   export type MissionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -14436,6 +14608,1246 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: MissionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SocialIntent
+   */
+
+  export type AggregateSocialIntent = {
+    _count: SocialIntentCountAggregateOutputType | null
+    _min: SocialIntentMinAggregateOutputType | null
+    _max: SocialIntentMaxAggregateOutputType | null
+  }
+
+  export type SocialIntentMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    userId: string | null
+    need: string | null
+    offer: string | null
+    constraints: string | null
+    disclosure: string | null
+    status: $Enums.IntentStatus | null
+    expiresAt: Date | null
+    withdrawnAt: Date | null
+    importConsentAt: Date | null
+    importedFields: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SocialIntentMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    userId: string | null
+    need: string | null
+    offer: string | null
+    constraints: string | null
+    disclosure: string | null
+    status: $Enums.IntentStatus | null
+    expiresAt: Date | null
+    withdrawnAt: Date | null
+    importConsentAt: Date | null
+    importedFields: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SocialIntentCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    missionId: number
+    userId: number
+    need: number
+    offer: number
+    constraints: number
+    disclosure: number
+    status: number
+    expiresAt: number
+    withdrawnAt: number
+    importConsentAt: number
+    importedFields: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type SocialIntentMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    userId?: true
+    need?: true
+    offer?: true
+    constraints?: true
+    disclosure?: true
+    status?: true
+    expiresAt?: true
+    withdrawnAt?: true
+    importConsentAt?: true
+    importedFields?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SocialIntentMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    userId?: true
+    need?: true
+    offer?: true
+    constraints?: true
+    disclosure?: true
+    status?: true
+    expiresAt?: true
+    withdrawnAt?: true
+    importConsentAt?: true
+    importedFields?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SocialIntentCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    userId?: true
+    need?: true
+    offer?: true
+    constraints?: true
+    disclosure?: true
+    status?: true
+    expiresAt?: true
+    withdrawnAt?: true
+    importConsentAt?: true
+    importedFields?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type SocialIntentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SocialIntent to aggregate.
+     */
+    where?: SocialIntentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SocialIntents to fetch.
+     */
+    orderBy?: SocialIntentOrderByWithRelationInput | SocialIntentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SocialIntentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SocialIntents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SocialIntents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SocialIntents
+    **/
+    _count?: true | SocialIntentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SocialIntentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SocialIntentMaxAggregateInputType
+  }
+
+  export type GetSocialIntentAggregateType<T extends SocialIntentAggregateArgs> = {
+        [P in keyof T & keyof AggregateSocialIntent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSocialIntent[P]>
+      : GetScalarType<T[P], AggregateSocialIntent[P]>
+  }
+
+
+
+
+  export type SocialIntentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SocialIntentWhereInput
+    orderBy?: SocialIntentOrderByWithAggregationInput | SocialIntentOrderByWithAggregationInput[]
+    by: SocialIntentScalarFieldEnum[] | SocialIntentScalarFieldEnum
+    having?: SocialIntentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SocialIntentCountAggregateInputType | true
+    _min?: SocialIntentMinAggregateInputType
+    _max?: SocialIntentMaxAggregateInputType
+  }
+
+  export type SocialIntentGroupByOutputType = {
+    id: string
+    organizationId: string
+    missionId: string
+    userId: string
+    need: string
+    offer: string
+    constraints: string | null
+    disclosure: string | null
+    status: $Enums.IntentStatus
+    expiresAt: Date | null
+    withdrawnAt: Date | null
+    importConsentAt: Date | null
+    importedFields: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: SocialIntentCountAggregateOutputType | null
+    _min: SocialIntentMinAggregateOutputType | null
+    _max: SocialIntentMaxAggregateOutputType | null
+  }
+
+  type GetSocialIntentGroupByPayload<T extends SocialIntentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SocialIntentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SocialIntentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SocialIntentGroupByOutputType[P]>
+            : GetScalarType<T[P], SocialIntentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SocialIntentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    userId?: boolean
+    need?: boolean
+    offer?: boolean
+    constraints?: boolean
+    disclosure?: boolean
+    status?: boolean
+    expiresAt?: boolean
+    withdrawnAt?: boolean
+    importConsentAt?: boolean
+    importedFields?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["socialIntent"]>
+
+  export type SocialIntentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    userId?: boolean
+    need?: boolean
+    offer?: boolean
+    constraints?: boolean
+    disclosure?: boolean
+    status?: boolean
+    expiresAt?: boolean
+    withdrawnAt?: boolean
+    importConsentAt?: boolean
+    importedFields?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["socialIntent"]>
+
+  export type SocialIntentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    userId?: boolean
+    need?: boolean
+    offer?: boolean
+    constraints?: boolean
+    disclosure?: boolean
+    status?: boolean
+    expiresAt?: boolean
+    withdrawnAt?: boolean
+    importConsentAt?: boolean
+    importedFields?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["socialIntent"]>
+
+  export type SocialIntentSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    userId?: boolean
+    need?: boolean
+    offer?: boolean
+    constraints?: boolean
+    disclosure?: boolean
+    status?: boolean
+    expiresAt?: boolean
+    withdrawnAt?: boolean
+    importConsentAt?: boolean
+    importedFields?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type SocialIntentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "missionId" | "userId" | "need" | "offer" | "constraints" | "disclosure" | "status" | "expiresAt" | "withdrawnAt" | "importConsentAt" | "importedFields" | "createdAt" | "updatedAt", ExtArgs["result"]["socialIntent"]>
+  export type SocialIntentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type SocialIntentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type SocialIntentIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $SocialIntentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SocialIntent"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      mission: Prisma.$MissionPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      /**
+       * 父锚点：T02 的 Mission。任务删除时意图级联删除。
+       */
+      missionId: string
+      /**
+       * 提交者。**必须**是该 Mission 所属租户的 ACTIVE 成员（服务端回查 memberships）。
+       */
+      userId: string
+      /**
+       * 我需要什么（Mission 的 goal 是"发起方要什么"，这里是"协作者要什么"）。
+       */
+      need: string
+      /**
+       * 我能提供什么。
+       */
+      offer: string
+      /**
+       * 附加约束（JSON 文本，字符串数组）。**必须**经 json-codec 读写。
+       */
+      constraints: string | null
+      /**
+       * 逐字段披露表（JSON 文本）：`{ "<fieldKey>": "SELF"|"ORGANIZER"|"COUNTERPARTY" }`。
+       * 
+       * 语义：**缺失的键 = 未授权**（落到目录默认值 SELF），不在这里补默认值 ——
+       * 「写库时补默认」会把"用户没选"悄悄固化成"系统认为他同意了"。
+       */
+      disclosure: string | null
+      status: $Enums.IntentStatus
+      /**
+       * 有效期。null = 不过期。过期后**仍可编辑续期**，但不再被披露（派生为 EXPIRED）。
+       */
+      expiresAt: Date | null
+      withdrawnAt: Date | null
+      /**
+       * ── 导入许可留痕（AC-12「用户主动授权」的落点）──
+       * 用户显式同意「从账户档案导入字段」的**时间戳**。null = 从未同意，
+       * 此时任何 `importFromProfile` 请求都必须被拒（400），不得默认放行。
+       */
+      importConsentAt: Date | null
+      /**
+       * 实际从档案导入的字段名（JSON 文本数组）。与 `disclosure` **分开存储**：
+       * 一个记"数据从哪来"、一个记"给谁看"。混在一起会导致"撤回导入"误删披露设置。
+       */
+      importedFields: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["socialIntent"]>
+    composites: {}
+  }
+
+  type SocialIntentGetPayload<S extends boolean | null | undefined | SocialIntentDefaultArgs> = $Result.GetResult<Prisma.$SocialIntentPayload, S>
+
+  type SocialIntentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SocialIntentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SocialIntentCountAggregateInputType | true
+    }
+
+  export interface SocialIntentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SocialIntent'], meta: { name: 'SocialIntent' } }
+    /**
+     * Find zero or one SocialIntent that matches the filter.
+     * @param {SocialIntentFindUniqueArgs} args - Arguments to find a SocialIntent
+     * @example
+     * // Get one SocialIntent
+     * const socialIntent = await prisma.socialIntent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SocialIntentFindUniqueArgs>(args: SelectSubset<T, SocialIntentFindUniqueArgs<ExtArgs>>): Prisma__SocialIntentClient<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SocialIntent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SocialIntentFindUniqueOrThrowArgs} args - Arguments to find a SocialIntent
+     * @example
+     * // Get one SocialIntent
+     * const socialIntent = await prisma.socialIntent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SocialIntentFindUniqueOrThrowArgs>(args: SelectSubset<T, SocialIntentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SocialIntentClient<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SocialIntent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SocialIntentFindFirstArgs} args - Arguments to find a SocialIntent
+     * @example
+     * // Get one SocialIntent
+     * const socialIntent = await prisma.socialIntent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SocialIntentFindFirstArgs>(args?: SelectSubset<T, SocialIntentFindFirstArgs<ExtArgs>>): Prisma__SocialIntentClient<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SocialIntent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SocialIntentFindFirstOrThrowArgs} args - Arguments to find a SocialIntent
+     * @example
+     * // Get one SocialIntent
+     * const socialIntent = await prisma.socialIntent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SocialIntentFindFirstOrThrowArgs>(args?: SelectSubset<T, SocialIntentFindFirstOrThrowArgs<ExtArgs>>): Prisma__SocialIntentClient<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SocialIntents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SocialIntentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SocialIntents
+     * const socialIntents = await prisma.socialIntent.findMany()
+     * 
+     * // Get first 10 SocialIntents
+     * const socialIntents = await prisma.socialIntent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const socialIntentWithIdOnly = await prisma.socialIntent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SocialIntentFindManyArgs>(args?: SelectSubset<T, SocialIntentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SocialIntent.
+     * @param {SocialIntentCreateArgs} args - Arguments to create a SocialIntent.
+     * @example
+     * // Create one SocialIntent
+     * const SocialIntent = await prisma.socialIntent.create({
+     *   data: {
+     *     // ... data to create a SocialIntent
+     *   }
+     * })
+     * 
+     */
+    create<T extends SocialIntentCreateArgs>(args: SelectSubset<T, SocialIntentCreateArgs<ExtArgs>>): Prisma__SocialIntentClient<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SocialIntents.
+     * @param {SocialIntentCreateManyArgs} args - Arguments to create many SocialIntents.
+     * @example
+     * // Create many SocialIntents
+     * const socialIntent = await prisma.socialIntent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SocialIntentCreateManyArgs>(args?: SelectSubset<T, SocialIntentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SocialIntents and returns the data saved in the database.
+     * @param {SocialIntentCreateManyAndReturnArgs} args - Arguments to create many SocialIntents.
+     * @example
+     * // Create many SocialIntents
+     * const socialIntent = await prisma.socialIntent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SocialIntents and only return the `id`
+     * const socialIntentWithIdOnly = await prisma.socialIntent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SocialIntentCreateManyAndReturnArgs>(args?: SelectSubset<T, SocialIntentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SocialIntent.
+     * @param {SocialIntentDeleteArgs} args - Arguments to delete one SocialIntent.
+     * @example
+     * // Delete one SocialIntent
+     * const SocialIntent = await prisma.socialIntent.delete({
+     *   where: {
+     *     // ... filter to delete one SocialIntent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SocialIntentDeleteArgs>(args: SelectSubset<T, SocialIntentDeleteArgs<ExtArgs>>): Prisma__SocialIntentClient<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SocialIntent.
+     * @param {SocialIntentUpdateArgs} args - Arguments to update one SocialIntent.
+     * @example
+     * // Update one SocialIntent
+     * const socialIntent = await prisma.socialIntent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SocialIntentUpdateArgs>(args: SelectSubset<T, SocialIntentUpdateArgs<ExtArgs>>): Prisma__SocialIntentClient<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SocialIntents.
+     * @param {SocialIntentDeleteManyArgs} args - Arguments to filter SocialIntents to delete.
+     * @example
+     * // Delete a few SocialIntents
+     * const { count } = await prisma.socialIntent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SocialIntentDeleteManyArgs>(args?: SelectSubset<T, SocialIntentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SocialIntents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SocialIntentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SocialIntents
+     * const socialIntent = await prisma.socialIntent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SocialIntentUpdateManyArgs>(args: SelectSubset<T, SocialIntentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SocialIntents and returns the data updated in the database.
+     * @param {SocialIntentUpdateManyAndReturnArgs} args - Arguments to update many SocialIntents.
+     * @example
+     * // Update many SocialIntents
+     * const socialIntent = await prisma.socialIntent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SocialIntents and only return the `id`
+     * const socialIntentWithIdOnly = await prisma.socialIntent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SocialIntentUpdateManyAndReturnArgs>(args: SelectSubset<T, SocialIntentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SocialIntent.
+     * @param {SocialIntentUpsertArgs} args - Arguments to update or create a SocialIntent.
+     * @example
+     * // Update or create a SocialIntent
+     * const socialIntent = await prisma.socialIntent.upsert({
+     *   create: {
+     *     // ... data to create a SocialIntent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SocialIntent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SocialIntentUpsertArgs>(args: SelectSubset<T, SocialIntentUpsertArgs<ExtArgs>>): Prisma__SocialIntentClient<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SocialIntents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SocialIntentCountArgs} args - Arguments to filter SocialIntents to count.
+     * @example
+     * // Count the number of SocialIntents
+     * const count = await prisma.socialIntent.count({
+     *   where: {
+     *     // ... the filter for the SocialIntents we want to count
+     *   }
+     * })
+    **/
+    count<T extends SocialIntentCountArgs>(
+      args?: Subset<T, SocialIntentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SocialIntentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SocialIntent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SocialIntentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SocialIntentAggregateArgs>(args: Subset<T, SocialIntentAggregateArgs>): Prisma.PrismaPromise<GetSocialIntentAggregateType<T>>
+
+    /**
+     * Group by SocialIntent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SocialIntentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SocialIntentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SocialIntentGroupByArgs['orderBy'] }
+        : { orderBy?: SocialIntentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SocialIntentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSocialIntentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SocialIntent model
+   */
+  readonly fields: SocialIntentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SocialIntent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SocialIntentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    mission<T extends MissionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MissionDefaultArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SocialIntent model
+   */
+  interface SocialIntentFieldRefs {
+    readonly id: FieldRef<"SocialIntent", 'String'>
+    readonly organizationId: FieldRef<"SocialIntent", 'String'>
+    readonly missionId: FieldRef<"SocialIntent", 'String'>
+    readonly userId: FieldRef<"SocialIntent", 'String'>
+    readonly need: FieldRef<"SocialIntent", 'String'>
+    readonly offer: FieldRef<"SocialIntent", 'String'>
+    readonly constraints: FieldRef<"SocialIntent", 'String'>
+    readonly disclosure: FieldRef<"SocialIntent", 'String'>
+    readonly status: FieldRef<"SocialIntent", 'IntentStatus'>
+    readonly expiresAt: FieldRef<"SocialIntent", 'DateTime'>
+    readonly withdrawnAt: FieldRef<"SocialIntent", 'DateTime'>
+    readonly importConsentAt: FieldRef<"SocialIntent", 'DateTime'>
+    readonly importedFields: FieldRef<"SocialIntent", 'String'>
+    readonly createdAt: FieldRef<"SocialIntent", 'DateTime'>
+    readonly updatedAt: FieldRef<"SocialIntent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SocialIntent findUnique
+   */
+  export type SocialIntentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * Filter, which SocialIntent to fetch.
+     */
+    where: SocialIntentWhereUniqueInput
+  }
+
+  /**
+   * SocialIntent findUniqueOrThrow
+   */
+  export type SocialIntentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * Filter, which SocialIntent to fetch.
+     */
+    where: SocialIntentWhereUniqueInput
+  }
+
+  /**
+   * SocialIntent findFirst
+   */
+  export type SocialIntentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * Filter, which SocialIntent to fetch.
+     */
+    where?: SocialIntentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SocialIntents to fetch.
+     */
+    orderBy?: SocialIntentOrderByWithRelationInput | SocialIntentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SocialIntents.
+     */
+    cursor?: SocialIntentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SocialIntents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SocialIntents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SocialIntents.
+     */
+    distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
+  }
+
+  /**
+   * SocialIntent findFirstOrThrow
+   */
+  export type SocialIntentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * Filter, which SocialIntent to fetch.
+     */
+    where?: SocialIntentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SocialIntents to fetch.
+     */
+    orderBy?: SocialIntentOrderByWithRelationInput | SocialIntentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SocialIntents.
+     */
+    cursor?: SocialIntentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SocialIntents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SocialIntents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SocialIntents.
+     */
+    distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
+  }
+
+  /**
+   * SocialIntent findMany
+   */
+  export type SocialIntentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * Filter, which SocialIntents to fetch.
+     */
+    where?: SocialIntentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SocialIntents to fetch.
+     */
+    orderBy?: SocialIntentOrderByWithRelationInput | SocialIntentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SocialIntents.
+     */
+    cursor?: SocialIntentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SocialIntents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SocialIntents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SocialIntents.
+     */
+    distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
+  }
+
+  /**
+   * SocialIntent create
+   */
+  export type SocialIntentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SocialIntent.
+     */
+    data: XOR<SocialIntentCreateInput, SocialIntentUncheckedCreateInput>
+  }
+
+  /**
+   * SocialIntent createMany
+   */
+  export type SocialIntentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SocialIntents.
+     */
+    data: SocialIntentCreateManyInput | SocialIntentCreateManyInput[]
+  }
+
+  /**
+   * SocialIntent createManyAndReturn
+   */
+  export type SocialIntentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * The data used to create many SocialIntents.
+     */
+    data: SocialIntentCreateManyInput | SocialIntentCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SocialIntent update
+   */
+  export type SocialIntentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SocialIntent.
+     */
+    data: XOR<SocialIntentUpdateInput, SocialIntentUncheckedUpdateInput>
+    /**
+     * Choose, which SocialIntent to update.
+     */
+    where: SocialIntentWhereUniqueInput
+  }
+
+  /**
+   * SocialIntent updateMany
+   */
+  export type SocialIntentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SocialIntents.
+     */
+    data: XOR<SocialIntentUpdateManyMutationInput, SocialIntentUncheckedUpdateManyInput>
+    /**
+     * Filter which SocialIntents to update
+     */
+    where?: SocialIntentWhereInput
+    /**
+     * Limit how many SocialIntents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SocialIntent updateManyAndReturn
+   */
+  export type SocialIntentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * The data used to update SocialIntents.
+     */
+    data: XOR<SocialIntentUpdateManyMutationInput, SocialIntentUncheckedUpdateManyInput>
+    /**
+     * Filter which SocialIntents to update
+     */
+    where?: SocialIntentWhereInput
+    /**
+     * Limit how many SocialIntents to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SocialIntent upsert
+   */
+  export type SocialIntentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SocialIntent to update in case it exists.
+     */
+    where: SocialIntentWhereUniqueInput
+    /**
+     * In case the SocialIntent found by the `where` argument doesn't exist, create a new SocialIntent with this data.
+     */
+    create: XOR<SocialIntentCreateInput, SocialIntentUncheckedCreateInput>
+    /**
+     * In case the SocialIntent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SocialIntentUpdateInput, SocialIntentUncheckedUpdateInput>
+  }
+
+  /**
+   * SocialIntent delete
+   */
+  export type SocialIntentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    /**
+     * Filter which SocialIntent to delete.
+     */
+    where: SocialIntentWhereUniqueInput
+  }
+
+  /**
+   * SocialIntent deleteMany
+   */
+  export type SocialIntentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SocialIntents to delete
+     */
+    where?: SocialIntentWhereInput
+    /**
+     * Limit how many SocialIntents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SocialIntent without action
+   */
+  export type SocialIntentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
   }
 
 
@@ -16981,6 +18393,7 @@ export namespace Prisma {
     memberships?: boolean | User$membershipsArgs<ExtArgs>
     missions?: boolean | User$missionsArgs<ExtArgs>
     missionParticipations?: boolean | User$missionParticipationsArgs<ExtArgs>
+    socialIntents?: boolean | User$socialIntentsArgs<ExtArgs>
     analyticsEvents?: boolean | User$analyticsEventsArgs<ExtArgs>
     reportsMade?: boolean | User$reportsMadeArgs<ExtArgs>
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
@@ -17077,6 +18490,7 @@ export namespace Prisma {
     memberships?: boolean | User$membershipsArgs<ExtArgs>
     missions?: boolean | User$missionsArgs<ExtArgs>
     missionParticipations?: boolean | User$missionParticipationsArgs<ExtArgs>
+    socialIntents?: boolean | User$socialIntentsArgs<ExtArgs>
     analyticsEvents?: boolean | User$analyticsEventsArgs<ExtArgs>
     reportsMade?: boolean | User$reportsMadeArgs<ExtArgs>
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
@@ -17119,6 +18533,7 @@ export namespace Prisma {
       memberships: Prisma.$MembershipPayload<ExtArgs>[]
       missions: Prisma.$MissionPayload<ExtArgs>[]
       missionParticipations: Prisma.$MissionParticipationPayload<ExtArgs>[]
+      socialIntents: Prisma.$SocialIntentPayload<ExtArgs>[]
       analyticsEvents: Prisma.$AnalyticsEventPayload<ExtArgs>[]
       reportsMade: Prisma.$UserReportPayload<ExtArgs>[]
       reportsReceived: Prisma.$UserReportPayload<ExtArgs>[]
@@ -17565,6 +18980,7 @@ export namespace Prisma {
     memberships<T extends User$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, User$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     missions<T extends User$missionsArgs<ExtArgs> = {}>(args?: Subset<T, User$missionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     missionParticipations<T extends User$missionParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, User$missionParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    socialIntents<T extends User$socialIntentsArgs<ExtArgs> = {}>(args?: Subset<T, User$socialIntentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     analyticsEvents<T extends User$analyticsEventsArgs<ExtArgs> = {}>(args?: Subset<T, User$analyticsEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reportsMade<T extends User$reportsMadeArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsMadeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reportsReceived<T extends User$reportsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -18661,6 +20077,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: MissionParticipationScalarFieldEnum | MissionParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * User.socialIntents
+   */
+  export type User$socialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    where?: SocialIntentWhereInput
+    orderBy?: SocialIntentOrderByWithRelationInput | SocialIntentOrderByWithRelationInput[]
+    cursor?: SocialIntentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
   }
 
   /**
@@ -57067,6 +58507,7 @@ export namespace Prisma {
     missions?: boolean | Organization$missionsArgs<ExtArgs>
     missionParticipations?: boolean | Organization$missionParticipationsArgs<ExtArgs>
     idempotencyRecords?: boolean | Organization$idempotencyRecordsArgs<ExtArgs>
+    socialIntents?: boolean | Organization$socialIntentsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -57104,6 +58545,7 @@ export namespace Prisma {
     missions?: boolean | Organization$missionsArgs<ExtArgs>
     missionParticipations?: boolean | Organization$missionParticipationsArgs<ExtArgs>
     idempotencyRecords?: boolean | Organization$idempotencyRecordsArgs<ExtArgs>
+    socialIntents?: boolean | Organization$socialIntentsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -57117,6 +58559,7 @@ export namespace Prisma {
       missions: Prisma.$MissionPayload<ExtArgs>[]
       missionParticipations: Prisma.$MissionParticipationPayload<ExtArgs>[]
       idempotencyRecords: Prisma.$IdempotencyRecordPayload<ExtArgs>[]
+      socialIntents: Prisma.$SocialIntentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -57527,6 +58970,7 @@ export namespace Prisma {
     missions<T extends Organization$missionsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$missionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     missionParticipations<T extends Organization$missionParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$missionParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     idempotencyRecords<T extends Organization$idempotencyRecordsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$idempotencyRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    socialIntents<T extends Organization$socialIntentsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$socialIntentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -58070,6 +59514,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: IdempotencyRecordScalarFieldEnum | IdempotencyRecordScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.socialIntents
+   */
+  export type Organization$socialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SocialIntent
+     */
+    select?: SocialIntentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SocialIntent
+     */
+    omit?: SocialIntentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SocialIntentInclude<ExtArgs> | null
+    where?: SocialIntentWhereInput
+    orderBy?: SocialIntentOrderByWithRelationInput | SocialIntentOrderByWithRelationInput[]
+    cursor?: SocialIntentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
   }
 
   /**
@@ -60454,6 +61922,27 @@ export namespace Prisma {
   export type MissionScalarFieldEnum = (typeof MissionScalarFieldEnum)[keyof typeof MissionScalarFieldEnum]
 
 
+  export const SocialIntentScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    missionId: 'missionId',
+    userId: 'userId',
+    need: 'need',
+    offer: 'offer',
+    constraints: 'constraints',
+    disclosure: 'disclosure',
+    status: 'status',
+    expiresAt: 'expiresAt',
+    withdrawnAt: 'withdrawnAt',
+    importConsentAt: 'importConsentAt',
+    importedFields: 'importedFields',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type SocialIntentScalarFieldEnum = (typeof SocialIntentScalarFieldEnum)[keyof typeof SocialIntentScalarFieldEnum]
+
+
   export const MissionParticipationScalarFieldEnum: {
     id: 'id',
     organizationId: 'organizationId',
@@ -61238,6 +62727,13 @@ export namespace Prisma {
    * Reference to a field of type 'MissionStatus'
    */
   export type EnumMissionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MissionStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'IntentStatus'
+   */
+  export type EnumIntentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IntentStatus'>
     
 
 
@@ -62108,6 +63604,7 @@ export namespace Prisma {
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     participations?: MissionParticipationListRelationFilter
+    socialIntents?: SocialIntentListRelationFilter
   }
 
   export type MissionOrderByWithRelationInput = {
@@ -62131,6 +63628,7 @@ export namespace Prisma {
     organization?: OrganizationOrderByWithRelationInput
     owner?: UserOrderByWithRelationInput
     participations?: MissionParticipationOrderByRelationAggregateInput
+    socialIntents?: SocialIntentOrderByRelationAggregateInput
   }
 
   export type MissionWhereUniqueInput = Prisma.AtLeast<{
@@ -62157,6 +63655,7 @@ export namespace Prisma {
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     participations?: MissionParticipationListRelationFilter
+    socialIntents?: SocialIntentListRelationFilter
   }, "id" | "shareToken">
 
   export type MissionOrderByWithAggregationInput = {
@@ -62205,6 +63704,118 @@ export namespace Prisma {
     closedAt?: DateTimeNullableWithAggregatesFilter<"Mission"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Mission"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Mission"> | Date | string
+  }
+
+  export type SocialIntentWhereInput = {
+    AND?: SocialIntentWhereInput | SocialIntentWhereInput[]
+    OR?: SocialIntentWhereInput[]
+    NOT?: SocialIntentWhereInput | SocialIntentWhereInput[]
+    id?: StringFilter<"SocialIntent"> | string
+    organizationId?: StringFilter<"SocialIntent"> | string
+    missionId?: StringFilter<"SocialIntent"> | string
+    userId?: StringFilter<"SocialIntent"> | string
+    need?: StringFilter<"SocialIntent"> | string
+    offer?: StringFilter<"SocialIntent"> | string
+    constraints?: StringNullableFilter<"SocialIntent"> | string | null
+    disclosure?: StringNullableFilter<"SocialIntent"> | string | null
+    status?: EnumIntentStatusFilter<"SocialIntent"> | $Enums.IntentStatus
+    expiresAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    withdrawnAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    importConsentAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    importedFields?: StringNullableFilter<"SocialIntent"> | string | null
+    createdAt?: DateTimeFilter<"SocialIntent"> | Date | string
+    updatedAt?: DateTimeFilter<"SocialIntent"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    mission?: XOR<MissionScalarRelationFilter, MissionWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type SocialIntentOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    need?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrderInput | SortOrder
+    disclosure?: SortOrderInput | SortOrder
+    status?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    withdrawnAt?: SortOrderInput | SortOrder
+    importConsentAt?: SortOrderInput | SortOrder
+    importedFields?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    mission?: MissionOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type SocialIntentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    missionId_userId?: SocialIntentMissionIdUserIdCompoundUniqueInput
+    AND?: SocialIntentWhereInput | SocialIntentWhereInput[]
+    OR?: SocialIntentWhereInput[]
+    NOT?: SocialIntentWhereInput | SocialIntentWhereInput[]
+    organizationId?: StringFilter<"SocialIntent"> | string
+    missionId?: StringFilter<"SocialIntent"> | string
+    userId?: StringFilter<"SocialIntent"> | string
+    need?: StringFilter<"SocialIntent"> | string
+    offer?: StringFilter<"SocialIntent"> | string
+    constraints?: StringNullableFilter<"SocialIntent"> | string | null
+    disclosure?: StringNullableFilter<"SocialIntent"> | string | null
+    status?: EnumIntentStatusFilter<"SocialIntent"> | $Enums.IntentStatus
+    expiresAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    withdrawnAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    importConsentAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    importedFields?: StringNullableFilter<"SocialIntent"> | string | null
+    createdAt?: DateTimeFilter<"SocialIntent"> | Date | string
+    updatedAt?: DateTimeFilter<"SocialIntent"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    mission?: XOR<MissionScalarRelationFilter, MissionWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "missionId_userId">
+
+  export type SocialIntentOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    need?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrderInput | SortOrder
+    disclosure?: SortOrderInput | SortOrder
+    status?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    withdrawnAt?: SortOrderInput | SortOrder
+    importConsentAt?: SortOrderInput | SortOrder
+    importedFields?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: SocialIntentCountOrderByAggregateInput
+    _max?: SocialIntentMaxOrderByAggregateInput
+    _min?: SocialIntentMinOrderByAggregateInput
+  }
+
+  export type SocialIntentScalarWhereWithAggregatesInput = {
+    AND?: SocialIntentScalarWhereWithAggregatesInput | SocialIntentScalarWhereWithAggregatesInput[]
+    OR?: SocialIntentScalarWhereWithAggregatesInput[]
+    NOT?: SocialIntentScalarWhereWithAggregatesInput | SocialIntentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SocialIntent"> | string
+    organizationId?: StringWithAggregatesFilter<"SocialIntent"> | string
+    missionId?: StringWithAggregatesFilter<"SocialIntent"> | string
+    userId?: StringWithAggregatesFilter<"SocialIntent"> | string
+    need?: StringWithAggregatesFilter<"SocialIntent"> | string
+    offer?: StringWithAggregatesFilter<"SocialIntent"> | string
+    constraints?: StringNullableWithAggregatesFilter<"SocialIntent"> | string | null
+    disclosure?: StringNullableWithAggregatesFilter<"SocialIntent"> | string | null
+    status?: EnumIntentStatusWithAggregatesFilter<"SocialIntent"> | $Enums.IntentStatus
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"SocialIntent"> | Date | string | null
+    withdrawnAt?: DateTimeNullableWithAggregatesFilter<"SocialIntent"> | Date | string | null
+    importConsentAt?: DateTimeNullableWithAggregatesFilter<"SocialIntent"> | Date | string | null
+    importedFields?: StringNullableWithAggregatesFilter<"SocialIntent"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"SocialIntent"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SocialIntent"> | Date | string
   }
 
   export type MissionParticipationWhereInput = {
@@ -62403,6 +64014,7 @@ export namespace Prisma {
     memberships?: MembershipListRelationFilter
     missions?: MissionListRelationFilter
     missionParticipations?: MissionParticipationListRelationFilter
+    socialIntents?: SocialIntentListRelationFilter
     analyticsEvents?: AnalyticsEventListRelationFilter
     reportsMade?: UserReportListRelationFilter
     reportsReceived?: UserReportListRelationFilter
@@ -62456,6 +64068,7 @@ export namespace Prisma {
     memberships?: MembershipOrderByRelationAggregateInput
     missions?: MissionOrderByRelationAggregateInput
     missionParticipations?: MissionParticipationOrderByRelationAggregateInput
+    socialIntents?: SocialIntentOrderByRelationAggregateInput
     analyticsEvents?: AnalyticsEventOrderByRelationAggregateInput
     reportsMade?: UserReportOrderByRelationAggregateInput
     reportsReceived?: UserReportOrderByRelationAggregateInput
@@ -62512,6 +64125,7 @@ export namespace Prisma {
     memberships?: MembershipListRelationFilter
     missions?: MissionListRelationFilter
     missionParticipations?: MissionParticipationListRelationFilter
+    socialIntents?: SocialIntentListRelationFilter
     analyticsEvents?: AnalyticsEventListRelationFilter
     reportsMade?: UserReportListRelationFilter
     reportsReceived?: UserReportListRelationFilter
@@ -65717,6 +67331,7 @@ export namespace Prisma {
     missions?: MissionListRelationFilter
     missionParticipations?: MissionParticipationListRelationFilter
     idempotencyRecords?: IdempotencyRecordListRelationFilter
+    socialIntents?: SocialIntentListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -65731,6 +67346,7 @@ export namespace Prisma {
     missions?: MissionOrderByRelationAggregateInput
     missionParticipations?: MissionParticipationOrderByRelationAggregateInput
     idempotencyRecords?: IdempotencyRecordOrderByRelationAggregateInput
+    socialIntents?: SocialIntentOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -65748,6 +67364,7 @@ export namespace Prisma {
     missions?: MissionListRelationFilter
     missionParticipations?: MissionParticipationListRelationFilter
     idempotencyRecords?: IdempotencyRecordListRelationFilter
+    socialIntents?: SocialIntentListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -66660,6 +68277,7 @@ export namespace Prisma {
     organization: OrganizationCreateNestedOneWithoutMissionsInput
     owner: UserCreateNestedOneWithoutMissionsInput
     participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateInput = {
@@ -66681,6 +68299,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUpdateInput = {
@@ -66702,6 +68321,7 @@ export namespace Prisma {
     organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
     owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
     participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateInput = {
@@ -66723,6 +68343,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionCreateManyInput = {
@@ -66779,6 +68400,129 @@ export namespace Prisma {
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentCreateInput = {
+    id?: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutSocialIntentsInput
+    mission: MissionCreateNestedOneWithoutSocialIntentsInput
+    user: UserCreateNestedOneWithoutSocialIntentsInput
+  }
+
+  export type SocialIntentUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    userId: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SocialIntentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutSocialIntentsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutSocialIntentsNestedInput
+    user?: UserUpdateOneRequiredWithoutSocialIntentsNestedInput
+  }
+
+  export type SocialIntentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentCreateManyInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    userId: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SocialIntentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -66978,6 +68722,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -67031,6 +68776,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -67084,6 +68830,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -67137,6 +68884,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -70793,6 +72541,7 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -70807,6 +72556,7 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -70821,6 +72571,7 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -70835,6 +72586,7 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -71690,7 +73442,17 @@ export namespace Prisma {
     none?: MissionParticipationWhereInput
   }
 
+  export type SocialIntentListRelationFilter = {
+    every?: SocialIntentWhereInput
+    some?: SocialIntentWhereInput
+    none?: SocialIntentWhereInput
+  }
+
   export type MissionParticipationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SocialIntentOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -71772,16 +73534,92 @@ export namespace Prisma {
     _max?: NestedEnumMissionStatusFilter<$PrismaModel>
   }
 
-  export type EnumMissionParticipationStatusFilter<$PrismaModel = never> = {
-    equals?: $Enums.MissionParticipationStatus | EnumMissionParticipationStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.MissionParticipationStatus[]
-    notIn?: $Enums.MissionParticipationStatus[]
-    not?: NestedEnumMissionParticipationStatusFilter<$PrismaModel> | $Enums.MissionParticipationStatus
+  export type EnumIntentStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.IntentStatus | EnumIntentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.IntentStatus[]
+    notIn?: $Enums.IntentStatus[]
+    not?: NestedEnumIntentStatusFilter<$PrismaModel> | $Enums.IntentStatus
   }
 
   export type MissionScalarRelationFilter = {
     is?: MissionWhereInput
     isNot?: MissionWhereInput
+  }
+
+  export type SocialIntentMissionIdUserIdCompoundUniqueInput = {
+    missionId: string
+    userId: string
+  }
+
+  export type SocialIntentCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    need?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrder
+    disclosure?: SortOrder
+    status?: SortOrder
+    expiresAt?: SortOrder
+    withdrawnAt?: SortOrder
+    importConsentAt?: SortOrder
+    importedFields?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SocialIntentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    need?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrder
+    disclosure?: SortOrder
+    status?: SortOrder
+    expiresAt?: SortOrder
+    withdrawnAt?: SortOrder
+    importConsentAt?: SortOrder
+    importedFields?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SocialIntentMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    need?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrder
+    disclosure?: SortOrder
+    status?: SortOrder
+    expiresAt?: SortOrder
+    withdrawnAt?: SortOrder
+    importConsentAt?: SortOrder
+    importedFields?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumIntentStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.IntentStatus | EnumIntentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.IntentStatus[]
+    notIn?: $Enums.IntentStatus[]
+    not?: NestedEnumIntentStatusWithAggregatesFilter<$PrismaModel> | $Enums.IntentStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumIntentStatusFilter<$PrismaModel>
+    _max?: NestedEnumIntentStatusFilter<$PrismaModel>
+  }
+
+  export type EnumMissionParticipationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionParticipationStatus | EnumMissionParticipationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionParticipationStatus[]
+    notIn?: $Enums.MissionParticipationStatus[]
+    not?: NestedEnumMissionParticipationStatusFilter<$PrismaModel> | $Enums.MissionParticipationStatus
   }
 
   export type MissionParticipationMissionIdUserIdCompoundUniqueInput = {
@@ -74784,11 +76622,25 @@ export namespace Prisma {
     connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
   }
 
+  export type SocialIntentCreateNestedManyWithoutMissionInput = {
+    create?: XOR<SocialIntentCreateWithoutMissionInput, SocialIntentUncheckedCreateWithoutMissionInput> | SocialIntentCreateWithoutMissionInput[] | SocialIntentUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutMissionInput | SocialIntentCreateOrConnectWithoutMissionInput[]
+    createMany?: SocialIntentCreateManyMissionInputEnvelope
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+  }
+
   export type MissionParticipationUncheckedCreateNestedManyWithoutMissionInput = {
     create?: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput> | MissionParticipationCreateWithoutMissionInput[] | MissionParticipationUncheckedCreateWithoutMissionInput[]
     connectOrCreate?: MissionParticipationCreateOrConnectWithoutMissionInput | MissionParticipationCreateOrConnectWithoutMissionInput[]
     createMany?: MissionParticipationCreateManyMissionInputEnvelope
     connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+  }
+
+  export type SocialIntentUncheckedCreateNestedManyWithoutMissionInput = {
+    create?: XOR<SocialIntentCreateWithoutMissionInput, SocialIntentUncheckedCreateWithoutMissionInput> | SocialIntentCreateWithoutMissionInput[] | SocialIntentUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutMissionInput | SocialIntentCreateOrConnectWithoutMissionInput[]
+    createMany?: SocialIntentCreateManyMissionInputEnvelope
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
   }
 
   export type EnumMissionStatusFieldUpdateOperationsInput = {
@@ -74825,6 +76677,20 @@ export namespace Prisma {
     deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
   }
 
+  export type SocialIntentUpdateManyWithoutMissionNestedInput = {
+    create?: XOR<SocialIntentCreateWithoutMissionInput, SocialIntentUncheckedCreateWithoutMissionInput> | SocialIntentCreateWithoutMissionInput[] | SocialIntentUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutMissionInput | SocialIntentCreateOrConnectWithoutMissionInput[]
+    upsert?: SocialIntentUpsertWithWhereUniqueWithoutMissionInput | SocialIntentUpsertWithWhereUniqueWithoutMissionInput[]
+    createMany?: SocialIntentCreateManyMissionInputEnvelope
+    set?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    disconnect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    delete?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    update?: SocialIntentUpdateWithWhereUniqueWithoutMissionInput | SocialIntentUpdateWithWhereUniqueWithoutMissionInput[]
+    updateMany?: SocialIntentUpdateManyWithWhereWithoutMissionInput | SocialIntentUpdateManyWithWhereWithoutMissionInput[]
+    deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+  }
+
   export type MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput = {
     create?: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput> | MissionParticipationCreateWithoutMissionInput[] | MissionParticipationUncheckedCreateWithoutMissionInput[]
     connectOrCreate?: MissionParticipationCreateOrConnectWithoutMissionInput | MissionParticipationCreateOrConnectWithoutMissionInput[]
@@ -74837,6 +76703,66 @@ export namespace Prisma {
     update?: MissionParticipationUpdateWithWhereUniqueWithoutMissionInput | MissionParticipationUpdateWithWhereUniqueWithoutMissionInput[]
     updateMany?: MissionParticipationUpdateManyWithWhereWithoutMissionInput | MissionParticipationUpdateManyWithWhereWithoutMissionInput[]
     deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+  }
+
+  export type SocialIntentUncheckedUpdateManyWithoutMissionNestedInput = {
+    create?: XOR<SocialIntentCreateWithoutMissionInput, SocialIntentUncheckedCreateWithoutMissionInput> | SocialIntentCreateWithoutMissionInput[] | SocialIntentUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutMissionInput | SocialIntentCreateOrConnectWithoutMissionInput[]
+    upsert?: SocialIntentUpsertWithWhereUniqueWithoutMissionInput | SocialIntentUpsertWithWhereUniqueWithoutMissionInput[]
+    createMany?: SocialIntentCreateManyMissionInputEnvelope
+    set?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    disconnect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    delete?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    update?: SocialIntentUpdateWithWhereUniqueWithoutMissionInput | SocialIntentUpdateWithWhereUniqueWithoutMissionInput[]
+    updateMany?: SocialIntentUpdateManyWithWhereWithoutMissionInput | SocialIntentUpdateManyWithWhereWithoutMissionInput[]
+    deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+  }
+
+  export type OrganizationCreateNestedOneWithoutSocialIntentsInput = {
+    create?: XOR<OrganizationCreateWithoutSocialIntentsInput, OrganizationUncheckedCreateWithoutSocialIntentsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutSocialIntentsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type MissionCreateNestedOneWithoutSocialIntentsInput = {
+    create?: XOR<MissionCreateWithoutSocialIntentsInput, MissionUncheckedCreateWithoutSocialIntentsInput>
+    connectOrCreate?: MissionCreateOrConnectWithoutSocialIntentsInput
+    connect?: MissionWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutSocialIntentsInput = {
+    create?: XOR<UserCreateWithoutSocialIntentsInput, UserUncheckedCreateWithoutSocialIntentsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSocialIntentsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type EnumIntentStatusFieldUpdateOperationsInput = {
+    set?: $Enums.IntentStatus
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutSocialIntentsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutSocialIntentsInput, OrganizationUncheckedCreateWithoutSocialIntentsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutSocialIntentsInput
+    upsert?: OrganizationUpsertWithoutSocialIntentsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutSocialIntentsInput, OrganizationUpdateWithoutSocialIntentsInput>, OrganizationUncheckedUpdateWithoutSocialIntentsInput>
+  }
+
+  export type MissionUpdateOneRequiredWithoutSocialIntentsNestedInput = {
+    create?: XOR<MissionCreateWithoutSocialIntentsInput, MissionUncheckedCreateWithoutSocialIntentsInput>
+    connectOrCreate?: MissionCreateOrConnectWithoutSocialIntentsInput
+    upsert?: MissionUpsertWithoutSocialIntentsInput
+    connect?: MissionWhereUniqueInput
+    update?: XOR<XOR<MissionUpdateToOneWithWhereWithoutSocialIntentsInput, MissionUpdateWithoutSocialIntentsInput>, MissionUncheckedUpdateWithoutSocialIntentsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutSocialIntentsNestedInput = {
+    create?: XOR<UserCreateWithoutSocialIntentsInput, UserUncheckedCreateWithoutSocialIntentsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSocialIntentsInput
+    upsert?: UserUpsertWithoutSocialIntentsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutSocialIntentsInput, UserUpdateWithoutSocialIntentsInput>, UserUncheckedUpdateWithoutSocialIntentsInput>
   }
 
   export type OrganizationCreateNestedOneWithoutMissionParticipationsInput = {
@@ -75092,6 +77018,13 @@ export namespace Prisma {
     connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
   }
 
+  export type SocialIntentCreateNestedManyWithoutUserInput = {
+    create?: XOR<SocialIntentCreateWithoutUserInput, SocialIntentUncheckedCreateWithoutUserInput> | SocialIntentCreateWithoutUserInput[] | SocialIntentUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutUserInput | SocialIntentCreateOrConnectWithoutUserInput[]
+    createMany?: SocialIntentCreateManyUserInputEnvelope
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+  }
+
   export type AnalyticsEventCreateNestedManyWithoutUserInput = {
     create?: XOR<AnalyticsEventCreateWithoutUserInput, AnalyticsEventUncheckedCreateWithoutUserInput> | AnalyticsEventCreateWithoutUserInput[] | AnalyticsEventUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AnalyticsEventCreateOrConnectWithoutUserInput | AnalyticsEventCreateOrConnectWithoutUserInput[]
@@ -75324,6 +77257,13 @@ export namespace Prisma {
     connectOrCreate?: MissionParticipationCreateOrConnectWithoutUserInput | MissionParticipationCreateOrConnectWithoutUserInput[]
     createMany?: MissionParticipationCreateManyUserInputEnvelope
     connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+  }
+
+  export type SocialIntentUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<SocialIntentCreateWithoutUserInput, SocialIntentUncheckedCreateWithoutUserInput> | SocialIntentCreateWithoutUserInput[] | SocialIntentUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutUserInput | SocialIntentCreateOrConnectWithoutUserInput[]
+    createMany?: SocialIntentCreateManyUserInputEnvelope
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
   }
 
   export type AnalyticsEventUncheckedCreateNestedManyWithoutUserInput = {
@@ -75749,6 +77689,20 @@ export namespace Prisma {
     update?: MissionParticipationUpdateWithWhereUniqueWithoutUserInput | MissionParticipationUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: MissionParticipationUpdateManyWithWhereWithoutUserInput | MissionParticipationUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+  }
+
+  export type SocialIntentUpdateManyWithoutUserNestedInput = {
+    create?: XOR<SocialIntentCreateWithoutUserInput, SocialIntentUncheckedCreateWithoutUserInput> | SocialIntentCreateWithoutUserInput[] | SocialIntentUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutUserInput | SocialIntentCreateOrConnectWithoutUserInput[]
+    upsert?: SocialIntentUpsertWithWhereUniqueWithoutUserInput | SocialIntentUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: SocialIntentCreateManyUserInputEnvelope
+    set?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    disconnect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    delete?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    update?: SocialIntentUpdateWithWhereUniqueWithoutUserInput | SocialIntentUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: SocialIntentUpdateManyWithWhereWithoutUserInput | SocialIntentUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
   }
 
   export type AnalyticsEventUpdateManyWithoutUserNestedInput = {
@@ -76209,6 +78163,20 @@ export namespace Prisma {
     update?: MissionParticipationUpdateWithWhereUniqueWithoutUserInput | MissionParticipationUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: MissionParticipationUpdateManyWithWhereWithoutUserInput | MissionParticipationUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+  }
+
+  export type SocialIntentUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<SocialIntentCreateWithoutUserInput, SocialIntentUncheckedCreateWithoutUserInput> | SocialIntentCreateWithoutUserInput[] | SocialIntentUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutUserInput | SocialIntentCreateOrConnectWithoutUserInput[]
+    upsert?: SocialIntentUpsertWithWhereUniqueWithoutUserInput | SocialIntentUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: SocialIntentCreateManyUserInputEnvelope
+    set?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    disconnect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    delete?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    update?: SocialIntentUpdateWithWhereUniqueWithoutUserInput | SocialIntentUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: SocialIntentUpdateManyWithWhereWithoutUserInput | SocialIntentUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
   }
 
   export type AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput = {
@@ -77510,6 +79478,13 @@ export namespace Prisma {
     connect?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
   }
 
+  export type SocialIntentCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<SocialIntentCreateWithoutOrganizationInput, SocialIntentUncheckedCreateWithoutOrganizationInput> | SocialIntentCreateWithoutOrganizationInput[] | SocialIntentUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutOrganizationInput | SocialIntentCreateOrConnectWithoutOrganizationInput[]
+    createMany?: SocialIntentCreateManyOrganizationInputEnvelope
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+  }
+
   export type MembershipUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -77543,6 +79518,13 @@ export namespace Prisma {
     connectOrCreate?: IdempotencyRecordCreateOrConnectWithoutOrganizationInput | IdempotencyRecordCreateOrConnectWithoutOrganizationInput[]
     createMany?: IdempotencyRecordCreateManyOrganizationInputEnvelope
     connect?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+  }
+
+  export type SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<SocialIntentCreateWithoutOrganizationInput, SocialIntentUncheckedCreateWithoutOrganizationInput> | SocialIntentCreateWithoutOrganizationInput[] | SocialIntentUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutOrganizationInput | SocialIntentCreateOrConnectWithoutOrganizationInput[]
+    createMany?: SocialIntentCreateManyOrganizationInputEnvelope
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
   }
 
   export type EnumOrganizationStatusFieldUpdateOperationsInput = {
@@ -77619,6 +79601,20 @@ export namespace Prisma {
     deleteMany?: IdempotencyRecordScalarWhereInput | IdempotencyRecordScalarWhereInput[]
   }
 
+  export type SocialIntentUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<SocialIntentCreateWithoutOrganizationInput, SocialIntentUncheckedCreateWithoutOrganizationInput> | SocialIntentCreateWithoutOrganizationInput[] | SocialIntentUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutOrganizationInput | SocialIntentCreateOrConnectWithoutOrganizationInput[]
+    upsert?: SocialIntentUpsertWithWhereUniqueWithoutOrganizationInput | SocialIntentUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: SocialIntentCreateManyOrganizationInputEnvelope
+    set?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    disconnect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    delete?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    update?: SocialIntentUpdateWithWhereUniqueWithoutOrganizationInput | SocialIntentUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: SocialIntentUpdateManyWithWhereWithoutOrganizationInput | SocialIntentUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+  }
+
   export type MembershipUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -77687,6 +79683,20 @@ export namespace Prisma {
     update?: IdempotencyRecordUpdateWithWhereUniqueWithoutOrganizationInput | IdempotencyRecordUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: IdempotencyRecordUpdateManyWithWhereWithoutOrganizationInput | IdempotencyRecordUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: IdempotencyRecordScalarWhereInput | IdempotencyRecordScalarWhereInput[]
+  }
+
+  export type SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<SocialIntentCreateWithoutOrganizationInput, SocialIntentUncheckedCreateWithoutOrganizationInput> | SocialIntentCreateWithoutOrganizationInput[] | SocialIntentUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: SocialIntentCreateOrConnectWithoutOrganizationInput | SocialIntentCreateOrConnectWithoutOrganizationInput[]
+    upsert?: SocialIntentUpsertWithWhereUniqueWithoutOrganizationInput | SocialIntentUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: SocialIntentCreateManyOrganizationInputEnvelope
+    set?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    disconnect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    delete?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+    update?: SocialIntentUpdateWithWhereUniqueWithoutOrganizationInput | SocialIntentUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: SocialIntentUpdateManyWithWhereWithoutOrganizationInput | SocialIntentUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutMembershipsInput = {
@@ -78039,6 +80049,23 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMissionStatusFilter<$PrismaModel>
     _max?: NestedEnumMissionStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumIntentStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.IntentStatus | EnumIntentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.IntentStatus[]
+    notIn?: $Enums.IntentStatus[]
+    not?: NestedEnumIntentStatusFilter<$PrismaModel> | $Enums.IntentStatus
+  }
+
+  export type NestedEnumIntentStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.IntentStatus | EnumIntentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.IntentStatus[]
+    notIn?: $Enums.IntentStatus[]
+    not?: NestedEnumIntentStatusWithAggregatesFilter<$PrismaModel> | $Enums.IntentStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumIntentStatusFilter<$PrismaModel>
+    _max?: NestedEnumIntentStatusFilter<$PrismaModel>
   }
 
   export type NestedEnumMissionParticipationStatusFilter<$PrismaModel = never> = {
@@ -78663,6 +80690,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionsInput = {
@@ -78676,6 +80704,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionsInput = {
@@ -78727,6 +80756,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -78779,6 +80809,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -78821,6 +80852,49 @@ export namespace Prisma {
     data: MissionParticipationCreateManyMissionInput | MissionParticipationCreateManyMissionInput[]
   }
 
+  export type SocialIntentCreateWithoutMissionInput = {
+    id?: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutSocialIntentsInput
+    user: UserCreateNestedOneWithoutSocialIntentsInput
+  }
+
+  export type SocialIntentUncheckedCreateWithoutMissionInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SocialIntentCreateOrConnectWithoutMissionInput = {
+    where: SocialIntentWhereUniqueInput
+    create: XOR<SocialIntentCreateWithoutMissionInput, SocialIntentUncheckedCreateWithoutMissionInput>
+  }
+
+  export type SocialIntentCreateManyMissionInputEnvelope = {
+    data: SocialIntentCreateManyMissionInput | SocialIntentCreateManyMissionInput[]
+  }
+
   export type OrganizationUpsertWithoutMissionsInput = {
     update: XOR<OrganizationUpdateWithoutMissionsInput, OrganizationUncheckedUpdateWithoutMissionsInput>
     create: XOR<OrganizationCreateWithoutMissionsInput, OrganizationUncheckedCreateWithoutMissionsInput>
@@ -78843,6 +80917,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionsInput = {
@@ -78856,6 +80931,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMissionsInput = {
@@ -78913,6 +80989,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -78965,6 +81042,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -79003,6 +81081,443 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"MissionParticipation"> | Date | string
   }
 
+  export type SocialIntentUpsertWithWhereUniqueWithoutMissionInput = {
+    where: SocialIntentWhereUniqueInput
+    update: XOR<SocialIntentUpdateWithoutMissionInput, SocialIntentUncheckedUpdateWithoutMissionInput>
+    create: XOR<SocialIntentCreateWithoutMissionInput, SocialIntentUncheckedCreateWithoutMissionInput>
+  }
+
+  export type SocialIntentUpdateWithWhereUniqueWithoutMissionInput = {
+    where: SocialIntentWhereUniqueInput
+    data: XOR<SocialIntentUpdateWithoutMissionInput, SocialIntentUncheckedUpdateWithoutMissionInput>
+  }
+
+  export type SocialIntentUpdateManyWithWhereWithoutMissionInput = {
+    where: SocialIntentScalarWhereInput
+    data: XOR<SocialIntentUpdateManyMutationInput, SocialIntentUncheckedUpdateManyWithoutMissionInput>
+  }
+
+  export type SocialIntentScalarWhereInput = {
+    AND?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+    OR?: SocialIntentScalarWhereInput[]
+    NOT?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+    id?: StringFilter<"SocialIntent"> | string
+    organizationId?: StringFilter<"SocialIntent"> | string
+    missionId?: StringFilter<"SocialIntent"> | string
+    userId?: StringFilter<"SocialIntent"> | string
+    need?: StringFilter<"SocialIntent"> | string
+    offer?: StringFilter<"SocialIntent"> | string
+    constraints?: StringNullableFilter<"SocialIntent"> | string | null
+    disclosure?: StringNullableFilter<"SocialIntent"> | string | null
+    status?: EnumIntentStatusFilter<"SocialIntent"> | $Enums.IntentStatus
+    expiresAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    withdrawnAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    importConsentAt?: DateTimeNullableFilter<"SocialIntent"> | Date | string | null
+    importedFields?: StringNullableFilter<"SocialIntent"> | string | null
+    createdAt?: DateTimeFilter<"SocialIntent"> | Date | string
+    updatedAt?: DateTimeFilter<"SocialIntent"> | Date | string
+  }
+
+  export type OrganizationCreateWithoutSocialIntentsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutSocialIntentsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutSocialIntentsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutSocialIntentsInput, OrganizationUncheckedCreateWithoutSocialIntentsInput>
+  }
+
+  export type MissionCreateWithoutSocialIntentsInput = {
+    id?: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMissionsInput
+    owner: UserCreateNestedOneWithoutMissionsInput
+    participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionUncheckedCreateWithoutSocialIntentsInput = {
+    id?: string
+    organizationId: string
+    ownerId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionCreateOrConnectWithoutSocialIntentsInput = {
+    where: MissionWhereUniqueInput
+    create: XOR<MissionCreateWithoutSocialIntentsInput, MissionUncheckedCreateWithoutSocialIntentsInput>
+  }
+
+  export type UserCreateWithoutSocialIntentsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutSocialIntentsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationUncheckedCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationUncheckedCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageUncheckedCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptUncheckedCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionUncheckedCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleUncheckedCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestUncheckedCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestUncheckedCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantUncheckedCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantUncheckedCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutSocialIntentsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutSocialIntentsInput, UserUncheckedCreateWithoutSocialIntentsInput>
+  }
+
+  export type OrganizationUpsertWithoutSocialIntentsInput = {
+    update: XOR<OrganizationUpdateWithoutSocialIntentsInput, OrganizationUncheckedUpdateWithoutSocialIntentsInput>
+    create: XOR<OrganizationCreateWithoutSocialIntentsInput, OrganizationUncheckedCreateWithoutSocialIntentsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutSocialIntentsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutSocialIntentsInput, OrganizationUncheckedUpdateWithoutSocialIntentsInput>
+  }
+
+  export type OrganizationUpdateWithoutSocialIntentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutSocialIntentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type MissionUpsertWithoutSocialIntentsInput = {
+    update: XOR<MissionUpdateWithoutSocialIntentsInput, MissionUncheckedUpdateWithoutSocialIntentsInput>
+    create: XOR<MissionCreateWithoutSocialIntentsInput, MissionUncheckedCreateWithoutSocialIntentsInput>
+    where?: MissionWhereInput
+  }
+
+  export type MissionUpdateToOneWithWhereWithoutSocialIntentsInput = {
+    where?: MissionWhereInput
+    data: XOR<MissionUpdateWithoutSocialIntentsInput, MissionUncheckedUpdateWithoutSocialIntentsInput>
+  }
+
+  export type MissionUpdateWithoutSocialIntentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
+    owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
+    participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+  }
+
+  export type MissionUncheckedUpdateWithoutSocialIntentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+  }
+
+  export type UserUpsertWithoutSocialIntentsInput = {
+    update: XOR<UserUpdateWithoutSocialIntentsInput, UserUncheckedUpdateWithoutSocialIntentsInput>
+    create: XOR<UserCreateWithoutSocialIntentsInput, UserUncheckedCreateWithoutSocialIntentsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutSocialIntentsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutSocialIntentsInput, UserUncheckedUpdateWithoutSocialIntentsInput>
+  }
+
+  export type UserUpdateWithoutSocialIntentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutSocialIntentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUncheckedUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUncheckedUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUncheckedUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUncheckedUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUncheckedUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUncheckedUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUncheckedUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUncheckedUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUncheckedUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
   export type OrganizationCreateWithoutMissionParticipationsInput = {
     id?: string
     name: string
@@ -79014,6 +81529,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
     missions?: MissionCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionParticipationsInput = {
@@ -79027,6 +81543,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
     missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionParticipationsInput = {
@@ -79052,6 +81569,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutMissionsInput
     owner: UserCreateNestedOneWithoutMissionsInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateWithoutParticipationsInput = {
@@ -79072,6 +81590,7 @@ export namespace Prisma {
     closedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionCreateOrConnectWithoutParticipationsInput = {
@@ -79123,6 +81642,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -79175,6 +81695,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -79210,6 +81731,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
     missions?: MissionUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionParticipationsInput = {
@@ -79223,6 +81745,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutParticipationsInput = {
@@ -79254,6 +81777,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
     owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateWithoutParticipationsInput = {
@@ -79274,6 +81798,7 @@ export namespace Prisma {
     closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type UserUpsertWithoutMissionParticipationsInput = {
@@ -79331,6 +81856,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -79383,6 +81909,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -79402,6 +81929,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
     missions?: MissionCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIdempotencyRecordsInput = {
@@ -79415,6 +81943,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
     missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIdempotencyRecordsInput = {
@@ -79444,6 +81973,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
     missions?: MissionUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput = {
@@ -79457,6 +81987,7 @@ export namespace Prisma {
     auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -80631,6 +83162,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutMissionsInput
     participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateWithoutOwnerInput = {
@@ -80651,6 +83183,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionCreateOrConnectWithoutOwnerInput = {
@@ -80689,6 +83222,49 @@ export namespace Prisma {
 
   export type MissionParticipationCreateManyUserInputEnvelope = {
     data: MissionParticipationCreateManyUserInput | MissionParticipationCreateManyUserInput[]
+  }
+
+  export type SocialIntentCreateWithoutUserInput = {
+    id?: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutSocialIntentsInput
+    mission: MissionCreateNestedOneWithoutSocialIntentsInput
+  }
+
+  export type SocialIntentUncheckedCreateWithoutUserInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SocialIntentCreateOrConnectWithoutUserInput = {
+    where: SocialIntentWhereUniqueInput
+    create: XOR<SocialIntentCreateWithoutUserInput, SocialIntentUncheckedCreateWithoutUserInput>
+  }
+
+  export type SocialIntentCreateManyUserInputEnvelope = {
+    data: SocialIntentCreateManyUserInput | SocialIntentCreateManyUserInput[]
   }
 
   export type AnalyticsEventCreateWithoutUserInput = {
@@ -81877,6 +84453,22 @@ export namespace Prisma {
     data: XOR<MissionParticipationUpdateManyMutationInput, MissionParticipationUncheckedUpdateManyWithoutUserInput>
   }
 
+  export type SocialIntentUpsertWithWhereUniqueWithoutUserInput = {
+    where: SocialIntentWhereUniqueInput
+    update: XOR<SocialIntentUpdateWithoutUserInput, SocialIntentUncheckedUpdateWithoutUserInput>
+    create: XOR<SocialIntentCreateWithoutUserInput, SocialIntentUncheckedCreateWithoutUserInput>
+  }
+
+  export type SocialIntentUpdateWithWhereUniqueWithoutUserInput = {
+    where: SocialIntentWhereUniqueInput
+    data: XOR<SocialIntentUpdateWithoutUserInput, SocialIntentUncheckedUpdateWithoutUserInput>
+  }
+
+  export type SocialIntentUpdateManyWithWhereWithoutUserInput = {
+    where: SocialIntentScalarWhereInput
+    data: XOR<SocialIntentUpdateManyMutationInput, SocialIntentUncheckedUpdateManyWithoutUserInput>
+  }
+
   export type AnalyticsEventUpsertWithWhereUniqueWithoutUserInput = {
     where: AnalyticsEventWhereUniqueInput
     update: XOR<AnalyticsEventUpdateWithoutUserInput, AnalyticsEventUncheckedUpdateWithoutUserInput>
@@ -82100,6 +84692,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -82152,6 +84745,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -82220,6 +84814,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -82272,6 +84867,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -82324,6 +84920,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -82376,6 +84973,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -82444,6 +85042,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -82496,6 +85095,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -82548,6 +85148,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -82600,6 +85201,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -82668,6 +85270,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -82720,6 +85323,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -82772,6 +85376,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -82824,6 +85429,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -82892,6 +85498,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -82944,6 +85551,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -82996,6 +85604,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -83048,6 +85657,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -83105,6 +85715,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -83157,6 +85768,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -83250,6 +85862,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -83302,6 +85915,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -83365,6 +85979,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -83417,6 +86032,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -83550,6 +86166,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -83602,6 +86219,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -83741,6 +86359,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -83793,6 +86412,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -83845,6 +86465,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -83897,6 +86518,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -83954,6 +86576,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -84006,6 +86629,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -84285,6 +86909,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -84337,6 +86962,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -84400,6 +87026,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -84452,6 +87079,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -84661,6 +87289,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -84713,6 +87342,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -84864,6 +87494,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -84916,6 +87547,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -85045,6 +87677,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -85097,6 +87730,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -85300,6 +87934,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -85352,6 +87987,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -85580,6 +88216,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -85632,6 +88269,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -85856,6 +88494,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -85908,6 +88547,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -86027,6 +88667,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -86079,6 +88720,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -86220,6 +88862,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -86272,6 +88915,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -86324,6 +88968,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -86376,6 +89021,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -86444,6 +89090,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -86496,6 +89143,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -86548,6 +89196,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -86600,6 +89249,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -86657,6 +89307,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -86709,6 +89360,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -86854,6 +89506,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -86906,6 +89559,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -86969,6 +89623,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -87021,6 +89676,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -87156,6 +89812,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -87208,6 +89865,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -87265,6 +89923,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -87317,6 +89976,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -87462,6 +90122,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -87514,6 +90175,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -87577,6 +90239,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -87629,6 +90292,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -87764,6 +90428,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -87816,6 +90481,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -87884,6 +90550,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -87936,6 +90603,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -87988,6 +90656,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -88040,6 +90709,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -88108,6 +90778,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -88160,6 +90831,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -88212,6 +90884,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -88264,6 +90937,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -88332,6 +91006,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -88384,6 +91059,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -88436,6 +91112,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -88488,6 +91165,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -88556,6 +91234,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -88608,6 +91287,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -88660,6 +91340,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -88712,6 +91393,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -88780,6 +91462,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -88832,6 +91515,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -88884,6 +91568,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -88936,6 +91621,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -89004,6 +91690,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -89056,6 +91743,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -89109,6 +91797,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -89161,6 +91850,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -89229,6 +91919,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -89281,6 +91972,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -89499,6 +92191,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -89551,6 +92244,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -89644,6 +92338,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -89696,6 +92391,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -89780,6 +92476,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -89832,6 +92529,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -89937,6 +92635,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -89989,6 +92688,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -90155,6 +92855,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -90207,6 +92908,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -90264,6 +92966,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -90316,6 +93019,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -90384,6 +93088,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -90436,6 +93141,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -90499,6 +93205,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -90551,6 +93258,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -90603,6 +93311,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -90655,6 +93364,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -90712,6 +93422,7 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -90764,6 +93475,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -90832,6 +93544,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -90884,6 +93597,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -90947,6 +93661,7 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -90999,6 +93714,7 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -91080,6 +93796,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     owner: UserCreateNestedOneWithoutMissionsInput
     participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateWithoutOrganizationInput = {
@@ -91100,6 +93817,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionCreateOrConnectWithoutOrganizationInput = {
@@ -91167,6 +93885,49 @@ export namespace Prisma {
 
   export type IdempotencyRecordCreateManyOrganizationInputEnvelope = {
     data: IdempotencyRecordCreateManyOrganizationInput | IdempotencyRecordCreateManyOrganizationInput[]
+  }
+
+  export type SocialIntentCreateWithoutOrganizationInput = {
+    id?: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    mission: MissionCreateNestedOneWithoutSocialIntentsInput
+    user: UserCreateNestedOneWithoutSocialIntentsInput
+  }
+
+  export type SocialIntentUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    missionId: string
+    userId: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SocialIntentCreateOrConnectWithoutOrganizationInput = {
+    where: SocialIntentWhereUniqueInput
+    create: XOR<SocialIntentCreateWithoutOrganizationInput, SocialIntentUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type SocialIntentCreateManyOrganizationInputEnvelope = {
+    data: SocialIntentCreateManyOrganizationInput | SocialIntentCreateManyOrganizationInput[]
   }
 
   export type MembershipUpsertWithWhereUniqueWithoutOrganizationInput = {
@@ -91277,6 +94038,22 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"IdempotencyRecord"> | Date | string
   }
 
+  export type SocialIntentUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: SocialIntentWhereUniqueInput
+    update: XOR<SocialIntentUpdateWithoutOrganizationInput, SocialIntentUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<SocialIntentCreateWithoutOrganizationInput, SocialIntentUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type SocialIntentUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: SocialIntentWhereUniqueInput
+    data: XOR<SocialIntentUpdateWithoutOrganizationInput, SocialIntentUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type SocialIntentUpdateManyWithWhereWithoutOrganizationInput = {
+    where: SocialIntentScalarWhereInput
+    data: XOR<SocialIntentUpdateManyMutationInput, SocialIntentUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
   export type OrganizationCreateWithoutMembershipsInput = {
     id?: string
     name: string
@@ -91288,6 +94065,7 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMembershipsInput = {
@@ -91301,6 +94079,7 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMembershipsInput = {
@@ -91352,6 +94131,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -91404,6 +94184,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -91439,6 +94220,7 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMembershipsInput = {
@@ -91452,6 +94234,7 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMembershipsInput = {
@@ -91509,6 +94292,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -91561,6 +94345,7 @@ export namespace Prisma {
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -91580,6 +94365,7 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAuditEventsInput = {
@@ -91593,6 +94379,7 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAuditEventsInput = {
@@ -91622,6 +94409,7 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAuditEventsInput = {
@@ -91635,6 +94423,7 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionParticipationCreateManyMissionInput = {
@@ -91643,6 +94432,23 @@ export namespace Prisma {
     userId: string
     status?: $Enums.MissionParticipationStatus
     note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SocialIntentCreateManyMissionInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -91673,6 +94479,57 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentUpdateWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutSocialIntentsNestedInput
+    user?: UserUpdateOneRequiredWithoutSocialIntentsNestedInput
+  }
+
+  export type SocialIntentUncheckedUpdateWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentUncheckedUpdateManyWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -92077,6 +94934,23 @@ export namespace Prisma {
     missionId: string
     status?: $Enums.MissionParticipationStatus
     note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SocialIntentCreateManyUserInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -93319,6 +96193,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
     participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateWithoutOwnerInput = {
@@ -93339,6 +96214,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateManyWithoutOwnerInput = {
@@ -93386,6 +96262,57 @@ export namespace Prisma {
     missionId?: StringFieldUpdateOperationsInput | string
     status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutSocialIntentsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutSocialIntentsNestedInput
+  }
+
+  export type SocialIntentUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -94217,6 +97144,23 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type SocialIntentCreateManyOrganizationInput = {
+    id?: string
+    missionId: string
+    userId: string
+    need: string
+    offer: string
+    constraints?: string | null
+    disclosure?: string | null
+    status?: $Enums.IntentStatus
+    expiresAt?: Date | string | null
+    withdrawnAt?: Date | string | null
+    importConsentAt?: Date | string | null
+    importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type MembershipUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
@@ -94292,6 +97236,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
     participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateWithoutOrganizationInput = {
@@ -94312,6 +97257,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateManyWithoutOrganizationInput = {
@@ -94391,6 +97337,57 @@ export namespace Prisma {
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mission?: MissionUpdateOneRequiredWithoutSocialIntentsNestedInput
+    user?: UserUpdateOneRequiredWithoutSocialIntentsNestedInput
+  }
+
+  export type SocialIntentUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SocialIntentUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    need?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    disclosure?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumIntentStatusFieldUpdateOperationsInput | $Enums.IntentStatus
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importConsentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    importedFields?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

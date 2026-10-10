@@ -4,14 +4,20 @@
  * Achieves millisecond-scale loading via:
  * 1. App Shell Strategy   — HTML/JS/CSS cached on install (instant navigation)
  * 2. Image Cache Strategy — Avatars cached with stale-while-revalidate (lorelei style)
- * 3. Offline Fallback    — Turso-stored base64 avatars work offline
- * 4. Background Sync     — Defers non-critical API calls
- */
+ * 3. Offline Fallback     — Turso-stored base64 avatars work offline
+ *
+ * ⚠️ `/api/*` 一律**不拦截**（详见下方 fetch 事件里的注释）：
+ *    个人数据的响应不做任何持久化缓存，"写完读到的必须是刚写的值"。 */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
-const API_CACHE = `api-${CACHE_VERSION}`;
+/**
+ * 页面导航缓存（**不含任何 API 响应**）。
+ * v4 之前这里是 `API_CACHE` —— 名字与用途都不对：它缓存的是页面，却因为也被
+ * API 分支复用而给"API 不缓存"留下了后门。改名后语义唯一。
+ */
+const PAGE_CACHE = `page-${CACHE_VERSION}`;
 
 // ─── App Shell Assets (cache on install) ───
 const STATIC_ASSETS = [
@@ -40,8 +46,13 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name.startsWith('static-') || name.startsWith('images-') || name.startsWith('api-'))
-          .filter((name) => name !== STATIC_CACHE && name !== IMAGE_CACHE && name !== API_CACHE)
+          // ⚠️ `api-` 前缀是**历史遗留**：v4 起不再写 API 缓存，但必须继续清理它 ——
+          //    否则旧版本存在设备上的那份 API 缓存（里面是意图正文、披露配置这类个人数据）
+          //    会一直留着，"不再缓存"只对新请求生效而已。
+          .filter((name) =>
+            ['static-', 'images-', 'page-', 'api-'].some((prefix) => name.startsWith(prefix))
+          )
+          .filter((name) => name !== STATIC_CACHE && name !== IMAGE_CACHE && name !== PAGE_CACHE)
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -69,19 +80,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. API — Stale-While-Revalidate (毫秒级重复访问)
+  // 3. API — **完全不拦截**，交给浏览器按 HTTP 语义处理。
+  //
+  //    这里此前是 `staleWhileRevalidate`（GET）—— 已移除，理由是它同时制造了一个
+  //    功能缺陷和一个隐私缺陷：
+  //      · 功能：SW 会**先返回缓存副本**，于是"刚写完立刻读"必然拿到上一次的数据。
+  //        用户把某字段从「组织者」收紧为「仅自己」后，界面上的披露预览仍显示旧范围，
+  //        看起来像"没保存成功"；反向（放开）时则相反 —— 用户以为已经授权了。
+  //      · 隐私：意图正文、披露配置、组织者视角的成员资料、会话响应全部是**带身份的个人数据**，
+  //        放进 Cache Storage 就等于在设备上留了一份可被后续会话/其他账号读到的副本。
+  //        撤销披露后，缓存里的旧内容依然可读。
+  //
+  //    放行后，服务端响应头里的 `Cache-Control: no-store` 才真正生效
+  //    （SW 在浏览器缓存之上又加了一层，它不退让的话响应头只是装饰）。
+  //    取舍：API 请求失去离线兜底 —— 但个人数据本就不该有离线副本，这是有意为之。
   if (isApiRequest(request)) {
-    // 只缓存 GET 请求（POST/PUT/DELETE 不缓存）
-    if (request.method === 'GET') {
-      event.respondWith(staleWhileRevalidate(request, API_CACHE));
-    } else {
-      event.respondWith(networkFirst(request, API_CACHE));
-    }
     return;
   }
 
-  // 4. Default — Network First
-  event.respondWith(networkFirst(request, API_CACHE));
+  // 4. Default — 页面导航等：Network First（在线优先，离线时回退到已缓存副本）
+  event.respondWith(networkFirst(request, PAGE_CACHE));
 });
 
 // ─── Helper Functions ───

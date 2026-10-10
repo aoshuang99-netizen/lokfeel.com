@@ -83,6 +83,9 @@ model User {
   // T02 Connection OS — Mission 发起 / 参与（模型定义见 prisma/schema/connection.prisma）
   missions              Mission[]              @relation("UserMissions")
   missionParticipations MissionParticipation[] @relation("UserMissionParticipations")
+
+  // T03 Connection OS — 成员意图与逐字段披露（模型定义见 prisma/schema/connection.prisma）
+  socialIntents SocialIntent[] @relation("UserSocialIntents")
   
   // Analytics
   analyticsEvents AnalyticsEvent[]

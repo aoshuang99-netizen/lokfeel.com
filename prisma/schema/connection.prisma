@@ -71,9 +71,99 @@ model Mission {
   organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   owner          User                   @relation("UserMissions", fields: [ownerId], references: [id], onDelete: Cascade)
   participations MissionParticipation[]
+  socialIntents  SocialIntent[]
 
   @@index([organizationId, status])
   @@index([organizationId, createdAt])
+  @@index([expiresAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// T03 · SocialIntent —— 成员意图与**逐字段披露**
+//
+// 与 MissionParticipation 的分工（不是重复建模）：
+//   - MissionParticipation：粗粒度「谁加入了哪个任务」（T02，必填、可计数）
+//   - SocialIntent：       细粒度「该成员的 need/offer/约束/有效期 + 逐字段可见范围」（T03）
+//   二者 1:1 互补；意图必须挂在一条已加入的参与关系之下（父锚点 `missionId + userId`）。
+//
+// 安全取向（AC-03 是 BLOCKER）：**默认拒绝**。`disclosure` 里没写的字段一律按
+// field-catalog 的 defaultAudience 处理，而目录中每个字段的默认值都是 `SELF`
+// （即不披露）。「用户没选」**绝不**等价于「用户同意」。
+// ═══════════════════════════════════════════════════════════════
+
+/// 意图生命周期。**只有本人能改**；`WITHDRAWN` 是终态（重新参与须显式 reactivate）。
+///
+/// 「已过期」**刻意不落库**：它由 `expiresAt` 与当前时间**派生**
+/// （见 `intents.ts` 的 `deriveIntentStatus()`）。若把它做成存储状态，
+/// 就必须依赖定时任务翻状态 —— 定时任务一旦停摆，「过期」会静默失效，
+/// 而已过期意图仍在被披露。派生状态没有这个失败模式。
+enum IntentStatus {
+  ACTIVE // 生效中：可被披露、可进入匹配
+  WITHDRAWN // 本人撤销：不再披露，且不可编辑（须 reactivate 显式复活）
+}
+
+/// 逐字段披露的受众档位。**档位是包含式的**（档位越高，受众越宽）：
+///   SELF          → 仅本人
+///   ORGANIZER     → 本人 + 组织者
+///   COUNTERPARTY  → 本人 + 组织者 + 对手方（最宽；对手方到 T04/T05 才存在）
+/// 因此"某受众能否看到" = `rank(granted) >= rank(viewer)`，
+/// 推论是**组织者视角 ⊇ 对手方视角**（组织者管整个任务，看到的不应更少）。
+/// 用 `///` 是为了让这条规则进入生成的 Client 类型提示，避免调用方凭直觉猜方向。
+enum DisclosureAudience {
+  SELF // 仅本人可见（= 不披露）
+  ORGANIZER // 任务组织者 / 运营
+  COUNTERPARTY // 双向同意后的对手方（T04/T05 起生效）
+}
+
+/// 成员意图。对应契约 social_intents 表的语义（契约挂在 organization 上，
+/// 本仓显式挂到 Mission —— 意图脱离具体任务没有业务含义，且 mission 级才能做名额/披露判定）。
+model SocialIntent {
+  id             String @id @default(cuid())
+  organizationId String
+  /// 父锚点：T02 的 Mission。任务删除时意图级联删除。
+  missionId      String
+  /// 提交者。**必须**是该 Mission 所属租户的 ACTIVE 成员（服务端回查 memberships）。
+  userId         String
+
+  /// 我需要什么（Mission 的 goal 是"发起方要什么"，这里是"协作者要什么"）。
+  need  String
+  /// 我能提供什么。
+  offer String
+  /// 附加约束（JSON 文本，字符串数组）。**必须**经 json-codec 读写。
+  constraints String?
+
+  /// 逐字段披露表（JSON 文本）：`{ "<fieldKey>": "SELF"|"ORGANIZER"|"COUNTERPARTY" }`。
+  ///
+  /// 语义：**缺失的键 = 未授权**（落到目录默认值 SELF），不在这里补默认值 ——
+  /// 「写库时补默认」会把"用户没选"悄悄固化成"系统认为他同意了"。
+  disclosure String?
+
+  status IntentStatus @default(ACTIVE)
+
+  /// 有效期。null = 不过期。过期后**仍可编辑续期**，但不再被披露（派生为 EXPIRED）。
+  expiresAt   DateTime?
+  withdrawnAt DateTime?
+
+  /// ── 导入许可留痕（AC-12「用户主动授权」的落点）──
+  /// 用户显式同意「从账户档案导入字段」的**时间戳**。null = 从未同意，
+  /// 此时任何 `importFromProfile` 请求都必须被拒（400），不得默认放行。
+  importConsentAt DateTime?
+  /// 实际从档案导入的字段名（JSON 文本数组）。与 `disclosure` **分开存储**：
+  /// 一个记"数据从哪来"、一个记"给谁看"。混在一起会导致"撤回导入"误删披露设置。
+  importedFields  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  mission      Mission      @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user         User         @relation("UserSocialIntents", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 同一任务同一成员只有一条意图 —— 幂等提交/编辑的落点。
+  @@unique([missionId, userId])
+  @@index([organizationId, status])
+  @@index([organizationId, missionId])
+  @@index([userId, status])
   @@index([expiresAt])
 }
 

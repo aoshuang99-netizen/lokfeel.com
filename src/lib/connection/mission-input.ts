@@ -13,6 +13,17 @@
 
 import { ValidationError } from '@/lib/errors'
 import { normalizeStringArray } from './json-codec'
+// 校验原语自 T03 起抽到 input-helpers（与 intent-input 共用）。此处仍以**同名**符号导入，
+// 因此本文件下方所有调用点与 T02 验收时的形态逐字一致 —— 抽取是纯搬运，不改语义。
+import {
+  asObject,
+  fail,
+  optionalBool,
+  optionalDate,
+  optionalInt,
+  optionalString,
+  requiredString,
+} from './input-helpers'
 
 // ── 字段长度约束（与 contracts + reference_backend/app/main.py 的 Field(...) 对齐）──
 export const LIMITS = {
@@ -27,84 +38,6 @@ export const LIMITS = {
   maxParticipantsMin: 1,
   maxParticipantsMax: 10000,
 } as const
-
-function fail(field: string, message: string): never {
-  throw new ValidationError(message, { field })
-}
-
-/** 必填字符串：trim 后校验长度。 */
-function requiredString(
-  value: unknown,
-  field: string,
-  min: number,
-  max: number
-): string {
-  if (typeof value !== 'string') fail(field, `${field} must be a string`)
-  const s = (value as string).trim()
-  if (s.length < min) fail(field, `${field} must be at least ${min} characters`)
-  if (s.length > max) fail(field, `${field} must be at most ${max} characters`)
-  return s
-}
-
-/** 可选字符串：`undefined`/`null`/`''` → `null`。 */
-function optionalString(value: unknown, field: string, max: number): string | null {
-  if (value === undefined || value === null) return null
-  if (typeof value !== 'string') fail(field, `${field} must be a string`)
-  const s = (value as string).trim()
-  if (!s) return null
-  if (s.length > max) fail(field, `${field} must be at most ${max} characters`)
-  return s
-}
-
-function optionalInt(
-  value: unknown,
-  field: string,
-  min: number,
-  max: number
-): number | null {
-  if (value === undefined || value === null || value === '') return null
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n) || !Number.isInteger(n)) {
-    fail(field, `${field} must be an integer`)
-  }
-  if (n < min || n > max) {
-    fail(field, `${field} must be between ${min} and ${max}`)
-  }
-  return n
-}
-
-function optionalBool(value: unknown, field: string): boolean | undefined {
-  if (value === undefined || value === null) return undefined
-  if (typeof value !== 'boolean') fail(field, `${field} must be a boolean`)
-  return value as boolean
-}
-
-/**
- * 日期：接受 ISO 字符串或 Date。`requireFuture` 用于创建（截止时间必须在未来，
- * 否则任务一创建就是失效态）；更新时允许把截止时间改到过去（用于"立即结束"）。
- */
-function optionalDate(
-  value: unknown,
-  field: string,
-  opts: { requireFuture?: boolean; now?: Date } = {}
-): Date | null {
-  if (value === undefined || value === null || value === '') return null
-  const d = value instanceof Date ? value : new Date(String(value))
-  if (Number.isNaN(d.getTime())) fail(field, `${field} must be a valid ISO-8601 date`)
-  if (opts.requireFuture) {
-    const now = opts.now ?? new Date()
-    if (d.getTime() <= now.getTime()) fail(field, `${field} must be in the future`)
-  }
-  return d
-}
-
-/** 只允许纯对象（拒绝数组/标量），否则无法安全地按字段取值。 */
-function asObject(body: unknown): Record<string, unknown> {
-  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
-    throw new ValidationError('Request body must be a JSON object')
-  }
-  return body as Record<string, unknown>
-}
 
 // ═══════════════════════════════════════════════════════════
 // 创建
