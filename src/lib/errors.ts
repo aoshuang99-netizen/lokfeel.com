@@ -45,6 +45,26 @@ export class NotFoundError extends ApiError {
 }
 
 /**
+ * 400 Bad Request — 输入形状/取值不合法（与 401/403 的"身份/权限"问题分开）
+ */
+export class ValidationError extends ApiError {
+  constructor(message = 'Invalid request', details?: any) {
+    super(400, message, details)
+    this.name = 'ValidationError'
+  }
+}
+
+/**
+ * 409 Conflict — 资源状态冲突（如幂等键被不同请求体复用、状态机非法迁移）
+ */
+export class ConflictError extends ApiError {
+  constructor(message = 'Conflict', details?: any) {
+    super(409, message, details)
+    this.name = 'ConflictError'
+  }
+}
+
+/**
  * 429 Too Many Requests
  */
 export class RateLimitError extends ApiError {

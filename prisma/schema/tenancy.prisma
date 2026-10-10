@@ -48,6 +48,11 @@ model Organization {
   memberships Membership[]
   auditEvents TenantAuditEvent[]
 
+  // ── T02 Connection OS 反向关系（connection.prisma）──
+  missions              Mission[]
+  missionParticipations MissionParticipation[]
+  idempotencyRecords    IdempotencyRecord[]
+
   @@index([status])
 }
 

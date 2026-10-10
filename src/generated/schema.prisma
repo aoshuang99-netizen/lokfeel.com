@@ -241,6 +241,135 @@ model BotAvatar {
   updatedAt DateTime @updatedAt
 }
 
+// ═══════════════════════════════════════════════════════════════
+// CONNECTION OS — 业务闭环实体（自 T02 起逐任务追加）
+//
+// 对齐契约：
+//   - contracts/schema.sql:15-20   (missions)
+//   - contracts/connection.openapi.yaml  /missions 与 /v1/missions/{missionId}
+//
+// 设计约束（继承 T01 的 tenancy.prisma，见 docs/implementation/T01/DIALECT-DIFF.md）：
+//   1. **方言无关**：本文件不出现任何 `@db.*` 原生类型标注。同一份定义可同时为
+//      libSQL（当前生产）与 PostgreSQL（M6 目标）生成；差异只体现在迁移 SQL。
+//   2. **复合语义字段走 `String` + 单点 codec**：libSQL 无 `jsonb`，契约里的
+//      `jsonb` 一律落为 JSON 文本，编解码**只允许**经 `src/lib/connection/json-codec.ts`。
+//      散落的 `JSON.parse` 会导致「有的存字符串、有的存对象」的静默腐化。
+//   3. **`organizationId` 一律由服务端从会话派生**（`resolveTenant()`），
+//      绝不接受客户端传入值作为授权依据。
+//   4. **加列优先 / 只增不改**：新任务只往本文件加模型；改动既有列语义需走 MIGRATION_PLAN。
+// ═══════════════════════════════════════════════════════════════
+
+/// Mission 生命周期。契约 missions.status 为自由 text（默认 'draft'），
+/// 这里收敛为枚举 —— 取值与 `src/lib/connection/missions.ts` 的状态机逐字一致。
+enum MissionStatus {
+  DRAFT // 草稿：不可分享，分享链接返回 404
+  ACTIVE // 已发布：分享页可访问，可被加入
+  PAUSED // 已暂停：分享页只读，拒绝新加入（保留历史）
+  CLOSED // 已关闭：分享页只读，终止
+}
+
+/// 成员加入 Mission 的状态。
+/// ⚠️ 与 T03 的 `SocialIntent` 分工：本模型只表达「谁加入了哪个任务」（粗粒度、必填），
+/// `SocialIntent` 表达「该成员的 need/offer/逐字段披露范围」（细粒度，T03 交付）。
+/// 二者是 1:1 互补关系，不是重复建模。
+enum MissionParticipationStatus {
+  INTERESTED // 已加入/表达参与意愿
+  WITHDRAWN // 本人撤销
+  REMOVED // 运营移出
+}
+
+/// 连接任务。对应契约 missions 表。
+model Mission {
+  id             String @id @default(cuid())
+  /// 租户归属。**必填**（T01 起新表直接带上，不再走加列批次）。
+  organizationId String
+  /// 任务发起人。契约 persons 同义于本仓 `User`。
+  ownerId        String
+
+  title           String
+  goal            String
+  offer           String
+  /// 约束（JSON 文本，字符串数组）。**必须**经 json-codec 读写。
+  constraints     String?
+  /// 成功标准：验收「连接是否达成」的判据（PRD 要求可判定，非口号）。
+  successCriteria String
+
+  status MissionStatus @default(DRAFT)
+
+  /// 分享令牌：`/m/<shareToken>` 的唯一寻址方式。
+  /// 高熵、不可枚举、URL-safe；**即能力凭证**，故不可预测、不可自增。
+  shareToken    String  @unique
+  /// 是否允许**未注册**访客预览（最小披露）。关闭后分享页一律要求登录。
+  publicPreview Boolean @default(true)
+
+  /// 限额。null = 不限。
+  maxParticipants Int?
+
+  expiresAt   DateTime? // 截止（过期后分享页只读、拒绝新加入）
+  publishedAt DateTime? // 首次 publish 时间
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner          User                   @relation("UserMissions", fields: [ownerId], references: [id], onDelete: Cascade)
+  participations MissionParticipation[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+  @@index([expiresAt])
+}
+
+/// 成员 × Mission 的加入关系。契约中没有独立表（契约把 memberships 与
+/// social_intents 直接挂 organization），这里显式建模是为了：
+///   1. 让「加入」可计数、可撤销、可审计（AC-11 的加入动作需要落库）；
+///   2. 给 T03 的 `SocialIntent` 一个稳定的父锚点（`missionId` + `userId`）。
+model MissionParticipation {
+  id             String                     @id @default(cuid())
+  organizationId String
+  missionId      String
+  userId         String
+  status         MissionParticipationStatus @default(INTERESTED)
+  /// 加入时的可选留言（最小披露：不进入公开投影）。
+  note           String?
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  mission      Mission      @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user         User         @relation("UserMissionParticipations", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 同一任务同一成员只能有一条加入记录（幂等 join 的落点）。
+  @@unique([missionId, userId])
+  @@index([organizationId, status])
+  @@index([userId, status])
+}
+
+/// 幂等记录。契约对 `POST /missions` 强制要求 `Idempotency-Key` 请求头
+/// （connection.openapi.yaml:12-19）。同样的键重复提交必须返回**首次结果**，
+/// 不得创建第二条 Mission —— 这是 AC-07（幂等）在本任务的最小落点。
+///
+/// 键空间是 `(organizationId, scope, key)`：同一把 key 在不同租户/不同业务动作下
+/// 互不干扰，避免跨租户串号。
+model IdempotencyRecord {
+  id             String   @id @default(cuid())
+  organizationId String
+  /// 业务动作，如 `mission.create` / `mission.join`。
+  scope          String
+  /// 客户端提交的 Idempotency-Key 原文。
+  key            String
+  /// 请求体指纹（sha256）。同一 key 配不同请求体 → 409（防止「键复用了但意图变了」）。
+  requestHash    String
+  resourceType   String
+  resourceId     String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, scope, key])
+  @@index([organizationId, createdAt])
+}
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -321,6 +450,10 @@ model User {
 
   // T01 多租户 — 成员关系（模型定义见 prisma/schema/tenancy.prisma）
   memberships Membership[] @relation("UserMemberships")
+
+  // T02 Connection OS — Mission 发起 / 参与（模型定义见 prisma/schema/connection.prisma）
+  missions              Mission[]              @relation("UserMissions")
+  missionParticipations MissionParticipation[] @relation("UserMissionParticipations")
 
   // Analytics
   analyticsEvents AnalyticsEvent[]
@@ -1824,6 +1957,11 @@ model Organization {
 
   memberships Membership[]
   auditEvents TenantAuditEvent[]
+
+  // ── T02 Connection OS 反向关系（connection.prisma）──
+  missions              Mission[]
+  missionParticipations MissionParticipation[]
+  idempotencyRecords    IdempotencyRecord[]
 
   @@index([status])
 }

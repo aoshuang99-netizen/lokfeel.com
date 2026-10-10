@@ -79,6 +79,10 @@ model User {
 
   // T01 多租户 — 成员关系（模型定义见 prisma/schema/tenancy.prisma）
   memberships     Membership[]          @relation("UserMemberships")
+
+  // T02 Connection OS — Mission 发起 / 参与（模型定义见 prisma/schema/connection.prisma）
+  missions              Mission[]              @relation("UserMissions")
+  missionParticipations MissionParticipation[] @relation("UserMissionParticipations")
   
   // Analytics
   analyticsEvents AnalyticsEvent[]

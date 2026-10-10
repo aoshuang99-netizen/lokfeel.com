@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ApiError } from "./errors";
 
 // ============================================================================
 // API Error Codes
@@ -196,3 +197,53 @@ export async function executeBatchOperation<T>(
 
 // Backward compatibility: export simple versions that existing code uses
 export { success as apiSuccess, badRequest as apiBadRequest, unauthorized as apiUnauthorized, forbidden as apiForbidden, notFound as apiNotFound, serverError as apiServerError, created as apiCreated };
+
+// ============================================================================
+// Unified error → response mapping
+// ============================================================================
+
+/**
+ * 把任意抛出的错误映射成本仓统一的响应信封。
+ *
+ * 为什么需要它：`ApiError` 家族（`src/lib/errors.ts`）带 `statusCode`，
+ * 但各路由若自行 `if (e instanceof ApiError) ... else ...`，很容易漏掉某个状态码
+ * 而把 400/404/409 一律错报成 500。集中映射后，"新增一个错误类型"只需要改这一处。
+ *
+ * ⚠️ 未经识别的错误一律 500，且**不回显** `error.message`
+ * （避免把内部实现细节/栈信息泄露给调用方）。
+ */
+export function errorResponse(error: unknown): NextResponse<ApiResponse> {
+  if (error instanceof ApiError) {
+    switch (error.statusCode) {
+      case 400:
+        return validationError(error.message, error.details);
+      case 401:
+        return unauthorized(error.message);
+      case 403:
+        return forbidden(error.message);
+      case 404:
+        return notFound(error.message);
+      case 409:
+        return conflict(error.message, error.details);
+      case 429:
+        return rateLimited(error.message);
+      default:
+        return serverError(error.message);
+    }
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('[api] unhandled error:', error);
+  }
+  return serverError('Internal server error');
+}
+
+/** 路由级兜底：把 handler 包成"永不抛出、永远返回统一信封"的形式。 */
+export async function withErrorEnvelope(
+  fn: () => Promise<NextResponse>
+): Promise<NextResponse> {
+  try {
+    return await fn();
+  } catch (error) {
+    return errorResponse(error);
+  }
+}

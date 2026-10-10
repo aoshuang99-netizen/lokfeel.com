@@ -77,7 +77,13 @@
     "tenancy:migrate": "node scripts/tenancy/migrate.mjs apply",
     "tenancy:rollback": "node scripts/tenancy/migrate.mjs rollback",
     "tenancy:verify": "node scripts/tenancy/migrate.mjs verify",
-    "test:tenancy": "jest tests/tenancy"
+    "test:tenancy": "jest tests/tenancy",
+    "connection:probe": "node scripts/connection/migrate.mjs probe",
+    "connection:plan": "node scripts/connection/migrate.mjs plan",
+    "connection:migrate": "node scripts/connection/migrate.mjs apply",
+    "connection:rollback": "node scripts/connection/migrate.mjs rollback",
+    "connection:verify": "node scripts/connection/migrate.mjs verify",
+    "test:connection": "jest tests/connection"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

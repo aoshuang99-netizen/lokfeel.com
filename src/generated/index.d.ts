@@ -44,6 +44,29 @@ export type BotPreference = $Result.DefaultSelection<Prisma.$BotPreferencePayloa
  */
 export type BotAvatar = $Result.DefaultSelection<Prisma.$BotAvatarPayload>
 /**
+ * Model Mission
+ * 连接任务。对应契约 missions 表。
+ */
+export type Mission = $Result.DefaultSelection<Prisma.$MissionPayload>
+/**
+ * Model MissionParticipation
+ * 成员 × Mission 的加入关系。契约中没有独立表（契约把 memberships 与
+ * social_intents 直接挂 organization），这里显式建模是为了：
+ * 1. 让「加入」可计数、可撤销、可审计（AC-11 的加入动作需要落库）；
+ * 2. 给 T03 的 `SocialIntent` 一个稳定的父锚点（`missionId` + `userId`）。
+ */
+export type MissionParticipation = $Result.DefaultSelection<Prisma.$MissionParticipationPayload>
+/**
+ * Model IdempotencyRecord
+ * 幂等记录。契约对 `POST /missions` 强制要求 `Idempotency-Key` 请求头
+ * （connection.openapi.yaml:12-19）。同样的键重复提交必须返回**首次结果**，
+ * 不得创建第二条 Mission —— 这是 AC-07（幂等）在本任务的最小落点。
+ * 
+ * 键空间是 `(organizationId, scope, key)`：同一把 key 在不同租户/不同业务动作下
+ * 互不干扰，避免跨租户串号。
+ */
+export type IdempotencyRecord = $Result.DefaultSelection<Prisma.$IdempotencyRecordPayload>
+/**
  * Model User
  * 
  */
@@ -282,6 +305,25 @@ export const OnlinePattern: {
 };
 
 export type OnlinePattern = (typeof OnlinePattern)[keyof typeof OnlinePattern]
+
+
+export const MissionStatus: {
+  DRAFT: 'DRAFT',
+  ACTIVE: 'ACTIVE',
+  PAUSED: 'PAUSED',
+  CLOSED: 'CLOSED'
+};
+
+export type MissionStatus = (typeof MissionStatus)[keyof typeof MissionStatus]
+
+
+export const MissionParticipationStatus: {
+  INTERESTED: 'INTERESTED',
+  WITHDRAWN: 'WITHDRAWN',
+  REMOVED: 'REMOVED'
+};
+
+export type MissionParticipationStatus = (typeof MissionParticipationStatus)[keyof typeof MissionParticipationStatus]
 
 
 export const AuditCategory: {
@@ -721,6 +763,14 @@ export type OnlinePattern = $Enums.OnlinePattern
 
 export const OnlinePattern: typeof $Enums.OnlinePattern
 
+export type MissionStatus = $Enums.MissionStatus
+
+export const MissionStatus: typeof $Enums.MissionStatus
+
+export type MissionParticipationStatus = $Enums.MissionParticipationStatus
+
+export const MissionParticipationStatus: typeof $Enums.MissionParticipationStatus
+
 export type AuditCategory = $Enums.AuditCategory
 
 export const AuditCategory: typeof $Enums.AuditCategory
@@ -1037,6 +1087,36 @@ export class PrismaClient<
     * ```
     */
   get botAvatar(): Prisma.BotAvatarDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.mission`: Exposes CRUD operations for the **Mission** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Missions
+    * const missions = await prisma.mission.findMany()
+    * ```
+    */
+  get mission(): Prisma.MissionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.missionParticipation`: Exposes CRUD operations for the **MissionParticipation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MissionParticipations
+    * const missionParticipations = await prisma.missionParticipation.findMany()
+    * ```
+    */
+  get missionParticipation(): Prisma.MissionParticipationDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.idempotencyRecord`: Exposes CRUD operations for the **IdempotencyRecord** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more IdempotencyRecords
+    * const idempotencyRecords = await prisma.idempotencyRecord.findMany()
+    * ```
+    */
+  get idempotencyRecord(): Prisma.IdempotencyRecordDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.user`: Exposes CRUD operations for the **User** model.
@@ -1850,6 +1930,9 @@ export namespace Prisma {
     BotLearningRecord: 'BotLearningRecord',
     BotPreference: 'BotPreference',
     BotAvatar: 'BotAvatar',
+    Mission: 'Mission',
+    MissionParticipation: 'MissionParticipation',
+    IdempotencyRecord: 'IdempotencyRecord',
     User: 'User',
     Account: 'Account',
     Session: 'Session',
@@ -1901,7 +1984,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
+      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "missionParticipation" | "idempotencyRecord" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2346,6 +2429,228 @@ export namespace Prisma {
           count: {
             args: Prisma.BotAvatarCountArgs<ExtArgs>
             result: $Utils.Optional<BotAvatarCountAggregateOutputType> | number
+          }
+        }
+      }
+      Mission: {
+        payload: Prisma.$MissionPayload<ExtArgs>
+        fields: Prisma.MissionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MissionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MissionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>
+          }
+          findFirst: {
+            args: Prisma.MissionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MissionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>
+          }
+          findMany: {
+            args: Prisma.MissionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>[]
+          }
+          create: {
+            args: Prisma.MissionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>
+          }
+          createMany: {
+            args: Prisma.MissionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MissionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>[]
+          }
+          delete: {
+            args: Prisma.MissionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>
+          }
+          update: {
+            args: Prisma.MissionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>
+          }
+          deleteMany: {
+            args: Prisma.MissionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MissionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MissionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>[]
+          }
+          upsert: {
+            args: Prisma.MissionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionPayload>
+          }
+          aggregate: {
+            args: Prisma.MissionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMission>
+          }
+          groupBy: {
+            args: Prisma.MissionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MissionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MissionCountArgs<ExtArgs>
+            result: $Utils.Optional<MissionCountAggregateOutputType> | number
+          }
+        }
+      }
+      MissionParticipation: {
+        payload: Prisma.$MissionParticipationPayload<ExtArgs>
+        fields: Prisma.MissionParticipationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MissionParticipationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MissionParticipationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>
+          }
+          findFirst: {
+            args: Prisma.MissionParticipationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MissionParticipationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>
+          }
+          findMany: {
+            args: Prisma.MissionParticipationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>[]
+          }
+          create: {
+            args: Prisma.MissionParticipationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>
+          }
+          createMany: {
+            args: Prisma.MissionParticipationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MissionParticipationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>[]
+          }
+          delete: {
+            args: Prisma.MissionParticipationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>
+          }
+          update: {
+            args: Prisma.MissionParticipationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>
+          }
+          deleteMany: {
+            args: Prisma.MissionParticipationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MissionParticipationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MissionParticipationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>[]
+          }
+          upsert: {
+            args: Prisma.MissionParticipationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionParticipationPayload>
+          }
+          aggregate: {
+            args: Prisma.MissionParticipationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMissionParticipation>
+          }
+          groupBy: {
+            args: Prisma.MissionParticipationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MissionParticipationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MissionParticipationCountArgs<ExtArgs>
+            result: $Utils.Optional<MissionParticipationCountAggregateOutputType> | number
+          }
+        }
+      }
+      IdempotencyRecord: {
+        payload: Prisma.$IdempotencyRecordPayload<ExtArgs>
+        fields: Prisma.IdempotencyRecordFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.IdempotencyRecordFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.IdempotencyRecordFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>
+          }
+          findFirst: {
+            args: Prisma.IdempotencyRecordFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.IdempotencyRecordFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>
+          }
+          findMany: {
+            args: Prisma.IdempotencyRecordFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>[]
+          }
+          create: {
+            args: Prisma.IdempotencyRecordCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>
+          }
+          createMany: {
+            args: Prisma.IdempotencyRecordCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.IdempotencyRecordCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>[]
+          }
+          delete: {
+            args: Prisma.IdempotencyRecordDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>
+          }
+          update: {
+            args: Prisma.IdempotencyRecordUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>
+          }
+          deleteMany: {
+            args: Prisma.IdempotencyRecordDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.IdempotencyRecordUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.IdempotencyRecordUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>[]
+          }
+          upsert: {
+            args: Prisma.IdempotencyRecordUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IdempotencyRecordPayload>
+          }
+          aggregate: {
+            args: Prisma.IdempotencyRecordAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateIdempotencyRecord>
+          }
+          groupBy: {
+            args: Prisma.IdempotencyRecordGroupByArgs<ExtArgs>
+            result: $Utils.Optional<IdempotencyRecordGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.IdempotencyRecordCountArgs<ExtArgs>
+            result: $Utils.Optional<IdempotencyRecordCountAggregateOutputType> | number
           }
         }
       }
@@ -5142,6 +5447,9 @@ export namespace Prisma {
     botLearningRecord?: BotLearningRecordOmit
     botPreference?: BotPreferenceOmit
     botAvatar?: BotAvatarOmit
+    mission?: MissionOmit
+    missionParticipation?: MissionParticipationOmit
+    idempotencyRecord?: IdempotencyRecordOmit
     user?: UserOmit
     account?: AccountOmit
     session?: SessionOmit
@@ -5254,6 +5562,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type MissionCountOutputType
+   */
+
+  export type MissionCountOutputType = {
+    participations: number
+  }
+
+  export type MissionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participations?: boolean | MissionCountOutputTypeCountParticipationsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * MissionCountOutputType without action
+   */
+  export type MissionCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionCountOutputType
+     */
+    select?: MissionCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * MissionCountOutputType without action
+   */
+  export type MissionCountOutputTypeCountParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissionParticipationWhereInput
+  }
+
+
+  /**
    * Count Type UserCountOutputType
    */
 
@@ -5281,6 +5620,8 @@ export namespace Prisma {
     adminAudits: number
     adminRoles: number
     memberships: number
+    missions: number
+    missionParticipations: number
     analyticsEvents: number
     reportsMade: number
     reportsReceived: number
@@ -5312,6 +5653,8 @@ export namespace Prisma {
     adminAudits?: boolean | UserCountOutputTypeCountAdminAuditsArgs
     adminRoles?: boolean | UserCountOutputTypeCountAdminRolesArgs
     memberships?: boolean | UserCountOutputTypeCountMembershipsArgs
+    missions?: boolean | UserCountOutputTypeCountMissionsArgs
+    missionParticipations?: boolean | UserCountOutputTypeCountMissionParticipationsArgs
     analyticsEvents?: boolean | UserCountOutputTypeCountAnalyticsEventsArgs
     reportsMade?: boolean | UserCountOutputTypeCountReportsMadeArgs
     reportsReceived?: boolean | UserCountOutputTypeCountReportsReceivedArgs
@@ -5489,6 +5832,20 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountMembershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MembershipWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountMissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissionWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountMissionParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissionParticipationWhereInput
   }
 
   /**
@@ -5765,11 +6122,17 @@ export namespace Prisma {
   export type OrganizationCountOutputType = {
     memberships: number
     auditEvents: number
+    missions: number
+    missionParticipations: number
+    idempotencyRecords: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     memberships?: boolean | OrganizationCountOutputTypeCountMembershipsArgs
     auditEvents?: boolean | OrganizationCountOutputTypeCountAuditEventsArgs
+    missions?: boolean | OrganizationCountOutputTypeCountMissionsArgs
+    missionParticipations?: boolean | OrganizationCountOutputTypeCountMissionParticipationsArgs
+    idempotencyRecords?: boolean | OrganizationCountOutputTypeCountIdempotencyRecordsArgs
   }
 
   // Custom InputTypes
@@ -5795,6 +6158,27 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountAuditEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TenantAuditEventWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountMissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissionWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountMissionParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissionParticipationWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountIdempotencyRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: IdempotencyRecordWhereInput
   }
 
 
@@ -12745,6 +13129,3545 @@ export namespace Prisma {
 
 
   /**
+   * Model Mission
+   */
+
+  export type AggregateMission = {
+    _count: MissionCountAggregateOutputType | null
+    _avg: MissionAvgAggregateOutputType | null
+    _sum: MissionSumAggregateOutputType | null
+    _min: MissionMinAggregateOutputType | null
+    _max: MissionMaxAggregateOutputType | null
+  }
+
+  export type MissionAvgAggregateOutputType = {
+    maxParticipants: number | null
+  }
+
+  export type MissionSumAggregateOutputType = {
+    maxParticipants: number | null
+  }
+
+  export type MissionMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    ownerId: string | null
+    title: string | null
+    goal: string | null
+    offer: string | null
+    constraints: string | null
+    successCriteria: string | null
+    status: $Enums.MissionStatus | null
+    shareToken: string | null
+    publicPreview: boolean | null
+    maxParticipants: number | null
+    expiresAt: Date | null
+    publishedAt: Date | null
+    closedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MissionMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    ownerId: string | null
+    title: string | null
+    goal: string | null
+    offer: string | null
+    constraints: string | null
+    successCriteria: string | null
+    status: $Enums.MissionStatus | null
+    shareToken: string | null
+    publicPreview: boolean | null
+    maxParticipants: number | null
+    expiresAt: Date | null
+    publishedAt: Date | null
+    closedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MissionCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    ownerId: number
+    title: number
+    goal: number
+    offer: number
+    constraints: number
+    successCriteria: number
+    status: number
+    shareToken: number
+    publicPreview: number
+    maxParticipants: number
+    expiresAt: number
+    publishedAt: number
+    closedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type MissionAvgAggregateInputType = {
+    maxParticipants?: true
+  }
+
+  export type MissionSumAggregateInputType = {
+    maxParticipants?: true
+  }
+
+  export type MissionMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    ownerId?: true
+    title?: true
+    goal?: true
+    offer?: true
+    constraints?: true
+    successCriteria?: true
+    status?: true
+    shareToken?: true
+    publicPreview?: true
+    maxParticipants?: true
+    expiresAt?: true
+    publishedAt?: true
+    closedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MissionMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    ownerId?: true
+    title?: true
+    goal?: true
+    offer?: true
+    constraints?: true
+    successCriteria?: true
+    status?: true
+    shareToken?: true
+    publicPreview?: true
+    maxParticipants?: true
+    expiresAt?: true
+    publishedAt?: true
+    closedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MissionCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    ownerId?: true
+    title?: true
+    goal?: true
+    offer?: true
+    constraints?: true
+    successCriteria?: true
+    status?: true
+    shareToken?: true
+    publicPreview?: true
+    maxParticipants?: true
+    expiresAt?: true
+    publishedAt?: true
+    closedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type MissionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Mission to aggregate.
+     */
+    where?: MissionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Missions to fetch.
+     */
+    orderBy?: MissionOrderByWithRelationInput | MissionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MissionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Missions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Missions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Missions
+    **/
+    _count?: true | MissionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MissionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MissionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MissionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MissionMaxAggregateInputType
+  }
+
+  export type GetMissionAggregateType<T extends MissionAggregateArgs> = {
+        [P in keyof T & keyof AggregateMission]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMission[P]>
+      : GetScalarType<T[P], AggregateMission[P]>
+  }
+
+
+
+
+  export type MissionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissionWhereInput
+    orderBy?: MissionOrderByWithAggregationInput | MissionOrderByWithAggregationInput[]
+    by: MissionScalarFieldEnum[] | MissionScalarFieldEnum
+    having?: MissionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MissionCountAggregateInputType | true
+    _avg?: MissionAvgAggregateInputType
+    _sum?: MissionSumAggregateInputType
+    _min?: MissionMinAggregateInputType
+    _max?: MissionMaxAggregateInputType
+  }
+
+  export type MissionGroupByOutputType = {
+    id: string
+    organizationId: string
+    ownerId: string
+    title: string
+    goal: string
+    offer: string
+    constraints: string | null
+    successCriteria: string
+    status: $Enums.MissionStatus
+    shareToken: string
+    publicPreview: boolean
+    maxParticipants: number | null
+    expiresAt: Date | null
+    publishedAt: Date | null
+    closedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: MissionCountAggregateOutputType | null
+    _avg: MissionAvgAggregateOutputType | null
+    _sum: MissionSumAggregateOutputType | null
+    _min: MissionMinAggregateOutputType | null
+    _max: MissionMaxAggregateOutputType | null
+  }
+
+  type GetMissionGroupByPayload<T extends MissionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MissionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MissionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MissionGroupByOutputType[P]>
+            : GetScalarType<T[P], MissionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MissionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    ownerId?: boolean
+    title?: boolean
+    goal?: boolean
+    offer?: boolean
+    constraints?: boolean
+    successCriteria?: boolean
+    status?: boolean
+    shareToken?: boolean
+    publicPreview?: boolean
+    maxParticipants?: boolean
+    expiresAt?: boolean
+    publishedAt?: boolean
+    closedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+    participations?: boolean | Mission$participationsArgs<ExtArgs>
+    _count?: boolean | MissionCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["mission"]>
+
+  export type MissionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    ownerId?: boolean
+    title?: boolean
+    goal?: boolean
+    offer?: boolean
+    constraints?: boolean
+    successCriteria?: boolean
+    status?: boolean
+    shareToken?: boolean
+    publicPreview?: boolean
+    maxParticipants?: boolean
+    expiresAt?: boolean
+    publishedAt?: boolean
+    closedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["mission"]>
+
+  export type MissionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    ownerId?: boolean
+    title?: boolean
+    goal?: boolean
+    offer?: boolean
+    constraints?: boolean
+    successCriteria?: boolean
+    status?: boolean
+    shareToken?: boolean
+    publicPreview?: boolean
+    maxParticipants?: boolean
+    expiresAt?: boolean
+    publishedAt?: boolean
+    closedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["mission"]>
+
+  export type MissionSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    ownerId?: boolean
+    title?: boolean
+    goal?: boolean
+    offer?: boolean
+    constraints?: boolean
+    successCriteria?: boolean
+    status?: boolean
+    shareToken?: boolean
+    publicPreview?: boolean
+    maxParticipants?: boolean
+    expiresAt?: boolean
+    publishedAt?: boolean
+    closedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type MissionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "ownerId" | "title" | "goal" | "offer" | "constraints" | "successCriteria" | "status" | "shareToken" | "publicPreview" | "maxParticipants" | "expiresAt" | "publishedAt" | "closedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["mission"]>
+  export type MissionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+    participations?: boolean | Mission$participationsArgs<ExtArgs>
+    _count?: boolean | MissionCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type MissionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type MissionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $MissionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Mission"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      owner: Prisma.$UserPayload<ExtArgs>
+      participations: Prisma.$MissionParticipationPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 租户归属。**必填**（T01 起新表直接带上，不再走加列批次）。
+       */
+      organizationId: string
+      /**
+       * 任务发起人。契约 persons 同义于本仓 `User`。
+       */
+      ownerId: string
+      title: string
+      goal: string
+      offer: string
+      /**
+       * 约束（JSON 文本，字符串数组）。**必须**经 json-codec 读写。
+       */
+      constraints: string | null
+      /**
+       * 成功标准：验收「连接是否达成」的判据（PRD 要求可判定，非口号）。
+       */
+      successCriteria: string
+      status: $Enums.MissionStatus
+      /**
+       * 分享令牌：`/m/<shareToken>` 的唯一寻址方式。
+       * 高熵、不可枚举、URL-safe；**即能力凭证**，故不可预测、不可自增。
+       */
+      shareToken: string
+      /**
+       * 是否允许**未注册**访客预览（最小披露）。关闭后分享页一律要求登录。
+       */
+      publicPreview: boolean
+      /**
+       * 限额。null = 不限。
+       */
+      maxParticipants: number | null
+      expiresAt: Date | null
+      publishedAt: Date | null
+      closedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["mission"]>
+    composites: {}
+  }
+
+  type MissionGetPayload<S extends boolean | null | undefined | MissionDefaultArgs> = $Result.GetResult<Prisma.$MissionPayload, S>
+
+  type MissionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MissionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MissionCountAggregateInputType | true
+    }
+
+  export interface MissionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Mission'], meta: { name: 'Mission' } }
+    /**
+     * Find zero or one Mission that matches the filter.
+     * @param {MissionFindUniqueArgs} args - Arguments to find a Mission
+     * @example
+     * // Get one Mission
+     * const mission = await prisma.mission.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MissionFindUniqueArgs>(args: SelectSubset<T, MissionFindUniqueArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Mission that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MissionFindUniqueOrThrowArgs} args - Arguments to find a Mission
+     * @example
+     * // Get one Mission
+     * const mission = await prisma.mission.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MissionFindUniqueOrThrowArgs>(args: SelectSubset<T, MissionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Mission that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionFindFirstArgs} args - Arguments to find a Mission
+     * @example
+     * // Get one Mission
+     * const mission = await prisma.mission.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MissionFindFirstArgs>(args?: SelectSubset<T, MissionFindFirstArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Mission that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionFindFirstOrThrowArgs} args - Arguments to find a Mission
+     * @example
+     * // Get one Mission
+     * const mission = await prisma.mission.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MissionFindFirstOrThrowArgs>(args?: SelectSubset<T, MissionFindFirstOrThrowArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Missions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Missions
+     * const missions = await prisma.mission.findMany()
+     * 
+     * // Get first 10 Missions
+     * const missions = await prisma.mission.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const missionWithIdOnly = await prisma.mission.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MissionFindManyArgs>(args?: SelectSubset<T, MissionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Mission.
+     * @param {MissionCreateArgs} args - Arguments to create a Mission.
+     * @example
+     * // Create one Mission
+     * const Mission = await prisma.mission.create({
+     *   data: {
+     *     // ... data to create a Mission
+     *   }
+     * })
+     * 
+     */
+    create<T extends MissionCreateArgs>(args: SelectSubset<T, MissionCreateArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Missions.
+     * @param {MissionCreateManyArgs} args - Arguments to create many Missions.
+     * @example
+     * // Create many Missions
+     * const mission = await prisma.mission.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MissionCreateManyArgs>(args?: SelectSubset<T, MissionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Missions and returns the data saved in the database.
+     * @param {MissionCreateManyAndReturnArgs} args - Arguments to create many Missions.
+     * @example
+     * // Create many Missions
+     * const mission = await prisma.mission.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Missions and only return the `id`
+     * const missionWithIdOnly = await prisma.mission.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MissionCreateManyAndReturnArgs>(args?: SelectSubset<T, MissionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Mission.
+     * @param {MissionDeleteArgs} args - Arguments to delete one Mission.
+     * @example
+     * // Delete one Mission
+     * const Mission = await prisma.mission.delete({
+     *   where: {
+     *     // ... filter to delete one Mission
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MissionDeleteArgs>(args: SelectSubset<T, MissionDeleteArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Mission.
+     * @param {MissionUpdateArgs} args - Arguments to update one Mission.
+     * @example
+     * // Update one Mission
+     * const mission = await prisma.mission.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MissionUpdateArgs>(args: SelectSubset<T, MissionUpdateArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Missions.
+     * @param {MissionDeleteManyArgs} args - Arguments to filter Missions to delete.
+     * @example
+     * // Delete a few Missions
+     * const { count } = await prisma.mission.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MissionDeleteManyArgs>(args?: SelectSubset<T, MissionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Missions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Missions
+     * const mission = await prisma.mission.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MissionUpdateManyArgs>(args: SelectSubset<T, MissionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Missions and returns the data updated in the database.
+     * @param {MissionUpdateManyAndReturnArgs} args - Arguments to update many Missions.
+     * @example
+     * // Update many Missions
+     * const mission = await prisma.mission.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Missions and only return the `id`
+     * const missionWithIdOnly = await prisma.mission.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MissionUpdateManyAndReturnArgs>(args: SelectSubset<T, MissionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Mission.
+     * @param {MissionUpsertArgs} args - Arguments to update or create a Mission.
+     * @example
+     * // Update or create a Mission
+     * const mission = await prisma.mission.upsert({
+     *   create: {
+     *     // ... data to create a Mission
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Mission we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MissionUpsertArgs>(args: SelectSubset<T, MissionUpsertArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Missions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionCountArgs} args - Arguments to filter Missions to count.
+     * @example
+     * // Count the number of Missions
+     * const count = await prisma.mission.count({
+     *   where: {
+     *     // ... the filter for the Missions we want to count
+     *   }
+     * })
+    **/
+    count<T extends MissionCountArgs>(
+      args?: Subset<T, MissionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MissionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Mission.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MissionAggregateArgs>(args: Subset<T, MissionAggregateArgs>): Prisma.PrismaPromise<GetMissionAggregateType<T>>
+
+    /**
+     * Group by Mission.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MissionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MissionGroupByArgs['orderBy'] }
+        : { orderBy?: MissionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MissionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMissionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Mission model
+   */
+  readonly fields: MissionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Mission.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MissionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    participations<T extends Mission$participationsArgs<ExtArgs> = {}>(args?: Subset<T, Mission$participationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Mission model
+   */
+  interface MissionFieldRefs {
+    readonly id: FieldRef<"Mission", 'String'>
+    readonly organizationId: FieldRef<"Mission", 'String'>
+    readonly ownerId: FieldRef<"Mission", 'String'>
+    readonly title: FieldRef<"Mission", 'String'>
+    readonly goal: FieldRef<"Mission", 'String'>
+    readonly offer: FieldRef<"Mission", 'String'>
+    readonly constraints: FieldRef<"Mission", 'String'>
+    readonly successCriteria: FieldRef<"Mission", 'String'>
+    readonly status: FieldRef<"Mission", 'MissionStatus'>
+    readonly shareToken: FieldRef<"Mission", 'String'>
+    readonly publicPreview: FieldRef<"Mission", 'Boolean'>
+    readonly maxParticipants: FieldRef<"Mission", 'Int'>
+    readonly expiresAt: FieldRef<"Mission", 'DateTime'>
+    readonly publishedAt: FieldRef<"Mission", 'DateTime'>
+    readonly closedAt: FieldRef<"Mission", 'DateTime'>
+    readonly createdAt: FieldRef<"Mission", 'DateTime'>
+    readonly updatedAt: FieldRef<"Mission", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Mission findUnique
+   */
+  export type MissionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * Filter, which Mission to fetch.
+     */
+    where: MissionWhereUniqueInput
+  }
+
+  /**
+   * Mission findUniqueOrThrow
+   */
+  export type MissionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * Filter, which Mission to fetch.
+     */
+    where: MissionWhereUniqueInput
+  }
+
+  /**
+   * Mission findFirst
+   */
+  export type MissionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * Filter, which Mission to fetch.
+     */
+    where?: MissionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Missions to fetch.
+     */
+    orderBy?: MissionOrderByWithRelationInput | MissionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Missions.
+     */
+    cursor?: MissionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Missions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Missions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Missions.
+     */
+    distinct?: MissionScalarFieldEnum | MissionScalarFieldEnum[]
+  }
+
+  /**
+   * Mission findFirstOrThrow
+   */
+  export type MissionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * Filter, which Mission to fetch.
+     */
+    where?: MissionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Missions to fetch.
+     */
+    orderBy?: MissionOrderByWithRelationInput | MissionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Missions.
+     */
+    cursor?: MissionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Missions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Missions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Missions.
+     */
+    distinct?: MissionScalarFieldEnum | MissionScalarFieldEnum[]
+  }
+
+  /**
+   * Mission findMany
+   */
+  export type MissionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * Filter, which Missions to fetch.
+     */
+    where?: MissionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Missions to fetch.
+     */
+    orderBy?: MissionOrderByWithRelationInput | MissionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Missions.
+     */
+    cursor?: MissionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Missions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Missions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Missions.
+     */
+    distinct?: MissionScalarFieldEnum | MissionScalarFieldEnum[]
+  }
+
+  /**
+   * Mission create
+   */
+  export type MissionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Mission.
+     */
+    data: XOR<MissionCreateInput, MissionUncheckedCreateInput>
+  }
+
+  /**
+   * Mission createMany
+   */
+  export type MissionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Missions.
+     */
+    data: MissionCreateManyInput | MissionCreateManyInput[]
+  }
+
+  /**
+   * Mission createManyAndReturn
+   */
+  export type MissionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * The data used to create many Missions.
+     */
+    data: MissionCreateManyInput | MissionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Mission update
+   */
+  export type MissionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Mission.
+     */
+    data: XOR<MissionUpdateInput, MissionUncheckedUpdateInput>
+    /**
+     * Choose, which Mission to update.
+     */
+    where: MissionWhereUniqueInput
+  }
+
+  /**
+   * Mission updateMany
+   */
+  export type MissionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Missions.
+     */
+    data: XOR<MissionUpdateManyMutationInput, MissionUncheckedUpdateManyInput>
+    /**
+     * Filter which Missions to update
+     */
+    where?: MissionWhereInput
+    /**
+     * Limit how many Missions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Mission updateManyAndReturn
+   */
+  export type MissionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * The data used to update Missions.
+     */
+    data: XOR<MissionUpdateManyMutationInput, MissionUncheckedUpdateManyInput>
+    /**
+     * Filter which Missions to update
+     */
+    where?: MissionWhereInput
+    /**
+     * Limit how many Missions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Mission upsert
+   */
+  export type MissionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Mission to update in case it exists.
+     */
+    where: MissionWhereUniqueInput
+    /**
+     * In case the Mission found by the `where` argument doesn't exist, create a new Mission with this data.
+     */
+    create: XOR<MissionCreateInput, MissionUncheckedCreateInput>
+    /**
+     * In case the Mission was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MissionUpdateInput, MissionUncheckedUpdateInput>
+  }
+
+  /**
+   * Mission delete
+   */
+  export type MissionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    /**
+     * Filter which Mission to delete.
+     */
+    where: MissionWhereUniqueInput
+  }
+
+  /**
+   * Mission deleteMany
+   */
+  export type MissionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Missions to delete
+     */
+    where?: MissionWhereInput
+    /**
+     * Limit how many Missions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Mission.participations
+   */
+  export type Mission$participationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    where?: MissionParticipationWhereInput
+    orderBy?: MissionParticipationOrderByWithRelationInput | MissionParticipationOrderByWithRelationInput[]
+    cursor?: MissionParticipationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MissionParticipationScalarFieldEnum | MissionParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * Mission without action
+   */
+  export type MissionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model MissionParticipation
+   */
+
+  export type AggregateMissionParticipation = {
+    _count: MissionParticipationCountAggregateOutputType | null
+    _min: MissionParticipationMinAggregateOutputType | null
+    _max: MissionParticipationMaxAggregateOutputType | null
+  }
+
+  export type MissionParticipationMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    userId: string | null
+    status: $Enums.MissionParticipationStatus | null
+    note: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MissionParticipationMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    userId: string | null
+    status: $Enums.MissionParticipationStatus | null
+    note: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MissionParticipationCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    missionId: number
+    userId: number
+    status: number
+    note: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type MissionParticipationMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    userId?: true
+    status?: true
+    note?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MissionParticipationMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    userId?: true
+    status?: true
+    note?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MissionParticipationCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    userId?: true
+    status?: true
+    note?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type MissionParticipationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MissionParticipation to aggregate.
+     */
+    where?: MissionParticipationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissionParticipations to fetch.
+     */
+    orderBy?: MissionParticipationOrderByWithRelationInput | MissionParticipationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MissionParticipationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissionParticipations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissionParticipations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MissionParticipations
+    **/
+    _count?: true | MissionParticipationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MissionParticipationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MissionParticipationMaxAggregateInputType
+  }
+
+  export type GetMissionParticipationAggregateType<T extends MissionParticipationAggregateArgs> = {
+        [P in keyof T & keyof AggregateMissionParticipation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMissionParticipation[P]>
+      : GetScalarType<T[P], AggregateMissionParticipation[P]>
+  }
+
+
+
+
+  export type MissionParticipationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissionParticipationWhereInput
+    orderBy?: MissionParticipationOrderByWithAggregationInput | MissionParticipationOrderByWithAggregationInput[]
+    by: MissionParticipationScalarFieldEnum[] | MissionParticipationScalarFieldEnum
+    having?: MissionParticipationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MissionParticipationCountAggregateInputType | true
+    _min?: MissionParticipationMinAggregateInputType
+    _max?: MissionParticipationMaxAggregateInputType
+  }
+
+  export type MissionParticipationGroupByOutputType = {
+    id: string
+    organizationId: string
+    missionId: string
+    userId: string
+    status: $Enums.MissionParticipationStatus
+    note: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: MissionParticipationCountAggregateOutputType | null
+    _min: MissionParticipationMinAggregateOutputType | null
+    _max: MissionParticipationMaxAggregateOutputType | null
+  }
+
+  type GetMissionParticipationGroupByPayload<T extends MissionParticipationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MissionParticipationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MissionParticipationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MissionParticipationGroupByOutputType[P]>
+            : GetScalarType<T[P], MissionParticipationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MissionParticipationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    userId?: boolean
+    status?: boolean
+    note?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["missionParticipation"]>
+
+  export type MissionParticipationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    userId?: boolean
+    status?: boolean
+    note?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["missionParticipation"]>
+
+  export type MissionParticipationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    userId?: boolean
+    status?: boolean
+    note?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["missionParticipation"]>
+
+  export type MissionParticipationSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    userId?: boolean
+    status?: boolean
+    note?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type MissionParticipationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "missionId" | "userId" | "status" | "note" | "createdAt" | "updatedAt", ExtArgs["result"]["missionParticipation"]>
+  export type MissionParticipationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type MissionParticipationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type MissionParticipationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $MissionParticipationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MissionParticipation"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      mission: Prisma.$MissionPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      missionId: string
+      userId: string
+      status: $Enums.MissionParticipationStatus
+      /**
+       * 加入时的可选留言（最小披露：不进入公开投影）。
+       */
+      note: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["missionParticipation"]>
+    composites: {}
+  }
+
+  type MissionParticipationGetPayload<S extends boolean | null | undefined | MissionParticipationDefaultArgs> = $Result.GetResult<Prisma.$MissionParticipationPayload, S>
+
+  type MissionParticipationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MissionParticipationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MissionParticipationCountAggregateInputType | true
+    }
+
+  export interface MissionParticipationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MissionParticipation'], meta: { name: 'MissionParticipation' } }
+    /**
+     * Find zero or one MissionParticipation that matches the filter.
+     * @param {MissionParticipationFindUniqueArgs} args - Arguments to find a MissionParticipation
+     * @example
+     * // Get one MissionParticipation
+     * const missionParticipation = await prisma.missionParticipation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MissionParticipationFindUniqueArgs>(args: SelectSubset<T, MissionParticipationFindUniqueArgs<ExtArgs>>): Prisma__MissionParticipationClient<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MissionParticipation that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MissionParticipationFindUniqueOrThrowArgs} args - Arguments to find a MissionParticipation
+     * @example
+     * // Get one MissionParticipation
+     * const missionParticipation = await prisma.missionParticipation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MissionParticipationFindUniqueOrThrowArgs>(args: SelectSubset<T, MissionParticipationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MissionParticipationClient<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MissionParticipation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionParticipationFindFirstArgs} args - Arguments to find a MissionParticipation
+     * @example
+     * // Get one MissionParticipation
+     * const missionParticipation = await prisma.missionParticipation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MissionParticipationFindFirstArgs>(args?: SelectSubset<T, MissionParticipationFindFirstArgs<ExtArgs>>): Prisma__MissionParticipationClient<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MissionParticipation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionParticipationFindFirstOrThrowArgs} args - Arguments to find a MissionParticipation
+     * @example
+     * // Get one MissionParticipation
+     * const missionParticipation = await prisma.missionParticipation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MissionParticipationFindFirstOrThrowArgs>(args?: SelectSubset<T, MissionParticipationFindFirstOrThrowArgs<ExtArgs>>): Prisma__MissionParticipationClient<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MissionParticipations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionParticipationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MissionParticipations
+     * const missionParticipations = await prisma.missionParticipation.findMany()
+     * 
+     * // Get first 10 MissionParticipations
+     * const missionParticipations = await prisma.missionParticipation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const missionParticipationWithIdOnly = await prisma.missionParticipation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MissionParticipationFindManyArgs>(args?: SelectSubset<T, MissionParticipationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MissionParticipation.
+     * @param {MissionParticipationCreateArgs} args - Arguments to create a MissionParticipation.
+     * @example
+     * // Create one MissionParticipation
+     * const MissionParticipation = await prisma.missionParticipation.create({
+     *   data: {
+     *     // ... data to create a MissionParticipation
+     *   }
+     * })
+     * 
+     */
+    create<T extends MissionParticipationCreateArgs>(args: SelectSubset<T, MissionParticipationCreateArgs<ExtArgs>>): Prisma__MissionParticipationClient<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MissionParticipations.
+     * @param {MissionParticipationCreateManyArgs} args - Arguments to create many MissionParticipations.
+     * @example
+     * // Create many MissionParticipations
+     * const missionParticipation = await prisma.missionParticipation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MissionParticipationCreateManyArgs>(args?: SelectSubset<T, MissionParticipationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MissionParticipations and returns the data saved in the database.
+     * @param {MissionParticipationCreateManyAndReturnArgs} args - Arguments to create many MissionParticipations.
+     * @example
+     * // Create many MissionParticipations
+     * const missionParticipation = await prisma.missionParticipation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MissionParticipations and only return the `id`
+     * const missionParticipationWithIdOnly = await prisma.missionParticipation.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MissionParticipationCreateManyAndReturnArgs>(args?: SelectSubset<T, MissionParticipationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MissionParticipation.
+     * @param {MissionParticipationDeleteArgs} args - Arguments to delete one MissionParticipation.
+     * @example
+     * // Delete one MissionParticipation
+     * const MissionParticipation = await prisma.missionParticipation.delete({
+     *   where: {
+     *     // ... filter to delete one MissionParticipation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MissionParticipationDeleteArgs>(args: SelectSubset<T, MissionParticipationDeleteArgs<ExtArgs>>): Prisma__MissionParticipationClient<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MissionParticipation.
+     * @param {MissionParticipationUpdateArgs} args - Arguments to update one MissionParticipation.
+     * @example
+     * // Update one MissionParticipation
+     * const missionParticipation = await prisma.missionParticipation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MissionParticipationUpdateArgs>(args: SelectSubset<T, MissionParticipationUpdateArgs<ExtArgs>>): Prisma__MissionParticipationClient<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MissionParticipations.
+     * @param {MissionParticipationDeleteManyArgs} args - Arguments to filter MissionParticipations to delete.
+     * @example
+     * // Delete a few MissionParticipations
+     * const { count } = await prisma.missionParticipation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MissionParticipationDeleteManyArgs>(args?: SelectSubset<T, MissionParticipationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MissionParticipations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionParticipationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MissionParticipations
+     * const missionParticipation = await prisma.missionParticipation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MissionParticipationUpdateManyArgs>(args: SelectSubset<T, MissionParticipationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MissionParticipations and returns the data updated in the database.
+     * @param {MissionParticipationUpdateManyAndReturnArgs} args - Arguments to update many MissionParticipations.
+     * @example
+     * // Update many MissionParticipations
+     * const missionParticipation = await prisma.missionParticipation.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MissionParticipations and only return the `id`
+     * const missionParticipationWithIdOnly = await prisma.missionParticipation.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MissionParticipationUpdateManyAndReturnArgs>(args: SelectSubset<T, MissionParticipationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MissionParticipation.
+     * @param {MissionParticipationUpsertArgs} args - Arguments to update or create a MissionParticipation.
+     * @example
+     * // Update or create a MissionParticipation
+     * const missionParticipation = await prisma.missionParticipation.upsert({
+     *   create: {
+     *     // ... data to create a MissionParticipation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MissionParticipation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MissionParticipationUpsertArgs>(args: SelectSubset<T, MissionParticipationUpsertArgs<ExtArgs>>): Prisma__MissionParticipationClient<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MissionParticipations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionParticipationCountArgs} args - Arguments to filter MissionParticipations to count.
+     * @example
+     * // Count the number of MissionParticipations
+     * const count = await prisma.missionParticipation.count({
+     *   where: {
+     *     // ... the filter for the MissionParticipations we want to count
+     *   }
+     * })
+    **/
+    count<T extends MissionParticipationCountArgs>(
+      args?: Subset<T, MissionParticipationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MissionParticipationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MissionParticipation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionParticipationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MissionParticipationAggregateArgs>(args: Subset<T, MissionParticipationAggregateArgs>): Prisma.PrismaPromise<GetMissionParticipationAggregateType<T>>
+
+    /**
+     * Group by MissionParticipation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionParticipationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MissionParticipationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MissionParticipationGroupByArgs['orderBy'] }
+        : { orderBy?: MissionParticipationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MissionParticipationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMissionParticipationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MissionParticipation model
+   */
+  readonly fields: MissionParticipationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MissionParticipation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MissionParticipationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    mission<T extends MissionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MissionDefaultArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MissionParticipation model
+   */
+  interface MissionParticipationFieldRefs {
+    readonly id: FieldRef<"MissionParticipation", 'String'>
+    readonly organizationId: FieldRef<"MissionParticipation", 'String'>
+    readonly missionId: FieldRef<"MissionParticipation", 'String'>
+    readonly userId: FieldRef<"MissionParticipation", 'String'>
+    readonly status: FieldRef<"MissionParticipation", 'MissionParticipationStatus'>
+    readonly note: FieldRef<"MissionParticipation", 'String'>
+    readonly createdAt: FieldRef<"MissionParticipation", 'DateTime'>
+    readonly updatedAt: FieldRef<"MissionParticipation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MissionParticipation findUnique
+   */
+  export type MissionParticipationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which MissionParticipation to fetch.
+     */
+    where: MissionParticipationWhereUniqueInput
+  }
+
+  /**
+   * MissionParticipation findUniqueOrThrow
+   */
+  export type MissionParticipationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which MissionParticipation to fetch.
+     */
+    where: MissionParticipationWhereUniqueInput
+  }
+
+  /**
+   * MissionParticipation findFirst
+   */
+  export type MissionParticipationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which MissionParticipation to fetch.
+     */
+    where?: MissionParticipationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissionParticipations to fetch.
+     */
+    orderBy?: MissionParticipationOrderByWithRelationInput | MissionParticipationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MissionParticipations.
+     */
+    cursor?: MissionParticipationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissionParticipations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissionParticipations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MissionParticipations.
+     */
+    distinct?: MissionParticipationScalarFieldEnum | MissionParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * MissionParticipation findFirstOrThrow
+   */
+  export type MissionParticipationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which MissionParticipation to fetch.
+     */
+    where?: MissionParticipationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissionParticipations to fetch.
+     */
+    orderBy?: MissionParticipationOrderByWithRelationInput | MissionParticipationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MissionParticipations.
+     */
+    cursor?: MissionParticipationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissionParticipations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissionParticipations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MissionParticipations.
+     */
+    distinct?: MissionParticipationScalarFieldEnum | MissionParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * MissionParticipation findMany
+   */
+  export type MissionParticipationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * Filter, which MissionParticipations to fetch.
+     */
+    where?: MissionParticipationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissionParticipations to fetch.
+     */
+    orderBy?: MissionParticipationOrderByWithRelationInput | MissionParticipationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MissionParticipations.
+     */
+    cursor?: MissionParticipationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissionParticipations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissionParticipations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MissionParticipations.
+     */
+    distinct?: MissionParticipationScalarFieldEnum | MissionParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * MissionParticipation create
+   */
+  export type MissionParticipationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MissionParticipation.
+     */
+    data: XOR<MissionParticipationCreateInput, MissionParticipationUncheckedCreateInput>
+  }
+
+  /**
+   * MissionParticipation createMany
+   */
+  export type MissionParticipationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MissionParticipations.
+     */
+    data: MissionParticipationCreateManyInput | MissionParticipationCreateManyInput[]
+  }
+
+  /**
+   * MissionParticipation createManyAndReturn
+   */
+  export type MissionParticipationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * The data used to create many MissionParticipations.
+     */
+    data: MissionParticipationCreateManyInput | MissionParticipationCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MissionParticipation update
+   */
+  export type MissionParticipationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MissionParticipation.
+     */
+    data: XOR<MissionParticipationUpdateInput, MissionParticipationUncheckedUpdateInput>
+    /**
+     * Choose, which MissionParticipation to update.
+     */
+    where: MissionParticipationWhereUniqueInput
+  }
+
+  /**
+   * MissionParticipation updateMany
+   */
+  export type MissionParticipationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MissionParticipations.
+     */
+    data: XOR<MissionParticipationUpdateManyMutationInput, MissionParticipationUncheckedUpdateManyInput>
+    /**
+     * Filter which MissionParticipations to update
+     */
+    where?: MissionParticipationWhereInput
+    /**
+     * Limit how many MissionParticipations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MissionParticipation updateManyAndReturn
+   */
+  export type MissionParticipationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * The data used to update MissionParticipations.
+     */
+    data: XOR<MissionParticipationUpdateManyMutationInput, MissionParticipationUncheckedUpdateManyInput>
+    /**
+     * Filter which MissionParticipations to update
+     */
+    where?: MissionParticipationWhereInput
+    /**
+     * Limit how many MissionParticipations to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MissionParticipation upsert
+   */
+  export type MissionParticipationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MissionParticipation to update in case it exists.
+     */
+    where: MissionParticipationWhereUniqueInput
+    /**
+     * In case the MissionParticipation found by the `where` argument doesn't exist, create a new MissionParticipation with this data.
+     */
+    create: XOR<MissionParticipationCreateInput, MissionParticipationUncheckedCreateInput>
+    /**
+     * In case the MissionParticipation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MissionParticipationUpdateInput, MissionParticipationUncheckedUpdateInput>
+  }
+
+  /**
+   * MissionParticipation delete
+   */
+  export type MissionParticipationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    /**
+     * Filter which MissionParticipation to delete.
+     */
+    where: MissionParticipationWhereUniqueInput
+  }
+
+  /**
+   * MissionParticipation deleteMany
+   */
+  export type MissionParticipationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MissionParticipations to delete
+     */
+    where?: MissionParticipationWhereInput
+    /**
+     * Limit how many MissionParticipations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MissionParticipation without action
+   */
+  export type MissionParticipationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model IdempotencyRecord
+   */
+
+  export type AggregateIdempotencyRecord = {
+    _count: IdempotencyRecordCountAggregateOutputType | null
+    _min: IdempotencyRecordMinAggregateOutputType | null
+    _max: IdempotencyRecordMaxAggregateOutputType | null
+  }
+
+  export type IdempotencyRecordMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    scope: string | null
+    key: string | null
+    requestHash: string | null
+    resourceType: string | null
+    resourceId: string | null
+    createdAt: Date | null
+  }
+
+  export type IdempotencyRecordMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    scope: string | null
+    key: string | null
+    requestHash: string | null
+    resourceType: string | null
+    resourceId: string | null
+    createdAt: Date | null
+  }
+
+  export type IdempotencyRecordCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    scope: number
+    key: number
+    requestHash: number
+    resourceType: number
+    resourceId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type IdempotencyRecordMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    scope?: true
+    key?: true
+    requestHash?: true
+    resourceType?: true
+    resourceId?: true
+    createdAt?: true
+  }
+
+  export type IdempotencyRecordMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    scope?: true
+    key?: true
+    requestHash?: true
+    resourceType?: true
+    resourceId?: true
+    createdAt?: true
+  }
+
+  export type IdempotencyRecordCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    scope?: true
+    key?: true
+    requestHash?: true
+    resourceType?: true
+    resourceId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type IdempotencyRecordAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which IdempotencyRecord to aggregate.
+     */
+    where?: IdempotencyRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IdempotencyRecords to fetch.
+     */
+    orderBy?: IdempotencyRecordOrderByWithRelationInput | IdempotencyRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: IdempotencyRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IdempotencyRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IdempotencyRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned IdempotencyRecords
+    **/
+    _count?: true | IdempotencyRecordCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: IdempotencyRecordMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: IdempotencyRecordMaxAggregateInputType
+  }
+
+  export type GetIdempotencyRecordAggregateType<T extends IdempotencyRecordAggregateArgs> = {
+        [P in keyof T & keyof AggregateIdempotencyRecord]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateIdempotencyRecord[P]>
+      : GetScalarType<T[P], AggregateIdempotencyRecord[P]>
+  }
+
+
+
+
+  export type IdempotencyRecordGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: IdempotencyRecordWhereInput
+    orderBy?: IdempotencyRecordOrderByWithAggregationInput | IdempotencyRecordOrderByWithAggregationInput[]
+    by: IdempotencyRecordScalarFieldEnum[] | IdempotencyRecordScalarFieldEnum
+    having?: IdempotencyRecordScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: IdempotencyRecordCountAggregateInputType | true
+    _min?: IdempotencyRecordMinAggregateInputType
+    _max?: IdempotencyRecordMaxAggregateInputType
+  }
+
+  export type IdempotencyRecordGroupByOutputType = {
+    id: string
+    organizationId: string
+    scope: string
+    key: string
+    requestHash: string
+    resourceType: string
+    resourceId: string | null
+    createdAt: Date
+    _count: IdempotencyRecordCountAggregateOutputType | null
+    _min: IdempotencyRecordMinAggregateOutputType | null
+    _max: IdempotencyRecordMaxAggregateOutputType | null
+  }
+
+  type GetIdempotencyRecordGroupByPayload<T extends IdempotencyRecordGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<IdempotencyRecordGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof IdempotencyRecordGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], IdempotencyRecordGroupByOutputType[P]>
+            : GetScalarType<T[P], IdempotencyRecordGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type IdempotencyRecordSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    scope?: boolean
+    key?: boolean
+    requestHash?: boolean
+    resourceType?: boolean
+    resourceId?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["idempotencyRecord"]>
+
+  export type IdempotencyRecordSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    scope?: boolean
+    key?: boolean
+    requestHash?: boolean
+    resourceType?: boolean
+    resourceId?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["idempotencyRecord"]>
+
+  export type IdempotencyRecordSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    scope?: boolean
+    key?: boolean
+    requestHash?: boolean
+    resourceType?: boolean
+    resourceId?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["idempotencyRecord"]>
+
+  export type IdempotencyRecordSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    scope?: boolean
+    key?: boolean
+    requestHash?: boolean
+    resourceType?: boolean
+    resourceId?: boolean
+    createdAt?: boolean
+  }
+
+  export type IdempotencyRecordOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "scope" | "key" | "requestHash" | "resourceType" | "resourceId" | "createdAt", ExtArgs["result"]["idempotencyRecord"]>
+  export type IdempotencyRecordInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type IdempotencyRecordIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type IdempotencyRecordIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+
+  export type $IdempotencyRecordPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "IdempotencyRecord"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      /**
+       * 业务动作，如 `mission.create` / `mission.join`。
+       */
+      scope: string
+      /**
+       * 客户端提交的 Idempotency-Key 原文。
+       */
+      key: string
+      /**
+       * 请求体指纹（sha256）。同一 key 配不同请求体 → 409（防止「键复用了但意图变了」）。
+       */
+      requestHash: string
+      resourceType: string
+      resourceId: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["idempotencyRecord"]>
+    composites: {}
+  }
+
+  type IdempotencyRecordGetPayload<S extends boolean | null | undefined | IdempotencyRecordDefaultArgs> = $Result.GetResult<Prisma.$IdempotencyRecordPayload, S>
+
+  type IdempotencyRecordCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<IdempotencyRecordFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: IdempotencyRecordCountAggregateInputType | true
+    }
+
+  export interface IdempotencyRecordDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['IdempotencyRecord'], meta: { name: 'IdempotencyRecord' } }
+    /**
+     * Find zero or one IdempotencyRecord that matches the filter.
+     * @param {IdempotencyRecordFindUniqueArgs} args - Arguments to find a IdempotencyRecord
+     * @example
+     * // Get one IdempotencyRecord
+     * const idempotencyRecord = await prisma.idempotencyRecord.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends IdempotencyRecordFindUniqueArgs>(args: SelectSubset<T, IdempotencyRecordFindUniqueArgs<ExtArgs>>): Prisma__IdempotencyRecordClient<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one IdempotencyRecord that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {IdempotencyRecordFindUniqueOrThrowArgs} args - Arguments to find a IdempotencyRecord
+     * @example
+     * // Get one IdempotencyRecord
+     * const idempotencyRecord = await prisma.idempotencyRecord.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends IdempotencyRecordFindUniqueOrThrowArgs>(args: SelectSubset<T, IdempotencyRecordFindUniqueOrThrowArgs<ExtArgs>>): Prisma__IdempotencyRecordClient<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first IdempotencyRecord that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IdempotencyRecordFindFirstArgs} args - Arguments to find a IdempotencyRecord
+     * @example
+     * // Get one IdempotencyRecord
+     * const idempotencyRecord = await prisma.idempotencyRecord.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends IdempotencyRecordFindFirstArgs>(args?: SelectSubset<T, IdempotencyRecordFindFirstArgs<ExtArgs>>): Prisma__IdempotencyRecordClient<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first IdempotencyRecord that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IdempotencyRecordFindFirstOrThrowArgs} args - Arguments to find a IdempotencyRecord
+     * @example
+     * // Get one IdempotencyRecord
+     * const idempotencyRecord = await prisma.idempotencyRecord.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends IdempotencyRecordFindFirstOrThrowArgs>(args?: SelectSubset<T, IdempotencyRecordFindFirstOrThrowArgs<ExtArgs>>): Prisma__IdempotencyRecordClient<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more IdempotencyRecords that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IdempotencyRecordFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all IdempotencyRecords
+     * const idempotencyRecords = await prisma.idempotencyRecord.findMany()
+     * 
+     * // Get first 10 IdempotencyRecords
+     * const idempotencyRecords = await prisma.idempotencyRecord.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const idempotencyRecordWithIdOnly = await prisma.idempotencyRecord.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends IdempotencyRecordFindManyArgs>(args?: SelectSubset<T, IdempotencyRecordFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a IdempotencyRecord.
+     * @param {IdempotencyRecordCreateArgs} args - Arguments to create a IdempotencyRecord.
+     * @example
+     * // Create one IdempotencyRecord
+     * const IdempotencyRecord = await prisma.idempotencyRecord.create({
+     *   data: {
+     *     // ... data to create a IdempotencyRecord
+     *   }
+     * })
+     * 
+     */
+    create<T extends IdempotencyRecordCreateArgs>(args: SelectSubset<T, IdempotencyRecordCreateArgs<ExtArgs>>): Prisma__IdempotencyRecordClient<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many IdempotencyRecords.
+     * @param {IdempotencyRecordCreateManyArgs} args - Arguments to create many IdempotencyRecords.
+     * @example
+     * // Create many IdempotencyRecords
+     * const idempotencyRecord = await prisma.idempotencyRecord.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends IdempotencyRecordCreateManyArgs>(args?: SelectSubset<T, IdempotencyRecordCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many IdempotencyRecords and returns the data saved in the database.
+     * @param {IdempotencyRecordCreateManyAndReturnArgs} args - Arguments to create many IdempotencyRecords.
+     * @example
+     * // Create many IdempotencyRecords
+     * const idempotencyRecord = await prisma.idempotencyRecord.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many IdempotencyRecords and only return the `id`
+     * const idempotencyRecordWithIdOnly = await prisma.idempotencyRecord.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends IdempotencyRecordCreateManyAndReturnArgs>(args?: SelectSubset<T, IdempotencyRecordCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a IdempotencyRecord.
+     * @param {IdempotencyRecordDeleteArgs} args - Arguments to delete one IdempotencyRecord.
+     * @example
+     * // Delete one IdempotencyRecord
+     * const IdempotencyRecord = await prisma.idempotencyRecord.delete({
+     *   where: {
+     *     // ... filter to delete one IdempotencyRecord
+     *   }
+     * })
+     * 
+     */
+    delete<T extends IdempotencyRecordDeleteArgs>(args: SelectSubset<T, IdempotencyRecordDeleteArgs<ExtArgs>>): Prisma__IdempotencyRecordClient<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one IdempotencyRecord.
+     * @param {IdempotencyRecordUpdateArgs} args - Arguments to update one IdempotencyRecord.
+     * @example
+     * // Update one IdempotencyRecord
+     * const idempotencyRecord = await prisma.idempotencyRecord.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends IdempotencyRecordUpdateArgs>(args: SelectSubset<T, IdempotencyRecordUpdateArgs<ExtArgs>>): Prisma__IdempotencyRecordClient<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more IdempotencyRecords.
+     * @param {IdempotencyRecordDeleteManyArgs} args - Arguments to filter IdempotencyRecords to delete.
+     * @example
+     * // Delete a few IdempotencyRecords
+     * const { count } = await prisma.idempotencyRecord.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends IdempotencyRecordDeleteManyArgs>(args?: SelectSubset<T, IdempotencyRecordDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more IdempotencyRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IdempotencyRecordUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many IdempotencyRecords
+     * const idempotencyRecord = await prisma.idempotencyRecord.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends IdempotencyRecordUpdateManyArgs>(args: SelectSubset<T, IdempotencyRecordUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more IdempotencyRecords and returns the data updated in the database.
+     * @param {IdempotencyRecordUpdateManyAndReturnArgs} args - Arguments to update many IdempotencyRecords.
+     * @example
+     * // Update many IdempotencyRecords
+     * const idempotencyRecord = await prisma.idempotencyRecord.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more IdempotencyRecords and only return the `id`
+     * const idempotencyRecordWithIdOnly = await prisma.idempotencyRecord.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends IdempotencyRecordUpdateManyAndReturnArgs>(args: SelectSubset<T, IdempotencyRecordUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one IdempotencyRecord.
+     * @param {IdempotencyRecordUpsertArgs} args - Arguments to update or create a IdempotencyRecord.
+     * @example
+     * // Update or create a IdempotencyRecord
+     * const idempotencyRecord = await prisma.idempotencyRecord.upsert({
+     *   create: {
+     *     // ... data to create a IdempotencyRecord
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the IdempotencyRecord we want to update
+     *   }
+     * })
+     */
+    upsert<T extends IdempotencyRecordUpsertArgs>(args: SelectSubset<T, IdempotencyRecordUpsertArgs<ExtArgs>>): Prisma__IdempotencyRecordClient<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of IdempotencyRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IdempotencyRecordCountArgs} args - Arguments to filter IdempotencyRecords to count.
+     * @example
+     * // Count the number of IdempotencyRecords
+     * const count = await prisma.idempotencyRecord.count({
+     *   where: {
+     *     // ... the filter for the IdempotencyRecords we want to count
+     *   }
+     * })
+    **/
+    count<T extends IdempotencyRecordCountArgs>(
+      args?: Subset<T, IdempotencyRecordCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], IdempotencyRecordCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a IdempotencyRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IdempotencyRecordAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends IdempotencyRecordAggregateArgs>(args: Subset<T, IdempotencyRecordAggregateArgs>): Prisma.PrismaPromise<GetIdempotencyRecordAggregateType<T>>
+
+    /**
+     * Group by IdempotencyRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IdempotencyRecordGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends IdempotencyRecordGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: IdempotencyRecordGroupByArgs['orderBy'] }
+        : { orderBy?: IdempotencyRecordGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, IdempotencyRecordGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetIdempotencyRecordGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the IdempotencyRecord model
+   */
+  readonly fields: IdempotencyRecordFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for IdempotencyRecord.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__IdempotencyRecordClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the IdempotencyRecord model
+   */
+  interface IdempotencyRecordFieldRefs {
+    readonly id: FieldRef<"IdempotencyRecord", 'String'>
+    readonly organizationId: FieldRef<"IdempotencyRecord", 'String'>
+    readonly scope: FieldRef<"IdempotencyRecord", 'String'>
+    readonly key: FieldRef<"IdempotencyRecord", 'String'>
+    readonly requestHash: FieldRef<"IdempotencyRecord", 'String'>
+    readonly resourceType: FieldRef<"IdempotencyRecord", 'String'>
+    readonly resourceId: FieldRef<"IdempotencyRecord", 'String'>
+    readonly createdAt: FieldRef<"IdempotencyRecord", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * IdempotencyRecord findUnique
+   */
+  export type IdempotencyRecordFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which IdempotencyRecord to fetch.
+     */
+    where: IdempotencyRecordWhereUniqueInput
+  }
+
+  /**
+   * IdempotencyRecord findUniqueOrThrow
+   */
+  export type IdempotencyRecordFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which IdempotencyRecord to fetch.
+     */
+    where: IdempotencyRecordWhereUniqueInput
+  }
+
+  /**
+   * IdempotencyRecord findFirst
+   */
+  export type IdempotencyRecordFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which IdempotencyRecord to fetch.
+     */
+    where?: IdempotencyRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IdempotencyRecords to fetch.
+     */
+    orderBy?: IdempotencyRecordOrderByWithRelationInput | IdempotencyRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for IdempotencyRecords.
+     */
+    cursor?: IdempotencyRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IdempotencyRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IdempotencyRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of IdempotencyRecords.
+     */
+    distinct?: IdempotencyRecordScalarFieldEnum | IdempotencyRecordScalarFieldEnum[]
+  }
+
+  /**
+   * IdempotencyRecord findFirstOrThrow
+   */
+  export type IdempotencyRecordFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which IdempotencyRecord to fetch.
+     */
+    where?: IdempotencyRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IdempotencyRecords to fetch.
+     */
+    orderBy?: IdempotencyRecordOrderByWithRelationInput | IdempotencyRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for IdempotencyRecords.
+     */
+    cursor?: IdempotencyRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IdempotencyRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IdempotencyRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of IdempotencyRecords.
+     */
+    distinct?: IdempotencyRecordScalarFieldEnum | IdempotencyRecordScalarFieldEnum[]
+  }
+
+  /**
+   * IdempotencyRecord findMany
+   */
+  export type IdempotencyRecordFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which IdempotencyRecords to fetch.
+     */
+    where?: IdempotencyRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IdempotencyRecords to fetch.
+     */
+    orderBy?: IdempotencyRecordOrderByWithRelationInput | IdempotencyRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing IdempotencyRecords.
+     */
+    cursor?: IdempotencyRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IdempotencyRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IdempotencyRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of IdempotencyRecords.
+     */
+    distinct?: IdempotencyRecordScalarFieldEnum | IdempotencyRecordScalarFieldEnum[]
+  }
+
+  /**
+   * IdempotencyRecord create
+   */
+  export type IdempotencyRecordCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * The data needed to create a IdempotencyRecord.
+     */
+    data: XOR<IdempotencyRecordCreateInput, IdempotencyRecordUncheckedCreateInput>
+  }
+
+  /**
+   * IdempotencyRecord createMany
+   */
+  export type IdempotencyRecordCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many IdempotencyRecords.
+     */
+    data: IdempotencyRecordCreateManyInput | IdempotencyRecordCreateManyInput[]
+  }
+
+  /**
+   * IdempotencyRecord createManyAndReturn
+   */
+  export type IdempotencyRecordCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * The data used to create many IdempotencyRecords.
+     */
+    data: IdempotencyRecordCreateManyInput | IdempotencyRecordCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * IdempotencyRecord update
+   */
+  export type IdempotencyRecordUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * The data needed to update a IdempotencyRecord.
+     */
+    data: XOR<IdempotencyRecordUpdateInput, IdempotencyRecordUncheckedUpdateInput>
+    /**
+     * Choose, which IdempotencyRecord to update.
+     */
+    where: IdempotencyRecordWhereUniqueInput
+  }
+
+  /**
+   * IdempotencyRecord updateMany
+   */
+  export type IdempotencyRecordUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update IdempotencyRecords.
+     */
+    data: XOR<IdempotencyRecordUpdateManyMutationInput, IdempotencyRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which IdempotencyRecords to update
+     */
+    where?: IdempotencyRecordWhereInput
+    /**
+     * Limit how many IdempotencyRecords to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * IdempotencyRecord updateManyAndReturn
+   */
+  export type IdempotencyRecordUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * The data used to update IdempotencyRecords.
+     */
+    data: XOR<IdempotencyRecordUpdateManyMutationInput, IdempotencyRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which IdempotencyRecords to update
+     */
+    where?: IdempotencyRecordWhereInput
+    /**
+     * Limit how many IdempotencyRecords to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * IdempotencyRecord upsert
+   */
+  export type IdempotencyRecordUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * The filter to search for the IdempotencyRecord to update in case it exists.
+     */
+    where: IdempotencyRecordWhereUniqueInput
+    /**
+     * In case the IdempotencyRecord found by the `where` argument doesn't exist, create a new IdempotencyRecord with this data.
+     */
+    create: XOR<IdempotencyRecordCreateInput, IdempotencyRecordUncheckedCreateInput>
+    /**
+     * In case the IdempotencyRecord was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<IdempotencyRecordUpdateInput, IdempotencyRecordUncheckedUpdateInput>
+  }
+
+  /**
+   * IdempotencyRecord delete
+   */
+  export type IdempotencyRecordDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    /**
+     * Filter which IdempotencyRecord to delete.
+     */
+    where: IdempotencyRecordWhereUniqueInput
+  }
+
+  /**
+   * IdempotencyRecord deleteMany
+   */
+  export type IdempotencyRecordDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which IdempotencyRecords to delete
+     */
+    where?: IdempotencyRecordWhereInput
+    /**
+     * Limit how many IdempotencyRecords to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * IdempotencyRecord without action
+   */
+  export type IdempotencyRecordDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model User
    */
 
@@ -13056,6 +16979,8 @@ export namespace Prisma {
     adminAudits?: boolean | User$adminAuditsArgs<ExtArgs>
     adminRoles?: boolean | User$adminRolesArgs<ExtArgs>
     memberships?: boolean | User$membershipsArgs<ExtArgs>
+    missions?: boolean | User$missionsArgs<ExtArgs>
+    missionParticipations?: boolean | User$missionParticipationsArgs<ExtArgs>
     analyticsEvents?: boolean | User$analyticsEventsArgs<ExtArgs>
     reportsMade?: boolean | User$reportsMadeArgs<ExtArgs>
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
@@ -13150,6 +17075,8 @@ export namespace Prisma {
     adminAudits?: boolean | User$adminAuditsArgs<ExtArgs>
     adminRoles?: boolean | User$adminRolesArgs<ExtArgs>
     memberships?: boolean | User$membershipsArgs<ExtArgs>
+    missions?: boolean | User$missionsArgs<ExtArgs>
+    missionParticipations?: boolean | User$missionParticipationsArgs<ExtArgs>
     analyticsEvents?: boolean | User$analyticsEventsArgs<ExtArgs>
     reportsMade?: boolean | User$reportsMadeArgs<ExtArgs>
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
@@ -13190,6 +17117,8 @@ export namespace Prisma {
       adminAudits: Prisma.$AdminAuditPayload<ExtArgs>[]
       adminRoles: Prisma.$AdminUserRolePayload<ExtArgs>[]
       memberships: Prisma.$MembershipPayload<ExtArgs>[]
+      missions: Prisma.$MissionPayload<ExtArgs>[]
+      missionParticipations: Prisma.$MissionParticipationPayload<ExtArgs>[]
       analyticsEvents: Prisma.$AnalyticsEventPayload<ExtArgs>[]
       reportsMade: Prisma.$UserReportPayload<ExtArgs>[]
       reportsReceived: Prisma.$UserReportPayload<ExtArgs>[]
@@ -13634,6 +17563,8 @@ export namespace Prisma {
     adminAudits<T extends User$adminAuditsArgs<ExtArgs> = {}>(args?: Subset<T, User$adminAuditsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminAuditPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     adminRoles<T extends User$adminRolesArgs<ExtArgs> = {}>(args?: Subset<T, User$adminRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminUserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     memberships<T extends User$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, User$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    missions<T extends User$missionsArgs<ExtArgs> = {}>(args?: Subset<T, User$missionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    missionParticipations<T extends User$missionParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, User$missionParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     analyticsEvents<T extends User$analyticsEventsArgs<ExtArgs> = {}>(args?: Subset<T, User$analyticsEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reportsMade<T extends User$reportsMadeArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsMadeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reportsReceived<T extends User$reportsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -14682,6 +18613,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * User.missions
+   */
+  export type User$missionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    where?: MissionWhereInput
+    orderBy?: MissionOrderByWithRelationInput | MissionOrderByWithRelationInput[]
+    cursor?: MissionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MissionScalarFieldEnum | MissionScalarFieldEnum[]
+  }
+
+  /**
+   * User.missionParticipations
+   */
+  export type User$missionParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    where?: MissionParticipationWhereInput
+    orderBy?: MissionParticipationOrderByWithRelationInput | MissionParticipationOrderByWithRelationInput[]
+    cursor?: MissionParticipationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MissionParticipationScalarFieldEnum | MissionParticipationScalarFieldEnum[]
   }
 
   /**
@@ -53085,6 +57064,9 @@ export namespace Prisma {
     updatedAt?: boolean
     memberships?: boolean | Organization$membershipsArgs<ExtArgs>
     auditEvents?: boolean | Organization$auditEventsArgs<ExtArgs>
+    missions?: boolean | Organization$missionsArgs<ExtArgs>
+    missionParticipations?: boolean | Organization$missionParticipationsArgs<ExtArgs>
+    idempotencyRecords?: boolean | Organization$idempotencyRecordsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -53119,6 +57101,9 @@ export namespace Prisma {
   export type OrganizationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     memberships?: boolean | Organization$membershipsArgs<ExtArgs>
     auditEvents?: boolean | Organization$auditEventsArgs<ExtArgs>
+    missions?: boolean | Organization$missionsArgs<ExtArgs>
+    missionParticipations?: boolean | Organization$missionParticipationsArgs<ExtArgs>
+    idempotencyRecords?: boolean | Organization$idempotencyRecordsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -53129,6 +57114,9 @@ export namespace Prisma {
     objects: {
       memberships: Prisma.$MembershipPayload<ExtArgs>[]
       auditEvents: Prisma.$TenantAuditEventPayload<ExtArgs>[]
+      missions: Prisma.$MissionPayload<ExtArgs>[]
+      missionParticipations: Prisma.$MissionParticipationPayload<ExtArgs>[]
+      idempotencyRecords: Prisma.$IdempotencyRecordPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -53536,6 +57524,9 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     memberships<T extends Organization$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     auditEvents<T extends Organization$auditEventsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$auditEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TenantAuditEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    missions<T extends Organization$missionsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$missionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    missionParticipations<T extends Organization$missionParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$missionParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    idempotencyRecords<T extends Organization$idempotencyRecordsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$idempotencyRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -54007,6 +57998,78 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TenantAuditEventScalarFieldEnum | TenantAuditEventScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.missions
+   */
+  export type Organization$missionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Mission
+     */
+    select?: MissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Mission
+     */
+    omit?: MissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionInclude<ExtArgs> | null
+    where?: MissionWhereInput
+    orderBy?: MissionOrderByWithRelationInput | MissionOrderByWithRelationInput[]
+    cursor?: MissionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MissionScalarFieldEnum | MissionScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.missionParticipations
+   */
+  export type Organization$missionParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionParticipation
+     */
+    select?: MissionParticipationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionParticipation
+     */
+    omit?: MissionParticipationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissionParticipationInclude<ExtArgs> | null
+    where?: MissionParticipationWhereInput
+    orderBy?: MissionParticipationOrderByWithRelationInput | MissionParticipationOrderByWithRelationInput[]
+    cursor?: MissionParticipationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MissionParticipationScalarFieldEnum | MissionParticipationScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.idempotencyRecords
+   */
+  export type Organization$idempotencyRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IdempotencyRecord
+     */
+    select?: IdempotencyRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IdempotencyRecord
+     */
+    omit?: IdempotencyRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IdempotencyRecordInclude<ExtArgs> | null
+    where?: IdempotencyRecordWhereInput
+    orderBy?: IdempotencyRecordOrderByWithRelationInput | IdempotencyRecordOrderByWithRelationInput[]
+    cursor?: IdempotencyRecordWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: IdempotencyRecordScalarFieldEnum | IdempotencyRecordScalarFieldEnum[]
   }
 
   /**
@@ -56368,6 +60431,57 @@ export namespace Prisma {
   export type BotAvatarScalarFieldEnum = (typeof BotAvatarScalarFieldEnum)[keyof typeof BotAvatarScalarFieldEnum]
 
 
+  export const MissionScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    ownerId: 'ownerId',
+    title: 'title',
+    goal: 'goal',
+    offer: 'offer',
+    constraints: 'constraints',
+    successCriteria: 'successCriteria',
+    status: 'status',
+    shareToken: 'shareToken',
+    publicPreview: 'publicPreview',
+    maxParticipants: 'maxParticipants',
+    expiresAt: 'expiresAt',
+    publishedAt: 'publishedAt',
+    closedAt: 'closedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type MissionScalarFieldEnum = (typeof MissionScalarFieldEnum)[keyof typeof MissionScalarFieldEnum]
+
+
+  export const MissionParticipationScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    missionId: 'missionId',
+    userId: 'userId',
+    status: 'status',
+    note: 'note',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type MissionParticipationScalarFieldEnum = (typeof MissionParticipationScalarFieldEnum)[keyof typeof MissionParticipationScalarFieldEnum]
+
+
+  export const IdempotencyRecordScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    scope: 'scope',
+    key: 'key',
+    requestHash: 'requestHash',
+    resourceType: 'resourceType',
+    resourceId: 'resourceId',
+    createdAt: 'createdAt'
+  };
+
+  export type IdempotencyRecordScalarFieldEnum = (typeof IdempotencyRecordScalarFieldEnum)[keyof typeof IdempotencyRecordScalarFieldEnum]
+
+
   export const UserScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -57117,6 +61231,20 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+  /**
+   * Reference to a field of type 'MissionStatus'
+   */
+  export type EnumMissionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MissionStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'MissionParticipationStatus'
+   */
+  export type EnumMissionParticipationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MissionParticipationStatus'>
     
 
 
@@ -57956,6 +62084,277 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"BotAvatar"> | Date | string
   }
 
+  export type MissionWhereInput = {
+    AND?: MissionWhereInput | MissionWhereInput[]
+    OR?: MissionWhereInput[]
+    NOT?: MissionWhereInput | MissionWhereInput[]
+    id?: StringFilter<"Mission"> | string
+    organizationId?: StringFilter<"Mission"> | string
+    ownerId?: StringFilter<"Mission"> | string
+    title?: StringFilter<"Mission"> | string
+    goal?: StringFilter<"Mission"> | string
+    offer?: StringFilter<"Mission"> | string
+    constraints?: StringNullableFilter<"Mission"> | string | null
+    successCriteria?: StringFilter<"Mission"> | string
+    status?: EnumMissionStatusFilter<"Mission"> | $Enums.MissionStatus
+    shareToken?: StringFilter<"Mission"> | string
+    publicPreview?: BoolFilter<"Mission"> | boolean
+    maxParticipants?: IntNullableFilter<"Mission"> | number | null
+    expiresAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    publishedAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    closedAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    createdAt?: DateTimeFilter<"Mission"> | Date | string
+    updatedAt?: DateTimeFilter<"Mission"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    owner?: XOR<UserScalarRelationFilter, UserWhereInput>
+    participations?: MissionParticipationListRelationFilter
+  }
+
+  export type MissionOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    ownerId?: SortOrder
+    title?: SortOrder
+    goal?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrderInput | SortOrder
+    successCriteria?: SortOrder
+    status?: SortOrder
+    shareToken?: SortOrder
+    publicPreview?: SortOrder
+    maxParticipants?: SortOrderInput | SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    publishedAt?: SortOrderInput | SortOrder
+    closedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    owner?: UserOrderByWithRelationInput
+    participations?: MissionParticipationOrderByRelationAggregateInput
+  }
+
+  export type MissionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    shareToken?: string
+    AND?: MissionWhereInput | MissionWhereInput[]
+    OR?: MissionWhereInput[]
+    NOT?: MissionWhereInput | MissionWhereInput[]
+    organizationId?: StringFilter<"Mission"> | string
+    ownerId?: StringFilter<"Mission"> | string
+    title?: StringFilter<"Mission"> | string
+    goal?: StringFilter<"Mission"> | string
+    offer?: StringFilter<"Mission"> | string
+    constraints?: StringNullableFilter<"Mission"> | string | null
+    successCriteria?: StringFilter<"Mission"> | string
+    status?: EnumMissionStatusFilter<"Mission"> | $Enums.MissionStatus
+    publicPreview?: BoolFilter<"Mission"> | boolean
+    maxParticipants?: IntNullableFilter<"Mission"> | number | null
+    expiresAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    publishedAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    closedAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    createdAt?: DateTimeFilter<"Mission"> | Date | string
+    updatedAt?: DateTimeFilter<"Mission"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    owner?: XOR<UserScalarRelationFilter, UserWhereInput>
+    participations?: MissionParticipationListRelationFilter
+  }, "id" | "shareToken">
+
+  export type MissionOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    ownerId?: SortOrder
+    title?: SortOrder
+    goal?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrderInput | SortOrder
+    successCriteria?: SortOrder
+    status?: SortOrder
+    shareToken?: SortOrder
+    publicPreview?: SortOrder
+    maxParticipants?: SortOrderInput | SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    publishedAt?: SortOrderInput | SortOrder
+    closedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: MissionCountOrderByAggregateInput
+    _avg?: MissionAvgOrderByAggregateInput
+    _max?: MissionMaxOrderByAggregateInput
+    _min?: MissionMinOrderByAggregateInput
+    _sum?: MissionSumOrderByAggregateInput
+  }
+
+  export type MissionScalarWhereWithAggregatesInput = {
+    AND?: MissionScalarWhereWithAggregatesInput | MissionScalarWhereWithAggregatesInput[]
+    OR?: MissionScalarWhereWithAggregatesInput[]
+    NOT?: MissionScalarWhereWithAggregatesInput | MissionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Mission"> | string
+    organizationId?: StringWithAggregatesFilter<"Mission"> | string
+    ownerId?: StringWithAggregatesFilter<"Mission"> | string
+    title?: StringWithAggregatesFilter<"Mission"> | string
+    goal?: StringWithAggregatesFilter<"Mission"> | string
+    offer?: StringWithAggregatesFilter<"Mission"> | string
+    constraints?: StringNullableWithAggregatesFilter<"Mission"> | string | null
+    successCriteria?: StringWithAggregatesFilter<"Mission"> | string
+    status?: EnumMissionStatusWithAggregatesFilter<"Mission"> | $Enums.MissionStatus
+    shareToken?: StringWithAggregatesFilter<"Mission"> | string
+    publicPreview?: BoolWithAggregatesFilter<"Mission"> | boolean
+    maxParticipants?: IntNullableWithAggregatesFilter<"Mission"> | number | null
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"Mission"> | Date | string | null
+    publishedAt?: DateTimeNullableWithAggregatesFilter<"Mission"> | Date | string | null
+    closedAt?: DateTimeNullableWithAggregatesFilter<"Mission"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Mission"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Mission"> | Date | string
+  }
+
+  export type MissionParticipationWhereInput = {
+    AND?: MissionParticipationWhereInput | MissionParticipationWhereInput[]
+    OR?: MissionParticipationWhereInput[]
+    NOT?: MissionParticipationWhereInput | MissionParticipationWhereInput[]
+    id?: StringFilter<"MissionParticipation"> | string
+    organizationId?: StringFilter<"MissionParticipation"> | string
+    missionId?: StringFilter<"MissionParticipation"> | string
+    userId?: StringFilter<"MissionParticipation"> | string
+    status?: EnumMissionParticipationStatusFilter<"MissionParticipation"> | $Enums.MissionParticipationStatus
+    note?: StringNullableFilter<"MissionParticipation"> | string | null
+    createdAt?: DateTimeFilter<"MissionParticipation"> | Date | string
+    updatedAt?: DateTimeFilter<"MissionParticipation"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    mission?: XOR<MissionScalarRelationFilter, MissionWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type MissionParticipationOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    note?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    mission?: MissionOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type MissionParticipationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    missionId_userId?: MissionParticipationMissionIdUserIdCompoundUniqueInput
+    AND?: MissionParticipationWhereInput | MissionParticipationWhereInput[]
+    OR?: MissionParticipationWhereInput[]
+    NOT?: MissionParticipationWhereInput | MissionParticipationWhereInput[]
+    organizationId?: StringFilter<"MissionParticipation"> | string
+    missionId?: StringFilter<"MissionParticipation"> | string
+    userId?: StringFilter<"MissionParticipation"> | string
+    status?: EnumMissionParticipationStatusFilter<"MissionParticipation"> | $Enums.MissionParticipationStatus
+    note?: StringNullableFilter<"MissionParticipation"> | string | null
+    createdAt?: DateTimeFilter<"MissionParticipation"> | Date | string
+    updatedAt?: DateTimeFilter<"MissionParticipation"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    mission?: XOR<MissionScalarRelationFilter, MissionWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "missionId_userId">
+
+  export type MissionParticipationOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    note?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: MissionParticipationCountOrderByAggregateInput
+    _max?: MissionParticipationMaxOrderByAggregateInput
+    _min?: MissionParticipationMinOrderByAggregateInput
+  }
+
+  export type MissionParticipationScalarWhereWithAggregatesInput = {
+    AND?: MissionParticipationScalarWhereWithAggregatesInput | MissionParticipationScalarWhereWithAggregatesInput[]
+    OR?: MissionParticipationScalarWhereWithAggregatesInput[]
+    NOT?: MissionParticipationScalarWhereWithAggregatesInput | MissionParticipationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MissionParticipation"> | string
+    organizationId?: StringWithAggregatesFilter<"MissionParticipation"> | string
+    missionId?: StringWithAggregatesFilter<"MissionParticipation"> | string
+    userId?: StringWithAggregatesFilter<"MissionParticipation"> | string
+    status?: EnumMissionParticipationStatusWithAggregatesFilter<"MissionParticipation"> | $Enums.MissionParticipationStatus
+    note?: StringNullableWithAggregatesFilter<"MissionParticipation"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"MissionParticipation"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"MissionParticipation"> | Date | string
+  }
+
+  export type IdempotencyRecordWhereInput = {
+    AND?: IdempotencyRecordWhereInput | IdempotencyRecordWhereInput[]
+    OR?: IdempotencyRecordWhereInput[]
+    NOT?: IdempotencyRecordWhereInput | IdempotencyRecordWhereInput[]
+    id?: StringFilter<"IdempotencyRecord"> | string
+    organizationId?: StringFilter<"IdempotencyRecord"> | string
+    scope?: StringFilter<"IdempotencyRecord"> | string
+    key?: StringFilter<"IdempotencyRecord"> | string
+    requestHash?: StringFilter<"IdempotencyRecord"> | string
+    resourceType?: StringFilter<"IdempotencyRecord"> | string
+    resourceId?: StringNullableFilter<"IdempotencyRecord"> | string | null
+    createdAt?: DateTimeFilter<"IdempotencyRecord"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }
+
+  export type IdempotencyRecordOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    scope?: SortOrder
+    key?: SortOrder
+    requestHash?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+  }
+
+  export type IdempotencyRecordWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    organizationId_scope_key?: IdempotencyRecordOrganizationIdScopeKeyCompoundUniqueInput
+    AND?: IdempotencyRecordWhereInput | IdempotencyRecordWhereInput[]
+    OR?: IdempotencyRecordWhereInput[]
+    NOT?: IdempotencyRecordWhereInput | IdempotencyRecordWhereInput[]
+    organizationId?: StringFilter<"IdempotencyRecord"> | string
+    scope?: StringFilter<"IdempotencyRecord"> | string
+    key?: StringFilter<"IdempotencyRecord"> | string
+    requestHash?: StringFilter<"IdempotencyRecord"> | string
+    resourceType?: StringFilter<"IdempotencyRecord"> | string
+    resourceId?: StringNullableFilter<"IdempotencyRecord"> | string | null
+    createdAt?: DateTimeFilter<"IdempotencyRecord"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }, "id" | "organizationId_scope_key">
+
+  export type IdempotencyRecordOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    scope?: SortOrder
+    key?: SortOrder
+    requestHash?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: IdempotencyRecordCountOrderByAggregateInput
+    _max?: IdempotencyRecordMaxOrderByAggregateInput
+    _min?: IdempotencyRecordMinOrderByAggregateInput
+  }
+
+  export type IdempotencyRecordScalarWhereWithAggregatesInput = {
+    AND?: IdempotencyRecordScalarWhereWithAggregatesInput | IdempotencyRecordScalarWhereWithAggregatesInput[]
+    OR?: IdempotencyRecordScalarWhereWithAggregatesInput[]
+    NOT?: IdempotencyRecordScalarWhereWithAggregatesInput | IdempotencyRecordScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"IdempotencyRecord"> | string
+    organizationId?: StringWithAggregatesFilter<"IdempotencyRecord"> | string
+    scope?: StringWithAggregatesFilter<"IdempotencyRecord"> | string
+    key?: StringWithAggregatesFilter<"IdempotencyRecord"> | string
+    requestHash?: StringWithAggregatesFilter<"IdempotencyRecord"> | string
+    resourceType?: StringWithAggregatesFilter<"IdempotencyRecord"> | string
+    resourceId?: StringNullableWithAggregatesFilter<"IdempotencyRecord"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"IdempotencyRecord"> | Date | string
+  }
+
   export type UserWhereInput = {
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
@@ -58002,6 +62401,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditListRelationFilter
     adminRoles?: AdminUserRoleListRelationFilter
     memberships?: MembershipListRelationFilter
+    missions?: MissionListRelationFilter
+    missionParticipations?: MissionParticipationListRelationFilter
     analyticsEvents?: AnalyticsEventListRelationFilter
     reportsMade?: UserReportListRelationFilter
     reportsReceived?: UserReportListRelationFilter
@@ -58053,6 +62454,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditOrderByRelationAggregateInput
     adminRoles?: AdminUserRoleOrderByRelationAggregateInput
     memberships?: MembershipOrderByRelationAggregateInput
+    missions?: MissionOrderByRelationAggregateInput
+    missionParticipations?: MissionParticipationOrderByRelationAggregateInput
     analyticsEvents?: AnalyticsEventOrderByRelationAggregateInput
     reportsMade?: UserReportOrderByRelationAggregateInput
     reportsReceived?: UserReportOrderByRelationAggregateInput
@@ -58107,6 +62510,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditListRelationFilter
     adminRoles?: AdminUserRoleListRelationFilter
     memberships?: MembershipListRelationFilter
+    missions?: MissionListRelationFilter
+    missionParticipations?: MissionParticipationListRelationFilter
     analyticsEvents?: AnalyticsEventListRelationFilter
     reportsMade?: UserReportListRelationFilter
     reportsReceived?: UserReportListRelationFilter
@@ -61309,6 +65714,9 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Organization"> | Date | string
     memberships?: MembershipListRelationFilter
     auditEvents?: TenantAuditEventListRelationFilter
+    missions?: MissionListRelationFilter
+    missionParticipations?: MissionParticipationListRelationFilter
+    idempotencyRecords?: IdempotencyRecordListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -61320,6 +65728,9 @@ export namespace Prisma {
     updatedAt?: SortOrder
     memberships?: MembershipOrderByRelationAggregateInput
     auditEvents?: TenantAuditEventOrderByRelationAggregateInput
+    missions?: MissionOrderByRelationAggregateInput
+    missionParticipations?: MissionParticipationOrderByRelationAggregateInput
+    idempotencyRecords?: IdempotencyRecordOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -61334,6 +65745,9 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Organization"> | Date | string
     memberships?: MembershipListRelationFilter
     auditEvents?: TenantAuditEventListRelationFilter
+    missions?: MissionListRelationFilter
+    missionParticipations?: MissionParticipationListRelationFilter
+    idempotencyRecords?: IdempotencyRecordListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -62227,6 +66641,298 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type MissionCreateInput = {
+    id?: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMissionsInput
+    owner: UserCreateNestedOneWithoutMissionsInput
+    participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    ownerId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
+    owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
+    participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+  }
+
+  export type MissionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+  }
+
+  export type MissionCreateManyInput = {
+    id?: string
+    organizationId: string
+    ownerId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionParticipationCreateInput = {
+    id?: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMissionParticipationsInput
+    mission: MissionCreateNestedOneWithoutParticipationsInput
+    user: UserCreateNestedOneWithoutMissionParticipationsInput
+  }
+
+  export type MissionParticipationUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    userId: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionParticipationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMissionParticipationsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutParticipationsNestedInput
+    user?: UserUpdateOneRequiredWithoutMissionParticipationsNestedInput
+  }
+
+  export type MissionParticipationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionParticipationCreateManyInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    userId: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionParticipationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionParticipationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IdempotencyRecordCreateInput = {
+    id?: string
+    scope: string
+    key: string
+    requestHash: string
+    resourceType: string
+    resourceId?: string | null
+    createdAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutIdempotencyRecordsInput
+  }
+
+  export type IdempotencyRecordUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    scope: string
+    key: string
+    requestHash: string
+    resourceType: string
+    resourceId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type IdempotencyRecordUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    requestHash?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutIdempotencyRecordsNestedInput
+  }
+
+  export type IdempotencyRecordUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    requestHash?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IdempotencyRecordCreateManyInput = {
+    id?: string
+    organizationId: string
+    scope: string
+    key: string
+    requestHash: string
+    resourceType: string
+    resourceId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type IdempotencyRecordUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    requestHash?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IdempotencyRecordUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    requestHash?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     name?: string | null
@@ -62270,6 +66976,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -62321,6 +67029,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -62372,6 +67082,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -62423,6 +67135,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -66076,6 +70790,9 @@ export namespace Prisma {
     updatedAt?: Date | string
     memberships?: MembershipCreateNestedManyWithoutOrganizationInput
     auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -66087,6 +70804,9 @@ export namespace Prisma {
     updatedAt?: Date | string
     memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
     auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -66098,6 +70818,9 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
     auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -66109,6 +70832,9 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
     auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -66941,6 +71667,210 @@ export namespace Prisma {
     useCount?: SortOrder
   }
 
+  export type EnumMissionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionStatus | EnumMissionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionStatus[]
+    notIn?: $Enums.MissionStatus[]
+    not?: NestedEnumMissionStatusFilter<$PrismaModel> | $Enums.MissionStatus
+  }
+
+  export type OrganizationScalarRelationFilter = {
+    is?: OrganizationWhereInput
+    isNot?: OrganizationWhereInput
+  }
+
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type MissionParticipationListRelationFilter = {
+    every?: MissionParticipationWhereInput
+    some?: MissionParticipationWhereInput
+    none?: MissionParticipationWhereInput
+  }
+
+  export type MissionParticipationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MissionCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    ownerId?: SortOrder
+    title?: SortOrder
+    goal?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrder
+    successCriteria?: SortOrder
+    status?: SortOrder
+    shareToken?: SortOrder
+    publicPreview?: SortOrder
+    maxParticipants?: SortOrder
+    expiresAt?: SortOrder
+    publishedAt?: SortOrder
+    closedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MissionAvgOrderByAggregateInput = {
+    maxParticipants?: SortOrder
+  }
+
+  export type MissionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    ownerId?: SortOrder
+    title?: SortOrder
+    goal?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrder
+    successCriteria?: SortOrder
+    status?: SortOrder
+    shareToken?: SortOrder
+    publicPreview?: SortOrder
+    maxParticipants?: SortOrder
+    expiresAt?: SortOrder
+    publishedAt?: SortOrder
+    closedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MissionMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    ownerId?: SortOrder
+    title?: SortOrder
+    goal?: SortOrder
+    offer?: SortOrder
+    constraints?: SortOrder
+    successCriteria?: SortOrder
+    status?: SortOrder
+    shareToken?: SortOrder
+    publicPreview?: SortOrder
+    maxParticipants?: SortOrder
+    expiresAt?: SortOrder
+    publishedAt?: SortOrder
+    closedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MissionSumOrderByAggregateInput = {
+    maxParticipants?: SortOrder
+  }
+
+  export type EnumMissionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionStatus | EnumMissionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionStatus[]
+    notIn?: $Enums.MissionStatus[]
+    not?: NestedEnumMissionStatusWithAggregatesFilter<$PrismaModel> | $Enums.MissionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMissionStatusFilter<$PrismaModel>
+    _max?: NestedEnumMissionStatusFilter<$PrismaModel>
+  }
+
+  export type EnumMissionParticipationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionParticipationStatus | EnumMissionParticipationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionParticipationStatus[]
+    notIn?: $Enums.MissionParticipationStatus[]
+    not?: NestedEnumMissionParticipationStatusFilter<$PrismaModel> | $Enums.MissionParticipationStatus
+  }
+
+  export type MissionScalarRelationFilter = {
+    is?: MissionWhereInput
+    isNot?: MissionWhereInput
+  }
+
+  export type MissionParticipationMissionIdUserIdCompoundUniqueInput = {
+    missionId: string
+    userId: string
+  }
+
+  export type MissionParticipationCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MissionParticipationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MissionParticipationMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumMissionParticipationStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionParticipationStatus | EnumMissionParticipationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionParticipationStatus[]
+    notIn?: $Enums.MissionParticipationStatus[]
+    not?: NestedEnumMissionParticipationStatusWithAggregatesFilter<$PrismaModel> | $Enums.MissionParticipationStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMissionParticipationStatusFilter<$PrismaModel>
+    _max?: NestedEnumMissionParticipationStatusFilter<$PrismaModel>
+  }
+
+  export type IdempotencyRecordOrganizationIdScopeKeyCompoundUniqueInput = {
+    organizationId: string
+    scope: string
+    key: string
+  }
+
+  export type IdempotencyRecordCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    scope?: SortOrder
+    key?: SortOrder
+    requestHash?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type IdempotencyRecordMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    scope?: SortOrder
+    key?: SortOrder
+    requestHash?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type IdempotencyRecordMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    scope?: SortOrder
+    key?: SortOrder
+    requestHash?: SortOrder
+    resourceType?: SortOrder
+    resourceId?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type EnumUserRoleFilter<$PrismaModel = never> = {
     equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
     in?: $Enums.UserRole[]
@@ -67077,6 +72007,12 @@ export namespace Prisma {
     none?: MembershipWhereInput
   }
 
+  export type MissionListRelationFilter = {
+    every?: MissionWhereInput
+    some?: MissionWhereInput
+    none?: MissionWhereInput
+  }
+
   export type AnalyticsEventListRelationFilter = {
     every?: AnalyticsEventWhereInput
     some?: AnalyticsEventWhereInput
@@ -67176,6 +72112,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type MissionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type AnalyticsEventOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -67261,11 +72201,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumUserRoleFilter<$PrismaModel>
     _max?: NestedEnumUserRoleFilter<$PrismaModel>
-  }
-
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
   }
 
   export type AccountProviderProviderAccountIdCompoundUniqueInput = {
@@ -69617,7 +74552,17 @@ export namespace Prisma {
     none?: TenantAuditEventWhereInput
   }
 
+  export type IdempotencyRecordListRelationFilter = {
+    every?: IdempotencyRecordWhereInput
+    some?: IdempotencyRecordWhereInput
+    none?: IdempotencyRecordWhereInput
+  }
+
   export type TenantAuditEventOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type IdempotencyRecordOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -69670,11 +74615,6 @@ export namespace Prisma {
     in?: $Enums.MembershipStatus[]
     notIn?: $Enums.MembershipStatus[]
     not?: NestedEnumMembershipStatusFilter<$PrismaModel> | $Enums.MembershipStatus
-  }
-
-  export type OrganizationScalarRelationFilter = {
-    is?: OrganizationWhereInput
-    isNot?: OrganizationWhereInput
   }
 
   export type MembershipOrganizationIdUserIdCompoundUniqueInput = {
@@ -69823,6 +74763,140 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type OrganizationCreateNestedOneWithoutMissionsInput = {
+    create?: XOR<OrganizationCreateWithoutMissionsInput, OrganizationUncheckedCreateWithoutMissionsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutMissionsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutMissionsInput = {
+    create?: XOR<UserCreateWithoutMissionsInput, UserUncheckedCreateWithoutMissionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMissionsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type MissionParticipationCreateNestedManyWithoutMissionInput = {
+    create?: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput> | MissionParticipationCreateWithoutMissionInput[] | MissionParticipationUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutMissionInput | MissionParticipationCreateOrConnectWithoutMissionInput[]
+    createMany?: MissionParticipationCreateManyMissionInputEnvelope
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+  }
+
+  export type MissionParticipationUncheckedCreateNestedManyWithoutMissionInput = {
+    create?: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput> | MissionParticipationCreateWithoutMissionInput[] | MissionParticipationUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutMissionInput | MissionParticipationCreateOrConnectWithoutMissionInput[]
+    createMany?: MissionParticipationCreateManyMissionInputEnvelope
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+  }
+
+  export type EnumMissionStatusFieldUpdateOperationsInput = {
+    set?: $Enums.MissionStatus
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutMissionsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutMissionsInput, OrganizationUncheckedCreateWithoutMissionsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutMissionsInput
+    upsert?: OrganizationUpsertWithoutMissionsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutMissionsInput, OrganizationUpdateWithoutMissionsInput>, OrganizationUncheckedUpdateWithoutMissionsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutMissionsNestedInput = {
+    create?: XOR<UserCreateWithoutMissionsInput, UserUncheckedCreateWithoutMissionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMissionsInput
+    upsert?: UserUpsertWithoutMissionsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMissionsInput, UserUpdateWithoutMissionsInput>, UserUncheckedUpdateWithoutMissionsInput>
+  }
+
+  export type MissionParticipationUpdateManyWithoutMissionNestedInput = {
+    create?: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput> | MissionParticipationCreateWithoutMissionInput[] | MissionParticipationUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutMissionInput | MissionParticipationCreateOrConnectWithoutMissionInput[]
+    upsert?: MissionParticipationUpsertWithWhereUniqueWithoutMissionInput | MissionParticipationUpsertWithWhereUniqueWithoutMissionInput[]
+    createMany?: MissionParticipationCreateManyMissionInputEnvelope
+    set?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    disconnect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    delete?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    update?: MissionParticipationUpdateWithWhereUniqueWithoutMissionInput | MissionParticipationUpdateWithWhereUniqueWithoutMissionInput[]
+    updateMany?: MissionParticipationUpdateManyWithWhereWithoutMissionInput | MissionParticipationUpdateManyWithWhereWithoutMissionInput[]
+    deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+  }
+
+  export type MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput = {
+    create?: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput> | MissionParticipationCreateWithoutMissionInput[] | MissionParticipationUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutMissionInput | MissionParticipationCreateOrConnectWithoutMissionInput[]
+    upsert?: MissionParticipationUpsertWithWhereUniqueWithoutMissionInput | MissionParticipationUpsertWithWhereUniqueWithoutMissionInput[]
+    createMany?: MissionParticipationCreateManyMissionInputEnvelope
+    set?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    disconnect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    delete?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    update?: MissionParticipationUpdateWithWhereUniqueWithoutMissionInput | MissionParticipationUpdateWithWhereUniqueWithoutMissionInput[]
+    updateMany?: MissionParticipationUpdateManyWithWhereWithoutMissionInput | MissionParticipationUpdateManyWithWhereWithoutMissionInput[]
+    deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+  }
+
+  export type OrganizationCreateNestedOneWithoutMissionParticipationsInput = {
+    create?: XOR<OrganizationCreateWithoutMissionParticipationsInput, OrganizationUncheckedCreateWithoutMissionParticipationsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutMissionParticipationsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type MissionCreateNestedOneWithoutParticipationsInput = {
+    create?: XOR<MissionCreateWithoutParticipationsInput, MissionUncheckedCreateWithoutParticipationsInput>
+    connectOrCreate?: MissionCreateOrConnectWithoutParticipationsInput
+    connect?: MissionWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutMissionParticipationsInput = {
+    create?: XOR<UserCreateWithoutMissionParticipationsInput, UserUncheckedCreateWithoutMissionParticipationsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMissionParticipationsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type EnumMissionParticipationStatusFieldUpdateOperationsInput = {
+    set?: $Enums.MissionParticipationStatus
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutMissionParticipationsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutMissionParticipationsInput, OrganizationUncheckedCreateWithoutMissionParticipationsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutMissionParticipationsInput
+    upsert?: OrganizationUpsertWithoutMissionParticipationsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutMissionParticipationsInput, OrganizationUpdateWithoutMissionParticipationsInput>, OrganizationUncheckedUpdateWithoutMissionParticipationsInput>
+  }
+
+  export type MissionUpdateOneRequiredWithoutParticipationsNestedInput = {
+    create?: XOR<MissionCreateWithoutParticipationsInput, MissionUncheckedCreateWithoutParticipationsInput>
+    connectOrCreate?: MissionCreateOrConnectWithoutParticipationsInput
+    upsert?: MissionUpsertWithoutParticipationsInput
+    connect?: MissionWhereUniqueInput
+    update?: XOR<XOR<MissionUpdateToOneWithWhereWithoutParticipationsInput, MissionUpdateWithoutParticipationsInput>, MissionUncheckedUpdateWithoutParticipationsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutMissionParticipationsNestedInput = {
+    create?: XOR<UserCreateWithoutMissionParticipationsInput, UserUncheckedCreateWithoutMissionParticipationsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMissionParticipationsInput
+    upsert?: UserUpsertWithoutMissionParticipationsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMissionParticipationsInput, UserUpdateWithoutMissionParticipationsInput>, UserUncheckedUpdateWithoutMissionParticipationsInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutIdempotencyRecordsInput = {
+    create?: XOR<OrganizationCreateWithoutIdempotencyRecordsInput, OrganizationUncheckedCreateWithoutIdempotencyRecordsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutIdempotencyRecordsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutIdempotencyRecordsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutIdempotencyRecordsInput, OrganizationUncheckedCreateWithoutIdempotencyRecordsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutIdempotencyRecordsInput
+    upsert?: OrganizationUpsertWithoutIdempotencyRecordsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutIdempotencyRecordsInput, OrganizationUpdateWithoutIdempotencyRecordsInput>, OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput>
   }
 
   export type AccountCreateNestedManyWithoutUserInput = {
@@ -70002,6 +75076,20 @@ export namespace Prisma {
     connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
     createMany?: MembershipCreateManyUserInputEnvelope
     connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
+  export type MissionCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<MissionCreateWithoutOwnerInput, MissionUncheckedCreateWithoutOwnerInput> | MissionCreateWithoutOwnerInput[] | MissionUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: MissionCreateOrConnectWithoutOwnerInput | MissionCreateOrConnectWithoutOwnerInput[]
+    createMany?: MissionCreateManyOwnerInputEnvelope
+    connect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+  }
+
+  export type MissionParticipationCreateNestedManyWithoutUserInput = {
+    create?: XOR<MissionParticipationCreateWithoutUserInput, MissionParticipationUncheckedCreateWithoutUserInput> | MissionParticipationCreateWithoutUserInput[] | MissionParticipationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutUserInput | MissionParticipationCreateOrConnectWithoutUserInput[]
+    createMany?: MissionParticipationCreateManyUserInputEnvelope
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
   }
 
   export type AnalyticsEventCreateNestedManyWithoutUserInput = {
@@ -70222,6 +75310,20 @@ export namespace Prisma {
     connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
     createMany?: MembershipCreateManyUserInputEnvelope
     connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
+  export type MissionUncheckedCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<MissionCreateWithoutOwnerInput, MissionUncheckedCreateWithoutOwnerInput> | MissionCreateWithoutOwnerInput[] | MissionUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: MissionCreateOrConnectWithoutOwnerInput | MissionCreateOrConnectWithoutOwnerInput[]
+    createMany?: MissionCreateManyOwnerInputEnvelope
+    connect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+  }
+
+  export type MissionParticipationUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<MissionParticipationCreateWithoutUserInput, MissionParticipationUncheckedCreateWithoutUserInput> | MissionParticipationCreateWithoutUserInput[] | MissionParticipationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutUserInput | MissionParticipationCreateOrConnectWithoutUserInput[]
+    createMany?: MissionParticipationCreateManyUserInputEnvelope
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
   }
 
   export type AnalyticsEventUncheckedCreateNestedManyWithoutUserInput = {
@@ -70619,6 +75721,34 @@ export namespace Prisma {
     update?: MembershipUpdateWithWhereUniqueWithoutUserInput | MembershipUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: MembershipUpdateManyWithWhereWithoutUserInput | MembershipUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+  }
+
+  export type MissionUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<MissionCreateWithoutOwnerInput, MissionUncheckedCreateWithoutOwnerInput> | MissionCreateWithoutOwnerInput[] | MissionUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: MissionCreateOrConnectWithoutOwnerInput | MissionCreateOrConnectWithoutOwnerInput[]
+    upsert?: MissionUpsertWithWhereUniqueWithoutOwnerInput | MissionUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: MissionCreateManyOwnerInputEnvelope
+    set?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    disconnect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    delete?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    connect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    update?: MissionUpdateWithWhereUniqueWithoutOwnerInput | MissionUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: MissionUpdateManyWithWhereWithoutOwnerInput | MissionUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: MissionScalarWhereInput | MissionScalarWhereInput[]
+  }
+
+  export type MissionParticipationUpdateManyWithoutUserNestedInput = {
+    create?: XOR<MissionParticipationCreateWithoutUserInput, MissionParticipationUncheckedCreateWithoutUserInput> | MissionParticipationCreateWithoutUserInput[] | MissionParticipationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutUserInput | MissionParticipationCreateOrConnectWithoutUserInput[]
+    upsert?: MissionParticipationUpsertWithWhereUniqueWithoutUserInput | MissionParticipationUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: MissionParticipationCreateManyUserInputEnvelope
+    set?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    disconnect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    delete?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    update?: MissionParticipationUpdateWithWhereUniqueWithoutUserInput | MissionParticipationUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: MissionParticipationUpdateManyWithWhereWithoutUserInput | MissionParticipationUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
   }
 
   export type AnalyticsEventUpdateManyWithoutUserNestedInput = {
@@ -71051,6 +76181,34 @@ export namespace Prisma {
     update?: MembershipUpdateWithWhereUniqueWithoutUserInput | MembershipUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: MembershipUpdateManyWithWhereWithoutUserInput | MembershipUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+  }
+
+  export type MissionUncheckedUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<MissionCreateWithoutOwnerInput, MissionUncheckedCreateWithoutOwnerInput> | MissionCreateWithoutOwnerInput[] | MissionUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: MissionCreateOrConnectWithoutOwnerInput | MissionCreateOrConnectWithoutOwnerInput[]
+    upsert?: MissionUpsertWithWhereUniqueWithoutOwnerInput | MissionUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: MissionCreateManyOwnerInputEnvelope
+    set?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    disconnect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    delete?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    connect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    update?: MissionUpdateWithWhereUniqueWithoutOwnerInput | MissionUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: MissionUpdateManyWithWhereWithoutOwnerInput | MissionUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: MissionScalarWhereInput | MissionScalarWhereInput[]
+  }
+
+  export type MissionParticipationUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<MissionParticipationCreateWithoutUserInput, MissionParticipationUncheckedCreateWithoutUserInput> | MissionParticipationCreateWithoutUserInput[] | MissionParticipationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutUserInput | MissionParticipationCreateOrConnectWithoutUserInput[]
+    upsert?: MissionParticipationUpsertWithWhereUniqueWithoutUserInput | MissionParticipationUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: MissionParticipationCreateManyUserInputEnvelope
+    set?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    disconnect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    delete?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    update?: MissionParticipationUpdateWithWhereUniqueWithoutUserInput | MissionParticipationUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: MissionParticipationUpdateManyWithWhereWithoutUserInput | MissionParticipationUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
   }
 
   export type AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput = {
@@ -72331,6 +77489,27 @@ export namespace Prisma {
     connect?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
   }
 
+  export type MissionCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<MissionCreateWithoutOrganizationInput, MissionUncheckedCreateWithoutOrganizationInput> | MissionCreateWithoutOrganizationInput[] | MissionUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MissionCreateOrConnectWithoutOrganizationInput | MissionCreateOrConnectWithoutOrganizationInput[]
+    createMany?: MissionCreateManyOrganizationInputEnvelope
+    connect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+  }
+
+  export type MissionParticipationCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<MissionParticipationCreateWithoutOrganizationInput, MissionParticipationUncheckedCreateWithoutOrganizationInput> | MissionParticipationCreateWithoutOrganizationInput[] | MissionParticipationUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutOrganizationInput | MissionParticipationCreateOrConnectWithoutOrganizationInput[]
+    createMany?: MissionParticipationCreateManyOrganizationInputEnvelope
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+  }
+
+  export type IdempotencyRecordCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<IdempotencyRecordCreateWithoutOrganizationInput, IdempotencyRecordUncheckedCreateWithoutOrganizationInput> | IdempotencyRecordCreateWithoutOrganizationInput[] | IdempotencyRecordUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: IdempotencyRecordCreateOrConnectWithoutOrganizationInput | IdempotencyRecordCreateOrConnectWithoutOrganizationInput[]
+    createMany?: IdempotencyRecordCreateManyOrganizationInputEnvelope
+    connect?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+  }
+
   export type MembershipUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -72343,6 +77522,27 @@ export namespace Prisma {
     connectOrCreate?: TenantAuditEventCreateOrConnectWithoutOrganizationInput | TenantAuditEventCreateOrConnectWithoutOrganizationInput[]
     createMany?: TenantAuditEventCreateManyOrganizationInputEnvelope
     connect?: TenantAuditEventWhereUniqueInput | TenantAuditEventWhereUniqueInput[]
+  }
+
+  export type MissionUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<MissionCreateWithoutOrganizationInput, MissionUncheckedCreateWithoutOrganizationInput> | MissionCreateWithoutOrganizationInput[] | MissionUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MissionCreateOrConnectWithoutOrganizationInput | MissionCreateOrConnectWithoutOrganizationInput[]
+    createMany?: MissionCreateManyOrganizationInputEnvelope
+    connect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+  }
+
+  export type MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<MissionParticipationCreateWithoutOrganizationInput, MissionParticipationUncheckedCreateWithoutOrganizationInput> | MissionParticipationCreateWithoutOrganizationInput[] | MissionParticipationUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutOrganizationInput | MissionParticipationCreateOrConnectWithoutOrganizationInput[]
+    createMany?: MissionParticipationCreateManyOrganizationInputEnvelope
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+  }
+
+  export type IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<IdempotencyRecordCreateWithoutOrganizationInput, IdempotencyRecordUncheckedCreateWithoutOrganizationInput> | IdempotencyRecordCreateWithoutOrganizationInput[] | IdempotencyRecordUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: IdempotencyRecordCreateOrConnectWithoutOrganizationInput | IdempotencyRecordCreateOrConnectWithoutOrganizationInput[]
+    createMany?: IdempotencyRecordCreateManyOrganizationInputEnvelope
+    connect?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
   }
 
   export type EnumOrganizationStatusFieldUpdateOperationsInput = {
@@ -72377,6 +77577,48 @@ export namespace Prisma {
     deleteMany?: TenantAuditEventScalarWhereInput | TenantAuditEventScalarWhereInput[]
   }
 
+  export type MissionUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<MissionCreateWithoutOrganizationInput, MissionUncheckedCreateWithoutOrganizationInput> | MissionCreateWithoutOrganizationInput[] | MissionUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MissionCreateOrConnectWithoutOrganizationInput | MissionCreateOrConnectWithoutOrganizationInput[]
+    upsert?: MissionUpsertWithWhereUniqueWithoutOrganizationInput | MissionUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: MissionCreateManyOrganizationInputEnvelope
+    set?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    disconnect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    delete?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    connect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    update?: MissionUpdateWithWhereUniqueWithoutOrganizationInput | MissionUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: MissionUpdateManyWithWhereWithoutOrganizationInput | MissionUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: MissionScalarWhereInput | MissionScalarWhereInput[]
+  }
+
+  export type MissionParticipationUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<MissionParticipationCreateWithoutOrganizationInput, MissionParticipationUncheckedCreateWithoutOrganizationInput> | MissionParticipationCreateWithoutOrganizationInput[] | MissionParticipationUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutOrganizationInput | MissionParticipationCreateOrConnectWithoutOrganizationInput[]
+    upsert?: MissionParticipationUpsertWithWhereUniqueWithoutOrganizationInput | MissionParticipationUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: MissionParticipationCreateManyOrganizationInputEnvelope
+    set?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    disconnect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    delete?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    update?: MissionParticipationUpdateWithWhereUniqueWithoutOrganizationInput | MissionParticipationUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: MissionParticipationUpdateManyWithWhereWithoutOrganizationInput | MissionParticipationUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+  }
+
+  export type IdempotencyRecordUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<IdempotencyRecordCreateWithoutOrganizationInput, IdempotencyRecordUncheckedCreateWithoutOrganizationInput> | IdempotencyRecordCreateWithoutOrganizationInput[] | IdempotencyRecordUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: IdempotencyRecordCreateOrConnectWithoutOrganizationInput | IdempotencyRecordCreateOrConnectWithoutOrganizationInput[]
+    upsert?: IdempotencyRecordUpsertWithWhereUniqueWithoutOrganizationInput | IdempotencyRecordUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: IdempotencyRecordCreateManyOrganizationInputEnvelope
+    set?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+    disconnect?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+    delete?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+    connect?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+    update?: IdempotencyRecordUpdateWithWhereUniqueWithoutOrganizationInput | IdempotencyRecordUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: IdempotencyRecordUpdateManyWithWhereWithoutOrganizationInput | IdempotencyRecordUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: IdempotencyRecordScalarWhereInput | IdempotencyRecordScalarWhereInput[]
+  }
+
   export type MembershipUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -72403,6 +77645,48 @@ export namespace Prisma {
     update?: TenantAuditEventUpdateWithWhereUniqueWithoutOrganizationInput | TenantAuditEventUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: TenantAuditEventUpdateManyWithWhereWithoutOrganizationInput | TenantAuditEventUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: TenantAuditEventScalarWhereInput | TenantAuditEventScalarWhereInput[]
+  }
+
+  export type MissionUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<MissionCreateWithoutOrganizationInput, MissionUncheckedCreateWithoutOrganizationInput> | MissionCreateWithoutOrganizationInput[] | MissionUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MissionCreateOrConnectWithoutOrganizationInput | MissionCreateOrConnectWithoutOrganizationInput[]
+    upsert?: MissionUpsertWithWhereUniqueWithoutOrganizationInput | MissionUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: MissionCreateManyOrganizationInputEnvelope
+    set?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    disconnect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    delete?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    connect?: MissionWhereUniqueInput | MissionWhereUniqueInput[]
+    update?: MissionUpdateWithWhereUniqueWithoutOrganizationInput | MissionUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: MissionUpdateManyWithWhereWithoutOrganizationInput | MissionUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: MissionScalarWhereInput | MissionScalarWhereInput[]
+  }
+
+  export type MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<MissionParticipationCreateWithoutOrganizationInput, MissionParticipationUncheckedCreateWithoutOrganizationInput> | MissionParticipationCreateWithoutOrganizationInput[] | MissionParticipationUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MissionParticipationCreateOrConnectWithoutOrganizationInput | MissionParticipationCreateOrConnectWithoutOrganizationInput[]
+    upsert?: MissionParticipationUpsertWithWhereUniqueWithoutOrganizationInput | MissionParticipationUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: MissionParticipationCreateManyOrganizationInputEnvelope
+    set?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    disconnect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    delete?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    connect?: MissionParticipationWhereUniqueInput | MissionParticipationWhereUniqueInput[]
+    update?: MissionParticipationUpdateWithWhereUniqueWithoutOrganizationInput | MissionParticipationUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: MissionParticipationUpdateManyWithWhereWithoutOrganizationInput | MissionParticipationUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+  }
+
+  export type IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<IdempotencyRecordCreateWithoutOrganizationInput, IdempotencyRecordUncheckedCreateWithoutOrganizationInput> | IdempotencyRecordCreateWithoutOrganizationInput[] | IdempotencyRecordUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: IdempotencyRecordCreateOrConnectWithoutOrganizationInput | IdempotencyRecordCreateOrConnectWithoutOrganizationInput[]
+    upsert?: IdempotencyRecordUpsertWithWhereUniqueWithoutOrganizationInput | IdempotencyRecordUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: IdempotencyRecordCreateManyOrganizationInputEnvelope
+    set?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+    disconnect?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+    delete?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+    connect?: IdempotencyRecordWhereUniqueInput | IdempotencyRecordWhereUniqueInput[]
+    update?: IdempotencyRecordUpdateWithWhereUniqueWithoutOrganizationInput | IdempotencyRecordUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: IdempotencyRecordUpdateManyWithWhereWithoutOrganizationInput | IdempotencyRecordUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: IdempotencyRecordScalarWhereInput | IdempotencyRecordScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutMembershipsInput = {
@@ -72738,6 +78022,40 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedEnumMissionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionStatus | EnumMissionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionStatus[]
+    notIn?: $Enums.MissionStatus[]
+    not?: NestedEnumMissionStatusFilter<$PrismaModel> | $Enums.MissionStatus
+  }
+
+  export type NestedEnumMissionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionStatus | EnumMissionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionStatus[]
+    notIn?: $Enums.MissionStatus[]
+    not?: NestedEnumMissionStatusWithAggregatesFilter<$PrismaModel> | $Enums.MissionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMissionStatusFilter<$PrismaModel>
+    _max?: NestedEnumMissionStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMissionParticipationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionParticipationStatus | EnumMissionParticipationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionParticipationStatus[]
+    notIn?: $Enums.MissionParticipationStatus[]
+    not?: NestedEnumMissionParticipationStatusFilter<$PrismaModel> | $Enums.MissionParticipationStatus
+  }
+
+  export type NestedEnumMissionParticipationStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MissionParticipationStatus | EnumMissionParticipationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MissionParticipationStatus[]
+    notIn?: $Enums.MissionParticipationStatus[]
+    not?: NestedEnumMissionParticipationStatusWithAggregatesFilter<$PrismaModel> | $Enums.MissionParticipationStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMissionParticipationStatusFilter<$PrismaModel>
+    _max?: NestedEnumMissionParticipationStatusFilter<$PrismaModel>
   }
 
   export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
@@ -73332,6 +78650,813 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMembershipStatusFilter<$PrismaModel>
     _max?: NestedEnumMembershipStatusFilter<$PrismaModel>
+  }
+
+  export type OrganizationCreateWithoutMissionsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutMissionsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutMissionsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutMissionsInput, OrganizationUncheckedCreateWithoutMissionsInput>
+  }
+
+  export type UserCreateWithoutMissionsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutMissionsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationUncheckedCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationUncheckedCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageUncheckedCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptUncheckedCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionUncheckedCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleUncheckedCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestUncheckedCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestUncheckedCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantUncheckedCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantUncheckedCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutMissionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutMissionsInput, UserUncheckedCreateWithoutMissionsInput>
+  }
+
+  export type MissionParticipationCreateWithoutMissionInput = {
+    id?: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMissionParticipationsInput
+    user: UserCreateNestedOneWithoutMissionParticipationsInput
+  }
+
+  export type MissionParticipationUncheckedCreateWithoutMissionInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionParticipationCreateOrConnectWithoutMissionInput = {
+    where: MissionParticipationWhereUniqueInput
+    create: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput>
+  }
+
+  export type MissionParticipationCreateManyMissionInputEnvelope = {
+    data: MissionParticipationCreateManyMissionInput | MissionParticipationCreateManyMissionInput[]
+  }
+
+  export type OrganizationUpsertWithoutMissionsInput = {
+    update: XOR<OrganizationUpdateWithoutMissionsInput, OrganizationUncheckedUpdateWithoutMissionsInput>
+    create: XOR<OrganizationCreateWithoutMissionsInput, OrganizationUncheckedCreateWithoutMissionsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutMissionsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutMissionsInput, OrganizationUncheckedUpdateWithoutMissionsInput>
+  }
+
+  export type OrganizationUpdateWithoutMissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutMissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type UserUpsertWithoutMissionsInput = {
+    update: XOR<UserUpdateWithoutMissionsInput, UserUncheckedUpdateWithoutMissionsInput>
+    create: XOR<UserCreateWithoutMissionsInput, UserUncheckedCreateWithoutMissionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutMissionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutMissionsInput, UserUncheckedUpdateWithoutMissionsInput>
+  }
+
+  export type UserUpdateWithoutMissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutMissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUncheckedUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUncheckedUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUncheckedUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUncheckedUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUncheckedUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUncheckedUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUncheckedUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUncheckedUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUncheckedUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type MissionParticipationUpsertWithWhereUniqueWithoutMissionInput = {
+    where: MissionParticipationWhereUniqueInput
+    update: XOR<MissionParticipationUpdateWithoutMissionInput, MissionParticipationUncheckedUpdateWithoutMissionInput>
+    create: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput>
+  }
+
+  export type MissionParticipationUpdateWithWhereUniqueWithoutMissionInput = {
+    where: MissionParticipationWhereUniqueInput
+    data: XOR<MissionParticipationUpdateWithoutMissionInput, MissionParticipationUncheckedUpdateWithoutMissionInput>
+  }
+
+  export type MissionParticipationUpdateManyWithWhereWithoutMissionInput = {
+    where: MissionParticipationScalarWhereInput
+    data: XOR<MissionParticipationUpdateManyMutationInput, MissionParticipationUncheckedUpdateManyWithoutMissionInput>
+  }
+
+  export type MissionParticipationScalarWhereInput = {
+    AND?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+    OR?: MissionParticipationScalarWhereInput[]
+    NOT?: MissionParticipationScalarWhereInput | MissionParticipationScalarWhereInput[]
+    id?: StringFilter<"MissionParticipation"> | string
+    organizationId?: StringFilter<"MissionParticipation"> | string
+    missionId?: StringFilter<"MissionParticipation"> | string
+    userId?: StringFilter<"MissionParticipation"> | string
+    status?: EnumMissionParticipationStatusFilter<"MissionParticipation"> | $Enums.MissionParticipationStatus
+    note?: StringNullableFilter<"MissionParticipation"> | string | null
+    createdAt?: DateTimeFilter<"MissionParticipation"> | Date | string
+    updatedAt?: DateTimeFilter<"MissionParticipation"> | Date | string
+  }
+
+  export type OrganizationCreateWithoutMissionParticipationsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutMissionParticipationsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutMissionParticipationsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutMissionParticipationsInput, OrganizationUncheckedCreateWithoutMissionParticipationsInput>
+  }
+
+  export type MissionCreateWithoutParticipationsInput = {
+    id?: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMissionsInput
+    owner: UserCreateNestedOneWithoutMissionsInput
+  }
+
+  export type MissionUncheckedCreateWithoutParticipationsInput = {
+    id?: string
+    organizationId: string
+    ownerId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionCreateOrConnectWithoutParticipationsInput = {
+    where: MissionWhereUniqueInput
+    create: XOR<MissionCreateWithoutParticipationsInput, MissionUncheckedCreateWithoutParticipationsInput>
+  }
+
+  export type UserCreateWithoutMissionParticipationsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutMissionParticipationsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationUncheckedCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationUncheckedCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageUncheckedCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptUncheckedCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionUncheckedCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleUncheckedCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestUncheckedCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestUncheckedCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantUncheckedCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantUncheckedCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutMissionParticipationsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutMissionParticipationsInput, UserUncheckedCreateWithoutMissionParticipationsInput>
+  }
+
+  export type OrganizationUpsertWithoutMissionParticipationsInput = {
+    update: XOR<OrganizationUpdateWithoutMissionParticipationsInput, OrganizationUncheckedUpdateWithoutMissionParticipationsInput>
+    create: XOR<OrganizationCreateWithoutMissionParticipationsInput, OrganizationUncheckedCreateWithoutMissionParticipationsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutMissionParticipationsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutMissionParticipationsInput, OrganizationUncheckedUpdateWithoutMissionParticipationsInput>
+  }
+
+  export type OrganizationUpdateWithoutMissionParticipationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutMissionParticipationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type MissionUpsertWithoutParticipationsInput = {
+    update: XOR<MissionUpdateWithoutParticipationsInput, MissionUncheckedUpdateWithoutParticipationsInput>
+    create: XOR<MissionCreateWithoutParticipationsInput, MissionUncheckedCreateWithoutParticipationsInput>
+    where?: MissionWhereInput
+  }
+
+  export type MissionUpdateToOneWithWhereWithoutParticipationsInput = {
+    where?: MissionWhereInput
+    data: XOR<MissionUpdateWithoutParticipationsInput, MissionUncheckedUpdateWithoutParticipationsInput>
+  }
+
+  export type MissionUpdateWithoutParticipationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
+    owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
+  }
+
+  export type MissionUncheckedUpdateWithoutParticipationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserUpsertWithoutMissionParticipationsInput = {
+    update: XOR<UserUpdateWithoutMissionParticipationsInput, UserUncheckedUpdateWithoutMissionParticipationsInput>
+    create: XOR<UserCreateWithoutMissionParticipationsInput, UserUncheckedCreateWithoutMissionParticipationsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutMissionParticipationsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutMissionParticipationsInput, UserUncheckedUpdateWithoutMissionParticipationsInput>
+  }
+
+  export type UserUpdateWithoutMissionParticipationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutMissionParticipationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUncheckedUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUncheckedUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUncheckedUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUncheckedUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUncheckedUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUncheckedUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUncheckedUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUncheckedUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUncheckedUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type OrganizationCreateWithoutIdempotencyRecordsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutIdempotencyRecordsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutIdempotencyRecordsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutIdempotencyRecordsInput, OrganizationUncheckedCreateWithoutIdempotencyRecordsInput>
+  }
+
+  export type OrganizationUpsertWithoutIdempotencyRecordsInput = {
+    update: XOR<OrganizationUpdateWithoutIdempotencyRecordsInput, OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput>
+    create: XOR<OrganizationCreateWithoutIdempotencyRecordsInput, OrganizationUncheckedCreateWithoutIdempotencyRecordsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutIdempotencyRecordsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutIdempotencyRecordsInput, OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput>
+  }
+
+  export type OrganizationUpdateWithoutIdempotencyRecordsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -74488,6 +80613,84 @@ export namespace Prisma {
     data: MembershipCreateManyUserInput | MembershipCreateManyUserInput[]
   }
 
+  export type MissionCreateWithoutOwnerInput = {
+    id?: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMissionsInput
+    participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionUncheckedCreateWithoutOwnerInput = {
+    id?: string
+    organizationId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionCreateOrConnectWithoutOwnerInput = {
+    where: MissionWhereUniqueInput
+    create: XOR<MissionCreateWithoutOwnerInput, MissionUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type MissionCreateManyOwnerInputEnvelope = {
+    data: MissionCreateManyOwnerInput | MissionCreateManyOwnerInput[]
+  }
+
+  export type MissionParticipationCreateWithoutUserInput = {
+    id?: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMissionParticipationsInput
+    mission: MissionCreateNestedOneWithoutParticipationsInput
+  }
+
+  export type MissionParticipationUncheckedCreateWithoutUserInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionParticipationCreateOrConnectWithoutUserInput = {
+    where: MissionParticipationWhereUniqueInput
+    create: XOR<MissionParticipationCreateWithoutUserInput, MissionParticipationUncheckedCreateWithoutUserInput>
+  }
+
+  export type MissionParticipationCreateManyUserInputEnvelope = {
+    data: MissionParticipationCreateManyUserInput | MissionParticipationCreateManyUserInput[]
+  }
+
   export type AnalyticsEventCreateWithoutUserInput = {
     id?: string
     event: string
@@ -75619,6 +81822,61 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Membership"> | Date | string
   }
 
+  export type MissionUpsertWithWhereUniqueWithoutOwnerInput = {
+    where: MissionWhereUniqueInput
+    update: XOR<MissionUpdateWithoutOwnerInput, MissionUncheckedUpdateWithoutOwnerInput>
+    create: XOR<MissionCreateWithoutOwnerInput, MissionUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type MissionUpdateWithWhereUniqueWithoutOwnerInput = {
+    where: MissionWhereUniqueInput
+    data: XOR<MissionUpdateWithoutOwnerInput, MissionUncheckedUpdateWithoutOwnerInput>
+  }
+
+  export type MissionUpdateManyWithWhereWithoutOwnerInput = {
+    where: MissionScalarWhereInput
+    data: XOR<MissionUpdateManyMutationInput, MissionUncheckedUpdateManyWithoutOwnerInput>
+  }
+
+  export type MissionScalarWhereInput = {
+    AND?: MissionScalarWhereInput | MissionScalarWhereInput[]
+    OR?: MissionScalarWhereInput[]
+    NOT?: MissionScalarWhereInput | MissionScalarWhereInput[]
+    id?: StringFilter<"Mission"> | string
+    organizationId?: StringFilter<"Mission"> | string
+    ownerId?: StringFilter<"Mission"> | string
+    title?: StringFilter<"Mission"> | string
+    goal?: StringFilter<"Mission"> | string
+    offer?: StringFilter<"Mission"> | string
+    constraints?: StringNullableFilter<"Mission"> | string | null
+    successCriteria?: StringFilter<"Mission"> | string
+    status?: EnumMissionStatusFilter<"Mission"> | $Enums.MissionStatus
+    shareToken?: StringFilter<"Mission"> | string
+    publicPreview?: BoolFilter<"Mission"> | boolean
+    maxParticipants?: IntNullableFilter<"Mission"> | number | null
+    expiresAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    publishedAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    closedAt?: DateTimeNullableFilter<"Mission"> | Date | string | null
+    createdAt?: DateTimeFilter<"Mission"> | Date | string
+    updatedAt?: DateTimeFilter<"Mission"> | Date | string
+  }
+
+  export type MissionParticipationUpsertWithWhereUniqueWithoutUserInput = {
+    where: MissionParticipationWhereUniqueInput
+    update: XOR<MissionParticipationUpdateWithoutUserInput, MissionParticipationUncheckedUpdateWithoutUserInput>
+    create: XOR<MissionParticipationCreateWithoutUserInput, MissionParticipationUncheckedCreateWithoutUserInput>
+  }
+
+  export type MissionParticipationUpdateWithWhereUniqueWithoutUserInput = {
+    where: MissionParticipationWhereUniqueInput
+    data: XOR<MissionParticipationUpdateWithoutUserInput, MissionParticipationUncheckedUpdateWithoutUserInput>
+  }
+
+  export type MissionParticipationUpdateManyWithWhereWithoutUserInput = {
+    where: MissionParticipationScalarWhereInput
+    data: XOR<MissionParticipationUpdateManyMutationInput, MissionParticipationUncheckedUpdateManyWithoutUserInput>
+  }
+
   export type AnalyticsEventUpsertWithWhereUniqueWithoutUserInput = {
     where: AnalyticsEventWhereUniqueInput
     update: XOR<AnalyticsEventUpdateWithoutUserInput, AnalyticsEventUncheckedUpdateWithoutUserInput>
@@ -75840,6 +82098,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -75890,6 +82150,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -75956,6 +82218,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -76006,6 +82270,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -76056,6 +82322,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76106,6 +82374,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76172,6 +82442,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -76222,6 +82494,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -76272,6 +82546,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76322,6 +82598,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76388,6 +82666,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -76438,6 +82718,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -76488,6 +82770,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76538,6 +82822,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76604,6 +82890,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -76654,6 +82942,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -76704,6 +82994,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76754,6 +83046,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76809,6 +83103,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -76859,6 +83155,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -76950,6 +83248,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -77000,6 +83300,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -77061,6 +83363,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -77111,6 +83415,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -77242,6 +83548,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -77292,6 +83600,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -77429,6 +83739,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -77479,6 +83791,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -77529,6 +83843,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -77579,6 +83895,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -77634,6 +83952,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -77684,6 +84004,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -77961,6 +84283,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -78011,6 +84335,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -78072,6 +84398,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -78122,6 +84450,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -78329,6 +84659,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -78379,6 +84711,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -78528,6 +84862,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -78578,6 +84914,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -78705,6 +85043,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -78755,6 +85095,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -78956,6 +85298,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -79006,6 +85350,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -79232,6 +85578,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -79282,6 +85630,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -79504,6 +85854,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -79554,6 +85906,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -79671,6 +86025,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -79721,6 +86077,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -79860,6 +86218,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -79910,6 +86270,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -79960,6 +86322,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -80010,6 +86374,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -80076,6 +86442,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -80126,6 +86494,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -80176,6 +86546,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -80226,6 +86598,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -80281,6 +86655,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -80331,6 +86707,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -80474,6 +86852,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -80524,6 +86904,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -80585,6 +86967,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -80635,6 +87019,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -80768,6 +87154,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -80818,6 +87206,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -80873,6 +87263,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -80923,6 +87315,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -81066,6 +87460,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -81116,6 +87512,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -81177,6 +87575,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -81227,6 +87627,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -81360,6 +87762,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -81410,6 +87814,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -81476,6 +87882,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -81526,6 +87934,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -81576,6 +87986,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -81626,6 +88038,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -81692,6 +88106,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -81742,6 +88158,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -81792,6 +88210,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -81842,6 +88262,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -81908,6 +88330,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -81958,6 +88382,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -82008,6 +88434,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -82058,6 +88486,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -82124,6 +88554,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -82174,6 +88606,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -82224,6 +88658,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -82274,6 +88710,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -82340,6 +88778,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -82390,6 +88830,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -82440,6 +88882,8 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -82490,6 +88934,8 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -82556,6 +89002,8 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -82606,6 +89054,8 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -82657,6 +89107,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -82707,6 +89159,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -82773,6 +89227,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -82823,6 +89279,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -83039,6 +89497,8 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -83089,6 +89549,8 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -83180,6 +89642,8 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -83230,6 +89694,8 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -83312,6 +89778,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -83362,6 +89830,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -83465,6 +89935,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -83515,6 +89987,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -83679,6 +90153,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -83729,6 +90205,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -83784,6 +90262,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -83834,6 +90314,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -83900,6 +90382,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -83950,6 +90434,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -84011,6 +90497,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -84061,6 +90549,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -84111,6 +90601,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -84161,6 +90653,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -84216,6 +90710,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
     memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -84266,6 +90762,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -84332,6 +90830,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -84382,6 +90882,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -84443,6 +90945,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
     memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -84493,6 +90997,8 @@ export namespace Prisma {
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -84556,6 +91062,113 @@ export namespace Prisma {
     data: TenantAuditEventCreateManyOrganizationInput | TenantAuditEventCreateManyOrganizationInput[]
   }
 
+  export type MissionCreateWithoutOrganizationInput = {
+    id?: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutMissionsInput
+    participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    ownerId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionCreateOrConnectWithoutOrganizationInput = {
+    where: MissionWhereUniqueInput
+    create: XOR<MissionCreateWithoutOrganizationInput, MissionUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type MissionCreateManyOrganizationInputEnvelope = {
+    data: MissionCreateManyOrganizationInput | MissionCreateManyOrganizationInput[]
+  }
+
+  export type MissionParticipationCreateWithoutOrganizationInput = {
+    id?: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    mission: MissionCreateNestedOneWithoutParticipationsInput
+    user: UserCreateNestedOneWithoutMissionParticipationsInput
+  }
+
+  export type MissionParticipationUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    missionId: string
+    userId: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionParticipationCreateOrConnectWithoutOrganizationInput = {
+    where: MissionParticipationWhereUniqueInput
+    create: XOR<MissionParticipationCreateWithoutOrganizationInput, MissionParticipationUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type MissionParticipationCreateManyOrganizationInputEnvelope = {
+    data: MissionParticipationCreateManyOrganizationInput | MissionParticipationCreateManyOrganizationInput[]
+  }
+
+  export type IdempotencyRecordCreateWithoutOrganizationInput = {
+    id?: string
+    scope: string
+    key: string
+    requestHash: string
+    resourceType: string
+    resourceId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type IdempotencyRecordUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    scope: string
+    key: string
+    requestHash: string
+    resourceType: string
+    resourceId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type IdempotencyRecordCreateOrConnectWithoutOrganizationInput = {
+    where: IdempotencyRecordWhereUniqueInput
+    create: XOR<IdempotencyRecordCreateWithoutOrganizationInput, IdempotencyRecordUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type IdempotencyRecordCreateManyOrganizationInputEnvelope = {
+    data: IdempotencyRecordCreateManyOrganizationInput | IdempotencyRecordCreateManyOrganizationInput[]
+  }
+
   export type MembershipUpsertWithWhereUniqueWithoutOrganizationInput = {
     where: MembershipWhereUniqueInput
     update: XOR<MembershipUpdateWithoutOrganizationInput, MembershipUncheckedUpdateWithoutOrganizationInput>
@@ -84602,6 +91215,68 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"TenantAuditEvent"> | Date | string
   }
 
+  export type MissionUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: MissionWhereUniqueInput
+    update: XOR<MissionUpdateWithoutOrganizationInput, MissionUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<MissionCreateWithoutOrganizationInput, MissionUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type MissionUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: MissionWhereUniqueInput
+    data: XOR<MissionUpdateWithoutOrganizationInput, MissionUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type MissionUpdateManyWithWhereWithoutOrganizationInput = {
+    where: MissionScalarWhereInput
+    data: XOR<MissionUpdateManyMutationInput, MissionUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type MissionParticipationUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: MissionParticipationWhereUniqueInput
+    update: XOR<MissionParticipationUpdateWithoutOrganizationInput, MissionParticipationUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<MissionParticipationCreateWithoutOrganizationInput, MissionParticipationUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type MissionParticipationUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: MissionParticipationWhereUniqueInput
+    data: XOR<MissionParticipationUpdateWithoutOrganizationInput, MissionParticipationUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type MissionParticipationUpdateManyWithWhereWithoutOrganizationInput = {
+    where: MissionParticipationScalarWhereInput
+    data: XOR<MissionParticipationUpdateManyMutationInput, MissionParticipationUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type IdempotencyRecordUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: IdempotencyRecordWhereUniqueInput
+    update: XOR<IdempotencyRecordUpdateWithoutOrganizationInput, IdempotencyRecordUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<IdempotencyRecordCreateWithoutOrganizationInput, IdempotencyRecordUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type IdempotencyRecordUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: IdempotencyRecordWhereUniqueInput
+    data: XOR<IdempotencyRecordUpdateWithoutOrganizationInput, IdempotencyRecordUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type IdempotencyRecordUpdateManyWithWhereWithoutOrganizationInput = {
+    where: IdempotencyRecordScalarWhereInput
+    data: XOR<IdempotencyRecordUpdateManyMutationInput, IdempotencyRecordUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type IdempotencyRecordScalarWhereInput = {
+    AND?: IdempotencyRecordScalarWhereInput | IdempotencyRecordScalarWhereInput[]
+    OR?: IdempotencyRecordScalarWhereInput[]
+    NOT?: IdempotencyRecordScalarWhereInput | IdempotencyRecordScalarWhereInput[]
+    id?: StringFilter<"IdempotencyRecord"> | string
+    organizationId?: StringFilter<"IdempotencyRecord"> | string
+    scope?: StringFilter<"IdempotencyRecord"> | string
+    key?: StringFilter<"IdempotencyRecord"> | string
+    requestHash?: StringFilter<"IdempotencyRecord"> | string
+    resourceType?: StringFilter<"IdempotencyRecord"> | string
+    resourceId?: StringNullableFilter<"IdempotencyRecord"> | string | null
+    createdAt?: DateTimeFilter<"IdempotencyRecord"> | Date | string
+  }
+
   export type OrganizationCreateWithoutMembershipsInput = {
     id?: string
     name: string
@@ -84610,6 +91285,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMembershipsInput = {
@@ -84620,6 +91298,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMembershipsInput = {
@@ -84669,6 +91350,8 @@ export namespace Prisma {
     notifications?: NotificationCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -84719,6 +91402,8 @@ export namespace Prisma {
     notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
     adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
     adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -84751,6 +91436,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMembershipsInput = {
@@ -84761,6 +91449,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMembershipsInput = {
@@ -84816,6 +91507,8 @@ export namespace Prisma {
     notifications?: NotificationUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -84866,6 +91559,8 @@ export namespace Prisma {
     notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
     adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -84882,6 +91577,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAuditEventsInput = {
@@ -84892,6 +91590,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAuditEventsInput = {
@@ -84918,6 +91619,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAuditEventsInput = {
@@ -84928,6 +91632,49 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type MissionParticipationCreateManyMissionInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionParticipationUpdateWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMissionParticipationsNestedInput
+    user?: UserUpdateOneRequiredWithoutMissionParticipationsNestedInput
+  }
+
+  export type MissionParticipationUncheckedUpdateWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionParticipationUncheckedUpdateManyWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AccountCreateManyUserInput = {
@@ -85301,6 +92048,35 @@ export namespace Prisma {
     organizationId: string
     role?: $Enums.MembershipRole
     status?: $Enums.MembershipStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionCreateManyOwnerInput = {
+    id?: string
+    organizationId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionParticipationCreateManyUserInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -86525,6 +93301,95 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type MissionUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
+    participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+  }
+
+  export type MissionUncheckedUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+  }
+
+  export type MissionUncheckedUpdateManyWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionParticipationUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMissionParticipationsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutParticipationsNestedInput
+  }
+
+  export type MissionParticipationUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionParticipationUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AnalyticsEventUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     event?: StringFieldUpdateOperationsInput | string
@@ -87313,6 +94178,45 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type MissionCreateManyOrganizationInput = {
+    id?: string
+    ownerId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MissionParticipationCreateManyOrganizationInput = {
+    id?: string
+    missionId: string
+    userId: string
+    status?: $Enums.MissionParticipationStatus
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type IdempotencyRecordCreateManyOrganizationInput = {
+    id?: string
+    scope: string
+    key: string
+    requestHash: string
+    resourceType: string
+    resourceId?: string | null
+    createdAt?: Date | string
+  }
+
   export type MembershipUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
@@ -87367,6 +94271,125 @@ export namespace Prisma {
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
     safeMetadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
+    participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+  }
+
+  export type MissionUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+  }
+
+  export type MissionUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionParticipationUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mission?: MissionUpdateOneRequiredWithoutParticipationsNestedInput
+    user?: UserUpdateOneRequiredWithoutMissionParticipationsNestedInput
+  }
+
+  export type MissionParticipationUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionParticipationUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionParticipationStatusFieldUpdateOperationsInput | $Enums.MissionParticipationStatus
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IdempotencyRecordUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    requestHash?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IdempotencyRecordUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    requestHash?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IdempotencyRecordUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    requestHash?: StringFieldUpdateOperationsInput | string
+    resourceType?: StringFieldUpdateOperationsInput | string
+    resourceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

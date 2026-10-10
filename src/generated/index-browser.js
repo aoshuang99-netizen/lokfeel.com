@@ -221,6 +221,48 @@ exports.Prisma.BotAvatarScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.MissionScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  ownerId: 'ownerId',
+  title: 'title',
+  goal: 'goal',
+  offer: 'offer',
+  constraints: 'constraints',
+  successCriteria: 'successCriteria',
+  status: 'status',
+  shareToken: 'shareToken',
+  publicPreview: 'publicPreview',
+  maxParticipants: 'maxParticipants',
+  expiresAt: 'expiresAt',
+  publishedAt: 'publishedAt',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MissionParticipationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  missionId: 'missionId',
+  userId: 'userId',
+  status: 'status',
+  note: 'note',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.IdempotencyRecordScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  scope: 'scope',
+  key: 'key',
+  requestHash: 'requestHash',
+  resourceType: 'resourceType',
+  resourceId: 'resourceId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -826,6 +868,19 @@ exports.OnlinePattern = exports.$Enums.OnlinePattern = {
   AFTER_WORK: 'AFTER_WORK'
 };
 
+exports.MissionStatus = exports.$Enums.MissionStatus = {
+  DRAFT: 'DRAFT',
+  ACTIVE: 'ACTIVE',
+  PAUSED: 'PAUSED',
+  CLOSED: 'CLOSED'
+};
+
+exports.MissionParticipationStatus = exports.$Enums.MissionParticipationStatus = {
+  INTERESTED: 'INTERESTED',
+  WITHDRAWN: 'WITHDRAWN',
+  REMOVED: 'REMOVED'
+};
+
 exports.UserRole = exports.$Enums.UserRole = {
   USER: 'USER',
   ADMIN: 'ADMIN',
@@ -1144,6 +1199,9 @@ exports.Prisma.ModelName = {
   BotLearningRecord: 'BotLearningRecord',
   BotPreference: 'BotPreference',
   BotAvatar: 'BotAvatar',
+  Mission: 'Mission',
+  MissionParticipation: 'MissionParticipation',
+  IdempotencyRecord: 'IdempotencyRecord',
   User: 'User',
   Account: 'Account',
   Session: 'Session',

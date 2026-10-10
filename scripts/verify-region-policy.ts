@@ -178,6 +178,9 @@ ok('sitemap 1 小时缓存', (getCacheControl('/sitemap.xml') || '').includes('s
 ok('robots 1 小时缓存', (getCacheControl('/robots.txt') || '').includes('s-maxage=3600'))
 ok('控制台页面不设公开缓存', getCacheControl('/dashboard') === null)
 ok('私有 API 不设公开缓存', getCacheControl('/api/im/send') === null)
+// T02：分享页带能力令牌 → 必须 no-store（不得进入任何共享缓存）
+ok('Mission 分享页 no-store', (getCacheControl('/m/abcDEF123_-') || '').includes('no-store'))
+ok('Mission 分享页不得被 public 缓存', !(getCacheControl('/m/abcDEF123_-') || '').includes('public'))
 
 const h = (map: Record<string, string>) => ({ get: (k: string) => map[k] ?? null })
 ok('优先用 Vercel 国家头', getCountryFromHeaders(h({ 'x-vercel-ip-country': 'JP', 'cf-ipcountry': 'US' })) === 'JP')

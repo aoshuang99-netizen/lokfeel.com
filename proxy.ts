@@ -155,6 +155,9 @@ export const config = {
     '/dashboard/:path*',
     '/api/:path*',
     '/admin/:path*',
+    // T02：Mission Link 分享页。匿名可达，因此**必须**经过本中间件，
+    // 才能拿到安全响应头（X-Frame-Options 等）与 no-store 缓存策略。
+    '/m/:path*',
     '/sitemap.xml',
     '/robots.txt',
     '/blocked',

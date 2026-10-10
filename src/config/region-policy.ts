@@ -327,11 +327,19 @@ export function isCorsAllowed(
 const CACHE_LONG = 'public, s-maxage=7200, stale-while-revalidate=86400'
 const CACHE_SHORT = 'public, s-maxage=300, stale-while-revalidate=86400'
 const CACHE_HOURLY = 'public, s-maxage=3600, stale-while-revalidate=86400'
+/**
+ * 分享页（`/m/<shareToken>`）——URL 里的令牌**即能力凭证**。
+ * 因此它必须走 `private, no-store`：任何共享缓存（CDN、代理）留存该响应，
+ * 都等于把"持有链接即可查看"扩权成"缓存可见即可查看"。
+ */
+const CACHE_NO_STORE = 'private, no-store, max-age=0, must-revalidate'
 
 /** 公开页面的 CDN 缓存头（旧实现里逐条写死在 proxy.ts 中） */
 export function getCacheControl(pathname: string): string | null {
   if (pathname === '/' || pathname === '/login' || pathname === '/register') return CACHE_SHORT
   if (pathname === '/sitemap.xml' || pathname === '/robots.txt') return CACHE_HOURLY
+  // T02：Mission Link 分享页带令牌 → 绝不进入任何共享缓存。
+  if (pathname === '/m' || pathname.startsWith('/m/')) return CACHE_NO_STORE
   const staticLegal = [
     '/terms',
     '/privacy',
