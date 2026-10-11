@@ -108,10 +108,13 @@ export {
 
 // ── T03 · 披露字段目录（单一事实来源）──
 export {
-  DISCLOSURE_AUDIENCES,
+  AUDIENCE_OPTIONS,
   AUDIENCE_ORDER,
+  CANDIDATE_PROFILE_AUDIENCE,
+  DISCLOSURE_AUDIENCES,
   DISCLOSURE_FIELDS,
   DISCLOSURE_FIELD_KEYS,
+  EXTERNAL_AUDIENCES,
   IMPORTABLE_FIELD_KEYS,
   PROTECTED_FIELD_KEYS,
   SENSITIVE_FIELD_KEYS,
@@ -125,6 +128,7 @@ export {
   suggestedDisclosure,
   type DisclosureAudience,
   type DisclosureFieldKey,
+  type ExternalAudience,
   type FieldGroup,
   type FieldSpec,
 } from './field-catalog'
@@ -199,3 +203,37 @@ export {
   type ListIntentsOptions,
   type OrganizerIntentView,
 } from './intents'
+
+// ── T04 · 双向互补召回（纯内核）──
+export {
+  PIPELINE_REASONS,
+  RECALL_GATES,
+  applyGates,
+  buildCandidates,
+  explainCandidate,
+  markGated,
+  overlapTokens,
+  recall,
+  tokenize,
+  type CandidateMatch,
+  type CandidateResult,
+  type CandidateRow,
+  type Gate,
+  type GateCode,
+  type GateContext,
+  type GateOutcome,
+  type GatedRow,
+  type IntentSide,
+  type NoCandidateReason,
+  type RecallRow,
+  type RecalledCandidate,
+  type ReciprocalEvidence,
+} from './recall'
+
+// ── T04 · 候选装配（服务层；披露投影的装配点）──
+export {
+  listCandidates,
+  listCandidatesByShareToken,
+  type CandidateList,
+  type CandidateView,
+} from './candidates'

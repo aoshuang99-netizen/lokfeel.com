@@ -12,8 +12,8 @@
  *
  * 不 import barrel（`@/lib/connection`），避免 ESM 传递依赖（T03 踩过的坑）。
  */
+import { CANDIDATE_PROFILE_AUDIENCE } from '@/lib/connection/field-catalog'
 import {
-  CANDIDATE_PROFILE_AUDIENCE,
   RECALL_GATES,
   applyGates,
   buildCandidates,
@@ -285,16 +285,21 @@ describe('T04 · 管线（AC-13）', () => {
     expect(res.candidates.map((c) => c.userId)).toEqual(['user-b'])
   })
 
-  test('🔴 fail-closed：候选阶段不披露对方任何档案字段', () => {
-    // T03 向用户声明过 COUNTERPARTY = 双向同意后可见；候选是**同意前**，
-    // 因此这里必须一个字段都不给。放开它需要先引入更窄的新档位（产品决策）。
-    expect(CANDIDATE_PROFILE_AUDIENCE).toBeNull()
+  test('🔴 内核不持有档案：返回形状里没有 subject，投影只发生在服务层', () => {
+    // 决策 A：披露档位定为 `CANDIDATE`（见 field-catalog.ts）——
+    // 候选**能看到档案**，但只限对方显式授权给「同任务的伙伴」那一档的字段。
+    // 投影由服务层 `candidates.ts` 经 `discloseSubject()` 完成，**内核不参与**。
+    // 所以内核的返回里不该出现任何档案字段：一旦出现，就说明投影被"顺手"
+    // 塞进了排序层，AC-03 的"单一出口"就失效了。
+    expect(CANDIDATE_PROFILE_AUDIENCE).toBe('CANDIDATE')
 
     const res = buildCandidates(ME_SIDE, FIXTURE_RAW, CTX)
+    expect(res.candidates.length).toBeGreaterThan(0)
     for (const c of res.candidates) {
-      expect(c.subject).toEqual({})
+      // 连 `subject` 这个键都不该存在（类型与运行期双重确认）
+      expect(Object.keys(c).sort()).toEqual(['evidence', 'intentId', 'matchedTokens', 'userId'])
     }
-    // 整个响应里不得出现邮箱形态的字符串（防"顺手把 profile 带出来"）
+    // 整个内核响应里不得出现邮箱形态的字符串（防"顺手把 profile 带出来"）
     expect(JSON.stringify(res)).not.toMatch(/@[a-z0-9.-]+\.[a-z]{2,}/i)
   })
 })

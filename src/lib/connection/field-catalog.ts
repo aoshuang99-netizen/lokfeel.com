@@ -9,7 +9,8 @@
  *
  * 两条取值取向（都刻意的）：
  *   1. **受众档位是包含式的**：`ORGANIZER` 档 = 自己 + 组织者；`COUNTERPARTY` 档 =
- *      自己 + 组织者 + 对手方。所以档位越高，能看到的人越多（`audienceRank` 单调）。
+ *      自己 + 组织者 + 已同意的对手方；`CANDIDATE` 档 = 自己 + 组织者 +
+ *      同任务的互补伙伴（最宽）。所以档位越高，能看到的人越多（`audienceRank` 单调）。
  *      ⚠️ 不要把它理解成"平行受众"——那是另一种语义，会让"组织者看不到自己人的资料"
  *      这种反直觉行为发生。
  *   2. **缺省一律 `SELF`（不披露）**：`suggestedDisclosure()` 里的 `defaultAudience`
@@ -21,8 +22,25 @@
 // 受众档位
 // ═══════════════════════════════════════════════════════════
 
-/** 声明顺序即权限大小。新增档位**必须**追加在末尾，否则历史数据的相对可见性会变。 */
-export const DISCLOSURE_AUDIENCES = ['SELF', 'ORGANIZER', 'COUNTERPARTY'] as const
+/**
+ * 声明顺序即权限大小（索引越大 = 受众越广）。
+ *
+ * ⚠️ 新增档位时**不得改变已存在档位的相对次序** —— 库里的 `disclosure` 文本存的是
+ * 档位**名字**，理解这些名字的是本数组的次序；次序一变，**历史数据**的可见性
+ * 就会静默漂移，而且没有任何迁移能"顺便修好"它。因此新档位通常应**追加在末尾**。
+ *
+ * ⚠️ `CANDIDATE` 之所以追加在 `COUNTERPARTY` **之后**（而不是"候选比对手方窄"）：
+ *   记 `C` = 已同意的对手方集合，`P` = 同任务的互补伙伴集合。**`C ⊆ P`** ——
+ *   任何对手方，在双方同意之前本来就是一名候选伙伴。于是
+ *   `{组织者} ∪ C ⊆ {组织者} ∪ P`，即"给已同意者看" ⊂ "给伙伴看"。
+ *   `CANDIDATE` 是**更宽**的那一档。
+ *
+ *   若把次序写反（插在 `COUNTERPARTY` 之前），`rank(granted) >= rank(viewer)`
+ *   就会让 `rank(COUNTERPARTY) >= rank(CANDIDATE)` 成立 →
+ *   **尚未同意的人看到了用户只授权给已同意对手方的字段**：一次静默的越权披露。
+ *   `field-catalog.test.ts` 对此有一条不变量断言（T04 加）。
+ */
+export const DISCLOSURE_AUDIENCES = ['SELF', 'ORGANIZER', 'COUNTERPARTY', 'CANDIDATE'] as const
 
 export type DisclosureAudience = (typeof DISCLOSURE_AUDIENCES)[number]
 
@@ -45,11 +63,43 @@ export function isAudience(value: unknown): value is DisclosureAudience {
 /** 外部受众：投影的**合法目标**。`SELF` 不在其中（原因见下方 `audienceCanSee`）。 */
 export type ExternalAudience = Exclude<DisclosureAudience, 'SELF'>
 
-export const EXTERNAL_AUDIENCES: readonly ExternalAudience[] = ['ORGANIZER', 'COUNTERPARTY']
+export const EXTERNAL_AUDIENCES: readonly ExternalAudience[] = [
+  'ORGANIZER',
+  'COUNTERPARTY',
+  'CANDIDATE',
+]
+
+/**
+ * 表单渲染用的档位清单（**单一事实来源**），按"受众由窄到宽"排列。
+ *
+ * 为什么放这里而不是放进 `.tsx`：T03 已经因为"前端自己维护一份字段文案"吃过亏
+ * （见本文件顶部）。档位清单同理 —— 若前端硬编码三项，那么新增 `CANDIDATE` 时
+ * 前端会**静默**少一个选项，用户根本无从授权，而后端投影却已经支持这一档：
+ * 表现为"字段明明可以开给伙伴，但界面不给开关"。
+ */
+export const AUDIENCE_OPTIONS: readonly { value: DisclosureAudience; label: string }[] = [
+  { value: 'SELF', label: '仅自己' },
+  { value: 'ORGANIZER', label: '组织者' },
+  { value: 'COUNTERPARTY', label: '匹配后的对手方' },
+  { value: 'CANDIDATE', label: '同任务的伙伴' },
+]
 
 /**
  * 某受众能否看到"被授权到 `granted` 档"的字段。
  * 规则：`rank(granted) >= rank(viewer)`，即"受权范围覆盖到了这位受众"。
+ *
+ * 完整真相表（写下来是为了避免下一个人凭直觉猜方向 —— T04 我自己就先猜反过一次）：
+ *
+ *   granted        | viewer=ORGANIZER | viewer=COUNTERPARTY | viewer=CANDIDATE
+ *   ---------------|------------------|---------------------|-----------------
+ *   SELF           | ✗                | ✗                   | ✗
+ *   ORGANIZER      | ✓                | ✗                   | ✗
+ *   COUNTERPARTY   | ✓                | ✓                   | ✗
+ *   CANDIDATE      | ✓                | ✓                   | ✓
+ *
+ * 读法：「档位 = 我允许看到它的**最宽**人群」。最关键的一项是
+ * **`COUNTERPARTY` 档对候选不可见** —— 用户写了"只给已配对的对手方看"，
+ * 那么还没配对成功的人就不该看到（这正是把 `CANDIDATE` 追加在末尾的理由）。
  *
  * ⚠️ `viewer === 'SELF'` **恒为 false**。这不是遗漏，是刻意的：
  *   `SELF` 档的语义就是"不披露"，而"本人"根本不需要走投影 —— 他直接读自己的数据。
@@ -68,6 +118,21 @@ export function audienceCanSee(
 
 /** 缺省档位：字段未在披露表中出现时按此处理。**常量而非配置**，防止有人"顺手调宽"。 */
 export const MISSING_FIELD_AUDIENCE: DisclosureAudience = 'SELF'
+
+/**
+ * **候选阶段**（T04 双向检索）投影对方档案时使用的受众档位。
+ *
+ * 取值必须是 `CANDIDATE`，不能用 `COUNTERPARTY`。这两档是**向用户分别声明过**的：
+ *   「匹配后的对手方」= 双方都同意了才会看到；
+ *   「同任务的伙伴」  = 同一条任务里与我互补的成员（含尚未同意者）。
+ * 候选页的浏览者恰恰是「同任务的伙伴」。若改用 `COUNTERPARTY` 投影，
+ * `rank(COUNTERPARTY) >= rank(COUNTERPARTY)` 成立 → **还没同意的人看到了
+ * 用户只授权给已同意对手方的字段** —— 静默放宽一个已声明的受众范围，AC-03 不允许。
+ *
+ * 这个常量存在的意义：把"候选能看到哪一档"收敛成**唯一一个可审计的字面量**。
+ * 有人若想放宽，改的是这一行，而不是散落各处的投影调用点。
+ */
+export const CANDIDATE_PROFILE_AUDIENCE: ExternalAudience = 'CANDIDATE'
 
 // ═══════════════════════════════════════════════════════════
 // 字段定义
@@ -179,6 +244,19 @@ export function suggestedDisclosure(): Record<DisclosureFieldKey, DisclosureAudi
 /** 目录自检（供测试与启动期诊断使用）：返回不一致项，空数组 = 健康。 */
 export function auditCatalog(): string[] {
   const problems: string[] = []
+
+  // 表单档位清单必须与档位声明**完全一致**（缺一个 = 用户无从授权该档，
+  // 多一个 = 界面给出后端不认的档位）。顺序也要求一致，因为那就是权限次序。
+  const optValues = AUDIENCE_OPTIONS.map((o) => o.value)
+  if (optValues.join(',') !== DISCLOSURE_AUDIENCES.join(',')) {
+    problems.push(
+      `AUDIENCE_OPTIONS out of sync with DISCLOSURE_AUDIENCES: [${optValues.join(',')}]`
+    )
+  }
+  if (!EXTERNAL_AUDIENCES.includes(CANDIDATE_PROFILE_AUDIENCE)) {
+    problems.push(`CANDIDATE_PROFILE_AUDIENCE must be an external audience`)
+  }
+
   const seen = new Set<string>()
   for (const f of FIELD_DEFS) {
     if (seen.has(f.key)) problems.push(`duplicate field key: ${f.key}`)

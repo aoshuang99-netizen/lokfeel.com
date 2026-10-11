@@ -16,6 +16,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/lib/auth/auth'
 import {
+  AUDIENCE_OPTIONS,
   DISCLOSURE_FIELDS,
   getMyIntentByShareToken,
   getSharePageData,
@@ -91,6 +92,7 @@ export default async function IntentPage({ params }: PageProps) {
             joined={joined}
             fields={fields}
             suggested={Object.fromEntries(Object.entries(suggestedDisclosure()))}
+            audiences={AUDIENCE_OPTIONS.map((o) => ({ value: o.value as string, label: o.label }))}
             initialIntent={
               ctx.myIntent
                 ? {

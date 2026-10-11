@@ -35,20 +35,29 @@ export interface InitialIntentProp {
   status: string
 }
 
+export interface AudienceOptionProp {
+  value: string
+  label: string
+}
+
 export interface IntentFormProps {
   missionId: string
   missionOpen: boolean
   joined: boolean
   fields: DisclosureFieldProp[]
   suggested: Record<string, string>
+  /**
+   * 受众档位清单（含中文标签），由**服务端**从字段目录下发。
+   *
+   * 为什么不让前端自己写死三项：T03 已经因为"前端维护第二份清单"吃过亏。
+   * 若这里硬编码 `SELF/ORGANIZER/COUNTERPARTY`，T04 新增 `CANDIDATE` 档时
+   * 前端会**静默**少一个选项 —— 用户无从把字段开给"同任务的伙伴"，
+   * 而后端投影却已经支持这一档。这是"界面没有开关、数据却能往外走"的镜像版本：
+   * 用户以为自己没有选择，实际上系统已经替他把这档留好了。
+   */
+  audiences: AudienceOptionProp[]
   initialIntent: InitialIntentProp | null
 }
-
-const AUDIENCE_OPTIONS = [
-  { value: 'SELF', label: '仅自己' },
-  { value: 'ORGANIZER', label: '组织者' },
-  { value: 'COUNTERPARTY', label: '匹配后的对手方' },
-] as const
 
 const GROUP_LABELS: Record<string, string> = {
   identity: '身份',
@@ -68,7 +77,17 @@ function toLocalInput(iso: string | null): string {
 }
 
 export function IntentForm(props: IntentFormProps) {
-  const { missionId, missionOpen, joined, fields, suggested, initialIntent } = props
+  // `props.audiences` 是**档位清单**；下面 useState 里的 `audiences` 是
+  // "每个字段当前选了哪一档"。语义不同，故在解构处改名，避免混淆。
+  const {
+    missionId,
+    missionOpen,
+    joined,
+    fields,
+    suggested,
+    audiences: audienceOptions,
+    initialIntent,
+  } = props
 
   const [need, setNeed] = useState(initialIntent?.need ?? '')
   const [offer, setOffer] = useState(initialIntent?.offer ?? '')
@@ -89,6 +108,7 @@ export function IntentForm(props: IntentFormProps) {
   const [savedStatus, setSavedStatus] = useState<string>(initialIntent?.status ?? '')
   const [preview, setPreview] = useState<{
     organizer: Record<string, unknown>
+    candidate: Record<string, unknown>
     counterparty: Record<string, unknown>
   } | null>(null)
   const [message, setMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
@@ -114,6 +134,7 @@ export function IntentForm(props: IntentFormProps) {
       const body = await res.json()
       setPreview({
         organizer: body?.data?.preview?.organizer ?? {},
+        candidate: body?.data?.preview?.candidate ?? {},
         counterparty: body?.data?.preview?.counterparty ?? {},
       })
     } catch {
@@ -182,7 +203,7 @@ export function IntentForm(props: IntentFormProps) {
         return
       }
       setSavedStatus(body?.data?.status ?? 'WITHDRAWN')
-      setPreview({ organizer: {}, counterparty: {} })
+      setPreview({ organizer: {}, candidate: {}, counterparty: {} })
       setMessage({ kind: 'ok', text: '已撤销。你的资料不再出现在任何匹配与披露中。' })
     } finally {
       setBusy(false)
@@ -215,6 +236,22 @@ export function IntentForm(props: IntentFormProps) {
 
       {/* ── 意图正文 ── */}
       <section className="space-y-4">
+        {/*
+          ⚠️ 这条声明是**功能前提**，不是装饰文案：T04 的候选列表会把
+          「我需要什么 / 我能提供什么」展示给**同任务的参与者**（否则他们
+          无从判断要不要建立连接）。用户必须在**提交之前**就被告知这一点 ——
+          悄悄扩大一个用户没被告知过的可见范围，正是 AC-03 要防的事。
+          删掉这段就等同于把 need/offer 变成未声明的披露面。
+        */}
+        <p
+          className="rounded-xl border border-border bg-card/60 px-4 py-3 text-xs text-muted-foreground"
+          data-testid="intent-text-visibility"
+        >
+          下面两段内容会展示给<strong className="text-foreground">同任务的参与者</strong>
+          （用于互相判断是否值得建立连接），这是任务内匹配所必需的。
+          档案字段（昵称、城市、职业…）<strong className="text-foreground">不会</strong>
+          随之披露，它们各自独立受下方逐项开关控制。
+        </p>
         <div>
           <label htmlFor="intent-need" className="text-sm font-medium text-foreground">
             我需要什么
@@ -288,8 +325,11 @@ export function IntentForm(props: IntentFormProps) {
           </button>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          默认<strong className="text-foreground">不披露</strong>任何字段。你可以逐项选择可见范围：
-          「组织者」= 发起该任务的主理人；「匹配后的对手方」= 双向同意后才会看到的对方。
+          默认<strong className="text-foreground">不披露</strong>任何字段。选项按「能看到的人从少到多」
+          排列：<strong className="text-foreground">组织者</strong>= 只给发起该任务的主理人；
+          <strong className="text-foreground">匹配后的对手方</strong>= 只给已经与你双向同意的对方
+          （外加组织者）；<strong className="text-foreground">同任务的伙伴</strong>= 给同一条任务里
+          所有与你互补的成员（最宽，已覆盖前两种人）。
         </p>
 
         {Object.entries(grouped).map(([group, list]) => (
@@ -310,7 +350,7 @@ export function IntentForm(props: IntentFormProps) {
                   </div>
                   {f.disclosable ? (
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {AUDIENCE_OPTIONS.map((opt) => (
+                      {audienceOptions.map((opt) => (
                         <label
                           key={opt.value}
                           className={`cursor-pointer rounded-lg border px-3 py-1.5 text-xs ${
@@ -392,36 +432,60 @@ export function IntentForm(props: IntentFormProps) {
       {preview ? (
         <section className="rounded-2xl border border-border bg-card/40 p-5">
           <h2 className="text-sm font-semibold text-foreground">披露预览</h2>
-          <div className="mt-3" data-testid="intent-preview-organizer">
-            <h3 className="text-xs text-muted-foreground">组织者将看到</h3>
-            {Object.keys(preview.organizer).length === 0 ? (
-              <p className="text-sm text-muted-foreground">（无）</p>
-            ) : (
-              <ul className="mt-1 space-y-0.5 text-sm text-foreground">
-                {Object.entries(preview.organizer).map(([k, v]) => (
-                  <li key={k}>
-                    {fields.find((f) => f.key === k)?.label ?? k}：{String(v)}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="mt-3" data-testid="intent-preview-counterparty">
-            <h3 className="text-xs text-muted-foreground">匹配后的对手方将看到</h3>
-            {Object.keys(preview.counterparty).length === 0 ? (
-              <p className="text-sm text-muted-foreground">（无）</p>
-            ) : (
-              <ul className="mt-1 space-y-0.5 text-sm text-foreground">
-                {Object.entries(preview.counterparty).map(([k, v]) => (
-                  <li key={k}>
-                    {fields.find((f) => f.key === k)?.label ?? k}：{String(v)}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {/*
+            三个受众按"由宽到窄"排列：组织者 ⊇ 同任务的伙伴 ⊇ 匹配后的对手方。
+            顺序不是审美 —— 用户要能一眼看出"收紧哪一档会少给谁看"。
+          */}
+          <PreviewGroup
+            testId="intent-preview-organizer"
+            title="组织者将看到"
+            values={preview.organizer}
+            fields={fields}
+          />
+          <PreviewGroup
+            testId="intent-preview-candidate"
+            title="同任务的伙伴将看到"
+            values={preview.candidate}
+            fields={fields}
+          />
+          <PreviewGroup
+            testId="intent-preview-counterparty"
+            title="匹配后的对手方将看到"
+            values={preview.counterparty}
+            fields={fields}
+          />
         </section>
       ) : null}
+    </div>
+  )
+}
+
+/** 披露预览中的一个受众分组。抽出来是为了让多档渲染**不可能**出现不一致。 */
+function PreviewGroup({
+  testId,
+  title,
+  values,
+  fields,
+}: {
+  testId: string
+  title: string
+  values: Record<string, unknown>
+  fields: DisclosureFieldProp[]
+}) {
+  return (
+    <div className="mt-3" data-testid={testId}>
+      <h3 className="text-xs text-muted-foreground">{title}</h3>
+      {Object.keys(values).length === 0 ? (
+        <p className="text-sm text-muted-foreground">（无）</p>
+      ) : (
+        <ul className="mt-1 space-y-0.5 text-sm text-foreground">
+          {Object.entries(values).map(([k, v]) => (
+            <li key={k}>
+              {fields.find((f) => f.key === k)?.label ?? k}：{String(v)}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

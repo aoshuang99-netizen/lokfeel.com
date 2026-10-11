@@ -78,7 +78,23 @@ const INTENT_SELECT = {
   updatedAt: true,
 } as const
 
-export function deriveIntentStatus(row: IntentRow, now: Date = new Date()): IntentStatusView {
+/**
+ * 判定"派生状态"所需的最小字段集。
+ *
+ * 刻意**收窄**而不是直接要求 `IntentRow`：调用方常常只查到两三列就要判状态
+ * （例如 T04 的候选服务只 select 了 9 列），要求全行会逼着它们多查 6 列、
+ * 或者写一个 `as IntentRow` 把类型断言当胶水 —— 后者会让"少查了列"这类错误
+ * 一路滑到运行期才炸。
+ */
+export type IntentStatusSource = Pick<IntentRow, 'status' | 'expiresAt'>
+
+/** 投影"当前实际生效的披露表"所需的最小字段集。 */
+export type IntentDisclosureSource = Pick<IntentRow, 'disclosure' | 'status' | 'expiresAt'>
+
+export function deriveIntentStatus(
+  row: IntentStatusSource,
+  now: Date = new Date()
+): IntentStatusView {
   if (row.status === 'WITHDRAWN') return 'WITHDRAWN'
   if (row.expiresAt && row.expiresAt.getTime() <= now.getTime()) return 'EXPIRED'
   return 'ACTIVE'
@@ -91,7 +107,7 @@ export function deriveIntentStatus(row: IntentRow, now: Date = new Date()): Inte
  * 撤销不是只把 status 改一下，而是**当即可披露字段归零**，无需任何后台任务配合。
  */
 export function liveDisclosureOf(
-  row: Pick<IntentRow, 'disclosure' | 'status' | 'expiresAt'>,
+  row: IntentDisclosureSource,
   now: Date = new Date()
 ): DisclosureMap {
   if (row.status !== 'ACTIVE') return {}
@@ -232,8 +248,20 @@ export interface DisclosurePreview {
   intentId: string
   status: IntentStatusView
   summary: DisclosureSummary
-  /** 各受众实际会看到的内容（用真实档案投影；不含未授权字段）。 */
-  preview: { organizer: DisclosedProfile; counterparty: DisclosedProfile }
+  /**
+   * 各受众**实际**会看到的内容（用真实档案投影；不含未授权字段）。
+   *
+   * 三个受众的可见集合是**逐层变宽**的（档位包含式，见 field-catalog）：
+   *   `candidate` ⊆ `counterparty` ⊆ `organizer`
+   * 即组织者看到的最多，候选看到的最少。所以预览里出现
+   * "某项在 organizer 有、在 candidate 没有"是**正确**的；
+   * 反过来（candidate 有、organizer 没有）永远不该发生 —— 测试对此有断言。
+   */
+  preview: {
+    organizer: DisclosedProfile
+    candidate: DisclosedProfile
+    counterparty: DisclosedProfile
+  }
 }
 
 export async function previewDisclosure(
@@ -256,6 +284,7 @@ export async function previewDisclosure(
     summary: describeDisclosure(live),
     preview: {
       organizer: discloseSubject(profile, live, 'ORGANIZER'),
+      candidate: discloseSubject(profile, live, 'CANDIDATE'),
       counterparty: discloseSubject(profile, live, 'COUNTERPARTY'),
     },
   }

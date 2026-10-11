@@ -321,53 +321,71 @@ function rankCompare<R extends RecallRow>(a: RecalledCandidate<R>, b: RecalledCa
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 候选阶段的档案投影 —— 当前 **fail-closed**
+// 档案投影 —— 刻意**不在**本模块
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * 候选阶段可以看到对方档案的哪个受众档位。
+ * 候选阶段可以看到对方档案的哪个受众档位 —— 答案由披露层给出，见下方。
  *
- * 🔴 当前恒为 `null`（= 一个字段都不披露），这是**刻意的**，不是未完成：
+ * 本模块不做档案投影，也不持有任何档案数据：它的职责是回答"谁值得被推荐、
+ * 凭什么"；"谁能看到对方的哪些字段"是**披露层**的职责，唯一出口是
+ * `discloseSubject()`（T03 立下的规矩）。
  *
- *   T03 的 `DisclosureAudience` 注释向用户声明过
- *   `COUNTERPARTY = 双向同意后的对手方`。而 T04 的候选是**同意之前**的
- *   潜在对手方。若在这里直接复用 `COUNTERPARTY` 档，就等于**悄悄放宽一个
- *   已经向用户声明过的受众范围** —— 用户当初授权"给同意的对手方看"，
- *   却会被"还没同意的人"看到。这类静默的隐私回退是本项目的红线（AC-03）。
+ * 上一刀在这里放过一个 `subject` 占位字段（恒为 `{}`），用来表达"候选阶段
+ * 暂不披露任何字段"。决策落定后它被**删除**，而不是就地改成 CANDIDATE ——
+ * 一个纯排序内核不该假装自己知道投影这件事。留着它，下一个人就会以为
+ * "候选的字段是在这里拼的"，于是新增通道时绕过了 `discloseSubject()`，
+ * 那正是 AC-03 最怕的漂移。
  *
- *   因此候选列表当前**只给出互补依据**（哪些词元命中）与意图正文相关的
- *   结构化信息，**不含**对方任何档案字段（昵称/城市/职业…）。
- *   要让候选看到档案，必须先显式引入一个**低于 COUNTERPARTY** 的新档位
- *   （例如 `CANDIDATE`，且默认 SELF + 需成员逐字段主动开启），
- *   这是对隐私模型的扩展，须由产品决策后再开。
+ * 真实装配在服务层 `candidates.ts`：`buildCandidates()` 定序 → 对每个候选
+ * `discloseSubject(profile, live, CANDIDATE_PROFILE_AUDIENCE)`。
  *
- * 本模块把这件事收敛成**一个常量**：决策落定后改这里 + 对应测试即可，
- * 召回/排序/门控逻辑完全不受影响。
+ * 🔴 投影档位**必须**是 `CANDIDATE`，不能用 `COUNTERPARTY`：T03 已向用户
+ * 分别声明过两者（"同任务的伙伴" vs "匹配后的对手方"）。候选是**同意之前**
+ * 的潜在对手方，用 COUNTERPARTY 渲染候选，就是把"只授权给已同意对手方"的
+ * 字段提前给到"还没同意的人"—— 静默放宽一个已声明的受众范围（AC-03 红线）。
+ * 该取舍收敛在 `field-catalog.ts` 的 `CANDIDATE_PROFILE_AUDIENCE` 一个常量上。
  */
-export const CANDIDATE_PROFILE_AUDIENCE: null = null
 
 // ═══════════════════════════════════════════════════════════════
 // 端到端管线
 // ═══════════════════════════════════════════════════════════════
 
-/** 没有候选时的原因。**必须能说出口**，不许用空列表糊过去。 */
+/**
+ * 没有候选时的原因。**必须能说出口**，不许用空列表糊过去。
+ *
+ * 前三个由本模块的行级管线产出；最后两个由**服务层前置判定**产出
+ * （决定"该不该进入管线"的问题，不是行级问题，所以不在这里判）。
+ */
 export type NoCandidateReason =
+  | 'no_own_intent' // 自己还没在这条任务上提交意图（或已撤销/已过期）
   | 'no_other_intents' // 该任务下除自己外没有其他 ACTIVE 意图
   | 'all_gated_out' // 有其他意图，但全部被硬门控拒绝
   | 'no_reciprocal_overlap' // 过了门控，但没有一条构成"双向"互补
 
-export interface CandidateMatch<R extends RecallRow> {
+/** 本模块能产出的原因码子集（断言用；防止有人误以为 `no_own_intent` 出自这里）。 */
+export const PIPELINE_REASONS = [
+  'no_other_intents',
+  'all_gated_out',
+  'no_reciprocal_overlap',
+] as const satisfies readonly NoCandidateReason[]
+
+/**
+ * 一个候选。
+ *
+ * ⚠️ **刻意不含 `subject`**（对方档案）：本模块只回答"谁值得被推荐、凭什么"，
+ * 档案投影由服务层经 `discloseSubject()` 完成（原因见上方"档案投影"一节）。
+ */
+export interface CandidateMatch {
   intentId: string
   userId: string
   /** 互补依据（必填）。 */
   evidence: ReciprocalEvidence
   matchedTokens: number
-  /** 该候选可见的对方档案。当前恒为 `{}`（见 CANDIDATE_PROFILE_AUDIENCE）。 */
-  subject: Record<string, never>
 }
 
-export interface CandidateResult<R extends RecallRow> {
-  candidates: CandidateMatch<R>[]
+export interface CandidateResult {
+  candidates: CandidateMatch[]
   /** 没有候选时给出原因；有候选时为 null。 */
   noCandidatesReason: NoCandidateReason | null
   /** 被门控拒绝的明细（**计数与原因码**，不返回对方内容）。 */
@@ -384,13 +402,19 @@ export interface CandidateResult<R extends RecallRow> {
  *
  * ⚠️ 注意 `rows` 的**入参类型是原始行**，门控在函数内部完成 —— 这样调用方
  * 无法"忘记先门控"。函数内部先把门控结果转成 `GatedRow` 再交给 `recall()`。
+ *
+ * ⚠️ 返回类型**刻意不带行类型参数**（上一刀的 `CandidateMatch<R>` 泛型已删）：
+ * 内核的产出已经与"传进来的行长什么样"完全无关 —— 它只回 `intentId` /
+ * `userId` / 命中的词元，连对方的 `need`/`offer` 正文都要调用方自己按 userId 回填
+ * （见 `candidates.ts`）。把行类型透传出去，等于给"顺手把行里的档案字段塞进候选"
+ * 留了一条类型上的便道；这里把便道堵死。
  */
-export function buildCandidates<R extends RecallRow>(
+export function buildCandidates(
   me: IntentSide & { userId: string },
-  rows: readonly R[],
+  rows: readonly RecallRow[],
   ctx: GateContext,
   options: { limit?: number } = {}
-): CandidateResult<R> {
+): CandidateResult {
   const limit = Math.max(0, Math.floor(options.limit ?? 50))
 
   const { allowed, blocked } = applyGates(rows, ctx)
@@ -423,8 +447,8 @@ export function buildCandidates<R extends RecallRow>(
       userId: c.row.userId,
       evidence: c.evidence,
       matchedTokens: c.matchedTokens,
-      // fail-closed：当前一个档案字段都不披露（见 CANDIDATE_PROFILE_AUDIENCE 的说明）
-      subject: {} as Record<string, never>,
+      // ⚠️ 这里**不拼对方档案**（上一刀的 `subject: {}` 已删除）：
+      //    投影是披露层的职责，装配点在服务层 candidates.ts，经 discloseSubject()。
     })),
     noCandidatesReason: null,
     gatedOut,

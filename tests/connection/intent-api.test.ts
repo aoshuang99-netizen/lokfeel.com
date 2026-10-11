@@ -23,7 +23,7 @@ jest.mock('@/lib/db', () => ({
       deleteMany: jest.fn(),
     },
     mission: { findFirst: jest.fn(), findUnique: jest.fn() },
-    missionParticipation: { findUnique: jest.fn() },
+    missionParticipation: { findUnique: jest.fn(), findMany: jest.fn() },
     user: { findUnique: jest.fn(), findMany: jest.fn() },
     membership: { findFirst: jest.fn() },
     tenantAuditEvent: { create: jest.fn() },
@@ -44,6 +44,7 @@ import * as intentStatusRoute from '@/app/api/v1/intents/[intentId]/status/route
 import * as intentDisclosureRoute from '@/app/api/v1/intents/[intentId]/disclosure/route'
 import * as intentFieldsRoute from '@/app/api/v1/intents/fields/route'
 import * as missionIntentsRoute from '@/app/api/v1/missions/[missionId]/intents/route'
+import * as connectionsCandidatesRoute from '@/app/api/v1/connections/candidates/route'
 
 const requireAuthMock = requireAuth as unknown as jest.Mock
 const intentFindFirst = db.socialIntent.findFirst as unknown as jest.Mock
@@ -53,6 +54,7 @@ const intentCount = db.socialIntent.count as unknown as jest.Mock
 const intentCreate = db.socialIntent.create as unknown as jest.Mock
 const missionFindFirst = db.mission.findFirst as unknown as jest.Mock
 const partFindUnique = db.missionParticipation.findUnique as unknown as jest.Mock
+const partFindMany = db.missionParticipation.findMany as unknown as jest.Mock
 const userFindUnique = db.user.findUnique as unknown as jest.Mock
 const userFindMany = db.user.findMany as unknown as jest.Mock
 const membershipFindFirst = db.membership.findFirst as unknown as jest.Mock
@@ -296,12 +298,15 @@ describe('T03 · POST /api/v1/intents/[intentId]/status', () => {
 })
 
 describe('T03 · GET /api/v1/intents/[intentId]/disclosure', () => {
-  it('返回两个受众视角的投影，且不含受保护字段', async () => {
+  it('返回三个受众视角的投影（由宽到窄），且不含受保护字段', async () => {
     asRole('MEMBER')
-    intentFindFirst.mockResolvedValue(intentRow({ disclosure: '{"displayName":"COUNTERPARTY"}' }))
+    // displayName 授权给「匹配后的对手方」，city 授权给「同任务的伙伴」
+    intentFindFirst.mockResolvedValue(
+      intentRow({ disclosure: '{"displayName":"COUNTERPARTY","city":"CANDIDATE"}' })
+    )
     userFindUnique.mockResolvedValue({
       email: 'lin@example.com',
-      profile: { displayName: '林晓', bio: '八年跨境', age: 32 },
+      profile: { displayName: '林晓', bio: '八年跨境', age: 32, city: '上海' },
     })
 
     const res = await (intentDisclosureRoute.GET as any)(
@@ -310,13 +315,84 @@ describe('T03 · GET /api/v1/intents/[intentId]/disclosure', () => {
     )
     const body = await res.json()
     expect(res.status).toBe(200)
+    expect(body.data.preview.organizer.displayName).toBe('林晓')
     expect(body.data.preview.counterparty.displayName).toBe('林晓')
+
+    // 🔴 候选视角**只**含授权给「同任务的伙伴」的字段：displayName 授权的是
+    //    COUNTERPARTY（只给已配对对手方），因此候选看不到 —— 这正是档位方向的可观测形式。
+    expect(Object.keys(body.data.preview.candidate).sort()).toEqual(['city'])
+    expect(body.data.preview.candidate.city).toBe('上海')
+
+    // 可见集合逐层包含：候选 ⊆ 对手方 ⊆ 组织者
+    const keys = (o: object) => Object.keys(o)
+    expect(keys(body.data.preview.candidate).every((k) => k in body.data.preview.counterparty)).toBe(true)
+    expect(keys(body.data.preview.counterparty).every((k) => k in body.data.preview.organizer)).toBe(true)
+
     const json = JSON.stringify(body)
     expect(json).not.toContain('lin@example.com')
     // email 的**值**不出现；字段名会出现在 protectedFields 说明里（刻意给用户看的）
-    expect(Object.keys(body.data.preview.organizer)).not.toContain('email')
-    expect(Object.keys(body.data.preview.counterparty)).not.toContain('email')
+    for (const view of ['organizer', 'counterparty', 'candidate'] as const) {
+      expect(Object.keys(body.data.preview[view])).not.toContain('email')
+    }
     expect(body.data.summary.protectedFields.map((e: { key: string }) => e.key)).toContain('email')
+  })
+})
+
+describe('T04 · GET /api/v1/connections/candidates', () => {
+  it('匿名 → 401', async () => {
+    requireAuthMock.mockRejectedValue(new UnauthorizedError('Unauthorized'))
+    const res = await (connectionsCandidatesRoute.GET as any)(get('/api/v1/connections/candidates?missionId=m_1'))
+    expect(res.status).toBe(401)
+  })
+
+  it('缺 missionId → 400（不允许"给我全部候选"这种形状）', async () => {
+    asRole('MEMBER')
+    const res = await (connectionsCandidatesRoute.GET as any)(get('/api/v1/connections/candidates'))
+    expect(res.status).toBe(400)
+  })
+
+  it('limit 非正整数 → 400', async () => {
+    asRole('MEMBER')
+    const res = await (connectionsCandidatesRoute.GET as any)(
+      get('/api/v1/connections/candidates?missionId=m_1&limit=0')
+    )
+    expect(res.status).toBe(400)
+  })
+
+  it('MEMBER 自助可用 → 200，且响应自描述投影档位为 CANDIDATE', async () => {
+    asRole('MEMBER')
+    missionFindFirst.mockResolvedValue({ id: 'm_1', status: 'ACTIVE' })
+    intentFindFirst.mockResolvedValue(intentRow({ userId: 'u_1', need: 'need supply chain', offer: 'offer sourcing agent' }))
+    intentFindMany.mockResolvedValue([
+      intentRow({
+        id: 'i_b',
+        userId: 'u_b',
+        need: 'need sourcing agent',
+        offer: 'offer supply chain',
+        disclosure: '{"displayName":"CANDIDATE","age":"COUNTERPARTY"}',
+      }),
+    ])
+    partFindMany.mockResolvedValue([{ userId: 'u_1' }, { userId: 'u_b' }])
+    userFindMany.mockResolvedValue([
+      { id: 'u_b', email: 'leak@example.test', profile: { displayName: '林晓', age: 47 } },
+    ])
+
+    const res = await (connectionsCandidatesRoute.GET as any)(
+      get('/api/v1/connections/candidates?missionId=m_1')
+    )
+    const body = await res.json()
+    expect(res.status).toBe(200)
+    expect(body.data.profileAudience).toBe('CANDIDATE')
+    expect(body.data.candidates).toHaveLength(1)
+
+    const subject = body.data.candidates[0].subject
+    expect(subject.displayName).toBe('林晓')
+    // 🔴 age 授权给 COUNTERPARTY → 候选看不到；键不存在而非 null
+    expect(Object.prototype.hasOwnProperty.call(subject, 'age')).toBe(false)
+    // 值级扫描：邮箱与年龄的值都不得出现
+    const json = JSON.stringify(body)
+    expect(json).not.toContain('leak@example.test')
+    expect(json).not.toContain('47')
   })
 })
 

@@ -9,8 +9,10 @@
  * 两条产品铁律：
  *   - **最小披露**：页面只渲染 `getSharePageData()` 的公开投影；内部标识
  *     （missionId / organizationId / ownerId）**不**进入 DOM。
- *   - **无候选时不伪造**：`candidates` 在本阶段恒为空，页面渲染**显式空态**
- *     并说明"不会展示占位结果"，而不是造几条好看的假数据。
+ *   - **无候选时不伪造**：`candidates` 在本投影里**恒为空**（T04 之后依然如此，
+ *     理由是"匿名面结构性不披露"，见下方匹配候选区块的注释）。页面只给
+ *     **入口**（已加入的成员可跳转到 `/m/<token>/matches`），绝不渲染占位候选，
+ *     也绝不在公开面上直接呈现任何候选内容。
  */
 
 import type { Metadata } from 'next'
@@ -158,24 +160,37 @@ export default async function MissionSharePage({ params }: PageProps) {
           <Field label="成功标准" value={view.successCriteria} testId="mission-success" />
         </section>
 
-        {/* 匹配候选 —— 显式空态（铁律：无候选时不伪造） */}
+        {/* 匹配候选 —— 公开面**永不**渲染候选本身 */}
         <section className="mt-8 rounded-2xl border border-border bg-card/40 p-5" data-testid="mission-candidates">
           <h2 className="text-sm font-semibold text-foreground">匹配候选</h2>
           {/*
-            ⚠️ 此处**只有**空态分支：公开投影的 `candidates` 类型是 `never[]`
-            （见 src/lib/connection/public-view.ts），类型系统保证渲染不出候选。
-            T04 引入双向检索时，才会在这里新增真实候选分支 —— 在那之前，
-            任何"占位候选"都会让用户以为系统已经匹配到了人。
+            ⚠️ 这里渲染的是**入口**，不是候选列表本身。
+
+            公开投影的 `candidates` 类型**恒为 `never[]`**（见 public-view.ts），
+            这一条在 T04 之后**依然成立**，但理由变了：
+              T02 时是"匹配能力还没做"；
+              T04 起是"匿名面结构性不披露"—— 令牌只证明"拿到了链接"，
+              不证明"是这个社群的人"，所以候选永远不出现在匿名可达的响应里。
+            类型系统保证了这一点：本文件写不出渲染 `view.candidates` 的代码。
+
+            真实候选在**登录成员的** `/m/<token>/matches`（服务层经
+            `discloseSubject(..., 'CANDIDATE')` 白名单投影后才产出）。
           */}
-          <p className="mt-2 text-sm text-muted-foreground" data-testid="mission-candidates-empty">
-            暂无匹配候选。我们不会在缺少真实匹配结果时展示占位数据 ——
-            在成员提交意图、且完成双向匹配之后，这里才会出现有依据的推荐。
-          </p>
-          {!view.candidatesAvailable ? (
-            <p className="mt-3 text-xs text-muted-foreground">
-              匹配能力当前尚未启用（本社群尚未开启双向检索）。
+          {viewer?.joined ? (
+            <Link
+              href={`/m/${token}/matches`}
+              className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-blue-500/40 bg-blue-500/10 px-5 py-3 text-sm font-semibold text-blue-100"
+              data-testid="mission-matches-cta"
+            >
+              查看与我互补的人 →
+            </Link>
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground" data-testid="mission-candidates-empty">
+              匹配候选只对<strong className="text-foreground">已加入并提交了诉求</strong>
+              的成员可见。我们不会在缺少真实匹配结果时展示占位数据 ——
+              加入并提交你的诉求之后，才会出现有依据的推荐。
             </p>
-          ) : null}
+          )}
         </section>
 
         {view.expiresAt ? (

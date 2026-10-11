@@ -12,8 +12,6 @@
  *   从而逼着实现去删掉用户真正需要的信息。断言必须打在**值**上。
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { ValidationError } from '@/lib/errors'
 import {
   decodeDisclosure,
@@ -223,19 +221,43 @@ describe('T03 · 披露说明（"即将披露给谁哪些信息"）', () => {
 
     expect(summary.byAudience.ORGANIZER.map((e) => e.key)).toEqual(['displayName'])
     expect(summary.byAudience.COUNTERPARTY.map((e) => e.key)).toEqual(['age'])
-    // 组织者视角 = ORGANIZER ∪ COUNTERPARTY 两档（包含式的直接推论）
+    expect(summary.byAudience.CANDIDATE).toEqual([])
+    // 组织者视角 = ORGANIZER ∪ COUNTERPARTY ∪ CANDIDATE 三档（包含式的直接推论）
     expect(summary.visibleToOrganizer).toEqual(['displayName', 'age'])
-    // 对手方视角 = 仅最宽档
+    // 对手方视角 = COUNTERPARTY ∪ CANDIDATE 两档
     expect(summary.visibleToCounterparty).toEqual(['age'])
+    // 🔒 候选视角 = **仅** CANDIDATE 档。T04 的关键断言：
+    //    用户只授权给"组织者"或"已配对的对手方"的字段，候选一个都看不到。
+    expect(summary.visibleToCandidate).toEqual([])
 
     // SELF 档不构成"受众"，而是归入 withheld
     expect(summary.withheld).toContain('bio')
     expect(summary.withheld).not.toContain('displayName')
-    expect(Object.keys(summary.byAudience).sort()).toEqual(['COUNTERPARTY', 'ORGANIZER'])
+    expect(Object.keys(summary.byAudience).sort()).toEqual([
+      'CANDIDATE',
+      'COUNTERPARTY',
+      'ORGANIZER',
+    ])
 
     // 受保护字段单独一组（前端展示原因而非开关）
     expect(summary.protectedFields.map((e) => e.key)).toContain('email')
     expect(summary.withheld).not.toContain('email')
+  })
+
+  it('🔒 可见集合逐层包含：候选 ⊆ 对手方 ⊆ 组织者（档位方向的可观测推论）', () => {
+    const summary = describeDisclosure({
+      displayName: 'ORGANIZER',
+      age: 'COUNTERPARTY',
+      bio: 'CANDIDATE',
+    })
+    const subset = (a: string[], b: string[]) => a.every((k) => b.includes(k))
+
+    expect(summary.visibleToCandidate).toEqual(['bio'])
+    expect(subset(summary.visibleToCandidate, summary.visibleToCounterparty)).toBe(true)
+    expect(subset(summary.visibleToCounterparty, summary.visibleToOrganizer)).toBe(true)
+    // 反向必须**不**成立 —— 若成立，说明有档位的次序被写反了
+    // （最危险的一种：候选看到了只授权给已配对对手方的字段）
+    expect(subset(summary.visibleToOrganizer, summary.visibleToCandidate)).toBe(false)
   })
 
   it('敏感字段在说明中标出 sensitive（前端据此做视觉提示）', () => {

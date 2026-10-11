@@ -343,7 +343,8 @@ export type IntentStatus = (typeof IntentStatus)[keyof typeof IntentStatus]
 export const DisclosureAudience: {
   SELF: 'SELF',
   ORGANIZER: 'ORGANIZER',
-  COUNTERPARTY: 'COUNTERPARTY'
+  COUNTERPARTY: 'COUNTERPARTY',
+  CANDIDATE: 'CANDIDATE'
 };
 
 export type DisclosureAudience = (typeof DisclosureAudience)[keyof typeof DisclosureAudience]
@@ -14968,7 +14969,7 @@ export namespace Prisma {
        */
       constraints: string | null
       /**
-       * 逐字段披露表（JSON 文本）：`{ "<fieldKey>": "SELF"|"ORGANIZER"|"COUNTERPARTY" }`。
+       * 逐字段披露表（JSON 文本）：`{ "<fieldKey>": "SELF"|"ORGANIZER"|"CANDIDATE"|"COUNTERPARTY" }`。
        * 
        * 语义：**缺失的键 = 未授权**（落到目录默认值 SELF），不在这里补默认值 ——
        * 「写库时补默认」会把"用户没选"悄悄固化成"系统认为他同意了"。

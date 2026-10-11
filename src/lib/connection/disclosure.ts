@@ -65,13 +65,20 @@ export interface DisclosureSummary {
    * 各**外部**受众下的字段。刻意不含 `SELF`：
    *   「仅本人可见」等于「不披露」，它属于 `withheld`，而不是一个受众分组。
    *   把 SELF 混进来会让前端把它渲染成一个"受众"，从而误导用户以为那是某种披露。
+   *
+   * ⚠️ 这里的键是**用户显式选择的档位**，不是"谁能看到"。同一份披露表下，
+   * 三个受众**实际**看到的字段集合是逐层变宽的（见下面三个 `visibleTo*`）：
+   *   `visibleToCandidate` ⊆ `visibleToCounterparty` ⊆ `visibleToOrganizer`
+   * 因为档位是包含式的 —— 组织者看到的最多，候选看到的最少。
    */
   byAudience: Record<ExternalAudience, DisclosureEntry[]>
   /** 结构性不可授权的字段（联系方式类），单独列出以便前端说明原因。 */
   protectedFields: DisclosureEntry[]
-  /** 组织者能看到的字段键（= ORGANIZER 与 COUNTERPARTY 两档）。 */
+  /** 组织者能看到的字段键（授权档 ∈ ORGANIZER / COUNTERPARTY / CANDIDATE，最宽）。 */
   visibleToOrganizer: DisclosureFieldKey[]
-  /** 对手方（双向同意后）能看到的字段键。 */
+  /** 同任务的候选伙伴能看到的字段键（授权档 = CANDIDATE，最窄）。 */
+  visibleToCandidate: DisclosureFieldKey[]
+  /** 对手方（双向同意后）能看到的字段键（授权档 ∈ COUNTERPARTY / CANDIDATE）。 */
   visibleToCounterparty: DisclosureFieldKey[]
   /** 谁都不披露的字段键（仅自己）。 */
   withheld: DisclosureFieldKey[]
@@ -226,6 +233,7 @@ export function discloseSubject(
 export function describeDisclosure(map: DisclosureMap): DisclosureSummary {
   const byAudience: Record<ExternalAudience, DisclosureEntry[]> = {
     ORGANIZER: [],
+    CANDIDATE: [],
     COUNTERPARTY: [],
   }
   const withheld: DisclosureFieldKey[] = []
@@ -250,6 +258,7 @@ export function describeDisclosure(map: DisclosureMap): DisclosureSummary {
     byAudience,
     protectedFields,
     visibleToOrganizer: fieldsVisibleTo(map, 'ORGANIZER'),
+    visibleToCandidate: fieldsVisibleTo(map, 'CANDIDATE'),
     visibleToCounterparty: fieldsVisibleTo(map, 'COUNTERPARTY'),
     withheld,
   }

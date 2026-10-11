@@ -7,10 +7,13 @@
  */
 
 import {
+  AUDIENCE_OPTIONS,
   AUDIENCE_ORDER,
+  CANDIDATE_PROFILE_AUDIENCE,
   DISCLOSURE_AUDIENCES,
   DISCLOSURE_FIELDS,
   DISCLOSURE_FIELD_KEYS,
+  EXTERNAL_AUDIENCES,
   IMPORTABLE_FIELD_KEYS,
   MISSING_FIELD_AUDIENCE,
   PROTECTED_FIELD_KEYS,
@@ -76,24 +79,61 @@ describe('T03 · 披露字段目录', () => {
     expect(audienceRank('SELF')).toBe(0)
     expect(audienceRank('ORGANIZER')).toBe(1)
     expect(audienceRank('COUNTERPARTY')).toBe(2)
+    expect(audienceRank('CANDIDATE')).toBe(3)
     expect(audienceRank('NOPE' as never)).toBe(0)
     expect(AUDIENCE_ORDER).toEqual([...DISCLOSURE_AUDIENCES])
   })
 
-  it('audienceCanSee 表达的是**包含式**受众（档位越高看到的人越多）', () => {
+  it('🔒 档位次序不变量：CANDIDATE 是最宽的一档，且已存在档位的相对次序未被动过', () => {
+    // 这条不变量是 T04 引入 CANDIDATE 时**唯一**必须守住的东西。写反了就是一次
+    // 静默的越权披露，而且不会有任何运行期报错来提醒你：
+    //   记 C = 已同意的对手方，P = 同任务的互补伙伴。事实是 **C ⊆ P**
+    //   （任何对手方在同意之前本来就是候选伙伴），所以
+    //   "给已同意者看" ⊂ "给伙伴看" → CANDIDATE 更宽，必须追加在末尾。
+    //   若写成 CANDIDATE 更窄（插在 COUNTERPARTY 之前），
+    //   `rank(COUNTERPARTY) >= rank(CANDIDATE)` 成立 →
+    //   尚未同意的人会看到用户只授权给已同意对手方的字段。
+    expect(audienceRank('COUNTERPARTY')).toBeLessThan(audienceRank('CANDIDATE'))
+    // 已存在档位的相对次序（历史数据的可见性靠它，不得被新档位挤动）
+    expect(audienceRank('SELF')).toBeLessThan(audienceRank('ORGANIZER'))
+    expect(audienceRank('ORGANIZER')).toBeLessThan(audienceRank('COUNTERPARTY'))
+  })
+
+  it('audienceCanSee 真相表（档位 = 我允许看到它的最宽人群）', () => {
     // 投影受众里**没有** SELF：本人不走投影机制（否则就是"传 SELF 即全量"）
     expect(audienceCanSee('SELF', 'SELF')).toBe(false)
     expect(audienceCanSee('ORGANIZER', 'SELF')).toBe(false)
     expect(audienceCanSee('COUNTERPARTY', 'SELF')).toBe(false)
+    expect(audienceCanSee('CANDIDATE', 'SELF')).toBe(false)
+
     // SELF 档只给自己
     expect(audienceCanSee('SELF', 'ORGANIZER')).toBe(false)
     expect(audienceCanSee('SELF', 'COUNTERPARTY')).toBe(false)
-    // ORGANIZER 档 = 本人 + 组织者（对手方看不到）
+    expect(audienceCanSee('SELF', 'CANDIDATE')).toBe(false)
+
+    // ORGANIZER 档 = 本人 + 组织者（其余外部受众都看不到）
     expect(audienceCanSee('ORGANIZER', 'ORGANIZER')).toBe(true)
     expect(audienceCanSee('ORGANIZER', 'COUNTERPARTY')).toBe(false)
-    // COUNTERPARTY 档 = 最宽（本人 + 组织者 + 对手方）
-    expect(audienceCanSee('COUNTERPARTY', 'COUNTERPARTY')).toBe(true)
+    expect(audienceCanSee('ORGANIZER', 'CANDIDATE')).toBe(false)
+
+    // 🔴 COUNTERPARTY 档 = 本人 + 组织者 + 已同意对手方，**候选看不到**。
+    //    这一行是本模型里最要紧的一条：用户写了"只给已配对的对手方看"，
+    //    那么还没配对成功的人就不该看到。
     expect(audienceCanSee('COUNTERPARTY', 'ORGANIZER')).toBe(true)
+    expect(audienceCanSee('COUNTERPARTY', 'COUNTERPARTY')).toBe(true)
+    expect(audienceCanSee('COUNTERPARTY', 'CANDIDATE')).toBe(false)
+
+    // CANDIDATE 档 = 最宽（本人 + 组织者 + 已同意者 + 任意互补伙伴）
+    expect(audienceCanSee('CANDIDATE', 'ORGANIZER')).toBe(true)
+    expect(audienceCanSee('CANDIDATE', 'COUNTERPARTY')).toBe(true)
+    expect(audienceCanSee('CANDIDATE', 'CANDIDATE')).toBe(true)
+  })
+
+  it('CANDIDATE_PROFILE_AUDIENCE 是候选通道的投影目标，且必须是外部受众', () => {
+    // 候选页的浏览者身份就是"同任务的伙伴"，因此投影档位是 CANDIDATE。
+    // 用 COUNTERPARTY 会把"只授权给已同意对手方"的字段提前给到还没同意的人。
+    expect(CANDIDATE_PROFILE_AUDIENCE).toBe('CANDIDATE')
+    expect(EXTERNAL_AUDIENCES).toContain(CANDIDATE_PROFILE_AUDIENCE)
   })
 
   it('isAudience 严格匹配大小写（"organizer" 必须被拒绝）', () => {
@@ -115,5 +155,14 @@ describe('T03 · 披露字段目录', () => {
     expect(Object.keys(s).sort()).toEqual([...DISCLOSURE_FIELD_KEYS].sort())
     expect(s.displayName).toBe('ORGANIZER')
     expect(s.email).toBe('SELF')
+  })
+
+  it('表单档位清单与档位声明完全一致（少一项 = 用户无从授权该档）', () => {
+    // 这是"界面没有开关、数据却能往外走"的镜像版本：若前端清单少了 CANDIDATE，
+    // 用户就无法把字段开给同任务的伙伴，而后端投影已经支持这一档。
+    expect(AUDIENCE_OPTIONS.map((o) => o.value)).toEqual([...DISCLOSURE_AUDIENCES])
+    expect(AUDIENCE_OPTIONS.every((o) => o.label.trim().length > 0)).toBe(true)
+    // EXTERNAL_AUDIENCES 是档位声明去掉 SELF 后的原序子集
+    expect(EXTERNAL_AUDIENCES).toEqual(DISCLOSURE_AUDIENCES.filter((a) => a !== 'SELF'))
   })
 })
