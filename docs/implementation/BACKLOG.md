@@ -5,7 +5,7 @@
 >
 > | 项 | 值 |
 > |---|---|
-> | 真实仓库基线 | `b4125eb`（`main`，T04 第二刀代码提交） |
+> | 真实仓库基线 | `0c95b89`（`main`，**已推送 GitHub + 已发布 Netlify 生产**；生产复验 T04 19/19 · T03 14/14 · 窗口期 13/13） |
 > | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（内核 `e3bc161` + 装配与档位 `b4125eb`） |
 > | 剩余 | **T05–T12，共 8 个任务** |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
@@ -305,7 +305,7 @@
 |---|---|---|---|---|
 | T02 | `tsc` 0 错误 | `tests/connection` 130 · 全量 502 | 全绿 | 移动端 8/8（真实 Chrome） |
 | T03 | `tsc` 0 错误 | `tests/connection` 241 · 全量 620 | 全绿 | 移动端 AC-12 + AC-03 |
-| T04 | `tsc` 0 错误（4m22s） | `tests/connection` **290** · 全量 **669** | `check:script-decls` 45 通过 · ESLint 0/0 | 移动端候选页 **3/3** |
+| T04 | `tsc` 0 错误（4m22s） | `tests/connection` **290** · 全量 **669** | `check:script-decls` 45 通过 · ESLint 0/0 | 移动端候选页 **3/3** · 生产复验 **19/19**（`verify-t04-prod.mjs`） |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash
