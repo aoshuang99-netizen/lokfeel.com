@@ -177,13 +177,26 @@ export default async function MissionSharePage({ params }: PageProps) {
             `discloseSubject(..., 'CANDIDATE')` 白名单投影后才产出）。
           */}
           {viewer?.joined ? (
-            <Link
-              href={`/m/${token}/matches`}
-              className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-blue-500/40 bg-blue-500/10 px-5 py-3 text-sm font-semibold text-blue-100"
-              data-testid="mission-matches-cta"
-            >
-              查看与我互补的人 →
-            </Link>
+            <div className="mt-3 space-y-2">
+              <Link
+                href={`/m/${token}/matches`}
+                className="inline-flex w-full items-center justify-center rounded-xl border border-blue-500/40 bg-blue-500/10 px-5 py-3 text-sm font-semibold text-blue-100"
+                data-testid="mission-matches-cta"
+              >
+                查看与我互补的人 →
+              </Link>
+              {/*
+                T05：连接需要双方各自同意 —— 入口挂在「我的连接」上，
+                待决提案在那里由本人接受/拒绝/撤回（AC-04 / AC-05）。
+              */}
+              <Link
+                href={`/m/${token}/proposals`}
+                className="inline-flex w-full items-center justify-center rounded-xl border border-border px-5 py-3 text-sm font-semibold text-foreground"
+                data-testid="mission-proposals-cta"
+              >
+                我的连接 →
+              </Link>
+            </div>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground" data-testid="mission-candidates-empty">
               匹配候选只对<strong className="text-foreground">已加入并提交了诉求</strong>

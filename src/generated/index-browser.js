@@ -281,6 +281,31 @@ exports.Prisma.IdempotencyRecordScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ConnectionProposalScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  missionId: 'missionId',
+  proposerId: 'proposerId',
+  candidateId: 'candidateId',
+  status: 'status',
+  rationale: 'rationale',
+  expiresAt: 'expiresAt',
+  introducedAt: 'introducedAt',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProposalDecisionScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  proposalId: 'proposalId',
+  personId: 'personId',
+  decision: 'decision',
+  note: 'note',
+  decidedAt: 'decidedAt'
+};
+
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -904,6 +929,19 @@ exports.MissionParticipationStatus = exports.$Enums.MissionParticipationStatus =
   REMOVED: 'REMOVED'
 };
 
+exports.ConnectionProposalStatus = exports.$Enums.ConnectionProposalStatus = {
+  CONSENT_PENDING: 'CONSENT_PENDING',
+  MUTUALLY_ACCEPTED: 'MUTUALLY_ACCEPTED',
+  REJECTED: 'REJECTED',
+  REVOKED: 'REVOKED'
+};
+
+exports.ProposalDecisionKind = exports.$Enums.ProposalDecisionKind = {
+  ACCEPT: 'ACCEPT',
+  REJECT: 'REJECT',
+  REVOKE: 'REVOKE'
+};
+
 exports.UserRole = exports.$Enums.UserRole = {
   USER: 'USER',
   ADMIN: 'ADMIN',
@@ -1226,6 +1264,8 @@ exports.Prisma.ModelName = {
   SocialIntent: 'SocialIntent',
   MissionParticipation: 'MissionParticipation',
   IdempotencyRecord: 'IdempotencyRecord',
+  ConnectionProposal: 'ConnectionProposal',
+  ProposalDecision: 'ProposalDecision',
   User: 'User',
   Account: 'Account',
   Session: 'Session',

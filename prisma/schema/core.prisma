@@ -86,6 +86,15 @@ model User {
 
   // T03 Connection OS — 成员意图与逐字段披露（模型定义见 prisma/schema/connection.prisma）
   socialIntents SocialIntent[] @relation("UserSocialIntents")
+
+  // T05 Connection OS — 连接提案与个体表态（模型定义见 prisma/schema/connection.prisma）
+  //
+  // 三个关系**必须分开命名**：同一个人既可能是「发起方」也可能是「被介绍方」，
+  // 若共用一个关系名，Prisma 无法确定提案的两个外键各自指向哪一侧 ——
+  // 生成出来的 client 会把 proposer/candidate 混淆（编译期不报错，写入时错位）。
+  proposalsMade     ConnectionProposal[] @relation("ProposalProposer")
+  proposalsReceived ConnectionProposal[] @relation("ProposalCandidate")
+  proposalDecisions ProposalDecision[]   @relation("UserProposalDecisions")
   
   // Analytics
   analyticsEvents AnalyticsEvent[]

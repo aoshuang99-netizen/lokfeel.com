@@ -5,9 +5,9 @@
 >
 > | 项 | 值 |
 > |---|---|
-> | 真实仓库基线 | `0c95b89`（`main`，**已推送 GitHub + 已发布 Netlify 生产**；生产复验 T04 19/19 · T03 14/14 · 窗口期 13/13） |
-> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（内核 `e3bc161` + 装配与档位 `b4125eb`） |
-> | 剩余 | **T05–T12，共 8 个任务** |
+> | 真实仓库基线 | `cca7b80`（`main`，**已推送 GitHub + 已发布 Netlify 生产**；上一轮生产复验 T04 19/19 · T03 14/14 · 窗口期 13/13） |
+> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**（见 T05 卡片的交付记录） |
+> | 剩余 | **T06–T12，共 7 个任务** |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
 > | 规划背景 | 《LokFeel SaaS 核心功能架构与开源技术集成方案 V1.0》：10 大模块 / 6 个自研引擎 / P0–P3 / 12 项 Codex 实施清单 |
 
@@ -23,7 +23,7 @@
 | 2 | 建立 SaaS 多租户与角色权限 | **T01** | 09 Trust | ✅ 完成 |
 | 3 | 实现 Mission / Intent / Offer 领域模型 | **T02 + T03** | 01 Mission Studio · 02 Member Intel | ✅ T02 ✅ / T03 ✅ |
 | 4 | 实现双向匹配与候选解释 | **T04** | 03 Connection Engine | ✅ 完成 |
-| 5 | 实现 Consent / Approval / Revocation | **T05** | 09 Trust | ⬜ |
+| 5 | 实现 Consent / Approval / Revocation | **T05** | 09 Trust | ✅ 完成 |
 | 6 | 实现介绍工作流与任务恢复 | **T06** | 07 Workflow · 06 Comm Hub | ⬜ |
 | 7 | 实现 Outcome 与单位成本统计 | **T08** | 08 Outcome Intel | ⬜ |
 | 8 | 完成 Community SaaS Console | **T07** | 全模块的门面 | ⬜ |
@@ -146,6 +146,35 @@
 - **复用**：`ConsentRequest:648` / `ConsentGrant:685` / `/api/im/consent`
 - **铁律**：单方同意**不得**触发介绍；**执行时**必须再校验一次授权与过期（AC-06 是 race condition 测试）
 
+> **交付记录**（本刀 `SHA_TBD` · 2026-10-11 · 分支 `main`）
+>
+> **三条 AC 全部通过**：AC-04 单方同意不介绍 ✅ ｜ AC-05 拒绝与撤销 ✅ ｜ AC-06 执行时校验（CAS）✅
+>
+> - **门禁**：`tsc --noEmit` **0 错误** ｜ `jest tests/connection` **373/373**（T04 290 → 本刀 **+83**：纯内核/服务层 49 + HTTP 层 34）｜
+>   `jest`（全量）**752/752**（T04 669 → +83）｜ ESLint（T05 面）**0 error / 0 warning** ｜ `check:script-decls` **49 脚本**通过
+> - **AC-04 ✅**：`CONSENT_PENDING` **跨越第一次 accept**；只有双方均已同意（`MUTUALLY_ACCEPTED`）才可介绍。
+>   状态机抽成**纯函数内核**（`resolveStatusAfterDecision()` 等）—— 12 个 0.3 秒的断言，且**任何调用方都绕不过它**。
+> - **AC-05 ✅**：REJECT / REVOKE 立即终态并写 `closedAt`；终态后**任何**表态一律 **409**（**不是**幂等成功）。
+>   🔧 本刀修掉一处装配缺陷：同意过之后**只保留「撤回」**（原同时给「拒绝」+「撤回」→ 不同决策记录、相同终态，审计被覆盖）。
+> - **AC-06 ✅（race condition 落点）**：介绍是唯一**执行点**，在执行那一刻重查①提案仍 `MUTUALLY_ACCEPTED`/未过期/未介绍 ②双方 `SocialIntent` 仍 `ACTIVE`；
+>   用 `updateMany({ introducedAt: null, status: 'MUTUALLY_ACCEPTED' })` 做 **CAS 写入** —— "先查再写"在并发下会双写，条件更新不会。
+> - **移动端 E2E（真实 Chrome + Pixel 5）7/7**：匿名重定向 ｜ 分区渲染（文案不把「双方同意」说成「已连接」）｜
+>   单方同意仍待决 ｜ 双方同意仍非连接 ｜ 运营介绍 200 + 重复介绍 409 ｜ 拒绝/撤回进终态 ｜ 档位随阶段升级（含值级扫描）。
+> - **T04 回归 15/15（独立复验）**：T05 改动的 ④ 三条断言（`matches-connect-note` / `matches-view-proposals` 可见、`propose-open` 不存在）全部成立。
+>   ⚠️ `candidate-match.spec.ts` 的 **UI 登录腿**在本机 dev 下不稳（登录页受控组件 hydration 竞态）→ 新增
+>   `scripts/qa/verify-t04-candidate-regress.mjs`（用 `ctx.request` 登录）作为**可复跑**的等价取证。
+> - **迁移 C2（纯新增）**：`ConnectionProposal` + `ProposalDecision`（2 表 + 10 索引，**无** ALTER/DROP/数据订正）→ 迁移与回滚**零停机**。
+>   🟡 **生产库待执行** `node scripts/connection/migrate.mjs apply --batch=C2 --yes`（幂等）。回滚演练见 `T05/rollback.md`。
+> - **交付物**：`src/lib/connection/proposals.ts`（纯内核 + 服务层，新）· `proposal-input.ts`（新）·
+>   `/api/v1/connections/{proposals, introductions}` 与 `/api/v1/connections/{connectionId}/{consent,revoke,introduce}`（新）·
+>   `/m/[token]/proposals`（新，三分区）· `matches` 页接入「我的连接」+ 运营「发起连接」·
+>   `scripts/qa/seed-t05-e2e.mjs`（新夹具，**独立 Mission** `mission_e2e_t05`）
+> - 文档：`docs/implementation/T05/{changes,tests,risks,rollback}.md` ｜ 报告：`LokFeel-T05-ConsentTrust-2026-10-11.html`
+> - 🔧 顺带修复：`proposal-actions.tsx` / `propose-button.tsx` 的 `window.location.href = …` → `router.push()`（消 `react-hooks/immutability` **error** 与 no-location-assign **warning**）
+> - ⚠️ **交接 T06**：T06 的投递钩子**必须原样调用** `introduceConnection()`（AC-06 的两段校验 + CAS 已封好），**不得另写一份校验** —— 那正是 AC-06 最容易被绕开的路径。`introduce` **刻意不带幂等键**（重复调用 409 是正确结果）。
+> - ⚠️ **交接 T12**：把 E2E 登录统一切到 `ctx.request` 手法（消除登录页与本用例无关的抖动）；
+>   `T05/tests.md` §7.3 的判据原则（**断言"刷新后仍成立的"而非"用户能看到的"**）应写进端到端门禁规范。
+
 ### T06 · Workflow Execution — 可靠介绍与跟进状态机
 - **目标**：`Created → Discovering → Proposed → Consent Pending → Introduced → Coordinating → Action Completed → Outcome Recorded`
 - **依赖**：T05
@@ -229,7 +258,7 @@
 |---|---|---|
 | P0 基础（多租户/身份/权限/成员数据） | T01 ✅ + T03 ✅ | ✅ |
 | P0 核心（Mission/Intent/Matching） | T02 ✅ / T03 ✅ / T04 ✅ | 🟢 闭环 |
-| P0 安全（Consent/审批/审计） | T05 | ✅ |
+| P0 安全（Consent/审批/审计） | **T05 ✅** | ✅ |
 | P0 执行（介绍与跟进工作流） | T06 | ✅ |
 | P0 商业（Outcome/账单/用量） | T08 + T07 | ✅ |
 | P1 Agent（意图提取/草稿/协调） | T09 | ✅ |
@@ -243,6 +272,14 @@
 
 ① **AC-10（数据生命周期：导出/删除/缓存与索引与任务清理）在 T00–T12 中无人认领。**
 主指令把它写成上线阻断条件，但 13 个任务卡里没有一条明确承接。**建议挂到 T05**（Trust 模块）作为子项，否则 T12 必然卡在「BLOCKER 无主」。
+   > **T05 交付后的更新（⚠️ 仍未闭合）**：T05 **只认领了"满足阻断条件所需的那一小步"**，
+   > 并**主动记下了它与 AC-10 取向不一致的地方** ——
+   > `ProposalDecision` 是"**当前**表态"（`upsert` 覆盖）而非追加式流水；
+   > `writeTenantAudit(...)` 带 `.catch(() => {})`，即**审计写入失败不影响业务**。
+   > 这与 AC-10 的"不可抵赖"取向相反，已在 `T05/risks.md` **R7** 记为需在合规评审时
+   > 改为「事务内写入 + 追加式决策表」的待消解项。
+   > **"导出 / 删除 / 缓存与索引清理"三条仍未认领** → 仍须在 T12 之前明确归属，不要因为
+   > T05 打了勾就当作 AC-10 已闭合。
 
 ② **AC-25（真实付费试点）本质不是研发任务。** 需要真实客户与续费数据，代码侧只能产出「可复算的数据通道」，验收结论必然停留 `BLOCKED`。**不要为了凑绿而在 T12 虚报。**
 
@@ -274,24 +311,28 @@
 
 ## 7. 下一个动作
 
-**建议立即开工 T05（Consent & Trust — 双边同意、审批、撤销）**，理由：
+**建议立即开工 T06（Workflow Execution — 可靠介绍与跟进状态机）**，理由：
 
-1. **P0 核心闭环已在 T04 完成**：T02 有了任务、T03 有了意图、T04 把「意图」变成「可对接的人」——
-   但候选页上**没有任何"建立连接"的按钮**，因为双边同意不属于 T04。用户的下一步动作现在悬空。
-2. **T04 已经为 T05 铺好了地基**：候选（`CandidateView`）就是 T05 提案的**输入**；
-   `CANDIDATE` 档位的存在正是为了"同意之前只看到该看到的"，
-   而 `COUNTERPARTY` 档位**至今没有任何写入路径**（用户还无法把字段授权到这一档）——
-   T05 落地双边同意后，这一档才会真正生效。
-3. **T05 的 AC-06 是 race condition 测试**：必须"在执行引入的那一刻再校验一次授权与过期"。
-   这条与 T04 刚建立的「披露唯一出口」是同一类不变量 —— **趁上下文还热，接着做成本最低。**
+1. **T05 把"人"接上了，但"流程"还是断的**：双方同意后可被介绍（AC-04/05/06 均已验证），
+   可是**没有人被通知**、介绍**没有重试/超时/死信**、介绍之后的协调与成果记录也不存在。
+   用户此刻能做的最后一件事是"看到连接已建立"，然后就没有下一步了。
+2. **T06 是 T05 的直接下游，而且接口已经稳定**：`introduceConnection()` 已把 AC-06 的两段
+   校验（提案自身 + 双方意图仍生效）与 CAS 写入收敛在**一个函数**里 ——
+   T06 的投递钩子应当**原样调用它**，而不是另写一份校验（那正是 AC-06 最容易被绕开的路径）。
+3. **决策点已经到期**：§6-⑤（DB 队列 vs Temporal）在 T05 时"还轮不到"，现在**成了开工前的阻塞项**。
 
 **开工前必读**：
-- `T04/risks.md` 的 **R7**（`consent`/`revoke` 执行时必须再过一次 `discloseSubject`）与 **R2**（隔离仍是应用级）；
-- `T03/risks.md` 的 **R6**（撤销/过期后"披露归零"是读时判定 → **加缓存必须同步失效**）；
-- `T04/changes.md` §3.1（档位次序的推导：`CANDIDATE` 比 `COUNTERPARTY` 更宽，`COUNTERPARTY` 写入路径在 T05 才出现）。
+- `T05/risks.md` 的 **R1**（本刀只做了**同步**执行点，投递可靠性属 T06；队列化时
+  `(proposalId,'introduce')` 的幂等键必须**显式重建** —— 今天"只成功一次"是
+  `updateMany({introducedAt: null})` 的 CAS 带来的，换成队列后这条性质不会自动继承）、
+  **R4**（提案创建后对方**不会被通知**）与 **R9**（同意过后只剩「撤回」的口径 ——
+  通知文案里不要写回"拒绝"）；
+- `T05/changes.md` §3.3（执行时校验 = 重新查 + CAS 写）与 §3.6（**`introduce` 刻意不带幂等键**：
+  重复调用回 409 才是正确结果 —— 队列化后这条语义要**重新论证**，别顺手加回幂等键）；
+- `T05/tests.md` §7.3（移动端 E2E 的竞态教训：**"用户能看到的"与"刷新后仍成立的"不是同一类事实**）。
 
-**阻塞项**：无。**开工前无需等待 §6 的任何一项** ——
-§6-①②③ 属平台/迁移决策，§6-⑤（T06 工作流引擎）在 T05 之后才会用到。
+**阻塞项**：**§6-⑤ 必须先拍板**（T06 工作流引擎选型），否则会做出无法复用的实现；
+§6-①②③ 仍属平台/迁移决策，**不**阻塞 T06 开工。
 
 > ⚠️ **顺带认领**：§5-① 指出的 **AC-10（数据生命周期：导出/删除/缓存与索引与任务清理）至今无主**。
 > T05 是它最自然的落点（Trust 模块管"授权"，而"授权收回后的数据处置"属同一域）。

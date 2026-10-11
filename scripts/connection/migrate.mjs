@@ -46,9 +46,15 @@ export const BATCHES = {
     tables: ['SocialIntent'],
     label: 'T03 · 成员意图与逐字段披露（SocialIntent）',
   },
+  C2: {
+    // C2 内部也有依赖方向：ProposalDecision 的外键指向 ConnectionProposal。
+    // 数组顺序 = 创建顺序；rollback 取其逆序，故会先删 ProposalDecision。
+    tables: ['ConnectionProposal', 'ProposalDecision'],
+    label: 'T05 · 双边同意（ConnectionProposal / ProposalDecision）',
+  },
 }
 
-export const ALL_BATCHES = ['C0', 'C1']
+export const ALL_BATCHES = ['C0', 'C1', 'C2']
 
 // ══════════════════════════════════════════════════════════════════════
 // 环境加载
@@ -219,7 +225,53 @@ function sqlC1() {
   ]
 }
 
-const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1 }
+function sqlC2() {
+  return [
+    `CREATE TABLE IF NOT EXISTS "ConnectionProposal" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "missionId" TEXT NOT NULL,
+  "proposerId" TEXT NOT NULL,
+  "candidateId" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'CONSENT_PENDING',
+  "rationale" TEXT NOT NULL,
+  "expiresAt" DATETIME,
+  "introducedAt" DATETIME,
+  "closedAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL,
+  CONSTRAINT "ConnectionProposal_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ConnectionProposal_missionId_fkey" FOREIGN KEY ("missionId") REFERENCES "Mission" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ConnectionProposal_proposerId_fkey" FOREIGN KEY ("proposerId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ConnectionProposal_candidateId_fkey" FOREIGN KEY ("candidateId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "ConnectionProposal_missionId_proposerId_candidateId_key" ON "ConnectionProposal"("missionId", "proposerId", "candidateId")`,
+    `CREATE INDEX IF NOT EXISTS "ConnectionProposal_organizationId_status_idx" ON "ConnectionProposal"("organizationId", "status")`,
+    `CREATE INDEX IF NOT EXISTS "ConnectionProposal_organizationId_missionId_idx" ON "ConnectionProposal"("organizationId", "missionId")`,
+    `CREATE INDEX IF NOT EXISTS "ConnectionProposal_proposerId_status_idx" ON "ConnectionProposal"("proposerId", "status")`,
+    `CREATE INDEX IF NOT EXISTS "ConnectionProposal_candidateId_status_idx" ON "ConnectionProposal"("candidateId", "status")`,
+    `CREATE INDEX IF NOT EXISTS "ConnectionProposal_expiresAt_idx" ON "ConnectionProposal"("expiresAt")`,
+
+    `CREATE TABLE IF NOT EXISTS "ProposalDecision" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "proposalId" TEXT NOT NULL,
+  "personId" TEXT NOT NULL,
+  "decision" TEXT NOT NULL,
+  "note" TEXT,
+  "decidedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ProposalDecision_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ProposalDecision_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "ConnectionProposal" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "ProposalDecision_personId_fkey" FOREIGN KEY ("personId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "ProposalDecision_proposalId_personId_key" ON "ProposalDecision"("proposalId", "personId")`,
+    `CREATE INDEX IF NOT EXISTS "ProposalDecision_organizationId_idx" ON "ProposalDecision"("organizationId")`,
+    `CREATE INDEX IF NOT EXISTS "ProposalDecision_personId_decidedAt_idx" ON "ProposalDecision"("personId", "decidedAt")`,
+    `CREATE INDEX IF NOT EXISTS "ProposalDecision_decision_idx" ON "ProposalDecision"("decision")`,
+  ]
+}
+
+const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2 }
 
 /** 期望存在的索引（verify 断言用）。 */
 const EXPECTED_INDEXES = [
@@ -239,6 +291,17 @@ const EXPECTED_INDEXES = [
   { name: 'SocialIntent_organizationId_missionId_idx', table: 'SocialIntent', unique: false },
   { name: 'SocialIntent_userId_status_idx', table: 'SocialIntent', unique: false },
   { name: 'SocialIntent_expiresAt_idx', table: 'SocialIntent', unique: false },
+  // ── C2 ──
+  { name: 'ConnectionProposal_missionId_proposerId_candidateId_key', table: 'ConnectionProposal', unique: true },
+  { name: 'ConnectionProposal_organizationId_status_idx', table: 'ConnectionProposal', unique: false },
+  { name: 'ConnectionProposal_organizationId_missionId_idx', table: 'ConnectionProposal', unique: false },
+  { name: 'ConnectionProposal_proposerId_status_idx', table: 'ConnectionProposal', unique: false },
+  { name: 'ConnectionProposal_candidateId_status_idx', table: 'ConnectionProposal', unique: false },
+  { name: 'ConnectionProposal_expiresAt_idx', table: 'ConnectionProposal', unique: false },
+  { name: 'ProposalDecision_proposalId_personId_key', table: 'ProposalDecision', unique: true },
+  { name: 'ProposalDecision_organizationId_idx', table: 'ProposalDecision', unique: false },
+  { name: 'ProposalDecision_personId_decidedAt_idx', table: 'ProposalDecision', unique: false },
+  { name: 'ProposalDecision_decision_idx', table: 'ProposalDecision', unique: false },
 ]
 
 /** 期望存在的外键（表 → 引用目标），verify 断言用。 */
@@ -254,6 +317,17 @@ const EXPECTED_FKS = [
   { table: 'SocialIntent', target: 'Organization' },
   { table: 'SocialIntent', target: 'Mission' },
   { table: 'SocialIntent', target: 'User' },
+  // ── C2 ──
+  // ⚠️ `ConnectionProposal` 有 4 个外键，其中指向 `User` 的**有两个**（proposer / candidate）。
+  // 本列表用「表 → 目标」的粗粒度断言，所以两条 User 外键只留一条 —— 方向由下面
+  // `cmdVerify` 的列级断言（4c）单独守住：那里检查的是一条约束里**同时**出现
+  // `"proposerId"` 与 `"candidateId"`，只建其中一个会失败。
+  { table: 'ConnectionProposal', target: 'Organization' },
+  { table: 'ConnectionProposal', target: 'Mission' },
+  { table: 'ConnectionProposal', target: 'User' },
+  { table: 'ProposalDecision', target: 'Organization' },
+  { table: 'ProposalDecision', target: 'ConnectionProposal' },
+  { table: 'ProposalDecision', target: 'User' },
 ]
 
 /** 全部受管表（verify 用）。 */
@@ -489,6 +563,60 @@ async function cmdVerify(client) {
     ok('SocialIntent 关键列均为 NOT NULL', false, '表不存在')
   }
 
+  // 4c) T05 · ConnectionProposal / ProposalDecision 的列约束与默认值
+  const proposalCols = await tableColumns(client, 'ConnectionProposal')
+  if (proposalCols) {
+    const sql = (await tableCreateSql(client, 'ConnectionProposal')) || ''
+    const required = ['organizationId', 'missionId', 'proposerId', 'candidateId', 'rationale'].every(
+      (c) => new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('ConnectionProposal 关键列均为 NOT NULL', required)
+
+    ok(
+      "ConnectionProposal.status 默认 'CONSENT_PENDING'",
+      /"status"\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'CONSENT_PENDING'/.test(sql)
+    )
+
+    // 可空列：这三个"没有值"都是合法状态。若被建成 NOT NULL，
+    // 「不过期」「尚未介绍」「尚未关闭」都会变成写入失败。
+    const proposalNullable = ['expiresAt', 'introducedAt', 'closedAt'].every((c) =>
+      new RegExp(`"${c}"\\s+DATETIME\\b(?!\\s+NOT)`).test(sql)
+    )
+    ok('ConnectionProposal 可选列可为空（有效期/介绍时间/关闭时间）', proposalNullable)
+
+    // 🔴 方向断言：proposer / candidate 必须是**两条各自独立**的 User 外键。
+    // 若只建一条（例如把两个字段都接到同一个约束上），"被介绍方同意"会静默变成
+    // "发起方自己同意" —— 双方同意退化为单方，且没有任何运行期信号。
+    const hasProposerFk =
+      /CONSTRAINT\s+"ConnectionProposal_proposerId_fkey"\s+FOREIGN KEY\s+\("proposerId"\)\s+REFERENCES\s+"User"/.test(
+        sql
+      )
+    const hasCandidateFk =
+      /CONSTRAINT\s+"ConnectionProposal_candidateId_fkey"\s+FOREIGN KEY\s+\("candidateId"\)\s+REFERENCES\s+"User"/.test(
+        sql
+      )
+    ok('ConnectionProposal.proposerId → User 外键方向正确', hasProposerFk)
+    ok('ConnectionProposal.candidateId → User 外键方向正确', hasCandidateFk)
+  } else {
+    ok('ConnectionProposal 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  const decisionCols = await tableColumns(client, 'ProposalDecision')
+  if (decisionCols) {
+    const sql = (await tableCreateSql(client, 'ProposalDecision')) || ''
+    const required = ['organizationId', 'proposalId', 'personId', 'decision'].every((c) =>
+      new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('ProposalDecision 关键列均为 NOT NULL', required)
+    ok('ProposalDecision.note 可为空（拒绝理由不是必填项）', /"note"\s+TEXT\b(?!\s+NOT)/.test(sql))
+    ok(
+      'ProposalDecision.decidedAt 默认 CURRENT_TIMESTAMP',
+      /"decidedAt"\s+DATETIME\s+NOT\s+NULL\s+DEFAULT\s+CURRENT_TIMESTAMP/.test(sql)
+    )
+  } else {
+    ok('ProposalDecision 关键列均为 NOT NULL', false, '表不存在')
+  }
+
   // 5) 孤儿行（跨表完整性）
   const orphanMission = await countRows(
     client,
@@ -540,6 +668,51 @@ async function cmdVerify(client) {
   )
   if (dupIntent !== null) {
     ok('SocialIntent 无重复 (missionId,userId)', dupIntent === 0, `重复组 ${dupIntent}`)
+  }
+
+  // 5c) T05 · 提案与表态的唯一性、以及引用完整性
+  const dupProposal = await countRows(
+    client,
+    'ConnectionProposal',
+    ` GROUP BY "missionId", "proposerId", "candidateId" HAVING COUNT(*) > 1`
+  )
+  if (dupProposal !== null) {
+    ok(
+      'ConnectionProposal 无重复 (missionId,proposerId,candidateId)',
+      dupProposal === 0,
+      `重复组 ${dupProposal}`
+    )
+  }
+
+  const dupDecision = await countRows(
+    client,
+    'ProposalDecision',
+    ` GROUP BY "proposalId", "personId" HAVING COUNT(*) > 1`
+  )
+  if (dupDecision !== null) {
+    ok('ProposalDecision 无重复 (proposalId,personId)', dupDecision === 0, `重复组 ${dupDecision}`)
+  }
+
+  const orphanProposalMission = await countRows(
+    client,
+    'ConnectionProposal',
+    ` WHERE "missionId" NOT IN (SELECT "id" FROM "Mission")`
+  )
+  if (orphanProposalMission !== null) {
+    ok('ConnectionProposal 无孤儿 missionId', orphanProposalMission === 0, `孤儿 ${orphanProposalMission}`)
+  }
+
+  const orphanDecisionProposal = await countRows(
+    client,
+    'ProposalDecision',
+    ` WHERE "proposalId" NOT IN (SELECT "id" FROM "ConnectionProposal")`
+  )
+  if (orphanDecisionProposal !== null) {
+    ok(
+      'ProposalDecision 无孤儿 proposalId',
+      orphanDecisionProposal === 0,
+      `孤儿 ${orphanDecisionProposal}`
+    )
   }
 
   // 6) 计数（信息项，不断言 0 —— 生产可能有真实数据）

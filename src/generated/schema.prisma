@@ -315,6 +315,7 @@ model Mission {
   owner          User                   @relation("UserMissions", fields: [ownerId], references: [id], onDelete: Cascade)
   participations MissionParticipation[]
   socialIntents  SocialIntent[]
+  proposals      ConnectionProposal[]
 
   @@index([organizationId, status])
   @@index([organizationId, createdAt])
@@ -475,6 +476,126 @@ model IdempotencyRecord {
   @@index([organizationId, createdAt])
 }
 
+// ═══════════════════════════════════════════════════════════════
+// T05 · 双边同意（Consent & Trust）—— AC-04 / AC-05 / AC-06
+//
+// 契约对应：
+//   - contracts/schema.sql:693-704   (connection_proposals / proposal_decisions)
+//   - contracts/connection.openapi.yaml   POST /connections/proposals、
+//     POST /connections/{connectionId}/consent、POST /connections/{connectionId}/revoke
+//
+// ⚠️ **为什么不复用 core.prisma 的 `ConsentRequest` / `ConsentGrant`**
+//   （卡片写"可复用"，此处是逐条核对后的判定，不是偷懒新造表）：
+//   那两个模型是 **IM 媒体访问权限** —— `consentType: MEDIA`、
+//   `requestedLevel/grantedLevel: L0_TEXT | …`、外键 `conversationId` 挂在**会话**上，
+//   语义是"允许对方看我的摄像头 / 麦克风 / 加密消息"。
+//   本任务要表达的是"**组织者牵线，与另一个人建立连接**"：没有会话、没有媒体档位、
+//   参与者是「提案双方」而非「会话双方」。
+//   硬塞进 `ConsentRequest` 需要把 `conversationId` 改成可空、并给 `consentType`
+//   加一个与 `MEDIA` 并列的取值 —— 结果是**两个语义域共用一张表**：
+//   媒体权限的查询会捞到连接提案，反之亦然（且没有任何编译期信号）。
+//   契约本身把二者分表（`consent_grants` vs `connection_proposals`），本仓遵循契约。
+//   可以复用的是**模式**而非表：拒绝即关闭、撤销清空待发、执行前再校验。
+// ═══════════════════════════════════════════════════════════════
+
+/// 连接提案的生命周期。
+///
+/// ⚠️ 与 T03 `IntentStatus` 的根本差别：这是**双人**状态机。
+///   单人同意**不改变**"待决"这一事实 —— `CONSENT_PENDING` 会跨越第一次 accept。
+///   因此"能否介绍"的判据**不是** "有人同意了"，而是 `MUTUALLY_ACCEPTED`
+///   （AC-04：单方接受不得发送正式介绍）。
+enum ConnectionProposalStatus {
+  CONSENT_PENDING // 待决：至少一方尚未表态（刚创建时即此态）
+  MUTUALLY_ACCEPTED // 双方均已接受 —— **"可介绍"的唯一状态**
+  REJECTED // 任一方拒绝：终态，之后任何表态一律 409
+  REVOKED // 任一方撤销：终态；也可从 MUTUALLY_ACCEPTED 撤销（AC-05）
+}
+
+/// 个体表态类型。对应契约 `proposal_decisions.decision CHECK IN ('accept','reject','revoke')`。
+enum ProposalDecisionKind {
+  ACCEPT
+  REJECT
+  REVOKE
+}
+
+/// 连接提案。对应契约 `connection_proposals` 表。
+model ConnectionProposal {
+  id             String @id @default(cuid())
+  organizationId String
+  /// 提案依附的 Mission —— 互补关系是在某条任务下被发现并牵线的。
+  missionId      String
+
+  /// 发起方。**必须**是同租户 ACTIVE 成员且具备 `proposal.create`（T01 定为 OPERATOR+）。
+  proposerId  String
+  /// 被介绍方。**必须**是同租户 ACTIVE 成员，且与发起方不是同一人（契约 CHECK 的等价约束）。
+  candidateId String
+
+  status ConnectionProposalStatus @default(CONSENT_PENDING)
+
+  /// 发起理由。**会展示给被介绍方** —— 这是对方决定"要不要同意"的唯一依据，
+  /// 故必填（契约 `rationale text NOT NULL`）。不得写入内部判断或他人隐私。
+  rationale String
+
+  /// 提案有效期。null = 不过期。
+  /// ⚠️ AC-06：**执行（介绍）时必须再校验一次本字段**，不能只在创建时校验 ——
+  /// 提案完全可能在"双方都同意"与"真正介绍"之间失效。
+  expiresAt DateTime?
+
+  /// 介绍落地时间。null = 尚未介绍。写入即代表"连接已建立"，T06 据此驱动后续工作流。
+  introducedAt DateTime?
+  /// 关闭时间（进入 REJECTED / REVOKED 时写入），用于审计与"提案存活时长"统计。
+  closedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  mission      Mission            @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  proposer     User               @relation("ProposalProposer", fields: [proposerId], references: [id], onDelete: Cascade)
+  candidate    User               @relation("ProposalCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
+  decisions    ProposalDecision[]
+
+  /// 同一对（发起方 → 被介绍方）在同一任务下**只能有一条提案**。
+  /// 这同时是"重复发起"的最后一道兜底：即便客户端换了 `Idempotency-Key`，
+  /// 也不会为同一对搭档堆出多条并行同意流程 —— 那会把"双方同意"退化成
+  /// "同意其中一条"，而另外几条仍在待决（用户看到的界面会自相矛盾）。
+  @@unique([missionId, proposerId, candidateId])
+  @@index([organizationId, status])
+  @@index([organizationId, missionId])
+  @@index([proposerId, status])
+  @@index([candidateId, status])
+  @@index([expiresAt])
+}
+
+/// 个体表态记录。契约 `PRIMARY KEY(proposal_id, person_id)` —— 每人每提案**至多一行**。
+///
+/// 语义：这是「**当前**表态」，不是「表态流水」。同一人先 accept 后 revoke 时，
+/// 本行被**覆盖**（AC-05 的撤销即由此实现），而不是追加一行 ——
+/// 保留流水会把"谁在什么时候改过主意"变成永久记录，那不是本任务要收集的数据。
+/// 需要不可抵赖的追加式记录请走 `TenantAuditEvent`（写入失败不影响业务）。
+model ProposalDecision {
+  id             String @id @default(cuid())
+  organizationId String
+  proposalId     String
+  /// 表态人。服务层**必须**校验其 ∈ {proposerId, candidateId}（非参与者 → 403，不得 404 —— 
+  /// 提案对非参与者而言是"存在但不关你的事"，与跨租户的"不存在"是两种不同的答复）。
+  personId       String
+
+  decision  ProposalDecisionKind
+  /// 可选说明。**不返回给对侧** —— 否则"拒绝理由"就成了一次计划外的信息披露。
+  note      String?
+  decidedAt DateTime             @default(now())
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  proposal     ConnectionProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  person       User               @relation("UserProposalDecisions", fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([proposalId, personId])
+  @@index([organizationId])
+  @@index([personId, decidedAt])
+  @@index([decision])
+}
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -562,6 +683,15 @@ model User {
 
   // T03 Connection OS — 成员意图与逐字段披露（模型定义见 prisma/schema/connection.prisma）
   socialIntents SocialIntent[] @relation("UserSocialIntents")
+
+  // T05 Connection OS — 连接提案与个体表态（模型定义见 prisma/schema/connection.prisma）
+  //
+  // 三个关系**必须分开命名**：同一个人既可能是「发起方」也可能是「被介绍方」，
+  // 若共用一个关系名，Prisma 无法确定提案的两个外键各自指向哪一侧 ——
+  // 生成出来的 client 会把 proposer/candidate 混淆（编译期不报错，写入时错位）。
+  proposalsMade     ConnectionProposal[] @relation("ProposalProposer")
+  proposalsReceived ConnectionProposal[] @relation("ProposalCandidate")
+  proposalDecisions ProposalDecision[]   @relation("UserProposalDecisions")
 
   // Analytics
   analyticsEvents AnalyticsEvent[]
@@ -2073,6 +2203,13 @@ model Organization {
 
   // ── T03 Connection OS 反向关系（connection.prisma）──
   socialIntents SocialIntent[]
+
+  // ── T05 Connection OS 反向关系（connection.prisma）──
+  //
+  // 注意：`ConnectionProposal` 上**同时**有 `missionId` 与 `organizationId` 两个外键，
+  // 但只有 `organizationId` 指向本模型，因此不需要额外命名关系。
+  connectionProposals ConnectionProposal[]
+  proposalDecisions   ProposalDecision[]
 
   @@index([status])
 }

@@ -1,7 +1,7 @@
 /**
- * T04 · 候选页 —— `/m/<token>/matches`
+ * T04/T05 · 候选页 —— `/m/<token>/matches`
  *
- * 设计目标（AC-13「双向检索与可解释排序」）：
+ * 设计目标（AC-13「双向检索与可解释排序」+ T05 的牵线入口）：
  *   1. **每个候选都必须带得走依据**：展示**实际命中的词元**，而不是一个匹配百分比；
  *   2. **无候选不伪造**：没有互补关系时给出**确定性的原因**，绝不填占位候选；
  *   3. **移动优先**：单列、大字号、无横向滚动（与 T02/T03 的分享页一致）。
@@ -12,28 +12,31 @@
  *   - 对方的 `constraints`（筛选口径）不进候选；
  *   - 被门控拒绝的意图只贡献**计数**，不贡献内容 —— 页面拿不到"是谁被挡掉了"。
  *
- * 采用**纯服务端渲染**（无客户端状态）：与 T03 意图表单不同，本页没有交互写操作，
- * 因此不需要 `'use client'` —— 顺带避开了 dev 模式下 hydration 与 `networkidle`
- * 的一整类不稳定（T02/T03 都在那上面花过时间）。
+ * 采用**纯服务端渲染**（无客户端状态）：候选本身没有交互写操作；
+ * 唯一的写操作（「发起连接」）交给一个独立客户端组件承载（T05 新增）。
  *
- * ⚠️ 本页**不提供"建立连接"按钮**：双边同意与联系方式交换属于 T05。
- *   放一个点了没用的按钮，比放一句"下一步开放"更糟 —— 前者会让用户以为
- *   连接已经发出去了。
+ * ⚠️ 「发起连接」是**运营动作**（`proposal.create` = OPERATOR+）。
+ *   本页据真实 membership 角色决定是否渲染该入口；普通成员看到的是
+ *   「查看我的连接」—— 他们能对**自己被牵线的提案**表态，但不能替别人发起。
+ *   界面显隐不是安全边界：真正的执法在 API 与服务层。
  */
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/lib/auth/auth'
+import { can } from '@/lib/tenancy/capabilities'
 import {
   DISCLOSURE_FIELDS,
   explainCandidate,
   getMyIntentByShareToken,
   isShareTokenShaped,
   listCandidatesByShareToken,
+  resolveShareTokenTenant,
   type CandidateList,
   type NoCandidateReason,
 } from '@/lib/connection'
+import { ProposeButton } from './propose-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,14 +102,27 @@ export default async function MatchesPage({ params }: PageProps) {
   // 令牌无效 / 非本社群成员 → 一律"不存在"（不区分 404 与 403，避免接口探测）。
   if (!result) notFound()
 
+  // 「发起连接」是运营动作：按**真实 membership 角色**决定是否显示入口。
+  const tenant = await resolveShareTokenTenant(token, viewerId)
+  const canPropose = tenant ? can(tenant.ctx.role, 'proposal.create') : false
+
   const reason = result.noCandidatesReason
 
   return (
     <main data-testid="matches-page" className="min-h-screen bg-background pb-16">
       <div className="mx-auto w-full max-w-2xl px-5 pt-8">
-        <Link href={`/m/${token}`} className="text-sm text-muted-foreground" data-testid="matches-back">
-          ← 返回任务
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href={`/m/${token}`} className="text-sm text-muted-foreground" data-testid="matches-back">
+            ← 返回任务
+          </Link>
+          <Link
+            href={`/m/${token}/proposals`}
+            className="ml-auto text-sm text-blue-300"
+            data-testid="matches-my-proposals"
+          >
+            我的连接 →
+          </Link>
+        </div>
 
         <h1 className="mt-4 text-2xl font-semibold leading-snug text-foreground">
           与我互补的人
@@ -212,13 +228,24 @@ export default async function MatchesPage({ params }: PageProps) {
                       </dl>
                     )}
                   </div>
+
+                  {/*
+                    ⚠️ 被介绍方的身份 `c.userId` 与 `result.missionId` **不渲染**，
+                    只作为「发起连接」请求的参数传给客户端组件（成员页、已登录）。
+                    发起**不会**立即建立连接 —— 它只产生一条待双方同意的提案（AC-04）。
+                  */}
+                  {canPropose ? (
+                    <div className="mt-4 border-t border-border pt-3">
+                      <ProposeButton missionId={result.missionId} candidateId={c.userId} />
+                    </div>
+                  ) : null}
                 </li>
               )
             })}
           </ul>
         )}
 
-        {/* ── 边界说明（诚实：连接流程尚未交付）── */}
+        {/* ── 边界说明 ── */}
         <section className="mt-8 rounded-2xl border border-border bg-card/40 p-5">
           <h2 className="text-sm font-semibold text-foreground">关于这些信息</h2>
           <p className="mt-2 text-xs text-muted-foreground">
@@ -226,17 +253,26 @@ export default async function MatchesPage({ params }: PageProps) {
             你的诉求正文（我需要/我能提供）会展示给同任务的参与者。
             想收紧范围，可随时回到意图页修改 —— 改动**立即生效**，无需等待。
           </p>
-          <p className="mt-2 text-xs text-muted-foreground" data-testid="matches-connect-coming">
-            建立连接（双方确认、交换联系方式）将在下一步开放 ——
-            这一步需要双方各自的同意，不会由系统替你决定。
+          <p className="mt-2 text-xs text-muted-foreground" data-testid="matches-connect-note">
+            连接需要<strong className="text-foreground">双方各自同意</strong>，
+            再由运营发出介绍 —— 任何人都无法替你同意，系统也不会替你决定。
           </p>
-          <Link
-            href={`/m/${token}/intent`}
-            className="mt-3 inline-flex text-sm text-blue-300"
-            data-testid="matches-edit-intent"
-          >
-            调整我的披露范围 →
-          </Link>
+          <div className="mt-3 flex flex-wrap gap-4">
+            <Link
+              href={`/m/${token}/proposals`}
+              className="inline-flex text-sm text-blue-300"
+              data-testid="matches-view-proposals"
+            >
+              我的连接 →
+            </Link>
+            <Link
+              href={`/m/${token}/intent`}
+              className="inline-flex text-sm text-blue-300"
+              data-testid="matches-edit-intent"
+            >
+              调整我的披露范围 →
+            </Link>
+          </div>
         </section>
       </div>
     </main>

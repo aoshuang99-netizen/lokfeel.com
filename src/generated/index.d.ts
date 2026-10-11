@@ -73,6 +73,21 @@ export type MissionParticipation = $Result.DefaultSelection<Prisma.$MissionParti
  */
 export type IdempotencyRecord = $Result.DefaultSelection<Prisma.$IdempotencyRecordPayload>
 /**
+ * Model ConnectionProposal
+ * 连接提案。对应契约 `connection_proposals` 表。
+ */
+export type ConnectionProposal = $Result.DefaultSelection<Prisma.$ConnectionProposalPayload>
+/**
+ * Model ProposalDecision
+ * 个体表态记录。契约 `PRIMARY KEY(proposal_id, person_id)` —— 每人每提案**至多一行**。
+ * 
+ * 语义：这是「**当前**表态」，不是「表态流水」。同一人先 accept 后 revoke 时，
+ * 本行被**覆盖**（AC-05 的撤销即由此实现），而不是追加一行 ——
+ * 保留流水会把"谁在什么时候改过主意"变成永久记录，那不是本任务要收集的数据。
+ * 需要不可抵赖的追加式记录请走 `TenantAuditEvent`（写入失败不影响业务）。
+ */
+export type ProposalDecision = $Result.DefaultSelection<Prisma.$ProposalDecisionPayload>
+/**
  * Model User
  * 
  */
@@ -348,6 +363,25 @@ export const DisclosureAudience: {
 };
 
 export type DisclosureAudience = (typeof DisclosureAudience)[keyof typeof DisclosureAudience]
+
+
+export const ConnectionProposalStatus: {
+  CONSENT_PENDING: 'CONSENT_PENDING',
+  MUTUALLY_ACCEPTED: 'MUTUALLY_ACCEPTED',
+  REJECTED: 'REJECTED',
+  REVOKED: 'REVOKED'
+};
+
+export type ConnectionProposalStatus = (typeof ConnectionProposalStatus)[keyof typeof ConnectionProposalStatus]
+
+
+export const ProposalDecisionKind: {
+  ACCEPT: 'ACCEPT',
+  REJECT: 'REJECT',
+  REVOKE: 'REVOKE'
+};
+
+export type ProposalDecisionKind = (typeof ProposalDecisionKind)[keyof typeof ProposalDecisionKind]
 
 
 export const AuditCategory: {
@@ -803,6 +837,14 @@ export type DisclosureAudience = $Enums.DisclosureAudience
 
 export const DisclosureAudience: typeof $Enums.DisclosureAudience
 
+export type ConnectionProposalStatus = $Enums.ConnectionProposalStatus
+
+export const ConnectionProposalStatus: typeof $Enums.ConnectionProposalStatus
+
+export type ProposalDecisionKind = $Enums.ProposalDecisionKind
+
+export const ProposalDecisionKind: typeof $Enums.ProposalDecisionKind
+
 export type AuditCategory = $Enums.AuditCategory
 
 export const AuditCategory: typeof $Enums.AuditCategory
@@ -1159,6 +1201,26 @@ export class PrismaClient<
     * ```
     */
   get idempotencyRecord(): Prisma.IdempotencyRecordDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.connectionProposal`: Exposes CRUD operations for the **ConnectionProposal** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ConnectionProposals
+    * const connectionProposals = await prisma.connectionProposal.findMany()
+    * ```
+    */
+  get connectionProposal(): Prisma.ConnectionProposalDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.proposalDecision`: Exposes CRUD operations for the **ProposalDecision** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProposalDecisions
+    * const proposalDecisions = await prisma.proposalDecision.findMany()
+    * ```
+    */
+  get proposalDecision(): Prisma.ProposalDecisionDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.user`: Exposes CRUD operations for the **User** model.
@@ -1976,6 +2038,8 @@ export namespace Prisma {
     SocialIntent: 'SocialIntent',
     MissionParticipation: 'MissionParticipation',
     IdempotencyRecord: 'IdempotencyRecord',
+    ConnectionProposal: 'ConnectionProposal',
+    ProposalDecision: 'ProposalDecision',
     User: 'User',
     Account: 'Account',
     Session: 'Session',
@@ -2027,7 +2091,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
+      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2768,6 +2832,154 @@ export namespace Prisma {
           count: {
             args: Prisma.IdempotencyRecordCountArgs<ExtArgs>
             result: $Utils.Optional<IdempotencyRecordCountAggregateOutputType> | number
+          }
+        }
+      }
+      ConnectionProposal: {
+        payload: Prisma.$ConnectionProposalPayload<ExtArgs>
+        fields: Prisma.ConnectionProposalFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ConnectionProposalFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ConnectionProposalFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>
+          }
+          findFirst: {
+            args: Prisma.ConnectionProposalFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ConnectionProposalFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>
+          }
+          findMany: {
+            args: Prisma.ConnectionProposalFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>[]
+          }
+          create: {
+            args: Prisma.ConnectionProposalCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>
+          }
+          createMany: {
+            args: Prisma.ConnectionProposalCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ConnectionProposalCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>[]
+          }
+          delete: {
+            args: Prisma.ConnectionProposalDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>
+          }
+          update: {
+            args: Prisma.ConnectionProposalUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>
+          }
+          deleteMany: {
+            args: Prisma.ConnectionProposalDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ConnectionProposalUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ConnectionProposalUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>[]
+          }
+          upsert: {
+            args: Prisma.ConnectionProposalUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConnectionProposalPayload>
+          }
+          aggregate: {
+            args: Prisma.ConnectionProposalAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateConnectionProposal>
+          }
+          groupBy: {
+            args: Prisma.ConnectionProposalGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ConnectionProposalGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ConnectionProposalCountArgs<ExtArgs>
+            result: $Utils.Optional<ConnectionProposalCountAggregateOutputType> | number
+          }
+        }
+      }
+      ProposalDecision: {
+        payload: Prisma.$ProposalDecisionPayload<ExtArgs>
+        fields: Prisma.ProposalDecisionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProposalDecisionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProposalDecisionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>
+          }
+          findFirst: {
+            args: Prisma.ProposalDecisionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProposalDecisionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>
+          }
+          findMany: {
+            args: Prisma.ProposalDecisionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>[]
+          }
+          create: {
+            args: Prisma.ProposalDecisionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>
+          }
+          createMany: {
+            args: Prisma.ProposalDecisionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProposalDecisionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>[]
+          }
+          delete: {
+            args: Prisma.ProposalDecisionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>
+          }
+          update: {
+            args: Prisma.ProposalDecisionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProposalDecisionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProposalDecisionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProposalDecisionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProposalDecisionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProposalDecisionPayload>
+          }
+          aggregate: {
+            args: Prisma.ProposalDecisionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProposalDecision>
+          }
+          groupBy: {
+            args: Prisma.ProposalDecisionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProposalDecisionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProposalDecisionCountArgs<ExtArgs>
+            result: $Utils.Optional<ProposalDecisionCountAggregateOutputType> | number
           }
         }
       }
@@ -5568,6 +5780,8 @@ export namespace Prisma {
     socialIntent?: SocialIntentOmit
     missionParticipation?: MissionParticipationOmit
     idempotencyRecord?: IdempotencyRecordOmit
+    connectionProposal?: ConnectionProposalOmit
+    proposalDecision?: ProposalDecisionOmit
     user?: UserOmit
     account?: AccountOmit
     session?: SessionOmit
@@ -5686,11 +5900,13 @@ export namespace Prisma {
   export type MissionCountOutputType = {
     participations: number
     socialIntents: number
+    proposals: number
   }
 
   export type MissionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     participations?: boolean | MissionCountOutputTypeCountParticipationsArgs
     socialIntents?: boolean | MissionCountOutputTypeCountSocialIntentsArgs
+    proposals?: boolean | MissionCountOutputTypeCountProposalsArgs
   }
 
   // Custom InputTypes
@@ -5716,6 +5932,44 @@ export namespace Prisma {
    */
   export type MissionCountOutputTypeCountSocialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SocialIntentWhereInput
+  }
+
+  /**
+   * MissionCountOutputType without action
+   */
+  export type MissionCountOutputTypeCountProposalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ConnectionProposalWhereInput
+  }
+
+
+  /**
+   * Count Type ConnectionProposalCountOutputType
+   */
+
+  export type ConnectionProposalCountOutputType = {
+    decisions: number
+  }
+
+  export type ConnectionProposalCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    decisions?: boolean | ConnectionProposalCountOutputTypeCountDecisionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ConnectionProposalCountOutputType without action
+   */
+  export type ConnectionProposalCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposalCountOutputType
+     */
+    select?: ConnectionProposalCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ConnectionProposalCountOutputType without action
+   */
+  export type ConnectionProposalCountOutputTypeCountDecisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProposalDecisionWhereInput
   }
 
 
@@ -5750,6 +6004,9 @@ export namespace Prisma {
     missions: number
     missionParticipations: number
     socialIntents: number
+    proposalsMade: number
+    proposalsReceived: number
+    proposalDecisions: number
     analyticsEvents: number
     reportsMade: number
     reportsReceived: number
@@ -5784,6 +6041,9 @@ export namespace Prisma {
     missions?: boolean | UserCountOutputTypeCountMissionsArgs
     missionParticipations?: boolean | UserCountOutputTypeCountMissionParticipationsArgs
     socialIntents?: boolean | UserCountOutputTypeCountSocialIntentsArgs
+    proposalsMade?: boolean | UserCountOutputTypeCountProposalsMadeArgs
+    proposalsReceived?: boolean | UserCountOutputTypeCountProposalsReceivedArgs
+    proposalDecisions?: boolean | UserCountOutputTypeCountProposalDecisionsArgs
     analyticsEvents?: boolean | UserCountOutputTypeCountAnalyticsEventsArgs
     reportsMade?: boolean | UserCountOutputTypeCountReportsMadeArgs
     reportsReceived?: boolean | UserCountOutputTypeCountReportsReceivedArgs
@@ -5982,6 +6242,27 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountSocialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SocialIntentWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountProposalsMadeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ConnectionProposalWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountProposalsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ConnectionProposalWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountProposalDecisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProposalDecisionWhereInput
   }
 
   /**
@@ -6262,6 +6543,8 @@ export namespace Prisma {
     missionParticipations: number
     idempotencyRecords: number
     socialIntents: number
+    connectionProposals: number
+    proposalDecisions: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6271,6 +6554,8 @@ export namespace Prisma {
     missionParticipations?: boolean | OrganizationCountOutputTypeCountMissionParticipationsArgs
     idempotencyRecords?: boolean | OrganizationCountOutputTypeCountIdempotencyRecordsArgs
     socialIntents?: boolean | OrganizationCountOutputTypeCountSocialIntentsArgs
+    connectionProposals?: boolean | OrganizationCountOutputTypeCountConnectionProposalsArgs
+    proposalDecisions?: boolean | OrganizationCountOutputTypeCountProposalDecisionsArgs
   }
 
   // Custom InputTypes
@@ -6324,6 +6609,20 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountSocialIntentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SocialIntentWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountConnectionProposalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ConnectionProposalWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountProposalDecisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProposalDecisionWhereInput
   }
 
 
@@ -13571,6 +13870,7 @@ export namespace Prisma {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     participations?: boolean | Mission$participationsArgs<ExtArgs>
     socialIntents?: boolean | Mission$socialIntentsArgs<ExtArgs>
+    proposals?: boolean | Mission$proposalsArgs<ExtArgs>
     _count?: boolean | MissionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["mission"]>
 
@@ -13644,6 +13944,7 @@ export namespace Prisma {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     participations?: boolean | Mission$participationsArgs<ExtArgs>
     socialIntents?: boolean | Mission$socialIntentsArgs<ExtArgs>
+    proposals?: boolean | Mission$proposalsArgs<ExtArgs>
     _count?: boolean | MissionCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MissionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -13662,6 +13963,7 @@ export namespace Prisma {
       owner: Prisma.$UserPayload<ExtArgs>
       participations: Prisma.$MissionParticipationPayload<ExtArgs>[]
       socialIntents: Prisma.$SocialIntentPayload<ExtArgs>[]
+      proposals: Prisma.$ConnectionProposalPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -14101,6 +14403,7 @@ export namespace Prisma {
     owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     participations<T extends Mission$participationsArgs<ExtArgs> = {}>(args?: Subset<T, Mission$participationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     socialIntents<T extends Mission$socialIntentsArgs<ExtArgs> = {}>(args?: Subset<T, Mission$socialIntentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    proposals<T extends Mission$proposalsArgs<ExtArgs> = {}>(args?: Subset<T, Mission$proposalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14591,6 +14894,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
+  }
+
+  /**
+   * Mission.proposals
+   */
+  export type Mission$proposalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    where?: ConnectionProposalWhereInput
+    orderBy?: ConnectionProposalOrderByWithRelationInput | ConnectionProposalOrderByWithRelationInput[]
+    cursor?: ConnectionProposalWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ConnectionProposalScalarFieldEnum | ConnectionProposalScalarFieldEnum[]
   }
 
   /**
@@ -18081,6 +18408,2346 @@ export namespace Prisma {
 
 
   /**
+   * Model ConnectionProposal
+   */
+
+  export type AggregateConnectionProposal = {
+    _count: ConnectionProposalCountAggregateOutputType | null
+    _min: ConnectionProposalMinAggregateOutputType | null
+    _max: ConnectionProposalMaxAggregateOutputType | null
+  }
+
+  export type ConnectionProposalMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    proposerId: string | null
+    candidateId: string | null
+    status: $Enums.ConnectionProposalStatus | null
+    rationale: string | null
+    expiresAt: Date | null
+    introducedAt: Date | null
+    closedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ConnectionProposalMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    proposerId: string | null
+    candidateId: string | null
+    status: $Enums.ConnectionProposalStatus | null
+    rationale: string | null
+    expiresAt: Date | null
+    introducedAt: Date | null
+    closedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ConnectionProposalCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    missionId: number
+    proposerId: number
+    candidateId: number
+    status: number
+    rationale: number
+    expiresAt: number
+    introducedAt: number
+    closedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ConnectionProposalMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    proposerId?: true
+    candidateId?: true
+    status?: true
+    rationale?: true
+    expiresAt?: true
+    introducedAt?: true
+    closedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ConnectionProposalMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    proposerId?: true
+    candidateId?: true
+    status?: true
+    rationale?: true
+    expiresAt?: true
+    introducedAt?: true
+    closedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ConnectionProposalCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    proposerId?: true
+    candidateId?: true
+    status?: true
+    rationale?: true
+    expiresAt?: true
+    introducedAt?: true
+    closedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ConnectionProposalAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ConnectionProposal to aggregate.
+     */
+    where?: ConnectionProposalWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ConnectionProposals to fetch.
+     */
+    orderBy?: ConnectionProposalOrderByWithRelationInput | ConnectionProposalOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ConnectionProposalWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ConnectionProposals from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ConnectionProposals.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ConnectionProposals
+    **/
+    _count?: true | ConnectionProposalCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ConnectionProposalMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ConnectionProposalMaxAggregateInputType
+  }
+
+  export type GetConnectionProposalAggregateType<T extends ConnectionProposalAggregateArgs> = {
+        [P in keyof T & keyof AggregateConnectionProposal]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateConnectionProposal[P]>
+      : GetScalarType<T[P], AggregateConnectionProposal[P]>
+  }
+
+
+
+
+  export type ConnectionProposalGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ConnectionProposalWhereInput
+    orderBy?: ConnectionProposalOrderByWithAggregationInput | ConnectionProposalOrderByWithAggregationInput[]
+    by: ConnectionProposalScalarFieldEnum[] | ConnectionProposalScalarFieldEnum
+    having?: ConnectionProposalScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ConnectionProposalCountAggregateInputType | true
+    _min?: ConnectionProposalMinAggregateInputType
+    _max?: ConnectionProposalMaxAggregateInputType
+  }
+
+  export type ConnectionProposalGroupByOutputType = {
+    id: string
+    organizationId: string
+    missionId: string
+    proposerId: string
+    candidateId: string
+    status: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt: Date | null
+    introducedAt: Date | null
+    closedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ConnectionProposalCountAggregateOutputType | null
+    _min: ConnectionProposalMinAggregateOutputType | null
+    _max: ConnectionProposalMaxAggregateOutputType | null
+  }
+
+  type GetConnectionProposalGroupByPayload<T extends ConnectionProposalGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ConnectionProposalGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ConnectionProposalGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ConnectionProposalGroupByOutputType[P]>
+            : GetScalarType<T[P], ConnectionProposalGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ConnectionProposalSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    proposerId?: boolean
+    candidateId?: boolean
+    status?: boolean
+    rationale?: boolean
+    expiresAt?: boolean
+    introducedAt?: boolean
+    closedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    proposer?: boolean | UserDefaultArgs<ExtArgs>
+    candidate?: boolean | UserDefaultArgs<ExtArgs>
+    decisions?: boolean | ConnectionProposal$decisionsArgs<ExtArgs>
+    _count?: boolean | ConnectionProposalCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["connectionProposal"]>
+
+  export type ConnectionProposalSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    proposerId?: boolean
+    candidateId?: boolean
+    status?: boolean
+    rationale?: boolean
+    expiresAt?: boolean
+    introducedAt?: boolean
+    closedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    proposer?: boolean | UserDefaultArgs<ExtArgs>
+    candidate?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["connectionProposal"]>
+
+  export type ConnectionProposalSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    proposerId?: boolean
+    candidateId?: boolean
+    status?: boolean
+    rationale?: boolean
+    expiresAt?: boolean
+    introducedAt?: boolean
+    closedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    proposer?: boolean | UserDefaultArgs<ExtArgs>
+    candidate?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["connectionProposal"]>
+
+  export type ConnectionProposalSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    proposerId?: boolean
+    candidateId?: boolean
+    status?: boolean
+    rationale?: boolean
+    expiresAt?: boolean
+    introducedAt?: boolean
+    closedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ConnectionProposalOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "missionId" | "proposerId" | "candidateId" | "status" | "rationale" | "expiresAt" | "introducedAt" | "closedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["connectionProposal"]>
+  export type ConnectionProposalInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    proposer?: boolean | UserDefaultArgs<ExtArgs>
+    candidate?: boolean | UserDefaultArgs<ExtArgs>
+    decisions?: boolean | ConnectionProposal$decisionsArgs<ExtArgs>
+    _count?: boolean | ConnectionProposalCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ConnectionProposalIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    proposer?: boolean | UserDefaultArgs<ExtArgs>
+    candidate?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ConnectionProposalIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    mission?: boolean | MissionDefaultArgs<ExtArgs>
+    proposer?: boolean | UserDefaultArgs<ExtArgs>
+    candidate?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ConnectionProposalPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ConnectionProposal"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      mission: Prisma.$MissionPayload<ExtArgs>
+      proposer: Prisma.$UserPayload<ExtArgs>
+      candidate: Prisma.$UserPayload<ExtArgs>
+      decisions: Prisma.$ProposalDecisionPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      /**
+       * 提案依附的 Mission —— 互补关系是在某条任务下被发现并牵线的。
+       */
+      missionId: string
+      /**
+       * 发起方。**必须**是同租户 ACTIVE 成员且具备 `proposal.create`（T01 定为 OPERATOR+）。
+       */
+      proposerId: string
+      /**
+       * 被介绍方。**必须**是同租户 ACTIVE 成员，且与发起方不是同一人（契约 CHECK 的等价约束）。
+       */
+      candidateId: string
+      status: $Enums.ConnectionProposalStatus
+      /**
+       * 发起理由。**会展示给被介绍方** —— 这是对方决定"要不要同意"的唯一依据，
+       * 故必填（契约 `rationale text NOT NULL`）。不得写入内部判断或他人隐私。
+       */
+      rationale: string
+      /**
+       * 提案有效期。null = 不过期。
+       * ⚠️ AC-06：**执行（介绍）时必须再校验一次本字段**，不能只在创建时校验 ——
+       * 提案完全可能在"双方都同意"与"真正介绍"之间失效。
+       */
+      expiresAt: Date | null
+      /**
+       * 介绍落地时间。null = 尚未介绍。写入即代表"连接已建立"，T06 据此驱动后续工作流。
+       */
+      introducedAt: Date | null
+      /**
+       * 关闭时间（进入 REJECTED / REVOKED 时写入），用于审计与"提案存活时长"统计。
+       */
+      closedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["connectionProposal"]>
+    composites: {}
+  }
+
+  type ConnectionProposalGetPayload<S extends boolean | null | undefined | ConnectionProposalDefaultArgs> = $Result.GetResult<Prisma.$ConnectionProposalPayload, S>
+
+  type ConnectionProposalCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ConnectionProposalFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ConnectionProposalCountAggregateInputType | true
+    }
+
+  export interface ConnectionProposalDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ConnectionProposal'], meta: { name: 'ConnectionProposal' } }
+    /**
+     * Find zero or one ConnectionProposal that matches the filter.
+     * @param {ConnectionProposalFindUniqueArgs} args - Arguments to find a ConnectionProposal
+     * @example
+     * // Get one ConnectionProposal
+     * const connectionProposal = await prisma.connectionProposal.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ConnectionProposalFindUniqueArgs>(args: SelectSubset<T, ConnectionProposalFindUniqueArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ConnectionProposal that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ConnectionProposalFindUniqueOrThrowArgs} args - Arguments to find a ConnectionProposal
+     * @example
+     * // Get one ConnectionProposal
+     * const connectionProposal = await prisma.connectionProposal.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ConnectionProposalFindUniqueOrThrowArgs>(args: SelectSubset<T, ConnectionProposalFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ConnectionProposal that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConnectionProposalFindFirstArgs} args - Arguments to find a ConnectionProposal
+     * @example
+     * // Get one ConnectionProposal
+     * const connectionProposal = await prisma.connectionProposal.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ConnectionProposalFindFirstArgs>(args?: SelectSubset<T, ConnectionProposalFindFirstArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ConnectionProposal that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConnectionProposalFindFirstOrThrowArgs} args - Arguments to find a ConnectionProposal
+     * @example
+     * // Get one ConnectionProposal
+     * const connectionProposal = await prisma.connectionProposal.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ConnectionProposalFindFirstOrThrowArgs>(args?: SelectSubset<T, ConnectionProposalFindFirstOrThrowArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ConnectionProposals that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConnectionProposalFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ConnectionProposals
+     * const connectionProposals = await prisma.connectionProposal.findMany()
+     * 
+     * // Get first 10 ConnectionProposals
+     * const connectionProposals = await prisma.connectionProposal.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const connectionProposalWithIdOnly = await prisma.connectionProposal.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ConnectionProposalFindManyArgs>(args?: SelectSubset<T, ConnectionProposalFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ConnectionProposal.
+     * @param {ConnectionProposalCreateArgs} args - Arguments to create a ConnectionProposal.
+     * @example
+     * // Create one ConnectionProposal
+     * const ConnectionProposal = await prisma.connectionProposal.create({
+     *   data: {
+     *     // ... data to create a ConnectionProposal
+     *   }
+     * })
+     * 
+     */
+    create<T extends ConnectionProposalCreateArgs>(args: SelectSubset<T, ConnectionProposalCreateArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ConnectionProposals.
+     * @param {ConnectionProposalCreateManyArgs} args - Arguments to create many ConnectionProposals.
+     * @example
+     * // Create many ConnectionProposals
+     * const connectionProposal = await prisma.connectionProposal.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ConnectionProposalCreateManyArgs>(args?: SelectSubset<T, ConnectionProposalCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ConnectionProposals and returns the data saved in the database.
+     * @param {ConnectionProposalCreateManyAndReturnArgs} args - Arguments to create many ConnectionProposals.
+     * @example
+     * // Create many ConnectionProposals
+     * const connectionProposal = await prisma.connectionProposal.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ConnectionProposals and only return the `id`
+     * const connectionProposalWithIdOnly = await prisma.connectionProposal.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ConnectionProposalCreateManyAndReturnArgs>(args?: SelectSubset<T, ConnectionProposalCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ConnectionProposal.
+     * @param {ConnectionProposalDeleteArgs} args - Arguments to delete one ConnectionProposal.
+     * @example
+     * // Delete one ConnectionProposal
+     * const ConnectionProposal = await prisma.connectionProposal.delete({
+     *   where: {
+     *     // ... filter to delete one ConnectionProposal
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ConnectionProposalDeleteArgs>(args: SelectSubset<T, ConnectionProposalDeleteArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ConnectionProposal.
+     * @param {ConnectionProposalUpdateArgs} args - Arguments to update one ConnectionProposal.
+     * @example
+     * // Update one ConnectionProposal
+     * const connectionProposal = await prisma.connectionProposal.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ConnectionProposalUpdateArgs>(args: SelectSubset<T, ConnectionProposalUpdateArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ConnectionProposals.
+     * @param {ConnectionProposalDeleteManyArgs} args - Arguments to filter ConnectionProposals to delete.
+     * @example
+     * // Delete a few ConnectionProposals
+     * const { count } = await prisma.connectionProposal.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ConnectionProposalDeleteManyArgs>(args?: SelectSubset<T, ConnectionProposalDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ConnectionProposals.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConnectionProposalUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ConnectionProposals
+     * const connectionProposal = await prisma.connectionProposal.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ConnectionProposalUpdateManyArgs>(args: SelectSubset<T, ConnectionProposalUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ConnectionProposals and returns the data updated in the database.
+     * @param {ConnectionProposalUpdateManyAndReturnArgs} args - Arguments to update many ConnectionProposals.
+     * @example
+     * // Update many ConnectionProposals
+     * const connectionProposal = await prisma.connectionProposal.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ConnectionProposals and only return the `id`
+     * const connectionProposalWithIdOnly = await prisma.connectionProposal.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ConnectionProposalUpdateManyAndReturnArgs>(args: SelectSubset<T, ConnectionProposalUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ConnectionProposal.
+     * @param {ConnectionProposalUpsertArgs} args - Arguments to update or create a ConnectionProposal.
+     * @example
+     * // Update or create a ConnectionProposal
+     * const connectionProposal = await prisma.connectionProposal.upsert({
+     *   create: {
+     *     // ... data to create a ConnectionProposal
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ConnectionProposal we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ConnectionProposalUpsertArgs>(args: SelectSubset<T, ConnectionProposalUpsertArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ConnectionProposals.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConnectionProposalCountArgs} args - Arguments to filter ConnectionProposals to count.
+     * @example
+     * // Count the number of ConnectionProposals
+     * const count = await prisma.connectionProposal.count({
+     *   where: {
+     *     // ... the filter for the ConnectionProposals we want to count
+     *   }
+     * })
+    **/
+    count<T extends ConnectionProposalCountArgs>(
+      args?: Subset<T, ConnectionProposalCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ConnectionProposalCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ConnectionProposal.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConnectionProposalAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ConnectionProposalAggregateArgs>(args: Subset<T, ConnectionProposalAggregateArgs>): Prisma.PrismaPromise<GetConnectionProposalAggregateType<T>>
+
+    /**
+     * Group by ConnectionProposal.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConnectionProposalGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ConnectionProposalGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ConnectionProposalGroupByArgs['orderBy'] }
+        : { orderBy?: ConnectionProposalGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ConnectionProposalGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetConnectionProposalGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ConnectionProposal model
+   */
+  readonly fields: ConnectionProposalFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ConnectionProposal.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ConnectionProposalClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    mission<T extends MissionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MissionDefaultArgs<ExtArgs>>): Prisma__MissionClient<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    proposer<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    candidate<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    decisions<T extends ConnectionProposal$decisionsArgs<ExtArgs> = {}>(args?: Subset<T, ConnectionProposal$decisionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ConnectionProposal model
+   */
+  interface ConnectionProposalFieldRefs {
+    readonly id: FieldRef<"ConnectionProposal", 'String'>
+    readonly organizationId: FieldRef<"ConnectionProposal", 'String'>
+    readonly missionId: FieldRef<"ConnectionProposal", 'String'>
+    readonly proposerId: FieldRef<"ConnectionProposal", 'String'>
+    readonly candidateId: FieldRef<"ConnectionProposal", 'String'>
+    readonly status: FieldRef<"ConnectionProposal", 'ConnectionProposalStatus'>
+    readonly rationale: FieldRef<"ConnectionProposal", 'String'>
+    readonly expiresAt: FieldRef<"ConnectionProposal", 'DateTime'>
+    readonly introducedAt: FieldRef<"ConnectionProposal", 'DateTime'>
+    readonly closedAt: FieldRef<"ConnectionProposal", 'DateTime'>
+    readonly createdAt: FieldRef<"ConnectionProposal", 'DateTime'>
+    readonly updatedAt: FieldRef<"ConnectionProposal", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ConnectionProposal findUnique
+   */
+  export type ConnectionProposalFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * Filter, which ConnectionProposal to fetch.
+     */
+    where: ConnectionProposalWhereUniqueInput
+  }
+
+  /**
+   * ConnectionProposal findUniqueOrThrow
+   */
+  export type ConnectionProposalFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * Filter, which ConnectionProposal to fetch.
+     */
+    where: ConnectionProposalWhereUniqueInput
+  }
+
+  /**
+   * ConnectionProposal findFirst
+   */
+  export type ConnectionProposalFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * Filter, which ConnectionProposal to fetch.
+     */
+    where?: ConnectionProposalWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ConnectionProposals to fetch.
+     */
+    orderBy?: ConnectionProposalOrderByWithRelationInput | ConnectionProposalOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ConnectionProposals.
+     */
+    cursor?: ConnectionProposalWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ConnectionProposals from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ConnectionProposals.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ConnectionProposals.
+     */
+    distinct?: ConnectionProposalScalarFieldEnum | ConnectionProposalScalarFieldEnum[]
+  }
+
+  /**
+   * ConnectionProposal findFirstOrThrow
+   */
+  export type ConnectionProposalFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * Filter, which ConnectionProposal to fetch.
+     */
+    where?: ConnectionProposalWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ConnectionProposals to fetch.
+     */
+    orderBy?: ConnectionProposalOrderByWithRelationInput | ConnectionProposalOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ConnectionProposals.
+     */
+    cursor?: ConnectionProposalWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ConnectionProposals from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ConnectionProposals.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ConnectionProposals.
+     */
+    distinct?: ConnectionProposalScalarFieldEnum | ConnectionProposalScalarFieldEnum[]
+  }
+
+  /**
+   * ConnectionProposal findMany
+   */
+  export type ConnectionProposalFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * Filter, which ConnectionProposals to fetch.
+     */
+    where?: ConnectionProposalWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ConnectionProposals to fetch.
+     */
+    orderBy?: ConnectionProposalOrderByWithRelationInput | ConnectionProposalOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ConnectionProposals.
+     */
+    cursor?: ConnectionProposalWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ConnectionProposals from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ConnectionProposals.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ConnectionProposals.
+     */
+    distinct?: ConnectionProposalScalarFieldEnum | ConnectionProposalScalarFieldEnum[]
+  }
+
+  /**
+   * ConnectionProposal create
+   */
+  export type ConnectionProposalCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ConnectionProposal.
+     */
+    data: XOR<ConnectionProposalCreateInput, ConnectionProposalUncheckedCreateInput>
+  }
+
+  /**
+   * ConnectionProposal createMany
+   */
+  export type ConnectionProposalCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ConnectionProposals.
+     */
+    data: ConnectionProposalCreateManyInput | ConnectionProposalCreateManyInput[]
+  }
+
+  /**
+   * ConnectionProposal createManyAndReturn
+   */
+  export type ConnectionProposalCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * The data used to create many ConnectionProposals.
+     */
+    data: ConnectionProposalCreateManyInput | ConnectionProposalCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ConnectionProposal update
+   */
+  export type ConnectionProposalUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ConnectionProposal.
+     */
+    data: XOR<ConnectionProposalUpdateInput, ConnectionProposalUncheckedUpdateInput>
+    /**
+     * Choose, which ConnectionProposal to update.
+     */
+    where: ConnectionProposalWhereUniqueInput
+  }
+
+  /**
+   * ConnectionProposal updateMany
+   */
+  export type ConnectionProposalUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ConnectionProposals.
+     */
+    data: XOR<ConnectionProposalUpdateManyMutationInput, ConnectionProposalUncheckedUpdateManyInput>
+    /**
+     * Filter which ConnectionProposals to update
+     */
+    where?: ConnectionProposalWhereInput
+    /**
+     * Limit how many ConnectionProposals to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ConnectionProposal updateManyAndReturn
+   */
+  export type ConnectionProposalUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * The data used to update ConnectionProposals.
+     */
+    data: XOR<ConnectionProposalUpdateManyMutationInput, ConnectionProposalUncheckedUpdateManyInput>
+    /**
+     * Filter which ConnectionProposals to update
+     */
+    where?: ConnectionProposalWhereInput
+    /**
+     * Limit how many ConnectionProposals to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ConnectionProposal upsert
+   */
+  export type ConnectionProposalUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ConnectionProposal to update in case it exists.
+     */
+    where: ConnectionProposalWhereUniqueInput
+    /**
+     * In case the ConnectionProposal found by the `where` argument doesn't exist, create a new ConnectionProposal with this data.
+     */
+    create: XOR<ConnectionProposalCreateInput, ConnectionProposalUncheckedCreateInput>
+    /**
+     * In case the ConnectionProposal was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ConnectionProposalUpdateInput, ConnectionProposalUncheckedUpdateInput>
+  }
+
+  /**
+   * ConnectionProposal delete
+   */
+  export type ConnectionProposalDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    /**
+     * Filter which ConnectionProposal to delete.
+     */
+    where: ConnectionProposalWhereUniqueInput
+  }
+
+  /**
+   * ConnectionProposal deleteMany
+   */
+  export type ConnectionProposalDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ConnectionProposals to delete
+     */
+    where?: ConnectionProposalWhereInput
+    /**
+     * Limit how many ConnectionProposals to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ConnectionProposal.decisions
+   */
+  export type ConnectionProposal$decisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    where?: ProposalDecisionWhereInput
+    orderBy?: ProposalDecisionOrderByWithRelationInput | ProposalDecisionOrderByWithRelationInput[]
+    cursor?: ProposalDecisionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProposalDecisionScalarFieldEnum | ProposalDecisionScalarFieldEnum[]
+  }
+
+  /**
+   * ConnectionProposal without action
+   */
+  export type ConnectionProposalDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ProposalDecision
+   */
+
+  export type AggregateProposalDecision = {
+    _count: ProposalDecisionCountAggregateOutputType | null
+    _min: ProposalDecisionMinAggregateOutputType | null
+    _max: ProposalDecisionMaxAggregateOutputType | null
+  }
+
+  export type ProposalDecisionMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    proposalId: string | null
+    personId: string | null
+    decision: $Enums.ProposalDecisionKind | null
+    note: string | null
+    decidedAt: Date | null
+  }
+
+  export type ProposalDecisionMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    proposalId: string | null
+    personId: string | null
+    decision: $Enums.ProposalDecisionKind | null
+    note: string | null
+    decidedAt: Date | null
+  }
+
+  export type ProposalDecisionCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    proposalId: number
+    personId: number
+    decision: number
+    note: number
+    decidedAt: number
+    _all: number
+  }
+
+
+  export type ProposalDecisionMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    personId?: true
+    decision?: true
+    note?: true
+    decidedAt?: true
+  }
+
+  export type ProposalDecisionMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    personId?: true
+    decision?: true
+    note?: true
+    decidedAt?: true
+  }
+
+  export type ProposalDecisionCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    personId?: true
+    decision?: true
+    note?: true
+    decidedAt?: true
+    _all?: true
+  }
+
+  export type ProposalDecisionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProposalDecision to aggregate.
+     */
+    where?: ProposalDecisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProposalDecisions to fetch.
+     */
+    orderBy?: ProposalDecisionOrderByWithRelationInput | ProposalDecisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProposalDecisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProposalDecisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProposalDecisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProposalDecisions
+    **/
+    _count?: true | ProposalDecisionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProposalDecisionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProposalDecisionMaxAggregateInputType
+  }
+
+  export type GetProposalDecisionAggregateType<T extends ProposalDecisionAggregateArgs> = {
+        [P in keyof T & keyof AggregateProposalDecision]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProposalDecision[P]>
+      : GetScalarType<T[P], AggregateProposalDecision[P]>
+  }
+
+
+
+
+  export type ProposalDecisionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProposalDecisionWhereInput
+    orderBy?: ProposalDecisionOrderByWithAggregationInput | ProposalDecisionOrderByWithAggregationInput[]
+    by: ProposalDecisionScalarFieldEnum[] | ProposalDecisionScalarFieldEnum
+    having?: ProposalDecisionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProposalDecisionCountAggregateInputType | true
+    _min?: ProposalDecisionMinAggregateInputType
+    _max?: ProposalDecisionMaxAggregateInputType
+  }
+
+  export type ProposalDecisionGroupByOutputType = {
+    id: string
+    organizationId: string
+    proposalId: string
+    personId: string
+    decision: $Enums.ProposalDecisionKind
+    note: string | null
+    decidedAt: Date
+    _count: ProposalDecisionCountAggregateOutputType | null
+    _min: ProposalDecisionMinAggregateOutputType | null
+    _max: ProposalDecisionMaxAggregateOutputType | null
+  }
+
+  type GetProposalDecisionGroupByPayload<T extends ProposalDecisionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProposalDecisionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProposalDecisionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProposalDecisionGroupByOutputType[P]>
+            : GetScalarType<T[P], ProposalDecisionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProposalDecisionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    personId?: boolean
+    decision?: boolean
+    note?: boolean
+    decidedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+    person?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proposalDecision"]>
+
+  export type ProposalDecisionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    personId?: boolean
+    decision?: boolean
+    note?: boolean
+    decidedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+    person?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proposalDecision"]>
+
+  export type ProposalDecisionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    personId?: boolean
+    decision?: boolean
+    note?: boolean
+    decidedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+    person?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proposalDecision"]>
+
+  export type ProposalDecisionSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    personId?: boolean
+    decision?: boolean
+    note?: boolean
+    decidedAt?: boolean
+  }
+
+  export type ProposalDecisionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "proposalId" | "personId" | "decision" | "note" | "decidedAt", ExtArgs["result"]["proposalDecision"]>
+  export type ProposalDecisionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+    person?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ProposalDecisionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+    person?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ProposalDecisionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+    person?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ProposalDecisionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProposalDecision"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      proposal: Prisma.$ConnectionProposalPayload<ExtArgs>
+      person: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      proposalId: string
+      /**
+       * 表态人。服务层**必须**校验其 ∈ {proposerId, candidateId}（非参与者 → 403，不得 404 —— 
+       * 提案对非参与者而言是"存在但不关你的事"，与跨租户的"不存在"是两种不同的答复）。
+       */
+      personId: string
+      decision: $Enums.ProposalDecisionKind
+      /**
+       * 可选说明。**不返回给对侧** —— 否则"拒绝理由"就成了一次计划外的信息披露。
+       */
+      note: string | null
+      decidedAt: Date
+    }, ExtArgs["result"]["proposalDecision"]>
+    composites: {}
+  }
+
+  type ProposalDecisionGetPayload<S extends boolean | null | undefined | ProposalDecisionDefaultArgs> = $Result.GetResult<Prisma.$ProposalDecisionPayload, S>
+
+  type ProposalDecisionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProposalDecisionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProposalDecisionCountAggregateInputType | true
+    }
+
+  export interface ProposalDecisionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProposalDecision'], meta: { name: 'ProposalDecision' } }
+    /**
+     * Find zero or one ProposalDecision that matches the filter.
+     * @param {ProposalDecisionFindUniqueArgs} args - Arguments to find a ProposalDecision
+     * @example
+     * // Get one ProposalDecision
+     * const proposalDecision = await prisma.proposalDecision.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProposalDecisionFindUniqueArgs>(args: SelectSubset<T, ProposalDecisionFindUniqueArgs<ExtArgs>>): Prisma__ProposalDecisionClient<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProposalDecision that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProposalDecisionFindUniqueOrThrowArgs} args - Arguments to find a ProposalDecision
+     * @example
+     * // Get one ProposalDecision
+     * const proposalDecision = await prisma.proposalDecision.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProposalDecisionFindUniqueOrThrowArgs>(args: SelectSubset<T, ProposalDecisionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProposalDecisionClient<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProposalDecision that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProposalDecisionFindFirstArgs} args - Arguments to find a ProposalDecision
+     * @example
+     * // Get one ProposalDecision
+     * const proposalDecision = await prisma.proposalDecision.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProposalDecisionFindFirstArgs>(args?: SelectSubset<T, ProposalDecisionFindFirstArgs<ExtArgs>>): Prisma__ProposalDecisionClient<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProposalDecision that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProposalDecisionFindFirstOrThrowArgs} args - Arguments to find a ProposalDecision
+     * @example
+     * // Get one ProposalDecision
+     * const proposalDecision = await prisma.proposalDecision.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProposalDecisionFindFirstOrThrowArgs>(args?: SelectSubset<T, ProposalDecisionFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProposalDecisionClient<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProposalDecisions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProposalDecisionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProposalDecisions
+     * const proposalDecisions = await prisma.proposalDecision.findMany()
+     * 
+     * // Get first 10 ProposalDecisions
+     * const proposalDecisions = await prisma.proposalDecision.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const proposalDecisionWithIdOnly = await prisma.proposalDecision.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProposalDecisionFindManyArgs>(args?: SelectSubset<T, ProposalDecisionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProposalDecision.
+     * @param {ProposalDecisionCreateArgs} args - Arguments to create a ProposalDecision.
+     * @example
+     * // Create one ProposalDecision
+     * const ProposalDecision = await prisma.proposalDecision.create({
+     *   data: {
+     *     // ... data to create a ProposalDecision
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProposalDecisionCreateArgs>(args: SelectSubset<T, ProposalDecisionCreateArgs<ExtArgs>>): Prisma__ProposalDecisionClient<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProposalDecisions.
+     * @param {ProposalDecisionCreateManyArgs} args - Arguments to create many ProposalDecisions.
+     * @example
+     * // Create many ProposalDecisions
+     * const proposalDecision = await prisma.proposalDecision.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProposalDecisionCreateManyArgs>(args?: SelectSubset<T, ProposalDecisionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProposalDecisions and returns the data saved in the database.
+     * @param {ProposalDecisionCreateManyAndReturnArgs} args - Arguments to create many ProposalDecisions.
+     * @example
+     * // Create many ProposalDecisions
+     * const proposalDecision = await prisma.proposalDecision.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProposalDecisions and only return the `id`
+     * const proposalDecisionWithIdOnly = await prisma.proposalDecision.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProposalDecisionCreateManyAndReturnArgs>(args?: SelectSubset<T, ProposalDecisionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProposalDecision.
+     * @param {ProposalDecisionDeleteArgs} args - Arguments to delete one ProposalDecision.
+     * @example
+     * // Delete one ProposalDecision
+     * const ProposalDecision = await prisma.proposalDecision.delete({
+     *   where: {
+     *     // ... filter to delete one ProposalDecision
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProposalDecisionDeleteArgs>(args: SelectSubset<T, ProposalDecisionDeleteArgs<ExtArgs>>): Prisma__ProposalDecisionClient<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProposalDecision.
+     * @param {ProposalDecisionUpdateArgs} args - Arguments to update one ProposalDecision.
+     * @example
+     * // Update one ProposalDecision
+     * const proposalDecision = await prisma.proposalDecision.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProposalDecisionUpdateArgs>(args: SelectSubset<T, ProposalDecisionUpdateArgs<ExtArgs>>): Prisma__ProposalDecisionClient<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProposalDecisions.
+     * @param {ProposalDecisionDeleteManyArgs} args - Arguments to filter ProposalDecisions to delete.
+     * @example
+     * // Delete a few ProposalDecisions
+     * const { count } = await prisma.proposalDecision.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProposalDecisionDeleteManyArgs>(args?: SelectSubset<T, ProposalDecisionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProposalDecisions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProposalDecisionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProposalDecisions
+     * const proposalDecision = await prisma.proposalDecision.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProposalDecisionUpdateManyArgs>(args: SelectSubset<T, ProposalDecisionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProposalDecisions and returns the data updated in the database.
+     * @param {ProposalDecisionUpdateManyAndReturnArgs} args - Arguments to update many ProposalDecisions.
+     * @example
+     * // Update many ProposalDecisions
+     * const proposalDecision = await prisma.proposalDecision.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProposalDecisions and only return the `id`
+     * const proposalDecisionWithIdOnly = await prisma.proposalDecision.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProposalDecisionUpdateManyAndReturnArgs>(args: SelectSubset<T, ProposalDecisionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProposalDecision.
+     * @param {ProposalDecisionUpsertArgs} args - Arguments to update or create a ProposalDecision.
+     * @example
+     * // Update or create a ProposalDecision
+     * const proposalDecision = await prisma.proposalDecision.upsert({
+     *   create: {
+     *     // ... data to create a ProposalDecision
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProposalDecision we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProposalDecisionUpsertArgs>(args: SelectSubset<T, ProposalDecisionUpsertArgs<ExtArgs>>): Prisma__ProposalDecisionClient<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProposalDecisions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProposalDecisionCountArgs} args - Arguments to filter ProposalDecisions to count.
+     * @example
+     * // Count the number of ProposalDecisions
+     * const count = await prisma.proposalDecision.count({
+     *   where: {
+     *     // ... the filter for the ProposalDecisions we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProposalDecisionCountArgs>(
+      args?: Subset<T, ProposalDecisionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProposalDecisionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProposalDecision.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProposalDecisionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProposalDecisionAggregateArgs>(args: Subset<T, ProposalDecisionAggregateArgs>): Prisma.PrismaPromise<GetProposalDecisionAggregateType<T>>
+
+    /**
+     * Group by ProposalDecision.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProposalDecisionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProposalDecisionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProposalDecisionGroupByArgs['orderBy'] }
+        : { orderBy?: ProposalDecisionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProposalDecisionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProposalDecisionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProposalDecision model
+   */
+  readonly fields: ProposalDecisionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProposalDecision.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProposalDecisionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    proposal<T extends ConnectionProposalDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ConnectionProposalDefaultArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    person<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProposalDecision model
+   */
+  interface ProposalDecisionFieldRefs {
+    readonly id: FieldRef<"ProposalDecision", 'String'>
+    readonly organizationId: FieldRef<"ProposalDecision", 'String'>
+    readonly proposalId: FieldRef<"ProposalDecision", 'String'>
+    readonly personId: FieldRef<"ProposalDecision", 'String'>
+    readonly decision: FieldRef<"ProposalDecision", 'ProposalDecisionKind'>
+    readonly note: FieldRef<"ProposalDecision", 'String'>
+    readonly decidedAt: FieldRef<"ProposalDecision", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProposalDecision findUnique
+   */
+  export type ProposalDecisionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * Filter, which ProposalDecision to fetch.
+     */
+    where: ProposalDecisionWhereUniqueInput
+  }
+
+  /**
+   * ProposalDecision findUniqueOrThrow
+   */
+  export type ProposalDecisionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * Filter, which ProposalDecision to fetch.
+     */
+    where: ProposalDecisionWhereUniqueInput
+  }
+
+  /**
+   * ProposalDecision findFirst
+   */
+  export type ProposalDecisionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * Filter, which ProposalDecision to fetch.
+     */
+    where?: ProposalDecisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProposalDecisions to fetch.
+     */
+    orderBy?: ProposalDecisionOrderByWithRelationInput | ProposalDecisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProposalDecisions.
+     */
+    cursor?: ProposalDecisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProposalDecisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProposalDecisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProposalDecisions.
+     */
+    distinct?: ProposalDecisionScalarFieldEnum | ProposalDecisionScalarFieldEnum[]
+  }
+
+  /**
+   * ProposalDecision findFirstOrThrow
+   */
+  export type ProposalDecisionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * Filter, which ProposalDecision to fetch.
+     */
+    where?: ProposalDecisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProposalDecisions to fetch.
+     */
+    orderBy?: ProposalDecisionOrderByWithRelationInput | ProposalDecisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProposalDecisions.
+     */
+    cursor?: ProposalDecisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProposalDecisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProposalDecisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProposalDecisions.
+     */
+    distinct?: ProposalDecisionScalarFieldEnum | ProposalDecisionScalarFieldEnum[]
+  }
+
+  /**
+   * ProposalDecision findMany
+   */
+  export type ProposalDecisionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * Filter, which ProposalDecisions to fetch.
+     */
+    where?: ProposalDecisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProposalDecisions to fetch.
+     */
+    orderBy?: ProposalDecisionOrderByWithRelationInput | ProposalDecisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProposalDecisions.
+     */
+    cursor?: ProposalDecisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProposalDecisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProposalDecisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProposalDecisions.
+     */
+    distinct?: ProposalDecisionScalarFieldEnum | ProposalDecisionScalarFieldEnum[]
+  }
+
+  /**
+   * ProposalDecision create
+   */
+  export type ProposalDecisionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProposalDecision.
+     */
+    data: XOR<ProposalDecisionCreateInput, ProposalDecisionUncheckedCreateInput>
+  }
+
+  /**
+   * ProposalDecision createMany
+   */
+  export type ProposalDecisionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProposalDecisions.
+     */
+    data: ProposalDecisionCreateManyInput | ProposalDecisionCreateManyInput[]
+  }
+
+  /**
+   * ProposalDecision createManyAndReturn
+   */
+  export type ProposalDecisionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProposalDecisions.
+     */
+    data: ProposalDecisionCreateManyInput | ProposalDecisionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProposalDecision update
+   */
+  export type ProposalDecisionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProposalDecision.
+     */
+    data: XOR<ProposalDecisionUpdateInput, ProposalDecisionUncheckedUpdateInput>
+    /**
+     * Choose, which ProposalDecision to update.
+     */
+    where: ProposalDecisionWhereUniqueInput
+  }
+
+  /**
+   * ProposalDecision updateMany
+   */
+  export type ProposalDecisionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProposalDecisions.
+     */
+    data: XOR<ProposalDecisionUpdateManyMutationInput, ProposalDecisionUncheckedUpdateManyInput>
+    /**
+     * Filter which ProposalDecisions to update
+     */
+    where?: ProposalDecisionWhereInput
+    /**
+     * Limit how many ProposalDecisions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProposalDecision updateManyAndReturn
+   */
+  export type ProposalDecisionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * The data used to update ProposalDecisions.
+     */
+    data: XOR<ProposalDecisionUpdateManyMutationInput, ProposalDecisionUncheckedUpdateManyInput>
+    /**
+     * Filter which ProposalDecisions to update
+     */
+    where?: ProposalDecisionWhereInput
+    /**
+     * Limit how many ProposalDecisions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProposalDecision upsert
+   */
+  export type ProposalDecisionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProposalDecision to update in case it exists.
+     */
+    where: ProposalDecisionWhereUniqueInput
+    /**
+     * In case the ProposalDecision found by the `where` argument doesn't exist, create a new ProposalDecision with this data.
+     */
+    create: XOR<ProposalDecisionCreateInput, ProposalDecisionUncheckedCreateInput>
+    /**
+     * In case the ProposalDecision was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProposalDecisionUpdateInput, ProposalDecisionUncheckedUpdateInput>
+  }
+
+  /**
+   * ProposalDecision delete
+   */
+  export type ProposalDecisionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    /**
+     * Filter which ProposalDecision to delete.
+     */
+    where: ProposalDecisionWhereUniqueInput
+  }
+
+  /**
+   * ProposalDecision deleteMany
+   */
+  export type ProposalDecisionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProposalDecisions to delete
+     */
+    where?: ProposalDecisionWhereInput
+    /**
+     * Limit how many ProposalDecisions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProposalDecision without action
+   */
+  export type ProposalDecisionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model User
    */
 
@@ -18395,6 +21062,9 @@ export namespace Prisma {
     missions?: boolean | User$missionsArgs<ExtArgs>
     missionParticipations?: boolean | User$missionParticipationsArgs<ExtArgs>
     socialIntents?: boolean | User$socialIntentsArgs<ExtArgs>
+    proposalsMade?: boolean | User$proposalsMadeArgs<ExtArgs>
+    proposalsReceived?: boolean | User$proposalsReceivedArgs<ExtArgs>
+    proposalDecisions?: boolean | User$proposalDecisionsArgs<ExtArgs>
     analyticsEvents?: boolean | User$analyticsEventsArgs<ExtArgs>
     reportsMade?: boolean | User$reportsMadeArgs<ExtArgs>
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
@@ -18492,6 +21162,9 @@ export namespace Prisma {
     missions?: boolean | User$missionsArgs<ExtArgs>
     missionParticipations?: boolean | User$missionParticipationsArgs<ExtArgs>
     socialIntents?: boolean | User$socialIntentsArgs<ExtArgs>
+    proposalsMade?: boolean | User$proposalsMadeArgs<ExtArgs>
+    proposalsReceived?: boolean | User$proposalsReceivedArgs<ExtArgs>
+    proposalDecisions?: boolean | User$proposalDecisionsArgs<ExtArgs>
     analyticsEvents?: boolean | User$analyticsEventsArgs<ExtArgs>
     reportsMade?: boolean | User$reportsMadeArgs<ExtArgs>
     reportsReceived?: boolean | User$reportsReceivedArgs<ExtArgs>
@@ -18535,6 +21208,9 @@ export namespace Prisma {
       missions: Prisma.$MissionPayload<ExtArgs>[]
       missionParticipations: Prisma.$MissionParticipationPayload<ExtArgs>[]
       socialIntents: Prisma.$SocialIntentPayload<ExtArgs>[]
+      proposalsMade: Prisma.$ConnectionProposalPayload<ExtArgs>[]
+      proposalsReceived: Prisma.$ConnectionProposalPayload<ExtArgs>[]
+      proposalDecisions: Prisma.$ProposalDecisionPayload<ExtArgs>[]
       analyticsEvents: Prisma.$AnalyticsEventPayload<ExtArgs>[]
       reportsMade: Prisma.$UserReportPayload<ExtArgs>[]
       reportsReceived: Prisma.$UserReportPayload<ExtArgs>[]
@@ -18982,6 +21658,9 @@ export namespace Prisma {
     missions<T extends User$missionsArgs<ExtArgs> = {}>(args?: Subset<T, User$missionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     missionParticipations<T extends User$missionParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, User$missionParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     socialIntents<T extends User$socialIntentsArgs<ExtArgs> = {}>(args?: Subset<T, User$socialIntentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    proposalsMade<T extends User$proposalsMadeArgs<ExtArgs> = {}>(args?: Subset<T, User$proposalsMadeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    proposalsReceived<T extends User$proposalsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$proposalsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    proposalDecisions<T extends User$proposalDecisionsArgs<ExtArgs> = {}>(args?: Subset<T, User$proposalDecisionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     analyticsEvents<T extends User$analyticsEventsArgs<ExtArgs> = {}>(args?: Subset<T, User$analyticsEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnalyticsEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reportsMade<T extends User$reportsMadeArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsMadeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reportsReceived<T extends User$reportsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$reportsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -20102,6 +22781,78 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
+  }
+
+  /**
+   * User.proposalsMade
+   */
+  export type User$proposalsMadeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    where?: ConnectionProposalWhereInput
+    orderBy?: ConnectionProposalOrderByWithRelationInput | ConnectionProposalOrderByWithRelationInput[]
+    cursor?: ConnectionProposalWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ConnectionProposalScalarFieldEnum | ConnectionProposalScalarFieldEnum[]
+  }
+
+  /**
+   * User.proposalsReceived
+   */
+  export type User$proposalsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    where?: ConnectionProposalWhereInput
+    orderBy?: ConnectionProposalOrderByWithRelationInput | ConnectionProposalOrderByWithRelationInput[]
+    cursor?: ConnectionProposalWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ConnectionProposalScalarFieldEnum | ConnectionProposalScalarFieldEnum[]
+  }
+
+  /**
+   * User.proposalDecisions
+   */
+  export type User$proposalDecisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    where?: ProposalDecisionWhereInput
+    orderBy?: ProposalDecisionOrderByWithRelationInput | ProposalDecisionOrderByWithRelationInput[]
+    cursor?: ProposalDecisionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProposalDecisionScalarFieldEnum | ProposalDecisionScalarFieldEnum[]
   }
 
   /**
@@ -58509,6 +61260,8 @@ export namespace Prisma {
     missionParticipations?: boolean | Organization$missionParticipationsArgs<ExtArgs>
     idempotencyRecords?: boolean | Organization$idempotencyRecordsArgs<ExtArgs>
     socialIntents?: boolean | Organization$socialIntentsArgs<ExtArgs>
+    connectionProposals?: boolean | Organization$connectionProposalsArgs<ExtArgs>
+    proposalDecisions?: boolean | Organization$proposalDecisionsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -58547,6 +61300,8 @@ export namespace Prisma {
     missionParticipations?: boolean | Organization$missionParticipationsArgs<ExtArgs>
     idempotencyRecords?: boolean | Organization$idempotencyRecordsArgs<ExtArgs>
     socialIntents?: boolean | Organization$socialIntentsArgs<ExtArgs>
+    connectionProposals?: boolean | Organization$connectionProposalsArgs<ExtArgs>
+    proposalDecisions?: boolean | Organization$proposalDecisionsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -58561,6 +61316,8 @@ export namespace Prisma {
       missionParticipations: Prisma.$MissionParticipationPayload<ExtArgs>[]
       idempotencyRecords: Prisma.$IdempotencyRecordPayload<ExtArgs>[]
       socialIntents: Prisma.$SocialIntentPayload<ExtArgs>[]
+      connectionProposals: Prisma.$ConnectionProposalPayload<ExtArgs>[]
+      proposalDecisions: Prisma.$ProposalDecisionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -58972,6 +61729,8 @@ export namespace Prisma {
     missionParticipations<T extends Organization$missionParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$missionParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     idempotencyRecords<T extends Organization$idempotencyRecordsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$idempotencyRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IdempotencyRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     socialIntents<T extends Organization$socialIntentsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$socialIntentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    connectionProposals<T extends Organization$connectionProposalsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$connectionProposalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    proposalDecisions<T extends Organization$proposalDecisionsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$proposalDecisionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -59539,6 +62298,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SocialIntentScalarFieldEnum | SocialIntentScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.connectionProposals
+   */
+  export type Organization$connectionProposalsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConnectionProposal
+     */
+    select?: ConnectionProposalSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConnectionProposal
+     */
+    omit?: ConnectionProposalOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConnectionProposalInclude<ExtArgs> | null
+    where?: ConnectionProposalWhereInput
+    orderBy?: ConnectionProposalOrderByWithRelationInput | ConnectionProposalOrderByWithRelationInput[]
+    cursor?: ConnectionProposalWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ConnectionProposalScalarFieldEnum | ConnectionProposalScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.proposalDecisions
+   */
+  export type Organization$proposalDecisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProposalDecision
+     */
+    select?: ProposalDecisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProposalDecision
+     */
+    omit?: ProposalDecisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProposalDecisionInclude<ExtArgs> | null
+    where?: ProposalDecisionWhereInput
+    orderBy?: ProposalDecisionOrderByWithRelationInput | ProposalDecisionOrderByWithRelationInput[]
+    cursor?: ProposalDecisionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProposalDecisionScalarFieldEnum | ProposalDecisionScalarFieldEnum[]
   }
 
   /**
@@ -61972,6 +64779,37 @@ export namespace Prisma {
   export type IdempotencyRecordScalarFieldEnum = (typeof IdempotencyRecordScalarFieldEnum)[keyof typeof IdempotencyRecordScalarFieldEnum]
 
 
+  export const ConnectionProposalScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    missionId: 'missionId',
+    proposerId: 'proposerId',
+    candidateId: 'candidateId',
+    status: 'status',
+    rationale: 'rationale',
+    expiresAt: 'expiresAt',
+    introducedAt: 'introducedAt',
+    closedAt: 'closedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ConnectionProposalScalarFieldEnum = (typeof ConnectionProposalScalarFieldEnum)[keyof typeof ConnectionProposalScalarFieldEnum]
+
+
+  export const ProposalDecisionScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    proposalId: 'proposalId',
+    personId: 'personId',
+    decision: 'decision',
+    note: 'note',
+    decidedAt: 'decidedAt'
+  };
+
+  export type ProposalDecisionScalarFieldEnum = (typeof ProposalDecisionScalarFieldEnum)[keyof typeof ProposalDecisionScalarFieldEnum]
+
+
   export const UserScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -62742,6 +65580,20 @@ export namespace Prisma {
    * Reference to a field of type 'MissionParticipationStatus'
    */
   export type EnumMissionParticipationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MissionParticipationStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'ConnectionProposalStatus'
+   */
+  export type EnumConnectionProposalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ConnectionProposalStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'ProposalDecisionKind'
+   */
+  export type EnumProposalDecisionKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProposalDecisionKind'>
     
 
 
@@ -63606,6 +66458,7 @@ export namespace Prisma {
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     participations?: MissionParticipationListRelationFilter
     socialIntents?: SocialIntentListRelationFilter
+    proposals?: ConnectionProposalListRelationFilter
   }
 
   export type MissionOrderByWithRelationInput = {
@@ -63630,6 +66483,7 @@ export namespace Prisma {
     owner?: UserOrderByWithRelationInput
     participations?: MissionParticipationOrderByRelationAggregateInput
     socialIntents?: SocialIntentOrderByRelationAggregateInput
+    proposals?: ConnectionProposalOrderByRelationAggregateInput
   }
 
   export type MissionWhereUniqueInput = Prisma.AtLeast<{
@@ -63657,6 +66511,7 @@ export namespace Prisma {
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     participations?: MissionParticipationListRelationFilter
     socialIntents?: SocialIntentListRelationFilter
+    proposals?: ConnectionProposalListRelationFilter
   }, "id" | "shareToken">
 
   export type MissionOrderByWithAggregationInput = {
@@ -63967,6 +66822,181 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"IdempotencyRecord"> | Date | string
   }
 
+  export type ConnectionProposalWhereInput = {
+    AND?: ConnectionProposalWhereInput | ConnectionProposalWhereInput[]
+    OR?: ConnectionProposalWhereInput[]
+    NOT?: ConnectionProposalWhereInput | ConnectionProposalWhereInput[]
+    id?: StringFilter<"ConnectionProposal"> | string
+    organizationId?: StringFilter<"ConnectionProposal"> | string
+    missionId?: StringFilter<"ConnectionProposal"> | string
+    proposerId?: StringFilter<"ConnectionProposal"> | string
+    candidateId?: StringFilter<"ConnectionProposal"> | string
+    status?: EnumConnectionProposalStatusFilter<"ConnectionProposal"> | $Enums.ConnectionProposalStatus
+    rationale?: StringFilter<"ConnectionProposal"> | string
+    expiresAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    introducedAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    closedAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    createdAt?: DateTimeFilter<"ConnectionProposal"> | Date | string
+    updatedAt?: DateTimeFilter<"ConnectionProposal"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    mission?: XOR<MissionScalarRelationFilter, MissionWhereInput>
+    proposer?: XOR<UserScalarRelationFilter, UserWhereInput>
+    candidate?: XOR<UserScalarRelationFilter, UserWhereInput>
+    decisions?: ProposalDecisionListRelationFilter
+  }
+
+  export type ConnectionProposalOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    proposerId?: SortOrder
+    candidateId?: SortOrder
+    status?: SortOrder
+    rationale?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    introducedAt?: SortOrderInput | SortOrder
+    closedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    mission?: MissionOrderByWithRelationInput
+    proposer?: UserOrderByWithRelationInput
+    candidate?: UserOrderByWithRelationInput
+    decisions?: ProposalDecisionOrderByRelationAggregateInput
+  }
+
+  export type ConnectionProposalWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    missionId_proposerId_candidateId?: ConnectionProposalMissionIdProposerIdCandidateIdCompoundUniqueInput
+    AND?: ConnectionProposalWhereInput | ConnectionProposalWhereInput[]
+    OR?: ConnectionProposalWhereInput[]
+    NOT?: ConnectionProposalWhereInput | ConnectionProposalWhereInput[]
+    organizationId?: StringFilter<"ConnectionProposal"> | string
+    missionId?: StringFilter<"ConnectionProposal"> | string
+    proposerId?: StringFilter<"ConnectionProposal"> | string
+    candidateId?: StringFilter<"ConnectionProposal"> | string
+    status?: EnumConnectionProposalStatusFilter<"ConnectionProposal"> | $Enums.ConnectionProposalStatus
+    rationale?: StringFilter<"ConnectionProposal"> | string
+    expiresAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    introducedAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    closedAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    createdAt?: DateTimeFilter<"ConnectionProposal"> | Date | string
+    updatedAt?: DateTimeFilter<"ConnectionProposal"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    mission?: XOR<MissionScalarRelationFilter, MissionWhereInput>
+    proposer?: XOR<UserScalarRelationFilter, UserWhereInput>
+    candidate?: XOR<UserScalarRelationFilter, UserWhereInput>
+    decisions?: ProposalDecisionListRelationFilter
+  }, "id" | "missionId_proposerId_candidateId">
+
+  export type ConnectionProposalOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    proposerId?: SortOrder
+    candidateId?: SortOrder
+    status?: SortOrder
+    rationale?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    introducedAt?: SortOrderInput | SortOrder
+    closedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ConnectionProposalCountOrderByAggregateInput
+    _max?: ConnectionProposalMaxOrderByAggregateInput
+    _min?: ConnectionProposalMinOrderByAggregateInput
+  }
+
+  export type ConnectionProposalScalarWhereWithAggregatesInput = {
+    AND?: ConnectionProposalScalarWhereWithAggregatesInput | ConnectionProposalScalarWhereWithAggregatesInput[]
+    OR?: ConnectionProposalScalarWhereWithAggregatesInput[]
+    NOT?: ConnectionProposalScalarWhereWithAggregatesInput | ConnectionProposalScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ConnectionProposal"> | string
+    organizationId?: StringWithAggregatesFilter<"ConnectionProposal"> | string
+    missionId?: StringWithAggregatesFilter<"ConnectionProposal"> | string
+    proposerId?: StringWithAggregatesFilter<"ConnectionProposal"> | string
+    candidateId?: StringWithAggregatesFilter<"ConnectionProposal"> | string
+    status?: EnumConnectionProposalStatusWithAggregatesFilter<"ConnectionProposal"> | $Enums.ConnectionProposalStatus
+    rationale?: StringWithAggregatesFilter<"ConnectionProposal"> | string
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"ConnectionProposal"> | Date | string | null
+    introducedAt?: DateTimeNullableWithAggregatesFilter<"ConnectionProposal"> | Date | string | null
+    closedAt?: DateTimeNullableWithAggregatesFilter<"ConnectionProposal"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ConnectionProposal"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ConnectionProposal"> | Date | string
+  }
+
+  export type ProposalDecisionWhereInput = {
+    AND?: ProposalDecisionWhereInput | ProposalDecisionWhereInput[]
+    OR?: ProposalDecisionWhereInput[]
+    NOT?: ProposalDecisionWhereInput | ProposalDecisionWhereInput[]
+    id?: StringFilter<"ProposalDecision"> | string
+    organizationId?: StringFilter<"ProposalDecision"> | string
+    proposalId?: StringFilter<"ProposalDecision"> | string
+    personId?: StringFilter<"ProposalDecision"> | string
+    decision?: EnumProposalDecisionKindFilter<"ProposalDecision"> | $Enums.ProposalDecisionKind
+    note?: StringNullableFilter<"ProposalDecision"> | string | null
+    decidedAt?: DateTimeFilter<"ProposalDecision"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    proposal?: XOR<ConnectionProposalScalarRelationFilter, ConnectionProposalWhereInput>
+    person?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ProposalDecisionOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    personId?: SortOrder
+    decision?: SortOrder
+    note?: SortOrderInput | SortOrder
+    decidedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    proposal?: ConnectionProposalOrderByWithRelationInput
+    person?: UserOrderByWithRelationInput
+  }
+
+  export type ProposalDecisionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    proposalId_personId?: ProposalDecisionProposalIdPersonIdCompoundUniqueInput
+    AND?: ProposalDecisionWhereInput | ProposalDecisionWhereInput[]
+    OR?: ProposalDecisionWhereInput[]
+    NOT?: ProposalDecisionWhereInput | ProposalDecisionWhereInput[]
+    organizationId?: StringFilter<"ProposalDecision"> | string
+    proposalId?: StringFilter<"ProposalDecision"> | string
+    personId?: StringFilter<"ProposalDecision"> | string
+    decision?: EnumProposalDecisionKindFilter<"ProposalDecision"> | $Enums.ProposalDecisionKind
+    note?: StringNullableFilter<"ProposalDecision"> | string | null
+    decidedAt?: DateTimeFilter<"ProposalDecision"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    proposal?: XOR<ConnectionProposalScalarRelationFilter, ConnectionProposalWhereInput>
+    person?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "proposalId_personId">
+
+  export type ProposalDecisionOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    personId?: SortOrder
+    decision?: SortOrder
+    note?: SortOrderInput | SortOrder
+    decidedAt?: SortOrder
+    _count?: ProposalDecisionCountOrderByAggregateInput
+    _max?: ProposalDecisionMaxOrderByAggregateInput
+    _min?: ProposalDecisionMinOrderByAggregateInput
+  }
+
+  export type ProposalDecisionScalarWhereWithAggregatesInput = {
+    AND?: ProposalDecisionScalarWhereWithAggregatesInput | ProposalDecisionScalarWhereWithAggregatesInput[]
+    OR?: ProposalDecisionScalarWhereWithAggregatesInput[]
+    NOT?: ProposalDecisionScalarWhereWithAggregatesInput | ProposalDecisionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ProposalDecision"> | string
+    organizationId?: StringWithAggregatesFilter<"ProposalDecision"> | string
+    proposalId?: StringWithAggregatesFilter<"ProposalDecision"> | string
+    personId?: StringWithAggregatesFilter<"ProposalDecision"> | string
+    decision?: EnumProposalDecisionKindWithAggregatesFilter<"ProposalDecision"> | $Enums.ProposalDecisionKind
+    note?: StringNullableWithAggregatesFilter<"ProposalDecision"> | string | null
+    decidedAt?: DateTimeWithAggregatesFilter<"ProposalDecision"> | Date | string
+  }
+
   export type UserWhereInput = {
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
@@ -64016,6 +67046,9 @@ export namespace Prisma {
     missions?: MissionListRelationFilter
     missionParticipations?: MissionParticipationListRelationFilter
     socialIntents?: SocialIntentListRelationFilter
+    proposalsMade?: ConnectionProposalListRelationFilter
+    proposalsReceived?: ConnectionProposalListRelationFilter
+    proposalDecisions?: ProposalDecisionListRelationFilter
     analyticsEvents?: AnalyticsEventListRelationFilter
     reportsMade?: UserReportListRelationFilter
     reportsReceived?: UserReportListRelationFilter
@@ -64070,6 +67103,9 @@ export namespace Prisma {
     missions?: MissionOrderByRelationAggregateInput
     missionParticipations?: MissionParticipationOrderByRelationAggregateInput
     socialIntents?: SocialIntentOrderByRelationAggregateInput
+    proposalsMade?: ConnectionProposalOrderByRelationAggregateInput
+    proposalsReceived?: ConnectionProposalOrderByRelationAggregateInput
+    proposalDecisions?: ProposalDecisionOrderByRelationAggregateInput
     analyticsEvents?: AnalyticsEventOrderByRelationAggregateInput
     reportsMade?: UserReportOrderByRelationAggregateInput
     reportsReceived?: UserReportOrderByRelationAggregateInput
@@ -64127,6 +67163,9 @@ export namespace Prisma {
     missions?: MissionListRelationFilter
     missionParticipations?: MissionParticipationListRelationFilter
     socialIntents?: SocialIntentListRelationFilter
+    proposalsMade?: ConnectionProposalListRelationFilter
+    proposalsReceived?: ConnectionProposalListRelationFilter
+    proposalDecisions?: ProposalDecisionListRelationFilter
     analyticsEvents?: AnalyticsEventListRelationFilter
     reportsMade?: UserReportListRelationFilter
     reportsReceived?: UserReportListRelationFilter
@@ -67333,6 +70372,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationListRelationFilter
     idempotencyRecords?: IdempotencyRecordListRelationFilter
     socialIntents?: SocialIntentListRelationFilter
+    connectionProposals?: ConnectionProposalListRelationFilter
+    proposalDecisions?: ProposalDecisionListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -67348,6 +70389,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationOrderByRelationAggregateInput
     idempotencyRecords?: IdempotencyRecordOrderByRelationAggregateInput
     socialIntents?: SocialIntentOrderByRelationAggregateInput
+    connectionProposals?: ConnectionProposalOrderByRelationAggregateInput
+    proposalDecisions?: ProposalDecisionOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -67366,6 +70409,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationListRelationFilter
     idempotencyRecords?: IdempotencyRecordListRelationFilter
     socialIntents?: SocialIntentListRelationFilter
+    connectionProposals?: ConnectionProposalListRelationFilter
+    proposalDecisions?: ProposalDecisionListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -68279,6 +71324,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutMissionsInput
     participations?: MissionParticipationCreateNestedManyWithoutMissionInput
     socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateInput = {
@@ -68301,6 +71347,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUpdateInput = {
@@ -68323,6 +71370,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
     participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateInput = {
@@ -68345,6 +71393,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionCreateManyInput = {
@@ -68678,6 +71727,178 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ConnectionProposalCreateInput = {
+    id?: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutConnectionProposalsInput
+    mission: MissionCreateNestedOneWithoutProposalsInput
+    proposer: UserCreateNestedOneWithoutProposalsMadeInput
+    candidate: UserCreateNestedOneWithoutProposalsReceivedInput
+    decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    proposerId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutConnectionProposalsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
+    proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
+    candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
+    decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalCreateManyInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    proposerId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ConnectionProposalUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionCreateInput = {
+    id?: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutProposalDecisionsInput
+    proposal: ConnectionProposalCreateNestedOneWithoutDecisionsInput
+    person: UserCreateNestedOneWithoutProposalDecisionsInput
+  }
+
+  export type ProposalDecisionUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    personId: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+  }
+
+  export type ProposalDecisionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutProposalDecisionsNestedInput
+    proposal?: ConnectionProposalUpdateOneRequiredWithoutDecisionsNestedInput
+    person?: UserUpdateOneRequiredWithoutProposalDecisionsNestedInput
+  }
+
+  export type ProposalDecisionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    personId?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionCreateManyInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    personId: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+  }
+
+  export type ProposalDecisionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    personId?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     name?: string | null
@@ -68724,6 +71945,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -68778,6 +72002,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -68832,6 +72059,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -68886,6 +72116,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -72543,6 +75776,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -72558,6 +75793,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -72573,6 +75810,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -72588,6 +75827,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -73449,11 +76690,21 @@ export namespace Prisma {
     none?: SocialIntentWhereInput
   }
 
+  export type ConnectionProposalListRelationFilter = {
+    every?: ConnectionProposalWhereInput
+    some?: ConnectionProposalWhereInput
+    none?: ConnectionProposalWhereInput
+  }
+
   export type MissionParticipationOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type SocialIntentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ConnectionProposalOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -73708,6 +76959,141 @@ export namespace Prisma {
     resourceType?: SortOrder
     resourceId?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type EnumConnectionProposalStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ConnectionProposalStatus | EnumConnectionProposalStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ConnectionProposalStatus[]
+    notIn?: $Enums.ConnectionProposalStatus[]
+    not?: NestedEnumConnectionProposalStatusFilter<$PrismaModel> | $Enums.ConnectionProposalStatus
+  }
+
+  export type ProposalDecisionListRelationFilter = {
+    every?: ProposalDecisionWhereInput
+    some?: ProposalDecisionWhereInput
+    none?: ProposalDecisionWhereInput
+  }
+
+  export type ProposalDecisionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ConnectionProposalMissionIdProposerIdCandidateIdCompoundUniqueInput = {
+    missionId: string
+    proposerId: string
+    candidateId: string
+  }
+
+  export type ConnectionProposalCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    proposerId?: SortOrder
+    candidateId?: SortOrder
+    status?: SortOrder
+    rationale?: SortOrder
+    expiresAt?: SortOrder
+    introducedAt?: SortOrder
+    closedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ConnectionProposalMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    proposerId?: SortOrder
+    candidateId?: SortOrder
+    status?: SortOrder
+    rationale?: SortOrder
+    expiresAt?: SortOrder
+    introducedAt?: SortOrder
+    closedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ConnectionProposalMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    proposerId?: SortOrder
+    candidateId?: SortOrder
+    status?: SortOrder
+    rationale?: SortOrder
+    expiresAt?: SortOrder
+    introducedAt?: SortOrder
+    closedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumConnectionProposalStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ConnectionProposalStatus | EnumConnectionProposalStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ConnectionProposalStatus[]
+    notIn?: $Enums.ConnectionProposalStatus[]
+    not?: NestedEnumConnectionProposalStatusWithAggregatesFilter<$PrismaModel> | $Enums.ConnectionProposalStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumConnectionProposalStatusFilter<$PrismaModel>
+    _max?: NestedEnumConnectionProposalStatusFilter<$PrismaModel>
+  }
+
+  export type EnumProposalDecisionKindFilter<$PrismaModel = never> = {
+    equals?: $Enums.ProposalDecisionKind | EnumProposalDecisionKindFieldRefInput<$PrismaModel>
+    in?: $Enums.ProposalDecisionKind[]
+    notIn?: $Enums.ProposalDecisionKind[]
+    not?: NestedEnumProposalDecisionKindFilter<$PrismaModel> | $Enums.ProposalDecisionKind
+  }
+
+  export type ConnectionProposalScalarRelationFilter = {
+    is?: ConnectionProposalWhereInput
+    isNot?: ConnectionProposalWhereInput
+  }
+
+  export type ProposalDecisionProposalIdPersonIdCompoundUniqueInput = {
+    proposalId: string
+    personId: string
+  }
+
+  export type ProposalDecisionCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    personId?: SortOrder
+    decision?: SortOrder
+    note?: SortOrder
+    decidedAt?: SortOrder
+  }
+
+  export type ProposalDecisionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    personId?: SortOrder
+    decision?: SortOrder
+    note?: SortOrder
+    decidedAt?: SortOrder
+  }
+
+  export type ProposalDecisionMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    personId?: SortOrder
+    decision?: SortOrder
+    note?: SortOrder
+    decidedAt?: SortOrder
+  }
+
+  export type EnumProposalDecisionKindWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ProposalDecisionKind | EnumProposalDecisionKindFieldRefInput<$PrismaModel>
+    in?: $Enums.ProposalDecisionKind[]
+    notIn?: $Enums.ProposalDecisionKind[]
+    not?: NestedEnumProposalDecisionKindWithAggregatesFilter<$PrismaModel> | $Enums.ProposalDecisionKind
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumProposalDecisionKindFilter<$PrismaModel>
+    _max?: NestedEnumProposalDecisionKindFilter<$PrismaModel>
   }
 
   export type EnumUserRoleFilter<$PrismaModel = never> = {
@@ -76630,6 +80016,13 @@ export namespace Prisma {
     connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
   }
 
+  export type ConnectionProposalCreateNestedManyWithoutMissionInput = {
+    create?: XOR<ConnectionProposalCreateWithoutMissionInput, ConnectionProposalUncheckedCreateWithoutMissionInput> | ConnectionProposalCreateWithoutMissionInput[] | ConnectionProposalUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutMissionInput | ConnectionProposalCreateOrConnectWithoutMissionInput[]
+    createMany?: ConnectionProposalCreateManyMissionInputEnvelope
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+  }
+
   export type MissionParticipationUncheckedCreateNestedManyWithoutMissionInput = {
     create?: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput> | MissionParticipationCreateWithoutMissionInput[] | MissionParticipationUncheckedCreateWithoutMissionInput[]
     connectOrCreate?: MissionParticipationCreateOrConnectWithoutMissionInput | MissionParticipationCreateOrConnectWithoutMissionInput[]
@@ -76642,6 +80035,13 @@ export namespace Prisma {
     connectOrCreate?: SocialIntentCreateOrConnectWithoutMissionInput | SocialIntentCreateOrConnectWithoutMissionInput[]
     createMany?: SocialIntentCreateManyMissionInputEnvelope
     connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+  }
+
+  export type ConnectionProposalUncheckedCreateNestedManyWithoutMissionInput = {
+    create?: XOR<ConnectionProposalCreateWithoutMissionInput, ConnectionProposalUncheckedCreateWithoutMissionInput> | ConnectionProposalCreateWithoutMissionInput[] | ConnectionProposalUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutMissionInput | ConnectionProposalCreateOrConnectWithoutMissionInput[]
+    createMany?: ConnectionProposalCreateManyMissionInputEnvelope
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
   }
 
   export type EnumMissionStatusFieldUpdateOperationsInput = {
@@ -76692,6 +80092,20 @@ export namespace Prisma {
     deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
   }
 
+  export type ConnectionProposalUpdateManyWithoutMissionNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutMissionInput, ConnectionProposalUncheckedCreateWithoutMissionInput> | ConnectionProposalCreateWithoutMissionInput[] | ConnectionProposalUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutMissionInput | ConnectionProposalCreateOrConnectWithoutMissionInput[]
+    upsert?: ConnectionProposalUpsertWithWhereUniqueWithoutMissionInput | ConnectionProposalUpsertWithWhereUniqueWithoutMissionInput[]
+    createMany?: ConnectionProposalCreateManyMissionInputEnvelope
+    set?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    disconnect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    delete?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    update?: ConnectionProposalUpdateWithWhereUniqueWithoutMissionInput | ConnectionProposalUpdateWithWhereUniqueWithoutMissionInput[]
+    updateMany?: ConnectionProposalUpdateManyWithWhereWithoutMissionInput | ConnectionProposalUpdateManyWithWhereWithoutMissionInput[]
+    deleteMany?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+  }
+
   export type MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput = {
     create?: XOR<MissionParticipationCreateWithoutMissionInput, MissionParticipationUncheckedCreateWithoutMissionInput> | MissionParticipationCreateWithoutMissionInput[] | MissionParticipationUncheckedCreateWithoutMissionInput[]
     connectOrCreate?: MissionParticipationCreateOrConnectWithoutMissionInput | MissionParticipationCreateOrConnectWithoutMissionInput[]
@@ -76718,6 +80132,20 @@ export namespace Prisma {
     update?: SocialIntentUpdateWithWhereUniqueWithoutMissionInput | SocialIntentUpdateWithWhereUniqueWithoutMissionInput[]
     updateMany?: SocialIntentUpdateManyWithWhereWithoutMissionInput | SocialIntentUpdateManyWithWhereWithoutMissionInput[]
     deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyWithoutMissionNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutMissionInput, ConnectionProposalUncheckedCreateWithoutMissionInput> | ConnectionProposalCreateWithoutMissionInput[] | ConnectionProposalUncheckedCreateWithoutMissionInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutMissionInput | ConnectionProposalCreateOrConnectWithoutMissionInput[]
+    upsert?: ConnectionProposalUpsertWithWhereUniqueWithoutMissionInput | ConnectionProposalUpsertWithWhereUniqueWithoutMissionInput[]
+    createMany?: ConnectionProposalCreateManyMissionInputEnvelope
+    set?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    disconnect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    delete?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    update?: ConnectionProposalUpdateWithWhereUniqueWithoutMissionInput | ConnectionProposalUpdateWithWhereUniqueWithoutMissionInput[]
+    updateMany?: ConnectionProposalUpdateManyWithWhereWithoutMissionInput | ConnectionProposalUpdateManyWithWhereWithoutMissionInput[]
+    deleteMany?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutSocialIntentsInput = {
@@ -76824,6 +80252,154 @@ export namespace Prisma {
     upsert?: OrganizationUpsertWithoutIdempotencyRecordsInput
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutIdempotencyRecordsInput, OrganizationUpdateWithoutIdempotencyRecordsInput>, OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutConnectionProposalsInput = {
+    create?: XOR<OrganizationCreateWithoutConnectionProposalsInput, OrganizationUncheckedCreateWithoutConnectionProposalsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutConnectionProposalsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type MissionCreateNestedOneWithoutProposalsInput = {
+    create?: XOR<MissionCreateWithoutProposalsInput, MissionUncheckedCreateWithoutProposalsInput>
+    connectOrCreate?: MissionCreateOrConnectWithoutProposalsInput
+    connect?: MissionWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutProposalsMadeInput = {
+    create?: XOR<UserCreateWithoutProposalsMadeInput, UserUncheckedCreateWithoutProposalsMadeInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProposalsMadeInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutProposalsReceivedInput = {
+    create?: XOR<UserCreateWithoutProposalsReceivedInput, UserUncheckedCreateWithoutProposalsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProposalsReceivedInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type ProposalDecisionCreateNestedManyWithoutProposalInput = {
+    create?: XOR<ProposalDecisionCreateWithoutProposalInput, ProposalDecisionUncheckedCreateWithoutProposalInput> | ProposalDecisionCreateWithoutProposalInput[] | ProposalDecisionUncheckedCreateWithoutProposalInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutProposalInput | ProposalDecisionCreateOrConnectWithoutProposalInput[]
+    createMany?: ProposalDecisionCreateManyProposalInputEnvelope
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+  }
+
+  export type ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput = {
+    create?: XOR<ProposalDecisionCreateWithoutProposalInput, ProposalDecisionUncheckedCreateWithoutProposalInput> | ProposalDecisionCreateWithoutProposalInput[] | ProposalDecisionUncheckedCreateWithoutProposalInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutProposalInput | ProposalDecisionCreateOrConnectWithoutProposalInput[]
+    createMany?: ProposalDecisionCreateManyProposalInputEnvelope
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+  }
+
+  export type EnumConnectionProposalStatusFieldUpdateOperationsInput = {
+    set?: $Enums.ConnectionProposalStatus
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutConnectionProposalsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutConnectionProposalsInput, OrganizationUncheckedCreateWithoutConnectionProposalsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutConnectionProposalsInput
+    upsert?: OrganizationUpsertWithoutConnectionProposalsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutConnectionProposalsInput, OrganizationUpdateWithoutConnectionProposalsInput>, OrganizationUncheckedUpdateWithoutConnectionProposalsInput>
+  }
+
+  export type MissionUpdateOneRequiredWithoutProposalsNestedInput = {
+    create?: XOR<MissionCreateWithoutProposalsInput, MissionUncheckedCreateWithoutProposalsInput>
+    connectOrCreate?: MissionCreateOrConnectWithoutProposalsInput
+    upsert?: MissionUpsertWithoutProposalsInput
+    connect?: MissionWhereUniqueInput
+    update?: XOR<XOR<MissionUpdateToOneWithWhereWithoutProposalsInput, MissionUpdateWithoutProposalsInput>, MissionUncheckedUpdateWithoutProposalsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutProposalsMadeNestedInput = {
+    create?: XOR<UserCreateWithoutProposalsMadeInput, UserUncheckedCreateWithoutProposalsMadeInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProposalsMadeInput
+    upsert?: UserUpsertWithoutProposalsMadeInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProposalsMadeInput, UserUpdateWithoutProposalsMadeInput>, UserUncheckedUpdateWithoutProposalsMadeInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutProposalsReceivedNestedInput = {
+    create?: XOR<UserCreateWithoutProposalsReceivedInput, UserUncheckedCreateWithoutProposalsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProposalsReceivedInput
+    upsert?: UserUpsertWithoutProposalsReceivedInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProposalsReceivedInput, UserUpdateWithoutProposalsReceivedInput>, UserUncheckedUpdateWithoutProposalsReceivedInput>
+  }
+
+  export type ProposalDecisionUpdateManyWithoutProposalNestedInput = {
+    create?: XOR<ProposalDecisionCreateWithoutProposalInput, ProposalDecisionUncheckedCreateWithoutProposalInput> | ProposalDecisionCreateWithoutProposalInput[] | ProposalDecisionUncheckedCreateWithoutProposalInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutProposalInput | ProposalDecisionCreateOrConnectWithoutProposalInput[]
+    upsert?: ProposalDecisionUpsertWithWhereUniqueWithoutProposalInput | ProposalDecisionUpsertWithWhereUniqueWithoutProposalInput[]
+    createMany?: ProposalDecisionCreateManyProposalInputEnvelope
+    set?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    disconnect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    delete?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    update?: ProposalDecisionUpdateWithWhereUniqueWithoutProposalInput | ProposalDecisionUpdateWithWhereUniqueWithoutProposalInput[]
+    updateMany?: ProposalDecisionUpdateManyWithWhereWithoutProposalInput | ProposalDecisionUpdateManyWithWhereWithoutProposalInput[]
+    deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
+  }
+
+  export type ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput = {
+    create?: XOR<ProposalDecisionCreateWithoutProposalInput, ProposalDecisionUncheckedCreateWithoutProposalInput> | ProposalDecisionCreateWithoutProposalInput[] | ProposalDecisionUncheckedCreateWithoutProposalInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutProposalInput | ProposalDecisionCreateOrConnectWithoutProposalInput[]
+    upsert?: ProposalDecisionUpsertWithWhereUniqueWithoutProposalInput | ProposalDecisionUpsertWithWhereUniqueWithoutProposalInput[]
+    createMany?: ProposalDecisionCreateManyProposalInputEnvelope
+    set?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    disconnect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    delete?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    update?: ProposalDecisionUpdateWithWhereUniqueWithoutProposalInput | ProposalDecisionUpdateWithWhereUniqueWithoutProposalInput[]
+    updateMany?: ProposalDecisionUpdateManyWithWhereWithoutProposalInput | ProposalDecisionUpdateManyWithWhereWithoutProposalInput[]
+    deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
+  }
+
+  export type OrganizationCreateNestedOneWithoutProposalDecisionsInput = {
+    create?: XOR<OrganizationCreateWithoutProposalDecisionsInput, OrganizationUncheckedCreateWithoutProposalDecisionsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutProposalDecisionsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type ConnectionProposalCreateNestedOneWithoutDecisionsInput = {
+    create?: XOR<ConnectionProposalCreateWithoutDecisionsInput, ConnectionProposalUncheckedCreateWithoutDecisionsInput>
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutDecisionsInput
+    connect?: ConnectionProposalWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutProposalDecisionsInput = {
+    create?: XOR<UserCreateWithoutProposalDecisionsInput, UserUncheckedCreateWithoutProposalDecisionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProposalDecisionsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type EnumProposalDecisionKindFieldUpdateOperationsInput = {
+    set?: $Enums.ProposalDecisionKind
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutProposalDecisionsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutProposalDecisionsInput, OrganizationUncheckedCreateWithoutProposalDecisionsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutProposalDecisionsInput
+    upsert?: OrganizationUpsertWithoutProposalDecisionsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutProposalDecisionsInput, OrganizationUpdateWithoutProposalDecisionsInput>, OrganizationUncheckedUpdateWithoutProposalDecisionsInput>
+  }
+
+  export type ConnectionProposalUpdateOneRequiredWithoutDecisionsNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutDecisionsInput, ConnectionProposalUncheckedCreateWithoutDecisionsInput>
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutDecisionsInput
+    upsert?: ConnectionProposalUpsertWithoutDecisionsInput
+    connect?: ConnectionProposalWhereUniqueInput
+    update?: XOR<XOR<ConnectionProposalUpdateToOneWithWhereWithoutDecisionsInput, ConnectionProposalUpdateWithoutDecisionsInput>, ConnectionProposalUncheckedUpdateWithoutDecisionsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutProposalDecisionsNestedInput = {
+    create?: XOR<UserCreateWithoutProposalDecisionsInput, UserUncheckedCreateWithoutProposalDecisionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProposalDecisionsInput
+    upsert?: UserUpsertWithoutProposalDecisionsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProposalDecisionsInput, UserUpdateWithoutProposalDecisionsInput>, UserUncheckedUpdateWithoutProposalDecisionsInput>
   }
 
   export type AccountCreateNestedManyWithoutUserInput = {
@@ -77024,6 +80600,27 @@ export namespace Prisma {
     connectOrCreate?: SocialIntentCreateOrConnectWithoutUserInput | SocialIntentCreateOrConnectWithoutUserInput[]
     createMany?: SocialIntentCreateManyUserInputEnvelope
     connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+  }
+
+  export type ConnectionProposalCreateNestedManyWithoutProposerInput = {
+    create?: XOR<ConnectionProposalCreateWithoutProposerInput, ConnectionProposalUncheckedCreateWithoutProposerInput> | ConnectionProposalCreateWithoutProposerInput[] | ConnectionProposalUncheckedCreateWithoutProposerInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutProposerInput | ConnectionProposalCreateOrConnectWithoutProposerInput[]
+    createMany?: ConnectionProposalCreateManyProposerInputEnvelope
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+  }
+
+  export type ConnectionProposalCreateNestedManyWithoutCandidateInput = {
+    create?: XOR<ConnectionProposalCreateWithoutCandidateInput, ConnectionProposalUncheckedCreateWithoutCandidateInput> | ConnectionProposalCreateWithoutCandidateInput[] | ConnectionProposalUncheckedCreateWithoutCandidateInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutCandidateInput | ConnectionProposalCreateOrConnectWithoutCandidateInput[]
+    createMany?: ConnectionProposalCreateManyCandidateInputEnvelope
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+  }
+
+  export type ProposalDecisionCreateNestedManyWithoutPersonInput = {
+    create?: XOR<ProposalDecisionCreateWithoutPersonInput, ProposalDecisionUncheckedCreateWithoutPersonInput> | ProposalDecisionCreateWithoutPersonInput[] | ProposalDecisionUncheckedCreateWithoutPersonInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutPersonInput | ProposalDecisionCreateOrConnectWithoutPersonInput[]
+    createMany?: ProposalDecisionCreateManyPersonInputEnvelope
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
   }
 
   export type AnalyticsEventCreateNestedManyWithoutUserInput = {
@@ -77265,6 +80862,27 @@ export namespace Prisma {
     connectOrCreate?: SocialIntentCreateOrConnectWithoutUserInput | SocialIntentCreateOrConnectWithoutUserInput[]
     createMany?: SocialIntentCreateManyUserInputEnvelope
     connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+  }
+
+  export type ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput = {
+    create?: XOR<ConnectionProposalCreateWithoutProposerInput, ConnectionProposalUncheckedCreateWithoutProposerInput> | ConnectionProposalCreateWithoutProposerInput[] | ConnectionProposalUncheckedCreateWithoutProposerInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutProposerInput | ConnectionProposalCreateOrConnectWithoutProposerInput[]
+    createMany?: ConnectionProposalCreateManyProposerInputEnvelope
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+  }
+
+  export type ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput = {
+    create?: XOR<ConnectionProposalCreateWithoutCandidateInput, ConnectionProposalUncheckedCreateWithoutCandidateInput> | ConnectionProposalCreateWithoutCandidateInput[] | ConnectionProposalUncheckedCreateWithoutCandidateInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutCandidateInput | ConnectionProposalCreateOrConnectWithoutCandidateInput[]
+    createMany?: ConnectionProposalCreateManyCandidateInputEnvelope
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+  }
+
+  export type ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput = {
+    create?: XOR<ProposalDecisionCreateWithoutPersonInput, ProposalDecisionUncheckedCreateWithoutPersonInput> | ProposalDecisionCreateWithoutPersonInput[] | ProposalDecisionUncheckedCreateWithoutPersonInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutPersonInput | ProposalDecisionCreateOrConnectWithoutPersonInput[]
+    createMany?: ProposalDecisionCreateManyPersonInputEnvelope
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
   }
 
   export type AnalyticsEventUncheckedCreateNestedManyWithoutUserInput = {
@@ -77704,6 +81322,48 @@ export namespace Prisma {
     update?: SocialIntentUpdateWithWhereUniqueWithoutUserInput | SocialIntentUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: SocialIntentUpdateManyWithWhereWithoutUserInput | SocialIntentUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+  }
+
+  export type ConnectionProposalUpdateManyWithoutProposerNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutProposerInput, ConnectionProposalUncheckedCreateWithoutProposerInput> | ConnectionProposalCreateWithoutProposerInput[] | ConnectionProposalUncheckedCreateWithoutProposerInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutProposerInput | ConnectionProposalCreateOrConnectWithoutProposerInput[]
+    upsert?: ConnectionProposalUpsertWithWhereUniqueWithoutProposerInput | ConnectionProposalUpsertWithWhereUniqueWithoutProposerInput[]
+    createMany?: ConnectionProposalCreateManyProposerInputEnvelope
+    set?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    disconnect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    delete?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    update?: ConnectionProposalUpdateWithWhereUniqueWithoutProposerInput | ConnectionProposalUpdateWithWhereUniqueWithoutProposerInput[]
+    updateMany?: ConnectionProposalUpdateManyWithWhereWithoutProposerInput | ConnectionProposalUpdateManyWithWhereWithoutProposerInput[]
+    deleteMany?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+  }
+
+  export type ConnectionProposalUpdateManyWithoutCandidateNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutCandidateInput, ConnectionProposalUncheckedCreateWithoutCandidateInput> | ConnectionProposalCreateWithoutCandidateInput[] | ConnectionProposalUncheckedCreateWithoutCandidateInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutCandidateInput | ConnectionProposalCreateOrConnectWithoutCandidateInput[]
+    upsert?: ConnectionProposalUpsertWithWhereUniqueWithoutCandidateInput | ConnectionProposalUpsertWithWhereUniqueWithoutCandidateInput[]
+    createMany?: ConnectionProposalCreateManyCandidateInputEnvelope
+    set?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    disconnect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    delete?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    update?: ConnectionProposalUpdateWithWhereUniqueWithoutCandidateInput | ConnectionProposalUpdateWithWhereUniqueWithoutCandidateInput[]
+    updateMany?: ConnectionProposalUpdateManyWithWhereWithoutCandidateInput | ConnectionProposalUpdateManyWithWhereWithoutCandidateInput[]
+    deleteMany?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+  }
+
+  export type ProposalDecisionUpdateManyWithoutPersonNestedInput = {
+    create?: XOR<ProposalDecisionCreateWithoutPersonInput, ProposalDecisionUncheckedCreateWithoutPersonInput> | ProposalDecisionCreateWithoutPersonInput[] | ProposalDecisionUncheckedCreateWithoutPersonInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutPersonInput | ProposalDecisionCreateOrConnectWithoutPersonInput[]
+    upsert?: ProposalDecisionUpsertWithWhereUniqueWithoutPersonInput | ProposalDecisionUpsertWithWhereUniqueWithoutPersonInput[]
+    createMany?: ProposalDecisionCreateManyPersonInputEnvelope
+    set?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    disconnect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    delete?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    update?: ProposalDecisionUpdateWithWhereUniqueWithoutPersonInput | ProposalDecisionUpdateWithWhereUniqueWithoutPersonInput[]
+    updateMany?: ProposalDecisionUpdateManyWithWhereWithoutPersonInput | ProposalDecisionUpdateManyWithWhereWithoutPersonInput[]
+    deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
   }
 
   export type AnalyticsEventUpdateManyWithoutUserNestedInput = {
@@ -78178,6 +81838,48 @@ export namespace Prisma {
     update?: SocialIntentUpdateWithWhereUniqueWithoutUserInput | SocialIntentUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: SocialIntentUpdateManyWithWhereWithoutUserInput | SocialIntentUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutProposerInput, ConnectionProposalUncheckedCreateWithoutProposerInput> | ConnectionProposalCreateWithoutProposerInput[] | ConnectionProposalUncheckedCreateWithoutProposerInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutProposerInput | ConnectionProposalCreateOrConnectWithoutProposerInput[]
+    upsert?: ConnectionProposalUpsertWithWhereUniqueWithoutProposerInput | ConnectionProposalUpsertWithWhereUniqueWithoutProposerInput[]
+    createMany?: ConnectionProposalCreateManyProposerInputEnvelope
+    set?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    disconnect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    delete?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    update?: ConnectionProposalUpdateWithWhereUniqueWithoutProposerInput | ConnectionProposalUpdateWithWhereUniqueWithoutProposerInput[]
+    updateMany?: ConnectionProposalUpdateManyWithWhereWithoutProposerInput | ConnectionProposalUpdateManyWithWhereWithoutProposerInput[]
+    deleteMany?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutCandidateInput, ConnectionProposalUncheckedCreateWithoutCandidateInput> | ConnectionProposalCreateWithoutCandidateInput[] | ConnectionProposalUncheckedCreateWithoutCandidateInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutCandidateInput | ConnectionProposalCreateOrConnectWithoutCandidateInput[]
+    upsert?: ConnectionProposalUpsertWithWhereUniqueWithoutCandidateInput | ConnectionProposalUpsertWithWhereUniqueWithoutCandidateInput[]
+    createMany?: ConnectionProposalCreateManyCandidateInputEnvelope
+    set?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    disconnect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    delete?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    update?: ConnectionProposalUpdateWithWhereUniqueWithoutCandidateInput | ConnectionProposalUpdateWithWhereUniqueWithoutCandidateInput[]
+    updateMany?: ConnectionProposalUpdateManyWithWhereWithoutCandidateInput | ConnectionProposalUpdateManyWithWhereWithoutCandidateInput[]
+    deleteMany?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+  }
+
+  export type ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput = {
+    create?: XOR<ProposalDecisionCreateWithoutPersonInput, ProposalDecisionUncheckedCreateWithoutPersonInput> | ProposalDecisionCreateWithoutPersonInput[] | ProposalDecisionUncheckedCreateWithoutPersonInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutPersonInput | ProposalDecisionCreateOrConnectWithoutPersonInput[]
+    upsert?: ProposalDecisionUpsertWithWhereUniqueWithoutPersonInput | ProposalDecisionUpsertWithWhereUniqueWithoutPersonInput[]
+    createMany?: ProposalDecisionCreateManyPersonInputEnvelope
+    set?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    disconnect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    delete?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    update?: ProposalDecisionUpdateWithWhereUniqueWithoutPersonInput | ProposalDecisionUpdateWithWhereUniqueWithoutPersonInput[]
+    updateMany?: ProposalDecisionUpdateManyWithWhereWithoutPersonInput | ProposalDecisionUpdateManyWithWhereWithoutPersonInput[]
+    deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
   }
 
   export type AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput = {
@@ -79486,6 +83188,20 @@ export namespace Prisma {
     connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
   }
 
+  export type ConnectionProposalCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<ConnectionProposalCreateWithoutOrganizationInput, ConnectionProposalUncheckedCreateWithoutOrganizationInput> | ConnectionProposalCreateWithoutOrganizationInput[] | ConnectionProposalUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutOrganizationInput | ConnectionProposalCreateOrConnectWithoutOrganizationInput[]
+    createMany?: ConnectionProposalCreateManyOrganizationInputEnvelope
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+  }
+
+  export type ProposalDecisionCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<ProposalDecisionCreateWithoutOrganizationInput, ProposalDecisionUncheckedCreateWithoutOrganizationInput> | ProposalDecisionCreateWithoutOrganizationInput[] | ProposalDecisionUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutOrganizationInput | ProposalDecisionCreateOrConnectWithoutOrganizationInput[]
+    createMany?: ProposalDecisionCreateManyOrganizationInputEnvelope
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+  }
+
   export type MembershipUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -79526,6 +83242,20 @@ export namespace Prisma {
     connectOrCreate?: SocialIntentCreateOrConnectWithoutOrganizationInput | SocialIntentCreateOrConnectWithoutOrganizationInput[]
     createMany?: SocialIntentCreateManyOrganizationInputEnvelope
     connect?: SocialIntentWhereUniqueInput | SocialIntentWhereUniqueInput[]
+  }
+
+  export type ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<ConnectionProposalCreateWithoutOrganizationInput, ConnectionProposalUncheckedCreateWithoutOrganizationInput> | ConnectionProposalCreateWithoutOrganizationInput[] | ConnectionProposalUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutOrganizationInput | ConnectionProposalCreateOrConnectWithoutOrganizationInput[]
+    createMany?: ConnectionProposalCreateManyOrganizationInputEnvelope
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+  }
+
+  export type ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<ProposalDecisionCreateWithoutOrganizationInput, ProposalDecisionUncheckedCreateWithoutOrganizationInput> | ProposalDecisionCreateWithoutOrganizationInput[] | ProposalDecisionUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutOrganizationInput | ProposalDecisionCreateOrConnectWithoutOrganizationInput[]
+    createMany?: ProposalDecisionCreateManyOrganizationInputEnvelope
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
   }
 
   export type EnumOrganizationStatusFieldUpdateOperationsInput = {
@@ -79616,6 +83346,34 @@ export namespace Prisma {
     deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
   }
 
+  export type ConnectionProposalUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutOrganizationInput, ConnectionProposalUncheckedCreateWithoutOrganizationInput> | ConnectionProposalCreateWithoutOrganizationInput[] | ConnectionProposalUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutOrganizationInput | ConnectionProposalCreateOrConnectWithoutOrganizationInput[]
+    upsert?: ConnectionProposalUpsertWithWhereUniqueWithoutOrganizationInput | ConnectionProposalUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: ConnectionProposalCreateManyOrganizationInputEnvelope
+    set?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    disconnect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    delete?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    update?: ConnectionProposalUpdateWithWhereUniqueWithoutOrganizationInput | ConnectionProposalUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: ConnectionProposalUpdateManyWithWhereWithoutOrganizationInput | ConnectionProposalUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+  }
+
+  export type ProposalDecisionUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<ProposalDecisionCreateWithoutOrganizationInput, ProposalDecisionUncheckedCreateWithoutOrganizationInput> | ProposalDecisionCreateWithoutOrganizationInput[] | ProposalDecisionUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutOrganizationInput | ProposalDecisionCreateOrConnectWithoutOrganizationInput[]
+    upsert?: ProposalDecisionUpsertWithWhereUniqueWithoutOrganizationInput | ProposalDecisionUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: ProposalDecisionCreateManyOrganizationInputEnvelope
+    set?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    disconnect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    delete?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    update?: ProposalDecisionUpdateWithWhereUniqueWithoutOrganizationInput | ProposalDecisionUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: ProposalDecisionUpdateManyWithWhereWithoutOrganizationInput | ProposalDecisionUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
+  }
+
   export type MembershipUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -79698,6 +83456,34 @@ export namespace Prisma {
     update?: SocialIntentUpdateWithWhereUniqueWithoutOrganizationInput | SocialIntentUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: SocialIntentUpdateManyWithWhereWithoutOrganizationInput | SocialIntentUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: SocialIntentScalarWhereInput | SocialIntentScalarWhereInput[]
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutOrganizationInput, ConnectionProposalUncheckedCreateWithoutOrganizationInput> | ConnectionProposalCreateWithoutOrganizationInput[] | ConnectionProposalUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutOrganizationInput | ConnectionProposalCreateOrConnectWithoutOrganizationInput[]
+    upsert?: ConnectionProposalUpsertWithWhereUniqueWithoutOrganizationInput | ConnectionProposalUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: ConnectionProposalCreateManyOrganizationInputEnvelope
+    set?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    disconnect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    delete?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    connect?: ConnectionProposalWhereUniqueInput | ConnectionProposalWhereUniqueInput[]
+    update?: ConnectionProposalUpdateWithWhereUniqueWithoutOrganizationInput | ConnectionProposalUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: ConnectionProposalUpdateManyWithWhereWithoutOrganizationInput | ConnectionProposalUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+  }
+
+  export type ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<ProposalDecisionCreateWithoutOrganizationInput, ProposalDecisionUncheckedCreateWithoutOrganizationInput> | ProposalDecisionCreateWithoutOrganizationInput[] | ProposalDecisionUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ProposalDecisionCreateOrConnectWithoutOrganizationInput | ProposalDecisionCreateOrConnectWithoutOrganizationInput[]
+    upsert?: ProposalDecisionUpsertWithWhereUniqueWithoutOrganizationInput | ProposalDecisionUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: ProposalDecisionCreateManyOrganizationInputEnvelope
+    set?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    disconnect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    delete?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+    update?: ProposalDecisionUpdateWithWhereUniqueWithoutOrganizationInput | ProposalDecisionUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: ProposalDecisionUpdateManyWithWhereWithoutOrganizationInput | ProposalDecisionUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutMembershipsInput = {
@@ -80084,6 +83870,40 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMissionParticipationStatusFilter<$PrismaModel>
     _max?: NestedEnumMissionParticipationStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumConnectionProposalStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ConnectionProposalStatus | EnumConnectionProposalStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ConnectionProposalStatus[]
+    notIn?: $Enums.ConnectionProposalStatus[]
+    not?: NestedEnumConnectionProposalStatusFilter<$PrismaModel> | $Enums.ConnectionProposalStatus
+  }
+
+  export type NestedEnumConnectionProposalStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ConnectionProposalStatus | EnumConnectionProposalStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ConnectionProposalStatus[]
+    notIn?: $Enums.ConnectionProposalStatus[]
+    not?: NestedEnumConnectionProposalStatusWithAggregatesFilter<$PrismaModel> | $Enums.ConnectionProposalStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumConnectionProposalStatusFilter<$PrismaModel>
+    _max?: NestedEnumConnectionProposalStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumProposalDecisionKindFilter<$PrismaModel = never> = {
+    equals?: $Enums.ProposalDecisionKind | EnumProposalDecisionKindFieldRefInput<$PrismaModel>
+    in?: $Enums.ProposalDecisionKind[]
+    notIn?: $Enums.ProposalDecisionKind[]
+    not?: NestedEnumProposalDecisionKindFilter<$PrismaModel> | $Enums.ProposalDecisionKind
+  }
+
+  export type NestedEnumProposalDecisionKindWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ProposalDecisionKind | EnumProposalDecisionKindFieldRefInput<$PrismaModel>
+    in?: $Enums.ProposalDecisionKind[]
+    notIn?: $Enums.ProposalDecisionKind[]
+    not?: NestedEnumProposalDecisionKindWithAggregatesFilter<$PrismaModel> | $Enums.ProposalDecisionKind
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumProposalDecisionKindFilter<$PrismaModel>
+    _max?: NestedEnumProposalDecisionKindFilter<$PrismaModel>
   }
 
   export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
@@ -80692,6 +84512,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionsInput = {
@@ -80706,6 +84528,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionsInput = {
@@ -80758,6 +84582,9 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -80811,6 +84638,9 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -80896,6 +84726,45 @@ export namespace Prisma {
     data: SocialIntentCreateManyMissionInput | SocialIntentCreateManyMissionInput[]
   }
 
+  export type ConnectionProposalCreateWithoutMissionInput = {
+    id?: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutConnectionProposalsInput
+    proposer: UserCreateNestedOneWithoutProposalsMadeInput
+    candidate: UserCreateNestedOneWithoutProposalsReceivedInput
+    decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalUncheckedCreateWithoutMissionInput = {
+    id?: string
+    organizationId: string
+    proposerId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalCreateOrConnectWithoutMissionInput = {
+    where: ConnectionProposalWhereUniqueInput
+    create: XOR<ConnectionProposalCreateWithoutMissionInput, ConnectionProposalUncheckedCreateWithoutMissionInput>
+  }
+
+  export type ConnectionProposalCreateManyMissionInputEnvelope = {
+    data: ConnectionProposalCreateManyMissionInput | ConnectionProposalCreateManyMissionInput[]
+  }
+
   export type OrganizationUpsertWithoutMissionsInput = {
     update: XOR<OrganizationUpdateWithoutMissionsInput, OrganizationUncheckedUpdateWithoutMissionsInput>
     create: XOR<OrganizationCreateWithoutMissionsInput, OrganizationUncheckedCreateWithoutMissionsInput>
@@ -80919,6 +84788,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionsInput = {
@@ -80933,6 +84804,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMissionsInput = {
@@ -80991,6 +84864,9 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -81044,6 +84920,9 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -81119,6 +84998,40 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"SocialIntent"> | Date | string
   }
 
+  export type ConnectionProposalUpsertWithWhereUniqueWithoutMissionInput = {
+    where: ConnectionProposalWhereUniqueInput
+    update: XOR<ConnectionProposalUpdateWithoutMissionInput, ConnectionProposalUncheckedUpdateWithoutMissionInput>
+    create: XOR<ConnectionProposalCreateWithoutMissionInput, ConnectionProposalUncheckedCreateWithoutMissionInput>
+  }
+
+  export type ConnectionProposalUpdateWithWhereUniqueWithoutMissionInput = {
+    where: ConnectionProposalWhereUniqueInput
+    data: XOR<ConnectionProposalUpdateWithoutMissionInput, ConnectionProposalUncheckedUpdateWithoutMissionInput>
+  }
+
+  export type ConnectionProposalUpdateManyWithWhereWithoutMissionInput = {
+    where: ConnectionProposalScalarWhereInput
+    data: XOR<ConnectionProposalUpdateManyMutationInput, ConnectionProposalUncheckedUpdateManyWithoutMissionInput>
+  }
+
+  export type ConnectionProposalScalarWhereInput = {
+    AND?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+    OR?: ConnectionProposalScalarWhereInput[]
+    NOT?: ConnectionProposalScalarWhereInput | ConnectionProposalScalarWhereInput[]
+    id?: StringFilter<"ConnectionProposal"> | string
+    organizationId?: StringFilter<"ConnectionProposal"> | string
+    missionId?: StringFilter<"ConnectionProposal"> | string
+    proposerId?: StringFilter<"ConnectionProposal"> | string
+    candidateId?: StringFilter<"ConnectionProposal"> | string
+    status?: EnumConnectionProposalStatusFilter<"ConnectionProposal"> | $Enums.ConnectionProposalStatus
+    rationale?: StringFilter<"ConnectionProposal"> | string
+    expiresAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    introducedAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    closedAt?: DateTimeNullableFilter<"ConnectionProposal"> | Date | string | null
+    createdAt?: DateTimeFilter<"ConnectionProposal"> | Date | string
+    updatedAt?: DateTimeFilter<"ConnectionProposal"> | Date | string
+  }
+
   export type OrganizationCreateWithoutSocialIntentsInput = {
     id?: string
     name: string
@@ -81131,6 +85044,8 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSocialIntentsInput = {
@@ -81145,6 +85060,8 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSocialIntentsInput = {
@@ -81171,6 +85088,7 @@ export namespace Prisma {
     organization: OrganizationCreateNestedOneWithoutMissionsInput
     owner: UserCreateNestedOneWithoutMissionsInput
     participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateWithoutSocialIntentsInput = {
@@ -81192,6 +85110,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionCreateOrConnectWithoutSocialIntentsInput = {
@@ -81244,6 +85163,9 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -81297,6 +85219,9 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -81333,6 +85258,8 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSocialIntentsInput = {
@@ -81347,6 +85274,8 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutSocialIntentsInput = {
@@ -81379,6 +85308,7 @@ export namespace Prisma {
     organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
     owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
     participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateWithoutSocialIntentsInput = {
@@ -81400,6 +85330,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type UserUpsertWithoutSocialIntentsInput = {
@@ -81458,6 +85389,9 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -81511,6 +85445,9 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -81531,6 +85468,8 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionParticipationsInput = {
@@ -81545,6 +85484,8 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionParticipationsInput = {
@@ -81571,6 +85512,7 @@ export namespace Prisma {
     organization: OrganizationCreateNestedOneWithoutMissionsInput
     owner: UserCreateNestedOneWithoutMissionsInput
     socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateWithoutParticipationsInput = {
@@ -81592,6 +85534,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionCreateOrConnectWithoutParticipationsInput = {
@@ -81644,6 +85587,9 @@ export namespace Prisma {
     memberships?: MembershipCreateNestedManyWithoutUserInput
     missions?: MissionCreateNestedManyWithoutOwnerInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -81697,6 +85643,9 @@ export namespace Prisma {
     memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -81733,6 +85682,8 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionParticipationsInput = {
@@ -81747,6 +85698,8 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutParticipationsInput = {
@@ -81779,6 +85732,7 @@ export namespace Prisma {
     organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
     owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateWithoutParticipationsInput = {
@@ -81800,6 +85754,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type UserUpsertWithoutMissionParticipationsInput = {
@@ -81858,6 +85813,9 @@ export namespace Prisma {
     memberships?: MembershipUpdateManyWithoutUserNestedInput
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -81911,6 +85869,9 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -81931,6 +85892,8 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIdempotencyRecordsInput = {
@@ -81945,6 +85908,8 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIdempotencyRecordsInput = {
@@ -81975,6 +85940,8 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput = {
@@ -81989,6 +85956,1124 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationCreateWithoutConnectionProposalsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutConnectionProposalsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutConnectionProposalsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutConnectionProposalsInput, OrganizationUncheckedCreateWithoutConnectionProposalsInput>
+  }
+
+  export type MissionCreateWithoutProposalsInput = {
+    id?: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMissionsInput
+    owner: UserCreateNestedOneWithoutMissionsInput
+    participations?: MissionParticipationCreateNestedManyWithoutMissionInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionUncheckedCreateWithoutProposalsInput = {
+    id?: string
+    organizationId: string
+    ownerId: string
+    title: string
+    goal: string
+    offer: string
+    constraints?: string | null
+    successCriteria: string
+    status?: $Enums.MissionStatus
+    shareToken: string
+    publicPreview?: boolean
+    maxParticipants?: number | null
+    expiresAt?: Date | string | null
+    publishedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
+  }
+
+  export type MissionCreateOrConnectWithoutProposalsInput = {
+    where: MissionWhereUniqueInput
+    create: XOR<MissionCreateWithoutProposalsInput, MissionUncheckedCreateWithoutProposalsInput>
+  }
+
+  export type UserCreateWithoutProposalsMadeInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutProposalsMadeInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationUncheckedCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationUncheckedCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageUncheckedCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptUncheckedCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionUncheckedCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleUncheckedCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestUncheckedCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestUncheckedCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantUncheckedCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantUncheckedCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutProposalsMadeInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutProposalsMadeInput, UserUncheckedCreateWithoutProposalsMadeInput>
+  }
+
+  export type UserCreateWithoutProposalsReceivedInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutProposalsReceivedInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationUncheckedCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationUncheckedCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageUncheckedCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptUncheckedCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionUncheckedCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleUncheckedCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestUncheckedCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestUncheckedCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantUncheckedCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantUncheckedCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutProposalsReceivedInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutProposalsReceivedInput, UserUncheckedCreateWithoutProposalsReceivedInput>
+  }
+
+  export type ProposalDecisionCreateWithoutProposalInput = {
+    id?: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutProposalDecisionsInput
+    person: UserCreateNestedOneWithoutProposalDecisionsInput
+  }
+
+  export type ProposalDecisionUncheckedCreateWithoutProposalInput = {
+    id?: string
+    organizationId: string
+    personId: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+  }
+
+  export type ProposalDecisionCreateOrConnectWithoutProposalInput = {
+    where: ProposalDecisionWhereUniqueInput
+    create: XOR<ProposalDecisionCreateWithoutProposalInput, ProposalDecisionUncheckedCreateWithoutProposalInput>
+  }
+
+  export type ProposalDecisionCreateManyProposalInputEnvelope = {
+    data: ProposalDecisionCreateManyProposalInput | ProposalDecisionCreateManyProposalInput[]
+  }
+
+  export type OrganizationUpsertWithoutConnectionProposalsInput = {
+    update: XOR<OrganizationUpdateWithoutConnectionProposalsInput, OrganizationUncheckedUpdateWithoutConnectionProposalsInput>
+    create: XOR<OrganizationCreateWithoutConnectionProposalsInput, OrganizationUncheckedCreateWithoutConnectionProposalsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutConnectionProposalsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutConnectionProposalsInput, OrganizationUncheckedUpdateWithoutConnectionProposalsInput>
+  }
+
+  export type OrganizationUpdateWithoutConnectionProposalsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutConnectionProposalsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type MissionUpsertWithoutProposalsInput = {
+    update: XOR<MissionUpdateWithoutProposalsInput, MissionUncheckedUpdateWithoutProposalsInput>
+    create: XOR<MissionCreateWithoutProposalsInput, MissionUncheckedCreateWithoutProposalsInput>
+    where?: MissionWhereInput
+  }
+
+  export type MissionUpdateToOneWithWhereWithoutProposalsInput = {
+    where?: MissionWhereInput
+    data: XOR<MissionUpdateWithoutProposalsInput, MissionUncheckedUpdateWithoutProposalsInput>
+  }
+
+  export type MissionUpdateWithoutProposalsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
+    owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
+    participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
+  }
+
+  export type MissionUncheckedUpdateWithoutProposalsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    goal?: StringFieldUpdateOperationsInput | string
+    offer?: StringFieldUpdateOperationsInput | string
+    constraints?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: StringFieldUpdateOperationsInput | string
+    status?: EnumMissionStatusFieldUpdateOperationsInput | $Enums.MissionStatus
+    shareToken?: StringFieldUpdateOperationsInput | string
+    publicPreview?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: NullableIntFieldUpdateOperationsInput | number | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
+  }
+
+  export type UserUpsertWithoutProposalsMadeInput = {
+    update: XOR<UserUpdateWithoutProposalsMadeInput, UserUncheckedUpdateWithoutProposalsMadeInput>
+    create: XOR<UserCreateWithoutProposalsMadeInput, UserUncheckedCreateWithoutProposalsMadeInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutProposalsMadeInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutProposalsMadeInput, UserUncheckedUpdateWithoutProposalsMadeInput>
+  }
+
+  export type UserUpdateWithoutProposalsMadeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutProposalsMadeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUncheckedUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUncheckedUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUncheckedUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUncheckedUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUncheckedUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUncheckedUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUncheckedUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUncheckedUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUncheckedUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUpsertWithoutProposalsReceivedInput = {
+    update: XOR<UserUpdateWithoutProposalsReceivedInput, UserUncheckedUpdateWithoutProposalsReceivedInput>
+    create: XOR<UserCreateWithoutProposalsReceivedInput, UserUncheckedCreateWithoutProposalsReceivedInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutProposalsReceivedInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutProposalsReceivedInput, UserUncheckedUpdateWithoutProposalsReceivedInput>
+  }
+
+  export type UserUpdateWithoutProposalsReceivedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutProposalsReceivedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUncheckedUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUncheckedUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUncheckedUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUncheckedUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUncheckedUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUncheckedUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUncheckedUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUncheckedUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUncheckedUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type ProposalDecisionUpsertWithWhereUniqueWithoutProposalInput = {
+    where: ProposalDecisionWhereUniqueInput
+    update: XOR<ProposalDecisionUpdateWithoutProposalInput, ProposalDecisionUncheckedUpdateWithoutProposalInput>
+    create: XOR<ProposalDecisionCreateWithoutProposalInput, ProposalDecisionUncheckedCreateWithoutProposalInput>
+  }
+
+  export type ProposalDecisionUpdateWithWhereUniqueWithoutProposalInput = {
+    where: ProposalDecisionWhereUniqueInput
+    data: XOR<ProposalDecisionUpdateWithoutProposalInput, ProposalDecisionUncheckedUpdateWithoutProposalInput>
+  }
+
+  export type ProposalDecisionUpdateManyWithWhereWithoutProposalInput = {
+    where: ProposalDecisionScalarWhereInput
+    data: XOR<ProposalDecisionUpdateManyMutationInput, ProposalDecisionUncheckedUpdateManyWithoutProposalInput>
+  }
+
+  export type ProposalDecisionScalarWhereInput = {
+    AND?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
+    OR?: ProposalDecisionScalarWhereInput[]
+    NOT?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
+    id?: StringFilter<"ProposalDecision"> | string
+    organizationId?: StringFilter<"ProposalDecision"> | string
+    proposalId?: StringFilter<"ProposalDecision"> | string
+    personId?: StringFilter<"ProposalDecision"> | string
+    decision?: EnumProposalDecisionKindFilter<"ProposalDecision"> | $Enums.ProposalDecisionKind
+    note?: StringNullableFilter<"ProposalDecision"> | string | null
+    decidedAt?: DateTimeFilter<"ProposalDecision"> | Date | string
+  }
+
+  export type OrganizationCreateWithoutProposalDecisionsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutProposalDecisionsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutProposalDecisionsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutProposalDecisionsInput, OrganizationUncheckedCreateWithoutProposalDecisionsInput>
+  }
+
+  export type ConnectionProposalCreateWithoutDecisionsInput = {
+    id?: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutConnectionProposalsInput
+    mission: MissionCreateNestedOneWithoutProposalsInput
+    proposer: UserCreateNestedOneWithoutProposalsMadeInput
+    candidate: UserCreateNestedOneWithoutProposalsReceivedInput
+  }
+
+  export type ConnectionProposalUncheckedCreateWithoutDecisionsInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    proposerId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ConnectionProposalCreateOrConnectWithoutDecisionsInput = {
+    where: ConnectionProposalWhereUniqueInput
+    create: XOR<ConnectionProposalCreateWithoutDecisionsInput, ConnectionProposalUncheckedCreateWithoutDecisionsInput>
+  }
+
+  export type UserCreateWithoutProposalDecisionsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenCreateNestedManyWithoutUserInput
+    profile?: ProfileCreateNestedOneWithoutUserInput
+    sentMatches?: MatchCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionCreateNestedManyWithoutUserInput
+    payments?: PaymentCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
+    missions?: MissionCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutProposalDecisionsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    password?: string | null
+    role?: $Enums.UserRole
+    tokenVersion?: number
+    isBot?: boolean
+    botType?: string | null
+    botConfig?: string | null
+    cardVerified?: boolean
+    cardVerifiedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verificationTokens?: VerificationTokenUncheckedCreateNestedManyWithoutUserInput
+    profile?: ProfileUncheckedCreateNestedOneWithoutUserInput
+    sentMatches?: MatchUncheckedCreateNestedManyWithoutSenderInput
+    receivedMatches?: MatchUncheckedCreateNestedManyWithoutReceiverInput
+    matchReactions?: MatchReactionUncheckedCreateNestedManyWithoutUserInput
+    conversationsA?: ConversationUncheckedCreateNestedManyWithoutUserAInput
+    conversationsB?: ConversationUncheckedCreateNestedManyWithoutUserBInput
+    imMessages?: IMMessageUncheckedCreateNestedManyWithoutSenderInput
+    messageReceipts?: MessageReceiptUncheckedCreateNestedManyWithoutUserInput
+    messageReactions?: MessageReactionUncheckedCreateNestedManyWithoutUserInput
+    imParticipants?: ConversationParticipantUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedOneWithoutUserInput
+    powerBoardRule?: PowerBoardRuleUncheckedCreateNestedOneWithoutUserInput
+    consentRequestsMade?: ConsentRequestUncheckedCreateNestedManyWithoutRequesterInput
+    consentRequestsRecv?: ConsentRequestUncheckedCreateNestedManyWithoutTargetInput
+    consentGrantsMade?: ConsentGrantUncheckedCreateNestedManyWithoutGranterInput
+    consentGrantsRecv?: ConsentGrantUncheckedCreateNestedManyWithoutGranteeInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutUserInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    adminAudits?: AdminAuditUncheckedCreateNestedManyWithoutActorInput
+    adminRoles?: AdminUserRoleUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+    reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
+    reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
+    blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
+    blocksReceived?: BlockUncheckedCreateNestedManyWithoutBlockedInput
+    sincerityWallet?: SincerityWalletUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutProposalDecisionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutProposalDecisionsInput, UserUncheckedCreateWithoutProposalDecisionsInput>
+  }
+
+  export type OrganizationUpsertWithoutProposalDecisionsInput = {
+    update: XOR<OrganizationUpdateWithoutProposalDecisionsInput, OrganizationUncheckedUpdateWithoutProposalDecisionsInput>
+    create: XOR<OrganizationCreateWithoutProposalDecisionsInput, OrganizationUncheckedCreateWithoutProposalDecisionsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutProposalDecisionsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutProposalDecisionsInput, OrganizationUncheckedUpdateWithoutProposalDecisionsInput>
+  }
+
+  export type OrganizationUpdateWithoutProposalDecisionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutProposalDecisionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type ConnectionProposalUpsertWithoutDecisionsInput = {
+    update: XOR<ConnectionProposalUpdateWithoutDecisionsInput, ConnectionProposalUncheckedUpdateWithoutDecisionsInput>
+    create: XOR<ConnectionProposalCreateWithoutDecisionsInput, ConnectionProposalUncheckedCreateWithoutDecisionsInput>
+    where?: ConnectionProposalWhereInput
+  }
+
+  export type ConnectionProposalUpdateToOneWithWhereWithoutDecisionsInput = {
+    where?: ConnectionProposalWhereInput
+    data: XOR<ConnectionProposalUpdateWithoutDecisionsInput, ConnectionProposalUncheckedUpdateWithoutDecisionsInput>
+  }
+
+  export type ConnectionProposalUpdateWithoutDecisionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutConnectionProposalsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
+    proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
+    candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateWithoutDecisionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserUpsertWithoutProposalDecisionsInput = {
+    update: XOR<UserUpdateWithoutProposalDecisionsInput, UserUncheckedUpdateWithoutProposalDecisionsInput>
+    create: XOR<UserCreateWithoutProposalDecisionsInput, UserUncheckedCreateWithoutProposalDecisionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutProposalDecisionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutProposalDecisionsInput, UserUncheckedUpdateWithoutProposalDecisionsInput>
+  }
+
+  export type UserUpdateWithoutProposalDecisionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUpdateManyWithoutUserNestedInput
+    profile?: ProfileUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUpdateManyWithoutUserNestedInput
+    payments?: PaymentUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
+    missions?: MissionUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutProposalDecisionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    isBot?: BoolFieldUpdateOperationsInput | boolean
+    botType?: NullableStringFieldUpdateOperationsInput | string | null
+    botConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    cardVerified?: BoolFieldUpdateOperationsInput | boolean
+    cardVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verificationTokens?: VerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+    profile?: ProfileUncheckedUpdateOneWithoutUserNestedInput
+    sentMatches?: MatchUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMatches?: MatchUncheckedUpdateManyWithoutReceiverNestedInput
+    matchReactions?: MatchReactionUncheckedUpdateManyWithoutUserNestedInput
+    conversationsA?: ConversationUncheckedUpdateManyWithoutUserANestedInput
+    conversationsB?: ConversationUncheckedUpdateManyWithoutUserBNestedInput
+    imMessages?: IMMessageUncheckedUpdateManyWithoutSenderNestedInput
+    messageReceipts?: MessageReceiptUncheckedUpdateManyWithoutUserNestedInput
+    messageReactions?: MessageReactionUncheckedUpdateManyWithoutUserNestedInput
+    imParticipants?: ConversationParticipantUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateOneWithoutUserNestedInput
+    powerBoardRule?: PowerBoardRuleUncheckedUpdateOneWithoutUserNestedInput
+    consentRequestsMade?: ConsentRequestUncheckedUpdateManyWithoutRequesterNestedInput
+    consentRequestsRecv?: ConsentRequestUncheckedUpdateManyWithoutTargetNestedInput
+    consentGrantsMade?: ConsentGrantUncheckedUpdateManyWithoutGranterNestedInput
+    consentGrantsRecv?: ConsentGrantUncheckedUpdateManyWithoutGranteeNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    subscriptions?: SubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    adminAudits?: AdminAuditUncheckedUpdateManyWithoutActorNestedInput
+    adminRoles?: AdminUserRoleUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+    reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
+    reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
+    blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
+    blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
+    sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -83164,6 +88249,7 @@ export namespace Prisma {
     organization: OrganizationCreateNestedOneWithoutMissionsInput
     participations?: MissionParticipationCreateNestedManyWithoutMissionInput
     socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateWithoutOwnerInput = {
@@ -83185,6 +88271,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionCreateOrConnectWithoutOwnerInput = {
@@ -83266,6 +88353,111 @@ export namespace Prisma {
 
   export type SocialIntentCreateManyUserInputEnvelope = {
     data: SocialIntentCreateManyUserInput | SocialIntentCreateManyUserInput[]
+  }
+
+  export type ConnectionProposalCreateWithoutProposerInput = {
+    id?: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutConnectionProposalsInput
+    mission: MissionCreateNestedOneWithoutProposalsInput
+    candidate: UserCreateNestedOneWithoutProposalsReceivedInput
+    decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalUncheckedCreateWithoutProposerInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalCreateOrConnectWithoutProposerInput = {
+    where: ConnectionProposalWhereUniqueInput
+    create: XOR<ConnectionProposalCreateWithoutProposerInput, ConnectionProposalUncheckedCreateWithoutProposerInput>
+  }
+
+  export type ConnectionProposalCreateManyProposerInputEnvelope = {
+    data: ConnectionProposalCreateManyProposerInput | ConnectionProposalCreateManyProposerInput[]
+  }
+
+  export type ConnectionProposalCreateWithoutCandidateInput = {
+    id?: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutConnectionProposalsInput
+    mission: MissionCreateNestedOneWithoutProposalsInput
+    proposer: UserCreateNestedOneWithoutProposalsMadeInput
+    decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalUncheckedCreateWithoutCandidateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    proposerId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalCreateOrConnectWithoutCandidateInput = {
+    where: ConnectionProposalWhereUniqueInput
+    create: XOR<ConnectionProposalCreateWithoutCandidateInput, ConnectionProposalUncheckedCreateWithoutCandidateInput>
+  }
+
+  export type ConnectionProposalCreateManyCandidateInputEnvelope = {
+    data: ConnectionProposalCreateManyCandidateInput | ConnectionProposalCreateManyCandidateInput[]
+  }
+
+  export type ProposalDecisionCreateWithoutPersonInput = {
+    id?: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutProposalDecisionsInput
+    proposal: ConnectionProposalCreateNestedOneWithoutDecisionsInput
+  }
+
+  export type ProposalDecisionUncheckedCreateWithoutPersonInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+  }
+
+  export type ProposalDecisionCreateOrConnectWithoutPersonInput = {
+    where: ProposalDecisionWhereUniqueInput
+    create: XOR<ProposalDecisionCreateWithoutPersonInput, ProposalDecisionUncheckedCreateWithoutPersonInput>
+  }
+
+  export type ProposalDecisionCreateManyPersonInputEnvelope = {
+    data: ProposalDecisionCreateManyPersonInput | ProposalDecisionCreateManyPersonInput[]
   }
 
   export type AnalyticsEventCreateWithoutUserInput = {
@@ -84470,6 +89662,54 @@ export namespace Prisma {
     data: XOR<SocialIntentUpdateManyMutationInput, SocialIntentUncheckedUpdateManyWithoutUserInput>
   }
 
+  export type ConnectionProposalUpsertWithWhereUniqueWithoutProposerInput = {
+    where: ConnectionProposalWhereUniqueInput
+    update: XOR<ConnectionProposalUpdateWithoutProposerInput, ConnectionProposalUncheckedUpdateWithoutProposerInput>
+    create: XOR<ConnectionProposalCreateWithoutProposerInput, ConnectionProposalUncheckedCreateWithoutProposerInput>
+  }
+
+  export type ConnectionProposalUpdateWithWhereUniqueWithoutProposerInput = {
+    where: ConnectionProposalWhereUniqueInput
+    data: XOR<ConnectionProposalUpdateWithoutProposerInput, ConnectionProposalUncheckedUpdateWithoutProposerInput>
+  }
+
+  export type ConnectionProposalUpdateManyWithWhereWithoutProposerInput = {
+    where: ConnectionProposalScalarWhereInput
+    data: XOR<ConnectionProposalUpdateManyMutationInput, ConnectionProposalUncheckedUpdateManyWithoutProposerInput>
+  }
+
+  export type ConnectionProposalUpsertWithWhereUniqueWithoutCandidateInput = {
+    where: ConnectionProposalWhereUniqueInput
+    update: XOR<ConnectionProposalUpdateWithoutCandidateInput, ConnectionProposalUncheckedUpdateWithoutCandidateInput>
+    create: XOR<ConnectionProposalCreateWithoutCandidateInput, ConnectionProposalUncheckedCreateWithoutCandidateInput>
+  }
+
+  export type ConnectionProposalUpdateWithWhereUniqueWithoutCandidateInput = {
+    where: ConnectionProposalWhereUniqueInput
+    data: XOR<ConnectionProposalUpdateWithoutCandidateInput, ConnectionProposalUncheckedUpdateWithoutCandidateInput>
+  }
+
+  export type ConnectionProposalUpdateManyWithWhereWithoutCandidateInput = {
+    where: ConnectionProposalScalarWhereInput
+    data: XOR<ConnectionProposalUpdateManyMutationInput, ConnectionProposalUncheckedUpdateManyWithoutCandidateInput>
+  }
+
+  export type ProposalDecisionUpsertWithWhereUniqueWithoutPersonInput = {
+    where: ProposalDecisionWhereUniqueInput
+    update: XOR<ProposalDecisionUpdateWithoutPersonInput, ProposalDecisionUncheckedUpdateWithoutPersonInput>
+    create: XOR<ProposalDecisionCreateWithoutPersonInput, ProposalDecisionUncheckedCreateWithoutPersonInput>
+  }
+
+  export type ProposalDecisionUpdateWithWhereUniqueWithoutPersonInput = {
+    where: ProposalDecisionWhereUniqueInput
+    data: XOR<ProposalDecisionUpdateWithoutPersonInput, ProposalDecisionUncheckedUpdateWithoutPersonInput>
+  }
+
+  export type ProposalDecisionUpdateManyWithWhereWithoutPersonInput = {
+    where: ProposalDecisionScalarWhereInput
+    data: XOR<ProposalDecisionUpdateManyMutationInput, ProposalDecisionUncheckedUpdateManyWithoutPersonInput>
+  }
+
   export type AnalyticsEventUpsertWithWhereUniqueWithoutUserInput = {
     where: AnalyticsEventWhereUniqueInput
     update: XOR<AnalyticsEventUpdateWithoutUserInput, AnalyticsEventUncheckedUpdateWithoutUserInput>
@@ -84694,6 +89934,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -84747,6 +89990,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -84816,6 +90062,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -84869,6 +90118,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -84922,6 +90174,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -84975,6 +90230,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -85044,6 +90302,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -85097,6 +90358,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -85150,6 +90414,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -85203,6 +90470,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -85272,6 +90542,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -85325,6 +90598,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -85378,6 +90654,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -85431,6 +90710,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -85500,6 +90782,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -85553,6 +90838,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -85606,6 +90894,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -85659,6 +90950,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -85717,6 +91011,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -85770,6 +91067,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -85864,6 +91164,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -85917,6 +91220,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -85981,6 +91287,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -86034,6 +91343,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -86168,6 +91480,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -86221,6 +91536,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -86361,6 +91679,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -86414,6 +91735,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -86467,6 +91791,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -86520,6 +91847,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -86578,6 +91908,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -86631,6 +91964,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -86911,6 +92247,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -86964,6 +92303,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -87028,6 +92370,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -87081,6 +92426,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -87291,6 +92639,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -87344,6 +92695,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -87496,6 +92850,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -87549,6 +92906,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -87679,6 +93039,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -87732,6 +93095,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -87936,6 +93302,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -87989,6 +93358,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -88218,6 +93590,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -88271,6 +93646,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -88496,6 +93874,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -88549,6 +93930,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -88669,6 +94053,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -88722,6 +94109,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -88864,6 +94254,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -88917,6 +94310,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -88970,6 +94366,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -89023,6 +94422,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -89092,6 +94494,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -89145,6 +94550,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -89198,6 +94606,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -89251,6 +94662,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -89309,6 +94723,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -89362,6 +94779,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -89508,6 +94928,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -89561,6 +94984,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -89625,6 +95051,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -89678,6 +95107,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -89814,6 +95246,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -89867,6 +95302,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -89925,6 +95363,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -89978,6 +95419,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -90124,6 +95568,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -90177,6 +95624,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -90241,6 +95691,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -90294,6 +95747,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -90430,6 +95886,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -90483,6 +95942,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -90552,6 +96014,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -90605,6 +96070,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -90658,6 +96126,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -90711,6 +96182,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -90780,6 +96254,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -90833,6 +96310,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -90886,6 +96366,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -90939,6 +96422,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -91008,6 +96494,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -91061,6 +96550,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -91114,6 +96606,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -91167,6 +96662,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -91236,6 +96734,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -91289,6 +96790,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -91342,6 +96846,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -91395,6 +96902,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -91464,6 +96974,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -91517,6 +97030,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -91570,6 +97086,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -91623,6 +97142,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -91692,6 +97214,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -91745,6 +97270,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -91799,6 +97327,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -91852,6 +97383,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -91921,6 +97455,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -91974,6 +97511,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -92193,6 +97733,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -92246,6 +97789,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -92340,6 +97886,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -92393,6 +97942,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -92478,6 +98030,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -92531,6 +98086,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -92637,6 +98195,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -92690,6 +98251,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -92857,6 +98421,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -92910,6 +98477,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -92968,6 +98538,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -93021,6 +98594,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -93090,6 +98666,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -93143,6 +98722,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -93207,6 +98789,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -93260,6 +98845,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -93313,6 +98901,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -93366,6 +98957,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -93424,6 +99018,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockCreateNestedManyWithoutBlockerInput
@@ -93477,6 +99074,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     blocksGiven?: BlockUncheckedCreateNestedManyWithoutBlockerInput
@@ -93546,6 +99146,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -93599,6 +99202,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -93663,6 +99269,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUpdateManyWithoutBlockerNestedInput
@@ -93716,6 +99325,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
@@ -93798,6 +99410,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutMissionsInput
     participations?: MissionParticipationCreateNestedManyWithoutMissionInput
     socialIntents?: SocialIntentCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalCreateNestedManyWithoutMissionInput
   }
 
   export type MissionUncheckedCreateWithoutOrganizationInput = {
@@ -93819,6 +99432,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     participations?: MissionParticipationUncheckedCreateNestedManyWithoutMissionInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutMissionInput
+    proposals?: ConnectionProposalUncheckedCreateNestedManyWithoutMissionInput
   }
 
   export type MissionCreateOrConnectWithoutOrganizationInput = {
@@ -93929,6 +99543,72 @@ export namespace Prisma {
 
   export type SocialIntentCreateManyOrganizationInputEnvelope = {
     data: SocialIntentCreateManyOrganizationInput | SocialIntentCreateManyOrganizationInput[]
+  }
+
+  export type ConnectionProposalCreateWithoutOrganizationInput = {
+    id?: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    mission: MissionCreateNestedOneWithoutProposalsInput
+    proposer: UserCreateNestedOneWithoutProposalsMadeInput
+    candidate: UserCreateNestedOneWithoutProposalsReceivedInput
+    decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    missionId: string
+    proposerId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalCreateOrConnectWithoutOrganizationInput = {
+    where: ConnectionProposalWhereUniqueInput
+    create: XOR<ConnectionProposalCreateWithoutOrganizationInput, ConnectionProposalUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type ConnectionProposalCreateManyOrganizationInputEnvelope = {
+    data: ConnectionProposalCreateManyOrganizationInput | ConnectionProposalCreateManyOrganizationInput[]
+  }
+
+  export type ProposalDecisionCreateWithoutOrganizationInput = {
+    id?: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+    proposal: ConnectionProposalCreateNestedOneWithoutDecisionsInput
+    person: UserCreateNestedOneWithoutProposalDecisionsInput
+  }
+
+  export type ProposalDecisionUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    proposalId: string
+    personId: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+  }
+
+  export type ProposalDecisionCreateOrConnectWithoutOrganizationInput = {
+    where: ProposalDecisionWhereUniqueInput
+    create: XOR<ProposalDecisionCreateWithoutOrganizationInput, ProposalDecisionUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type ProposalDecisionCreateManyOrganizationInputEnvelope = {
+    data: ProposalDecisionCreateManyOrganizationInput | ProposalDecisionCreateManyOrganizationInput[]
   }
 
   export type MembershipUpsertWithWhereUniqueWithoutOrganizationInput = {
@@ -94055,6 +99735,38 @@ export namespace Prisma {
     data: XOR<SocialIntentUpdateManyMutationInput, SocialIntentUncheckedUpdateManyWithoutOrganizationInput>
   }
 
+  export type ConnectionProposalUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: ConnectionProposalWhereUniqueInput
+    update: XOR<ConnectionProposalUpdateWithoutOrganizationInput, ConnectionProposalUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<ConnectionProposalCreateWithoutOrganizationInput, ConnectionProposalUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type ConnectionProposalUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: ConnectionProposalWhereUniqueInput
+    data: XOR<ConnectionProposalUpdateWithoutOrganizationInput, ConnectionProposalUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type ConnectionProposalUpdateManyWithWhereWithoutOrganizationInput = {
+    where: ConnectionProposalScalarWhereInput
+    data: XOR<ConnectionProposalUpdateManyMutationInput, ConnectionProposalUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type ProposalDecisionUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: ProposalDecisionWhereUniqueInput
+    update: XOR<ProposalDecisionUpdateWithoutOrganizationInput, ProposalDecisionUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<ProposalDecisionCreateWithoutOrganizationInput, ProposalDecisionUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type ProposalDecisionUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: ProposalDecisionWhereUniqueInput
+    data: XOR<ProposalDecisionUpdateWithoutOrganizationInput, ProposalDecisionUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type ProposalDecisionUpdateManyWithWhereWithoutOrganizationInput = {
+    where: ProposalDecisionScalarWhereInput
+    data: XOR<ProposalDecisionUpdateManyMutationInput, ProposalDecisionUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
   export type OrganizationCreateWithoutMembershipsInput = {
     id?: string
     name: string
@@ -94067,6 +99779,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMembershipsInput = {
@@ -94081,6 +99795,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMembershipsInput = {
@@ -94133,6 +99849,9 @@ export namespace Prisma {
     missions?: MissionCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventCreateNestedManyWithoutUserInput
     reportsMade?: UserReportCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportCreateNestedManyWithoutReportedUserInput
@@ -94186,6 +99905,9 @@ export namespace Prisma {
     missions?: MissionUncheckedCreateNestedManyWithoutOwnerInput
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutUserInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutUserInput
+    proposalsMade?: ConnectionProposalUncheckedCreateNestedManyWithoutProposerInput
+    proposalsReceived?: ConnectionProposalUncheckedCreateNestedManyWithoutCandidateInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutPersonInput
     analyticsEvents?: AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
     reportsMade?: UserReportUncheckedCreateNestedManyWithoutReporterInput
     reportsReceived?: UserReportUncheckedCreateNestedManyWithoutReportedUserInput
@@ -94222,6 +99944,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMembershipsInput = {
@@ -94236,6 +99960,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMembershipsInput = {
@@ -94294,6 +100020,9 @@ export namespace Prisma {
     missions?: MissionUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUpdateManyWithoutReportedUserNestedInput
@@ -94347,6 +100076,9 @@ export namespace Prisma {
     missions?: MissionUncheckedUpdateManyWithoutOwnerNestedInput
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutUserNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutUserNestedInput
+    proposalsMade?: ConnectionProposalUncheckedUpdateManyWithoutProposerNestedInput
+    proposalsReceived?: ConnectionProposalUncheckedUpdateManyWithoutCandidateNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutPersonNestedInput
     analyticsEvents?: AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
     reportsMade?: UserReportUncheckedUpdateManyWithoutReporterNestedInput
     reportsReceived?: UserReportUncheckedUpdateManyWithoutReportedUserNestedInput
@@ -94367,6 +100099,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAuditEventsInput = {
@@ -94381,6 +100115,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAuditEventsInput = {
@@ -94411,6 +100147,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAuditEventsInput = {
@@ -94425,6 +100163,8 @@ export namespace Prisma {
     missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionParticipationCreateManyMissionInput = {
@@ -94450,6 +100190,20 @@ export namespace Prisma {
     withdrawnAt?: Date | string | null
     importConsentAt?: Date | string | null
     importedFields?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ConnectionProposalCreateManyMissionInput = {
+    id?: string
+    organizationId: string
+    proposerId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -94533,6 +100287,86 @@ export namespace Prisma {
     importedFields?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConnectionProposalUpdateWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutConnectionProposalsNestedInput
+    proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
+    candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
+    decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyWithoutMissionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionCreateManyProposalInput = {
+    id?: string
+    organizationId: string
+    personId: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+  }
+
+  export type ProposalDecisionUpdateWithoutProposalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutProposalDecisionsNestedInput
+    person?: UserUpdateOneRequiredWithoutProposalDecisionsNestedInput
+  }
+
+  export type ProposalDecisionUncheckedUpdateWithoutProposalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    personId?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionUncheckedUpdateManyWithoutProposalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    personId?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AccountCreateManyUserInput = {
@@ -94954,6 +100788,43 @@ export namespace Prisma {
     importedFields?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type ConnectionProposalCreateManyProposerInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ConnectionProposalCreateManyCandidateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    proposerId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProposalDecisionCreateManyPersonInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
   }
 
   export type AnalyticsEventCreateManyUserInput = {
@@ -96195,6 +102066,7 @@ export namespace Prisma {
     organization?: OrganizationUpdateOneRequiredWithoutMissionsNestedInput
     participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateWithoutOwnerInput = {
@@ -96216,6 +102088,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateManyWithoutOwnerInput = {
@@ -96316,6 +102189,121 @@ export namespace Prisma {
     importedFields?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConnectionProposalUpdateWithoutProposerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutConnectionProposalsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
+    candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
+    decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateWithoutProposerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyWithoutProposerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConnectionProposalUpdateWithoutCandidateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutConnectionProposalsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
+    proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
+    decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateWithoutCandidateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyWithoutCandidateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionUpdateWithoutPersonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutProposalDecisionsNestedInput
+    proposal?: ConnectionProposalUpdateOneRequiredWithoutDecisionsNestedInput
+  }
+
+  export type ProposalDecisionUncheckedUpdateWithoutPersonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionUncheckedUpdateManyWithoutPersonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AnalyticsEventUpdateWithoutUserInput = {
@@ -97162,6 +103150,29 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type ConnectionProposalCreateManyOrganizationInput = {
+    id?: string
+    missionId: string
+    proposerId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProposalDecisionCreateManyOrganizationInput = {
+    id?: string
+    proposalId: string
+    personId: string
+    decision: $Enums.ProposalDecisionKind
+    note?: string | null
+    decidedAt?: Date | string
+  }
+
   export type MembershipUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
@@ -97238,6 +103249,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutMissionsNestedInput
     participations?: MissionParticipationUpdateManyWithoutMissionNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateWithoutOrganizationInput = {
@@ -97259,6 +103271,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participations?: MissionParticipationUncheckedUpdateManyWithoutMissionNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutMissionNestedInput
+    proposals?: ConnectionProposalUncheckedUpdateManyWithoutMissionNestedInput
   }
 
   export type MissionUncheckedUpdateManyWithoutOrganizationInput = {
@@ -97389,6 +103402,77 @@ export namespace Prisma {
     importedFields?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConnectionProposalUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
+    proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
+    candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
+    decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    proposal?: ConnectionProposalUpdateOneRequiredWithoutDecisionsNestedInput
+    person?: UserUpdateOneRequiredWithoutProposalDecisionsNestedInput
+  }
+
+  export type ProposalDecisionUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    personId?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProposalDecisionUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    personId?: StringFieldUpdateOperationsInput | string
+    decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

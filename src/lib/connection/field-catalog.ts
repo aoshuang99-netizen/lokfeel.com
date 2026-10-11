@@ -134,6 +134,19 @@ export const MISSING_FIELD_AUDIENCE: DisclosureAudience = 'SELF'
  */
 export const CANDIDATE_PROFILE_AUDIENCE: ExternalAudience = 'CANDIDATE'
 
+/**
+ * T05 · 「双方同意后」的档案档位。
+ *
+ * ⚠️ 这个常量是 **`COUNTERPARTY` 档位唯一的生效入口**。T05 之前，该档位虽然
+ * 存在于目录、也能被用户选中，却**没有任何读路径** —— 用户把字段设成
+ * 「匹配后可见」，结果永远不会有人看到它们（功能静默失效，且没有任何报错）。
+ * 双边同意落地后，本常量才第一次被投影调用点引用。
+ *
+ * 收敛成常量与 `CANDIDATE_PROFILE_AUDIENCE` 同理：想改「已介绍的对手方能看什么」，
+ * 改的是这一行，而不是散落各处的投影调用点。
+ */
+export const COUNTERPARTY_PROFILE_AUDIENCE: ExternalAudience = 'COUNTERPARTY'
+
 // ═══════════════════════════════════════════════════════════
 // 字段定义
 // ═══════════════════════════════════════════════════════════
@@ -255,6 +268,18 @@ export function auditCatalog(): string[] {
   }
   if (!EXTERNAL_AUDIENCES.includes(CANDIDATE_PROFILE_AUDIENCE)) {
     problems.push(`CANDIDATE_PROFILE_AUDIENCE must be an external audience`)
+  }
+  if (!EXTERNAL_AUDIENCES.includes(COUNTERPARTY_PROFILE_AUDIENCE)) {
+    problems.push(`COUNTERPARTY_PROFILE_AUDIENCE must be an external audience`)
+  }
+  // T05：两个**投影档位常量**之间必须有确定的秩关系。
+  // 「已同意的对手方」在集合上包含于「同任务的伙伴」，所以 `COUNTERPARTY` 必须更窄 ——
+  // 若把它设成更宽，就会出现"候选人看不到、已同意的人反而能看到"的反漏斗：
+  // 它不会报错，只会让用户在同意之后**失去**之前能看到的信息。
+  if (audienceRank(COUNTERPARTY_PROFILE_AUDIENCE) >= audienceRank(CANDIDATE_PROFILE_AUDIENCE)) {
+    problems.push(
+      `COUNTERPARTY_PROFILE_AUDIENCE must be narrower than CANDIDATE_PROFILE_AUDIENCE`
+    )
   }
 
   const seen = new Set<string>()

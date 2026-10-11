@@ -56,6 +56,13 @@ model Organization {
   // ── T03 Connection OS 反向关系（connection.prisma）──
   socialIntents SocialIntent[]
 
+  // ── T05 Connection OS 反向关系（connection.prisma）──
+  //
+  // 注意：`ConnectionProposal` 上**同时**有 `missionId` 与 `organizationId` 两个外键，
+  // 但只有 `organizationId` 指向本模型，因此不需要额外命名关系。
+  connectionProposals ConnectionProposal[]
+  proposalDecisions   ProposalDecision[]
+
   @@index([status])
 }
 

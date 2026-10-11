@@ -166,8 +166,12 @@ test.describe('T04 · 双向互补候选与披露边界（移动端 · AC-13 / A
     await expect(profile).toContainText('昵称')
     await expect(profile).toContainText('城市')
 
-    // ④ 诚实标注：连接流程尚未开放，且不提供"点了没用"的按钮
-    await expect(page.getByTestId('matches-connect-coming')).toBeVisible()
+    // ④ 诚实标注（T05 起语义变化）：连接需**双方各自同意**，入口在「我的连接」。
+    //    普通成员（本夹具的 member）看不到「发起连接」—— 那是运营动作（proposal.create），
+    //    放一个点了必然 403 的按钮比不放更糟。
+    await expect(page.getByTestId('matches-connect-note')).toBeVisible()
+    await expect(page.getByTestId('matches-view-proposals')).toBeVisible()
+    await expect(page.getByTestId('propose-open')).toHaveCount(0)
 
     // ⑤ 移动端：无横向滚动
     const overflow = await page.evaluate(

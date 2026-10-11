@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T05 · Consent &amp; Trust 交付报告 — LokFeel Connection OS</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#111827; --ink-2:#374151; --ink-3:#6b7280;
+    --line:#e5e7eb; --accent:#1d4ed8; --ok:#047857; --ok-bg:#ecfdf5; --warn:#b45309;
+    --warn-bg:#fffbeb; --bad:#b91c1c; --bad-bg:#fef2f2; --code:#f3f4f6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 80px}
+  header{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;border-radius:16px;padding:28px 30px;box-shadow:0 10px 30px rgba(29,78,216,.18)}
+  header .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+  header h1{margin:8px 0 6px;font-size:27px;line-height:1.3}
+  header p{margin:0;opacity:.92;font-size:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .meta span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 12px;font-size:12.5px}
+  .badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+  .b-ok{background:var(--ok-bg);color:var(--ok);border:1px solid #a7f3d0}
+  .b-warn{background:var(--warn-bg);color:var(--warn);border:1px solid #fde68a}
+  .b-bad{background:var(--bad-bg);color:var(--bad);border:1px solid #fecaca}
+  h2{font-size:18px;margin:34px 0 12px;padding-left:11px;border-left:4px solid var(--accent)}
+  h3{font-size:15px;margin:22px 0 8px;color:var(--ink-2)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .n{font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .kpi .l{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+  .kpi.ok .n{color:var(--ok)}
+  .kpi.warn .n{color:var(--warn)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:12px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px}
+  caption{caption-side:top;text-align:left;font-size:12.5px;color:var(--ink-3);padding:0 0 8px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#f9fafb;font-weight:700;color:var(--ink-2);font-size:12.5px;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  code{background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.6}
+  ul{margin:8px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+  .node{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+  .arrow{color:var(--ink-3);font-weight:700}
+  .note{background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:8px;padding:12px 14px;font-size:13.5px}
+  .danger{background:var(--bad-bg);border:1px solid #fecaca;border-left:4px solid var(--bad);border-radius:8px;padding:12px 14px;font-size:13.5px}
+  .okbox{background:var(--ok-bg);border:1px solid #a7f3d0;border-left:4px solid var(--ok);border-radius:8px;padding:12px 14px;font-size:13.5px}
+  footer{margin-top:40px;color:var(--ink-3);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">LokFeel · Connection OS · 交付报告</div>
+  <h1>T05 · Consent &amp; Trust — 双边同意、审批、撤销与审计</h1>
+  <p>组织者牵线，但「愿不愿意被介绍」由当事人各自决定：提案 → 双方各自同意 → 运营介绍 → 建立连接</p>
+  <div class="meta">
+    <span>代码提交 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">SHA_TBD</code></span>
+    <span>基线 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">cca7b80</code></span>
+    <span>2026-10-11</span>
+    <span>分支 main</span>
+    <span>AC-04 <b>通过</b> · AC-05 <b>通过</b> · AC-06 <b>通过</b></span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi ok"><div class="n">7/7</div><div class="l">移动端 E2E（真实 Chrome + Pixel 5）</div></div>
+  <div class="kpi ok"><div class="n">373/373</div><div class="l">connection 用例（T04 290 → 本刀 +83）</div></div>
+  <div class="kpi ok"><div class="n">752/752</div><div class="l">全量 jest 回归（T04 669 → +83）</div></div>
+  <div class="kpi ok"><div class="n">0</div><div class="l">tsc 类型错误</div></div>
+  <div class="kpi ok"><div class="n">0 / 0</div><div class="l">ESLint（T05 面）error / warning</div></div>
+  <div class="kpi ok"><div class="n">15/15</div><div class="l">T04 候选页回归（独立复验）</div></div>
+  <div class="kpi ok"><div class="n">3/3</div><div class="l">AC-04 / AC-05 / AC-06 全部通过</div></div>
+</div>
+
+<h2>1. 交付了什么</h2>
+<div class="flow">
+  <span class="node">ConnectionProposal 模型</span><span class="arrow">→</span>
+  <span class="node">纯函数状态机内核</span><span class="arrow">→</span>
+  <span class="node">consent / revoke API</span><span class="arrow">→</span>
+  <span class="node">introduce（执行点 · CAS）</span><span class="arrow">→</span>
+  <span class="node">我的连接（移动端）</span>
+</div>
+<div class="card">
+  把一个「组织者牵线」的产品动作，拆成**可被逐条验证**的三件事：
+  <ul>
+    <li><b>AC-04 单方同意不介绍</b>：第一个同意的人**不能**触发介绍；只有双方都同意（<code>MUTUALLY_ACCEPTED</code>）才可被介绍。</li>
+    <li><b>AC-05 拒绝与撤销</b>：拒绝 / 撤回立即进入终态；终态之后任何表态一律 <code>409</code> —— 不是"幂等成功"。</li>
+    <li><b>AC-06 执行时校验（race condition）</b>：介绍在执行的那一刻重新查提案与双方意图，用**条件更新（CAS）**写入 —— 并发下只有一个能成功。</li>
+  </ul>
+  并顺手接通了 T04 留下的一个悬空档位：<code>COUNTERPARTY</code>（用户授权给"已同意的对手方"的字段），在本刀之前**没有任何读路径**。
+</div>
+
+<h2>2. 三条 AC 各自被什么证明</h2>
+<table>
+<caption>每层能证伪的失败形状不同 —— 任何一层都替代不了另一层。</caption>
+<tr><th>AC</th><th>一句话</th><th>主判据</th><th>独立佐证</th></tr>
+<tr>
+  <td><b>AC-04</b></td>
+  <td>单方同意<b>不</b>产生介绍</td>
+  <td>纯内核 <code>resolveStatusAfterDecision()</code>（4 例）+ 服务层负测（11 例）</td>
+  <td>E2E：点同意 → 状态仍「待决」；双方同意 → 「等待介绍」仍非已连接</td>
+</tr>
+<tr>
+  <td><b>AC-05</b></td>
+  <td>拒绝即关闭；撤销阻止后续</td>
+  <td>服务层 + HTTP 层状态码（14 例）</td>
+  <td>E2E：拒绝 → 已拒绝；撤回 → 已撤回；两者动作区消失</td>
+</tr>
+<tr>
+  <td><b>AC-06</b></td>
+  <td>执行时再校验（race）</td>
+  <td>纯函数 <code>evaluateIntroducibility()</code> + <code>updateMany</code> CAS 写入</td>
+  <td>E2E：运营介绍 → 200 建立连接；重复介绍 → 409</td>
+</tr>
+</table>
+
+<div class="note">
+  <b>为什么把 AC-04 抽成纯函数。</b>AC-04 的全部内容就是一条状态转移规则。写成服务层里的 <code>if</code>，就只能靠<b>起数据库</b>来验证；
+  抽成 <code>resolveStatusAfterDecision(谁, 决定, 双方表态)</code> 之后，这条规则有了 12 个 0.3 秒跑完的断言，
+  而且<b>任何调用方都绕不过它</b> —— 这正是"最容易写错的那一处"应有的形状。
+</div>
+
+<h2>3. 测试分层与门禁</h2>
+<div class="grid2">
+  <table>
+    <caption>四层测试</caption>
+    <tr><th>层</th><th>规模</th><th>覆盖</th></tr>
+    <tr><td>L1 纯内核</td><td rowspan="2">49 例</td><td>状态派生 / 可介绍性 / 动作清单（无 IO）</td></tr>
+    <tr><td>L2 服务层</td><td>读写顺序 / 租户隔离 / 投影档位</td></tr>
+    <tr><td>L3 HTTP 层</td><td>34 例</td><td>鉴权 · 能力 · 幂等 · 状态码全谱系</td></tr>
+    <tr><td>L4 E2E</td><td>7 例</td><td>真实路由 + 登录态 + 页面渲染</td></tr>
+  </table>
+  <table>
+    <caption>门禁</caption>
+    <tr><th>项</th><th>结果</th></tr>
+    <tr><td><code>tsc --noEmit</code></td><td><span class="badge b-ok">0 错误</span></td></tr>
+    <tr><td><code>jest tests/connection</code></td><td><span class="badge b-ok">373 / 373</span></td></tr>
+    <tr><td><code>jest</code>（全量）</td><td><span class="badge b-ok">752 / 752</span></td></tr>
+    <tr><td>ESLint（T05 面）</td><td><span class="badge b-ok">0 / 0</span></td></tr>
+    <tr><td><code>check:script-decls</code></td><td><span class="badge b-ok">49 脚本通过</span></td></tr>
+    <tr><td>移动端 E2E</td><td><span class="badge b-ok">7 / 7</span></td></tr>
+    <tr><td>T04 候选页回归</td><td><span class="badge b-ok">15 / 15</span></td></tr>
+  </table>
+</div>
+
+<h2>4. 移动端 E2E 的 7 条用例</h2>
+<table>
+<caption>Pixel 5 视口 + 系统真实 Chrome；<code>test.describe.serial</code> —— 多条用例有意共享一条状态演化链。</caption>
+<tr><th>#</th><th>用例</th><th>AC</th><th>判据（刷新后依然成立的事实）</th></tr>
+<tr><td>1</td><td>🔒 匿名访问提案页 → 重定向登录</td><td>—</td><td>提案是成员数据，未登录不得见</td></tr>
+<tr><td>2</td><td>✅ 分区渲染：待处理 / 已建立 / 已结束</td><td>AC-04 语义</td><td>文案<b>不把</b>「双方同意」说成「已连接」</td></tr>
+<tr><td>3</td><td>★ AC-04 单方同意 → 仍是待决</td><td>AC-04</td><td>状态仍「待决」</td></tr>
+<tr><td>4</td><td>★ AC-04 双方都同意 → 「等待介绍」</td><td>AC-04</td><td>仍非已连接，无介绍痕迹</td></tr>
+<tr><td>5</td><td>★ AC-06 运营介绍 → 200；重复介绍 → 409</td><td>AC-06</td><td>介绍后进「已建立」；二次 POST 409</td></tr>
+<tr><td>6</td><td>★ AC-05 拒绝 / 撤回 → 终态，无动作</td><td>AC-05</td><td>已拒绝 / 已撤回；动作区消失</td></tr>
+<tr><td>7</td><td>🔒 档位随阶段升级 + 未授权字段不出现</td><td>AC-03/披露</td><td>未介绍 → <code>CANDIDATE</code>；已介绍 → <code>COUNTERPARTY</code>（age 可见、bio 仍不可见）</td></tr>
+</table>
+
+<h2>5. 关键设计决策</h2>
+<table>
+<tr><th>决策</th><th>为什么</th></tr>
+<tr>
+  <td><b><code>CONSENT_PENDING</code> 跨越第一次 accept</b></td>
+  <td>最常见的错误是把 accept 写成"状态 = ACCEPTED"，于是<b>谁先点谁触发</b>。判据始终是「双方均已同意」。</td>
+</tr>
+<tr>
+  <td><b>终态后表态 → <code>409</code>（不是幂等成功）</b></td>
+  <td>若"'拒绝'之后再'接受'"被静默接受，用户会以为自己改变了主意，而对方早已收到拒绝 —— 这种"两端认知不一致"比显式报错危险得多。</td>
+</tr>
+<tr>
+  <td><b>执行时校验 = 重新查 + CAS 写</b></td>
+  <td>"先查再写"在并发下仍会双写。<code>updateMany(&#123; introducedAt: null, status: 'MUTUALLY_ACCEPTED' &#125;)</code> 把"再校验"与"写入"合并成一条原子语句，并发只有一个能成功。</td>
+</tr>
+<tr>
+  <td><b>披露档位随<b>阶段</b>升级</b></td>
+  <td>升级判据是 <code>introducedAt !== null</code>，<b>不是</b>"双方点了同意"。若写成"同意即升级"，用户只授权给「已同意对手方」的字段（如年龄）会在<b>还没被介绍</b>时就泄露。降级即刻生效，不需要定时任务。</td>
+</tr>
+<tr>
+  <td><b><code>introduce</code> 刻意不带幂等键</b></td>
+  <td>介绍是<b>一次性事实</b>，"再介绍一次"本身就是错误请求 —— 正确的答复是 <code>409</code>，而不是"回放上次结果"。给它幂等键反而会把"第二次点击"伪装成成功。</td>
+</tr>
+<tr>
+  <td><b>拒绝理由不回流</b></td>
+  <td><code>ProposalDecision.note</code> 只落库供审计，不返回给对侧 —— 否则"拒绝理由"就成了一次计划外的信息披露。</td>
+</tr>
+</table>
+
+<h2>6. 本刀修掉的四处缺陷</h2>
+<table>
+<tr><th>#</th><th>缺陷</th><th>怎么发现的</th><th>修复</th></tr>
+<tr>
+  <td>R9</td>
+  <td>同意过之后同时出现「拒绝」与「撤回」两个按钮 —— 产生<b>不同</b>决策记录却造成<b>相同</b>终态，审计里"曾经同意过"被覆盖成"拒绝"</td>
+  <td>产品语义复核</td>
+  <td>同意过后只保留「撤回」（撤回同意才是改主意的准确语义）</td>
+</tr>
+<tr>
+  <td>R10</td>
+  <td>契约路径多一段（写成 <code>/connections/proposals/&#123;id&#125;/consent</code>，真实只有 3 段）</td>
+  <td><b>只有 E2E</b> 才暴露 —— 单测直接调 handler、<b>每一次都全绿</b></td>
+  <td>修正实现与注释；并在 API 单测文件头标注"本层证不了路径形状"</td>
+</tr>
+<tr>
+  <td>R11</td>
+  <td>E2E 断言"成功提示文案"是竞态：终态动作后 <code>router.refresh()</code> 把瞬态提示卸载</td>
+  <td>间歇性失败；库里其实已 200</td>
+  <td>断言改为"刷新后依然成立的事实"，锚点取 POST 响应（详见 §7）</td>
+</tr>
+<tr>
+  <td>—</td>
+  <td>两个客户端组件用 <code>window.location.href = …</code> 跳登录 → <code>react-hooks/immutability</code> <b>error</b></td>
+  <td>ESLint</td>
+  <td>改用 <code>router.push()</code>（Next 官方推荐，同时消 error 与 warning）</td>
+</tr>
+</table>
+
+<h2>7. 把 E2E 从「偶发红」修成「稳定绿」的三处竞态</h2>
+<div class="card">
+  <h3>7.1 登录不加载登录页</h3>
+  用 <code>browserContext.request.post('/api/auth/login')</code> —— 它<b>共享上下文的 cookie 罐</b>，
+  后续 <code>ctx.newPage()</code> 天然是已登录态，<b>全程不加载任何 HTML 页面</b>。
+  打的仍是同一个端点、带同一个 <code>Origin</code>，没有绕过被测逻辑。
+  <h3>7.2 以 POST 响应为锚点，不以瞬态提示为锚点</h3>
+  首个写请求在 dev 下可能现场编译到 <b>68 秒</b>（指纹：<code>POST …/consent 200 in 68s (next.js: 67s)</code>）——
+  慢的是框架编译，不是业务代码。"等 POST 响应"天然不受编译耗时影响。
+  <h3>7.3 「用户能看到的」≠「刷新后仍成立的」</h3>
+  <div class="danger">
+    <b>这条值得单独记。</b>断言"用户能看到的"（瞬态提示、过渡态）的用例，在 dev 下<b>必然偶发</b>；
+    只有"刷新后仍然成立"的持久事实（分区归属、终态、有无动作区）才是可以长期守住的判据。
+  </div>
+</div>
+
+<h2>8. T04 回归：登录页脆弱性与等价复验</h2>
+<div class="card">
+  <code>candidate-match.spec.ts</code> 的第 2/3 例用 <code>loginViaUi()</code> 走真实登录页。
+  在本机 dev 下连续 2 轮失败，<b>失败点在登录、不在候选页</b>：登录页的受控组件在 hydration 完成前接受
+  <code>fill()</code> 却不让 React state 更新，提交时前端校验报"字段为空"，3 次重试都拿不到 session-token。
+  <div class="note" style="margin-top:10px">
+    <b>结论：</b>这是登录页的脆弱性，与候选页断言无关（它根本没执行到候选页）。
+    为把"登录方式"这个无关变量消除掉，新增可复跑脚本
+    <code>scripts/qa/verify-t04-candidate-regress.mjs</code>，用同一套 <code>ctx.request</code> 手法复验 ——
+    <b>15 / 15 通过</b>，其中包含 T05 真正改动的 ④ 三条断言
+    （<code>matches-connect-note</code> / <code>matches-view-proposals</code> 可见、<code>propose-open</code> 不存在）。
+    <br><br>
+    <b>建议：</b>T12 端到端门禁把 E2E 登录统一切到 <code>ctx.request</code> 手法，消除这一类与业务无关的抖动。
+  </div>
+</div>
+
+<h2>9. 数据库与回滚</h2>
+<div class="grid2">
+  <div class="card">
+    <h3>迁移性质</h3>
+    <b>纯新增</b>：2 张表（<code>ConnectionProposal</code> / <code>ProposalDecision</code>）+ 10 个索引。
+    <b>无</b> <code>ALTER</code> / <b>无</b> <code>DROP</code> / <b>无</b> 数据订正 → 迁移与回滚<b>零停机</b>。
+  </div>
+  <div class="card">
+    <h3>回滚</h3>
+    <b>默认方案 A</b>：只回滚代码，两张表留在原地（空表不影响任何既有查询）。<br>
+    <b>方案 B</b>：<code>migrate.mjs rollback --batch=C2</code> —— 它会先把行<b>备份成 JSON 再删表</b>。
+    已在种子库副本上实测（回滚后 <code>SocialIntent / MissionParticipation / User / Mission</code> 行数<b>不变</b>，反向自证只动了该动的表）。
+  </div>
+</div>
+
+<h2>10. 风险与未闭合项</h2>
+<table>
+<caption>分级：🔴 上线阻断判断项 / 🟡 需关注 / 🟢 已消解。</caption>
+<tr><th>级别</th><th>项</th><th>说明与归属</th></tr>
+<tr><td>🟡</td><td><b>生产库需执行 C2 迁移</b></td><td>T05 建了两张新表。部署前须在生产 Turso 库执行 <code>node scripts/connection/migrate.mjs apply --batch=C2 --yes</code>（幂等、纯新增、零停机）。</td></tr>
+<tr><td>🔴</td><td>R1 介绍执行点是<b>同步</b>的</td><td>AC-06 证的是<b>并发安全</b>，不是投递可靠性（无 outbox / 重试 / 超时 / 死信）。队列化属 <b>T06</b>；届时校验代码必须<b>原样搬过去</b>。</td></tr>
+<tr><td>🔴</td><td>R2 隔离是<b>应用级</b>而非 DB 级</td><td>libSQL 无 RLS；提案服务的隔离全靠"查询带 <code>organizationId</code>"的写法。彻底消除靠 <b>M6（PG + RLS）</b>。</td></tr>
+<tr><td>🟡</td><td>R3 供给侧单点</td><td>没有 OPERATOR 的社群无法发起提案，且界面不解释原因。缓解：开通新社群时确保至少一名 OPERATOR；根治属 T07。</td></tr>
+<tr><td>🟡</td><td>R4 提案创建后<b>对方不会被通知</b></td><td>无邮件 / 站内信 / 推送。双边同意在技术上成立，但流程上会卡住。属 <b>T06</b>（通知内容不得包含 rationale 全文与对侧档案）。</td></tr>
+<tr><td>🟡</td><td>R5 <code>EXPIRED</code> 是派生值</td><td><code>?states=EXPIRED</code> 的过滤只能发生在装配之后 —— <b>优化即失效</b>（下推进 SQL 会静默变成"过滤不掉"，而非报错）。</td></tr>
+<tr><td>🟡</td><td>R6 撤回改变不了已发生的事实</td><td>介绍落地后不可撤；"停止联系"的正确出口是 Block（不属本任务范围）。</td></tr>
+<tr><td>🟡</td><td>R7 决策表是<b>当前表态</b>非流水</td><td>先 accept 后 revoke 会覆盖本行；不可抵赖的追加式记录只在审计事件里。合规评审时处理（AC-10）。</td></tr>
+<tr><td>🟡</td><td>R8 提案列表无分页</td><td><code>limit</code> 默认 50，静默截断。属 T12。</td></tr>
+</table>
+
+<h2>11. 下一步</h2>
+<div class="okbox">
+  <b>建议立即开工 T06（Workflow Execution — 可靠介绍与跟进状态机）。</b>
+  <ul>
+    <li>T05 把「<b>人</b>」接上了，但「<b>流程</b>」还是断的：双方同意后可被介绍（AC-04/05/06 已全部验证），但没有人通知、没有重试、没有跟进。</li>
+    <li>T06 是 T05 的直接下游，且<b>接口已经稳定</b>：<code>introduceConnection()</code> 已把 AC-06 的两段校验封好，T06 的投递钩子应当<b>原样调用它</b>，而不是另写一份校验（那正是 AC-06 最容易被绕开的路径）。</li>
+    <li><b>开工前的阻塞项</b>：§6-⑤ <b>工作流引擎选型</b>（DB 任务队列 vs Temporal）必须<b>先拍板</b>，否则会做出无法复用的实现。</li>
+  </ul>
+</div>
+
+<footer>
+  LokFeel · Connection OS · T05 Consent &amp; Trust · 2026-10-11<br>
+  文档：<code>docs/implementation/T05/&#123;changes,tests,risks,rollback&#125;.md</code>
+</footer>
+
+</div>
+</body>
+</html>
