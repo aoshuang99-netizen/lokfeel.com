@@ -68,6 +68,7 @@
     "verify:turn:candidate": "node scripts/qa/verify-turn-candidate.mjs",
     "verify:turn:prod": "node scripts/qa/verify-turn-prod.mjs",
     "verify:t06:prod": "node scripts/qa/verify-t06-prod.mjs",
+    "verify:t07:prod": "node scripts/qa/verify-t07-prod.mjs",
     "verify:email:channel": "node scripts/qa/verify-email-channel.mjs",
     "lifecycle:sweep": "node scripts/qa/lifecycle-sweep.mjs",
     "lifecycle:sweep:apply": "node scripts/qa/lifecycle-sweep.mjs --apply",
