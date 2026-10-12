@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T06 · Workflow Execution 交付报告 — LokFeel Connection OS</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#111827; --ink-2:#374151; --ink-3:#6b7280;
+    --line:#e5e7eb; --accent:#1d4ed8; --ok:#047857; --ok-bg:#ecfdf5; --warn:#b45309;
+    --warn-bg:#fffbeb; --bad:#b91c1c; --bad-bg:#fef2f2; --code:#f3f4f6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 80px}
+  header{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;border-radius:16px;padding:28px 30px;box-shadow:0 10px 30px rgba(29,78,216,.18)}
+  header .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+  header h1{margin:8px 0 6px;font-size:27px;line-height:1.3}
+  header p{margin:0;opacity:.92;font-size:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .meta span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 12px;font-size:12.5px}
+  .badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+  .b-ok{background:var(--ok-bg);color:var(--ok);border:1px solid #a7f3d0}
+  .b-warn{background:var(--warn-bg);color:var(--warn);border:1px solid #fde68a}
+  .b-bad{background:var(--bad-bg);color:var(--bad);border:1px solid #fecaca}
+  h2{font-size:18px;margin:34px 0 12px;padding-left:11px;border-left:4px solid var(--accent)}
+  h3{font-size:15px;margin:22px 0 8px;color:var(--ink-2)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .n{font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .kpi .l{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+  .kpi.ok .n{color:var(--ok)}
+  .kpi.warn .n{color:var(--warn)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:12px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px}
+  caption{caption-side:top;text-align:left;font-size:12.5px;color:var(--ink-3);padding:0 0 8px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#f9fafb;font-weight:700;color:var(--ink-2);font-size:12.5px;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  code{background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.6}
+  ul{margin:8px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+  .node{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+  .arrow{color:var(--ink-3);font-weight:700}
+  .note{background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:8px;padding:12px 14px;font-size:13.5px}
+  .danger{background:var(--bad-bg);border:1px solid #fecaca;border-left:4px solid var(--bad);border-radius:8px;padding:12px 14px;font-size:13.5px}
+  .okbox{background:var(--ok-bg);border:1px solid #a7f3d0;border-left:4px solid var(--ok);border-radius:8px;padding:12px 14px;font-size:13.5px}
+  footer{margin-top:40px;color:var(--ink-3);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">LokFeel · Connection OS · 交付报告</div>
+  <h1>T06 · Workflow Execution — 可靠介绍与跟进状态机</h1>
+  <p>把「牵线」从一次人类动作，变成一条<strong>可靠的流程</strong>：创建 → 双方同意 → 介绍 → 协调 → 成果</p>
+  <div class="meta">
+    <span>代码提交 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">165ccf7</code></span>
+    <span>基线 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">83f4be9</code></span>
+    <span>2026-10-12</span>
+    <span>分支 main</span>
+    <span>AC-07 <b>通过</b> · AC-09 <b>通过</b> · AC-14 <b>通过</b> · AC-17 <b>通过</b></span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi ok"><div class="n">4/4</div><div class="l">AC-07 / AC-09 / AC-14 / AC-17 全部通过</div></div>
+  <div class="kpi ok"><div class="n">921/921</div><div class="l">全量 jest 回归（46 套；T05 752 → 本刀 +169）</div></div>
+  <div class="kpi ok"><div class="n">169</div><div class="l">新增工作流用例（8 套，全部离线）</div></div>
+  <div class="kpi ok"><div class="n">8/8</div><div class="l">E2E（含故障注入，可重复执行）</div></div>
+  <div class="kpi ok"><div class="n">0</div><div class="l">tsc 类型错误</div></div>
+  <div class="kpi ok"><div class="n">0 / 0</div><div class="l">ESLint error / warning（T06 面）</div></div>
+  <div class="kpi ok"><div class="n">108</div><div class="l">迁移对账项（C0–C3）全绿</div></div>
+  <div class="kpi warn"><div class="n">1</div><div class="l">标 BLOCKED（真实邮件外发，缺凭据）</div></div>
+</div>
+
+<h2>1. 交付了什么</h2>
+<div class="flow">
+  <span class="node">DB outbox（WorkflowJob）</span><span class="arrow">→</span>
+  <span class="node">CAS 领取 + 租约</span><span class="arrow">→</span>
+  <span class="node">统一投递出口</span><span class="arrow">→</span>
+  <span class="node">阶段状态机</span><span class="arrow">→</span>
+  <span class="node">运营视图 + 人工接管</span>
+</div>
+<div class="card">
+  本刀要解决的是 T05 之后仍然断掉的**流程可靠性**。四件事：
+  <ul>
+    <li><b>AC-07 幂等</b>：同一业务动作只有一条任务、一条投递 —— 由 <code>(organizationId, dedupeKey)</code> 唯一约束保证；介绍任务是<strong>提案级</strong>键（不含收件人），通知任务含收件人。</li>
+    <li><b>AC-09 消息合规</b>：所有对外通知只有<strong>一个出口</strong> <code>deliverNotification()</code> —— 它同时负责披露守卫、投递幂等与沙箱判定。站内信真实落库；邮件无凭据时记 <code>CAPTURED</code>，<strong>绝不</strong>标 <code>SENT</code>。</li>
+    <li><b>AC-14 端到端</b>：<code>PROPOSED → CONSENT_PENDING → INTRODUCED → COORDINATING → ACTION_COMPLETED → OUTCOME_RECORDED</code>，且<strong>只前进不回退</strong>。</li>
+    <li><b>AC-17 崩溃恢复</b>：CAS 领取 + 租约（60s）+ 终态不可复活 + 死信人工接管 + 对账补偿 —— 故障注入下<strong>无重复消息</strong>。</li>
+  </ul>
+</div>
+
+<h2>2. 四条 AC 各自被什么证明</h2>
+<table>
+<caption>每层能证伪的失败形状不同 —— 任何一层都替代不了另一层。</caption>
+<tr><th>AC</th><th>一句话</th><th>主判据</th><th>独立佐证</th></tr>
+<tr>
+  <td><b>AC-07</b></td>
+  <td>同一次动作只有一条任务 / 一条投递</td>
+  <td>纯内核 <code>jobDedupeKey()</code>（介绍=提案级）+ <code>enqueueJob</code> 撞唯一键返回 <code>created:false</code>（<b>不</b> upsert 重置）</td>
+  <td>E2E：再跑一轮 tick → 投递数 / 介绍任务数 / <code>introducedAt</code> 全不变</td>
+</tr>
+<tr>
+  <td><b>AC-09</b></td>
+  <td>内容合规；不冒充已送达；不冒充真人</td>
+  <td>类型层（<code>RenderInput</code> 无 rationale 位）+ 最长公共子串守卫（发送前）+ 强制身份声明</td>
+  <td>E2E：4 条投递；IN_APP=<code>SENT</code>、EMAIL=<code>CAPTURED</code>；正文含声明、<b>不含</b> rationale</td>
+</tr>
+<tr>
+  <td><b>AC-14</b></td>
+  <td>端到端链路可靠推进</td>
+  <td>状态机 <code>applyEvent()</code> + 4 个业务钩子（创建 / 表态 / 撤销 / 介绍）</td>
+  <td>E2E：提案 → 介绍落地 → 流程 <code>INTRODUCED</code>；投递留痕</td>
+</tr>
+<tr>
+  <td><b>AC-17</b></td>
+  <td>崩溃 / 漏跑可恢复，且可接管</td>
+  <td>纯函数 <code>isClaimable()</code>（三种可领取）+ CAS 收尾五态</td>
+  <td>E2E：<b>故障注入</b>（提案已双方同意、<b>无 job</b>）→ 对账补入队 → 下一轮执行完成；死信 <code>OPERATOR 403 → ADMIN 200</code>，重复接管 409</td>
+</tr>
+</table>
+
+<h2>3. 架构：为什么是「自建 DB outbox」</h2>
+<div class="grid2">
+  <div class="card">
+    <h3>开工前的阻塞项（已拍板）</h3>
+    <p>BACKLOG §6-⑤ 要求先决定引擎：战略方案给 Temporal，PRD 允许"早期一个可靠的数据库任务队列"。</p>
+    <p><b>选 DB outbox，判据是平台约束而非偏好</b>：Temporal 需要常驻进程（worker），
+    而 Netlify 免费计划的函数是**临时**的 —— 没有长驻进程可跑。替换点隔离在
+    <code>runtime.ts</code> 的驱动器接口，日后换引擎不必动业务层。</p>
+    <div class="note">同一批还拍板了**消息通道**：站内信 + <b>邮件沙箱</b>（而非仅站内信或真实外发）。</div>
+  </div>
+  <div class="card">
+    <h3>分层（单向无环）</h3>
+<pre>job-core（纯函数·无 IO）
+stage-machine（纯函数）   delivery（投递出口）
+        ↑                      ↑
+  workflow（阶段持久化）──► runtime（引擎）
+                               ↑
+                           hooks（业务钩子）</pre>
+    <p>纯函数内核让"重试 / 超时 / 死信 / 租约"这些最易错、又最难在集成测试里复现的分支能被<strong>秒级穷举</strong>。</p>
+  </div>
+</div>
+
+<h2>4. 三个关键取舍（都写在 risks.md 里）</h2>
+<table>
+<tr><th>取舍</th><th>选择</th><th>为什么</th></tr>
+<tr>
+  <td>失败分类</td>
+  <td><b>三</b>类：<code>retryable</code> / <code>permanent</code> / <code>superseded</code></td>
+  <td>"提案已被介绍 / 已撤销"<b>不是失败</b>，是"目标已由别的路径达成" → 记 <code>CANCELLED</code> 而非 <code>FAILED</code>。只分两类会让它在监控里长得和"数据损坏"一样。</td>
+</tr>
+<tr>
+  <td>未知错误默认</td>
+  <td><code>retryable</code>（而非 permanent）</td>
+  <td>投递类失败绝大多数是暂时性的；反向默认会让一次网络抖动<b>永久</b>放弃一条真实通知，且无人发现。代价有 <code>maxAttempts</code> 兜底。</td>
+</tr>
+<tr>
+  <td>队列里以谁的身份执行</td>
+  <td><b>发起提案的运营</b>（不是系统万能身份）</td>
+  <td>队列只是把"已在运营授权下决定要做的事"延迟执行，<b>不产生新权限</b>。运营已离职/降级 → 停等人接管，而不是由系统越权代做。</td>
+</tr>
+</table>
+
+<h2>5. 故障注入：AC-17 的实际形态</h2>
+<div class="card">
+  <p>最难的场景不是"任务失败"，而是<strong>钩子根本没跑成</strong> —— 提案在那里，却永远不会被通知。E2E 直接构造这个状态：</p>
+<pre>夹具：cp_e2e_wf_recover —— MUTUALLY_ACCEPTED、introducedAt=NULL、<b>无任何 WorkflowJob</b>
+                                    （模拟"钩子失败"）
+
+tick #1  ── 领取并执行既有任务；随后 reconcileMissingJobs() 扫描
+            "已双方同意但未介绍"的提案 → 补入队（此时任务已存在，尚未执行）
+tick #2  ── 领取并执行那条被补入队的介绍任务 → 介绍落地
+
+断言：introducedAt 非空 · 流程 stage=INTRODUCED · 任务 SUCCEEDED
+      · 4 条投递（双方 × 站内信+邮件）· 再跑 tick #3 数量不变（无重复）</pre>
+  <div class="okbox"><b>为什么要两次 tick</b>：驱动器先执行、后对账。因此"补入队"的任务要到<b>下一轮</b>才执行 —— 这是刻意的顺序（先干完手头的活，再补漏）。用例把这个语义显式写进了注释与断言。</div>
+</div>
+
+<h2>6. 门禁与可复跑命令</h2>
+<table>
+<tr><th>门禁</th><th>命令</th><th>结果</th></tr>
+<tr><td>类型</td><td><code>npx tsc --noEmit</code></td><td><span class="badge b-ok">0 error</span></td></tr>
+<tr><td>工作流单测</td><td><code>npx jest tests/workflow</code></td><td><span class="badge b-ok">8 套 / 169 passed</span></td></tr>
+<tr><td>全量回归</td><td><code>npx jest --maxWorkers=2</code></td><td><span class="badge b-ok">46 套 / 921 passed</span></td></tr>
+<tr><td>Lint</td><td><code>npx eslint src/lib/workflow tests/workflow …</code></td><td><span class="badge b-ok">0 / 0</span></td></tr>
+<tr><td>脚本声明</td><td><code>npm run check:script-decls</code></td><td><span class="badge b-ok">50 通过</span></td></tr>
+<tr><td>迁移对账</td><td><code>node scripts/connection/migrate.mjs verify</code></td><td><span class="badge b-ok">108 项</span></td></tr>
+<tr><td>E2E</td><td><code>npx playwright test -c playwright.t02.config.ts tests/e2e/workflow-execution.spec.ts</code></td><td><span class="badge b-ok">8/8（可重复执行）</span></td></tr>
+</table>
+
+<h2>7. 残留与 BLOCKED（诚实清单）</h2>
+<ul>
+  <li><span class="badge b-bad">BLOCKED</span> <b>真实邮件外发</b>：无 <code>RESEND_API_KEY</code>（用户明确排除）。当前所有邮件投递为 <code>CAPTURED</code>（沙箱捕获，含内容快照）。接上 key 的那一刻自动变 <code>SENT</code>，<b>零代码改动</b>。</li>
+  <li><span class="badge b-warn">滞留</span> <b>死信无主动告警推送</b>：只有 <code>needsAttention</code> 列表 + 审计事件。若 Console 想要"红点"，需在 T07 接一个告警任务（注意别用通知管道通知自己，见 risks R9）。</li>
+  <li><span class="badge b-warn">滞留</span> <b>阶段机的后两段没有自动触发点</b>：<code>ACTION_COMPLETED</code> / <code>OUTCOME_RECORDED</code> 等 T08 的"成果记录"入口。</li>
+  <li><span class="badge b-warn">滞留</span> <b>调度粒度是小时级</b>：Netlify 免费计划限制。引擎正确性不依赖频率（幂等键 + 租约兜底），但重试的实际延迟以小时计。</li>
+  <li><span class="badge b-warn">无主</span> <b>AC-10 数据生命周期</b>：T06 新增的两张表同样需要清理策略（终态任务归档、投递记录保留期），建议 T08 或 T12 前认领。</li>
+</ul>
+
+<h2>8. 本刀踩到并记录在案的两个坑</h2>
+<div class="grid2">
+  <div class="danger">
+    <h3>① Prisma DateTime 的存储格式</h3>
+    Prisma 经 libSQL 写的是 <code>2026-10-12T06:31:11.687+00:00</code>，而 <code>CURRENT_TIMESTAMP</code>
+    风格是 <code>2026-10-12 06:31:11</code>（空格分隔）。夹具按后者写 → 引擎的 CAS
+    <b>等值</b>条件永远命中 0 行 → 任务被<b>安静跳过</b>、停在 PENDING。<br>
+    <b>教训</b>：凡是会被引擎用作 CAS 等值条件的列，夹具必须写成 Prisma 的格式。
+  </div>
+  <div class="danger">
+    <h3>② 路由相对路径的层数</h3>
+    C3 的路由在 <code>workflow/jobs/[jobId]/takeover/</code>（<b>4 段</b>），
+    <code>_shared</code> 在 <code>workflow/_shared</code> → 应为 <code>../../../_shared</code>。
+    照抄 T05 的 3 段写法（<code>../../_shared</code>）会被 tsc 以 <code>TS2307</code> 拦下。<br>
+    <b>教训</b>：相对 import 路径有 tsc 兜底；<b>路由路径的形状</b>只有 E2E 打真实 URL 能证。
+  </div>
+</div>
+
+<h2>9. 下一步</h2>
+<div class="card">
+  <p>T06 之后，<b>建议开工 T07（SaaS Console）或 T08（Outcome &amp; Billing）</b> —— 两者都可先做：</p>
+  <ul>
+    <li><b>T07</b>：运营视图 API 已就绪（计数 / 需人处置 / 停滞 / 投递计数），Console 正好是它的消费方。</li>
+    <li><b>T08</b>：会让 T06 的阶段机真正完整（补上 <code>ACTION_COMPLETED</code> / <code>OUTCOME_RECORDED</code> 的触发点）。</li>
+  </ul>
+  <div class="note">仍未拍板的是 <b>§6-⑥ T09 Agent 运行时技术栈</b>（TS 内编排 vs Python/LangGraph）—— 那是 T09 开工前的阻塞项，不影响 T07/T08。</div>
+</div>
+
+<footer>
+  LokFeel · Connection OS · T06 交付报告 · 生成于 2026-10-12 · 提交 165ccf7<br>
+  详细记录见 <code>docs/implementation/T06/{changes,tests,risks,rollback}.md</code>
+</footer>
+
+</div>
+</body>
+</html>

@@ -6,8 +6,8 @@
 > | 项 | 值 |
 > |---|---|
 > | 真实仓库基线 | `cca7b80`（`main`，**已推送 GitHub + 已发布 Netlify 生产**；上一轮生产复验 T04 19/19 · T03 14/14 · 窗口期 13/13） |
-> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**（见 T05 卡片的交付记录） |
-> | 剩余 | **T06–T12，共 7 个任务** |
+> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**（见 T05 卡片的交付记录）、**T06 Workflow Execution**（见 T06 卡片的交付记录） |
+> | 剩余 | **T07–T12，共 6 个任务** |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
 > | 规划背景 | 《LokFeel SaaS 核心功能架构与开源技术集成方案 V1.0》：10 大模块 / 6 个自研引擎 / P0–P3 / 12 项 Codex 实施清单 |
 
@@ -24,7 +24,7 @@
 | 3 | 实现 Mission / Intent / Offer 领域模型 | **T02 + T03** | 01 Mission Studio · 02 Member Intel | ✅ T02 ✅ / T03 ✅ |
 | 4 | 实现双向匹配与候选解释 | **T04** | 03 Connection Engine | ✅ 完成 |
 | 5 | 实现 Consent / Approval / Revocation | **T05** | 09 Trust | ✅ 完成 |
-| 6 | 实现介绍工作流与任务恢复 | **T06** | 07 Workflow · 06 Comm Hub | ⬜ |
+| 6 | 实现介绍工作流与任务恢复 | **T06** | 07 Workflow · 06 Comm Hub | ✅ 完成 |
 | 7 | 实现 Outcome 与单位成本统计 | **T08** | 08 Outcome Intel | ⬜ |
 | 8 | 完成 Community SaaS Console | **T07** | 全模块的门面 | ⬜ |
 | 9 | 接入 LangGraph 与模型调用网关 | **T09** | 05 Agent Workforce | ⬜ |
@@ -175,13 +175,26 @@
 > - ⚠️ **交接 T12**：把 E2E 登录统一切到 `ctx.request` 手法（消除登录页与本用例无关的抖动）；
 >   `T05/tests.md` §7.3 的判据原则（**断言"刷新后仍成立的"而非"用户能看到的"**）应写进端到端门禁规范。
 
-### T06 · Workflow Execution — 可靠介绍与跟进状态机
+### T06 · Workflow Execution — 可靠介绍与跟进状态机 ✅ 完成
 - **目标**：`Created → Discovering → Proposed → Consent Pending → Introduced → Coordinating → Action Completed → Outcome Recorded`
 - **依赖**：T05
 - **验收**：**AC-07 / AC-09 / AC-14 / AC-17**
 - **交付**：outbox + 幂等键 + 重试 + 超时 + 死信 + 人工接管；邮件沙箱
-- **待决策**：**DB 任务队列 vs Temporal**（战略方案给 Temporal，PRD 明确「早期一个可靠的数据库任务队列就足够」）
+- **待决策**：~~**DB 任务队列 vs Temporal**~~ → **已拍板：DB outbox**（Temporal 需常驻进程，Netlify 免费计划无此能力）。消息通道 = **站内信 + 邮件沙箱**
 - **铁律**：故障注入下**无重复消息**；仅用官方授权渠道，禁止静默冒充真人
+
+> **交付记录**
+> - 提交：`165ccf7`（`feat(t06): 可靠介绍与跟进状态机 —— outbox 引擎、统一投递出口与运营视图`，含 `[skip netlify]`）
+> - 文档：`docs/implementation/T06/{changes,tests,risks,rollback}.md`
+> - 迁移：**C3 批次**（`WorkflowJob` / `NotificationDelivery` / `IntroductionWorkflow`；纯新增，无 ALTER/DROP）
+> - 代码：`src/lib/workflow/`（8 文件 / 2731 行）、5 个 API 端点、4 个 T05 路由接钩子、能力矩阵 +2
+> - 测试：`tests/workflow/`（8 套 / **169 用例**）+ `tests/e2e/workflow-execution.spec.ts`（AC-07/09/14/17 故障注入）
+> - 门禁：`tsc --noEmit` **0 error**；`jest tests/workflow tests/connection tests/tenancy` 全绿；`eslint` 0 error / 0 warning；`check:script-decls` ✅；`connection:migrate verify` 108 项 ✅
+> - 结论：**AC-07 / AC-09 / AC-14 / AC-17 全部 PASS**。真实邮件外发 = `BLOCKED`（缺 `RESEND_API_KEY`，用户明确排除；接上 key 后 `CAPTURED` 自动变 `SENT`，零代码改动）
+> - 交接 T07/T08：① 阶段机的 `ACTION_COMPLETED` / `OUTCOME_RECORDED` **尚无自动触发点**，等 T08 的"成果记录"入口；
+>   ② 运营视图 API（`/api/v1/workflow/*`）已就绪，T07 的 Console 可直接消费；
+>   ③ 死信**无主动告警推送**（只有 `needsAttention` 列表 + 审计事件），若需要应由 T07 接一个告警任务（见 T06 `risks.md` R9）。
+
 
 ### T07 · SaaS Console — 社群经营工作台
 - **目标**：Dashboard / Missions / Members / Connections / Agents / Outcomes / Settings 七屏，真实 API、无空按钮。
@@ -259,7 +272,7 @@
 | P0 基础（多租户/身份/权限/成员数据） | T01 ✅ + T03 ✅ | ✅ |
 | P0 核心（Mission/Intent/Matching） | T02 ✅ / T03 ✅ / T04 ✅ | 🟢 闭环 |
 | P0 安全（Consent/审批/审计） | **T05 ✅** | ✅ |
-| P0 执行（介绍与跟进工作流） | T06 | ✅ |
+| P0 执行（介绍与跟进工作流） | **T06 ✅** | ✅ |
 | P0 商业（Outcome/账单/用量） | T08 + T07 | ✅ |
 | P1 Agent（意图提取/草稿/协调） | T09 | ✅ |
 | P1 网络（Community Bridge） | T10 | ✅ |
@@ -289,7 +302,11 @@
    > **T04 交付后的更新**：T04 已用「结构化过滤 + 词元互补」交付 AC-13（用户确认的过渡方向），
    > 因此 **M6 不再阻塞 T04**，但它仍是 **T04/risks.md R1（语义召回）** 与 **R2（DB 级隔离）** 的唯一消解路径。
 
-⑤ **工作流引擎选型两份文档不一致**（战略方案 → Temporal；PRD → 允许先用 DB 队列）。**T06 开工前必须先决策**，否则会做出无法复用的实现。
+⑤ **工作流引擎选型两份文档不一致**（战略方案 → Temporal；PRD → 允许先用 DB 队列）。~~T06 开工前必须先决策~~
+   > **T06 已拍板（开工前）**：选 **DB outbox**。判据是**平台约束而非偏好** —— Temporal 需要常驻进程，
+   > 而 Netlify 免费计划的函数是临时的（无长驻 worker）；且 PRD 明确"早期一个可靠的数据库任务队列就足够"。
+   > 替换点已隔离在 `src/lib/workflow/runtime.ts` 的驱动器接口，日后若要换引擎不必动业务层。
+   > 消息通道同批拍板为 **站内信 + 邮件沙箱**。
 
 ⑥ **Agent 运行时技术栈分叉**：战略方案 → Python + LangGraph；现有仓 → 纯 TS。**T09 开工前必须决策**（见 §6-⑥）。
 
@@ -303,7 +320,7 @@
 | ② | 是否现在做 **M6（迁 PostgreSQL）** | 语义召回（T04/R1）、AC-01 硬证据 | PG 连接串 |
 | ③ | 主键策略：保持 `cuid()` 还是改 `@db.Uuid` | 38 表回归范围 | 一次拍板 |
 | ④ | T00–T04 提交**是否推送到公开仓库** | — | 你的决定（含生产迁移记录与披露模型） |
-| ⑤ | **T06 工作流引擎**：DB 队列 vs Temporal | T06 实现形态 | 一次拍板 |
+| ⑤ | ~~**T06 工作流引擎**：DB 队列 vs Temporal~~ | — | ✅ 已拍板：**DB outbox**（见 §5-⑤ 更新） |
 | ⑥ | **T09 Agent 运行时**：TS 内编排 vs Python/LangGraph 独立服务 | T09 架构 | 一次拍板 |
 | ⑦ | Creem 凭据是否提供 | AC-21 | 已决定暂不提供 → 保持 `BLOCKED` |
 
@@ -311,32 +328,32 @@
 
 ## 7. 下一个动作
 
-**建议立即开工 T06（Workflow Execution — 可靠介绍与跟进状态机）**，理由：
+**T06 已交付 → 建议开工 T07（SaaS Console — 社群经营工作台）或 T08（Outcome & Billing）**。
 
-1. **T05 把"人"接上了，但"流程"还是断的**：双方同意后可被介绍（AC-04/05/06 均已验证），
-   可是**没有人被通知**、介绍**没有重试/超时/死信**、介绍之后的协调与成果记录也不存在。
-   用户此刻能做的最后一件事是"看到连接已建立"，然后就没有下一步了。
-2. **T06 是 T05 的直接下游，而且接口已经稳定**：`introduceConnection()` 已把 AC-06 的两段
-   校验（提案自身 + 双方意图仍生效）与 CAS 写入收敛在**一个函数**里 ——
-   T06 的投递钩子应当**原样调用它**，而不是另写一份校验（那正是 AC-06 最容易被绕开的路径）。
-3. **决策点已经到期**：§6-⑤（DB 队列 vs Temporal）在 T05 时"还轮不到"，现在**成了开工前的阻塞项**。
+理由：
 
-**开工前必读**：
-- `T05/risks.md` 的 **R1**（本刀只做了**同步**执行点，投递可靠性属 T06；队列化时
-  `(proposalId,'introduce')` 的幂等键必须**显式重建** —— 今天"只成功一次"是
-  `updateMany({introducedAt: null})` 的 CAS 带来的，换成队列后这条性质不会自动继承）、
-  **R4**（提案创建后对方**不会被通知**）与 **R9**（同意过后只剩「撤回」的口径 ——
-  通知文案里不要写回"拒绝"）；
-- `T05/changes.md` §3.3（执行时校验 = 重新查 + CAS 写）与 §3.6（**`introduce` 刻意不带幂等键**：
-  重复调用回 409 才是正确结果 —— 队列化后这条语义要**重新论证**，别顺手加回幂等键）；
-- `T05/tests.md` §7.3（移动端 E2E 的竞态教训：**"用户能看到的"与"刷新后仍成立的"不是同一类事实**）。
+1. **T06 把"流程"接上了**：提案 → 双方同意 → 介绍 → 跟进 现在有可靠的 outbox 驱动、
+   幂等键、重试/死信/人工接管；运营视图 API（`/api/v1/workflow/*`）已就绪，
+   但**只有 API，没有界面** —— T07 的 Console 是最自然的消费方（`needsAttention` /
+   `stalled` 正好是"运营待办"列表的数据源）。
+2. **T08 是 T06 的下游闭环**：阶段机的 `ACTION_COMPLETED` / `OUTCOME_RECORDED`
+   目前**没有自动触发点** —— 它们等的是 T08 的"成果记录"入口。两个任务都可先做，
+   但 **T08 会让 T06 的阶段机真正完整**。
+3. **决策点仍然到期的是 §6-⑥**（T09 Agent 运行时技术栈：TS 内编排 vs Python/LangGraph）——
+   那是 T09 开工前的阻塞项，**不**影响 T07/T08。
 
-**阻塞项**：**§6-⑤ 必须先拍板**（T06 工作流引擎选型），否则会做出无法复用的实现；
-§6-①②③ 仍属平台/迁移决策，**不**阻塞 T06 开工。
+**T07 开工前必读**：
+- `T06/changes.md` §2.5（运营视图的四个面：计数 / 需人处置 / 停滞 / 投递计数）与
+  `T06/risks.md` **R9**（死信**无主动告警推送** —— 若 Console 想要"红点"，
+  需要一个告警任务，且要小心"用通知管道通知自己"的回路）。
 
-> ⚠️ **顺带认领**：§5-① 指出的 **AC-10（数据生命周期：导出/删除/缓存与索引与任务清理）至今无主**。
-> T05 是它最自然的落点（Trust 模块管"授权"，而"授权收回后的数据处置"属同一域）。
-> 若 T05 不认领，T12 必然卡在「BLOCKER 无主」——**建议在 T05 开工时一并立子项**。
+**T08 开工前必读**：
+- `T06/changes.md` §4.2（失败三分法）与 `T06/risks.md` **R7**（阶段超时只可见、不自动推进）；
+- `T05/changes.md` §3.6（`introduce` 刻意不带幂等键的语义）。
+
+> ⚠️ **仍未认领**：§5-① 指出的 **AC-10（数据生命周期：导出/删除/缓存与索引与任务清理）至今无主**。
+> T06 新增的 `WorkflowJob` / `NotificationDelivery` **同样需要清理策略**
+> （终态任务可归档、投递记录有保留期）—— T08 或 T12 前必须认领，否则 T12 会卡在「BLOCKER 无主」。
 
 ---
 
@@ -347,6 +364,8 @@
 | T02 | `tsc` 0 错误 | `tests/connection` 130 · 全量 502 | 全绿 | 移动端 8/8（真实 Chrome） |
 | T03 | `tsc` 0 错误 | `tests/connection` 241 · 全量 620 | 全绿 | 移动端 AC-12 + AC-03 |
 | T04 | `tsc` 0 错误（4m22s） | `tests/connection` **290** · 全量 **669** | `check:script-decls` 45 通过 · ESLint 0/0 | 移动端候选页 **3/3** · 生产复验 **19/19**（`verify-t04-prod.mjs`） |
+| T05 | `tsc` 0 错误 | `tests/connection` **373** | ESLint 0/0 | 移动端 AC-04/05/06（`consent-trust.spec.ts`） |
+| T06 | `tsc` 0 错误（9m20s） | `tests/workflow` **169** · 全量 **921** · `tests/connection` 373 · `tests/tenancy` 49 | `check:script-decls` 50 通过 · ESLint 0/0 · `connection:migrate verify` 108 项 | API 级 **8/8**（`workflow-execution.spec.ts`，含故障注入；**可重复执行**） |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash
@@ -359,4 +378,4 @@
 
 ---
 *本文件由 T00/T01 交付后盘点生成；每个任务收尾时回填提交 SHA 与 AC 结论。*
-*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）· 2026-10-10*
+*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12*
