@@ -20,6 +20,7 @@
  *    待处置条目渲染为纯展示行，落地页在 Slice 2/3 补上后再加链接。
  */
 
+import Link from 'next/link'
 import { AlertTriangle, Clock, Inbox, Mail, RefreshCw, Target } from 'lucide-react'
 import { useApiGet } from '@/hooks/use-api'
 
@@ -269,11 +270,18 @@ export default function ConsoleDashboardPage() {
         </p>
       </Panel>
 
-      {/* ── 任务（第二个数据面，Slice 2 展开） ── */}
+      {/* ── 任务（第二个数据面；列表屏已在 Slice 2 落地） ── */}
       <section className="rounded-2xl border border-card-border bg-background-secondary p-4">
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 text-foreground-muted" />
           <h2 className="text-sm font-semibold text-foreground font-display">连接任务</h2>
+          <Link
+            href="/console/missions"
+            className="ml-auto inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            查看全部
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
         <p className="text-sm text-foreground-muted mt-2">
           {missionTotal === null
@@ -281,7 +289,7 @@ export default function ConsoleDashboardPage() {
             : `本社群共有 ${missionTotal} 条任务。`}
         </p>
         <p className="text-[11px] text-foreground-subtle mt-1">
-          任务列表、意图与暂停操作在「任务」屏（Slice 2）。
+          任务列表、状态过滤与状态迁移（发布 / 暂停 / 恢复 / 关闭）都在「任务」屏。
         </p>
       </section>
     </div>

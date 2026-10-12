@@ -1,8 +1,9 @@
 # T07 · SaaS Console — 社群经营工作台（开工方案）
 
-> **状态**：🚧 **开工中（Slice 1 落地）**。本文件是设计 + 切片计划 + 验收口径。
+> **状态**：🚧 **开工中（Slice 1 + Slice 2 已落地）**。本文件是设计 + 切片计划 + 验收口径。
 > **AC-18 尚未认领** —— 它要求"七屏可达且**无空按钮**"，只有七屏都接上真实数据才算。
-> 当前只落地了 **Slice 1（骨架 + Dashboard）**，其余屏幕在导航里显式标注"施工中"。
+> 已落地 **Slice 1（骨架 + Dashboard）**、**Slice 2（Missions / Members）**；
+> Connections / Agents / Outcomes / Settings 仍在导航里显式标注"施工中"（是 `<span>`，不是死链）。
 
 ## 0. 任务定义（来自 BACKLOG）
 
@@ -57,8 +58,8 @@ T07 要的是**组织态**：一个社群运营者看"我的社群跑得怎么�
 | 屏 | 路由 | 主要数据源 | 现状 |
 |---|---|---|---|
 | Dashboard | `/console` | `/api/v1/workflow/overview`、`/api/v1/missions` | ✅ **Slice 1** |
-| Missions | `/console/missions` | `/api/v1/missions`（+ `[missionId]/intents`） | Slice 2 |
-| Members | `/console/members` | `/api/v1/members`（**待建**，能力 `member.read`） | Slice 2 |
+| Missions | `/console/missions` · `/[missionId]` | `/api/v1/missions`（+ `/[missionId]/pause` 状态迁移） | ✅ **Slice 2** |
+| Members | `/console/members` | `/api/v1/members`（**Slice 2 新建**，能力 `member.read`） | ✅ **Slice 2** |
 | Connections | `/console/connections` | `/api/v1/connections`（+ workflow 阶段） | Slice 3 |
 | Agents | `/console/agents` | T09 运行时（**尚不存在**） | Slice 4（等 T09） |
 | Outcomes | `/console/outcomes` | T08 的 `Outcome` / `UsageRecord`（**尚不存在**） | Slice 4（等 T08） |
@@ -70,19 +71,53 @@ T07 要的是**组织态**：一个社群运营者看"我的社群跑得怎么�
 
 ---
 
-## 3. Slice 1 交付了什么（本次）
+## 3. Slice 1 交付了什么
 
 | 文件 | 作用 |
 |---|---|
 | `src/app/console/layout.tsx` | 服务端：`auth()` → 未登录跳登录；`resolveTenantForUser()` → 无组织渲染说明页；有组织渲染骨架 |
-| `src/app/console/console-shell.tsx` | 客户端骨架：顶部组织名 + 角色 + "返回个人模式"；左侧七屏导航 |
+| `src/app/console/console-shell.tsx` | 客户端骨架：顶部组织名 + 角色 + "返回个人模式"；左侧七屏导航（**导航清单内嵌在本文件的 `CONSOLE_NAV` 常量里**，未实现的标 `ready:false`） |
 | `src/app/console/no-org.tsx` | 无组织说明页（非错误页） |
 | `src/app/console/page.tsx` | **Dashboard**：队列健康度 / 需人处置 / 停滞 / 投递计数（全部真实数据） |
-| `src/app/console/nav.ts` | 导航清单（**单一来源**，七屏都在这里登记；未实现的标 `ready:false`） |
 | `src/components/layout/sidebar-v2.tsx` | 个人态侧边栏加一条组织态入口 |
+
+> 📌 本文件早前写"导航清单放 `src/app/console/nav.ts`" —— 实际实现在
+> `console-shell.tsx` 的 `CONSOLE_NAV`。差异已更正，避免后人按旧路径白找。
 
 **Slice 1 的自证**：Dashboard 的每个数字都能对回一个真实接口的返回值，
 且"需人处置"为空时渲染**说明**（"当前没有需要人工处置的任务"）而不是空白。
+
+---
+
+## 3.5 Slice 2 交付了什么
+
+| 文件 | 作用 |
+|---|---|
+| `src/lib/tenancy/members.ts` | **新增**成员目录服务层（只读）：`listMembers` / `countMembersByRole` / `getMemberById` / `parseMemberFilters` / `displayNameOf` / `toMemberDto` |
+| `src/app/api/v1/members/route.ts` | **新增** `GET /api/v1/members`（`member.read`），分页 + `role` / `status` / `q` 过滤 |
+| `src/app/console/missions/page.tsx` | 任务列表：状态过滤 + 分页 + 行跳详情 |
+| `src/app/console/missions/[missionId]/page.tsx` | 任务详情：字段 + **由状态机派生的迁移按钮** |
+| `src/app/console/members/page.tsx` | 成员目录：角色过滤 + 搜索 + 分页 |
+| `src/app/console/console-shell.tsx` | `CONSOLE_NAV` 中 missions / members → `ready: true` |
+
+**Slice 2 的三条设计决定**
+
+1. **动作按钮由状态机派生，不写死**。页面的 `ACTIONS_BY_STATUS` 与
+   `lib/connection/missions.ts` 的 `TRANSITIONS` 同源：
+   `DRAFT→[发布,关闭]`、`ACTIVE→[暂停,关闭]`、`PAUSED→[恢复,关闭]`、`CLOSED→[]`。
+   `PAUSED` 下 `publish` 与 `resume` 都合法（同义）→ **只渲染 `resume`**；
+   `CLOSED` 是终态 → **不渲染任何按钮**，改为说明"终态不可迁移"。
+   这样用户点不到必然 409 的按钮。
+2. **成员目录的投影边界写进 `select`**：`password` / `tokenVersion` / `accounts` /
+   `sessions` **根本不查**（不是"查了再过滤"）；Profile 只取
+   `displayName` / `avatar` / `city`，**不取匹配域字段**（性别取向、关系蓝图、雷区等）。
+3. **没做的功能就说没做**：任务创建界面、成员邀请流程均未实现 →
+   **不渲染对应按钮**，只在页面上陈述事实并指出接口路径。
+   渲染一个点了没反应的按钮，正是 AC-18 要排除的"空按钮"。
+
+**Slice 2 的自证**：`tests/tenancy/members.test.ts` 覆盖分页 / 过滤 / 租户谓词 /
+投影边界；`members-api.test.ts` 覆盖 `MEMBER 403 · OPERATOR 200 · 非法值忽略 ·
+500 不泄漏内部信息`。
 
 ---
 
@@ -91,7 +126,7 @@ T07 要的是**组织态**：一个社群运营者看"我的社群跑得怎么�
 | 切片 | 内容 | 前置 |
 |---|---|---|
 | **1** ✅ | 骨架 + 无组织态 + Dashboard | — |
-| 2 | Missions（列表/详情/暂停）+ Members（需先建 `GET /api/v1/members`） | 无 |
+| **2** ✅ | Missions（列表 / 详情 / 状态迁移）+ Members（新建 `GET /api/v1/members`） | 无 |
 | 3 | Connections（含工作流阶段与停滞标记）+ Settings（`GET/PATCH /api/v1/org`） | 无 |
 | 4 | Outcomes（等 T08）+ Agents（等 T09 技术栈拍板） | T08 / §6-⑥ |
 | 5 | Playwright 覆盖 AC-18（七屏可达 + 无空按钮负测） | 全部 |
@@ -121,3 +156,4 @@ T07 要的是**组织态**：一个社群运营者看"我的社群跑得怎么�
 | 日期 | 变更 |
 |---|---|
 | 2026-10-12 | 开工：设计 + Slice 1（骨架 / 无组织态 / Dashboard）+ 个人态侧边栏入口。**AC-18 未认领**（七屏未齐）。 |
+| 2026-10-12 | **Slice 2 落地**：Missions（列表 / 详情 / 状态机派生的迁移按钮）+ Members（新建 `GET /api/v1/members` + 成员目录屏）。导航四项 → 两个已就绪。**AC-18 仍未认领**（Connections / Agents / Outcomes / Settings 未做）。 |

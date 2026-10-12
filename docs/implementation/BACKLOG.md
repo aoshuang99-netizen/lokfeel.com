@@ -214,6 +214,9 @@
 - **验收**：**AC-18**
 - **交付**：在既有 `(dashboard)` 之外新增组织级 IA（建议 `/console/*`），复用现有布局与鉴权原语
 - **风险**：🟡 与既有 B2C 页面**共存** → 必须做明确的「个人态 vs 组织态」导航分层，否则用户看不懂
+- **进度**：🚧 **Slice 1 + Slice 2 已落地**（`/console` 骨架 + Dashboard · Missions · Members）。
+  Connections / Agents / Outcomes / Settings 未做 → **AC-18 未认领**。方案与切片计划见
+  `docs/implementation/T07/plan.md`。
 
 ### T08 · Outcome & Billing — 成果验证、成本归因、订阅
 - **目标**：三级成果验证 + 漏斗/工时/成本 + 用量归集 + 支付沙箱。
@@ -346,7 +349,13 @@
 
 ## 7. 下一个动作
 
-**T06 已交付并上线 → T07 Slice 1 已上线（`0414186`）**；T07 后续 Slice 与 T08 待开工。
+**T06 已交付并上线 → T07 Slice 1 + Slice 2 已落地**；T07 剩余四屏（Connections / Settings → Slice 3，
+Outcomes / Agents → Slice 4，分别等 T08 与 T09 选型）与 T08 待开工。
+
+> **Slice 2（2026-10-12，未发版）**：新增 `GET /api/v1/members`（`member.read`）+ 成员目录服务层
+> `src/lib/tenancy/members.ts`；Console 落地 Missions（列表 / 详情 / **状态机派生的迁移按钮**）
+> 与 Members（角色过滤 + 搜索 + 分页）两屏。门禁：`tests/tenancy` **87**（49 → 87）· 全量 **984** ·
+> ESLint 0/0 · `tsc` 0 error。
 
 > 🟡 **三个待拍板项仍未定**（都不阻塞当前主线）：① AC-10 自动清理是否开启（`LIFECYCLE.md` §4.4）；
 > ② 分钟级调度走哪条路（`SCHEDULING.md`，涉及 CI 额度成本）；③ T09 Agent 运行时选型。
@@ -414,6 +423,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T06+ · 死信主动告警（R9） | `tsc` | `tests/workflow/alerts.test.ts` **11** | ESLint 0/0 | 防回路断言：告警**不产生 WorkflowJob** |
 | T06+ · AC-10 生命周期清理 | `tsc` | `tests/lifecycle` **13** | ESLint 0/0 | **自证夹具**：`seed-lifecycle-e2e.mjs` + `lifecycle-sweep.mjs`（dry-run 命中 1/2/1 = 期望；apply 后复跑 0；`PENDING` 与未读项存活） |
 | T07 · Console Slice 1 | `tsc` 0 错误 | — | ESLint 0/0 · `check:script-decls` 57 通过 | 生产复验 **19/19**（`verify-t07-prod.mjs`：`/console` 匿名 307 跳登录、lifecycle 端点 dry 只统计、0 泄漏）；AC-18 **未认领** |
+| T07 · Console Slice 2 | `tsc` 0 错误 | `tests/tenancy` **87**（49 → 87）· 全量 **984**（50 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/members`：API 层测试断言 `MEMBER 403 · OPERATOR 200 · 非法值忽略 · 500 不泄漏内部信息`；AC-18 **仍未认领**（四屏未做） |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash

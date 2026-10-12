@@ -4,6 +4,10 @@
  * 两条硬规则的测试：元数据必须脱敏；审计失败不得改变业务结果。
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any --
+   本文件刻意用 `any` 构造"畸形/越界"的元数据来验证脱敏逻辑，
+   `unknown` 表达不了这种"故意喂错类型"的测试意图。与 tests/workflow/*.test.ts 同款约定。 */
+
 jest.mock('@/lib/db', () => ({
   db: {
     tenantAuditEvent: { create: jest.fn(), findMany: jest.fn() },

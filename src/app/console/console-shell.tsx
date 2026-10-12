@@ -40,8 +40,8 @@ interface ConsoleNavItem {
 
 const CONSOLE_NAV: readonly ConsoleNavItem[] = [
   { href: '/console', label: '总览', icon: LayoutDashboard, ready: true, capability: 'workflow.read' },
-  { href: '/console/missions', label: '任务', icon: Target, ready: false, capability: 'mission.read' },
-  { href: '/console/members', label: '成员', icon: Users, ready: false, capability: 'member.read' },
+  { href: '/console/missions', label: '任务', icon: Target, ready: true, capability: 'mission.read' },
+  { href: '/console/members', label: '成员', icon: Users, ready: true, capability: 'member.read' },
   { href: '/console/connections', label: '连接', icon: Link2, ready: false, capability: 'proposal.read' },
   { href: '/console/agents', label: '智能体', icon: Bot, ready: false, capability: 'outcome.read' },
   { href: '/console/outcomes', label: '成果', icon: BadgeCheck, ready: false, capability: 'outcome.read' },

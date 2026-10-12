@@ -46,3 +46,17 @@ export {
   redactMetadata,
   type TenantAuditInput,
 } from './audit'
+
+// ── T07 · 成员目录（只读） ──
+export {
+  MEMBERSHIP_STATUSES,
+  displayNameOf,
+  parseMemberFilters,
+  listMembers,
+  countMembersByRole,
+  getMemberById,
+  type MemberDto,
+  type MemberFilters,
+  type MembershipStatusValue,
+  type ListMembersOptions,
+} from './members'
