@@ -131,14 +131,19 @@ export default function ConsoleDashboardPage() {
   }
 
   if (overview.error || !overview.data?.data) {
+    // 403 不是故障，是权限边界：MEMBER 也能进 `/console`（`org.read` 让他们看得到设置页），
+    // 但队列视图需要 `workflow.read`（OPERATOR+）。按"权限不足"讲，别按"接口坏了"讲。
+    const denied = /permission|forbidden|403/i.test(overview.error ?? '')
     return (
       <div className="rounded-2xl border border-card-border bg-background-secondary p-6">
         <div className="flex items-center gap-2 text-warning mb-2">
           <AlertTriangle className="w-4 h-4" />
-          <p className="text-sm font-medium">暂时读不到队列状态</p>
+          <p className="text-sm font-medium">{denied ? '权限不足' : '暂时读不到队列状态'}</p>
         </div>
         <p className="text-sm text-foreground-muted mb-4">
-          {overview.error ?? '接口没有返回可用的数据。'}
+          {denied
+            ? '队列健康度需要「运营」及以上角色。你在本社群的角色不够 —— 这不是错误，而是权限边界。'
+            : (overview.error ?? '接口没有返回可用的数据。')}
         </p>
         <button
           type="button"
@@ -218,7 +223,9 @@ export default function ConsoleDashboardPage() {
           ))}
         </ul>
         <p className="text-[11px] text-foreground-subtle mt-3">
-          接管与手动重试入口在「连接」屏（Slice 3），接口已就绪：`/api/v1/workflow/jobs/&lt;id&gt;/takeover`。
+          接管 / 手动重试的操作界面尚未实现，接口已就绪：
+          `/api/v1/workflow/jobs/&lt;id&gt;/takeover`、`/requeue`。在此之前这里**只展示不操作**
+          —— 渲染一个点了没反应的按钮，正是 AC-18 要排除的「空按钮」。
         </p>
       </Panel>
 

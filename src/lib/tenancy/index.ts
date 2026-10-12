@@ -60,3 +60,18 @@ export {
   type MembershipStatusValue,
   type ListMembersOptions,
 } from './members'
+
+// ── T07 · 组织（社群）档案 ──
+export {
+  ORG_NAME_MAX,
+  ORG_SLUG_MAX,
+  ORG_SLUG_MIN,
+  ORG_SLUG_PATTERN,
+  getOrganization,
+  getOrganizationOverview,
+  parseOrganizationUpdate,
+  updateOrganization,
+  type OrganizationDto,
+  type OrganizationOverview,
+  type UpdateOrganizationInput,
+} from './org'

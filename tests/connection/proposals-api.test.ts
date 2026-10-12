@@ -528,8 +528,8 @@ describe('T05 · POST /api/v1/connections/{connectionId}/introduce', () => {
     asRole('OPERATOR', OP)
     propFindFirst.mockResolvedValue(proposalRow({ status: 'MUTUALLY_ACCEPTED' }))
     intentFindMany.mockResolvedValue([
-      { userId: OP, status: 'ACTIVE', expiresAt: null },
-      { userId: ME, status: 'WITHDRAWN', expiresAt: null },
+      { missionId: 'm_1', userId: OP, status: 'ACTIVE', expiresAt: null },
+      { missionId: 'm_1', userId: ME, status: 'WITHDRAWN', expiresAt: null },
     ])
 
     const res = await (introduceRoute.POST as any)(
@@ -546,8 +546,8 @@ describe('T05 · POST /api/v1/connections/{connectionId}/introduce', () => {
     asRole('OPERATOR', OP)
     propFindFirst.mockResolvedValue(proposalRow({ status: 'MUTUALLY_ACCEPTED' }))
     intentFindMany.mockResolvedValue([
-      { userId: OP, status: 'ACTIVE', expiresAt: new Date('2020-01-01T00:00:00.000Z') },
-      { userId: ME, status: 'ACTIVE', expiresAt: null },
+      { missionId: 'm_1', userId: OP, status: 'ACTIVE', expiresAt: new Date('2020-01-01T00:00:00.000Z') },
+      { missionId: 'm_1', userId: ME, status: 'ACTIVE', expiresAt: null },
     ])
 
     const res = await (introduceRoute.POST as any)(
@@ -565,8 +565,8 @@ describe('T05 · POST /api/v1/connections/{connectionId}/introduce', () => {
       .mockResolvedValueOnce(proposalRow({ status: 'MUTUALLY_ACCEPTED' })) // 执行前
       .mockResolvedValueOnce(proposalRow({ status: 'MUTUALLY_ACCEPTED', introducedAt: new Date() })) // 执行后
     intentFindMany.mockResolvedValue([
-      { userId: OP, status: 'ACTIVE', expiresAt: null },
-      { userId: ME, status: 'ACTIVE', expiresAt: null },
+      { missionId: 'm_1', userId: OP, status: 'ACTIVE', expiresAt: null },
+      { missionId: 'm_1', userId: ME, status: 'ACTIVE', expiresAt: null },
     ])
     decisionFindMany.mockResolvedValue([
       { personId: OP, decision: 'ACCEPT' },
@@ -592,8 +592,8 @@ describe('T05 · POST /api/v1/connections/{connectionId}/introduce', () => {
     asRole('OPERATOR', OP)
     propFindFirst.mockResolvedValue(proposalRow({ status: 'MUTUALLY_ACCEPTED' }))
     intentFindMany.mockResolvedValue([
-      { userId: OP, status: 'ACTIVE', expiresAt: null },
-      { userId: ME, status: 'ACTIVE', expiresAt: null },
+      { missionId: 'm_1', userId: OP, status: 'ACTIVE', expiresAt: null },
+      { missionId: 'm_1', userId: ME, status: 'ACTIVE', expiresAt: null },
     ])
     propUpdateMany.mockResolvedValue({ count: 0 }) // 另一个并发请求已抢先写入
 
@@ -624,8 +624,8 @@ describe('T05 · POST /api/v1/connections/{connectionId}/introduce', () => {
       .mockResolvedValueOnce(proposalRow({ status: 'MUTUALLY_ACCEPTED' }))
       .mockResolvedValueOnce(proposalRow({ status: 'MUTUALLY_ACCEPTED', introducedAt: new Date() }))
     intentFindMany.mockResolvedValue([
-      { userId: OP, status: 'ACTIVE', expiresAt: null },
-      { userId: ME, status: 'ACTIVE', expiresAt: null },
+      { missionId: 'm_1', userId: OP, status: 'ACTIVE', expiresAt: null },
+      { missionId: 'm_1', userId: ME, status: 'ACTIVE', expiresAt: null },
     ])
     decisionFindMany.mockResolvedValue([
       { personId: OP, decision: 'ACCEPT' },

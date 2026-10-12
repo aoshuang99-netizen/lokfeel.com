@@ -7,7 +7,7 @@
 > |---|---|
 > | 真实仓库基线 | `0414186`（`main`，**已推送 GitHub + 已发布 Netlify 生产**，部署 `6acc9c781f2e` ready；本批生产复验 **T07 19/19 · T06 25/25 · T04 19/19 · 窗口期 13/13**） |
 > | 上一发布基线 | `233669e`（T05 + T06）—— 再往前 `0c95b89`（T04）；T05/T06 曾长期带跳过标记未发版，已于 `233669e` 补齐 |
-> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**、**T06 Workflow Execution**、**T06+ 死信告警 / AC-10 生命周期**、**T07 Console Slice 1**（以上均已上线） |
+> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**、**T06 Workflow Execution**、**T06+ 死信告警 / AC-10 生命周期**、**T07 Console Slice 1**（以上均已上线）；**T07 Console Slice 2 / Slice 3**（已落地、**未发版**） |
 > | 剩余 | **T07–T12，共 6 个任务** |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
 > | 规划背景 | 《LokFeel SaaS 核心功能架构与开源技术集成方案 V1.0》：10 大模块 / 6 个自研引擎 / P0–P3 / 12 项 Codex 实施清单 |
@@ -214,8 +214,8 @@
 - **验收**：**AC-18**
 - **交付**：在既有 `(dashboard)` 之外新增组织级 IA（建议 `/console/*`），复用现有布局与鉴权原语
 - **风险**：🟡 与既有 B2C 页面**共存** → 必须做明确的「个人态 vs 组织态」导航分层，否则用户看不懂
-- **进度**：🚧 **Slice 1 + Slice 2 已落地**（`/console` 骨架 + Dashboard · Missions · Members）。
-  Connections / Agents / Outcomes / Settings 未做 → **AC-18 未认领**。方案与切片计划见
+- **进度**：🚧 **Slice 1 + Slice 2 + Slice 3 已落地**（`/console` 骨架 + Dashboard · Missions · Members · Connections · Settings）。
+  Agents / Outcomes 未做（分别等 T09 选型与 T08 成果面）→ **AC-18 未认领**。方案与切片计划见
   `docs/implementation/T07/plan.md`。
 
 ### T08 · Outcome & Billing — 成果验证、成本归因、订阅
@@ -349,8 +349,17 @@
 
 ## 7. 下一个动作
 
-**T06 已交付并上线 → T07 Slice 1 + Slice 2 已落地**；T07 剩余四屏（Connections / Settings → Slice 3，
-Outcomes / Agents → Slice 4，分别等 T08 与 T09 选型）与 T08 待开工。
+**T06 已交付并上线 → T07 Slice 1 + Slice 2 + Slice 3 已落地**；T07 最后两屏
+（Outcomes / Agents → Slice 4，分别等 T08 的成果面与 T09 选型）与 T08 待开工。
+
+> **Slice 3（2026-10-12，未发版）**：新增 `GET /api/v1/connections/pipeline`（`workflow.read`，
+> 租户级连接运营视图：分桶 / 停滞 / **与服务端同源的「可介绍」判据**）+ `GET/PATCH /api/v1/org`
+> （`org.read` 全员 / `org.update` 仅 OWNER）；Console 落地 Connections 与 Settings 两屏。
+> 顺带把 T05 的"可介绍性"两层校验抽成单一判据 `introductionBlockersByProposal()`（执行点与
+> 界面共用，消除漂移）。
+> 🔴 一处易踩的守卫陷阱：`withTenant` 对能力数组是 **`some()`（任一满足）**，
+> 所以租户级端点**不能**把弱能力（如 `proposal.read`，连 MEMBER 都有）写进数组 ——
+> 那会把端点降级成全成员可读。`pipeline` 因此只 gate `workflow.read`，并有负向断言护住。
 
 > **Slice 2（2026-10-12，未发版）**：新增 `GET /api/v1/members`（`member.read`）+ 成员目录服务层
 > `src/lib/tenancy/members.ts`；Console 落地 Missions（列表 / 详情 / **状态机派生的迁移按钮**）
@@ -424,6 +433,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T06+ · AC-10 生命周期清理 | `tsc` | `tests/lifecycle` **13** | ESLint 0/0 | **自证夹具**：`seed-lifecycle-e2e.mjs` + `lifecycle-sweep.mjs`（dry-run 命中 1/2/1 = 期望；apply 后复跑 0；`PENDING` 与未读项存活） |
 | T07 · Console Slice 1 | `tsc` 0 错误 | — | ESLint 0/0 · `check:script-decls` 57 通过 | 生产复验 **19/19**（`verify-t07-prod.mjs`：`/console` 匿名 307 跳登录、lifecycle 端点 dry 只统计、0 泄漏）；AC-18 **未认领** |
 | T07 · Console Slice 2 | `tsc` 0 错误 | `tests/tenancy` **87**（49 → 87）· 全量 **984**（50 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/members`：API 层测试断言 `MEMBER 403 · OPERATOR 200 · 非法值忽略 · 500 不泄漏内部信息`；AC-18 **仍未认领**（四屏未做） |
+| T07 · Console Slice 3 | `tsc` 0 错误 | `tests/connection` **373 → 408**（16 → 18 套）· `tests/tenancy` **87 → 120**（5 → 7 套）· 全量 **984 → 1052**（50 → 54 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/connections/pipeline`（`workflow.read`）+ `GET/PATCH /api/v1/org`；负向断言防 `withTenant(some)` 降级、`ADMIN` 也不可改组织档案；AC-18 **仍未认领**（Agents 等 T09 / Outcomes 等 T08） |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash

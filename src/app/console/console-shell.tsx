@@ -42,10 +42,13 @@ const CONSOLE_NAV: readonly ConsoleNavItem[] = [
   { href: '/console', label: '总览', icon: LayoutDashboard, ready: true, capability: 'workflow.read' },
   { href: '/console/missions', label: '任务', icon: Target, ready: true, capability: 'mission.read' },
   { href: '/console/members', label: '成员', icon: Users, ready: true, capability: 'member.read' },
-  { href: '/console/connections', label: '连接', icon: Link2, ready: false, capability: 'proposal.read' },
+  { href: '/console/connections', label: '连接', icon: Link2, ready: true, capability: 'workflow.read' },
   { href: '/console/agents', label: '智能体', icon: Bot, ready: false, capability: 'outcome.read' },
   { href: '/console/outcomes', label: '成果', icon: BadgeCheck, ready: false, capability: 'outcome.read' },
-  { href: '/console/settings', label: '设置', icon: Settings, ready: false, capability: 'org.update' },
+  // ⚠️ 设置屏的**读**是 `org.read`（所有成员都有），所以这里 gate 的是读而不是写 ——
+  //    若 gate 成 `org.update`（仅 OWNER），ADMIN/OPERATOR 会连"看看社群叫什么"都做不到。
+  //    能不能编辑由页面自己按能力降级（`GET /api/v1/org` 会下发 capabilities）。
+  { href: '/console/settings', label: '设置', icon: Settings, ready: true, capability: 'org.read' },
 ]
 
 export interface ConsoleShellProps {

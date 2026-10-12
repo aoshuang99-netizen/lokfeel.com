@@ -250,11 +250,13 @@ export {
   findProposalById,
   hardDeleteProposal,
   introduceConnection,
+  introductionBlockersByProposal,
   isClosed,
   isExpired,
   listIntroductions,
   listMyProposals,
   listMyProposalsByShareToken,
+  normalizeProposalStatus,
   partyRoleOf,
   resolveShareTokenTenant,
   resolveStatusAfterDecision,
@@ -264,6 +266,7 @@ export {
   type DecisionPair,
   type Introducibility,
   type IntroducibilityBlocker,
+  type IntroducibleCandidate,
   type IntroductionBlocker,
   type IntroductionView,
   type ListProposalsOptions,
@@ -276,6 +279,20 @@ export {
   type ProposalStatus,
   type ShareTokenTenant,
 } from './proposals'
+
+// ── T07 · 连接运营视图（租户级只读投影）──
+export {
+  BUCKET_LABELS,
+  CONNECTION_BUCKETS,
+  SCAN_LIMIT,
+  bucketOf,
+  listOrgConnections,
+  parseConnectionBucket,
+  type ConnectionBucket,
+  type ListOrgConnectionsOptions,
+  type OrgConnectionRow,
+  type OrgConnectionsResult,
+} from './operations'
 
 // ── T05 · 提案输入校验 ──
 export {

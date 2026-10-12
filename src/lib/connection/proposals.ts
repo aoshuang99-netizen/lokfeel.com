@@ -28,7 +28,8 @@
  * 3. **执行时再校验一次**（AC-06，race condition）。
  *    介绍是本任务唯一的**执行点**，必须在**执行的那一刻**重新确认两件事：
  *      ① 提案仍为 `MUTUALLY_ACCEPTED`、未过期、未撤销、未介绍过 —— `evaluateIntroducibility()`（纯函数）；
- *      ② **双方**的 `SocialIntent` 此刻仍 `ACTIVE` 且未过期 —— `loadLiveParties()`（IO）。
+ *      ② **双方**的 `SocialIntent` 此刻仍 `ACTIVE` 且未过期 —— 同一 IO 层。
+ *    第①②层已合并为单一判据 `introductionBlockersByProposal()`，执行点与运营视图共用。
  *    写入用**条件更新**实现 compare-and-swap（`introducedAt: null` +
  *    `status: 'MUTUALLY_ACCEPTED'` 作为 WHERE 谓词）：两个并发请求只有一个能成功。
  *    这才是真正的"执行时校验"——"先查再写"在并发下仍然会双写。
@@ -314,8 +315,13 @@ interface ProposalRow {
   updatedAt: Date
 }
 
-/** 把 DB 的字符串状态收敛为字面量 union（未知值 → 视作待决，**不**当作"可介绍"）。 */
-function normalizeStatus(value: string): ProposalStatus {
+/**
+ * 把 DB 的字符串状态收敛为字面量 union（未知值 → 视作待决，**不**当作"可介绍"）。
+ *
+ * 导出是为了让运营视图（`operations.ts`）用**同一套**归一化 —— 两边各写一份
+ * switch 时，将来新增一个状态极易只改一处，导致同一行数据在列表与详情里显示不同状态。
+ */
+export function normalizeProposalStatus(value: string): ProposalStatus {
   switch (value) {
     case 'MUTUALLY_ACCEPTED':
       return 'MUTUALLY_ACCEPTED'
@@ -373,7 +379,7 @@ function assembleProposal(
   counterparty: { subject: SubjectProfile | null; live: DisclosureMap },
   now: Date
 ): ProposalDto {
-  const status = normalizeStatus(row.status)
+  const status = normalizeProposalStatus(row.status)
   const normalized: ProposalRow & { status: ProposalStatus } = { ...row, status }
   const role = partyRoleOf(row, ctx.userId)
   if (!role) throw new ForbiddenError('Not a participant of this proposal')
@@ -566,7 +572,7 @@ export async function createProposal(
   }).catch(() => {})
 
   const counterparty = await loadCounterparty(row, candidateId, now)
-  return assembleProposal({ ...row, status: normalizeStatus(row.status) }, [], ctx, counterparty, now)
+  return assembleProposal({ ...row, status: normalizeProposalStatus(row.status) }, [], ctx, counterparty, now)
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -596,7 +602,7 @@ export async function decideProposal(
   const role = partyRoleOf(row, ctx.userId)
   if (!role) throw new ForbiddenError('Not a participant of this proposal')
 
-  const status = normalizeStatus(row.status)
+  const status = normalizeProposalStatus(row.status)
   const normalized: ProposalRow & { status: ProposalStatus } = { ...row, status }
 
   // 契约：已关闭 → 409（`{'409': {description: Closed}}`）。
@@ -688,25 +694,78 @@ export async function revokeProposal(
 // 写：介绍（AC-06 的执行点）
 // ═══════════════════════════════════════════════════════════
 
-/** 读双方意图的"生效中"状态（AC-06 第②层）。 */
-async function loadLiveParties(
-  row: ProposalRow,
-  now: Date
-): Promise<{ proposerLive: boolean; candidateLive: boolean }> {
+/** 参与可介绍性批量判定的最小字段集（`ProposalRow` 与运营视图行都满足）。 */
+export interface IntroducibleCandidate {
+  id: string
+  organizationId: string
+  missionId: string
+  proposerId: string
+  candidateId: string
+  status: ProposalStatus
+  introducedAt: Date | null
+  expiresAt: Date | null
+}
+
+/**
+ * 批量判定「此刻哪些提案可介绍」—— **AC-06 的单一判据**。
+ *
+ * `introduceConnection()`（执行点）与运营视图（`operations.ts` 的"介绍"按钮）
+ * **共用本函数**，因此界面判为可点的必然能执行成功、判为不可点的端点必然 409 ——
+ * 两处不会各自演化出不同结论（这正是"漂移"最典型的来源）。
+ *
+ * 判据与执行点逐条对齐：
+ *   ① 提案自身（`evaluateIntroducibility`，纯函数）：未介绍过、非 rejected/revoked、
+ *      未过期、且为 `MUTUALLY_ACCEPTED`；
+ *   ② 双方意图此刻仍 `ACTIVE`（AC-06 第②层，需要 IO）。
+ *
+ * 性能：第①层先算，**只对第①层通过的**再查意图，且意图一次批量取回
+ * （运营屏一页几十条，逐条查会 N+1）。没有任何候选通过时**不查库**。
+ */
+export async function introductionBlockersByProposal(
+  candidates: readonly IntroducibleCandidate[],
+  now: Date = new Date()
+): Promise<Map<string, IntroductionBlocker[]>> {
+  const out = new Map<string, IntroductionBlocker[]>()
+  if (candidates.length === 0) return out
+
+  const pending: IntroducibleCandidate[] = []
+  for (const c of candidates) {
+    const blockers: IntroductionBlocker[] = [...evaluateIntroducibility(c, now).blockers]
+    out.set(c.id, blockers)
+    if (blockers.length === 0) pending.push(c)
+  }
+  if (pending.length === 0) return out
+
   const intents = await db.socialIntent.findMany({
     where: {
-      organizationId: row.organizationId,
-      missionId: row.missionId,
-      userId: { in: [row.proposerId, row.candidateId] },
+      organizationId: { in: [...new Set(pending.map((c) => c.organizationId))] },
+      missionId: { in: [...new Set(pending.map((c) => c.missionId))] },
+      userId: { in: [...new Set(pending.flatMap((c) => [c.proposerId, c.candidateId]))] },
     },
-    select: { userId: true, status: true, expiresAt: true },
+    select: { missionId: true, userId: true, status: true, expiresAt: true },
   })
-  const live = (userId: string): boolean => {
-    const it = intents.find((i) => i.userId === userId)
-    if (!it) return false
-    return deriveIntentStatus({ status: it.status, expiresAt: it.expiresAt }, now) === 'ACTIVE'
+  // 键只取 (missionId,userId)：`missionId` 是 `Mission.id`（cuid，全局唯一），
+  // 因此它已经隐含了租户归属 —— 再加 organizationId 属于冗余防御，
+  // 反而会让"意图行必须带上 organizationId"变成隐性契约。
+  const liveKey = (missionId: string, userId: string) => `${missionId}::${userId}`
+  const live = new Set(
+    intents
+      .filter(
+        (i) => deriveIntentStatus({ status: i.status, expiresAt: i.expiresAt }, now) === 'ACTIVE'
+      )
+      .map((i) => liveKey(i.missionId, i.userId))
+  )
+
+  for (const c of pending) {
+    const blockers = out.get(c.id)!
+    if (!live.has(liveKey(c.missionId, c.proposerId))) {
+      blockers.push('proposer_intent_not_live')
+    }
+    if (!live.has(liveKey(c.missionId, c.candidateId))) {
+      blockers.push('candidate_intent_not_live')
+    }
   }
-  return { proposerLive: live(row.proposerId), candidateLive: live(row.candidateId) }
+  return out
 }
 
 /**
@@ -735,17 +794,22 @@ export async function introduceConnection(
   })) as ProposalRow | null
   if (!row) throw new NotFoundError('Proposal not found')
 
-  const status = normalizeStatus(row.status)
+  const status = normalizeProposalStatus(row.status)
   const normalized: ProposalRow & { status: ProposalStatus } = { ...row, status }
 
-  const blockers: IntroductionBlocker[] = [...evaluateIntroducibility(normalized, now).blockers]
-
-  // ① 已经不可能成功时，不必再查意图（省一次查询，也让错误信息更聚焦）。
-  if (blockers.length === 0) {
-    const { proposerLive, candidateLive } = await loadLiveParties(normalized, now)
-    if (!proposerLive) blockers.push('proposer_intent_not_live')
-    if (!candidateLive) blockers.push('candidate_intent_not_live')
+  // 判据与运营视图共用（`introductionBlockersByProposal`）—— 单一来源，见其文档。
+  // 只传本条：函数内部同样"第①层过了才查意图"，因此查询次数与旧实现一致。
+  const candidate: IntroducibleCandidate = {
+    id: normalized.id,
+    organizationId: normalized.organizationId,
+    missionId: normalized.missionId,
+    proposerId: normalized.proposerId,
+    candidateId: normalized.candidateId,
+    status: normalized.status,
+    introducedAt: normalized.introducedAt,
+    expiresAt: normalized.expiresAt,
   }
+  const blockers = (await introductionBlockersByProposal([candidate], now)).get(row.id) ?? []
 
   if (blockers.length > 0) {
     throw new ConflictError('Proposal is not introducible', { blockers })
@@ -817,7 +881,7 @@ export async function findProposalById(
     select: { personId: true, decision: true },
   })
   const counterparty = await loadCounterparty(row, counterpartOf(row, ctx.userId), now)
-  return assembleProposal({ ...row, status: normalizeStatus(row.status) }, decisions, ctx, counterparty, now)
+  return assembleProposal({ ...row, status: normalizeProposalStatus(row.status) }, decisions, ctx, counterparty, now)
 }
 
 export interface ListProposalsOptions {
@@ -887,7 +951,7 @@ export async function listMyProposals(
 
   const views = rows.map((row) => {
     const other = counterpartOf(row, ctx.userId)
-    const normalized: ProposalRow = { ...row, status: normalizeStatus(row.status) }
+    const normalized: ProposalRow = { ...row, status: normalizeProposalStatus(row.status) }
     return assembleProposal(
       normalized,
       decisions.filter((d) => d.proposalId === row.id),
@@ -1034,7 +1098,7 @@ export async function listIntroductions(
       proposalId: row.id,
       missionId: row.missionId,
       userId: other,
-      state: deriveProposalState({ ...row, status: normalizeStatus(row.status) }, now),
+      state: deriveProposalState({ ...row, status: normalizeProposalStatus(row.status) }, now),
       introducedAt: (row.introducedAt as Date).toISOString(),
       subject: discloseSubject(profiles.get(other) ?? {}, live, COUNTERPARTY_PROFILE_AUDIENCE),
       audience: COUNTERPARTY_PROFILE_AUDIENCE,

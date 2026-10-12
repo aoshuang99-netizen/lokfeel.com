@@ -1,9 +1,11 @@
 # T07 · SaaS Console — 社群经营工作台（开工方案）
 
-> **状态**：🚧 **开工中（Slice 1 + Slice 2 已落地）**。本文件是设计 + 切片计划 + 验收口径。
+> **状态**：🚧 **开工中（Slice 1 + 2 + 3 已落地）**。本文件是设计 + 切片计划 + 验收口径。
 > **AC-18 尚未认领** —— 它要求"七屏可达且**无空按钮**"，只有七屏都接上真实数据才算。
-> 已落地 **Slice 1（骨架 + Dashboard）**、**Slice 2（Missions / Members）**；
-> Connections / Agents / Outcomes / Settings 仍在导航里显式标注"施工中"（是 `<span>`，不是死链）。
+> 已落地 **Slice 1（骨架 + Dashboard）**、**Slice 2（Missions / Members）**、
+> **Slice 3（Connections / Settings）**；
+> Agents / Outcomes 仍在导航里显式标注"施工中"（是 `<span>`，不是死链）——
+> 它们分别等 T09 技术栈拍板与 T08 的成果数据面，**不是**没做，而是依赖未就绪。
 
 ## 0. 任务定义（来自 BACKLOG）
 
@@ -60,10 +62,10 @@ T07 要的是**组织态**：一个社群运营者看"我的社群跑得怎么�
 | Dashboard | `/console` | `/api/v1/workflow/overview`、`/api/v1/missions` | ✅ **Slice 1** |
 | Missions | `/console/missions` · `/[missionId]` | `/api/v1/missions`（+ `/[missionId]/pause` 状态迁移） | ✅ **Slice 2** |
 | Members | `/console/members` | `/api/v1/members`（**Slice 2 新建**，能力 `member.read`） | ✅ **Slice 2** |
-| Connections | `/console/connections` | `/api/v1/connections`（+ workflow 阶段） | Slice 3 |
+| Connections | `/console/connections` | `/api/v1/connections/pipeline`（**Slice 3 新建**）+ `/api/v1/connections/{id}/introduce` | ✅ **Slice 3** |
 | Agents | `/console/agents` | T09 运行时（**尚不存在**） | Slice 4（等 T09） |
 | Outcomes | `/console/outcomes` | T08 的 `Outcome` / `UsageRecord`（**尚不存在**） | Slice 4（等 T08） |
-| Settings | `/console/settings` | `/api/v1/org`（**待建**，能力 `org.read` / `org.update`） | Slice 3 |
+| Settings | `/console/settings` | `/api/v1/org`（**Slice 3 新建**，读 `org.read` / 写 `org.update`） | ✅ **Slice 3** |
 
 **「无空按钮」怎么落地**：每一屏的每个可点元素必须有**有效行为**（跳转 / 提交 / 展开）。
 不能有行为时，**不要渲染成按钮** —— 要么不渲染，要么渲染成**带说明的禁用态**
@@ -121,13 +123,58 @@ T07 要的是**组织态**：一个社群运营者看"我的社群跑得怎么�
 
 ---
 
+## 3.6 Slice 3 交付了什么
+
+| 文件 | 作用 |
+|---|---|
+| `src/lib/connection/operations.ts` | **新增**租户级连接运营视图：`listOrgConnections`（提案 × T06 阶段 × 停滞 × 可介绍性）、`bucketOf`、`parseConnectionBucket` |
+| `src/app/api/v1/connections/pipeline/route.ts` | **新增** `GET /api/v1/connections/pipeline`（`workflow.read`），四个语义桶 + `stalled` + 分页 |
+| `src/app/console/connections/page.tsx` | 连接屏：分桶 tab（带计数）+ 只看停滞 + 停滞徽章 + 阶段列 + **行内「发送介绍」** |
+| `src/lib/tenancy/org.ts` | **新增**组织档案服务：`getOrganization` / `getOrganizationOverview` / `parseOrganizationUpdate` / `updateOrganization` |
+| `src/app/api/v1/org/route.ts` | **新增** `GET /api/v1/org`（`org.read`，**全员**）/ `PATCH`（`org.update`，**仅 OWNER**） |
+| `src/app/console/settings/page.tsx` | 设置屏：只读档案 + 成员数；编辑表单**仅所有者可见**；转让/删除为说明而非按钮 |
+| `src/lib/connection/proposals.ts` | **重构**：`loadLiveParties` → `introductionBlockersByProposal`（批量、单一判据），执行点与之共用 |
+| `src/app/console/console-shell.tsx` | connections / settings → `ready: true`（settings 的 gate 是 `org.read` 而非 `org.update`） |
+
+**Slice 3 的四条设计决定**
+
+1. **「可介绍」只留一个判据**。把 T05 里"提案可介绍性 + 双方意图存活"两层校验抽成
+   `introductionBlockersByProposal()`（批量、一次查意图），`POST /connections/{id}/introduce`
+   与连接屏的「发送介绍」按钮**共用它**。否则"界面说能点、端点 409"这类漂移迟早发生。
+   接入时踩到一处：意图查询改用 (missionId,userId) 作键（`missionId` 是 cuid，已隐含租户），
+   连带把两条测试夹具补上 `missionId` —— 夹具缺字段会让"过期"用例**因为错的理由通过**。
+2. **租户级视图只 gate 一个能力**。`withTenant` 对数组是 **`some()`**，把 `proposal.read`
+   （连 MEMBER 都有）写进数组会把端点**降级**成全成员可读。故 `pipeline` 只 gate
+   `workflow.read`，并在路由与测试里各写一条说明/负向断言。
+3. **分桶是运营语义，不是状态值**。`INTRODUCED` 必须先于状态判断（`deriveProposalState`
+   对已介绍行返回 `MUTUALLY_ACCEPTED`，先判状态就会把"已介绍"算成"待介绍"）；
+   `REJECTED/REVOKED/EXPIRED` 合并为 `CLOSED`。桶名 `PENDING_CONSENT` **词序刻意**与状态
+   `CONSENT_PENDING` 相反，避免被当成同一个东西互换。
+4. **组织档案"读公共、写专属"**。`org.read` 在 `SELF_SERVICE`（全员），`org.update` 在
+   `OWNER_ONLY`（仅所有者）。设置屏据此分岔：非所有者看到的是**只读视图 + 说明**，
+   而不是一个必然 403 的保存按钮。`status` 刻意不可改 —— 允许自助把 `SUSPENDED` 改回
+   `ACTIVE` 等于让欠费社群自己解封。
+
+**Slice 3 的诚实口径**：`pipeline` 的派生过滤（分桶 / 停滞）无法下推 SQL，实现是
+"取最近 300 条 → 派生 → 过滤 → 内存分页"。当窗口被截断时响应带 `truncated: true`，
+界面**必须**把它显示出来 —— 否则"共 N 条"会被读成全量。
+
+**Slice 3 的自证**：`tests/connection/operations.test.ts` 覆盖租户谓词 / 投影边界
+（DTO **不含**双方 userId）/ 分桶（含"已介绍不能被算成待介绍"）/ 停滞（终态不判停滞）/
+`canIntroduce` 与执行点同源 / `truncated` 不虚报；`pipeline-api.test.ts` 覆盖
+`MEMBER 403 · OPERATOR 200 · 未知 bucket 400`（含防 `some()` 降级的负向断言）；
+`tests/tenancy/org.test.ts` + `org-api.test.ts` 覆盖 `OWNER 可写 / ADMIN 也不可写 /
+slug 冲突 409 / 非法输入不静默跳过 / 审计不记新值`。
+
+---
+
 ## 4. 切片计划
 
 | 切片 | 内容 | 前置 |
 |---|---|---|
 | **1** ✅ | 骨架 + 无组织态 + Dashboard | — |
 | **2** ✅ | Missions（列表 / 详情 / 状态迁移）+ Members（新建 `GET /api/v1/members`） | 无 |
-| 3 | Connections（含工作流阶段与停滞标记）+ Settings（`GET/PATCH /api/v1/org`） | 无 |
+| 3 ✅ | Connections（含工作流阶段与停滞标记）+ Settings（`GET/PATCH /api/v1/org`） | 无 |
 | 4 | Outcomes（等 T08）+ Agents（等 T09 技术栈拍板） | T08 / §6-⑥ |
 | 5 | Playwright 覆盖 AC-18（七屏可达 + 无空按钮负测） | 全部 |
 
@@ -142,8 +189,17 @@ T07 要的是**组织态**：一个社群运营者看"我的社群跑得怎么�
 | Dashboard | `workflow.read` + `mission.read` | OPERATOR+ |
 | Missions | `mission.read`（写：`mission.create` / `mission.update`） | OPERATOR+ / ADMIN+ |
 | Members | `member.read`（邀请：`member.invite`） | ADMIN+ |
-| Connections | `proposal.read` + `workflow.read` | OPERATOR+ |
-| Settings | `org.read` / `org.update` | ADMIN+ |
+| Connections | `workflow.read`（**单条**，见下方 ⚠️） | OPERATOR+ |
+| Settings | `org.read`（读）/ `org.update`（写） | 全员 / **仅 OWNER** |
+
+> ⚠️ **Connections 为什么只 gate `workflow.read`**：`withTenant` 对能力数组是
+> **`some()`（任一满足）**，不是 `every()`。最初设计的 "`proposal.read` + `workflow.read`"
+> 若照字面写进数组，会因为 `proposal.read` 连 MEMBER 都有而**把租户级视图降级**成全成员可读。
+> 故这里只留 OPERATOR+ 的 `workflow.read`。`pipeline-api.test.ts` 有一条
+> "MEMBER → 403" 的负向断言专门防这次降级被重演。
+>
+> 同理，`settings` 的导航 gate 的是**读**能力（`org.read`）而不是写 —— 否则 ADMIN/OPERATOR
+> 连"社群叫什么"都看不到。能不能编辑由页面按 `capabilities` 降级渲染。
 
 **切片 1 的降级行为**：能力不足时（例如未来把 MEMBER 放进 `/console`），
 对应的卡片显示"权限不足"而不是报错 —— 前端不做授权判断，**只做降级展示**；
@@ -157,3 +213,4 @@ T07 要的是**组织态**：一个社群运营者看"我的社群跑得怎么�
 |---|---|
 | 2026-10-12 | 开工：设计 + Slice 1（骨架 / 无组织态 / Dashboard）+ 个人态侧边栏入口。**AC-18 未认领**（七屏未齐）。 |
 | 2026-10-12 | **Slice 2 落地**：Missions（列表 / 详情 / 状态机派生的迁移按钮）+ Members（新建 `GET /api/v1/members` + 成员目录屏）。导航四项 → 两个已就绪。**AC-18 仍未认领**（Connections / Agents / Outcomes / Settings 未做）。 |
+| 2026-10-12 | **Slice 3 落地**：Connections（新建 `GET /api/v1/connections/pipeline` + 连接屏，含停滞标记与同源「可介绍」判据）+ Settings（新建 `GET/PATCH /api/v1/org` + 设置屏，读全员 / 写仅所有者）。顺带把 T05 的可介绍性抽为单一判据。**AC-18 仍未认领**（Agents 等 T09、Outcomes 等 T08）。 |

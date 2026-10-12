@@ -584,8 +584,8 @@ describe('T05 · introduceConnection（AC-04 负测 + AC-06 执行时校验）',
 
     // 同意之后、介绍之前：被介绍方撤销了意图
     intentFindMany.mockResolvedValue([
-      { userId: PROPOSER, status: 'ACTIVE', expiresAt: null },
-      { userId: CANDIDATE, status: 'WITHDRAWN', expiresAt: null },
+      { missionId: MISSION, userId: PROPOSER, status: 'ACTIVE', expiresAt: null },
+      { missionId: MISSION, userId: CANDIDATE, status: 'WITHDRAWN', expiresAt: null },
     ])
 
     await expect(introduceConnection(OWNER_CTX, 'p_1', LATER)).rejects.toMatchObject({
@@ -602,8 +602,8 @@ describe('T05 · introduceConnection（AC-04 负测 + AC-06 执行时校验）',
 
     const past = new Date('2026-10-10T00:00:00.000Z')
     intentFindMany.mockResolvedValue([
-      { userId: PROPOSER, status: 'ACTIVE', expiresAt: past },
-      { userId: CANDIDATE, status: 'ACTIVE', expiresAt: null },
+      { missionId: MISSION, userId: PROPOSER, status: 'ACTIVE', expiresAt: past },
+      { missionId: MISSION, userId: CANDIDATE, status: 'ACTIVE', expiresAt: null },
     ])
 
     await expect(introduceConnection(OWNER_CTX, 'p_1', LATER)).rejects.toMatchObject({
