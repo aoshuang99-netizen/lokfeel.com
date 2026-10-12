@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * T07 Slice 1 · 社群控制台（`/console/*`）生产上线复验
+ * T07 · 社群控制台（`/console/*`）生产上线复验 —— Slice 1 + Slice 2 + Slice 3
  *
  * 判据沿用 T03/T04/T06 复验的同一套（避免"公开页 200 就算上线"这种伪信号）：
  *   「路由缺失」       → Next 内置 404（可见文本含 "Page Not Found"，HTML）
@@ -9,9 +9,12 @@
  *
  * 覆盖：
  *   ① 存活 + 数据库可达
- *   ② `/console` 匿名 → 必须 307 跳登录，且回跳地址 = /console（证明组织态骨架已上线）
+ *   ② 组织态五屏匿名 → 必须 307 跳登录，且回跳地址保留（证明屏幕代码已上线）
+ *      Slice 1 ` /console`；Slice 2 `/console/missions` `/console/members`；
+ *      Slice 3 `/console/connections` `/console/settings`
  *   ③ `/dashboard` 匿名 → 同款 307（个人态回归，证明两态守卫一致）
- *   ④ 工作流 API 匿名全拒（AC-02 回归 + 证明路由已注册）
+ *   ④ API 匿名全拒（AC-02 回归 + 证明路由已注册）：工作流（T06）×2、
+ *      成员目录（Slice 2）、连接运营视图 + 组织档案（Slice 3）
  *   ⑤ `/api/cron/lifecycle-sweep` 守卫：无 token / 错 token 一律 401
  *   ⑥ **可选**：带真实 CRON_SECRET 打 `?dry=1` → 200
  *      —— 这是唯一能证明「AC-10 端点已上线且**默认只统计**（未开启自动删）」的取证。
@@ -51,12 +54,13 @@ const sk = (label, extra = '') => {
   skip++
 }
 
-async function req(method, p, { headers = {}, timeout = 25000 } = {}) {
+async function req(method, p, { headers = {}, body, timeout = 25000 } = {}) {
   try {
     const res = await fetch(`${BASE}${p}`, {
       method,
       redirect: 'manual',
       headers,
+      body,
       signal: AbortSignal.timeout(timeout),
     })
     const text = await res.text()
@@ -133,7 +137,7 @@ function resolveCronSecret() {
 }
 
 const main = async () => {
-  console.log(`\n目标 ${BASE}   （T07 Slice 1 上线复验 · 只读为原则）\n`)
+  console.log(`\n目标 ${BASE}   （T07 Slice 1+2+3 上线复验 · 只读为原则）\n`)
 
   console.log('── 1) 存活与数据库 ──')
   {
@@ -149,15 +153,57 @@ const main = async () => {
     }
   }
 
-  console.log('\n── 2) 组织态骨架 /console 受登录保护 ──')
+  console.log('\n── 2) 组织态屏幕全部受登录保护（Slice 1 / 2 / 3）──')
   assertLoginGuarded('GET /console（匿名）', await req('GET', '/console'), '/console')
+  assertLoginGuarded(
+    'GET /console/missions（匿名）',
+    await req('GET', '/console/missions'),
+    '/console/missions'
+  )
+  assertLoginGuarded(
+    'GET /console/members（匿名）',
+    await req('GET', '/console/members'),
+    '/console/members'
+  )
+  assertLoginGuarded(
+    'GET /console/connections（匿名）',
+    await req('GET', '/console/connections'),
+    '/console/connections'
+  )
+  assertLoginGuarded(
+    'GET /console/settings（匿名）',
+    await req('GET', '/console/settings'),
+    '/console/settings'
+  )
 
   console.log('\n── 3) 个人态 /dashboard 回归（两态守卫应一致）──')
   assertLoginGuarded('GET /dashboard（匿名）', await req('GET', '/dashboard'))
 
-  console.log('\n── 4) 工作流 API：匿名全拒（AC-02 回归）──')
+  console.log('\n── 4) API 匿名全拒（AC-02 回归 + 证明路由已注册）──')
   assertAnonymousRejected('GET /api/v1/workflow/overview', await req('GET', '/api/v1/workflow/overview'))
   assertAnonymousRejected('GET /api/v1/workflow/jobs', await req('GET', '/api/v1/workflow/jobs'))
+  // Slice 2：成员目录（member.read = OPERATOR+）
+  assertAnonymousRejected('GET /api/v1/members', await req('GET', '/api/v1/members'))
+  assertAnonymousRejected('GET /api/v1/members?q=x', await req('GET', '/api/v1/members?q=x'))
+  // Slice 3：连接运营视图（workflow.read = OPERATOR+）
+  assertAnonymousRejected(
+    'GET /api/v1/connections/pipeline',
+    await req('GET', '/api/v1/connections/pipeline')
+  )
+  //   非法 bucket 也必须是 401 而非 400 —— 鉴权必须先于参数校验（否则匿名者能探到参数面）
+  assertAnonymousRejected(
+    'GET /api/v1/connections/pipeline?bucket=__nope__',
+    await req('GET', '/api/v1/connections/pipeline?bucket=__nope__')
+  )
+  // Slice 3：组织档案（读 org.read / 写 org.update）
+  assertAnonymousRejected('GET /api/v1/org', await req('GET', '/api/v1/org'))
+  assertAnonymousRejected(
+    'PATCH /api/v1/org（匿名 · body 空对象）',
+    await req('PATCH', '/api/v1/org', {
+      headers: { 'content-type': 'application/json' },
+      body: '{}',
+    })
+  )
 
   console.log('\n── 5) AC-10 端点守卫：无凭据必须被拦 ──')
   assertAnonymousRejected(
