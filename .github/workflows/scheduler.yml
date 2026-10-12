@@ -1,0 +1,88 @@
+name: Sub-hour workflow scheduler (optional)
+
+# ─────────────────────────────────────────────────────────────────────────
+# R8 · 调度粒度：Netlify 免费计划的 cron **只保证小时级**，而 T06 的重试退避
+# 是 30s 起步、租约 60s —— 小时级下"抖动"几乎失去意义（实际重试延迟以小时计）。
+#
+# 本 workflow 是**把粒度降到分钟级的三条路之一**，跑在 GitHub 的 runner 上，
+# **不消耗 Netlify 构建额度**。默认**不开启定时**，原因见下。
+#
+# ─────────────────────────────────────────────────────────────────────────
+# ⚠️ 为什么默认不开 schedule（成本取舍，需你拍板）
+# ─────────────────────────────────────────────────────────────────────────
+# GitHub Actions 的免费额度：**公开仓库不限**；**私有仓库 2000 分钟/月**。
+# 每跑一次约 15–20 秒：
+#   · `*/10` → 144 次/天 ≈ 43 分钟/天 ≈ **1300 分钟/月**
+#   · `*/5`  → 288 次/天 ≈ 86 分钟/天 ≈ **2600 分钟/月（会超）**
+# 所以"每分钟级"在私有仓库上会吃掉大半甚至超出免费额度 —— 这属于成本决策，
+# 不该由代码悄悄替你做。**三条路选一条**（详见 docs/implementation/SCHEDULING.md）：
+#
+#   ① 现在就用：手动触发（Actions → Run workflow），或把下面的 schedule 取消注释；
+#   ② 零额度方案：用 cron-job.org 直接打同一个端点（推荐，不占任何 CI 额度）；
+#   ③ 付费方案：Netlify 付费计划自带更高频 cron。
+#
+# 前置条件：仓库 Secrets 里配置 `CRON_SECRET`（与 Netlify 站点级变量同值）。
+# 未配置时本 workflow 会**优雅跳过**（exit 0），不会刷红。
+# ─────────────────────────────────────────────────────────────────────────
+
+on:
+  # 取消下面两行注释即可开启分钟级定时（注意上面的额度说明）。
+  # schedule:
+  #   - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      tick_limit:
+        description: '单轮最多执行的任务数（默认 20）'
+        required: false
+        default: '20'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sub-hour-scheduler
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard (skip when CRON_SECRET is absent)
+        id: guard
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "⚠️ 未配置 CRON_SECRET —— 跳过（这不是失败）"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Drive workflow outbox
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BASE_URL: ${{ vars.CRON_BASE_URL || 'https://app.lokfeel.com' }}
+          TICK_LIMIT: ${{ inputs.tick_limit || '20' }}
+        run: |
+          set -euo pipefail
+          echo "── /api/cron/workflow-tick ──"
+          curl -sS --max-time 60 -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/workflow-tick?limit=$TICK_LIMIT" \
+            -w '\nhttp=%{http_code}\n' | tee tick.json
+
+      - name: Lifecycle sweep (AC-10)
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BASE_URL: ${{ vars.CRON_BASE_URL || 'https://app.lokfeel.com' }}
+        run: |
+          set -euo pipefail
+          echo "── /api/cron/lifecycle-sweep ──"
+          # 保留期以天计，分钟级打它没有意义，这里只是让同一次调度把两个维护动作都覆盖到。
+          curl -sS --max-time 60 -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/lifecycle-sweep" \
+            -w '\nhttp=%{http_code}\n' | tee lifecycle.json

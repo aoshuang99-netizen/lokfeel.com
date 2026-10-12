@@ -12,6 +12,7 @@ import {
   Settings,
   Gift,
   Sparkles,
+  Building2,
 } from "lucide-react";
 import { InvitePanel } from "@/components/invite/invite-panel";
 import { useSession } from "next-auth/react";
@@ -162,6 +163,28 @@ export default function SidebarV2({ onCollapseChange }: SidebarProps) {
 
         {/* ── Separator ────────────────────────── */}
         <div className="my-3 border-t border-border/10" />
+
+        {/*
+          T07 · 组织态入口。
+          「个人态 vs 组织态」的分层在导航上只有这一个接触点（见 T07/plan.md §1）：
+          个人模式看「我」，社群模式看「我的社群」。不带组织成员关系的用户点进去
+          会看到一页说明（不是错误页），所以这里**无条件**显示是安全的。
+        */}
+        <Link
+          href="/console"
+          className={`
+            flex items-center gap-3 px-3 py-2.5 rounded-xl
+            transition-all duration-200
+            ${isActive("/console")
+              ? "bg-primary/10 text-primary"
+              : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"}
+          `}
+        >
+          <div className={`p-2 rounded-lg ${isActive("/console") ? "bg-primary/15" : ""}`}>
+            <Building2 className="w-4 h-4" />
+          </div>
+          <span className={`font-medium text-sm ${labelCls}`}>社群控制台</span>
+        </Link>
 
         {/* Settings */}
         <Link

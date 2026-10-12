@@ -22,7 +22,7 @@ import {
 } from '@/lib/workflow/notification-content'
 
 describe('T06 · renderNotification（模板与身份声明）', () => {
-  it('四种模板都能渲染出非空 subject 与 body', () => {
+  it('每个登记模板都能渲染出非空 subject 与 body（覆盖到全部模板）', () => {
     for (const template of NOTIFICATION_TEMPLATES) {
       const r = renderNotification({ template, organizationName: '示例社群' })
       expect(r.subject.length).toBeGreaterThan(0)
@@ -77,11 +77,25 @@ describe('T06 · renderNotification（模板与身份声明）', () => {
     expect(r.body).toContain('不会向对方披露')
   })
 
-  it('isNotificationTemplate 只认四个模板', () => {
+  it('isNotificationTemplate 只认登记在册的模板（共 5 个）', () => {
+    expect(NOTIFICATION_TEMPLATES).toHaveLength(5)
     expect(isNotificationTemplate('proposal.pending')).toBe(true)
     expect(isNotificationTemplate('connection.followup')).toBe(true)
+    // R9 新增：运营告警模板也必须被登记，否则 alerts.ts 的投递会被当成非法模板
+    expect(isNotificationTemplate('operator.attention')).toBe(true)
     expect(isNotificationTemplate('proposal.rejected')).toBe(false)
     expect(isNotificationTemplate(42)).toBe(false)
+  })
+
+  it('★ 运营告警**不**引用任务标题（告警只说"有事"，不说是谁的什么事）', () => {
+    const withMission = renderNotification({
+      template: 'operator.attention',
+      organizationName: '静山读书会',
+      missionTitle: '东南亚清关资源对接',
+    })
+    // 即便是传了 missionTitle，运营告警模板也不该把它渲染出去
+    expect(withMission.body).not.toContain('东南亚清关资源对接')
+    expect(withMission.body).toContain(SENDER_ATTRIBUTION_SUFFIX)
   })
 })
 

@@ -305,6 +305,12 @@
    > 改为「事务内写入 + 追加式决策表」的待消解项。
    > **"导出 / 删除 / 缓存与索引清理"三条仍未认领** → 仍须在 T12 之前明确归属，不要因为
    > T05 打了勾就当作 AC-10 已闭合。
+   > **2026-10-12 更新（部分认领，⚠️ 仍未闭合）**：新增 `docs/implementation/LIFECYCLE.md`，
+   > 认领了「**任务清理 + 通知保留期**」这一支 —— `src/lib/lifecycle/{policy,sweep}.ts`
+   > （纯函数判定 + 受限批量删除）+ `/api/cron/lifecycle-sweep` + CLI + **自证夹具** + 13 单测。
+   > T06 新增的两张只增不减的表（`WorkflowJob` / `NotificationDelivery`）自此有了保留策略。
+   > ❌ **「导出」与「删除请求」两个入口仍未实现**；「缓存/索引清理」待 M6 迁 PG+pgvector 后重新评估。
+   > ⇒ **AC-10 仍是未闭合项**，只是从"整条无主"变成"一支已认领"。
 
 ② **AC-25（真实付费试点）本质不是研发任务。** 需要真实客户与续费数据，代码侧只能产出「可复算的数据通道」，验收结论必然停留 `BLOCKED`。**不要为了凑绿而在 T12 虚报。**
 
@@ -340,7 +346,7 @@
 
 ## 7. 下一个动作
 
-**T06 已交付 → 建议开工 T07（SaaS Console — 社群经营工作台）或 T08（Outcome & Billing）**。
+**T06 已交付 → T07 已开工（Slice 1）**；T08 仍待开工。
 
 理由：
 
@@ -363,9 +369,21 @@
 - `T06/changes.md` §4.2（失败三分法）与 `T06/risks.md` **R7**（阶段超时只可见、不自动推进）；
 - `T05/changes.md` §3.6（`introduce` 刻意不带幂等键的语义）。
 
-> ⚠️ **仍未认领**：§5-① 指出的 **AC-10（数据生命周期：导出/删除/缓存与索引与任务清理）至今无主**。
-> T06 新增的 `WorkflowJob` / `NotificationDelivery` **同样需要清理策略**
-> （终态任务可归档、投递记录有保留期）—— T08 或 T12 前必须认领，否则 T12 会卡在「BLOCKER 无主」。
+> ✅ **2026-10-12 已部分认领**：AC-10 的「任务清理 + 通知保留期」一支落到
+> `docs/implementation/LIFECYCLE.md`（`src/lib/lifecycle/*` + cron 端点 + 自证夹具 + 13 单测）。
+> T06 新增的 `WorkflowJob` / `NotificationDelivery` 自此有保留策略（终态任务 90 天 /
+> 证据 730 天 / 僵死 PENDING 7 天 / 已读站内信 60 天）。
+> ❌ **「导出」与「删除请求」仍未实现** → **AC-10 仍未闭合**，T12 前必须补齐，否则仍会卡在
+> 「BLOCKER 无主」。另见 §5-① 的完整交代。
+
+**2026-10-12 · T07 开工（Slice 1）**：新增组织态 IA `/console/*`
+（`docs/implementation/T07/plan.md`）—— 骨架 + 无组织说明页 + Dashboard（消费
+`/api/v1/workflow/overview` 的真实数据）+ 个人态侧边栏入口。
+**AC-18 未认领**（七屏未齐，导航里未实现的入口渲染为不可点的"施工中"而非死链）。
+
+**R8（调度粒度）**：给出三条路与成本对比（`docs/implementation/SCHEDULING.md`
++ `.github/workflows/scheduler.yml`，**默认未开启定时** —— 是否用掉 GitHub Actions
+免费额度属成本决策）。
 
 ---
 
@@ -378,6 +396,10 @@
 | T04 | `tsc` 0 错误（4m22s） | `tests/connection` **290** · 全量 **669** | `check:script-decls` 45 通过 · ESLint 0/0 | 移动端候选页 **3/3** · 生产复验 **19/19**（`verify-t04-prod.mjs`） |
 | T05 | `tsc` 0 错误 | `tests/connection` **373** | ESLint 0/0 | 移动端 AC-04/05/06（`consent-trust.spec.ts`） |
 | T06 | `tsc` 0 错误（9m20s） | `tests/workflow` **169** · 全量 **921** · `tests/connection` 373 · `tests/tenancy` 49 | `check:script-decls` 50 通过 · ESLint 0/0 · `connection:migrate verify` 108 项 | API 级 **8/8**（`workflow-execution.spec.ts`，含故障注入；**可重复执行**） |
+| T06+ · 邮件通道就绪度 | — | — | `npm run verify:email:channel`（凭据分类 + **契约漂移检查**） | 真实外发仍 **BLOCKED**（无 `RESEND_API_KEY`） |
+| T06+ · 死信主动告警（R9） | `tsc` | `tests/workflow/alerts.test.ts` **11** | ESLint 0/0 | 防回路断言：告警**不产生 WorkflowJob** |
+| T06+ · AC-10 生命周期清理 | `tsc` | `tests/lifecycle` **13** | ESLint 0/0 | **自证夹具**：`seed-lifecycle-e2e.mjs` + `lifecycle-sweep.mjs`（dry-run 命中 1/2/1 = 期望；apply 后复跑 0；`PENDING` 与未读项存活） |
+| T07 · Console Slice 1 | `tsc` | — | ESLint 0/0 | 人工可达 `/console`；AC-18 **未认领** |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash

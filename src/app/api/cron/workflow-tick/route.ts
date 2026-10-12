@@ -1,8 +1,11 @@
 /**
  * T06 · 工作流驱动器端点（内部）
  *
- *   POST /api/cron/workflow-tick   —— 跑一轮：领取 → 执行 → 收尾；顺带对账
+ *   POST /api/cron/workflow-tick   —— 跑一轮：领取 → 执行 → 收尾；顺带对账 + 运营告警
  *   GET  /api/cron/workflow-tick   —— 同上（便于手工/浏览器触发排障）
+ *
+ * 三段顺序（有依赖，不可换）：**执行 → 对账 → 告警**。
+ * 告警排在最后，是因为它读的是"此刻仍需人处置"的状态；参数 `?alerts=0` / `?reconcile=0` 可单独关掉。
  *
  * 守卫：`Authorization: Bearer <CRON_SECRET>`（与 `src/app/api/cron/*` 其余端点一致）。
  * 由 `netlify/functions/cron-runner.ts` 按 `netlify.toml` 的 schedule 触发。
@@ -18,7 +21,7 @@
  */
 
 import { NextResponse } from 'next/server'
-import { runWorkflowTick, reconcileMissingJobs } from '@/lib/workflow'
+import { alertOperatorsOfAttention, runWorkflowTick, reconcileMissingJobs } from '@/lib/workflow'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -44,6 +47,7 @@ async function handle(request: Request): Promise<NextResponse> {
   const limit = limitRaw && Number.isFinite(Number(limitRaw)) ? Number(limitRaw) : undefined
   const budgetMs = budgetRaw && Number.isFinite(Number(budgetRaw)) ? Number(budgetRaw) : undefined
   const doReconcile = url.searchParams.get('reconcile') !== '0'
+  const doAlerts = url.searchParams.get('alerts') !== '0'
 
   try {
     const tick = await runWorkflowTick({
@@ -55,10 +59,16 @@ async function handle(request: Request): Promise<NextResponse> {
     // 漏网的来源只有"钩子没跑成"（见 hooks.ts 的可靠性说明），因此量很小。
     const reconciliation = doReconcile ? await reconcileMissingJobs({ limit: 20 }) : null
 
+    // 运营告警放在**最后**：它读的是"此刻仍需人处置"的状态，
+    // 必须在对账补入队之后，否则会漏报刚补上的那批。
+    // 告警**不产生任务**（见 alerts.ts 的防回路说明），因此不会影响本轮 tick 的语义。
+    const alerts = doAlerts ? await alertOperatorsOfAttention() : null
+
     return NextResponse.json({
       ok: true,
       tick,
       reconciliation,
+      alerts,
       wallClockMs: Date.now() - startedAt,
     })
   } catch (err) {

@@ -22,12 +22,14 @@ export type NotificationTemplate =
   | 'proposal.accepted' // 对方已同意，等你表态
   | 'connection.introduced' // 连接已建立
   | 'connection.followup' // 跟进提示（AC-14 的"跟进"段）
+  | 'operator.attention' // 运营告警：有任务需要人工处置（R9）
 
 export const NOTIFICATION_TEMPLATES: readonly NotificationTemplate[] = [
   'proposal.pending',
   'proposal.accepted',
   'connection.introduced',
   'connection.followup',
+  'operator.attention',
 ] as const
 
 export function isNotificationTemplate(value: unknown): value is NotificationTemplate {
@@ -106,6 +108,17 @@ export function renderNotification(input: RenderInput): RenderedNotification {
           body: [
             `「${org}」想了解你这条连接${mission ? `（任务：${mission}）` : ''}的进展。`,
             '如果已经聊过了，可以在连接页记录结果；如果暂时没有进展，也可以先放一放。',
+          ].join('\n'),
+        }
+      case 'operator.attention':
+        // 运营告警：收件人是**运营/管理员**，不是成员。
+        // 刻意**不**引用 mission 标题与任何业务文本 —— 告警只需要表达
+        // "有待处置项"，多说一个字都是一次多余的披露面（R9 的防回路 + R4 的纵深防御）。
+        return {
+          subject: '有连接任务需要人工处置',
+          body: [
+            `「${org}」的连接工作流里有任务进入了需要人工处置的状态（死信 / 已接管 / 失败）。`,
+            '请打开运营控制台查看待处置清单，必要时接管或重试；在处置之前，这些任务不会自动重试。',
           ].join('\n'),
         }
     }

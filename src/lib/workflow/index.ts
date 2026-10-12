@@ -88,6 +88,7 @@ export {
 
 // ── 阶段持久化与运营视图 ──
 export {
+  ATTENTION_JOB_STATUSES,
   advanceIntroductionWorkflow,
   ensureIntroductionWorkflow,
   getIntroductionWorkflow,
@@ -138,3 +139,16 @@ export {
   type HookResult,
   type ProposalRef,
 } from './hooks'
+
+// ── 运营告警（R9：死信主动推送）──
+export {
+  DEFAULT_ALERT_ORG_LIMIT,
+  OPERATOR_ALERT_ACTION_URL,
+  OPERATOR_ALERT_TEMPLATE,
+  alertDayKey,
+  alertOperatorsOfAttention,
+  findOrgsWithAttention,
+  listAlertRecipients,
+  operatorAlertDedupeKey,
+  type AttentionAlertReport,
+} from './alerts'

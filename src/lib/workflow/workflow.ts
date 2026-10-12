@@ -256,6 +256,15 @@ const ALL_JOB_STATUSES: WorkflowJobStatus[] = [
   'CANCELLED',
 ]
 
+/**
+ * 「需要人处置」的任务状态。
+ *
+ * ⚠️ 这是**运营视图**（`getWorkflowOverview.needsAttention`）与**运营告警**
+ * （`alerts.ts`）的共同判据 —— 两处必须一致，否则会出现"视图里有红点、
+ * 告警却不触发"（或反之）的静默漂移。故提取为单一来源。
+ */
+export const ATTENTION_JOB_STATUSES: WorkflowJobStatus[] = ['DEAD', 'TAKEN_OVER', 'FAILED']
+
 export async function getWorkflowOverview(
   organizationId: string,
   now: Date = new Date()
@@ -275,7 +284,7 @@ export async function getWorkflowOverview(
   }
 
   const needsAttention = await listWorkflowJobs(organizationId, {
-    statuses: ['DEAD', 'TAKEN_OVER', 'FAILED'],
+    statuses: ATTENTION_JOB_STATUSES,
     limit: 50,
   })
 
