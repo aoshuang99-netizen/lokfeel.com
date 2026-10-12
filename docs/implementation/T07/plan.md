@@ -1,11 +1,20 @@
 # T07 · SaaS Console — 社群经营工作台（开工方案）
 
-> **状态**：🚧 **开工中（Slice 1 + 2 + 3 已落地）**。本文件是设计 + 切片计划 + 验收口径。
+> **状态**：🚧 **开工中（Slice 1 + 2 + 3 已落地并上线 —— 发版 `564802a` / 部署 `6accbb986762`）**。本文件是设计 + 切片计划 + 验收口径。
 > **AC-18 尚未认领** —— 它要求"七屏可达且**无空按钮**"，只有七屏都接上真实数据才算。
 > 已落地 **Slice 1（骨架 + Dashboard）**、**Slice 2（Missions / Members）**、
 > **Slice 3（Connections / Settings）**；
 > Agents / Outcomes 仍在导航里显式标注"施工中"（是 `<span>`，不是死链）——
 > 它们分别等 T09 技术栈拍板与 T08 的成果数据面，**不是**没做，而是依赖未就绪。
+>
+> ⚠️ **已知不一致（Slice 1 起就存在，非 Slice 3 引入，待拍板）**：`src/app/console/layout.tsx`
+> 未登录时把回跳地址**写死**为 `/console`，与该文件头注释「跳登录（保留回跳地址）」不符
+> → 深链（如 `/console/settings`）登录后被送回控制台入口。个人态
+> `src/app/(dashboard)/layout.tsx` 是**按 Referer 保留真实路径**的（两者做法不一致）。
+> 影响仅限"回跳目的地"，不泄漏、不越权（回跳始终落在 `/console` 内，且 `/login` 侧另有
+> `isSafeRedirect` 相对路径校验）。修法 = 对齐个人态布局（约 6 行）。
+> 复验脚本 `verify-t07-prod.mjs` §2 已把该现象**显式打印**（不假装通过），
+> 断言只守「不泄漏到 `/dashboard` 或 `/`」这条真不变量。
 
 ## 0. 任务定义（来自 BACKLOG）
 
@@ -214,3 +223,4 @@ slug 冲突 409 / 非法输入不静默跳过 / 审计不记新值`。
 | 2026-10-12 | 开工：设计 + Slice 1（骨架 / 无组织态 / Dashboard）+ 个人态侧边栏入口。**AC-18 未认领**（七屏未齐）。 |
 | 2026-10-12 | **Slice 2 落地**：Missions（列表 / 详情 / 状态机派生的迁移按钮）+ Members（新建 `GET /api/v1/members` + 成员目录屏）。导航四项 → 两个已就绪。**AC-18 仍未认领**（Connections / Agents / Outcomes / Settings 未做）。 |
 | 2026-10-12 | **Slice 3 落地**：Connections（新建 `GET /api/v1/connections/pipeline` + 连接屏，含停滞标记与同源「可介绍」判据）+ Settings（新建 `GET/PATCH /api/v1/org` + 设置屏，读全员 / 写仅所有者）。顺带把 T05 的可介绍性抽为单一判据。**AC-18 仍未认领**（Agents 等 T09、Outcomes 等 T08）。 |
+| 2026-10-12 | **Slice 2 + Slice 3 发版上线**（`564802a` / 部署 `6accbb986762` @ 10:51Z，**无 schema 变更**）。上线复验 **43/43**（`verify-t07-prod.mjs` 扩展至 Slice 1–3）· T06 25/25 · T04 19/19 · 窗口期 13/13。**发版前基线 19 通过 / 10 失败**，10 处精确落在未上线的 Slice 2/3 面 ⇒ 脚本能区分「路由缺失」与「已上线但被守卫拦下」。同时记录一处**既有**不一致（`console/layout.tsx` 未登录回跳写死 `/console`，与其注释「保留回跳地址」不符）→ 待拍板。**AC-18 仍未认领**。 |
