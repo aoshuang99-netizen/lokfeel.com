@@ -64,8 +64,10 @@
   <div class="meta">
     <span>代码提交 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">165ccf7</code></span>
     <span>基线 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">83f4be9</code></span>
+    <span>发布提交 <code style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28);color:#fff">233669e</code></span>
     <span>2026-10-12</span>
     <span>分支 main</span>
+    <span>生产已上线（C2 + C3）</span>
     <span>AC-07 <b>通过</b> · AC-09 <b>通过</b> · AC-14 <b>通过</b> · AC-17 <b>通过</b></span>
   </div>
 </header>
@@ -77,8 +79,42 @@
   <div class="kpi ok"><div class="n">8/8</div><div class="l">E2E（含故障注入，可重复执行）</div></div>
   <div class="kpi ok"><div class="n">0</div><div class="l">tsc 类型错误</div></div>
   <div class="kpi ok"><div class="n">0 / 0</div><div class="l">ESLint error / warning（T06 面）</div></div>
-  <div class="kpi ok"><div class="n">108</div><div class="l">迁移对账项（C0–C3）全绿</div></div>
+  <div class="kpi ok"><div class="n">107</div><div class="l">迁移对账项（C0–C3）全绿</div></div>
   <div class="kpi warn"><div class="n">1</div><div class="l">标 BLOCKED（真实邮件外发，缺凭据）</div></div>
+</div>
+
+<h2>0. 上线记录（T05 + T06 同批发版）</h2>
+<div class="okbox">
+  <b>发布提交 <code>233669e</code></b> · 自定义域 <code>app.lokfeel.com</code> · 部署 <code>6acc86bb3a0a</code> 于 2026-10-12 15:07 (CST) 发布。
+  本刀之前，main 上 T05（<code>75897d3</code>）与 T06（<code>165ccf7</code>）两次交付都带跳过标记、<b>未触发构建</b> ——
+  生产一直停在 T04。本次先把生产库的 C2 + C3 补齐，再推一个<b>不带</b>跳过标记的发布提交，两刀一起上线。
+</div>
+<table>
+<caption>迁移与上线证据（全部实测，非推断）</caption>
+<tr><th>步骤</th><th>命令 / 判据</th><th>结果</th></tr>
+<tr><td>迁移前基线快照</td><td><code>node scripts/qa/db-snapshot.mjs before</code></td><td>49 表；<code>User</code> 12922 · <code>Profile</code> 11887 · <code>Organization</code> 1</td></tr>
+<tr><td>只读预览 SQL</td><td><code>migrate.mjs plan --batch=C2</code></td><td>仅 <code>CREATE TABLE/INDEX IF NOT EXISTS</code>，无 ALTER / DROP</td></tr>
+<tr><td>应用 C2（T05）</td><td><code>migrate.mjs apply --batch=C2 --yes</code></td><td>✅ 12 条语句全 ok</td></tr>
+<tr><td>应用 C3（T06）</td><td><code>migrate.mjs apply --batch=C3 --yes</code></td><td>✅ 13 条语句全 ok</td></tr>
+<tr><td>对账</td><td><code>migrate.mjs verify</code></td><td>✅ <b>107/107</b>（含软引用反向断言）</td></tr>
+<tr><td>迁移后对照</td><td><code>db-snapshot.mjs diff before after</code></td><td>✅ 49 → 54 表，新增仅 C2/C3 五张；<b>既有表行数全部未变</b></td></tr>
+<tr><td>发版</td><td><code>bash scripts/push-main.sh</code></td><td>✅ <code>4e47d70..233669e</code>；Netlify 构建 <code>ready</code></td></tr>
+<tr><td>线上复验（窗口期内）</td><td><code>verify-public-origin.mjs</code></td><td>✅ 13/13，<b>0 处</b>部署专用域名泄漏</td></tr>
+<tr><td>线上复验（T06 面）</td><td><code>verify-t06-prod.mjs</code></td><td>✅ 25/25（含 cron 实跑 200）</td></tr>
+<tr><td>回归（T04）</td><td><code>verify-t04-prod.mjs</code></td><td>✅ 19/19</td></tr>
+</table>
+<div class="note">
+  <b>最硬的一条证据</b>：带真实 <code>CRON_SECRET</code> 在生产打一次驱动器 → <b>200</b> 且返回结构化 tick 摘要
+  （<code>claimed=0 · succeeded=0 · reconcile.scanned=0</code>）。<code>runWorkflowTick()</code> 第一步就是查 <code>WorkflowJob</code>，
+  表不存在必然 500 —— 所以这条 200 同时证明了「代码已上线」+「线上运行时真的读得到 C3 三张表」。
+  公开页返回 200 是证明不了任何事的（公开页永远是 200）。
+</div>
+<div class="danger">
+  🟡 <b>既有环境缺口（非本次回归）</b>：<code>verify-login-realpath.mjs</code> 12 项失败 —— 但根因不是发布窗口期
+  （同源守卫<b>没有</b> 403，端点回的是业务 401 <code>Invalid email or password</code>；cookie host 断言反而通过）。
+  本地直连生产库比对 bcrypt 哈希后确认：<b>生产库里根本没有 <code>qa.male@ / qa.female@lokfeel.com</code> 这两个账号</b>
+  （此前被清理脚本删除，<code>User</code> 12922 行里无匹配）。因此「真实登录路径」这一层在**本刀之前就已无法取证**。
+  修复 = 重跑 <code>scripts/qa/create-qa-accounts.mjs</code>（会向生产写 2 个测试用户，需单独授权）。
 </div>
 
 <h2>1. 交付了什么</h2>

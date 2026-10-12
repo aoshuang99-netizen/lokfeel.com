@@ -27,7 +27,9 @@
 | 项 | 值 |
 |---|---|
 | 交付提交 | `165ccf7` — `feat(t06): 可靠介绍与跟进状态机 —— outbox 引擎、统一投递出口与运营视图`（含 `[skip netlify]`） |
-| 本文档回填 | 紧随其后的文档提交 |
+| 文档提交 | `4e47d70` — 四件套 / BACKLOG / 交付报告（含 `[skip netlify]`） |
+| **发布提交** | **`233669e`** — `chore(release): 发布 T05 双边同意 + T06 工作流状态机 —— 生产迁移 C2/C3 已应用`（**不带**跳过标记 → 触发构建） |
+| 生产部署 | `6acc86bb3a0a`，`ready` @ 2026-10-12 15:07 (CST)，域 `app.lokfeel.com` |
 | 分支 | `main`（`allowed_branches=['main']`：推 main 才发版） |
 
 > ⚠️ `[skip netlify]` 会被**扫描整条提交信息（含正文）** —— 发布提交正文里**别写出它**，否则自伤静默跳过构建。
@@ -181,3 +183,60 @@ API 单测（直接 import handler）永远是绿的。
    且 `maxAttempts` 兜底。反向默认会让一次网络抖动**永久**放弃一条真实通知，且无人发现。
 4. **`operatorContext` 以发起提案的运营身份执行**：队列**不产生新权限**。
    若该运营已离职/降级 → `permanent` → FAILED 等人工接管，而不是由"系统"越权代做。
+
+---
+
+## 5. 生产上线记录（与 T05 同批）
+
+### 5.1 为什么是"先迁移、后发版"这个顺序
+
+C3 是**纯新增**但**代码依赖它**：发版后线上运行时第一步就查 `WorkflowJob`。
+若先发版，那么从构建完成到迁移完成之间的所有 `workflow-tick` 都会 500
+（cron 由平台按小时触发，窗口不可控）。所以顺序固定为：
+
+```
+基线快照 → 只读 plan → apply C2 → apply C3 → verify → 发布提交（不带跳过标记）
+```
+
+### 5.2 迁移取证
+
+| 步骤 | 命令 | 结果 |
+|---|---|---|
+| 迁移前基线 | `node scripts/qa/db-snapshot.mjs before`（**新脚本**） | 49 表；`User` 12922 · `Profile` 11887 · `Organization` 1 · `Membership` 0 |
+| 只读预览 | `migrate.mjs plan --batch=C2` | 仅 `CREATE TABLE/INDEX IF NOT EXISTS`，**无** ALTER / DROP |
+| 应用 C2 | `migrate.mjs apply --batch=C2 --yes` | ✅ 12 条语句全 ok |
+| 应用 C3 | `migrate.mjs apply --batch=C3 --yes` | ✅ 13 条语句全 ok |
+| 对账 | `migrate.mjs verify` | ✅ **107/107**（含软引用**反向**断言） |
+| 迁移后对照 | `node scripts/qa/db-snapshot.mjs diff before after`（**新脚本**） | ✅ 49 → 54 表；新增仅 C2/C3 五张；**既有表行数全部未变** |
+
+> `db-snapshot.mjs diff` 会**主动证伪**：若出现预期外的新增表、任何表消失、或既有表行数变化，
+> 它 exit 1 并列出差异 —— 把"零影响"从一句声明变成一条可复跑的判据。
+
+### 5.3 发布与线上复验
+
+| 项 | 结果 |
+|---|---|
+| 发布提交 | `233669e` → Netlify 部署 `6acc86bb3a0a` `ready` @ 2026-10-12 15:07 (CST) |
+| `verify-public-origin`（窗口期内） | ✅ **13/13**，0 处部署专用域名泄漏 |
+| `verify-t06-prod`（**新脚本**） | ✅ **25/25** |
+| `verify-t04-prod`（回归） | ✅ **19/19** |
+| `verify-login-realpath` | ❌ 12 项失败 → 见下 5.4（**既有环境缺口**，非本刀回归） |
+
+`verify-t06-prod` 覆盖：健康与 DB 可达；T06 四个运营端点 + T05 两个连接端点**匿名全拒**（401+JSON，
+用来**反证**路由确实已注册 —— 404 HTML 就说明代码没上线）；cron 守卫（无 token / 错 token 一律 401）；
+披露负测（匿名响应体不得含 `dedupeKey` / `payload` / `recipientId` 等字段名）；窗口期域名泄漏扫描。
+
+### 5.4 🟡 发现：生产库里没有 QA 账号（本刀之前就存在）
+
+`verify-login-realpath` 12 项失败，但**根因不是发布窗口期**：
+同源守卫**没有** 403（端点正常处理了请求并回业务 401 `Invalid email or password`），
+cookie host 断言反而**通过**。为定位，新增 `scripts/qa/probe-qa-login.mjs`：
+它**本地直连生产库**取 `User.password` 哈希并用 bcrypt 实比对。结论确定：
+
+- `qa.male@lokfeel.com` / `qa.female@lokfeel.com` **在库里不存在** → 本地密码再怎么对也没用；
+- `User` 12922 行、未软删 12922 行、`Membership` 0 行 —— 本次发版**未删除任何用户**。
+
+即：**"真实登录路径"这一层复验，在本刀之前就已无法取证**（账号被早前的清理脚本删掉了）。
+修复 = 重跑 `scripts/qa/create-qa-accounts.mjs`（幂等、会向生产写 2 个测试用户）—— 属生产写入，需单独授权。
+⇒ 这是本项目 QA 体系的一个**结构性盲区**：清理脚本把复验的前置条件也清掉了，两者没有联动。
+

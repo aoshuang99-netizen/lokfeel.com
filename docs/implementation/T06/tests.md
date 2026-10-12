@@ -132,10 +132,37 @@ npx playwright test -c playwright.t02.config.ts tests/e2e/workflow-execution.spe
 | 复用回归 | `npx jest tests/connection` `npx jest tests/tenancy` | ✅ 全绿（钩子接入未破坏 T05 / T01） |
 | Lint | `npm run lint` | 见 §6 |
 | 脚本声明 | `npm run check:script-decls` | ✅（`.mjs` 是 tsc 死角，故有此独立守卫） |
-| 迁移对账 | `node scripts/connection/migrate.mjs verify` | ✅ 108 项（C0–C3） |
+| 迁移对账 | `node scripts/connection/migrate.mjs verify` | ✅ **107 项**（C0–C3；脚本自报 `107/107`） |
 | E2E | 见 §1 | 需本地 dev + CRON_SECRET；**未在 CI 跑**（8G 本机内存约束） |
+
+> 📌 计数口径：早前记的「108 项」是把脚本末尾的 `✅ 全部通过`**汇总行**也 `grep -c '✅'` 数了进去。
+> 脚本自报 107，以脚本为准。（本条即"统计口径也算判据"的一个小实例。）
 
 ## 6. Lint
 
 见 §5 实际输出；新增源码与测试均以 `/* eslint-disable @typescript-eslint/no-explicit-any */`
 只在**测试文件**顶部开启（mock 需要），源码不引入 any。
+
+## 7. 生产上线复验（新增，2026-10-12）
+
+单测与 E2E 都跑在**本地隔离库**上 —— 它们能证明逻辑正确，**不能**证明线上部署真的包含这些代码。
+本刀为此补了生产侧复验脚本，并把判据设计成"能证伪"的：
+
+| 脚本 | 覆盖 | 结果 |
+|---|---|---|
+| `scripts/qa/verify-t06-prod.mjs`（**新**，`npm run verify:t06-prod`） | 健康 + DB 可达；4 个 T06 端点 + 2 个 T05 端点匿名全拒；cron 守卫；披露负测；窗口期域名扫描；**真实 `CRON_SECRET` 实跑驱动器** | ✅ **25/25** |
+| `scripts/qa/verify-t04-prod.mjs` | T04 页面/接口回归 + 披露负测 + 窗口期 | ✅ 19/19 |
+| `scripts/qa/verify-public-origin.mjs` | OAuth/登录跳转一律落在公开域名 | ✅ 13/13（窗口期内，0 泄漏） |
+| `scripts/qa/verify-login-realpath.mjs` | 真实登录路径（自定义端点 + 同源守卫 + 会话下发） | ❌ 12 失败 → **既有环境缺口**，见 `changes.md` §5.4 |
+| `scripts/qa/probe-qa-login.mjs`（**新**，`npm run qa:probe:login`） | 直连生产库 + bcrypt 比对，**定性**登录失败的真因 | ✔ 定位出：生产库无 QA 账号 |
+| `scripts/qa/db-snapshot.mjs`（**新**，`npm run qa:db:snapshot`） | 迁移前后基线快照 + `diff` 主动证伪 | ✅ 49 → 54 表，既有表行数未变 |
+
+### 判据为什么必须这样设计
+
+1. **"返回 200"证明不了任何事** —— 公开页永远 200。故对**受保护**端点断言 `401 + application/json`：
+   401 说明"路由在 + 鉴权生效"；若拿到 Next 的 HTML 404，反而是"代码没上线"的铁证。
+2. **只有 cron 实跑能证明运行时读得到新表**：`runWorkflowTick()` 第一步查 `WorkflowJob`，
+   表不存在必然 500。所以"带真实 `CRON_SECRET` → 200 + 结构化 tick 摘要"是本刀最硬的一条线上证据。
+3. **验证一个失败要先分清它的成因**：登录 401 既可能是窗口期故障、也可能是凭据过期。
+   只看状态码分不出来 → 于是新增 `probe-qa-login.mjs` 从库里取哈希本地比对，把结论钉死。
+

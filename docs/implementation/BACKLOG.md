@@ -5,8 +5,9 @@
 >
 > | 项 | 值 |
 > |---|---|
-> | 真实仓库基线 | `cca7b80`（`main`，**已推送 GitHub + 已发布 Netlify 生产**；上一轮生产复验 T04 19/19 · T03 14/14 · 窗口期 13/13） |
-> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**（见 T05 卡片的交付记录）、**T06 Workflow Execution**（见 T06 卡片的交付记录） |
+> | 真实仓库基线 | `233669e`（`main`，**已推送 GitHub + 已发布 Netlify 生产**；本批生产复验 **T06 25/25 · T04 19/19 · 窗口期 13/13**，迁移对账 **107/107**） |
+> | 上一发布基线 | `0c95b89`（T04）—— 此前 T05/T06 两次交付均带跳过标记未发版，本次一并发版补齐 |
+> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**（见 T05 卡片的交付记录）、**T06 Workflow Execution**（见 T06 卡片的交付记录，**已上线**） |
 > | 剩余 | **T07–T12，共 6 个任务** |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
 > | 规划背景 | 《LokFeel SaaS 核心功能架构与开源技术集成方案 V1.0》：10 大模块 / 6 个自研引擎 / P0–P3 / 12 项 Codex 实施清单 |
@@ -189,10 +190,18 @@
 > - 迁移：**C3 批次**（`WorkflowJob` / `NotificationDelivery` / `IntroductionWorkflow`；纯新增，无 ALTER/DROP）
 >   ✅ **生产库已应用**（2026-10-12，与 C2 同批）：`verify` **107/107** 全绿（含软引用反向断言）；
 >   迁移前后快照 `User` 12922 / `Profile` 11887 行数未变 → **零影响**
-> - **发版**：本次打破 T02 以来的 `[skip netlify]` 惯例，首次推**不带跳过标记**的发布提交（C2 + C3 已就位后才发版）
+> - **发版**：**`233669e`** —— `chore(release): 发布 T05 双边同意 + T06 工作流状态机 —— 生产迁移 C2/C3 已应用`。
+>   本次打破 T02 以来的 `[skip netlify]` 惯例，推**不带跳过标记**的发布提交（C2 + C3 应用到生产后才发版），
+>   把积压的 T05 + T06 一起带上生产。部署 `6acc86bb3a0a` 于 2026-10-12 15:07 (CST) `ready`。
+>   发版后复验：`verify-t06-prod` **25/25**（含带真实 `CRON_SECRET` 在生产实跑驱动器 → 200 + tick 结构化摘要）、
+>   `verify-t04-prod` **19/19**、`verify-public-origin` **13/13（窗口期内，0 泄漏）**。
+>   🟡 **发现既有环境缺口**：生产库里**不存在** `qa.male@ / qa.female@lokfeel.com`（`probe-qa-login.mjs` 直连比对确认），
+>   因此 `verify-login-realpath` 12 项失败属**本刀之前就存在**的取证盲区（同源守卫未 403、cookie host 断言反而通过，
+>   非发布窗口期故障）。修复 = 重跑 `scripts/qa/create-qa-accounts.mjs`（需单独授权，会向生产写 2 个测试用户）。
 > - 代码：`src/lib/workflow/`（8 文件 / 2731 行）、5 个 API 端点、4 个 T05 路由接钩子、能力矩阵 +2
 > - 测试：`tests/workflow/`（8 套 / **169 用例**）+ `tests/e2e/workflow-execution.spec.ts`（AC-07/09/14/17 故障注入）
-> - 门禁：`tsc --noEmit` **0 error**；`jest tests/workflow tests/connection tests/tenancy` 全绿；`eslint` 0 error / 0 warning；`check:script-decls` ✅；`connection:migrate verify` 108 项 ✅
+> - 门禁：`tsc --noEmit` **0 error**；`jest tests/workflow tests/connection tests/tenancy` 全绿；`eslint` 0 error / 0 warning；`check:script-decls` ✅；`connection:migrate verify` **107 项** ✅
+>   （注：早前记的「108 项」是把脚本末尾的 `✅ 全部通过` 汇总行也数进去了 —— 脚本自报 `107/107`，以脚本为准）
 > - 结论：**AC-07 / AC-09 / AC-14 / AC-17 全部 PASS**。真实邮件外发 = `BLOCKED`（缺 `RESEND_API_KEY`，用户明确排除；接上 key 后 `CAPTURED` 自动变 `SENT`，零代码改动）
 > - 交接 T07/T08：① 阶段机的 `ACTION_COMPLETED` / `OUTCOME_RECORDED` **尚无自动触发点**，等 T08 的"成果记录"入口；
 >   ② 运营视图 API（`/api/v1/workflow/*`）已就绪，T07 的 Console 可直接消费；
