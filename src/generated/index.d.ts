@@ -88,6 +88,28 @@ export type ConnectionProposal = $Result.DefaultSelection<Prisma.$ConnectionProp
  */
 export type ProposalDecision = $Result.DefaultSelection<Prisma.$ProposalDecisionPayload>
 /**
+ * Model WorkflowJob
+ * Outbox / 任务队列。**一张表同时承载待执行、重试、死信、接管** ——
+ * 拆成多表会让"一个任务的一生"跨三张表，而 AC-17 要求能一眼看清它的处境。
+ */
+export type WorkflowJob = $Result.DefaultSelection<Prisma.$WorkflowJobPayload>
+/**
+ * Model NotificationDelivery
+ * 消息投递记录（**审计面**：到底给谁、发了什么、走的哪个渠道、结果如何）。
+ * 
+ * 与 `Notification`（core.prisma，站内信的**收件箱**）分工：
+ * - `Notification`   → 用户能看到的那条消息（可能被已读/删除）。
+ * - `NotificationDelivery` → 我们**投递过**这件事的记录（不可被用户删除，是 AC-09 的证据）。
+ * 二者不是重复建模：一条投递可能因为去重而**不**产生新 `Notification`，
+ * 也可能在 `Notification` 被删后仍需保留投递证据。
+ */
+export type NotificationDelivery = $Result.DefaultSelection<Prisma.$NotificationDeliveryPayload>
+/**
+ * Model IntroductionWorkflow
+ * 介绍工作流实例（**一提案一条**）。记录 AC-14 那条链走到哪一步、每一步何时发生。
+ */
+export type IntroductionWorkflow = $Result.DefaultSelection<Prisma.$IntroductionWorkflowPayload>
+/**
  * Model User
  * 
  */
@@ -382,6 +404,59 @@ export const ProposalDecisionKind: {
 };
 
 export type ProposalDecisionKind = (typeof ProposalDecisionKind)[keyof typeof ProposalDecisionKind]
+
+
+export const WorkflowJobKind: {
+  PROPOSAL_CREATED: 'PROPOSAL_CREATED',
+  CONSENT_ACCEPTED: 'CONSENT_ACCEPTED',
+  INTRODUCE_CONNECTION: 'INTRODUCE_CONNECTION',
+  COORDINATION_FOLLOWUP: 'COORDINATION_FOLLOWUP'
+};
+
+export type WorkflowJobKind = (typeof WorkflowJobKind)[keyof typeof WorkflowJobKind]
+
+
+export const WorkflowJobStatus: {
+  PENDING: 'PENDING',
+  RUNNING: 'RUNNING',
+  SUCCEEDED: 'SUCCEEDED',
+  FAILED: 'FAILED',
+  DEAD: 'DEAD',
+  TAKEN_OVER: 'TAKEN_OVER',
+  CANCELLED: 'CANCELLED'
+};
+
+export type WorkflowJobStatus = (typeof WorkflowJobStatus)[keyof typeof WorkflowJobStatus]
+
+
+export const NotificationChannel: {
+  IN_APP: 'IN_APP',
+  EMAIL: 'EMAIL'
+};
+
+export type NotificationChannel = (typeof NotificationChannel)[keyof typeof NotificationChannel]
+
+
+export const NotificationDeliveryStatus: {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  CAPTURED: 'CAPTURED',
+  FAILED: 'FAILED'
+};
+
+export type NotificationDeliveryStatus = (typeof NotificationDeliveryStatus)[keyof typeof NotificationDeliveryStatus]
+
+
+export const WorkflowStage: {
+  PROPOSED: 'PROPOSED',
+  CONSENT_PENDING: 'CONSENT_PENDING',
+  INTRODUCED: 'INTRODUCED',
+  COORDINATING: 'COORDINATING',
+  ACTION_COMPLETED: 'ACTION_COMPLETED',
+  OUTCOME_RECORDED: 'OUTCOME_RECORDED'
+};
+
+export type WorkflowStage = (typeof WorkflowStage)[keyof typeof WorkflowStage]
 
 
 export const AuditCategory: {
@@ -845,6 +920,26 @@ export type ProposalDecisionKind = $Enums.ProposalDecisionKind
 
 export const ProposalDecisionKind: typeof $Enums.ProposalDecisionKind
 
+export type WorkflowJobKind = $Enums.WorkflowJobKind
+
+export const WorkflowJobKind: typeof $Enums.WorkflowJobKind
+
+export type WorkflowJobStatus = $Enums.WorkflowJobStatus
+
+export const WorkflowJobStatus: typeof $Enums.WorkflowJobStatus
+
+export type NotificationChannel = $Enums.NotificationChannel
+
+export const NotificationChannel: typeof $Enums.NotificationChannel
+
+export type NotificationDeliveryStatus = $Enums.NotificationDeliveryStatus
+
+export const NotificationDeliveryStatus: typeof $Enums.NotificationDeliveryStatus
+
+export type WorkflowStage = $Enums.WorkflowStage
+
+export const WorkflowStage: typeof $Enums.WorkflowStage
+
 export type AuditCategory = $Enums.AuditCategory
 
 export const AuditCategory: typeof $Enums.AuditCategory
@@ -1221,6 +1316,36 @@ export class PrismaClient<
     * ```
     */
   get proposalDecision(): Prisma.ProposalDecisionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.workflowJob`: Exposes CRUD operations for the **WorkflowJob** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more WorkflowJobs
+    * const workflowJobs = await prisma.workflowJob.findMany()
+    * ```
+    */
+  get workflowJob(): Prisma.WorkflowJobDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.notificationDelivery`: Exposes CRUD operations for the **NotificationDelivery** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more NotificationDeliveries
+    * const notificationDeliveries = await prisma.notificationDelivery.findMany()
+    * ```
+    */
+  get notificationDelivery(): Prisma.NotificationDeliveryDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.introductionWorkflow`: Exposes CRUD operations for the **IntroductionWorkflow** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more IntroductionWorkflows
+    * const introductionWorkflows = await prisma.introductionWorkflow.findMany()
+    * ```
+    */
+  get introductionWorkflow(): Prisma.IntroductionWorkflowDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.user`: Exposes CRUD operations for the **User** model.
@@ -2040,6 +2165,9 @@ export namespace Prisma {
     IdempotencyRecord: 'IdempotencyRecord',
     ConnectionProposal: 'ConnectionProposal',
     ProposalDecision: 'ProposalDecision',
+    WorkflowJob: 'WorkflowJob',
+    NotificationDelivery: 'NotificationDelivery',
+    IntroductionWorkflow: 'IntroductionWorkflow',
     User: 'User',
     Account: 'Account',
     Session: 'Session',
@@ -2091,7 +2219,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
+      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2980,6 +3108,228 @@ export namespace Prisma {
           count: {
             args: Prisma.ProposalDecisionCountArgs<ExtArgs>
             result: $Utils.Optional<ProposalDecisionCountAggregateOutputType> | number
+          }
+        }
+      }
+      WorkflowJob: {
+        payload: Prisma.$WorkflowJobPayload<ExtArgs>
+        fields: Prisma.WorkflowJobFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.WorkflowJobFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.WorkflowJobFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>
+          }
+          findFirst: {
+            args: Prisma.WorkflowJobFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.WorkflowJobFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>
+          }
+          findMany: {
+            args: Prisma.WorkflowJobFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>[]
+          }
+          create: {
+            args: Prisma.WorkflowJobCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>
+          }
+          createMany: {
+            args: Prisma.WorkflowJobCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.WorkflowJobCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>[]
+          }
+          delete: {
+            args: Prisma.WorkflowJobDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>
+          }
+          update: {
+            args: Prisma.WorkflowJobUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>
+          }
+          deleteMany: {
+            args: Prisma.WorkflowJobDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.WorkflowJobUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.WorkflowJobUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>[]
+          }
+          upsert: {
+            args: Prisma.WorkflowJobUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WorkflowJobPayload>
+          }
+          aggregate: {
+            args: Prisma.WorkflowJobAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateWorkflowJob>
+          }
+          groupBy: {
+            args: Prisma.WorkflowJobGroupByArgs<ExtArgs>
+            result: $Utils.Optional<WorkflowJobGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.WorkflowJobCountArgs<ExtArgs>
+            result: $Utils.Optional<WorkflowJobCountAggregateOutputType> | number
+          }
+        }
+      }
+      NotificationDelivery: {
+        payload: Prisma.$NotificationDeliveryPayload<ExtArgs>
+        fields: Prisma.NotificationDeliveryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.NotificationDeliveryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.NotificationDeliveryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          findFirst: {
+            args: Prisma.NotificationDeliveryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.NotificationDeliveryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          findMany: {
+            args: Prisma.NotificationDeliveryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>[]
+          }
+          create: {
+            args: Prisma.NotificationDeliveryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          createMany: {
+            args: Prisma.NotificationDeliveryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.NotificationDeliveryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>[]
+          }
+          delete: {
+            args: Prisma.NotificationDeliveryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          update: {
+            args: Prisma.NotificationDeliveryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          deleteMany: {
+            args: Prisma.NotificationDeliveryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.NotificationDeliveryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.NotificationDeliveryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>[]
+          }
+          upsert: {
+            args: Prisma.NotificationDeliveryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationDeliveryPayload>
+          }
+          aggregate: {
+            args: Prisma.NotificationDeliveryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateNotificationDelivery>
+          }
+          groupBy: {
+            args: Prisma.NotificationDeliveryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<NotificationDeliveryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.NotificationDeliveryCountArgs<ExtArgs>
+            result: $Utils.Optional<NotificationDeliveryCountAggregateOutputType> | number
+          }
+        }
+      }
+      IntroductionWorkflow: {
+        payload: Prisma.$IntroductionWorkflowPayload<ExtArgs>
+        fields: Prisma.IntroductionWorkflowFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.IntroductionWorkflowFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.IntroductionWorkflowFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>
+          }
+          findFirst: {
+            args: Prisma.IntroductionWorkflowFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.IntroductionWorkflowFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>
+          }
+          findMany: {
+            args: Prisma.IntroductionWorkflowFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>[]
+          }
+          create: {
+            args: Prisma.IntroductionWorkflowCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>
+          }
+          createMany: {
+            args: Prisma.IntroductionWorkflowCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.IntroductionWorkflowCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>[]
+          }
+          delete: {
+            args: Prisma.IntroductionWorkflowDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>
+          }
+          update: {
+            args: Prisma.IntroductionWorkflowUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>
+          }
+          deleteMany: {
+            args: Prisma.IntroductionWorkflowDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.IntroductionWorkflowUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.IntroductionWorkflowUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>[]
+          }
+          upsert: {
+            args: Prisma.IntroductionWorkflowUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IntroductionWorkflowPayload>
+          }
+          aggregate: {
+            args: Prisma.IntroductionWorkflowAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateIntroductionWorkflow>
+          }
+          groupBy: {
+            args: Prisma.IntroductionWorkflowGroupByArgs<ExtArgs>
+            result: $Utils.Optional<IntroductionWorkflowGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.IntroductionWorkflowCountArgs<ExtArgs>
+            result: $Utils.Optional<IntroductionWorkflowCountAggregateOutputType> | number
           }
         }
       }
@@ -5782,6 +6132,9 @@ export namespace Prisma {
     idempotencyRecord?: IdempotencyRecordOmit
     connectionProposal?: ConnectionProposalOmit
     proposalDecision?: ProposalDecisionOmit
+    workflowJob?: WorkflowJobOmit
+    notificationDelivery?: NotificationDeliveryOmit
+    introductionWorkflow?: IntroductionWorkflowOmit
     user?: UserOmit
     account?: AccountOmit
     session?: SessionOmit
@@ -6545,6 +6898,9 @@ export namespace Prisma {
     socialIntents: number
     connectionProposals: number
     proposalDecisions: number
+    workflowJobs: number
+    notificationDeliveries: number
+    introductionWorkflows: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6556,6 +6912,9 @@ export namespace Prisma {
     socialIntents?: boolean | OrganizationCountOutputTypeCountSocialIntentsArgs
     connectionProposals?: boolean | OrganizationCountOutputTypeCountConnectionProposalsArgs
     proposalDecisions?: boolean | OrganizationCountOutputTypeCountProposalDecisionsArgs
+    workflowJobs?: boolean | OrganizationCountOutputTypeCountWorkflowJobsArgs
+    notificationDeliveries?: boolean | OrganizationCountOutputTypeCountNotificationDeliveriesArgs
+    introductionWorkflows?: boolean | OrganizationCountOutputTypeCountIntroductionWorkflowsArgs
   }
 
   // Custom InputTypes
@@ -6623,6 +6982,27 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountProposalDecisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProposalDecisionWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountWorkflowJobsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WorkflowJobWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountNotificationDeliveriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: NotificationDeliveryWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountIntroductionWorkflowsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: IntroductionWorkflowWhereInput
   }
 
 
@@ -18632,6 +19012,7 @@ export namespace Prisma {
     proposer?: boolean | UserDefaultArgs<ExtArgs>
     candidate?: boolean | UserDefaultArgs<ExtArgs>
     decisions?: boolean | ConnectionProposal$decisionsArgs<ExtArgs>
+    introductionWorkflow?: boolean | ConnectionProposal$introductionWorkflowArgs<ExtArgs>
     _count?: boolean | ConnectionProposalCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["connectionProposal"]>
 
@@ -18695,6 +19076,7 @@ export namespace Prisma {
     proposer?: boolean | UserDefaultArgs<ExtArgs>
     candidate?: boolean | UserDefaultArgs<ExtArgs>
     decisions?: boolean | ConnectionProposal$decisionsArgs<ExtArgs>
+    introductionWorkflow?: boolean | ConnectionProposal$introductionWorkflowArgs<ExtArgs>
     _count?: boolean | ConnectionProposalCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ConnectionProposalIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -18718,6 +19100,10 @@ export namespace Prisma {
       proposer: Prisma.$UserPayload<ExtArgs>
       candidate: Prisma.$UserPayload<ExtArgs>
       decisions: Prisma.$ProposalDecisionPayload<ExtArgs>[]
+      /**
+       * T06：一提案至多一条介绍工作流（1:1）。提案删除时工作流级联删除。
+       */
+      introductionWorkflow: Prisma.$IntroductionWorkflowPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -19155,6 +19541,7 @@ export namespace Prisma {
     proposer<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     candidate<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     decisions<T extends ConnectionProposal$decisionsArgs<ExtArgs> = {}>(args?: Subset<T, ConnectionProposal$decisionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    introductionWorkflow<T extends ConnectionProposal$introductionWorkflowArgs<ExtArgs> = {}>(args?: Subset<T, ConnectionProposal$introductionWorkflowArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -19616,6 +20003,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ProposalDecisionScalarFieldEnum | ProposalDecisionScalarFieldEnum[]
+  }
+
+  /**
+   * ConnectionProposal.introductionWorkflow
+   */
+  export type ConnectionProposal$introductionWorkflowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    where?: IntroductionWorkflowWhereInput
   }
 
   /**
@@ -20744,6 +21150,3715 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ProposalDecisionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model WorkflowJob
+   */
+
+  export type AggregateWorkflowJob = {
+    _count: WorkflowJobCountAggregateOutputType | null
+    _avg: WorkflowJobAvgAggregateOutputType | null
+    _sum: WorkflowJobSumAggregateOutputType | null
+    _min: WorkflowJobMinAggregateOutputType | null
+    _max: WorkflowJobMaxAggregateOutputType | null
+  }
+
+  export type WorkflowJobAvgAggregateOutputType = {
+    attempts: number | null
+    maxAttempts: number | null
+  }
+
+  export type WorkflowJobSumAggregateOutputType = {
+    attempts: number | null
+    maxAttempts: number | null
+  }
+
+  export type WorkflowJobMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    dedupeKey: string | null
+    kind: $Enums.WorkflowJobKind | null
+    status: $Enums.WorkflowJobStatus | null
+    proposalId: string | null
+    missionId: string | null
+    payload: string | null
+    attempts: number | null
+    maxAttempts: number | null
+    nextAttemptAt: Date | null
+    lockedBy: string | null
+    lockedUntil: Date | null
+    lastError: string | null
+    deadLetteredAt: Date | null
+    takenOverBy: string | null
+    takenOverAt: Date | null
+    cancelledAt: Date | null
+    completedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WorkflowJobMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    dedupeKey: string | null
+    kind: $Enums.WorkflowJobKind | null
+    status: $Enums.WorkflowJobStatus | null
+    proposalId: string | null
+    missionId: string | null
+    payload: string | null
+    attempts: number | null
+    maxAttempts: number | null
+    nextAttemptAt: Date | null
+    lockedBy: string | null
+    lockedUntil: Date | null
+    lastError: string | null
+    deadLetteredAt: Date | null
+    takenOverBy: string | null
+    takenOverAt: Date | null
+    cancelledAt: Date | null
+    completedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WorkflowJobCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    dedupeKey: number
+    kind: number
+    status: number
+    proposalId: number
+    missionId: number
+    payload: number
+    attempts: number
+    maxAttempts: number
+    nextAttemptAt: number
+    lockedBy: number
+    lockedUntil: number
+    lastError: number
+    deadLetteredAt: number
+    takenOverBy: number
+    takenOverAt: number
+    cancelledAt: number
+    completedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type WorkflowJobAvgAggregateInputType = {
+    attempts?: true
+    maxAttempts?: true
+  }
+
+  export type WorkflowJobSumAggregateInputType = {
+    attempts?: true
+    maxAttempts?: true
+  }
+
+  export type WorkflowJobMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    dedupeKey?: true
+    kind?: true
+    status?: true
+    proposalId?: true
+    missionId?: true
+    payload?: true
+    attempts?: true
+    maxAttempts?: true
+    nextAttemptAt?: true
+    lockedBy?: true
+    lockedUntil?: true
+    lastError?: true
+    deadLetteredAt?: true
+    takenOverBy?: true
+    takenOverAt?: true
+    cancelledAt?: true
+    completedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WorkflowJobMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    dedupeKey?: true
+    kind?: true
+    status?: true
+    proposalId?: true
+    missionId?: true
+    payload?: true
+    attempts?: true
+    maxAttempts?: true
+    nextAttemptAt?: true
+    lockedBy?: true
+    lockedUntil?: true
+    lastError?: true
+    deadLetteredAt?: true
+    takenOverBy?: true
+    takenOverAt?: true
+    cancelledAt?: true
+    completedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WorkflowJobCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    dedupeKey?: true
+    kind?: true
+    status?: true
+    proposalId?: true
+    missionId?: true
+    payload?: true
+    attempts?: true
+    maxAttempts?: true
+    nextAttemptAt?: true
+    lockedBy?: true
+    lockedUntil?: true
+    lastError?: true
+    deadLetteredAt?: true
+    takenOverBy?: true
+    takenOverAt?: true
+    cancelledAt?: true
+    completedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type WorkflowJobAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WorkflowJob to aggregate.
+     */
+    where?: WorkflowJobWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WorkflowJobs to fetch.
+     */
+    orderBy?: WorkflowJobOrderByWithRelationInput | WorkflowJobOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: WorkflowJobWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WorkflowJobs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WorkflowJobs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned WorkflowJobs
+    **/
+    _count?: true | WorkflowJobCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: WorkflowJobAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: WorkflowJobSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: WorkflowJobMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: WorkflowJobMaxAggregateInputType
+  }
+
+  export type GetWorkflowJobAggregateType<T extends WorkflowJobAggregateArgs> = {
+        [P in keyof T & keyof AggregateWorkflowJob]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateWorkflowJob[P]>
+      : GetScalarType<T[P], AggregateWorkflowJob[P]>
+  }
+
+
+
+
+  export type WorkflowJobGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WorkflowJobWhereInput
+    orderBy?: WorkflowJobOrderByWithAggregationInput | WorkflowJobOrderByWithAggregationInput[]
+    by: WorkflowJobScalarFieldEnum[] | WorkflowJobScalarFieldEnum
+    having?: WorkflowJobScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: WorkflowJobCountAggregateInputType | true
+    _avg?: WorkflowJobAvgAggregateInputType
+    _sum?: WorkflowJobSumAggregateInputType
+    _min?: WorkflowJobMinAggregateInputType
+    _max?: WorkflowJobMaxAggregateInputType
+  }
+
+  export type WorkflowJobGroupByOutputType = {
+    id: string
+    organizationId: string
+    dedupeKey: string
+    kind: $Enums.WorkflowJobKind
+    status: $Enums.WorkflowJobStatus
+    proposalId: string | null
+    missionId: string | null
+    payload: string | null
+    attempts: number
+    maxAttempts: number
+    nextAttemptAt: Date
+    lockedBy: string | null
+    lockedUntil: Date | null
+    lastError: string | null
+    deadLetteredAt: Date | null
+    takenOverBy: string | null
+    takenOverAt: Date | null
+    cancelledAt: Date | null
+    completedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: WorkflowJobCountAggregateOutputType | null
+    _avg: WorkflowJobAvgAggregateOutputType | null
+    _sum: WorkflowJobSumAggregateOutputType | null
+    _min: WorkflowJobMinAggregateOutputType | null
+    _max: WorkflowJobMaxAggregateOutputType | null
+  }
+
+  type GetWorkflowJobGroupByPayload<T extends WorkflowJobGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<WorkflowJobGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof WorkflowJobGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], WorkflowJobGroupByOutputType[P]>
+            : GetScalarType<T[P], WorkflowJobGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type WorkflowJobSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    dedupeKey?: boolean
+    kind?: boolean
+    status?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    payload?: boolean
+    attempts?: boolean
+    maxAttempts?: boolean
+    nextAttemptAt?: boolean
+    lockedBy?: boolean
+    lockedUntil?: boolean
+    lastError?: boolean
+    deadLetteredAt?: boolean
+    takenOverBy?: boolean
+    takenOverAt?: boolean
+    cancelledAt?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["workflowJob"]>
+
+  export type WorkflowJobSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    dedupeKey?: boolean
+    kind?: boolean
+    status?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    payload?: boolean
+    attempts?: boolean
+    maxAttempts?: boolean
+    nextAttemptAt?: boolean
+    lockedBy?: boolean
+    lockedUntil?: boolean
+    lastError?: boolean
+    deadLetteredAt?: boolean
+    takenOverBy?: boolean
+    takenOverAt?: boolean
+    cancelledAt?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["workflowJob"]>
+
+  export type WorkflowJobSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    dedupeKey?: boolean
+    kind?: boolean
+    status?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    payload?: boolean
+    attempts?: boolean
+    maxAttempts?: boolean
+    nextAttemptAt?: boolean
+    lockedBy?: boolean
+    lockedUntil?: boolean
+    lastError?: boolean
+    deadLetteredAt?: boolean
+    takenOverBy?: boolean
+    takenOverAt?: boolean
+    cancelledAt?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["workflowJob"]>
+
+  export type WorkflowJobSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    dedupeKey?: boolean
+    kind?: boolean
+    status?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    payload?: boolean
+    attempts?: boolean
+    maxAttempts?: boolean
+    nextAttemptAt?: boolean
+    lockedBy?: boolean
+    lockedUntil?: boolean
+    lastError?: boolean
+    deadLetteredAt?: boolean
+    takenOverBy?: boolean
+    takenOverAt?: boolean
+    cancelledAt?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type WorkflowJobOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "dedupeKey" | "kind" | "status" | "proposalId" | "missionId" | "payload" | "attempts" | "maxAttempts" | "nextAttemptAt" | "lockedBy" | "lockedUntil" | "lastError" | "deadLetteredAt" | "takenOverBy" | "takenOverAt" | "cancelledAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["workflowJob"]>
+  export type WorkflowJobInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type WorkflowJobIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type WorkflowJobIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+
+  export type $WorkflowJobPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "WorkflowJob"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      /**
+       * **幂等键**（AC-07 的落点）：同一业务动作重复入队只会有一行。
+       * 例：`introduce:<proposalId>`、`proposal-created:<proposalId>`。
+       * 唯一约束 `(organizationId, dedupeKey)` 让并发入队退化为"第二次撞唯一键"，
+       * 而不是"两条任务各投递一次"。
+       */
+      dedupeKey: string
+      kind: $Enums.WorkflowJobKind
+      status: $Enums.WorkflowJobStatus
+      /**
+       * 软引用（见文件头说明）：不建 FK，删提案不抹掉投递痕迹。
+       */
+      proposalId: string | null
+      missionId: string | null
+      /**
+       * 载荷（JSON 文本，经 json-codec 读写）。
+       * ⚠️ **禁止**放 rationale 全文与对侧档案字段 —— 任务是内部调度凭据，
+       * 不是信息披露通道。披露只能经 `discloseSubject()`（T03 的唯一出口）。
+       */
+      payload: string | null
+      attempts: number
+      maxAttempts: number
+      /**
+       * 下次可被领取的时间。退避 = 指数 + 抖动（见 `src/lib/workflow/backoff.ts`）。
+       */
+      nextAttemptAt: Date
+      /**
+       * 领取者标识（worker 实例名）。租约到期后他人可重新领取。
+       */
+      lockedBy: string | null
+      lockedUntil: Date | null
+      /**
+       * 最后一次失败原因（截断存储，仅供排障。**禁止**写入正文内容）。
+       */
+      lastError: string | null
+      /**
+       * 进入死信的时间。
+       */
+      deadLetteredAt: Date | null
+      /**
+       * 人工接管者与时间。接管后自动重试停止。
+       */
+      takenOverBy: string | null
+      takenOverAt: Date | null
+      /**
+       * 被上游取消的时间（AC-05：撤销要能取消待发任务）。
+       */
+      cancelledAt: Date | null
+      completedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["workflowJob"]>
+    composites: {}
+  }
+
+  type WorkflowJobGetPayload<S extends boolean | null | undefined | WorkflowJobDefaultArgs> = $Result.GetResult<Prisma.$WorkflowJobPayload, S>
+
+  type WorkflowJobCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<WorkflowJobFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: WorkflowJobCountAggregateInputType | true
+    }
+
+  export interface WorkflowJobDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['WorkflowJob'], meta: { name: 'WorkflowJob' } }
+    /**
+     * Find zero or one WorkflowJob that matches the filter.
+     * @param {WorkflowJobFindUniqueArgs} args - Arguments to find a WorkflowJob
+     * @example
+     * // Get one WorkflowJob
+     * const workflowJob = await prisma.workflowJob.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends WorkflowJobFindUniqueArgs>(args: SelectSubset<T, WorkflowJobFindUniqueArgs<ExtArgs>>): Prisma__WorkflowJobClient<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one WorkflowJob that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {WorkflowJobFindUniqueOrThrowArgs} args - Arguments to find a WorkflowJob
+     * @example
+     * // Get one WorkflowJob
+     * const workflowJob = await prisma.workflowJob.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends WorkflowJobFindUniqueOrThrowArgs>(args: SelectSubset<T, WorkflowJobFindUniqueOrThrowArgs<ExtArgs>>): Prisma__WorkflowJobClient<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WorkflowJob that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkflowJobFindFirstArgs} args - Arguments to find a WorkflowJob
+     * @example
+     * // Get one WorkflowJob
+     * const workflowJob = await prisma.workflowJob.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends WorkflowJobFindFirstArgs>(args?: SelectSubset<T, WorkflowJobFindFirstArgs<ExtArgs>>): Prisma__WorkflowJobClient<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WorkflowJob that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkflowJobFindFirstOrThrowArgs} args - Arguments to find a WorkflowJob
+     * @example
+     * // Get one WorkflowJob
+     * const workflowJob = await prisma.workflowJob.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends WorkflowJobFindFirstOrThrowArgs>(args?: SelectSubset<T, WorkflowJobFindFirstOrThrowArgs<ExtArgs>>): Prisma__WorkflowJobClient<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more WorkflowJobs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkflowJobFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all WorkflowJobs
+     * const workflowJobs = await prisma.workflowJob.findMany()
+     * 
+     * // Get first 10 WorkflowJobs
+     * const workflowJobs = await prisma.workflowJob.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const workflowJobWithIdOnly = await prisma.workflowJob.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends WorkflowJobFindManyArgs>(args?: SelectSubset<T, WorkflowJobFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a WorkflowJob.
+     * @param {WorkflowJobCreateArgs} args - Arguments to create a WorkflowJob.
+     * @example
+     * // Create one WorkflowJob
+     * const WorkflowJob = await prisma.workflowJob.create({
+     *   data: {
+     *     // ... data to create a WorkflowJob
+     *   }
+     * })
+     * 
+     */
+    create<T extends WorkflowJobCreateArgs>(args: SelectSubset<T, WorkflowJobCreateArgs<ExtArgs>>): Prisma__WorkflowJobClient<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many WorkflowJobs.
+     * @param {WorkflowJobCreateManyArgs} args - Arguments to create many WorkflowJobs.
+     * @example
+     * // Create many WorkflowJobs
+     * const workflowJob = await prisma.workflowJob.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends WorkflowJobCreateManyArgs>(args?: SelectSubset<T, WorkflowJobCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many WorkflowJobs and returns the data saved in the database.
+     * @param {WorkflowJobCreateManyAndReturnArgs} args - Arguments to create many WorkflowJobs.
+     * @example
+     * // Create many WorkflowJobs
+     * const workflowJob = await prisma.workflowJob.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many WorkflowJobs and only return the `id`
+     * const workflowJobWithIdOnly = await prisma.workflowJob.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends WorkflowJobCreateManyAndReturnArgs>(args?: SelectSubset<T, WorkflowJobCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a WorkflowJob.
+     * @param {WorkflowJobDeleteArgs} args - Arguments to delete one WorkflowJob.
+     * @example
+     * // Delete one WorkflowJob
+     * const WorkflowJob = await prisma.workflowJob.delete({
+     *   where: {
+     *     // ... filter to delete one WorkflowJob
+     *   }
+     * })
+     * 
+     */
+    delete<T extends WorkflowJobDeleteArgs>(args: SelectSubset<T, WorkflowJobDeleteArgs<ExtArgs>>): Prisma__WorkflowJobClient<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one WorkflowJob.
+     * @param {WorkflowJobUpdateArgs} args - Arguments to update one WorkflowJob.
+     * @example
+     * // Update one WorkflowJob
+     * const workflowJob = await prisma.workflowJob.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends WorkflowJobUpdateArgs>(args: SelectSubset<T, WorkflowJobUpdateArgs<ExtArgs>>): Prisma__WorkflowJobClient<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more WorkflowJobs.
+     * @param {WorkflowJobDeleteManyArgs} args - Arguments to filter WorkflowJobs to delete.
+     * @example
+     * // Delete a few WorkflowJobs
+     * const { count } = await prisma.workflowJob.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends WorkflowJobDeleteManyArgs>(args?: SelectSubset<T, WorkflowJobDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WorkflowJobs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkflowJobUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many WorkflowJobs
+     * const workflowJob = await prisma.workflowJob.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends WorkflowJobUpdateManyArgs>(args: SelectSubset<T, WorkflowJobUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WorkflowJobs and returns the data updated in the database.
+     * @param {WorkflowJobUpdateManyAndReturnArgs} args - Arguments to update many WorkflowJobs.
+     * @example
+     * // Update many WorkflowJobs
+     * const workflowJob = await prisma.workflowJob.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more WorkflowJobs and only return the `id`
+     * const workflowJobWithIdOnly = await prisma.workflowJob.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends WorkflowJobUpdateManyAndReturnArgs>(args: SelectSubset<T, WorkflowJobUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one WorkflowJob.
+     * @param {WorkflowJobUpsertArgs} args - Arguments to update or create a WorkflowJob.
+     * @example
+     * // Update or create a WorkflowJob
+     * const workflowJob = await prisma.workflowJob.upsert({
+     *   create: {
+     *     // ... data to create a WorkflowJob
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the WorkflowJob we want to update
+     *   }
+     * })
+     */
+    upsert<T extends WorkflowJobUpsertArgs>(args: SelectSubset<T, WorkflowJobUpsertArgs<ExtArgs>>): Prisma__WorkflowJobClient<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of WorkflowJobs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkflowJobCountArgs} args - Arguments to filter WorkflowJobs to count.
+     * @example
+     * // Count the number of WorkflowJobs
+     * const count = await prisma.workflowJob.count({
+     *   where: {
+     *     // ... the filter for the WorkflowJobs we want to count
+     *   }
+     * })
+    **/
+    count<T extends WorkflowJobCountArgs>(
+      args?: Subset<T, WorkflowJobCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], WorkflowJobCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a WorkflowJob.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkflowJobAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends WorkflowJobAggregateArgs>(args: Subset<T, WorkflowJobAggregateArgs>): Prisma.PrismaPromise<GetWorkflowJobAggregateType<T>>
+
+    /**
+     * Group by WorkflowJob.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WorkflowJobGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends WorkflowJobGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: WorkflowJobGroupByArgs['orderBy'] }
+        : { orderBy?: WorkflowJobGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, WorkflowJobGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetWorkflowJobGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the WorkflowJob model
+   */
+  readonly fields: WorkflowJobFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for WorkflowJob.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__WorkflowJobClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the WorkflowJob model
+   */
+  interface WorkflowJobFieldRefs {
+    readonly id: FieldRef<"WorkflowJob", 'String'>
+    readonly organizationId: FieldRef<"WorkflowJob", 'String'>
+    readonly dedupeKey: FieldRef<"WorkflowJob", 'String'>
+    readonly kind: FieldRef<"WorkflowJob", 'WorkflowJobKind'>
+    readonly status: FieldRef<"WorkflowJob", 'WorkflowJobStatus'>
+    readonly proposalId: FieldRef<"WorkflowJob", 'String'>
+    readonly missionId: FieldRef<"WorkflowJob", 'String'>
+    readonly payload: FieldRef<"WorkflowJob", 'String'>
+    readonly attempts: FieldRef<"WorkflowJob", 'Int'>
+    readonly maxAttempts: FieldRef<"WorkflowJob", 'Int'>
+    readonly nextAttemptAt: FieldRef<"WorkflowJob", 'DateTime'>
+    readonly lockedBy: FieldRef<"WorkflowJob", 'String'>
+    readonly lockedUntil: FieldRef<"WorkflowJob", 'DateTime'>
+    readonly lastError: FieldRef<"WorkflowJob", 'String'>
+    readonly deadLetteredAt: FieldRef<"WorkflowJob", 'DateTime'>
+    readonly takenOverBy: FieldRef<"WorkflowJob", 'String'>
+    readonly takenOverAt: FieldRef<"WorkflowJob", 'DateTime'>
+    readonly cancelledAt: FieldRef<"WorkflowJob", 'DateTime'>
+    readonly completedAt: FieldRef<"WorkflowJob", 'DateTime'>
+    readonly createdAt: FieldRef<"WorkflowJob", 'DateTime'>
+    readonly updatedAt: FieldRef<"WorkflowJob", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * WorkflowJob findUnique
+   */
+  export type WorkflowJobFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkflowJob to fetch.
+     */
+    where: WorkflowJobWhereUniqueInput
+  }
+
+  /**
+   * WorkflowJob findUniqueOrThrow
+   */
+  export type WorkflowJobFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkflowJob to fetch.
+     */
+    where: WorkflowJobWhereUniqueInput
+  }
+
+  /**
+   * WorkflowJob findFirst
+   */
+  export type WorkflowJobFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkflowJob to fetch.
+     */
+    where?: WorkflowJobWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WorkflowJobs to fetch.
+     */
+    orderBy?: WorkflowJobOrderByWithRelationInput | WorkflowJobOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WorkflowJobs.
+     */
+    cursor?: WorkflowJobWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WorkflowJobs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WorkflowJobs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WorkflowJobs.
+     */
+    distinct?: WorkflowJobScalarFieldEnum | WorkflowJobScalarFieldEnum[]
+  }
+
+  /**
+   * WorkflowJob findFirstOrThrow
+   */
+  export type WorkflowJobFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkflowJob to fetch.
+     */
+    where?: WorkflowJobWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WorkflowJobs to fetch.
+     */
+    orderBy?: WorkflowJobOrderByWithRelationInput | WorkflowJobOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WorkflowJobs.
+     */
+    cursor?: WorkflowJobWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WorkflowJobs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WorkflowJobs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WorkflowJobs.
+     */
+    distinct?: WorkflowJobScalarFieldEnum | WorkflowJobScalarFieldEnum[]
+  }
+
+  /**
+   * WorkflowJob findMany
+   */
+  export type WorkflowJobFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * Filter, which WorkflowJobs to fetch.
+     */
+    where?: WorkflowJobWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WorkflowJobs to fetch.
+     */
+    orderBy?: WorkflowJobOrderByWithRelationInput | WorkflowJobOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing WorkflowJobs.
+     */
+    cursor?: WorkflowJobWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WorkflowJobs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WorkflowJobs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WorkflowJobs.
+     */
+    distinct?: WorkflowJobScalarFieldEnum | WorkflowJobScalarFieldEnum[]
+  }
+
+  /**
+   * WorkflowJob create
+   */
+  export type WorkflowJobCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * The data needed to create a WorkflowJob.
+     */
+    data: XOR<WorkflowJobCreateInput, WorkflowJobUncheckedCreateInput>
+  }
+
+  /**
+   * WorkflowJob createMany
+   */
+  export type WorkflowJobCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many WorkflowJobs.
+     */
+    data: WorkflowJobCreateManyInput | WorkflowJobCreateManyInput[]
+  }
+
+  /**
+   * WorkflowJob createManyAndReturn
+   */
+  export type WorkflowJobCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * The data used to create many WorkflowJobs.
+     */
+    data: WorkflowJobCreateManyInput | WorkflowJobCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WorkflowJob update
+   */
+  export type WorkflowJobUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * The data needed to update a WorkflowJob.
+     */
+    data: XOR<WorkflowJobUpdateInput, WorkflowJobUncheckedUpdateInput>
+    /**
+     * Choose, which WorkflowJob to update.
+     */
+    where: WorkflowJobWhereUniqueInput
+  }
+
+  /**
+   * WorkflowJob updateMany
+   */
+  export type WorkflowJobUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update WorkflowJobs.
+     */
+    data: XOR<WorkflowJobUpdateManyMutationInput, WorkflowJobUncheckedUpdateManyInput>
+    /**
+     * Filter which WorkflowJobs to update
+     */
+    where?: WorkflowJobWhereInput
+    /**
+     * Limit how many WorkflowJobs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WorkflowJob updateManyAndReturn
+   */
+  export type WorkflowJobUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * The data used to update WorkflowJobs.
+     */
+    data: XOR<WorkflowJobUpdateManyMutationInput, WorkflowJobUncheckedUpdateManyInput>
+    /**
+     * Filter which WorkflowJobs to update
+     */
+    where?: WorkflowJobWhereInput
+    /**
+     * Limit how many WorkflowJobs to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WorkflowJob upsert
+   */
+  export type WorkflowJobUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * The filter to search for the WorkflowJob to update in case it exists.
+     */
+    where: WorkflowJobWhereUniqueInput
+    /**
+     * In case the WorkflowJob found by the `where` argument doesn't exist, create a new WorkflowJob with this data.
+     */
+    create: XOR<WorkflowJobCreateInput, WorkflowJobUncheckedCreateInput>
+    /**
+     * In case the WorkflowJob was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<WorkflowJobUpdateInput, WorkflowJobUncheckedUpdateInput>
+  }
+
+  /**
+   * WorkflowJob delete
+   */
+  export type WorkflowJobDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    /**
+     * Filter which WorkflowJob to delete.
+     */
+    where: WorkflowJobWhereUniqueInput
+  }
+
+  /**
+   * WorkflowJob deleteMany
+   */
+  export type WorkflowJobDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WorkflowJobs to delete
+     */
+    where?: WorkflowJobWhereInput
+    /**
+     * Limit how many WorkflowJobs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * WorkflowJob without action
+   */
+  export type WorkflowJobDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model NotificationDelivery
+   */
+
+  export type AggregateNotificationDelivery = {
+    _count: NotificationDeliveryCountAggregateOutputType | null
+    _min: NotificationDeliveryMinAggregateOutputType | null
+    _max: NotificationDeliveryMaxAggregateOutputType | null
+  }
+
+  export type NotificationDeliveryMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    dedupeKey: string | null
+    channel: $Enums.NotificationChannel | null
+    status: $Enums.NotificationDeliveryStatus | null
+    recipientId: string | null
+    template: string | null
+    subject: string | null
+    body: string | null
+    actionUrl: string | null
+    capturedAt: Date | null
+    provider: string | null
+    providerMessageId: string | null
+    failureReason: string | null
+    sentAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type NotificationDeliveryMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    dedupeKey: string | null
+    channel: $Enums.NotificationChannel | null
+    status: $Enums.NotificationDeliveryStatus | null
+    recipientId: string | null
+    template: string | null
+    subject: string | null
+    body: string | null
+    actionUrl: string | null
+    capturedAt: Date | null
+    provider: string | null
+    providerMessageId: string | null
+    failureReason: string | null
+    sentAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type NotificationDeliveryCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    dedupeKey: number
+    channel: number
+    status: number
+    recipientId: number
+    template: number
+    subject: number
+    body: number
+    actionUrl: number
+    capturedAt: number
+    provider: number
+    providerMessageId: number
+    failureReason: number
+    sentAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type NotificationDeliveryMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    dedupeKey?: true
+    channel?: true
+    status?: true
+    recipientId?: true
+    template?: true
+    subject?: true
+    body?: true
+    actionUrl?: true
+    capturedAt?: true
+    provider?: true
+    providerMessageId?: true
+    failureReason?: true
+    sentAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type NotificationDeliveryMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    dedupeKey?: true
+    channel?: true
+    status?: true
+    recipientId?: true
+    template?: true
+    subject?: true
+    body?: true
+    actionUrl?: true
+    capturedAt?: true
+    provider?: true
+    providerMessageId?: true
+    failureReason?: true
+    sentAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type NotificationDeliveryCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    dedupeKey?: true
+    channel?: true
+    status?: true
+    recipientId?: true
+    template?: true
+    subject?: true
+    body?: true
+    actionUrl?: true
+    capturedAt?: true
+    provider?: true
+    providerMessageId?: true
+    failureReason?: true
+    sentAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type NotificationDeliveryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which NotificationDelivery to aggregate.
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NotificationDeliveries to fetch.
+     */
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: NotificationDeliveryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NotificationDeliveries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NotificationDeliveries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned NotificationDeliveries
+    **/
+    _count?: true | NotificationDeliveryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: NotificationDeliveryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: NotificationDeliveryMaxAggregateInputType
+  }
+
+  export type GetNotificationDeliveryAggregateType<T extends NotificationDeliveryAggregateArgs> = {
+        [P in keyof T & keyof AggregateNotificationDelivery]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateNotificationDelivery[P]>
+      : GetScalarType<T[P], AggregateNotificationDelivery[P]>
+  }
+
+
+
+
+  export type NotificationDeliveryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: NotificationDeliveryWhereInput
+    orderBy?: NotificationDeliveryOrderByWithAggregationInput | NotificationDeliveryOrderByWithAggregationInput[]
+    by: NotificationDeliveryScalarFieldEnum[] | NotificationDeliveryScalarFieldEnum
+    having?: NotificationDeliveryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: NotificationDeliveryCountAggregateInputType | true
+    _min?: NotificationDeliveryMinAggregateInputType
+    _max?: NotificationDeliveryMaxAggregateInputType
+  }
+
+  export type NotificationDeliveryGroupByOutputType = {
+    id: string
+    organizationId: string
+    dedupeKey: string
+    channel: $Enums.NotificationChannel
+    status: $Enums.NotificationDeliveryStatus
+    recipientId: string
+    template: string
+    subject: string | null
+    body: string
+    actionUrl: string | null
+    capturedAt: Date | null
+    provider: string | null
+    providerMessageId: string | null
+    failureReason: string | null
+    sentAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: NotificationDeliveryCountAggregateOutputType | null
+    _min: NotificationDeliveryMinAggregateOutputType | null
+    _max: NotificationDeliveryMaxAggregateOutputType | null
+  }
+
+  type GetNotificationDeliveryGroupByPayload<T extends NotificationDeliveryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<NotificationDeliveryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof NotificationDeliveryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], NotificationDeliveryGroupByOutputType[P]>
+            : GetScalarType<T[P], NotificationDeliveryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type NotificationDeliverySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    dedupeKey?: boolean
+    channel?: boolean
+    status?: boolean
+    recipientId?: boolean
+    template?: boolean
+    subject?: boolean
+    body?: boolean
+    actionUrl?: boolean
+    capturedAt?: boolean
+    provider?: boolean
+    providerMessageId?: boolean
+    failureReason?: boolean
+    sentAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["notificationDelivery"]>
+
+  export type NotificationDeliverySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    dedupeKey?: boolean
+    channel?: boolean
+    status?: boolean
+    recipientId?: boolean
+    template?: boolean
+    subject?: boolean
+    body?: boolean
+    actionUrl?: boolean
+    capturedAt?: boolean
+    provider?: boolean
+    providerMessageId?: boolean
+    failureReason?: boolean
+    sentAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["notificationDelivery"]>
+
+  export type NotificationDeliverySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    dedupeKey?: boolean
+    channel?: boolean
+    status?: boolean
+    recipientId?: boolean
+    template?: boolean
+    subject?: boolean
+    body?: boolean
+    actionUrl?: boolean
+    capturedAt?: boolean
+    provider?: boolean
+    providerMessageId?: boolean
+    failureReason?: boolean
+    sentAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["notificationDelivery"]>
+
+  export type NotificationDeliverySelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    dedupeKey?: boolean
+    channel?: boolean
+    status?: boolean
+    recipientId?: boolean
+    template?: boolean
+    subject?: boolean
+    body?: boolean
+    actionUrl?: boolean
+    capturedAt?: boolean
+    provider?: boolean
+    providerMessageId?: boolean
+    failureReason?: boolean
+    sentAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type NotificationDeliveryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "dedupeKey" | "channel" | "status" | "recipientId" | "template" | "subject" | "body" | "actionUrl" | "capturedAt" | "provider" | "providerMessageId" | "failureReason" | "sentAt" | "createdAt" | "updatedAt", ExtArgs["result"]["notificationDelivery"]>
+  export type NotificationDeliveryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type NotificationDeliveryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type NotificationDeliveryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+
+  export type $NotificationDeliveryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "NotificationDelivery"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      /**
+       * 幂等键：`<kind>:<proposalId>:<recipientId>` —— 同一业务动作对同一人只投递一次。
+       */
+      dedupeKey: string
+      channel: $Enums.NotificationChannel
+      status: $Enums.NotificationDeliveryStatus
+      /**
+       * 软引用（见文件头说明）：收件人注销后投递记录仍需留存。
+       */
+      recipientId: string
+      /**
+       * 模板标识（如 `proposal.pending`）。决定文案骨架，与人无关，故可安全落库。
+       */
+      template: string
+      subject: string | null
+      /**
+       * 渲染后的正文。**系统生成**，只含最小披露信息。
+       */
+      body: string
+      actionUrl: string | null
+      /**
+       * ── 沙箱捕获（AC-09 的证据面）──
+       * 无真实凭据时不外发，但把"要发什么"记下来：`CAPTURED` + 本字段非空。
+       */
+      capturedAt: Date | null
+      /**
+       * 实际渠道：`in-app` / `resend` / `smtp` / `sandbox`。
+       */
+      provider: string | null
+      providerMessageId: string | null
+      failureReason: string | null
+      sentAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["notificationDelivery"]>
+    composites: {}
+  }
+
+  type NotificationDeliveryGetPayload<S extends boolean | null | undefined | NotificationDeliveryDefaultArgs> = $Result.GetResult<Prisma.$NotificationDeliveryPayload, S>
+
+  type NotificationDeliveryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<NotificationDeliveryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: NotificationDeliveryCountAggregateInputType | true
+    }
+
+  export interface NotificationDeliveryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['NotificationDelivery'], meta: { name: 'NotificationDelivery' } }
+    /**
+     * Find zero or one NotificationDelivery that matches the filter.
+     * @param {NotificationDeliveryFindUniqueArgs} args - Arguments to find a NotificationDelivery
+     * @example
+     * // Get one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends NotificationDeliveryFindUniqueArgs>(args: SelectSubset<T, NotificationDeliveryFindUniqueArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one NotificationDelivery that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {NotificationDeliveryFindUniqueOrThrowArgs} args - Arguments to find a NotificationDelivery
+     * @example
+     * // Get one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends NotificationDeliveryFindUniqueOrThrowArgs>(args: SelectSubset<T, NotificationDeliveryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first NotificationDelivery that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryFindFirstArgs} args - Arguments to find a NotificationDelivery
+     * @example
+     * // Get one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends NotificationDeliveryFindFirstArgs>(args?: SelectSubset<T, NotificationDeliveryFindFirstArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first NotificationDelivery that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryFindFirstOrThrowArgs} args - Arguments to find a NotificationDelivery
+     * @example
+     * // Get one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends NotificationDeliveryFindFirstOrThrowArgs>(args?: SelectSubset<T, NotificationDeliveryFindFirstOrThrowArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more NotificationDeliveries that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all NotificationDeliveries
+     * const notificationDeliveries = await prisma.notificationDelivery.findMany()
+     * 
+     * // Get first 10 NotificationDeliveries
+     * const notificationDeliveries = await prisma.notificationDelivery.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const notificationDeliveryWithIdOnly = await prisma.notificationDelivery.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends NotificationDeliveryFindManyArgs>(args?: SelectSubset<T, NotificationDeliveryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a NotificationDelivery.
+     * @param {NotificationDeliveryCreateArgs} args - Arguments to create a NotificationDelivery.
+     * @example
+     * // Create one NotificationDelivery
+     * const NotificationDelivery = await prisma.notificationDelivery.create({
+     *   data: {
+     *     // ... data to create a NotificationDelivery
+     *   }
+     * })
+     * 
+     */
+    create<T extends NotificationDeliveryCreateArgs>(args: SelectSubset<T, NotificationDeliveryCreateArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many NotificationDeliveries.
+     * @param {NotificationDeliveryCreateManyArgs} args - Arguments to create many NotificationDeliveries.
+     * @example
+     * // Create many NotificationDeliveries
+     * const notificationDelivery = await prisma.notificationDelivery.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends NotificationDeliveryCreateManyArgs>(args?: SelectSubset<T, NotificationDeliveryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many NotificationDeliveries and returns the data saved in the database.
+     * @param {NotificationDeliveryCreateManyAndReturnArgs} args - Arguments to create many NotificationDeliveries.
+     * @example
+     * // Create many NotificationDeliveries
+     * const notificationDelivery = await prisma.notificationDelivery.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many NotificationDeliveries and only return the `id`
+     * const notificationDeliveryWithIdOnly = await prisma.notificationDelivery.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends NotificationDeliveryCreateManyAndReturnArgs>(args?: SelectSubset<T, NotificationDeliveryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a NotificationDelivery.
+     * @param {NotificationDeliveryDeleteArgs} args - Arguments to delete one NotificationDelivery.
+     * @example
+     * // Delete one NotificationDelivery
+     * const NotificationDelivery = await prisma.notificationDelivery.delete({
+     *   where: {
+     *     // ... filter to delete one NotificationDelivery
+     *   }
+     * })
+     * 
+     */
+    delete<T extends NotificationDeliveryDeleteArgs>(args: SelectSubset<T, NotificationDeliveryDeleteArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one NotificationDelivery.
+     * @param {NotificationDeliveryUpdateArgs} args - Arguments to update one NotificationDelivery.
+     * @example
+     * // Update one NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends NotificationDeliveryUpdateArgs>(args: SelectSubset<T, NotificationDeliveryUpdateArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more NotificationDeliveries.
+     * @param {NotificationDeliveryDeleteManyArgs} args - Arguments to filter NotificationDeliveries to delete.
+     * @example
+     * // Delete a few NotificationDeliveries
+     * const { count } = await prisma.notificationDelivery.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends NotificationDeliveryDeleteManyArgs>(args?: SelectSubset<T, NotificationDeliveryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more NotificationDeliveries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many NotificationDeliveries
+     * const notificationDelivery = await prisma.notificationDelivery.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends NotificationDeliveryUpdateManyArgs>(args: SelectSubset<T, NotificationDeliveryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more NotificationDeliveries and returns the data updated in the database.
+     * @param {NotificationDeliveryUpdateManyAndReturnArgs} args - Arguments to update many NotificationDeliveries.
+     * @example
+     * // Update many NotificationDeliveries
+     * const notificationDelivery = await prisma.notificationDelivery.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more NotificationDeliveries and only return the `id`
+     * const notificationDeliveryWithIdOnly = await prisma.notificationDelivery.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends NotificationDeliveryUpdateManyAndReturnArgs>(args: SelectSubset<T, NotificationDeliveryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one NotificationDelivery.
+     * @param {NotificationDeliveryUpsertArgs} args - Arguments to update or create a NotificationDelivery.
+     * @example
+     * // Update or create a NotificationDelivery
+     * const notificationDelivery = await prisma.notificationDelivery.upsert({
+     *   create: {
+     *     // ... data to create a NotificationDelivery
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the NotificationDelivery we want to update
+     *   }
+     * })
+     */
+    upsert<T extends NotificationDeliveryUpsertArgs>(args: SelectSubset<T, NotificationDeliveryUpsertArgs<ExtArgs>>): Prisma__NotificationDeliveryClient<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of NotificationDeliveries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryCountArgs} args - Arguments to filter NotificationDeliveries to count.
+     * @example
+     * // Count the number of NotificationDeliveries
+     * const count = await prisma.notificationDelivery.count({
+     *   where: {
+     *     // ... the filter for the NotificationDeliveries we want to count
+     *   }
+     * })
+    **/
+    count<T extends NotificationDeliveryCountArgs>(
+      args?: Subset<T, NotificationDeliveryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], NotificationDeliveryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a NotificationDelivery.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends NotificationDeliveryAggregateArgs>(args: Subset<T, NotificationDeliveryAggregateArgs>): Prisma.PrismaPromise<GetNotificationDeliveryAggregateType<T>>
+
+    /**
+     * Group by NotificationDelivery.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificationDeliveryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends NotificationDeliveryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: NotificationDeliveryGroupByArgs['orderBy'] }
+        : { orderBy?: NotificationDeliveryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, NotificationDeliveryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetNotificationDeliveryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the NotificationDelivery model
+   */
+  readonly fields: NotificationDeliveryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for NotificationDelivery.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__NotificationDeliveryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the NotificationDelivery model
+   */
+  interface NotificationDeliveryFieldRefs {
+    readonly id: FieldRef<"NotificationDelivery", 'String'>
+    readonly organizationId: FieldRef<"NotificationDelivery", 'String'>
+    readonly dedupeKey: FieldRef<"NotificationDelivery", 'String'>
+    readonly channel: FieldRef<"NotificationDelivery", 'NotificationChannel'>
+    readonly status: FieldRef<"NotificationDelivery", 'NotificationDeliveryStatus'>
+    readonly recipientId: FieldRef<"NotificationDelivery", 'String'>
+    readonly template: FieldRef<"NotificationDelivery", 'String'>
+    readonly subject: FieldRef<"NotificationDelivery", 'String'>
+    readonly body: FieldRef<"NotificationDelivery", 'String'>
+    readonly actionUrl: FieldRef<"NotificationDelivery", 'String'>
+    readonly capturedAt: FieldRef<"NotificationDelivery", 'DateTime'>
+    readonly provider: FieldRef<"NotificationDelivery", 'String'>
+    readonly providerMessageId: FieldRef<"NotificationDelivery", 'String'>
+    readonly failureReason: FieldRef<"NotificationDelivery", 'String'>
+    readonly sentAt: FieldRef<"NotificationDelivery", 'DateTime'>
+    readonly createdAt: FieldRef<"NotificationDelivery", 'DateTime'>
+    readonly updatedAt: FieldRef<"NotificationDelivery", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * NotificationDelivery findUnique
+   */
+  export type NotificationDeliveryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDelivery to fetch.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+  }
+
+  /**
+   * NotificationDelivery findUniqueOrThrow
+   */
+  export type NotificationDeliveryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDelivery to fetch.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+  }
+
+  /**
+   * NotificationDelivery findFirst
+   */
+  export type NotificationDeliveryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDelivery to fetch.
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NotificationDeliveries to fetch.
+     */
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for NotificationDeliveries.
+     */
+    cursor?: NotificationDeliveryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NotificationDeliveries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NotificationDeliveries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of NotificationDeliveries.
+     */
+    distinct?: NotificationDeliveryScalarFieldEnum | NotificationDeliveryScalarFieldEnum[]
+  }
+
+  /**
+   * NotificationDelivery findFirstOrThrow
+   */
+  export type NotificationDeliveryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDelivery to fetch.
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NotificationDeliveries to fetch.
+     */
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for NotificationDeliveries.
+     */
+    cursor?: NotificationDeliveryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NotificationDeliveries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NotificationDeliveries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of NotificationDeliveries.
+     */
+    distinct?: NotificationDeliveryScalarFieldEnum | NotificationDeliveryScalarFieldEnum[]
+  }
+
+  /**
+   * NotificationDelivery findMany
+   */
+  export type NotificationDeliveryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter, which NotificationDeliveries to fetch.
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NotificationDeliveries to fetch.
+     */
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing NotificationDeliveries.
+     */
+    cursor?: NotificationDeliveryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NotificationDeliveries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NotificationDeliveries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of NotificationDeliveries.
+     */
+    distinct?: NotificationDeliveryScalarFieldEnum | NotificationDeliveryScalarFieldEnum[]
+  }
+
+  /**
+   * NotificationDelivery create
+   */
+  export type NotificationDeliveryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a NotificationDelivery.
+     */
+    data: XOR<NotificationDeliveryCreateInput, NotificationDeliveryUncheckedCreateInput>
+  }
+
+  /**
+   * NotificationDelivery createMany
+   */
+  export type NotificationDeliveryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many NotificationDeliveries.
+     */
+    data: NotificationDeliveryCreateManyInput | NotificationDeliveryCreateManyInput[]
+  }
+
+  /**
+   * NotificationDelivery createManyAndReturn
+   */
+  export type NotificationDeliveryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * The data used to create many NotificationDeliveries.
+     */
+    data: NotificationDeliveryCreateManyInput | NotificationDeliveryCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * NotificationDelivery update
+   */
+  export type NotificationDeliveryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a NotificationDelivery.
+     */
+    data: XOR<NotificationDeliveryUpdateInput, NotificationDeliveryUncheckedUpdateInput>
+    /**
+     * Choose, which NotificationDelivery to update.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+  }
+
+  /**
+   * NotificationDelivery updateMany
+   */
+  export type NotificationDeliveryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update NotificationDeliveries.
+     */
+    data: XOR<NotificationDeliveryUpdateManyMutationInput, NotificationDeliveryUncheckedUpdateManyInput>
+    /**
+     * Filter which NotificationDeliveries to update
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * Limit how many NotificationDeliveries to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * NotificationDelivery updateManyAndReturn
+   */
+  export type NotificationDeliveryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * The data used to update NotificationDeliveries.
+     */
+    data: XOR<NotificationDeliveryUpdateManyMutationInput, NotificationDeliveryUncheckedUpdateManyInput>
+    /**
+     * Filter which NotificationDeliveries to update
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * Limit how many NotificationDeliveries to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * NotificationDelivery upsert
+   */
+  export type NotificationDeliveryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the NotificationDelivery to update in case it exists.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+    /**
+     * In case the NotificationDelivery found by the `where` argument doesn't exist, create a new NotificationDelivery with this data.
+     */
+    create: XOR<NotificationDeliveryCreateInput, NotificationDeliveryUncheckedCreateInput>
+    /**
+     * In case the NotificationDelivery was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<NotificationDeliveryUpdateInput, NotificationDeliveryUncheckedUpdateInput>
+  }
+
+  /**
+   * NotificationDelivery delete
+   */
+  export type NotificationDeliveryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    /**
+     * Filter which NotificationDelivery to delete.
+     */
+    where: NotificationDeliveryWhereUniqueInput
+  }
+
+  /**
+   * NotificationDelivery deleteMany
+   */
+  export type NotificationDeliveryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which NotificationDeliveries to delete
+     */
+    where?: NotificationDeliveryWhereInput
+    /**
+     * Limit how many NotificationDeliveries to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * NotificationDelivery without action
+   */
+  export type NotificationDeliveryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model IntroductionWorkflow
+   */
+
+  export type AggregateIntroductionWorkflow = {
+    _count: IntroductionWorkflowCountAggregateOutputType | null
+    _min: IntroductionWorkflowMinAggregateOutputType | null
+    _max: IntroductionWorkflowMaxAggregateOutputType | null
+  }
+
+  export type IntroductionWorkflowMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    proposalId: string | null
+    missionId: string | null
+    stage: $Enums.WorkflowStage | null
+    stageEnteredAt: Date | null
+    timeline: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type IntroductionWorkflowMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    proposalId: string | null
+    missionId: string | null
+    stage: $Enums.WorkflowStage | null
+    stageEnteredAt: Date | null
+    timeline: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type IntroductionWorkflowCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    proposalId: number
+    missionId: number
+    stage: number
+    stageEnteredAt: number
+    timeline: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type IntroductionWorkflowMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    missionId?: true
+    stage?: true
+    stageEnteredAt?: true
+    timeline?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type IntroductionWorkflowMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    missionId?: true
+    stage?: true
+    stageEnteredAt?: true
+    timeline?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type IntroductionWorkflowCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    missionId?: true
+    stage?: true
+    stageEnteredAt?: true
+    timeline?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type IntroductionWorkflowAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which IntroductionWorkflow to aggregate.
+     */
+    where?: IntroductionWorkflowWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IntroductionWorkflows to fetch.
+     */
+    orderBy?: IntroductionWorkflowOrderByWithRelationInput | IntroductionWorkflowOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: IntroductionWorkflowWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IntroductionWorkflows from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IntroductionWorkflows.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned IntroductionWorkflows
+    **/
+    _count?: true | IntroductionWorkflowCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: IntroductionWorkflowMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: IntroductionWorkflowMaxAggregateInputType
+  }
+
+  export type GetIntroductionWorkflowAggregateType<T extends IntroductionWorkflowAggregateArgs> = {
+        [P in keyof T & keyof AggregateIntroductionWorkflow]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateIntroductionWorkflow[P]>
+      : GetScalarType<T[P], AggregateIntroductionWorkflow[P]>
+  }
+
+
+
+
+  export type IntroductionWorkflowGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: IntroductionWorkflowWhereInput
+    orderBy?: IntroductionWorkflowOrderByWithAggregationInput | IntroductionWorkflowOrderByWithAggregationInput[]
+    by: IntroductionWorkflowScalarFieldEnum[] | IntroductionWorkflowScalarFieldEnum
+    having?: IntroductionWorkflowScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: IntroductionWorkflowCountAggregateInputType | true
+    _min?: IntroductionWorkflowMinAggregateInputType
+    _max?: IntroductionWorkflowMaxAggregateInputType
+  }
+
+  export type IntroductionWorkflowGroupByOutputType = {
+    id: string
+    organizationId: string
+    proposalId: string
+    missionId: string
+    stage: $Enums.WorkflowStage
+    stageEnteredAt: Date
+    timeline: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: IntroductionWorkflowCountAggregateOutputType | null
+    _min: IntroductionWorkflowMinAggregateOutputType | null
+    _max: IntroductionWorkflowMaxAggregateOutputType | null
+  }
+
+  type GetIntroductionWorkflowGroupByPayload<T extends IntroductionWorkflowGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<IntroductionWorkflowGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof IntroductionWorkflowGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], IntroductionWorkflowGroupByOutputType[P]>
+            : GetScalarType<T[P], IntroductionWorkflowGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type IntroductionWorkflowSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    stage?: boolean
+    stageEnteredAt?: boolean
+    timeline?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["introductionWorkflow"]>
+
+  export type IntroductionWorkflowSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    stage?: boolean
+    stageEnteredAt?: boolean
+    timeline?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["introductionWorkflow"]>
+
+  export type IntroductionWorkflowSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    stage?: boolean
+    stageEnteredAt?: boolean
+    timeline?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["introductionWorkflow"]>
+
+  export type IntroductionWorkflowSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    stage?: boolean
+    stageEnteredAt?: boolean
+    timeline?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type IntroductionWorkflowOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "proposalId" | "missionId" | "stage" | "stageEnteredAt" | "timeline" | "createdAt" | "updatedAt", ExtArgs["result"]["introductionWorkflow"]>
+  export type IntroductionWorkflowInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+  }
+  export type IntroductionWorkflowIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+  }
+  export type IntroductionWorkflowIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    proposal?: boolean | ConnectionProposalDefaultArgs<ExtArgs>
+  }
+
+  export type $IntroductionWorkflowPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "IntroductionWorkflow"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      proposal: Prisma.$ConnectionProposalPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      /**
+       * 1:1 绑定提案。强 FK：提案没了，这条流程也就没有意义了。
+       */
+      proposalId: string
+      /**
+       * 软引用：missionId 只用于租户内筛选。
+       */
+      missionId: string
+      stage: $Enums.WorkflowStage
+      /**
+       * 进入当前阶段的时间（**超时判定的基准**；AC-17 的"超时"落点）。
+       */
+      stageEnteredAt: Date
+      /**
+       * 阶段时间线（JSON 文本数组）：`[{stage, at, by, reason}]`，追加式。
+       * 与 `ProposalDecision` 相反，这里**刻意留流水** —— 流程推进需要可复盘。
+       */
+      timeline: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["introductionWorkflow"]>
+    composites: {}
+  }
+
+  type IntroductionWorkflowGetPayload<S extends boolean | null | undefined | IntroductionWorkflowDefaultArgs> = $Result.GetResult<Prisma.$IntroductionWorkflowPayload, S>
+
+  type IntroductionWorkflowCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<IntroductionWorkflowFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: IntroductionWorkflowCountAggregateInputType | true
+    }
+
+  export interface IntroductionWorkflowDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['IntroductionWorkflow'], meta: { name: 'IntroductionWorkflow' } }
+    /**
+     * Find zero or one IntroductionWorkflow that matches the filter.
+     * @param {IntroductionWorkflowFindUniqueArgs} args - Arguments to find a IntroductionWorkflow
+     * @example
+     * // Get one IntroductionWorkflow
+     * const introductionWorkflow = await prisma.introductionWorkflow.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends IntroductionWorkflowFindUniqueArgs>(args: SelectSubset<T, IntroductionWorkflowFindUniqueArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one IntroductionWorkflow that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {IntroductionWorkflowFindUniqueOrThrowArgs} args - Arguments to find a IntroductionWorkflow
+     * @example
+     * // Get one IntroductionWorkflow
+     * const introductionWorkflow = await prisma.introductionWorkflow.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends IntroductionWorkflowFindUniqueOrThrowArgs>(args: SelectSubset<T, IntroductionWorkflowFindUniqueOrThrowArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first IntroductionWorkflow that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IntroductionWorkflowFindFirstArgs} args - Arguments to find a IntroductionWorkflow
+     * @example
+     * // Get one IntroductionWorkflow
+     * const introductionWorkflow = await prisma.introductionWorkflow.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends IntroductionWorkflowFindFirstArgs>(args?: SelectSubset<T, IntroductionWorkflowFindFirstArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first IntroductionWorkflow that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IntroductionWorkflowFindFirstOrThrowArgs} args - Arguments to find a IntroductionWorkflow
+     * @example
+     * // Get one IntroductionWorkflow
+     * const introductionWorkflow = await prisma.introductionWorkflow.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends IntroductionWorkflowFindFirstOrThrowArgs>(args?: SelectSubset<T, IntroductionWorkflowFindFirstOrThrowArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more IntroductionWorkflows that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IntroductionWorkflowFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all IntroductionWorkflows
+     * const introductionWorkflows = await prisma.introductionWorkflow.findMany()
+     * 
+     * // Get first 10 IntroductionWorkflows
+     * const introductionWorkflows = await prisma.introductionWorkflow.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const introductionWorkflowWithIdOnly = await prisma.introductionWorkflow.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends IntroductionWorkflowFindManyArgs>(args?: SelectSubset<T, IntroductionWorkflowFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a IntroductionWorkflow.
+     * @param {IntroductionWorkflowCreateArgs} args - Arguments to create a IntroductionWorkflow.
+     * @example
+     * // Create one IntroductionWorkflow
+     * const IntroductionWorkflow = await prisma.introductionWorkflow.create({
+     *   data: {
+     *     // ... data to create a IntroductionWorkflow
+     *   }
+     * })
+     * 
+     */
+    create<T extends IntroductionWorkflowCreateArgs>(args: SelectSubset<T, IntroductionWorkflowCreateArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many IntroductionWorkflows.
+     * @param {IntroductionWorkflowCreateManyArgs} args - Arguments to create many IntroductionWorkflows.
+     * @example
+     * // Create many IntroductionWorkflows
+     * const introductionWorkflow = await prisma.introductionWorkflow.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends IntroductionWorkflowCreateManyArgs>(args?: SelectSubset<T, IntroductionWorkflowCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many IntroductionWorkflows and returns the data saved in the database.
+     * @param {IntroductionWorkflowCreateManyAndReturnArgs} args - Arguments to create many IntroductionWorkflows.
+     * @example
+     * // Create many IntroductionWorkflows
+     * const introductionWorkflow = await prisma.introductionWorkflow.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many IntroductionWorkflows and only return the `id`
+     * const introductionWorkflowWithIdOnly = await prisma.introductionWorkflow.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends IntroductionWorkflowCreateManyAndReturnArgs>(args?: SelectSubset<T, IntroductionWorkflowCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a IntroductionWorkflow.
+     * @param {IntroductionWorkflowDeleteArgs} args - Arguments to delete one IntroductionWorkflow.
+     * @example
+     * // Delete one IntroductionWorkflow
+     * const IntroductionWorkflow = await prisma.introductionWorkflow.delete({
+     *   where: {
+     *     // ... filter to delete one IntroductionWorkflow
+     *   }
+     * })
+     * 
+     */
+    delete<T extends IntroductionWorkflowDeleteArgs>(args: SelectSubset<T, IntroductionWorkflowDeleteArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one IntroductionWorkflow.
+     * @param {IntroductionWorkflowUpdateArgs} args - Arguments to update one IntroductionWorkflow.
+     * @example
+     * // Update one IntroductionWorkflow
+     * const introductionWorkflow = await prisma.introductionWorkflow.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends IntroductionWorkflowUpdateArgs>(args: SelectSubset<T, IntroductionWorkflowUpdateArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more IntroductionWorkflows.
+     * @param {IntroductionWorkflowDeleteManyArgs} args - Arguments to filter IntroductionWorkflows to delete.
+     * @example
+     * // Delete a few IntroductionWorkflows
+     * const { count } = await prisma.introductionWorkflow.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends IntroductionWorkflowDeleteManyArgs>(args?: SelectSubset<T, IntroductionWorkflowDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more IntroductionWorkflows.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IntroductionWorkflowUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many IntroductionWorkflows
+     * const introductionWorkflow = await prisma.introductionWorkflow.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends IntroductionWorkflowUpdateManyArgs>(args: SelectSubset<T, IntroductionWorkflowUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more IntroductionWorkflows and returns the data updated in the database.
+     * @param {IntroductionWorkflowUpdateManyAndReturnArgs} args - Arguments to update many IntroductionWorkflows.
+     * @example
+     * // Update many IntroductionWorkflows
+     * const introductionWorkflow = await prisma.introductionWorkflow.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more IntroductionWorkflows and only return the `id`
+     * const introductionWorkflowWithIdOnly = await prisma.introductionWorkflow.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends IntroductionWorkflowUpdateManyAndReturnArgs>(args: SelectSubset<T, IntroductionWorkflowUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one IntroductionWorkflow.
+     * @param {IntroductionWorkflowUpsertArgs} args - Arguments to update or create a IntroductionWorkflow.
+     * @example
+     * // Update or create a IntroductionWorkflow
+     * const introductionWorkflow = await prisma.introductionWorkflow.upsert({
+     *   create: {
+     *     // ... data to create a IntroductionWorkflow
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the IntroductionWorkflow we want to update
+     *   }
+     * })
+     */
+    upsert<T extends IntroductionWorkflowUpsertArgs>(args: SelectSubset<T, IntroductionWorkflowUpsertArgs<ExtArgs>>): Prisma__IntroductionWorkflowClient<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of IntroductionWorkflows.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IntroductionWorkflowCountArgs} args - Arguments to filter IntroductionWorkflows to count.
+     * @example
+     * // Count the number of IntroductionWorkflows
+     * const count = await prisma.introductionWorkflow.count({
+     *   where: {
+     *     // ... the filter for the IntroductionWorkflows we want to count
+     *   }
+     * })
+    **/
+    count<T extends IntroductionWorkflowCountArgs>(
+      args?: Subset<T, IntroductionWorkflowCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], IntroductionWorkflowCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a IntroductionWorkflow.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IntroductionWorkflowAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends IntroductionWorkflowAggregateArgs>(args: Subset<T, IntroductionWorkflowAggregateArgs>): Prisma.PrismaPromise<GetIntroductionWorkflowAggregateType<T>>
+
+    /**
+     * Group by IntroductionWorkflow.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IntroductionWorkflowGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends IntroductionWorkflowGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: IntroductionWorkflowGroupByArgs['orderBy'] }
+        : { orderBy?: IntroductionWorkflowGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, IntroductionWorkflowGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetIntroductionWorkflowGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the IntroductionWorkflow model
+   */
+  readonly fields: IntroductionWorkflowFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for IntroductionWorkflow.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__IntroductionWorkflowClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    proposal<T extends ConnectionProposalDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ConnectionProposalDefaultArgs<ExtArgs>>): Prisma__ConnectionProposalClient<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the IntroductionWorkflow model
+   */
+  interface IntroductionWorkflowFieldRefs {
+    readonly id: FieldRef<"IntroductionWorkflow", 'String'>
+    readonly organizationId: FieldRef<"IntroductionWorkflow", 'String'>
+    readonly proposalId: FieldRef<"IntroductionWorkflow", 'String'>
+    readonly missionId: FieldRef<"IntroductionWorkflow", 'String'>
+    readonly stage: FieldRef<"IntroductionWorkflow", 'WorkflowStage'>
+    readonly stageEnteredAt: FieldRef<"IntroductionWorkflow", 'DateTime'>
+    readonly timeline: FieldRef<"IntroductionWorkflow", 'String'>
+    readonly createdAt: FieldRef<"IntroductionWorkflow", 'DateTime'>
+    readonly updatedAt: FieldRef<"IntroductionWorkflow", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * IntroductionWorkflow findUnique
+   */
+  export type IntroductionWorkflowFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * Filter, which IntroductionWorkflow to fetch.
+     */
+    where: IntroductionWorkflowWhereUniqueInput
+  }
+
+  /**
+   * IntroductionWorkflow findUniqueOrThrow
+   */
+  export type IntroductionWorkflowFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * Filter, which IntroductionWorkflow to fetch.
+     */
+    where: IntroductionWorkflowWhereUniqueInput
+  }
+
+  /**
+   * IntroductionWorkflow findFirst
+   */
+  export type IntroductionWorkflowFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * Filter, which IntroductionWorkflow to fetch.
+     */
+    where?: IntroductionWorkflowWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IntroductionWorkflows to fetch.
+     */
+    orderBy?: IntroductionWorkflowOrderByWithRelationInput | IntroductionWorkflowOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for IntroductionWorkflows.
+     */
+    cursor?: IntroductionWorkflowWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IntroductionWorkflows from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IntroductionWorkflows.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of IntroductionWorkflows.
+     */
+    distinct?: IntroductionWorkflowScalarFieldEnum | IntroductionWorkflowScalarFieldEnum[]
+  }
+
+  /**
+   * IntroductionWorkflow findFirstOrThrow
+   */
+  export type IntroductionWorkflowFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * Filter, which IntroductionWorkflow to fetch.
+     */
+    where?: IntroductionWorkflowWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IntroductionWorkflows to fetch.
+     */
+    orderBy?: IntroductionWorkflowOrderByWithRelationInput | IntroductionWorkflowOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for IntroductionWorkflows.
+     */
+    cursor?: IntroductionWorkflowWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IntroductionWorkflows from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IntroductionWorkflows.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of IntroductionWorkflows.
+     */
+    distinct?: IntroductionWorkflowScalarFieldEnum | IntroductionWorkflowScalarFieldEnum[]
+  }
+
+  /**
+   * IntroductionWorkflow findMany
+   */
+  export type IntroductionWorkflowFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * Filter, which IntroductionWorkflows to fetch.
+     */
+    where?: IntroductionWorkflowWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IntroductionWorkflows to fetch.
+     */
+    orderBy?: IntroductionWorkflowOrderByWithRelationInput | IntroductionWorkflowOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing IntroductionWorkflows.
+     */
+    cursor?: IntroductionWorkflowWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IntroductionWorkflows from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IntroductionWorkflows.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of IntroductionWorkflows.
+     */
+    distinct?: IntroductionWorkflowScalarFieldEnum | IntroductionWorkflowScalarFieldEnum[]
+  }
+
+  /**
+   * IntroductionWorkflow create
+   */
+  export type IntroductionWorkflowCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * The data needed to create a IntroductionWorkflow.
+     */
+    data: XOR<IntroductionWorkflowCreateInput, IntroductionWorkflowUncheckedCreateInput>
+  }
+
+  /**
+   * IntroductionWorkflow createMany
+   */
+  export type IntroductionWorkflowCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many IntroductionWorkflows.
+     */
+    data: IntroductionWorkflowCreateManyInput | IntroductionWorkflowCreateManyInput[]
+  }
+
+  /**
+   * IntroductionWorkflow createManyAndReturn
+   */
+  export type IntroductionWorkflowCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * The data used to create many IntroductionWorkflows.
+     */
+    data: IntroductionWorkflowCreateManyInput | IntroductionWorkflowCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * IntroductionWorkflow update
+   */
+  export type IntroductionWorkflowUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * The data needed to update a IntroductionWorkflow.
+     */
+    data: XOR<IntroductionWorkflowUpdateInput, IntroductionWorkflowUncheckedUpdateInput>
+    /**
+     * Choose, which IntroductionWorkflow to update.
+     */
+    where: IntroductionWorkflowWhereUniqueInput
+  }
+
+  /**
+   * IntroductionWorkflow updateMany
+   */
+  export type IntroductionWorkflowUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update IntroductionWorkflows.
+     */
+    data: XOR<IntroductionWorkflowUpdateManyMutationInput, IntroductionWorkflowUncheckedUpdateManyInput>
+    /**
+     * Filter which IntroductionWorkflows to update
+     */
+    where?: IntroductionWorkflowWhereInput
+    /**
+     * Limit how many IntroductionWorkflows to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * IntroductionWorkflow updateManyAndReturn
+   */
+  export type IntroductionWorkflowUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * The data used to update IntroductionWorkflows.
+     */
+    data: XOR<IntroductionWorkflowUpdateManyMutationInput, IntroductionWorkflowUncheckedUpdateManyInput>
+    /**
+     * Filter which IntroductionWorkflows to update
+     */
+    where?: IntroductionWorkflowWhereInput
+    /**
+     * Limit how many IntroductionWorkflows to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * IntroductionWorkflow upsert
+   */
+  export type IntroductionWorkflowUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * The filter to search for the IntroductionWorkflow to update in case it exists.
+     */
+    where: IntroductionWorkflowWhereUniqueInput
+    /**
+     * In case the IntroductionWorkflow found by the `where` argument doesn't exist, create a new IntroductionWorkflow with this data.
+     */
+    create: XOR<IntroductionWorkflowCreateInput, IntroductionWorkflowUncheckedCreateInput>
+    /**
+     * In case the IntroductionWorkflow was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<IntroductionWorkflowUpdateInput, IntroductionWorkflowUncheckedUpdateInput>
+  }
+
+  /**
+   * IntroductionWorkflow delete
+   */
+  export type IntroductionWorkflowDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    /**
+     * Filter which IntroductionWorkflow to delete.
+     */
+    where: IntroductionWorkflowWhereUniqueInput
+  }
+
+  /**
+   * IntroductionWorkflow deleteMany
+   */
+  export type IntroductionWorkflowDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which IntroductionWorkflows to delete
+     */
+    where?: IntroductionWorkflowWhereInput
+    /**
+     * Limit how many IntroductionWorkflows to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * IntroductionWorkflow without action
+   */
+  export type IntroductionWorkflowDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
   }
 
 
@@ -61262,6 +65377,9 @@ export namespace Prisma {
     socialIntents?: boolean | Organization$socialIntentsArgs<ExtArgs>
     connectionProposals?: boolean | Organization$connectionProposalsArgs<ExtArgs>
     proposalDecisions?: boolean | Organization$proposalDecisionsArgs<ExtArgs>
+    workflowJobs?: boolean | Organization$workflowJobsArgs<ExtArgs>
+    notificationDeliveries?: boolean | Organization$notificationDeliveriesArgs<ExtArgs>
+    introductionWorkflows?: boolean | Organization$introductionWorkflowsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -61302,6 +65420,9 @@ export namespace Prisma {
     socialIntents?: boolean | Organization$socialIntentsArgs<ExtArgs>
     connectionProposals?: boolean | Organization$connectionProposalsArgs<ExtArgs>
     proposalDecisions?: boolean | Organization$proposalDecisionsArgs<ExtArgs>
+    workflowJobs?: boolean | Organization$workflowJobsArgs<ExtArgs>
+    notificationDeliveries?: boolean | Organization$notificationDeliveriesArgs<ExtArgs>
+    introductionWorkflows?: boolean | Organization$introductionWorkflowsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -61318,6 +65439,9 @@ export namespace Prisma {
       socialIntents: Prisma.$SocialIntentPayload<ExtArgs>[]
       connectionProposals: Prisma.$ConnectionProposalPayload<ExtArgs>[]
       proposalDecisions: Prisma.$ProposalDecisionPayload<ExtArgs>[]
+      workflowJobs: Prisma.$WorkflowJobPayload<ExtArgs>[]
+      notificationDeliveries: Prisma.$NotificationDeliveryPayload<ExtArgs>[]
+      introductionWorkflows: Prisma.$IntroductionWorkflowPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -61731,6 +65855,9 @@ export namespace Prisma {
     socialIntents<T extends Organization$socialIntentsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$socialIntentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SocialIntentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     connectionProposals<T extends Organization$connectionProposalsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$connectionProposalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConnectionProposalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proposalDecisions<T extends Organization$proposalDecisionsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$proposalDecisionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProposalDecisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    workflowJobs<T extends Organization$workflowJobsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$workflowJobsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    notificationDeliveries<T extends Organization$notificationDeliveriesArgs<ExtArgs> = {}>(args?: Subset<T, Organization$notificationDeliveriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    introductionWorkflows<T extends Organization$introductionWorkflowsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$introductionWorkflowsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -62346,6 +66473,78 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ProposalDecisionScalarFieldEnum | ProposalDecisionScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.workflowJobs
+   */
+  export type Organization$workflowJobsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkflowJob
+     */
+    select?: WorkflowJobSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkflowJob
+     */
+    omit?: WorkflowJobOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkflowJobInclude<ExtArgs> | null
+    where?: WorkflowJobWhereInput
+    orderBy?: WorkflowJobOrderByWithRelationInput | WorkflowJobOrderByWithRelationInput[]
+    cursor?: WorkflowJobWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: WorkflowJobScalarFieldEnum | WorkflowJobScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.notificationDeliveries
+   */
+  export type Organization$notificationDeliveriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationDelivery
+     */
+    select?: NotificationDeliverySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NotificationDelivery
+     */
+    omit?: NotificationDeliveryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificationDeliveryInclude<ExtArgs> | null
+    where?: NotificationDeliveryWhereInput
+    orderBy?: NotificationDeliveryOrderByWithRelationInput | NotificationDeliveryOrderByWithRelationInput[]
+    cursor?: NotificationDeliveryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: NotificationDeliveryScalarFieldEnum | NotificationDeliveryScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.introductionWorkflows
+   */
+  export type Organization$introductionWorkflowsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IntroductionWorkflow
+     */
+    select?: IntroductionWorkflowSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the IntroductionWorkflow
+     */
+    omit?: IntroductionWorkflowOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IntroductionWorkflowInclude<ExtArgs> | null
+    where?: IntroductionWorkflowWhereInput
+    orderBy?: IntroductionWorkflowOrderByWithRelationInput | IntroductionWorkflowOrderByWithRelationInput[]
+    cursor?: IntroductionWorkflowWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: IntroductionWorkflowScalarFieldEnum | IntroductionWorkflowScalarFieldEnum[]
   }
 
   /**
@@ -64810,6 +69009,71 @@ export namespace Prisma {
   export type ProposalDecisionScalarFieldEnum = (typeof ProposalDecisionScalarFieldEnum)[keyof typeof ProposalDecisionScalarFieldEnum]
 
 
+  export const WorkflowJobScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    dedupeKey: 'dedupeKey',
+    kind: 'kind',
+    status: 'status',
+    proposalId: 'proposalId',
+    missionId: 'missionId',
+    payload: 'payload',
+    attempts: 'attempts',
+    maxAttempts: 'maxAttempts',
+    nextAttemptAt: 'nextAttemptAt',
+    lockedBy: 'lockedBy',
+    lockedUntil: 'lockedUntil',
+    lastError: 'lastError',
+    deadLetteredAt: 'deadLetteredAt',
+    takenOverBy: 'takenOverBy',
+    takenOverAt: 'takenOverAt',
+    cancelledAt: 'cancelledAt',
+    completedAt: 'completedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type WorkflowJobScalarFieldEnum = (typeof WorkflowJobScalarFieldEnum)[keyof typeof WorkflowJobScalarFieldEnum]
+
+
+  export const NotificationDeliveryScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    dedupeKey: 'dedupeKey',
+    channel: 'channel',
+    status: 'status',
+    recipientId: 'recipientId',
+    template: 'template',
+    subject: 'subject',
+    body: 'body',
+    actionUrl: 'actionUrl',
+    capturedAt: 'capturedAt',
+    provider: 'provider',
+    providerMessageId: 'providerMessageId',
+    failureReason: 'failureReason',
+    sentAt: 'sentAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type NotificationDeliveryScalarFieldEnum = (typeof NotificationDeliveryScalarFieldEnum)[keyof typeof NotificationDeliveryScalarFieldEnum]
+
+
+  export const IntroductionWorkflowScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    proposalId: 'proposalId',
+    missionId: 'missionId',
+    stage: 'stage',
+    stageEnteredAt: 'stageEnteredAt',
+    timeline: 'timeline',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type IntroductionWorkflowScalarFieldEnum = (typeof IntroductionWorkflowScalarFieldEnum)[keyof typeof IntroductionWorkflowScalarFieldEnum]
+
+
   export const UserScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -65594,6 +69858,41 @@ export namespace Prisma {
    * Reference to a field of type 'ProposalDecisionKind'
    */
   export type EnumProposalDecisionKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProposalDecisionKind'>
+    
+
+
+  /**
+   * Reference to a field of type 'WorkflowJobKind'
+   */
+  export type EnumWorkflowJobKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkflowJobKind'>
+    
+
+
+  /**
+   * Reference to a field of type 'WorkflowJobStatus'
+   */
+  export type EnumWorkflowJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkflowJobStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'NotificationChannel'
+   */
+  export type EnumNotificationChannelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationChannel'>
+    
+
+
+  /**
+   * Reference to a field of type 'NotificationDeliveryStatus'
+   */
+  export type EnumNotificationDeliveryStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationDeliveryStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'WorkflowStage'
+   */
+  export type EnumWorkflowStageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkflowStage'>
     
 
 
@@ -66843,6 +71142,7 @@ export namespace Prisma {
     proposer?: XOR<UserScalarRelationFilter, UserWhereInput>
     candidate?: XOR<UserScalarRelationFilter, UserWhereInput>
     decisions?: ProposalDecisionListRelationFilter
+    introductionWorkflow?: XOR<IntroductionWorkflowNullableScalarRelationFilter, IntroductionWorkflowWhereInput> | null
   }
 
   export type ConnectionProposalOrderByWithRelationInput = {
@@ -66863,6 +71163,7 @@ export namespace Prisma {
     proposer?: UserOrderByWithRelationInput
     candidate?: UserOrderByWithRelationInput
     decisions?: ProposalDecisionOrderByRelationAggregateInput
+    introductionWorkflow?: IntroductionWorkflowOrderByWithRelationInput
   }
 
   export type ConnectionProposalWhereUniqueInput = Prisma.AtLeast<{
@@ -66887,6 +71188,7 @@ export namespace Prisma {
     proposer?: XOR<UserScalarRelationFilter, UserWhereInput>
     candidate?: XOR<UserScalarRelationFilter, UserWhereInput>
     decisions?: ProposalDecisionListRelationFilter
+    introductionWorkflow?: XOR<IntroductionWorkflowNullableScalarRelationFilter, IntroductionWorkflowWhereInput> | null
   }, "id" | "missionId_proposerId_candidateId">
 
   export type ConnectionProposalOrderByWithAggregationInput = {
@@ -66995,6 +71297,338 @@ export namespace Prisma {
     decision?: EnumProposalDecisionKindWithAggregatesFilter<"ProposalDecision"> | $Enums.ProposalDecisionKind
     note?: StringNullableWithAggregatesFilter<"ProposalDecision"> | string | null
     decidedAt?: DateTimeWithAggregatesFilter<"ProposalDecision"> | Date | string
+  }
+
+  export type WorkflowJobWhereInput = {
+    AND?: WorkflowJobWhereInput | WorkflowJobWhereInput[]
+    OR?: WorkflowJobWhereInput[]
+    NOT?: WorkflowJobWhereInput | WorkflowJobWhereInput[]
+    id?: StringFilter<"WorkflowJob"> | string
+    organizationId?: StringFilter<"WorkflowJob"> | string
+    dedupeKey?: StringFilter<"WorkflowJob"> | string
+    kind?: EnumWorkflowJobKindFilter<"WorkflowJob"> | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFilter<"WorkflowJob"> | $Enums.WorkflowJobStatus
+    proposalId?: StringNullableFilter<"WorkflowJob"> | string | null
+    missionId?: StringNullableFilter<"WorkflowJob"> | string | null
+    payload?: StringNullableFilter<"WorkflowJob"> | string | null
+    attempts?: IntFilter<"WorkflowJob"> | number
+    maxAttempts?: IntFilter<"WorkflowJob"> | number
+    nextAttemptAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+    lockedBy?: StringNullableFilter<"WorkflowJob"> | string | null
+    lockedUntil?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    lastError?: StringNullableFilter<"WorkflowJob"> | string | null
+    deadLetteredAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    takenOverBy?: StringNullableFilter<"WorkflowJob"> | string | null
+    takenOverAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    cancelledAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    createdAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+    updatedAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }
+
+  export type WorkflowJobOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    kind?: SortOrder
+    status?: SortOrder
+    proposalId?: SortOrderInput | SortOrder
+    missionId?: SortOrderInput | SortOrder
+    payload?: SortOrderInput | SortOrder
+    attempts?: SortOrder
+    maxAttempts?: SortOrder
+    nextAttemptAt?: SortOrder
+    lockedBy?: SortOrderInput | SortOrder
+    lockedUntil?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    deadLetteredAt?: SortOrderInput | SortOrder
+    takenOverBy?: SortOrderInput | SortOrder
+    takenOverAt?: SortOrderInput | SortOrder
+    cancelledAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+  }
+
+  export type WorkflowJobWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    organizationId_dedupeKey?: WorkflowJobOrganizationIdDedupeKeyCompoundUniqueInput
+    AND?: WorkflowJobWhereInput | WorkflowJobWhereInput[]
+    OR?: WorkflowJobWhereInput[]
+    NOT?: WorkflowJobWhereInput | WorkflowJobWhereInput[]
+    organizationId?: StringFilter<"WorkflowJob"> | string
+    dedupeKey?: StringFilter<"WorkflowJob"> | string
+    kind?: EnumWorkflowJobKindFilter<"WorkflowJob"> | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFilter<"WorkflowJob"> | $Enums.WorkflowJobStatus
+    proposalId?: StringNullableFilter<"WorkflowJob"> | string | null
+    missionId?: StringNullableFilter<"WorkflowJob"> | string | null
+    payload?: StringNullableFilter<"WorkflowJob"> | string | null
+    attempts?: IntFilter<"WorkflowJob"> | number
+    maxAttempts?: IntFilter<"WorkflowJob"> | number
+    nextAttemptAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+    lockedBy?: StringNullableFilter<"WorkflowJob"> | string | null
+    lockedUntil?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    lastError?: StringNullableFilter<"WorkflowJob"> | string | null
+    deadLetteredAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    takenOverBy?: StringNullableFilter<"WorkflowJob"> | string | null
+    takenOverAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    cancelledAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    createdAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+    updatedAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }, "id" | "organizationId_dedupeKey">
+
+  export type WorkflowJobOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    kind?: SortOrder
+    status?: SortOrder
+    proposalId?: SortOrderInput | SortOrder
+    missionId?: SortOrderInput | SortOrder
+    payload?: SortOrderInput | SortOrder
+    attempts?: SortOrder
+    maxAttempts?: SortOrder
+    nextAttemptAt?: SortOrder
+    lockedBy?: SortOrderInput | SortOrder
+    lockedUntil?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    deadLetteredAt?: SortOrderInput | SortOrder
+    takenOverBy?: SortOrderInput | SortOrder
+    takenOverAt?: SortOrderInput | SortOrder
+    cancelledAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: WorkflowJobCountOrderByAggregateInput
+    _avg?: WorkflowJobAvgOrderByAggregateInput
+    _max?: WorkflowJobMaxOrderByAggregateInput
+    _min?: WorkflowJobMinOrderByAggregateInput
+    _sum?: WorkflowJobSumOrderByAggregateInput
+  }
+
+  export type WorkflowJobScalarWhereWithAggregatesInput = {
+    AND?: WorkflowJobScalarWhereWithAggregatesInput | WorkflowJobScalarWhereWithAggregatesInput[]
+    OR?: WorkflowJobScalarWhereWithAggregatesInput[]
+    NOT?: WorkflowJobScalarWhereWithAggregatesInput | WorkflowJobScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"WorkflowJob"> | string
+    organizationId?: StringWithAggregatesFilter<"WorkflowJob"> | string
+    dedupeKey?: StringWithAggregatesFilter<"WorkflowJob"> | string
+    kind?: EnumWorkflowJobKindWithAggregatesFilter<"WorkflowJob"> | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusWithAggregatesFilter<"WorkflowJob"> | $Enums.WorkflowJobStatus
+    proposalId?: StringNullableWithAggregatesFilter<"WorkflowJob"> | string | null
+    missionId?: StringNullableWithAggregatesFilter<"WorkflowJob"> | string | null
+    payload?: StringNullableWithAggregatesFilter<"WorkflowJob"> | string | null
+    attempts?: IntWithAggregatesFilter<"WorkflowJob"> | number
+    maxAttempts?: IntWithAggregatesFilter<"WorkflowJob"> | number
+    nextAttemptAt?: DateTimeWithAggregatesFilter<"WorkflowJob"> | Date | string
+    lockedBy?: StringNullableWithAggregatesFilter<"WorkflowJob"> | string | null
+    lockedUntil?: DateTimeNullableWithAggregatesFilter<"WorkflowJob"> | Date | string | null
+    lastError?: StringNullableWithAggregatesFilter<"WorkflowJob"> | string | null
+    deadLetteredAt?: DateTimeNullableWithAggregatesFilter<"WorkflowJob"> | Date | string | null
+    takenOverBy?: StringNullableWithAggregatesFilter<"WorkflowJob"> | string | null
+    takenOverAt?: DateTimeNullableWithAggregatesFilter<"WorkflowJob"> | Date | string | null
+    cancelledAt?: DateTimeNullableWithAggregatesFilter<"WorkflowJob"> | Date | string | null
+    completedAt?: DateTimeNullableWithAggregatesFilter<"WorkflowJob"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"WorkflowJob"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"WorkflowJob"> | Date | string
+  }
+
+  export type NotificationDeliveryWhereInput = {
+    AND?: NotificationDeliveryWhereInput | NotificationDeliveryWhereInput[]
+    OR?: NotificationDeliveryWhereInput[]
+    NOT?: NotificationDeliveryWhereInput | NotificationDeliveryWhereInput[]
+    id?: StringFilter<"NotificationDelivery"> | string
+    organizationId?: StringFilter<"NotificationDelivery"> | string
+    dedupeKey?: StringFilter<"NotificationDelivery"> | string
+    channel?: EnumNotificationChannelFilter<"NotificationDelivery"> | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFilter<"NotificationDelivery"> | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFilter<"NotificationDelivery"> | string
+    template?: StringFilter<"NotificationDelivery"> | string
+    subject?: StringNullableFilter<"NotificationDelivery"> | string | null
+    body?: StringFilter<"NotificationDelivery"> | string
+    actionUrl?: StringNullableFilter<"NotificationDelivery"> | string | null
+    capturedAt?: DateTimeNullableFilter<"NotificationDelivery"> | Date | string | null
+    provider?: StringNullableFilter<"NotificationDelivery"> | string | null
+    providerMessageId?: StringNullableFilter<"NotificationDelivery"> | string | null
+    failureReason?: StringNullableFilter<"NotificationDelivery"> | string | null
+    sentAt?: DateTimeNullableFilter<"NotificationDelivery"> | Date | string | null
+    createdAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+    updatedAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }
+
+  export type NotificationDeliveryOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    channel?: SortOrder
+    status?: SortOrder
+    recipientId?: SortOrder
+    template?: SortOrder
+    subject?: SortOrderInput | SortOrder
+    body?: SortOrder
+    actionUrl?: SortOrderInput | SortOrder
+    capturedAt?: SortOrderInput | SortOrder
+    provider?: SortOrderInput | SortOrder
+    providerMessageId?: SortOrderInput | SortOrder
+    failureReason?: SortOrderInput | SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+  }
+
+  export type NotificationDeliveryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    organizationId_dedupeKey?: NotificationDeliveryOrganizationIdDedupeKeyCompoundUniqueInput
+    AND?: NotificationDeliveryWhereInput | NotificationDeliveryWhereInput[]
+    OR?: NotificationDeliveryWhereInput[]
+    NOT?: NotificationDeliveryWhereInput | NotificationDeliveryWhereInput[]
+    organizationId?: StringFilter<"NotificationDelivery"> | string
+    dedupeKey?: StringFilter<"NotificationDelivery"> | string
+    channel?: EnumNotificationChannelFilter<"NotificationDelivery"> | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFilter<"NotificationDelivery"> | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFilter<"NotificationDelivery"> | string
+    template?: StringFilter<"NotificationDelivery"> | string
+    subject?: StringNullableFilter<"NotificationDelivery"> | string | null
+    body?: StringFilter<"NotificationDelivery"> | string
+    actionUrl?: StringNullableFilter<"NotificationDelivery"> | string | null
+    capturedAt?: DateTimeNullableFilter<"NotificationDelivery"> | Date | string | null
+    provider?: StringNullableFilter<"NotificationDelivery"> | string | null
+    providerMessageId?: StringNullableFilter<"NotificationDelivery"> | string | null
+    failureReason?: StringNullableFilter<"NotificationDelivery"> | string | null
+    sentAt?: DateTimeNullableFilter<"NotificationDelivery"> | Date | string | null
+    createdAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+    updatedAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }, "id" | "organizationId_dedupeKey">
+
+  export type NotificationDeliveryOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    channel?: SortOrder
+    status?: SortOrder
+    recipientId?: SortOrder
+    template?: SortOrder
+    subject?: SortOrderInput | SortOrder
+    body?: SortOrder
+    actionUrl?: SortOrderInput | SortOrder
+    capturedAt?: SortOrderInput | SortOrder
+    provider?: SortOrderInput | SortOrder
+    providerMessageId?: SortOrderInput | SortOrder
+    failureReason?: SortOrderInput | SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: NotificationDeliveryCountOrderByAggregateInput
+    _max?: NotificationDeliveryMaxOrderByAggregateInput
+    _min?: NotificationDeliveryMinOrderByAggregateInput
+  }
+
+  export type NotificationDeliveryScalarWhereWithAggregatesInput = {
+    AND?: NotificationDeliveryScalarWhereWithAggregatesInput | NotificationDeliveryScalarWhereWithAggregatesInput[]
+    OR?: NotificationDeliveryScalarWhereWithAggregatesInput[]
+    NOT?: NotificationDeliveryScalarWhereWithAggregatesInput | NotificationDeliveryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    organizationId?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    dedupeKey?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    channel?: EnumNotificationChannelWithAggregatesFilter<"NotificationDelivery"> | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusWithAggregatesFilter<"NotificationDelivery"> | $Enums.NotificationDeliveryStatus
+    recipientId?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    template?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    subject?: StringNullableWithAggregatesFilter<"NotificationDelivery"> | string | null
+    body?: StringWithAggregatesFilter<"NotificationDelivery"> | string
+    actionUrl?: StringNullableWithAggregatesFilter<"NotificationDelivery"> | string | null
+    capturedAt?: DateTimeNullableWithAggregatesFilter<"NotificationDelivery"> | Date | string | null
+    provider?: StringNullableWithAggregatesFilter<"NotificationDelivery"> | string | null
+    providerMessageId?: StringNullableWithAggregatesFilter<"NotificationDelivery"> | string | null
+    failureReason?: StringNullableWithAggregatesFilter<"NotificationDelivery"> | string | null
+    sentAt?: DateTimeNullableWithAggregatesFilter<"NotificationDelivery"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"NotificationDelivery"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"NotificationDelivery"> | Date | string
+  }
+
+  export type IntroductionWorkflowWhereInput = {
+    AND?: IntroductionWorkflowWhereInput | IntroductionWorkflowWhereInput[]
+    OR?: IntroductionWorkflowWhereInput[]
+    NOT?: IntroductionWorkflowWhereInput | IntroductionWorkflowWhereInput[]
+    id?: StringFilter<"IntroductionWorkflow"> | string
+    organizationId?: StringFilter<"IntroductionWorkflow"> | string
+    proposalId?: StringFilter<"IntroductionWorkflow"> | string
+    missionId?: StringFilter<"IntroductionWorkflow"> | string
+    stage?: EnumWorkflowStageFilter<"IntroductionWorkflow"> | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+    timeline?: StringNullableFilter<"IntroductionWorkflow"> | string | null
+    createdAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+    updatedAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    proposal?: XOR<ConnectionProposalScalarRelationFilter, ConnectionProposalWhereInput>
+  }
+
+  export type IntroductionWorkflowOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    stage?: SortOrder
+    stageEnteredAt?: SortOrder
+    timeline?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    proposal?: ConnectionProposalOrderByWithRelationInput
+  }
+
+  export type IntroductionWorkflowWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    proposalId?: string
+    AND?: IntroductionWorkflowWhereInput | IntroductionWorkflowWhereInput[]
+    OR?: IntroductionWorkflowWhereInput[]
+    NOT?: IntroductionWorkflowWhereInput | IntroductionWorkflowWhereInput[]
+    organizationId?: StringFilter<"IntroductionWorkflow"> | string
+    missionId?: StringFilter<"IntroductionWorkflow"> | string
+    stage?: EnumWorkflowStageFilter<"IntroductionWorkflow"> | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+    timeline?: StringNullableFilter<"IntroductionWorkflow"> | string | null
+    createdAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+    updatedAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    proposal?: XOR<ConnectionProposalScalarRelationFilter, ConnectionProposalWhereInput>
+  }, "id" | "proposalId">
+
+  export type IntroductionWorkflowOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    stage?: SortOrder
+    stageEnteredAt?: SortOrder
+    timeline?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: IntroductionWorkflowCountOrderByAggregateInput
+    _max?: IntroductionWorkflowMaxOrderByAggregateInput
+    _min?: IntroductionWorkflowMinOrderByAggregateInput
+  }
+
+  export type IntroductionWorkflowScalarWhereWithAggregatesInput = {
+    AND?: IntroductionWorkflowScalarWhereWithAggregatesInput | IntroductionWorkflowScalarWhereWithAggregatesInput[]
+    OR?: IntroductionWorkflowScalarWhereWithAggregatesInput[]
+    NOT?: IntroductionWorkflowScalarWhereWithAggregatesInput | IntroductionWorkflowScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"IntroductionWorkflow"> | string
+    organizationId?: StringWithAggregatesFilter<"IntroductionWorkflow"> | string
+    proposalId?: StringWithAggregatesFilter<"IntroductionWorkflow"> | string
+    missionId?: StringWithAggregatesFilter<"IntroductionWorkflow"> | string
+    stage?: EnumWorkflowStageWithAggregatesFilter<"IntroductionWorkflow"> | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeWithAggregatesFilter<"IntroductionWorkflow"> | Date | string
+    timeline?: StringNullableWithAggregatesFilter<"IntroductionWorkflow"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"IntroductionWorkflow"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"IntroductionWorkflow"> | Date | string
   }
 
   export type UserWhereInput = {
@@ -70374,6 +75008,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentListRelationFilter
     connectionProposals?: ConnectionProposalListRelationFilter
     proposalDecisions?: ProposalDecisionListRelationFilter
+    workflowJobs?: WorkflowJobListRelationFilter
+    notificationDeliveries?: NotificationDeliveryListRelationFilter
+    introductionWorkflows?: IntroductionWorkflowListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -70391,6 +75028,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentOrderByRelationAggregateInput
     connectionProposals?: ConnectionProposalOrderByRelationAggregateInput
     proposalDecisions?: ProposalDecisionOrderByRelationAggregateInput
+    workflowJobs?: WorkflowJobOrderByRelationAggregateInput
+    notificationDeliveries?: NotificationDeliveryOrderByRelationAggregateInput
+    introductionWorkflows?: IntroductionWorkflowOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -70411,6 +75051,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentListRelationFilter
     connectionProposals?: ConnectionProposalListRelationFilter
     proposalDecisions?: ProposalDecisionListRelationFilter
+    workflowJobs?: WorkflowJobListRelationFilter
+    notificationDeliveries?: NotificationDeliveryListRelationFilter
+    introductionWorkflows?: IntroductionWorkflowListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -71741,6 +76384,7 @@ export namespace Prisma {
     proposer: UserCreateNestedOneWithoutProposalsMadeInput
     candidate: UserCreateNestedOneWithoutProposalsReceivedInput
     decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalUncheckedCreateInput = {
@@ -71757,6 +76401,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalUpdateInput = {
@@ -71773,6 +76418,7 @@ export namespace Prisma {
     proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
     candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
     decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateInput = {
@@ -71789,6 +76435,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalCreateManyInput = {
@@ -71897,6 +76544,394 @@ export namespace Prisma {
     decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
     note?: NullableStringFieldUpdateOperationsInput | string | null
     decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkflowJobCreateInput = {
+    id?: string
+    dedupeKey: string
+    kind: $Enums.WorkflowJobKind
+    status?: $Enums.WorkflowJobStatus
+    proposalId?: string | null
+    missionId?: string | null
+    payload?: string | null
+    attempts?: number
+    maxAttempts?: number
+    nextAttemptAt?: Date | string
+    lockedBy?: string | null
+    lockedUntil?: Date | string | null
+    lastError?: string | null
+    deadLetteredAt?: Date | string | null
+    takenOverBy?: string | null
+    takenOverAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutWorkflowJobsInput
+  }
+
+  export type WorkflowJobUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    dedupeKey: string
+    kind: $Enums.WorkflowJobKind
+    status?: $Enums.WorkflowJobStatus
+    proposalId?: string | null
+    missionId?: string | null
+    payload?: string | null
+    attempts?: number
+    maxAttempts?: number
+    nextAttemptAt?: Date | string
+    lockedBy?: string | null
+    lockedUntil?: Date | string | null
+    lastError?: string | null
+    deadLetteredAt?: Date | string | null
+    takenOverBy?: string | null
+    takenOverAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WorkflowJobUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    kind?: EnumWorkflowJobKindFieldUpdateOperationsInput | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFieldUpdateOperationsInput | $Enums.WorkflowJobStatus
+    proposalId?: NullableStringFieldUpdateOperationsInput | string | null
+    missionId?: NullableStringFieldUpdateOperationsInput | string | null
+    payload?: NullableStringFieldUpdateOperationsInput | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    maxAttempts?: IntFieldUpdateOperationsInput | number
+    nextAttemptAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lockedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    deadLetteredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    takenOverBy?: NullableStringFieldUpdateOperationsInput | string | null
+    takenOverAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutWorkflowJobsNestedInput
+  }
+
+  export type WorkflowJobUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    kind?: EnumWorkflowJobKindFieldUpdateOperationsInput | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFieldUpdateOperationsInput | $Enums.WorkflowJobStatus
+    proposalId?: NullableStringFieldUpdateOperationsInput | string | null
+    missionId?: NullableStringFieldUpdateOperationsInput | string | null
+    payload?: NullableStringFieldUpdateOperationsInput | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    maxAttempts?: IntFieldUpdateOperationsInput | number
+    nextAttemptAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lockedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    deadLetteredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    takenOverBy?: NullableStringFieldUpdateOperationsInput | string | null
+    takenOverAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkflowJobCreateManyInput = {
+    id?: string
+    organizationId: string
+    dedupeKey: string
+    kind: $Enums.WorkflowJobKind
+    status?: $Enums.WorkflowJobStatus
+    proposalId?: string | null
+    missionId?: string | null
+    payload?: string | null
+    attempts?: number
+    maxAttempts?: number
+    nextAttemptAt?: Date | string
+    lockedBy?: string | null
+    lockedUntil?: Date | string | null
+    lastError?: string | null
+    deadLetteredAt?: Date | string | null
+    takenOverBy?: string | null
+    takenOverAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WorkflowJobUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    kind?: EnumWorkflowJobKindFieldUpdateOperationsInput | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFieldUpdateOperationsInput | $Enums.WorkflowJobStatus
+    proposalId?: NullableStringFieldUpdateOperationsInput | string | null
+    missionId?: NullableStringFieldUpdateOperationsInput | string | null
+    payload?: NullableStringFieldUpdateOperationsInput | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    maxAttempts?: IntFieldUpdateOperationsInput | number
+    nextAttemptAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lockedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    deadLetteredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    takenOverBy?: NullableStringFieldUpdateOperationsInput | string | null
+    takenOverAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkflowJobUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    kind?: EnumWorkflowJobKindFieldUpdateOperationsInput | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFieldUpdateOperationsInput | $Enums.WorkflowJobStatus
+    proposalId?: NullableStringFieldUpdateOperationsInput | string | null
+    missionId?: NullableStringFieldUpdateOperationsInput | string | null
+    payload?: NullableStringFieldUpdateOperationsInput | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    maxAttempts?: IntFieldUpdateOperationsInput | number
+    nextAttemptAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lockedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    deadLetteredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    takenOverBy?: NullableStringFieldUpdateOperationsInput | string | null
+    takenOverAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryCreateInput = {
+    id?: string
+    dedupeKey: string
+    channel: $Enums.NotificationChannel
+    status?: $Enums.NotificationDeliveryStatus
+    recipientId: string
+    template: string
+    subject?: string | null
+    body: string
+    actionUrl?: string | null
+    capturedAt?: Date | string | null
+    provider?: string | null
+    providerMessageId?: string | null
+    failureReason?: string | null
+    sentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutNotificationDeliveriesInput
+  }
+
+  export type NotificationDeliveryUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    dedupeKey: string
+    channel: $Enums.NotificationChannel
+    status?: $Enums.NotificationDeliveryStatus
+    recipientId: string
+    template: string
+    subject?: string | null
+    body: string
+    actionUrl?: string | null
+    capturedAt?: Date | string | null
+    provider?: string | null
+    providerMessageId?: string | null
+    failureReason?: string | null
+    sentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type NotificationDeliveryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    channel?: EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFieldUpdateOperationsInput | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFieldUpdateOperationsInput | string
+    template?: StringFieldUpdateOperationsInput | string
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    actionUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    capturedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    failureReason?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutNotificationDeliveriesNestedInput
+  }
+
+  export type NotificationDeliveryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    channel?: EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFieldUpdateOperationsInput | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFieldUpdateOperationsInput | string
+    template?: StringFieldUpdateOperationsInput | string
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    actionUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    capturedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    failureReason?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryCreateManyInput = {
+    id?: string
+    organizationId: string
+    dedupeKey: string
+    channel: $Enums.NotificationChannel
+    status?: $Enums.NotificationDeliveryStatus
+    recipientId: string
+    template: string
+    subject?: string | null
+    body: string
+    actionUrl?: string | null
+    capturedAt?: Date | string | null
+    provider?: string | null
+    providerMessageId?: string | null
+    failureReason?: string | null
+    sentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type NotificationDeliveryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    channel?: EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFieldUpdateOperationsInput | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFieldUpdateOperationsInput | string
+    template?: StringFieldUpdateOperationsInput | string
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    actionUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    capturedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    failureReason?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    channel?: EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFieldUpdateOperationsInput | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFieldUpdateOperationsInput | string
+    template?: StringFieldUpdateOperationsInput | string
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    actionUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    capturedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    failureReason?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IntroductionWorkflowCreateInput = {
+    id?: string
+    missionId: string
+    stage?: $Enums.WorkflowStage
+    stageEnteredAt?: Date | string
+    timeline?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutIntroductionWorkflowsInput
+    proposal: ConnectionProposalCreateNestedOneWithoutIntroductionWorkflowInput
+  }
+
+  export type IntroductionWorkflowUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    missionId: string
+    stage?: $Enums.WorkflowStage
+    stageEnteredAt?: Date | string
+    timeline?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type IntroductionWorkflowUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutIntroductionWorkflowsNestedInput
+    proposal?: ConnectionProposalUpdateOneRequiredWithoutIntroductionWorkflowNestedInput
+  }
+
+  export type IntroductionWorkflowUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IntroductionWorkflowCreateManyInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    missionId: string
+    stage?: $Enums.WorkflowStage
+    stageEnteredAt?: Date | string
+    timeline?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type IntroductionWorkflowUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IntroductionWorkflowUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserCreateInput = {
@@ -75778,6 +80813,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -75795,6 +80833,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -75812,6 +80853,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -75829,6 +80873,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -76974,6 +82021,11 @@ export namespace Prisma {
     none?: ProposalDecisionWhereInput
   }
 
+  export type IntroductionWorkflowNullableScalarRelationFilter = {
+    is?: IntroductionWorkflowWhereInput | null
+    isNot?: IntroductionWorkflowWhereInput | null
+  }
+
   export type ProposalDecisionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -77094,6 +82146,279 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumProposalDecisionKindFilter<$PrismaModel>
     _max?: NestedEnumProposalDecisionKindFilter<$PrismaModel>
+  }
+
+  export type EnumWorkflowJobKindFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowJobKind | EnumWorkflowJobKindFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowJobKind[]
+    notIn?: $Enums.WorkflowJobKind[]
+    not?: NestedEnumWorkflowJobKindFilter<$PrismaModel> | $Enums.WorkflowJobKind
+  }
+
+  export type EnumWorkflowJobStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowJobStatus | EnumWorkflowJobStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowJobStatus[]
+    notIn?: $Enums.WorkflowJobStatus[]
+    not?: NestedEnumWorkflowJobStatusFilter<$PrismaModel> | $Enums.WorkflowJobStatus
+  }
+
+  export type WorkflowJobOrganizationIdDedupeKeyCompoundUniqueInput = {
+    organizationId: string
+    dedupeKey: string
+  }
+
+  export type WorkflowJobCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    kind?: SortOrder
+    status?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    payload?: SortOrder
+    attempts?: SortOrder
+    maxAttempts?: SortOrder
+    nextAttemptAt?: SortOrder
+    lockedBy?: SortOrder
+    lockedUntil?: SortOrder
+    lastError?: SortOrder
+    deadLetteredAt?: SortOrder
+    takenOverBy?: SortOrder
+    takenOverAt?: SortOrder
+    cancelledAt?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WorkflowJobAvgOrderByAggregateInput = {
+    attempts?: SortOrder
+    maxAttempts?: SortOrder
+  }
+
+  export type WorkflowJobMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    kind?: SortOrder
+    status?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    payload?: SortOrder
+    attempts?: SortOrder
+    maxAttempts?: SortOrder
+    nextAttemptAt?: SortOrder
+    lockedBy?: SortOrder
+    lockedUntil?: SortOrder
+    lastError?: SortOrder
+    deadLetteredAt?: SortOrder
+    takenOverBy?: SortOrder
+    takenOverAt?: SortOrder
+    cancelledAt?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WorkflowJobMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    kind?: SortOrder
+    status?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    payload?: SortOrder
+    attempts?: SortOrder
+    maxAttempts?: SortOrder
+    nextAttemptAt?: SortOrder
+    lockedBy?: SortOrder
+    lockedUntil?: SortOrder
+    lastError?: SortOrder
+    deadLetteredAt?: SortOrder
+    takenOverBy?: SortOrder
+    takenOverAt?: SortOrder
+    cancelledAt?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WorkflowJobSumOrderByAggregateInput = {
+    attempts?: SortOrder
+    maxAttempts?: SortOrder
+  }
+
+  export type EnumWorkflowJobKindWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowJobKind | EnumWorkflowJobKindFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowJobKind[]
+    notIn?: $Enums.WorkflowJobKind[]
+    not?: NestedEnumWorkflowJobKindWithAggregatesFilter<$PrismaModel> | $Enums.WorkflowJobKind
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkflowJobKindFilter<$PrismaModel>
+    _max?: NestedEnumWorkflowJobKindFilter<$PrismaModel>
+  }
+
+  export type EnumWorkflowJobStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowJobStatus | EnumWorkflowJobStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowJobStatus[]
+    notIn?: $Enums.WorkflowJobStatus[]
+    not?: NestedEnumWorkflowJobStatusWithAggregatesFilter<$PrismaModel> | $Enums.WorkflowJobStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkflowJobStatusFilter<$PrismaModel>
+    _max?: NestedEnumWorkflowJobStatusFilter<$PrismaModel>
+  }
+
+  export type EnumNotificationChannelFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationChannel | EnumNotificationChannelFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationChannel[]
+    notIn?: $Enums.NotificationChannel[]
+    not?: NestedEnumNotificationChannelFilter<$PrismaModel> | $Enums.NotificationChannel
+  }
+
+  export type EnumNotificationDeliveryStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationDeliveryStatus | EnumNotificationDeliveryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationDeliveryStatus[]
+    notIn?: $Enums.NotificationDeliveryStatus[]
+    not?: NestedEnumNotificationDeliveryStatusFilter<$PrismaModel> | $Enums.NotificationDeliveryStatus
+  }
+
+  export type NotificationDeliveryOrganizationIdDedupeKeyCompoundUniqueInput = {
+    organizationId: string
+    dedupeKey: string
+  }
+
+  export type NotificationDeliveryCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    channel?: SortOrder
+    status?: SortOrder
+    recipientId?: SortOrder
+    template?: SortOrder
+    subject?: SortOrder
+    body?: SortOrder
+    actionUrl?: SortOrder
+    capturedAt?: SortOrder
+    provider?: SortOrder
+    providerMessageId?: SortOrder
+    failureReason?: SortOrder
+    sentAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type NotificationDeliveryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    channel?: SortOrder
+    status?: SortOrder
+    recipientId?: SortOrder
+    template?: SortOrder
+    subject?: SortOrder
+    body?: SortOrder
+    actionUrl?: SortOrder
+    capturedAt?: SortOrder
+    provider?: SortOrder
+    providerMessageId?: SortOrder
+    failureReason?: SortOrder
+    sentAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type NotificationDeliveryMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    dedupeKey?: SortOrder
+    channel?: SortOrder
+    status?: SortOrder
+    recipientId?: SortOrder
+    template?: SortOrder
+    subject?: SortOrder
+    body?: SortOrder
+    actionUrl?: SortOrder
+    capturedAt?: SortOrder
+    provider?: SortOrder
+    providerMessageId?: SortOrder
+    failureReason?: SortOrder
+    sentAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumNotificationChannelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationChannel | EnumNotificationChannelFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationChannel[]
+    notIn?: $Enums.NotificationChannel[]
+    not?: NestedEnumNotificationChannelWithAggregatesFilter<$PrismaModel> | $Enums.NotificationChannel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumNotificationChannelFilter<$PrismaModel>
+    _max?: NestedEnumNotificationChannelFilter<$PrismaModel>
+  }
+
+  export type EnumNotificationDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationDeliveryStatus | EnumNotificationDeliveryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationDeliveryStatus[]
+    notIn?: $Enums.NotificationDeliveryStatus[]
+    not?: NestedEnumNotificationDeliveryStatusWithAggregatesFilter<$PrismaModel> | $Enums.NotificationDeliveryStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumNotificationDeliveryStatusFilter<$PrismaModel>
+    _max?: NestedEnumNotificationDeliveryStatusFilter<$PrismaModel>
+  }
+
+  export type EnumWorkflowStageFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowStage | EnumWorkflowStageFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowStage[]
+    notIn?: $Enums.WorkflowStage[]
+    not?: NestedEnumWorkflowStageFilter<$PrismaModel> | $Enums.WorkflowStage
+  }
+
+  export type IntroductionWorkflowCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    stage?: SortOrder
+    stageEnteredAt?: SortOrder
+    timeline?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type IntroductionWorkflowMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    stage?: SortOrder
+    stageEnteredAt?: SortOrder
+    timeline?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type IntroductionWorkflowMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    stage?: SortOrder
+    stageEnteredAt?: SortOrder
+    timeline?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumWorkflowStageWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowStage | EnumWorkflowStageFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowStage[]
+    notIn?: $Enums.WorkflowStage[]
+    not?: NestedEnumWorkflowStageWithAggregatesFilter<$PrismaModel> | $Enums.WorkflowStage
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkflowStageFilter<$PrismaModel>
+    _max?: NestedEnumWorkflowStageFilter<$PrismaModel>
   }
 
   export type EnumUserRoleFilter<$PrismaModel = never> = {
@@ -79783,11 +85108,41 @@ export namespace Prisma {
     none?: IdempotencyRecordWhereInput
   }
 
+  export type WorkflowJobListRelationFilter = {
+    every?: WorkflowJobWhereInput
+    some?: WorkflowJobWhereInput
+    none?: WorkflowJobWhereInput
+  }
+
+  export type NotificationDeliveryListRelationFilter = {
+    every?: NotificationDeliveryWhereInput
+    some?: NotificationDeliveryWhereInput
+    none?: NotificationDeliveryWhereInput
+  }
+
+  export type IntroductionWorkflowListRelationFilter = {
+    every?: IntroductionWorkflowWhereInput
+    some?: IntroductionWorkflowWhereInput
+    none?: IntroductionWorkflowWhereInput
+  }
+
   export type TenantAuditEventOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type IdempotencyRecordOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type WorkflowJobOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type NotificationDeliveryOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type IntroductionWorkflowOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -80285,11 +85640,23 @@ export namespace Prisma {
     connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
   }
 
+  export type IntroductionWorkflowCreateNestedOneWithoutProposalInput = {
+    create?: XOR<IntroductionWorkflowCreateWithoutProposalInput, IntroductionWorkflowUncheckedCreateWithoutProposalInput>
+    connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutProposalInput
+    connect?: IntroductionWorkflowWhereUniqueInput
+  }
+
   export type ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput = {
     create?: XOR<ProposalDecisionCreateWithoutProposalInput, ProposalDecisionUncheckedCreateWithoutProposalInput> | ProposalDecisionCreateWithoutProposalInput[] | ProposalDecisionUncheckedCreateWithoutProposalInput[]
     connectOrCreate?: ProposalDecisionCreateOrConnectWithoutProposalInput | ProposalDecisionCreateOrConnectWithoutProposalInput[]
     createMany?: ProposalDecisionCreateManyProposalInputEnvelope
     connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+  }
+
+  export type IntroductionWorkflowUncheckedCreateNestedOneWithoutProposalInput = {
+    create?: XOR<IntroductionWorkflowCreateWithoutProposalInput, IntroductionWorkflowUncheckedCreateWithoutProposalInput>
+    connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutProposalInput
+    connect?: IntroductionWorkflowWhereUniqueInput
   }
 
   export type EnumConnectionProposalStatusFieldUpdateOperationsInput = {
@@ -80342,6 +85709,16 @@ export namespace Prisma {
     deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
   }
 
+  export type IntroductionWorkflowUpdateOneWithoutProposalNestedInput = {
+    create?: XOR<IntroductionWorkflowCreateWithoutProposalInput, IntroductionWorkflowUncheckedCreateWithoutProposalInput>
+    connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutProposalInput
+    upsert?: IntroductionWorkflowUpsertWithoutProposalInput
+    disconnect?: IntroductionWorkflowWhereInput | boolean
+    delete?: IntroductionWorkflowWhereInput | boolean
+    connect?: IntroductionWorkflowWhereUniqueInput
+    update?: XOR<XOR<IntroductionWorkflowUpdateToOneWithWhereWithoutProposalInput, IntroductionWorkflowUpdateWithoutProposalInput>, IntroductionWorkflowUncheckedUpdateWithoutProposalInput>
+  }
+
   export type ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput = {
     create?: XOR<ProposalDecisionCreateWithoutProposalInput, ProposalDecisionUncheckedCreateWithoutProposalInput> | ProposalDecisionCreateWithoutProposalInput[] | ProposalDecisionUncheckedCreateWithoutProposalInput[]
     connectOrCreate?: ProposalDecisionCreateOrConnectWithoutProposalInput | ProposalDecisionCreateOrConnectWithoutProposalInput[]
@@ -80354,6 +85731,16 @@ export namespace Prisma {
     update?: ProposalDecisionUpdateWithWhereUniqueWithoutProposalInput | ProposalDecisionUpdateWithWhereUniqueWithoutProposalInput[]
     updateMany?: ProposalDecisionUpdateManyWithWhereWithoutProposalInput | ProposalDecisionUpdateManyWithWhereWithoutProposalInput[]
     deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
+  }
+
+  export type IntroductionWorkflowUncheckedUpdateOneWithoutProposalNestedInput = {
+    create?: XOR<IntroductionWorkflowCreateWithoutProposalInput, IntroductionWorkflowUncheckedCreateWithoutProposalInput>
+    connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutProposalInput
+    upsert?: IntroductionWorkflowUpsertWithoutProposalInput
+    disconnect?: IntroductionWorkflowWhereInput | boolean
+    delete?: IntroductionWorkflowWhereInput | boolean
+    connect?: IntroductionWorkflowWhereUniqueInput
+    update?: XOR<XOR<IntroductionWorkflowUpdateToOneWithWhereWithoutProposalInput, IntroductionWorkflowUpdateWithoutProposalInput>, IntroductionWorkflowUncheckedUpdateWithoutProposalInput>
   }
 
   export type OrganizationCreateNestedOneWithoutProposalDecisionsInput = {
@@ -80400,6 +85787,82 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutProposalDecisionsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProposalDecisionsInput, UserUpdateWithoutProposalDecisionsInput>, UserUncheckedUpdateWithoutProposalDecisionsInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutWorkflowJobsInput = {
+    create?: XOR<OrganizationCreateWithoutWorkflowJobsInput, OrganizationUncheckedCreateWithoutWorkflowJobsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutWorkflowJobsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type EnumWorkflowJobKindFieldUpdateOperationsInput = {
+    set?: $Enums.WorkflowJobKind
+  }
+
+  export type EnumWorkflowJobStatusFieldUpdateOperationsInput = {
+    set?: $Enums.WorkflowJobStatus
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutWorkflowJobsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutWorkflowJobsInput, OrganizationUncheckedCreateWithoutWorkflowJobsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutWorkflowJobsInput
+    upsert?: OrganizationUpsertWithoutWorkflowJobsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutWorkflowJobsInput, OrganizationUpdateWithoutWorkflowJobsInput>, OrganizationUncheckedUpdateWithoutWorkflowJobsInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutNotificationDeliveriesInput = {
+    create?: XOR<OrganizationCreateWithoutNotificationDeliveriesInput, OrganizationUncheckedCreateWithoutNotificationDeliveriesInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutNotificationDeliveriesInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type EnumNotificationChannelFieldUpdateOperationsInput = {
+    set?: $Enums.NotificationChannel
+  }
+
+  export type EnumNotificationDeliveryStatusFieldUpdateOperationsInput = {
+    set?: $Enums.NotificationDeliveryStatus
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutNotificationDeliveriesNestedInput = {
+    create?: XOR<OrganizationCreateWithoutNotificationDeliveriesInput, OrganizationUncheckedCreateWithoutNotificationDeliveriesInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutNotificationDeliveriesInput
+    upsert?: OrganizationUpsertWithoutNotificationDeliveriesInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutNotificationDeliveriesInput, OrganizationUpdateWithoutNotificationDeliveriesInput>, OrganizationUncheckedUpdateWithoutNotificationDeliveriesInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutIntroductionWorkflowsInput = {
+    create?: XOR<OrganizationCreateWithoutIntroductionWorkflowsInput, OrganizationUncheckedCreateWithoutIntroductionWorkflowsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutIntroductionWorkflowsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type ConnectionProposalCreateNestedOneWithoutIntroductionWorkflowInput = {
+    create?: XOR<ConnectionProposalCreateWithoutIntroductionWorkflowInput, ConnectionProposalUncheckedCreateWithoutIntroductionWorkflowInput>
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutIntroductionWorkflowInput
+    connect?: ConnectionProposalWhereUniqueInput
+  }
+
+  export type EnumWorkflowStageFieldUpdateOperationsInput = {
+    set?: $Enums.WorkflowStage
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutIntroductionWorkflowsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutIntroductionWorkflowsInput, OrganizationUncheckedCreateWithoutIntroductionWorkflowsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutIntroductionWorkflowsInput
+    upsert?: OrganizationUpsertWithoutIntroductionWorkflowsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutIntroductionWorkflowsInput, OrganizationUpdateWithoutIntroductionWorkflowsInput>, OrganizationUncheckedUpdateWithoutIntroductionWorkflowsInput>
+  }
+
+  export type ConnectionProposalUpdateOneRequiredWithoutIntroductionWorkflowNestedInput = {
+    create?: XOR<ConnectionProposalCreateWithoutIntroductionWorkflowInput, ConnectionProposalUncheckedCreateWithoutIntroductionWorkflowInput>
+    connectOrCreate?: ConnectionProposalCreateOrConnectWithoutIntroductionWorkflowInput
+    upsert?: ConnectionProposalUpsertWithoutIntroductionWorkflowInput
+    connect?: ConnectionProposalWhereUniqueInput
+    update?: XOR<XOR<ConnectionProposalUpdateToOneWithWhereWithoutIntroductionWorkflowInput, ConnectionProposalUpdateWithoutIntroductionWorkflowInput>, ConnectionProposalUncheckedUpdateWithoutIntroductionWorkflowInput>
   }
 
   export type AccountCreateNestedManyWithoutUserInput = {
@@ -83202,6 +88665,27 @@ export namespace Prisma {
     connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
   }
 
+  export type WorkflowJobCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<WorkflowJobCreateWithoutOrganizationInput, WorkflowJobUncheckedCreateWithoutOrganizationInput> | WorkflowJobCreateWithoutOrganizationInput[] | WorkflowJobUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: WorkflowJobCreateOrConnectWithoutOrganizationInput | WorkflowJobCreateOrConnectWithoutOrganizationInput[]
+    createMany?: WorkflowJobCreateManyOrganizationInputEnvelope
+    connect?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+  }
+
+  export type NotificationDeliveryCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<NotificationDeliveryCreateWithoutOrganizationInput, NotificationDeliveryUncheckedCreateWithoutOrganizationInput> | NotificationDeliveryCreateWithoutOrganizationInput[] | NotificationDeliveryUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: NotificationDeliveryCreateOrConnectWithoutOrganizationInput | NotificationDeliveryCreateOrConnectWithoutOrganizationInput[]
+    createMany?: NotificationDeliveryCreateManyOrganizationInputEnvelope
+    connect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+  }
+
+  export type IntroductionWorkflowCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<IntroductionWorkflowCreateWithoutOrganizationInput, IntroductionWorkflowUncheckedCreateWithoutOrganizationInput> | IntroductionWorkflowCreateWithoutOrganizationInput[] | IntroductionWorkflowUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutOrganizationInput | IntroductionWorkflowCreateOrConnectWithoutOrganizationInput[]
+    createMany?: IntroductionWorkflowCreateManyOrganizationInputEnvelope
+    connect?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+  }
+
   export type MembershipUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -83256,6 +88740,27 @@ export namespace Prisma {
     connectOrCreate?: ProposalDecisionCreateOrConnectWithoutOrganizationInput | ProposalDecisionCreateOrConnectWithoutOrganizationInput[]
     createMany?: ProposalDecisionCreateManyOrganizationInputEnvelope
     connect?: ProposalDecisionWhereUniqueInput | ProposalDecisionWhereUniqueInput[]
+  }
+
+  export type WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<WorkflowJobCreateWithoutOrganizationInput, WorkflowJobUncheckedCreateWithoutOrganizationInput> | WorkflowJobCreateWithoutOrganizationInput[] | WorkflowJobUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: WorkflowJobCreateOrConnectWithoutOrganizationInput | WorkflowJobCreateOrConnectWithoutOrganizationInput[]
+    createMany?: WorkflowJobCreateManyOrganizationInputEnvelope
+    connect?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+  }
+
+  export type NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<NotificationDeliveryCreateWithoutOrganizationInput, NotificationDeliveryUncheckedCreateWithoutOrganizationInput> | NotificationDeliveryCreateWithoutOrganizationInput[] | NotificationDeliveryUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: NotificationDeliveryCreateOrConnectWithoutOrganizationInput | NotificationDeliveryCreateOrConnectWithoutOrganizationInput[]
+    createMany?: NotificationDeliveryCreateManyOrganizationInputEnvelope
+    connect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+  }
+
+  export type IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<IntroductionWorkflowCreateWithoutOrganizationInput, IntroductionWorkflowUncheckedCreateWithoutOrganizationInput> | IntroductionWorkflowCreateWithoutOrganizationInput[] | IntroductionWorkflowUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutOrganizationInput | IntroductionWorkflowCreateOrConnectWithoutOrganizationInput[]
+    createMany?: IntroductionWorkflowCreateManyOrganizationInputEnvelope
+    connect?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
   }
 
   export type EnumOrganizationStatusFieldUpdateOperationsInput = {
@@ -83374,6 +88879,48 @@ export namespace Prisma {
     deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
   }
 
+  export type WorkflowJobUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<WorkflowJobCreateWithoutOrganizationInput, WorkflowJobUncheckedCreateWithoutOrganizationInput> | WorkflowJobCreateWithoutOrganizationInput[] | WorkflowJobUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: WorkflowJobCreateOrConnectWithoutOrganizationInput | WorkflowJobCreateOrConnectWithoutOrganizationInput[]
+    upsert?: WorkflowJobUpsertWithWhereUniqueWithoutOrganizationInput | WorkflowJobUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: WorkflowJobCreateManyOrganizationInputEnvelope
+    set?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+    disconnect?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+    delete?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+    connect?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+    update?: WorkflowJobUpdateWithWhereUniqueWithoutOrganizationInput | WorkflowJobUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: WorkflowJobUpdateManyWithWhereWithoutOrganizationInput | WorkflowJobUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: WorkflowJobScalarWhereInput | WorkflowJobScalarWhereInput[]
+  }
+
+  export type NotificationDeliveryUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<NotificationDeliveryCreateWithoutOrganizationInput, NotificationDeliveryUncheckedCreateWithoutOrganizationInput> | NotificationDeliveryCreateWithoutOrganizationInput[] | NotificationDeliveryUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: NotificationDeliveryCreateOrConnectWithoutOrganizationInput | NotificationDeliveryCreateOrConnectWithoutOrganizationInput[]
+    upsert?: NotificationDeliveryUpsertWithWhereUniqueWithoutOrganizationInput | NotificationDeliveryUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: NotificationDeliveryCreateManyOrganizationInputEnvelope
+    set?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    disconnect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    delete?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    connect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    update?: NotificationDeliveryUpdateWithWhereUniqueWithoutOrganizationInput | NotificationDeliveryUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: NotificationDeliveryUpdateManyWithWhereWithoutOrganizationInput | NotificationDeliveryUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: NotificationDeliveryScalarWhereInput | NotificationDeliveryScalarWhereInput[]
+  }
+
+  export type IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<IntroductionWorkflowCreateWithoutOrganizationInput, IntroductionWorkflowUncheckedCreateWithoutOrganizationInput> | IntroductionWorkflowCreateWithoutOrganizationInput[] | IntroductionWorkflowUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutOrganizationInput | IntroductionWorkflowCreateOrConnectWithoutOrganizationInput[]
+    upsert?: IntroductionWorkflowUpsertWithWhereUniqueWithoutOrganizationInput | IntroductionWorkflowUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: IntroductionWorkflowCreateManyOrganizationInputEnvelope
+    set?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+    disconnect?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+    delete?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+    connect?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+    update?: IntroductionWorkflowUpdateWithWhereUniqueWithoutOrganizationInput | IntroductionWorkflowUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: IntroductionWorkflowUpdateManyWithWhereWithoutOrganizationInput | IntroductionWorkflowUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: IntroductionWorkflowScalarWhereInput | IntroductionWorkflowScalarWhereInput[]
+  }
+
   export type MembershipUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -83484,6 +89031,48 @@ export namespace Prisma {
     update?: ProposalDecisionUpdateWithWhereUniqueWithoutOrganizationInput | ProposalDecisionUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: ProposalDecisionUpdateManyWithWhereWithoutOrganizationInput | ProposalDecisionUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: ProposalDecisionScalarWhereInput | ProposalDecisionScalarWhereInput[]
+  }
+
+  export type WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<WorkflowJobCreateWithoutOrganizationInput, WorkflowJobUncheckedCreateWithoutOrganizationInput> | WorkflowJobCreateWithoutOrganizationInput[] | WorkflowJobUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: WorkflowJobCreateOrConnectWithoutOrganizationInput | WorkflowJobCreateOrConnectWithoutOrganizationInput[]
+    upsert?: WorkflowJobUpsertWithWhereUniqueWithoutOrganizationInput | WorkflowJobUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: WorkflowJobCreateManyOrganizationInputEnvelope
+    set?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+    disconnect?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+    delete?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+    connect?: WorkflowJobWhereUniqueInput | WorkflowJobWhereUniqueInput[]
+    update?: WorkflowJobUpdateWithWhereUniqueWithoutOrganizationInput | WorkflowJobUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: WorkflowJobUpdateManyWithWhereWithoutOrganizationInput | WorkflowJobUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: WorkflowJobScalarWhereInput | WorkflowJobScalarWhereInput[]
+  }
+
+  export type NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<NotificationDeliveryCreateWithoutOrganizationInput, NotificationDeliveryUncheckedCreateWithoutOrganizationInput> | NotificationDeliveryCreateWithoutOrganizationInput[] | NotificationDeliveryUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: NotificationDeliveryCreateOrConnectWithoutOrganizationInput | NotificationDeliveryCreateOrConnectWithoutOrganizationInput[]
+    upsert?: NotificationDeliveryUpsertWithWhereUniqueWithoutOrganizationInput | NotificationDeliveryUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: NotificationDeliveryCreateManyOrganizationInputEnvelope
+    set?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    disconnect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    delete?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    connect?: NotificationDeliveryWhereUniqueInput | NotificationDeliveryWhereUniqueInput[]
+    update?: NotificationDeliveryUpdateWithWhereUniqueWithoutOrganizationInput | NotificationDeliveryUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: NotificationDeliveryUpdateManyWithWhereWithoutOrganizationInput | NotificationDeliveryUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: NotificationDeliveryScalarWhereInput | NotificationDeliveryScalarWhereInput[]
+  }
+
+  export type IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<IntroductionWorkflowCreateWithoutOrganizationInput, IntroductionWorkflowUncheckedCreateWithoutOrganizationInput> | IntroductionWorkflowCreateWithoutOrganizationInput[] | IntroductionWorkflowUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutOrganizationInput | IntroductionWorkflowCreateOrConnectWithoutOrganizationInput[]
+    upsert?: IntroductionWorkflowUpsertWithWhereUniqueWithoutOrganizationInput | IntroductionWorkflowUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: IntroductionWorkflowCreateManyOrganizationInputEnvelope
+    set?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+    disconnect?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+    delete?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+    connect?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+    update?: IntroductionWorkflowUpdateWithWhereUniqueWithoutOrganizationInput | IntroductionWorkflowUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: IntroductionWorkflowUpdateManyWithWhereWithoutOrganizationInput | IntroductionWorkflowUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: IntroductionWorkflowScalarWhereInput | IntroductionWorkflowScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutMembershipsInput = {
@@ -83904,6 +89493,91 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumProposalDecisionKindFilter<$PrismaModel>
     _max?: NestedEnumProposalDecisionKindFilter<$PrismaModel>
+  }
+
+  export type NestedEnumWorkflowJobKindFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowJobKind | EnumWorkflowJobKindFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowJobKind[]
+    notIn?: $Enums.WorkflowJobKind[]
+    not?: NestedEnumWorkflowJobKindFilter<$PrismaModel> | $Enums.WorkflowJobKind
+  }
+
+  export type NestedEnumWorkflowJobStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowJobStatus | EnumWorkflowJobStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowJobStatus[]
+    notIn?: $Enums.WorkflowJobStatus[]
+    not?: NestedEnumWorkflowJobStatusFilter<$PrismaModel> | $Enums.WorkflowJobStatus
+  }
+
+  export type NestedEnumWorkflowJobKindWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowJobKind | EnumWorkflowJobKindFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowJobKind[]
+    notIn?: $Enums.WorkflowJobKind[]
+    not?: NestedEnumWorkflowJobKindWithAggregatesFilter<$PrismaModel> | $Enums.WorkflowJobKind
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkflowJobKindFilter<$PrismaModel>
+    _max?: NestedEnumWorkflowJobKindFilter<$PrismaModel>
+  }
+
+  export type NestedEnumWorkflowJobStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowJobStatus | EnumWorkflowJobStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowJobStatus[]
+    notIn?: $Enums.WorkflowJobStatus[]
+    not?: NestedEnumWorkflowJobStatusWithAggregatesFilter<$PrismaModel> | $Enums.WorkflowJobStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkflowJobStatusFilter<$PrismaModel>
+    _max?: NestedEnumWorkflowJobStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumNotificationChannelFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationChannel | EnumNotificationChannelFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationChannel[]
+    notIn?: $Enums.NotificationChannel[]
+    not?: NestedEnumNotificationChannelFilter<$PrismaModel> | $Enums.NotificationChannel
+  }
+
+  export type NestedEnumNotificationDeliveryStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationDeliveryStatus | EnumNotificationDeliveryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationDeliveryStatus[]
+    notIn?: $Enums.NotificationDeliveryStatus[]
+    not?: NestedEnumNotificationDeliveryStatusFilter<$PrismaModel> | $Enums.NotificationDeliveryStatus
+  }
+
+  export type NestedEnumNotificationChannelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationChannel | EnumNotificationChannelFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationChannel[]
+    notIn?: $Enums.NotificationChannel[]
+    not?: NestedEnumNotificationChannelWithAggregatesFilter<$PrismaModel> | $Enums.NotificationChannel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumNotificationChannelFilter<$PrismaModel>
+    _max?: NestedEnumNotificationChannelFilter<$PrismaModel>
+  }
+
+  export type NestedEnumNotificationDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationDeliveryStatus | EnumNotificationDeliveryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationDeliveryStatus[]
+    notIn?: $Enums.NotificationDeliveryStatus[]
+    not?: NestedEnumNotificationDeliveryStatusWithAggregatesFilter<$PrismaModel> | $Enums.NotificationDeliveryStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumNotificationDeliveryStatusFilter<$PrismaModel>
+    _max?: NestedEnumNotificationDeliveryStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumWorkflowStageFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowStage | EnumWorkflowStageFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowStage[]
+    notIn?: $Enums.WorkflowStage[]
+    not?: NestedEnumWorkflowStageFilter<$PrismaModel> | $Enums.WorkflowStage
+  }
+
+  export type NestedEnumWorkflowStageWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.WorkflowStage | EnumWorkflowStageFieldRefInput<$PrismaModel>
+    in?: $Enums.WorkflowStage[]
+    notIn?: $Enums.WorkflowStage[]
+    not?: NestedEnumWorkflowStageWithAggregatesFilter<$PrismaModel> | $Enums.WorkflowStage
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWorkflowStageFilter<$PrismaModel>
+    _max?: NestedEnumWorkflowStageFilter<$PrismaModel>
   }
 
   export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
@@ -84514,6 +90188,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionsInput = {
@@ -84530,6 +90207,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionsInput = {
@@ -84739,6 +90419,7 @@ export namespace Prisma {
     proposer: UserCreateNestedOneWithoutProposalsMadeInput
     candidate: UserCreateNestedOneWithoutProposalsReceivedInput
     decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalUncheckedCreateWithoutMissionInput = {
@@ -84754,6 +90435,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalCreateOrConnectWithoutMissionInput = {
@@ -84790,6 +90472,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionsInput = {
@@ -84806,6 +90491,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMissionsInput = {
@@ -85046,6 +90734,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSocialIntentsInput = {
@@ -85062,6 +90753,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSocialIntentsInput = {
@@ -85260,6 +90954,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSocialIntentsInput = {
@@ -85276,6 +90973,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutSocialIntentsInput = {
@@ -85470,6 +91170,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionParticipationsInput = {
@@ -85486,6 +91189,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionParticipationsInput = {
@@ -85684,6 +91390,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionParticipationsInput = {
@@ -85700,6 +91409,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutParticipationsInput = {
@@ -85894,6 +91606,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIdempotencyRecordsInput = {
@@ -85910,6 +91625,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIdempotencyRecordsInput = {
@@ -85942,6 +91660,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput = {
@@ -85958,6 +91679,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutConnectionProposalsInput = {
@@ -85974,6 +91698,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutConnectionProposalsInput = {
@@ -85990,6 +91717,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutConnectionProposalsInput = {
@@ -86307,6 +92037,33 @@ export namespace Prisma {
     data: ProposalDecisionCreateManyProposalInput | ProposalDecisionCreateManyProposalInput[]
   }
 
+  export type IntroductionWorkflowCreateWithoutProposalInput = {
+    id?: string
+    missionId: string
+    stage?: $Enums.WorkflowStage
+    stageEnteredAt?: Date | string
+    timeline?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutIntroductionWorkflowsInput
+  }
+
+  export type IntroductionWorkflowUncheckedCreateWithoutProposalInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    stage?: $Enums.WorkflowStage
+    stageEnteredAt?: Date | string
+    timeline?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type IntroductionWorkflowCreateOrConnectWithoutProposalInput = {
+    where: IntroductionWorkflowWhereUniqueInput
+    create: XOR<IntroductionWorkflowCreateWithoutProposalInput, IntroductionWorkflowUncheckedCreateWithoutProposalInput>
+  }
+
   export type OrganizationUpsertWithoutConnectionProposalsInput = {
     update: XOR<OrganizationUpdateWithoutConnectionProposalsInput, OrganizationUncheckedUpdateWithoutConnectionProposalsInput>
     create: XOR<OrganizationCreateWithoutConnectionProposalsInput, OrganizationUncheckedCreateWithoutConnectionProposalsInput>
@@ -86332,6 +92089,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutConnectionProposalsInput = {
@@ -86348,6 +92108,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutProposalsInput = {
@@ -86680,6 +92443,39 @@ export namespace Prisma {
     decidedAt?: DateTimeFilter<"ProposalDecision"> | Date | string
   }
 
+  export type IntroductionWorkflowUpsertWithoutProposalInput = {
+    update: XOR<IntroductionWorkflowUpdateWithoutProposalInput, IntroductionWorkflowUncheckedUpdateWithoutProposalInput>
+    create: XOR<IntroductionWorkflowCreateWithoutProposalInput, IntroductionWorkflowUncheckedCreateWithoutProposalInput>
+    where?: IntroductionWorkflowWhereInput
+  }
+
+  export type IntroductionWorkflowUpdateToOneWithWhereWithoutProposalInput = {
+    where?: IntroductionWorkflowWhereInput
+    data: XOR<IntroductionWorkflowUpdateWithoutProposalInput, IntroductionWorkflowUncheckedUpdateWithoutProposalInput>
+  }
+
+  export type IntroductionWorkflowUpdateWithoutProposalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutIntroductionWorkflowsNestedInput
+  }
+
+  export type IntroductionWorkflowUncheckedUpdateWithoutProposalInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type OrganizationCreateWithoutProposalDecisionsInput = {
     id?: string
     name: string
@@ -86694,6 +92490,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutProposalDecisionsInput = {
@@ -86710,6 +92509,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutProposalDecisionsInput = {
@@ -86730,6 +92532,7 @@ export namespace Prisma {
     mission: MissionCreateNestedOneWithoutProposalsInput
     proposer: UserCreateNestedOneWithoutProposalsMadeInput
     candidate: UserCreateNestedOneWithoutProposalsReceivedInput
+    introductionWorkflow?: IntroductionWorkflowCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalUncheckedCreateWithoutDecisionsInput = {
@@ -86745,6 +92548,7 @@ export namespace Prisma {
     closedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    introductionWorkflow?: IntroductionWorkflowUncheckedCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalCreateOrConnectWithoutDecisionsInput = {
@@ -86894,6 +92698,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutProposalDecisionsInput = {
@@ -86910,6 +92717,9 @@ export namespace Prisma {
     idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ConnectionProposalUpsertWithoutDecisionsInput = {
@@ -86936,6 +92746,7 @@ export namespace Prisma {
     mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
     proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
     candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
+    introductionWorkflow?: IntroductionWorkflowUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateWithoutDecisionsInput = {
@@ -86951,6 +92762,7 @@ export namespace Prisma {
     closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    introductionWorkflow?: IntroductionWorkflowUncheckedUpdateOneWithoutProposalNestedInput
   }
 
   export type UserUpsertWithoutProposalDecisionsInput = {
@@ -87074,6 +92886,362 @@ export namespace Prisma {
     blocksGiven?: BlockUncheckedUpdateManyWithoutBlockerNestedInput
     blocksReceived?: BlockUncheckedUpdateManyWithoutBlockedNestedInput
     sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type OrganizationCreateWithoutWorkflowJobsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutWorkflowJobsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutWorkflowJobsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutWorkflowJobsInput, OrganizationUncheckedCreateWithoutWorkflowJobsInput>
+  }
+
+  export type OrganizationUpsertWithoutWorkflowJobsInput = {
+    update: XOR<OrganizationUpdateWithoutWorkflowJobsInput, OrganizationUncheckedUpdateWithoutWorkflowJobsInput>
+    create: XOR<OrganizationCreateWithoutWorkflowJobsInput, OrganizationUncheckedCreateWithoutWorkflowJobsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutWorkflowJobsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutWorkflowJobsInput, OrganizationUncheckedUpdateWithoutWorkflowJobsInput>
+  }
+
+  export type OrganizationUpdateWithoutWorkflowJobsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutWorkflowJobsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationCreateWithoutNotificationDeliveriesInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutNotificationDeliveriesInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutNotificationDeliveriesInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutNotificationDeliveriesInput, OrganizationUncheckedCreateWithoutNotificationDeliveriesInput>
+  }
+
+  export type OrganizationUpsertWithoutNotificationDeliveriesInput = {
+    update: XOR<OrganizationUpdateWithoutNotificationDeliveriesInput, OrganizationUncheckedUpdateWithoutNotificationDeliveriesInput>
+    create: XOR<OrganizationCreateWithoutNotificationDeliveriesInput, OrganizationUncheckedCreateWithoutNotificationDeliveriesInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutNotificationDeliveriesInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutNotificationDeliveriesInput, OrganizationUncheckedUpdateWithoutNotificationDeliveriesInput>
+  }
+
+  export type OrganizationUpdateWithoutNotificationDeliveriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutNotificationDeliveriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationCreateWithoutIntroductionWorkflowsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutIntroductionWorkflowsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutIntroductionWorkflowsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutIntroductionWorkflowsInput, OrganizationUncheckedCreateWithoutIntroductionWorkflowsInput>
+  }
+
+  export type ConnectionProposalCreateWithoutIntroductionWorkflowInput = {
+    id?: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutConnectionProposalsInput
+    mission: MissionCreateNestedOneWithoutProposalsInput
+    proposer: UserCreateNestedOneWithoutProposalsMadeInput
+    candidate: UserCreateNestedOneWithoutProposalsReceivedInput
+    decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalUncheckedCreateWithoutIntroductionWorkflowInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    proposerId: string
+    candidateId: string
+    status?: $Enums.ConnectionProposalStatus
+    rationale: string
+    expiresAt?: Date | string | null
+    introducedAt?: Date | string | null
+    closedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+  }
+
+  export type ConnectionProposalCreateOrConnectWithoutIntroductionWorkflowInput = {
+    where: ConnectionProposalWhereUniqueInput
+    create: XOR<ConnectionProposalCreateWithoutIntroductionWorkflowInput, ConnectionProposalUncheckedCreateWithoutIntroductionWorkflowInput>
+  }
+
+  export type OrganizationUpsertWithoutIntroductionWorkflowsInput = {
+    update: XOR<OrganizationUpdateWithoutIntroductionWorkflowsInput, OrganizationUncheckedUpdateWithoutIntroductionWorkflowsInput>
+    create: XOR<OrganizationCreateWithoutIntroductionWorkflowsInput, OrganizationUncheckedCreateWithoutIntroductionWorkflowsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutIntroductionWorkflowsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutIntroductionWorkflowsInput, OrganizationUncheckedUpdateWithoutIntroductionWorkflowsInput>
+  }
+
+  export type OrganizationUpdateWithoutIntroductionWorkflowsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutIntroductionWorkflowsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type ConnectionProposalUpsertWithoutIntroductionWorkflowInput = {
+    update: XOR<ConnectionProposalUpdateWithoutIntroductionWorkflowInput, ConnectionProposalUncheckedUpdateWithoutIntroductionWorkflowInput>
+    create: XOR<ConnectionProposalCreateWithoutIntroductionWorkflowInput, ConnectionProposalUncheckedCreateWithoutIntroductionWorkflowInput>
+    where?: ConnectionProposalWhereInput
+  }
+
+  export type ConnectionProposalUpdateToOneWithWhereWithoutIntroductionWorkflowInput = {
+    where?: ConnectionProposalWhereInput
+    data: XOR<ConnectionProposalUpdateWithoutIntroductionWorkflowInput, ConnectionProposalUncheckedUpdateWithoutIntroductionWorkflowInput>
+  }
+
+  export type ConnectionProposalUpdateWithoutIntroductionWorkflowInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutConnectionProposalsNestedInput
+    mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
+    proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
+    candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
+    decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+  }
+
+  export type ConnectionProposalUncheckedUpdateWithoutIntroductionWorkflowInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    proposerId?: StringFieldUpdateOperationsInput | string
+    candidateId?: StringFieldUpdateOperationsInput | string
+    status?: EnumConnectionProposalStatusFieldUpdateOperationsInput | $Enums.ConnectionProposalStatus
+    rationale?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    introducedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    closedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -88368,6 +94536,7 @@ export namespace Prisma {
     mission: MissionCreateNestedOneWithoutProposalsInput
     candidate: UserCreateNestedOneWithoutProposalsReceivedInput
     decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalUncheckedCreateWithoutProposerInput = {
@@ -88383,6 +94552,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalCreateOrConnectWithoutProposerInput = {
@@ -88407,6 +94577,7 @@ export namespace Prisma {
     mission: MissionCreateNestedOneWithoutProposalsInput
     proposer: UserCreateNestedOneWithoutProposalsMadeInput
     decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalUncheckedCreateWithoutCandidateInput = {
@@ -88422,6 +94593,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalCreateOrConnectWithoutCandidateInput = {
@@ -99558,6 +105730,7 @@ export namespace Prisma {
     proposer: UserCreateNestedOneWithoutProposalsMadeInput
     candidate: UserCreateNestedOneWithoutProposalsReceivedInput
     decisions?: ProposalDecisionCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalUncheckedCreateWithoutOrganizationInput = {
@@ -99573,6 +105746,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     decisions?: ProposalDecisionUncheckedCreateNestedManyWithoutProposalInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedCreateNestedOneWithoutProposalInput
   }
 
   export type ConnectionProposalCreateOrConnectWithoutOrganizationInput = {
@@ -99609,6 +105783,139 @@ export namespace Prisma {
 
   export type ProposalDecisionCreateManyOrganizationInputEnvelope = {
     data: ProposalDecisionCreateManyOrganizationInput | ProposalDecisionCreateManyOrganizationInput[]
+  }
+
+  export type WorkflowJobCreateWithoutOrganizationInput = {
+    id?: string
+    dedupeKey: string
+    kind: $Enums.WorkflowJobKind
+    status?: $Enums.WorkflowJobStatus
+    proposalId?: string | null
+    missionId?: string | null
+    payload?: string | null
+    attempts?: number
+    maxAttempts?: number
+    nextAttemptAt?: Date | string
+    lockedBy?: string | null
+    lockedUntil?: Date | string | null
+    lastError?: string | null
+    deadLetteredAt?: Date | string | null
+    takenOverBy?: string | null
+    takenOverAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WorkflowJobUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    dedupeKey: string
+    kind: $Enums.WorkflowJobKind
+    status?: $Enums.WorkflowJobStatus
+    proposalId?: string | null
+    missionId?: string | null
+    payload?: string | null
+    attempts?: number
+    maxAttempts?: number
+    nextAttemptAt?: Date | string
+    lockedBy?: string | null
+    lockedUntil?: Date | string | null
+    lastError?: string | null
+    deadLetteredAt?: Date | string | null
+    takenOverBy?: string | null
+    takenOverAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WorkflowJobCreateOrConnectWithoutOrganizationInput = {
+    where: WorkflowJobWhereUniqueInput
+    create: XOR<WorkflowJobCreateWithoutOrganizationInput, WorkflowJobUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type WorkflowJobCreateManyOrganizationInputEnvelope = {
+    data: WorkflowJobCreateManyOrganizationInput | WorkflowJobCreateManyOrganizationInput[]
+  }
+
+  export type NotificationDeliveryCreateWithoutOrganizationInput = {
+    id?: string
+    dedupeKey: string
+    channel: $Enums.NotificationChannel
+    status?: $Enums.NotificationDeliveryStatus
+    recipientId: string
+    template: string
+    subject?: string | null
+    body: string
+    actionUrl?: string | null
+    capturedAt?: Date | string | null
+    provider?: string | null
+    providerMessageId?: string | null
+    failureReason?: string | null
+    sentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type NotificationDeliveryUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    dedupeKey: string
+    channel: $Enums.NotificationChannel
+    status?: $Enums.NotificationDeliveryStatus
+    recipientId: string
+    template: string
+    subject?: string | null
+    body: string
+    actionUrl?: string | null
+    capturedAt?: Date | string | null
+    provider?: string | null
+    providerMessageId?: string | null
+    failureReason?: string | null
+    sentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type NotificationDeliveryCreateOrConnectWithoutOrganizationInput = {
+    where: NotificationDeliveryWhereUniqueInput
+    create: XOR<NotificationDeliveryCreateWithoutOrganizationInput, NotificationDeliveryUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type NotificationDeliveryCreateManyOrganizationInputEnvelope = {
+    data: NotificationDeliveryCreateManyOrganizationInput | NotificationDeliveryCreateManyOrganizationInput[]
+  }
+
+  export type IntroductionWorkflowCreateWithoutOrganizationInput = {
+    id?: string
+    missionId: string
+    stage?: $Enums.WorkflowStage
+    stageEnteredAt?: Date | string
+    timeline?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    proposal: ConnectionProposalCreateNestedOneWithoutIntroductionWorkflowInput
+  }
+
+  export type IntroductionWorkflowUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    proposalId: string
+    missionId: string
+    stage?: $Enums.WorkflowStage
+    stageEnteredAt?: Date | string
+    timeline?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type IntroductionWorkflowCreateOrConnectWithoutOrganizationInput = {
+    where: IntroductionWorkflowWhereUniqueInput
+    create: XOR<IntroductionWorkflowCreateWithoutOrganizationInput, IntroductionWorkflowUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type IntroductionWorkflowCreateManyOrganizationInputEnvelope = {
+    data: IntroductionWorkflowCreateManyOrganizationInput | IntroductionWorkflowCreateManyOrganizationInput[]
   }
 
   export type MembershipUpsertWithWhereUniqueWithoutOrganizationInput = {
@@ -99767,6 +106074,119 @@ export namespace Prisma {
     data: XOR<ProposalDecisionUpdateManyMutationInput, ProposalDecisionUncheckedUpdateManyWithoutOrganizationInput>
   }
 
+  export type WorkflowJobUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: WorkflowJobWhereUniqueInput
+    update: XOR<WorkflowJobUpdateWithoutOrganizationInput, WorkflowJobUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<WorkflowJobCreateWithoutOrganizationInput, WorkflowJobUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type WorkflowJobUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: WorkflowJobWhereUniqueInput
+    data: XOR<WorkflowJobUpdateWithoutOrganizationInput, WorkflowJobUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type WorkflowJobUpdateManyWithWhereWithoutOrganizationInput = {
+    where: WorkflowJobScalarWhereInput
+    data: XOR<WorkflowJobUpdateManyMutationInput, WorkflowJobUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type WorkflowJobScalarWhereInput = {
+    AND?: WorkflowJobScalarWhereInput | WorkflowJobScalarWhereInput[]
+    OR?: WorkflowJobScalarWhereInput[]
+    NOT?: WorkflowJobScalarWhereInput | WorkflowJobScalarWhereInput[]
+    id?: StringFilter<"WorkflowJob"> | string
+    organizationId?: StringFilter<"WorkflowJob"> | string
+    dedupeKey?: StringFilter<"WorkflowJob"> | string
+    kind?: EnumWorkflowJobKindFilter<"WorkflowJob"> | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFilter<"WorkflowJob"> | $Enums.WorkflowJobStatus
+    proposalId?: StringNullableFilter<"WorkflowJob"> | string | null
+    missionId?: StringNullableFilter<"WorkflowJob"> | string | null
+    payload?: StringNullableFilter<"WorkflowJob"> | string | null
+    attempts?: IntFilter<"WorkflowJob"> | number
+    maxAttempts?: IntFilter<"WorkflowJob"> | number
+    nextAttemptAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+    lockedBy?: StringNullableFilter<"WorkflowJob"> | string | null
+    lockedUntil?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    lastError?: StringNullableFilter<"WorkflowJob"> | string | null
+    deadLetteredAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    takenOverBy?: StringNullableFilter<"WorkflowJob"> | string | null
+    takenOverAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    cancelledAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"WorkflowJob"> | Date | string | null
+    createdAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+    updatedAt?: DateTimeFilter<"WorkflowJob"> | Date | string
+  }
+
+  export type NotificationDeliveryUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: NotificationDeliveryWhereUniqueInput
+    update: XOR<NotificationDeliveryUpdateWithoutOrganizationInput, NotificationDeliveryUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<NotificationDeliveryCreateWithoutOrganizationInput, NotificationDeliveryUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type NotificationDeliveryUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: NotificationDeliveryWhereUniqueInput
+    data: XOR<NotificationDeliveryUpdateWithoutOrganizationInput, NotificationDeliveryUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type NotificationDeliveryUpdateManyWithWhereWithoutOrganizationInput = {
+    where: NotificationDeliveryScalarWhereInput
+    data: XOR<NotificationDeliveryUpdateManyMutationInput, NotificationDeliveryUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type NotificationDeliveryScalarWhereInput = {
+    AND?: NotificationDeliveryScalarWhereInput | NotificationDeliveryScalarWhereInput[]
+    OR?: NotificationDeliveryScalarWhereInput[]
+    NOT?: NotificationDeliveryScalarWhereInput | NotificationDeliveryScalarWhereInput[]
+    id?: StringFilter<"NotificationDelivery"> | string
+    organizationId?: StringFilter<"NotificationDelivery"> | string
+    dedupeKey?: StringFilter<"NotificationDelivery"> | string
+    channel?: EnumNotificationChannelFilter<"NotificationDelivery"> | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFilter<"NotificationDelivery"> | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFilter<"NotificationDelivery"> | string
+    template?: StringFilter<"NotificationDelivery"> | string
+    subject?: StringNullableFilter<"NotificationDelivery"> | string | null
+    body?: StringFilter<"NotificationDelivery"> | string
+    actionUrl?: StringNullableFilter<"NotificationDelivery"> | string | null
+    capturedAt?: DateTimeNullableFilter<"NotificationDelivery"> | Date | string | null
+    provider?: StringNullableFilter<"NotificationDelivery"> | string | null
+    providerMessageId?: StringNullableFilter<"NotificationDelivery"> | string | null
+    failureReason?: StringNullableFilter<"NotificationDelivery"> | string | null
+    sentAt?: DateTimeNullableFilter<"NotificationDelivery"> | Date | string | null
+    createdAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+    updatedAt?: DateTimeFilter<"NotificationDelivery"> | Date | string
+  }
+
+  export type IntroductionWorkflowUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: IntroductionWorkflowWhereUniqueInput
+    update: XOR<IntroductionWorkflowUpdateWithoutOrganizationInput, IntroductionWorkflowUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<IntroductionWorkflowCreateWithoutOrganizationInput, IntroductionWorkflowUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type IntroductionWorkflowUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: IntroductionWorkflowWhereUniqueInput
+    data: XOR<IntroductionWorkflowUpdateWithoutOrganizationInput, IntroductionWorkflowUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type IntroductionWorkflowUpdateManyWithWhereWithoutOrganizationInput = {
+    where: IntroductionWorkflowScalarWhereInput
+    data: XOR<IntroductionWorkflowUpdateManyMutationInput, IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type IntroductionWorkflowScalarWhereInput = {
+    AND?: IntroductionWorkflowScalarWhereInput | IntroductionWorkflowScalarWhereInput[]
+    OR?: IntroductionWorkflowScalarWhereInput[]
+    NOT?: IntroductionWorkflowScalarWhereInput | IntroductionWorkflowScalarWhereInput[]
+    id?: StringFilter<"IntroductionWorkflow"> | string
+    organizationId?: StringFilter<"IntroductionWorkflow"> | string
+    proposalId?: StringFilter<"IntroductionWorkflow"> | string
+    missionId?: StringFilter<"IntroductionWorkflow"> | string
+    stage?: EnumWorkflowStageFilter<"IntroductionWorkflow"> | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+    timeline?: StringNullableFilter<"IntroductionWorkflow"> | string | null
+    createdAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+    updatedAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
+  }
+
   export type OrganizationCreateWithoutMembershipsInput = {
     id?: string
     name: string
@@ -99781,6 +106201,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMembershipsInput = {
@@ -99797,6 +106220,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMembershipsInput = {
@@ -99946,6 +106372,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMembershipsInput = {
@@ -99962,6 +106391,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMembershipsInput = {
@@ -100101,6 +106533,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAuditEventsInput = {
@@ -100117,6 +106552,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
     connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAuditEventsInput = {
@@ -100149,6 +106587,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAuditEventsInput = {
@@ -100165,6 +106606,9 @@ export namespace Prisma {
     socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
     connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionParticipationCreateManyMissionInput = {
@@ -100302,6 +106746,7 @@ export namespace Prisma {
     proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
     candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
     decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateWithoutMissionInput = {
@@ -100317,6 +106762,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateManyWithoutMissionInput = {
@@ -102204,6 +108650,7 @@ export namespace Prisma {
     mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
     candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
     decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateWithoutProposerInput = {
@@ -102219,6 +108666,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateManyWithoutProposerInput = {
@@ -102248,6 +108696,7 @@ export namespace Prisma {
     mission?: MissionUpdateOneRequiredWithoutProposalsNestedInput
     proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
     decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateWithoutCandidateInput = {
@@ -102263,6 +108712,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateManyWithoutCandidateInput = {
@@ -103173,6 +109623,59 @@ export namespace Prisma {
     decidedAt?: Date | string
   }
 
+  export type WorkflowJobCreateManyOrganizationInput = {
+    id?: string
+    dedupeKey: string
+    kind: $Enums.WorkflowJobKind
+    status?: $Enums.WorkflowJobStatus
+    proposalId?: string | null
+    missionId?: string | null
+    payload?: string | null
+    attempts?: number
+    maxAttempts?: number
+    nextAttemptAt?: Date | string
+    lockedBy?: string | null
+    lockedUntil?: Date | string | null
+    lastError?: string | null
+    deadLetteredAt?: Date | string | null
+    takenOverBy?: string | null
+    takenOverAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type NotificationDeliveryCreateManyOrganizationInput = {
+    id?: string
+    dedupeKey: string
+    channel: $Enums.NotificationChannel
+    status?: $Enums.NotificationDeliveryStatus
+    recipientId: string
+    template: string
+    subject?: string | null
+    body: string
+    actionUrl?: string | null
+    capturedAt?: Date | string | null
+    provider?: string | null
+    providerMessageId?: string | null
+    failureReason?: string | null
+    sentAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type IntroductionWorkflowCreateManyOrganizationInput = {
+    id?: string
+    proposalId: string
+    missionId: string
+    stage?: $Enums.WorkflowStage
+    stageEnteredAt?: Date | string
+    timeline?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type MembershipUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
@@ -103417,6 +109920,7 @@ export namespace Prisma {
     proposer?: UserUpdateOneRequiredWithoutProposalsMadeNestedInput
     candidate?: UserUpdateOneRequiredWithoutProposalsReceivedNestedInput
     decisions?: ProposalDecisionUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateWithoutOrganizationInput = {
@@ -103432,6 +109936,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     decisions?: ProposalDecisionUncheckedUpdateManyWithoutProposalNestedInput
+    introductionWorkflow?: IntroductionWorkflowUncheckedUpdateOneWithoutProposalNestedInput
   }
 
   export type ConnectionProposalUncheckedUpdateManyWithoutOrganizationInput = {
@@ -103473,6 +109978,165 @@ export namespace Prisma {
     decision?: EnumProposalDecisionKindFieldUpdateOperationsInput | $Enums.ProposalDecisionKind
     note?: NullableStringFieldUpdateOperationsInput | string | null
     decidedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkflowJobUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    kind?: EnumWorkflowJobKindFieldUpdateOperationsInput | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFieldUpdateOperationsInput | $Enums.WorkflowJobStatus
+    proposalId?: NullableStringFieldUpdateOperationsInput | string | null
+    missionId?: NullableStringFieldUpdateOperationsInput | string | null
+    payload?: NullableStringFieldUpdateOperationsInput | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    maxAttempts?: IntFieldUpdateOperationsInput | number
+    nextAttemptAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lockedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    deadLetteredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    takenOverBy?: NullableStringFieldUpdateOperationsInput | string | null
+    takenOverAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkflowJobUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    kind?: EnumWorkflowJobKindFieldUpdateOperationsInput | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFieldUpdateOperationsInput | $Enums.WorkflowJobStatus
+    proposalId?: NullableStringFieldUpdateOperationsInput | string | null
+    missionId?: NullableStringFieldUpdateOperationsInput | string | null
+    payload?: NullableStringFieldUpdateOperationsInput | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    maxAttempts?: IntFieldUpdateOperationsInput | number
+    nextAttemptAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lockedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    deadLetteredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    takenOverBy?: NullableStringFieldUpdateOperationsInput | string | null
+    takenOverAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WorkflowJobUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    kind?: EnumWorkflowJobKindFieldUpdateOperationsInput | $Enums.WorkflowJobKind
+    status?: EnumWorkflowJobStatusFieldUpdateOperationsInput | $Enums.WorkflowJobStatus
+    proposalId?: NullableStringFieldUpdateOperationsInput | string | null
+    missionId?: NullableStringFieldUpdateOperationsInput | string | null
+    payload?: NullableStringFieldUpdateOperationsInput | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    maxAttempts?: IntFieldUpdateOperationsInput | number
+    nextAttemptAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lockedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    deadLetteredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    takenOverBy?: NullableStringFieldUpdateOperationsInput | string | null
+    takenOverAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    channel?: EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFieldUpdateOperationsInput | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFieldUpdateOperationsInput | string
+    template?: StringFieldUpdateOperationsInput | string
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    actionUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    capturedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    failureReason?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    channel?: EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFieldUpdateOperationsInput | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFieldUpdateOperationsInput | string
+    template?: StringFieldUpdateOperationsInput | string
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    actionUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    capturedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    failureReason?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type NotificationDeliveryUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    channel?: EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
+    status?: EnumNotificationDeliveryStatusFieldUpdateOperationsInput | $Enums.NotificationDeliveryStatus
+    recipientId?: StringFieldUpdateOperationsInput | string
+    template?: StringFieldUpdateOperationsInput | string
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    actionUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    capturedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    failureReason?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IntroductionWorkflowUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    proposal?: ConnectionProposalUpdateOneRequiredWithoutIntroductionWorkflowNestedInput
+  }
+
+  export type IntroductionWorkflowUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    stage?: EnumWorkflowStageFieldUpdateOperationsInput | $Enums.WorkflowStage
+    stageEnteredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    timeline?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

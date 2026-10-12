@@ -306,6 +306,62 @@ exports.Prisma.ProposalDecisionScalarFieldEnum = {
   decidedAt: 'decidedAt'
 };
 
+exports.Prisma.WorkflowJobScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  dedupeKey: 'dedupeKey',
+  kind: 'kind',
+  status: 'status',
+  proposalId: 'proposalId',
+  missionId: 'missionId',
+  payload: 'payload',
+  attempts: 'attempts',
+  maxAttempts: 'maxAttempts',
+  nextAttemptAt: 'nextAttemptAt',
+  lockedBy: 'lockedBy',
+  lockedUntil: 'lockedUntil',
+  lastError: 'lastError',
+  deadLetteredAt: 'deadLetteredAt',
+  takenOverBy: 'takenOverBy',
+  takenOverAt: 'takenOverAt',
+  cancelledAt: 'cancelledAt',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.NotificationDeliveryScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  dedupeKey: 'dedupeKey',
+  channel: 'channel',
+  status: 'status',
+  recipientId: 'recipientId',
+  template: 'template',
+  subject: 'subject',
+  body: 'body',
+  actionUrl: 'actionUrl',
+  capturedAt: 'capturedAt',
+  provider: 'provider',
+  providerMessageId: 'providerMessageId',
+  failureReason: 'failureReason',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.IntroductionWorkflowScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  proposalId: 'proposalId',
+  missionId: 'missionId',
+  stage: 'stage',
+  stageEnteredAt: 'stageEnteredAt',
+  timeline: 'timeline',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -942,6 +998,44 @@ exports.ProposalDecisionKind = exports.$Enums.ProposalDecisionKind = {
   REVOKE: 'REVOKE'
 };
 
+exports.WorkflowJobKind = exports.$Enums.WorkflowJobKind = {
+  PROPOSAL_CREATED: 'PROPOSAL_CREATED',
+  CONSENT_ACCEPTED: 'CONSENT_ACCEPTED',
+  INTRODUCE_CONNECTION: 'INTRODUCE_CONNECTION',
+  COORDINATION_FOLLOWUP: 'COORDINATION_FOLLOWUP'
+};
+
+exports.WorkflowJobStatus = exports.$Enums.WorkflowJobStatus = {
+  PENDING: 'PENDING',
+  RUNNING: 'RUNNING',
+  SUCCEEDED: 'SUCCEEDED',
+  FAILED: 'FAILED',
+  DEAD: 'DEAD',
+  TAKEN_OVER: 'TAKEN_OVER',
+  CANCELLED: 'CANCELLED'
+};
+
+exports.NotificationChannel = exports.$Enums.NotificationChannel = {
+  IN_APP: 'IN_APP',
+  EMAIL: 'EMAIL'
+};
+
+exports.NotificationDeliveryStatus = exports.$Enums.NotificationDeliveryStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  CAPTURED: 'CAPTURED',
+  FAILED: 'FAILED'
+};
+
+exports.WorkflowStage = exports.$Enums.WorkflowStage = {
+  PROPOSED: 'PROPOSED',
+  CONSENT_PENDING: 'CONSENT_PENDING',
+  INTRODUCED: 'INTRODUCED',
+  COORDINATING: 'COORDINATING',
+  ACTION_COMPLETED: 'ACTION_COMPLETED',
+  OUTCOME_RECORDED: 'OUTCOME_RECORDED'
+};
+
 exports.UserRole = exports.$Enums.UserRole = {
   USER: 'USER',
   ADMIN: 'ADMIN',
@@ -1266,6 +1360,9 @@ exports.Prisma.ModelName = {
   IdempotencyRecord: 'IdempotencyRecord',
   ConnectionProposal: 'ConnectionProposal',
   ProposalDecision: 'ProposalDecision',
+  WorkflowJob: 'WorkflowJob',
+  NotificationDelivery: 'NotificationDelivery',
+  IntroductionWorkflow: 'IntroductionWorkflow',
   User: 'User',
   Account: 'Account',
   Session: 'Session',

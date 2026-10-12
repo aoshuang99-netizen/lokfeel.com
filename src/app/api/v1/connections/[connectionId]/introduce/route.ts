@@ -18,6 +18,7 @@
 import type { NextRequest } from 'next/server'
 import { errorResponse, success } from '@/lib/api-response'
 import { withTenant } from '@/lib/tenancy'
+import { onConnectionIntroduced } from '@/lib/workflow'
 import { introduceConnection } from '@/lib/connection'
 import { proposalIdOf } from '../../_shared/params'
 
@@ -25,6 +26,12 @@ export const POST = withTenant('proposal.create')(async (req: NextRequest, tenan
   try {
     const proposalId = proposalIdOf(params)
     const result = await introduceConnection(tenant, proposalId)
+
+    // T06：同步介绍落地后推进阶段并排入"跟进"（3 天后）。
+    // 队列侧（`runtime.handleIntroduce`）走的是同一条 `onConnectionIntroduced` ——
+    // 两处都要，否则"同步介绍"不会产生跟进任务。
+    await onConnectionIntroduced({ id: proposalId, organizationId: tenant.organizationId }).catch(() => {})
+
     return success(result)
   } catch (error) {
     return errorResponse(error)

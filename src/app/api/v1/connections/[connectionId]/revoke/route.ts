@@ -17,6 +17,7 @@
 import type { NextRequest } from 'next/server'
 import { errorResponse, success } from '@/lib/api-response'
 import { withTenant } from '@/lib/tenancy'
+import { onConsentDecided } from '@/lib/workflow'
 import { parseRevokeNote, revokeProposal } from '@/lib/connection'
 import { proposalIdOf } from '../../_shared/params'
 
@@ -34,6 +35,13 @@ export const POST = withTenant('proposal.decide')(async (req: NextRequest, tenan
 
     const note = parseRevokeNote(body)
     const result = await revokeProposal(tenant, proposalId, note)
+
+    // T06：撤销 = 以本人身份表态 REVOKE → 取消该提案的待发任务（AC-05）。
+    await onConsentDecided(
+      { id: proposalId, organizationId: tenant.organizationId },
+      { actorId: tenant.userId, decision: 'REVOKE' }
+    ).catch(() => {})
+
     return success(result)
   } catch (error) {
     return errorResponse(error)

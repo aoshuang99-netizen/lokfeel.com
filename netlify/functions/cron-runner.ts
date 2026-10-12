@@ -22,6 +22,10 @@ const CRON_PATHS = [
   "/api/cron/bot-learning",
   "/api/cron/cleanup-soft-delete",
   "/api/cron/migrate-avatars",
+  // T06 · outbox 驱动器：领取到期任务、回收失联租约、投递站内信/邮件，
+  // 并对账补漏（"已双方同意但未入队"的提案）。同样受小时级限制 ——
+  // 更细的粒度可让 cron-job.org 直接打这个端点（见文件头说明）。
+  "/api/cron/workflow-tick",
   "/api/cron/status",
 ];
 

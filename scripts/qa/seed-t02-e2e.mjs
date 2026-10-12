@@ -29,9 +29,10 @@ import bcrypt from 'bcryptjs'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '../..')
 
-const DB_FILE = '/tmp/t02-e2e.db'
+const DB_FILE = process.env.E2E_DB_FILE || '/tmp/t02-e2e.db'
 const DB_URL = `file:${DB_FILE}`
-const DDL_FILE = '/tmp/t02-full-ddl.sql'
+// DDL 落盘路径跟库文件走，避免多个 E2E 库并列时互相覆盖。
+const DDL_FILE = process.env.E2E_DDL_FILE || '/tmp/t02-full-ddl.sql'
 
 export const E2E = {
   orgId: 'org_e2e',

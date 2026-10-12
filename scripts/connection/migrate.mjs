@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * T02/T03 · Connection OS 迁移（批次 C0 / C1）
+ * T02–T06 · Connection OS 迁移（批次 C0 – C3）
  *
  * 用法：
  *   node scripts/connection/migrate.mjs probe                      # 只读：表/列/索引现状
@@ -12,6 +12,9 @@
  * 批次：
  *   C0 = Mission / MissionParticipation / IdempotencyRecord   （T02）
  *   C1 = SocialIntent                                          （T03，引用 C0 的 Mission）
+ *   C2 = ConnectionProposal / ProposalDecision                 （T05）
+ *   C3 = WorkflowJob / NotificationDelivery / IntroductionWorkflow
+ *        （T06；IntroductionWorkflow 引用 C2，其余两表仅指向 Organization）
  *
  * 设计约束（继承 T01 的 scripts/tenancy/migrate.mjs）：
  *   1. **纯新增** —— 各批次只 `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`，
@@ -52,9 +55,17 @@ export const BATCHES = {
     tables: ['ConnectionProposal', 'ProposalDecision'],
     label: 'T05 · 双边同意（ConnectionProposal / ProposalDecision）',
   },
+  C3: {
+    // C3 内部依赖：IntroductionWorkflow 的外键指向 ConnectionProposal（C2）。
+    // WorkflowJob 与 NotificationDelivery 只指向 Organization —— 其 proposalId /
+    // recipientId 是**软引用**（无 FK），刻意不随被引用行级联删除（见 prisma 注释）。
+    // 数组顺序 = 创建顺序；rollback 取其逆序。
+    tables: ['WorkflowJob', 'NotificationDelivery', 'IntroductionWorkflow'],
+    label: 'T06 · 可靠投递与跟进状态机（WorkflowJob / NotificationDelivery / IntroductionWorkflow）',
+  },
 }
 
-export const ALL_BATCHES = ['C0', 'C1', 'C2']
+export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3']
 
 // ══════════════════════════════════════════════════════════════════════
 // 环境加载
@@ -271,7 +282,84 @@ function sqlC2() {
   ]
 }
 
-const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2 }
+function sqlC3() {
+  return [
+    // ── WorkflowJob（outbox / 重试 / 死信 / 接管，单表承载）──
+    `CREATE TABLE IF NOT EXISTS "WorkflowJob" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "dedupeKey" TEXT NOT NULL,
+  "kind" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'PENDING',
+  "proposalId" TEXT,
+  "missionId" TEXT,
+  "payload" TEXT,
+  "attempts" INTEGER NOT NULL DEFAULT 0,
+  "maxAttempts" INTEGER NOT NULL DEFAULT 5,
+  "nextAttemptAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "lockedBy" TEXT,
+  "lockedUntil" DATETIME,
+  "lastError" TEXT,
+  "deadLetteredAt" DATETIME,
+  "takenOverBy" TEXT,
+  "takenOverAt" DATETIME,
+  "cancelledAt" DATETIME,
+  "completedAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL,
+  CONSTRAINT "WorkflowJob_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "WorkflowJob_organizationId_dedupeKey_key" ON "WorkflowJob"("organizationId", "dedupeKey")`,
+    `CREATE INDEX IF NOT EXISTS "WorkflowJob_status_nextAttemptAt_idx" ON "WorkflowJob"("status", "nextAttemptAt")`,
+    `CREATE INDEX IF NOT EXISTS "WorkflowJob_organizationId_status_nextAttemptAt_idx" ON "WorkflowJob"("organizationId", "status", "nextAttemptAt")`,
+    `CREATE INDEX IF NOT EXISTS "WorkflowJob_organizationId_proposalId_idx" ON "WorkflowJob"("organizationId", "proposalId")`,
+
+    // ── NotificationDelivery（投递审计面；无 FK 到 User —— recipientId 是软引用）──
+    `CREATE TABLE IF NOT EXISTS "NotificationDelivery" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "dedupeKey" TEXT NOT NULL,
+  "channel" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'PENDING',
+  "recipientId" TEXT NOT NULL,
+  "template" TEXT NOT NULL,
+  "subject" TEXT,
+  "body" TEXT NOT NULL,
+  "actionUrl" TEXT,
+  "capturedAt" DATETIME,
+  "provider" TEXT,
+  "providerMessageId" TEXT,
+  "failureReason" TEXT,
+  "sentAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL,
+  CONSTRAINT "NotificationDelivery_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "NotificationDelivery_organizationId_dedupeKey_key" ON "NotificationDelivery"("organizationId", "dedupeKey")`,
+    `CREATE INDEX IF NOT EXISTS "NotificationDelivery_organizationId_recipientId_createdAt_idx" ON "NotificationDelivery"("organizationId", "recipientId", "createdAt")`,
+    `CREATE INDEX IF NOT EXISTS "NotificationDelivery_organizationId_status_idx" ON "NotificationDelivery"("organizationId", "status")`,
+
+    // ── IntroductionWorkflow（1:1 绑定提案；FK 到 ConnectionProposal）──
+    `CREATE TABLE IF NOT EXISTS "IntroductionWorkflow" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "proposalId" TEXT NOT NULL,
+  "missionId" TEXT NOT NULL,
+  "stage" TEXT NOT NULL DEFAULT 'PROPOSED',
+  "stageEnteredAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "timeline" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL,
+  CONSTRAINT "IntroductionWorkflow_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "IntroductionWorkflow_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "ConnectionProposal" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IntroductionWorkflow_proposalId_key" ON "IntroductionWorkflow"("proposalId")`,
+    `CREATE INDEX IF NOT EXISTS "IntroductionWorkflow_organizationId_stage_idx" ON "IntroductionWorkflow"("organizationId", "stage")`,
+    `CREATE INDEX IF NOT EXISTS "IntroductionWorkflow_organizationId_missionId_idx" ON "IntroductionWorkflow"("organizationId", "missionId")`,
+  ]
+}
+
+const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3 }
 
 /** 期望存在的索引（verify 断言用）。 */
 const EXPECTED_INDEXES = [
@@ -302,6 +390,17 @@ const EXPECTED_INDEXES = [
   { name: 'ProposalDecision_organizationId_idx', table: 'ProposalDecision', unique: false },
   { name: 'ProposalDecision_personId_decidedAt_idx', table: 'ProposalDecision', unique: false },
   { name: 'ProposalDecision_decision_idx', table: 'ProposalDecision', unique: false },
+  // ── C3 ──
+  { name: 'WorkflowJob_organizationId_dedupeKey_key', table: 'WorkflowJob', unique: true },
+  { name: 'WorkflowJob_status_nextAttemptAt_idx', table: 'WorkflowJob', unique: false },
+  { name: 'WorkflowJob_organizationId_status_nextAttemptAt_idx', table: 'WorkflowJob', unique: false },
+  { name: 'WorkflowJob_organizationId_proposalId_idx', table: 'WorkflowJob', unique: false },
+  { name: 'NotificationDelivery_organizationId_dedupeKey_key', table: 'NotificationDelivery', unique: true },
+  { name: 'NotificationDelivery_organizationId_recipientId_createdAt_idx', table: 'NotificationDelivery', unique: false },
+  { name: 'NotificationDelivery_organizationId_status_idx', table: 'NotificationDelivery', unique: false },
+  { name: 'IntroductionWorkflow_proposalId_key', table: 'IntroductionWorkflow', unique: true },
+  { name: 'IntroductionWorkflow_organizationId_stage_idx', table: 'IntroductionWorkflow', unique: false },
+  { name: 'IntroductionWorkflow_organizationId_missionId_idx', table: 'IntroductionWorkflow', unique: false },
 ]
 
 /** 期望存在的外键（表 → 引用目标），verify 断言用。 */
@@ -328,6 +427,15 @@ const EXPECTED_FKS = [
   { table: 'ProposalDecision', target: 'Organization' },
   { table: 'ProposalDecision', target: 'ConnectionProposal' },
   { table: 'ProposalDecision', target: 'User' },
+  // ── C3 ──
+  // 只有三个模型建了 FK：WorkflowJob / NotificationDelivery 只指向 Organization；
+  // IntroductionWorkflow 额外指向 ConnectionProposal。
+  // （`WorkflowJob.proposalId` / `NotificationDelivery.recipientId` 是软引用，**故意没有 FK** ——
+  //  若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
+  { table: 'WorkflowJob', target: 'Organization' },
+  { table: 'NotificationDelivery', target: 'Organization' },
+  { table: 'IntroductionWorkflow', target: 'Organization' },
+  { table: 'IntroductionWorkflow', target: 'ConnectionProposal' },
 ]
 
 /** 全部受管表（verify 用）。 */
@@ -615,6 +723,89 @@ async function cmdVerify(client) {
     )
   } else {
     ok('ProposalDecision 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  // 4d) T06 · WorkflowJob / NotificationDelivery / IntroductionWorkflow
+  const jobCols = await tableColumns(client, 'WorkflowJob')
+  if (jobCols) {
+    const sql = (await tableCreateSql(client, 'WorkflowJob')) || ''
+    const required = ['organizationId', 'dedupeKey', 'kind', 'status'].every((c) =>
+      new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('WorkflowJob 关键列均为 NOT NULL', required)
+    ok(
+      "WorkflowJob.status 默认 'PENDING'",
+      /"status"\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'PENDING'/.test(sql)
+    )
+    ok(
+      'WorkflowJob.maxAttempts 默认 5',
+      /"maxAttempts"\s+INTEGER\s+NOT\s+NULL\s+DEFAULT\s+5/.test(sql)
+    )
+    // "尚未失败 / 未被领取 / 未进死信" 都是合法状态；建成 NOT NULL 会让它们无法表达。
+    const jobNullable = ['lockedBy', 'lockedUntil', 'lastError', 'deadLetteredAt', 'takenOverBy'].every(
+      (c) => new RegExp(`"${c}"\\s+(TEXT|DATETIME)\\b(?!\\s+NOT)`).test(sql)
+    )
+    ok('WorkflowJob 重试/租约列可为空', jobNullable)
+
+    // 🔴 **反向断言**：`proposalId` 上**不该**有外键（软引用，见 prisma 文件头）。
+    // 若有人"顺手"补一条 FK，删提案会级联抹掉投递痕迹 —— 那正是 AC-17 要留的证据。
+    // 断言"不存在"，才是把这条设计意图钉住。
+    ok(
+      'WorkflowJob.proposalId 无外键（软引用，删提案不抹投递痕迹）',
+      !/FOREIGN KEY\s+\("proposalId"\)/.test(sql)
+    )
+  } else {
+    ok('WorkflowJob 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  const deliveryCols = await tableColumns(client, 'NotificationDelivery')
+  if (deliveryCols) {
+    const sql = (await tableCreateSql(client, 'NotificationDelivery')) || ''
+    const required = ['organizationId', 'dedupeKey', 'channel', 'status', 'recipientId', 'template', 'body'].every(
+      (c) => new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('NotificationDelivery 关键列均为 NOT NULL', required)
+    ok(
+      "NotificationDelivery.status 默认 'PENDING'",
+      /"status"\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'PENDING'/.test(sql)
+    )
+    // 沙箱捕获列必须可空 —— 真实投递时它们本来就没有值，建 NOT NULL 会写不进去。
+    ok(
+      'NotificationDelivery.capturedAt 可为空（真实投递不写捕获）',
+      /"capturedAt"\s+DATETIME\b(?!\s+NOT)/.test(sql)
+    )
+    ok(
+      'NotificationDelivery.recipientId 无外键（软引用，收件人注销仍留痕）',
+      !/FOREIGN KEY\s+\("recipientId"\)/.test(sql)
+    )
+  } else {
+    ok('NotificationDelivery 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  const wfCols = await tableColumns(client, 'IntroductionWorkflow')
+  if (wfCols) {
+    const sql = (await tableCreateSql(client, 'IntroductionWorkflow')) || ''
+    const required = ['organizationId', 'proposalId', 'missionId', 'stage'].every((c) =>
+      new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('IntroductionWorkflow 关键列均为 NOT NULL', required)
+    ok(
+      "IntroductionWorkflow.stage 默认 'PROPOSED'",
+      /"stage"\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'PROPOSED'/.test(sql)
+    )
+    ok(
+      'IntroductionWorkflow.stageEnteredAt 默认 CURRENT_TIMESTAMP',
+      /"stageEnteredAt"\s+DATETIME\s+NOT\s+NULL\s+DEFAULT\s+CURRENT_TIMESTAMP/.test(sql)
+    )
+    // 正向：提案外键**必须**在 —— 工作流脱离提案没有意义，且超时判定要用它的状态。
+    ok(
+      'IntroductionWorkflow.proposalId → ConnectionProposal 外键存在',
+      /CONSTRAINT\s+"IntroductionWorkflow_proposalId_fkey"\s+FOREIGN KEY\s+\("proposalId"\)\s+REFERENCES\s+"ConnectionProposal"/.test(
+        sql
+      )
+    )
+  } else {
+    ok('IntroductionWorkflow 关键列均为 NOT NULL', false, '表不存在')
   }
 
   // 5) 孤儿行（跨表完整性）

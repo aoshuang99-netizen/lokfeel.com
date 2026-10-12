@@ -19,6 +19,7 @@ import type { NextRequest } from 'next/server'
 import { errorResponse, success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { withTenant } from '@/lib/tenancy'
+import { onConsentDecided } from '@/lib/workflow'
 import { decideProposal, parseConsentDecision } from '@/lib/connection'
 import { proposalIdOf } from '../../_shared/params'
 
@@ -35,6 +36,15 @@ export const POST = withTenant('proposal.decide')(async (req: NextRequest, tenan
 
     const decision = parseConsentDecision(body)
     const result = await decideProposal(tenant, proposalId, decision)
+
+    // T06：表态落库后翻译成工作流任务（通知对方 / 取消待发 / 双方同意时排介绍）。
+    // 阶段由钩子**重读**当前状态决定（此处 `result` 只给调用方看），
+    // 因此单方 ACCEPT 仍会是 CONSENT_PENDING，不会误排介绍任务（AC-04）。
+    await onConsentDecided(
+      { id: proposalId, organizationId: tenant.organizationId },
+      { actorId: tenant.userId, decision }
+    ).catch(() => {})
+
     return success(result)
   } catch (error) {
     return errorResponse(error)

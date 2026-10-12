@@ -311,6 +311,8 @@ model ConnectionProposal {
   proposer     User         @relation("ProposalProposer", fields: [proposerId], references: [id], onDelete: Cascade)
   candidate    User         @relation("ProposalCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
   decisions    ProposalDecision[]
+  /// T06：一提案至多一条介绍工作流（1:1）。提案删除时工作流级联删除。
+  introductionWorkflow IntroductionWorkflow?
 
   /// 同一对（发起方 → 被介绍方）在同一任务下**只能有一条提案**。
   /// 这同时是"重复发起"的最后一道兜底：即便客户端换了 `Idempotency-Key`，
@@ -351,4 +353,216 @@ model ProposalDecision {
   @@index([organizationId])
   @@index([personId, decidedAt])
   @@index([decision])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// T06 · Workflow Execution — 可靠投递与跟进状态机
+//
+// 对齐验收：AC-07（幂等）/ AC-09（消息合规）/ AC-14（介绍工作流）/ AC-17（工作流恢复）
+//
+// 引擎选型（BACKLOG §6-⑤ 的拍板结果）：**DB outbox**，不引入 Temporal。理由：
+//   1. 现网部署是 Netlify **免费计划** —— 无常驻进程，跑不了 Temporal worker；
+//   2. 现网 DB 是 libSQL，而 Temporal 需要 PG/MySQL —— 引入它等于先做尚未拍板的 M6；
+//   3. 本仓已有 `cron-runner` 调度器（netlify/functions）+ 内部 cron 端点（CRON_SECRET 守卫）
+//      + T02 幂等层 + T05 的 CAS 范式 —— outbox 是**零新增基础设施**的路线；
+//   4. PRD 明确「早期一个可靠的数据库任务队列就足够」，架构文档把 Temporal 定为
+//      「工作流复杂度确有必要时引入」。**替换点**已隔离在 `src/lib/workflow/runtime.ts`
+//      的驱动接口上，届时只需换驱动器，不改业务侧调用点。
+//
+// ⚠️ **软引用，不是外键**（刻意）：`WorkflowJob.proposalId` / `missionId` 与
+//   `NotificationDelivery.recipientId` 都不建 FK relation，只存 id 字符串。
+//   理由：outbox 与投递记录是**已发生事实的留痕**，其存在不能取决于被引用行是否还在。
+//   若建 FK 级联，「删掉提案」会连带抹掉「我们曾尝试投递、失败了几次、最终怎么收场」——
+//   那正是 AC-17（故障注入后可观测、可接管）最需要的那份证据。
+//   这与 `TenantAuditEvent.resourceId` 的取向一致（同样是软引用）。
+// ═══════════════════════════════════════════════════════════════
+
+/// 工作流任务类型。每个类型对应一处「业务动作之后的副作用」。
+enum WorkflowJobKind {
+  PROPOSAL_CREATED // 提案创建 → 通知被介绍方（消解 T05 R4「没人被通知」）
+  CONSENT_ACCEPTED // 一方表态 → 通知另一方（含"已同意，等待对方"的阶段性提示）
+  INTRODUCE_CONNECTION // 双方同意 → 执行介绍（**投递钩子**：原样调用 introduceConnection()）
+  COORDINATION_FOLLOWUP // 介绍落地 → 跟进提示（AC-14 的"跟进"段）
+}
+
+/// 任务状态机。
+///
+/// ⚠️ `DEAD` 与 `TAKEN_OVER` **不是同一件事**，不要合并：
+///   - `DEAD`：自动重试已耗尽 → 需要人判断"是否还该送"。系统已放弃。
+///   - `TAKEN_OVER`：人**主动**接管（可能发生在 DEAD 之后，也可能在重试中途）。
+///     接管后**自动重试必须停止** —— 否则人的处置会被自动重试覆盖。
+enum WorkflowJobStatus {
+  PENDING // 待执行（`nextAttemptAt` 到点前不可领）
+  RUNNING // 已被领取（持租约；租约过期 = 上一个执行者崩了，可被重新领取）
+  SUCCEEDED // 执行成功（终态）
+  FAILED // 不可重试的终态失败（如校验不通过：重试一万次也一样）
+  DEAD // 死信：可重试但重试次数耗尽（终态，等待人工）
+  TAKEN_OVER // 人工接管（终态；不再自动重试）
+  CANCELLED // 被上游撤销取消（AC-05「撤销取消待发任务」的落点）
+}
+
+/// 投递渠道。**仅这两条** —— 主指令要求"仅用官方授权渠道，禁止绕过平台 API"。
+enum NotificationChannel {
+  IN_APP // 站内通知（写 Notification 表，真实落库）
+  EMAIL // 邮件（统一出口；无真实凭据时进沙箱捕获，**不伪造已发送**）
+}
+
+/// 投递结果。
+///
+/// ⚠️ `CAPTURED` 与 `SENT` **必须分开**：前者是"沙箱捕获了投递意图与内容"，
+///   后者是"真实外部服务已受理"。把沙箱写成 SENT 就是虚报外部服务已接通
+///   （主指令：「没有真实凭据的流程只能标记 MOCKED / BLOCKED，不能标记 PASSED」）。
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT // 真实渠道已受理（provider 回执 id 落库）
+  CAPTURED // 沙箱捕获（无凭据）：记录内容与边界，供断言，不冒充已送达
+  FAILED
+}
+
+/// 介绍工作流的阶段（AC-14 的端到端链路）。
+///
+/// 与 `ConnectionProposalStatus` 的关系：后者是**授权**状态机（谁同意了），
+/// 本枚举是**流程**状态机（事情走到哪一步了）。二者不合并 —— 一次授权可能
+/// 对应多次流程推进（如介绍后协调、完成、记成果），而授权在介绍落地后就冻结了。
+enum WorkflowStage {
+  PROPOSED // 提案已创建，等待表态
+  CONSENT_PENDING // 至少一方已表态但未双方同意
+  INTRODUCED // 介绍已落地（introducedAt 已写）
+  COORDINATING // 双方正在协调（跟进中）
+  ACTION_COMPLETED // 连接行动已完成
+  OUTCOME_RECORDED // 成果已记录（T08 接手后的终态）
+}
+
+/// Outbox / 任务队列。**一张表同时承载待执行、重试、死信、接管** ——
+/// 拆成多表会让"一个任务的一生"跨三张表，而 AC-17 要求能一眼看清它的处境。
+model WorkflowJob {
+  id             String @id @default(cuid())
+  organizationId String
+
+  /// **幂等键**（AC-07 的落点）：同一业务动作重复入队只会有一行。
+  /// 例：`introduce:<proposalId>`、`proposal-created:<proposalId>`。
+  /// 唯一约束 `(organizationId, dedupeKey)` 让并发入队退化为"第二次撞唯一键"，
+  /// 而不是"两条任务各投递一次"。
+  dedupeKey String
+
+  kind   WorkflowJobKind
+  status WorkflowJobStatus @default(PENDING)
+
+  /// 软引用（见文件头说明）：不建 FK，删提案不抹掉投递痕迹。
+  proposalId String?
+  missionId  String?
+
+  /// 载荷（JSON 文本，经 json-codec 读写）。
+  /// ⚠️ **禁止**放 rationale 全文与对侧档案字段 —— 任务是内部调度凭据，
+  /// 不是信息披露通道。披露只能经 `discloseSubject()`（T03 的唯一出口）。
+  payload String?
+
+  // ── 重试与退避 ──
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(5)
+  /// 下次可被领取的时间。退避 = 指数 + 抖动（见 `src/lib/workflow/backoff.ts`）。
+  nextAttemptAt DateTime @default(now())
+
+  // ── 租约（AC-17 崩溃恢复的落点）──
+  /// 领取者标识（worker 实例名）。租约到期后他人可重新领取。
+  lockedBy    String?
+  lockedUntil DateTime?
+
+  /// 最后一次失败原因（截断存储，仅供排障。**禁止**写入正文内容）。
+  lastError String?
+
+  /// 进入死信的时间。
+  deadLetteredAt DateTime?
+  /// 人工接管者与时间。接管后自动重试停止。
+  takenOverBy    String?
+  takenOverAt    DateTime?
+  /// 被上游取消的时间（AC-05：撤销要能取消待发任务）。
+  cancelledAt    DateTime?
+
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  /// **AC-07 的硬保证**：同一租户内同一业务动作至多一行任务。
+  @@unique([organizationId, dedupeKey])
+  /// 领取与扫描的主索引：`(status, nextAttemptAt)` 先过滤再排序。
+  @@index([status, nextAttemptAt])
+  /// 租户内的运营视图（"本社群卡住的任务"）。
+  @@index([organizationId, status, nextAttemptAt])
+  @@index([organizationId, proposalId])
+}
+
+/// 消息投递记录（**审计面**：到底给谁、发了什么、走的哪个渠道、结果如何）。
+///
+/// 与 `Notification`（core.prisma，站内信的**收件箱**）分工：
+///   - `Notification`   → 用户能看到的那条消息（可能被已读/删除）。
+///   - `NotificationDelivery` → 我们**投递过**这件事的记录（不可被用户删除，是 AC-09 的证据）。
+/// 二者不是重复建模：一条投递可能因为去重而**不**产生新 `Notification`，
+/// 也可能在 `Notification` 被删后仍需保留投递证据。
+model NotificationDelivery {
+  id             String @id @default(cuid())
+  organizationId String
+
+  /// 幂等键：`<kind>:<proposalId>:<recipientId>` —— 同一业务动作对同一人只投递一次。
+  dedupeKey String
+
+  channel NotificationChannel
+  status  NotificationDeliveryStatus @default(PENDING)
+
+  /// 软引用（见文件头说明）：收件人注销后投递记录仍需留存。
+  recipientId String
+
+  /// 模板标识（如 `proposal.pending`）。决定文案骨架，与人无关，故可安全落库。
+  template String
+  subject  String?
+  /// 渲染后的正文。**系统生成**，只含最小披露信息。
+  body      String
+  actionUrl String?
+
+  /// ── 沙箱捕获（AC-09 的证据面）──
+  /// 无真实凭据时不外发，但把"要发什么"记下来：`CAPTURED` + 本字段非空。
+  capturedAt DateTime?
+  /// 实际渠道：`in-app` / `resend` / `smtp` / `sandbox`。
+  provider          String?
+  providerMessageId String?
+  failureReason     String?
+
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, recipientId, createdAt])
+  @@index([organizationId, status])
+}
+
+/// 介绍工作流实例（**一提案一条**）。记录 AC-14 那条链走到哪一步、每一步何时发生。
+model IntroductionWorkflow {
+  id             String @id @default(cuid())
+  organizationId String
+  /// 1:1 绑定提案。强 FK：提案没了，这条流程也就没有意义了。
+  proposalId     String @unique
+  /// 软引用：missionId 只用于租户内筛选。
+  missionId      String
+
+  stage          WorkflowStage @default(PROPOSED)
+  /// 进入当前阶段的时间（**超时判定的基准**；AC-17 的"超时"落点）。
+  stageEnteredAt DateTime      @default(now())
+
+  /// 阶段时间线（JSON 文本数组）：`[{stage, at, by, reason}]`，追加式。
+  /// 与 `ProposalDecision` 相反，这里**刻意留流水** —— 流程推进需要可复盘。
+  timeline String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  proposal     ConnectionProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, stage])
+  @@index([organizationId, missionId])
 }

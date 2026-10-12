@@ -63,6 +63,15 @@ model Organization {
   connectionProposals ConnectionProposal[]
   proposalDecisions   ProposalDecision[]
 
+  // ── T06 Connection OS 反向关系（connection.prisma）──
+  //
+  // ⚠️ 注意 `WorkflowJob.proposalId` / `MessageDelivery.recipientId` **不在此列**：
+  // 它们是**软引用**（无 FK），见 connection.prisma 文件头「软引用，不是外键」。
+  // 只有真正建了 FK relation 的三个模型出现在这里。
+  workflowJobs          WorkflowJob[]
+  notificationDeliveries NotificationDelivery[]
+  introductionWorkflows IntroductionWorkflow[]
+
   @@index([status])
 }
 

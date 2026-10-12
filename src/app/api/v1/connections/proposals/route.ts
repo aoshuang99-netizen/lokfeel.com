@@ -23,6 +23,7 @@ import type { NextRequest } from 'next/server'
 import { created, errorResponse, success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { withTenant } from '@/lib/tenancy'
+import { onProposalCreated } from '@/lib/workflow'
 import {
   createProposal,
   findProposalById,
@@ -76,6 +77,13 @@ export const POST = withTenant('proposal.create')(async (req: NextRequest, tenan
       // 误判成"又发了一条提案"。
       res.headers.set('Idempotent-Replayed', 'true')
     }
+
+    // T06：把"提案已创建"翻译成工作流任务（建实例 + 通知被介绍方）。
+    // 入队是**尽力而为**的非事务操作（理由见 `@/lib/workflow/hooks` 文件头）：
+    // 失败只记录进 HookResult.errors，绝不让已成功的提案创建变成 500。
+    // 重放路径同样调用 —— 入队幂等，撞 dedupeKey 只会 no-op。
+    await onProposalCreated({ id: resource.id, organizationId: tenant.organizationId }).catch(() => {})
+
     return res
   } catch (error) {
     return errorResponse(error)

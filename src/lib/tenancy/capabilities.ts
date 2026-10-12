@@ -48,6 +48,9 @@ export type TenantCapability =
   | 'outcome.read'
   | 'outcome.report'
   | 'outcome.verify' // 对手方确认 / 外部核验
+  // ── 工作流（T06）──
+  | 'workflow.read' // 查看任务队列 / 死信 / 停滞阶段（运营可见）
+  | 'workflow.manage' // 人工接管 / 手动重试（管理动作，影响"消息是否出街"）
   // ── 审计 ──
   | 'audit.read'
 
@@ -58,6 +61,7 @@ export const TENANT_CAPABILITIES: readonly TenantCapability[] = [
   'intent.read', 'intent.manage',
   'proposal.read', 'proposal.create', 'proposal.decide',
   'outcome.read', 'outcome.report', 'outcome.verify',
+  'workflow.read', 'workflow.manage',
   'audit.read',
 ] as const
 
@@ -80,6 +84,8 @@ const OPERATOR_EXTRA: TenantCapability[] = [
   'mission.update',
   'mission.delete',
   'proposal.create',
+  // T06：运营需要看见"哪些通知卡住了"，但**不能**替系统决定放不放行。
+  'workflow.read',
 ]
 
 // ── 管理能力：ADMIN 及以上 ──────────────────────────────────────────
@@ -91,6 +97,9 @@ const ADMIN_EXTRA: TenantCapability[] = [
   // 结果核验直接影响计费归因（T08），故归入管理员而非运营 ——
   // 保守取严，后续若要下放给 OPERATOR 需单独评审。
   'outcome.verify',
+  // T06：接管/重试会决定"一条消息是否出街"，是管理动作而非日常运营 ——
+  // 与 outcome.verify 同一取向：保守取严。
+  'workflow.manage',
 ]
 
 // ── 所有者专属 ──────────────────────────────────────────────────────
