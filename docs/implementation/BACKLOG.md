@@ -5,9 +5,9 @@
 >
 > | 项 | 值 |
 > |---|---|
-> | 真实仓库基线 | `233669e`（`main`，**已推送 GitHub + 已发布 Netlify 生产**；本批生产复验 **T06 25/25 · T04 19/19 · 窗口期 13/13**，迁移对账 **107/107**） |
-> | 上一发布基线 | `0c95b89`（T04）—— 此前 T05/T06 两次交付均带跳过标记未发版，本次一并发版补齐 |
-> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**（见 T05 卡片的交付记录）、**T06 Workflow Execution**（见 T06 卡片的交付记录，**已上线**） |
+> | 真实仓库基线 | `0414186`（`main`，**已推送 GitHub + 已发布 Netlify 生产**，部署 `6acc9c781f2e` ready；本批生产复验 **T07 19/19 · T06 25/25 · T04 19/19 · 窗口期 13/13**） |
+> | 上一发布基线 | `233669e`（T05 + T06）—— 再往前 `0c95b89`（T04）；T05/T06 曾长期带跳过标记未发版，已于 `233669e` 补齐 |
+> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**、**T06 Workflow Execution**、**T06+ 死信告警 / AC-10 生命周期**、**T07 Console Slice 1**（以上均已上线） |
 > | 剩余 | **T07–T12，共 6 个任务** |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
 > | 规划背景 | 《LokFeel SaaS 核心功能架构与开源技术集成方案 V1.0》：10 大模块 / 6 个自研引擎 / P0–P3 / 12 项 Codex 实施清单 |
@@ -346,7 +346,10 @@
 
 ## 7. 下一个动作
 
-**T06 已交付 → T07 已开工（Slice 1）**；T08 仍待开工。
+**T06 已交付并上线 → T07 Slice 1 已上线（`0414186`）**；T07 后续 Slice 与 T08 待开工。
+
+> 🟡 **三个待拍板项仍未定**（都不阻塞当前主线）：① AC-10 自动清理是否开启（`LIFECYCLE.md` §4.4）；
+> ② 分钟级调度走哪条路（`SCHEDULING.md`，涉及 CI 额度成本）；③ T09 Agent 运行时选型。
 
 理由：
 
@@ -383,6 +386,15 @@
 `/api/v1/workflow/overview` 的真实数据）+ 个人态侧边栏入口。
 **AC-18 未认领**（七屏未齐，导航里未实现的入口渲染为不可点的"施工中"而非死链）。
 
+**2026-10-12 · T07 Slice 1 + T06+ 已发版** —— 发布提交 `0414186`（正文**不带**
+跳过标记），Netlify 部署 `6acc9c781f2e` **ready**，一次性把积压的 T06+（死信告警 /
+AC-10 生命周期 / 调度方案）与 T07 Slice 1 一起上线（**无 schema 变更**，
+C2/C3 已在 `233669e` 应用到生产）。
+生产复验：`verify:t07:prod` **19/19** · `verify:t06:prod` **25/25** · `verify:t04:prod` 19/19 ·
+窗口期 `verify-public-origin` **13/13**（0 泄漏）。
+🔴 AC-10 端点**已上线但默认只统计**：生产 dry-run `scanned/match/purged` 全 0；
+`cron-runner.ts` 里该路径保持注释、GH Actions 步骤带 `?dry=1` —— 自动清理需运营方**显式开启**（`LIFECYCLE.md` §4.4）。
+
 **R8（调度粒度）**：给出三条路与成本对比（`docs/implementation/SCHEDULING.md`
 + `.github/workflows/scheduler.yml`，**默认未开启定时** —— 是否用掉 GitHub Actions
 免费额度属成本决策）。
@@ -401,7 +413,7 @@
 | T06+ · 邮件通道就绪度 | — | — | `npm run verify:email:channel`（凭据分类 + **契约漂移检查**） | 真实外发仍 **BLOCKED**（无 `RESEND_API_KEY`） |
 | T06+ · 死信主动告警（R9） | `tsc` | `tests/workflow/alerts.test.ts` **11** | ESLint 0/0 | 防回路断言：告警**不产生 WorkflowJob** |
 | T06+ · AC-10 生命周期清理 | `tsc` | `tests/lifecycle` **13** | ESLint 0/0 | **自证夹具**：`seed-lifecycle-e2e.mjs` + `lifecycle-sweep.mjs`（dry-run 命中 1/2/1 = 期望；apply 后复跑 0；`PENDING` 与未读项存活） |
-| T07 · Console Slice 1 | `tsc` | — | ESLint 0/0 | 人工可达 `/console`；AC-18 **未认领** |
+| T07 · Console Slice 1 | `tsc` 0 错误 | — | ESLint 0/0 · `check:script-decls` 57 通过 | 生产复验 **19/19**（`verify-t07-prod.mjs`：`/console` 匿名 307 跳登录、lifecycle 端点 dry 只统计、0 泄漏）；AC-18 **未认领** |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash
