@@ -353,14 +353,15 @@
 部署 `6accbb986762` @ 2026-10-12T10:51:04Z，**无 schema 变更**）；T07 最后两屏
 （Outcomes / Agents → Slice 4，分别等 T08 的成果面与 T09 选型）与 T08 待开工。
 
-> ⚠️ **本批发版发现的一处既有不一致（非本次引入，待拍板）**：`src/app/console/layout.tsx`
-> 未登录时把回跳地址**写死**为 `/console`，与其文件头注释「跳登录（保留回跳地址）」不符
-> → 深链（如 `/console/settings`）登录后被送回控制台入口。个人态
-> `src/app/(dashboard)/layout.tsx` 是**按 Referer 保留真实路径**的（两者做法不一致）。
-> 影响：仅"回跳目的地"这一层，不泄漏、不越权（回跳始终落在 `/console` 内，且 `/login`
-> 侧还有 `isSafeRedirect` 相对路径校验）。修法 = 对齐个人态布局（约 6 行）；
-> 复验脚本 `verify-t07-prod.mjs` §2 已把该现象**显式打印**（不假装通过），
-> 断言只守「不泄漏到 `/dashboard` 或 `/`」这一真不变量。
+> ✅ **已发现的既有不一致 → 已修复并补发**：`src/app/console/layout.tsx` 未登录时把回跳地址
+> **写死**为 `/console`，与其文件头注释「跳登录（保留回跳地址）」不符 → 深链（如
+> `/console/settings`）登录后被送回控制台入口（**Slice 1 起既有**，2026-10-12 发版复验发现）。
+> 现改为**对齐个人态** `src/app/(dashboard)/layout.tsx` 的做法：**从 Referer 取真实路径**，
+> 只接受 `/console` 命名空间内的相对路径（缺失/非法 → 回落入口；`/login` 侧另有
+> `isSafeRedirect` 兜底）。复验脚本同时新增 **§2b 带 Referer 探针**（断言回跳 === 请求路径）
+> 与**负向对照**（别态 Referer 不被采信）—— 把"保留回跳地址"从"只能读代码证明"
+> 变成"可复跑取证"。踩坑记录：**裸 `fetch`（无 Referer）时任何布局都会回落默认值**，
+> 所以不要用裸请求断言 `callbackUrl === 路径`（那是测 Referer，不是测守卫）。
 
 > **Slice 3（2026-10-12，已上线 `564802a`）**：新增 `GET /api/v1/connections/pipeline`（`workflow.read`，
 > 租户级连接运营视图：分桶 / 停滞 / **与服务端同源的「可介绍」判据**）+ `GET/PATCH /api/v1/org`

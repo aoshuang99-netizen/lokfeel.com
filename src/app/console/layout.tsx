@@ -14,6 +14,7 @@
  */
 
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { auth } from '@/lib/auth/auth'
 import { capabilitiesOf, listTenants, resolveTenantForUser, type TenantCapability } from '@/lib/tenancy'
 import ConsoleShell from './console-shell'
@@ -30,7 +31,22 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect(`/login?callbackUrl=${encodeURIComponent('/console')}`)
+    // 保留用户实际想访问的地址（取自 Referer）—— 与 (dashboard) 布局同款做法。
+    // ⚠️ 原先写死 '/console'：深链（如 /console/settings）登录后会被送回入口，
+    //    与文件头「未登录 → 跳登录（保留回跳地址）」的约定不符（2026-10-12 发版复验发现并修正）。
+    //    只接受落在 /console 命名空间内的相对路径；Referer 缺失/非法（如直接开书签）→ 回落入口。
+    //    这里不做授权判断 —— 由 /login 侧的 isSafeRedirect 兜底校验。
+    const headersList = await headers()
+    let callbackUrl = '/console'
+    try {
+      const refUrl = new URL(headersList.get('referer') || '')
+      if (refUrl.pathname.startsWith('/console')) {
+        callbackUrl = refUrl.pathname + refUrl.search
+      }
+    } catch {
+      /* Referer 缺失或非法 → 保持入口 */
+    }
+    redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`)
   }
 
   let organizationName = ''

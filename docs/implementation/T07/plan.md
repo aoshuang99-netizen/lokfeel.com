@@ -7,14 +7,13 @@
 > Agents / Outcomes 仍在导航里显式标注"施工中"（是 `<span>`，不是死链）——
 > 它们分别等 T09 技术栈拍板与 T08 的成果数据面，**不是**没做，而是依赖未就绪。
 >
-> ⚠️ **已知不一致（Slice 1 起就存在，非 Slice 3 引入，待拍板）**：`src/app/console/layout.tsx`
-> 未登录时把回跳地址**写死**为 `/console`，与该文件头注释「跳登录（保留回跳地址）」不符
-> → 深链（如 `/console/settings`）登录后被送回控制台入口。个人态
-> `src/app/(dashboard)/layout.tsx` 是**按 Referer 保留真实路径**的（两者做法不一致）。
-> 影响仅限"回跳目的地"，不泄漏、不越权（回跳始终落在 `/console` 内，且 `/login` 侧另有
-> `isSafeRedirect` 相对路径校验）。修法 = 对齐个人态布局（约 6 行）。
-> 复验脚本 `verify-t07-prod.mjs` §2 已把该现象**显式打印**（不假装通过），
-> 断言只守「不泄漏到 `/dashboard` 或 `/`」这条真不变量。
+> ✅ **已修复的既有不一致**（Slice 1 起就存在，2026-10-12 发版复验发现并补偿修复）：
+> `src/app/console/layout.tsx` 未登录时把回跳地址**写死**为 `/console`，与该文件头注释
+> 「跳登录（保留回跳地址）」不符 → 深链（如 `/console/settings`）登录后被送回控制台入口。
+> 现改为**对齐个人态** `src/app/(dashboard)/layout.tsx`：**从 Referer 取真实路径**，仅接受
+> `/console` 命名空间内的相对路径（缺失/非法 → 回落入口）；`/login` 侧另有 `isSafeRedirect`
+> 兜底，不引入新的开放重定向面。复验脚本新增 **§2b 带 Referer 探针** + **负向对照**
+> （别态 Referer 不被采信），使"保留回跳地址"可复跑取证。
 
 ## 0. 任务定义（来自 BACKLOG）
 

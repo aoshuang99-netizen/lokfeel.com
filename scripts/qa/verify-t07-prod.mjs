@@ -12,10 +12,11 @@
  *   ② 组织态五屏匿名 → 必须 307 跳登录，且回跳落在 `/console` 命名空间内（证明屏幕代码已上线）
  *      Slice 1 ` /console`；Slice 2 `/console/missions` `/console/members`；
  *      Slice 3 `/console/connections` `/console/settings`
- *      ⚠️ 已知不一致（Slice 1 起就存在，非本次引入）：`console/layout.tsx` 把 callbackUrl
- *         **写死**为 `/console`，与其文件头注释「保留回跳地址」不符 → 深链登录后回入口。
- *         个人态 `(dashboard)/layout.tsx` 是按 Referer 保留真实路径的。修法 = 对齐后者（1 行），
- *         待拍板；此处断言只守"不泄漏到 /dashboard 或 /"，不假装深链被保留。
+ *   ②b 深链保留（**带 Referer** 探针）+ 负向对照（别态 Referer 不被采信）
+ *      ⚠️ 历史：`console/layout.tsx` 曾把 callbackUrl **写死**为 `/console`，与其文件头注释
+ *         「跳登录（保留回跳地址）」不符 → 深链登录后被送回入口（Slice 1 起既有）。
+ *         已于 2026-10-12 对齐个人态 `(dashboard)/layout.tsx` 的做法修复；②b 是它的护栏 ——
+ *         没有 ②b，"保留回跳地址"这条契约就只能靠"读代码"证明。
  *   ③ `/dashboard` 匿名 → 同款 307（个人态回归，证明两态守卫一致）
  *   ④ API 匿名全拒（AC-02 回归 + 证明路由已注册）：工作流（T06）×2、
  *      成员目录（Slice 2）、连接运营视图 + 组织档案（Slice 3）
@@ -113,15 +114,13 @@ function assertLoginGuarded(label, r, expectedCallback) {
  * 组织态**子屏**（`/console/xxx`）的守卫断言。
  *
  * ⚠️ 为什么不像 `/console` 那样断言 callbackUrl === 请求路径：
- *   个人态布局 `(dashboard)/layout.tsx` 是**按 Referer 保留真实路径**的，
- *   而裸请求（无 Referer，本脚本就是）会回落到默认值 —— 所以"回跳 = 请求路径"
- *   对**任何**布局都不成立，那样断言等于测 Referer 而不是测守卫。
- *   组织态布局 `console/layout.tsx` 目前更进一步：**写死** `callbackUrl=/console`
- *   （其文件头注释却写着"保留回跳地址"）→ 深链登录后会被送回控制台入口。
+ *   `fetch` 裸请求（无 Referer，本脚本就是）时，**任何**布局都会回落到默认值
+ *   （个人态 → `/dashboard`，组织态 → `/console`）—— 所以"回跳 = 请求路径"
+ *   对任何布局都不成立；那样断言测的是 Referer，不是守卫（2026-10-12 发版复验踩过）。
  *
  * 故此处只断言**真正该守的不变量**：回跳必须落在 `/console` 命名空间内
- * （不被丢到 `/dashboard` 或 `/`），并把实际值打印出来 —— 深链未保留这件事
- * **显式可见**，不假装通过。
+ * （不被丢到 `/dashboard` 或 `/`），并把实际值打印出来。
+ * "深链是否被保留"由 §2b 的**带 Referer 探针**单独证明。
  */
 function assertConsoleGuarded(label, r, path) {
   if (isUnregisteredRoute404(r)) {
@@ -134,8 +133,20 @@ function assertConsoleGuarded(label, r, path) {
   const cb = m ? decodeURIComponent(m[1]) : ''
   ck(`${label} → 回跳落在 /console`, cb.startsWith('/console'), `callbackUrl=${cb || '(空)'}`)
   if (cb && cb !== path) {
-    console.log(`     ⚠️ 深链未保留：请求 ${path} → 回跳 ${cb}（console 布局写死入口）`)
+    console.log(`     ℹ️ 无 Referer → 回跳入口 ${cb}（**预期**行为；深链保留由 §2b 的带 Referer 探针证明）`)
   }
+}
+
+/**
+ * §2b 深链保留探针：带 `Referer: <BASE><path>` 再打一次，回跳地址必须**等于**该路径。
+ * 这是 2026-10-12 修掉 `console/layout.tsx` 写死 `/console` 之后新增的护栏 ——
+ * 没有它，"保留回跳地址"这条契约只能靠"读代码"证明。
+ */
+function assertDeepLinkPreserved(label, r, path) {
+  ck(`${label} → 307`, r.status === 307, `status=${r.status}`)
+  const m = /callbackUrl=([^&]*)/.exec(r.loc)
+  const cb = m ? decodeURIComponent(m[1]) : ''
+  ck(`${label} → 回跳保留深链`, cb === path, `callbackUrl=${cb || '(空)'}  期望=${path}`)
 }
 
 /** 匿名访问 API 必须被拒：401 + JSON */
@@ -208,6 +219,29 @@ const main = async () => {
     await req('GET', '/console/settings'),
     '/console/settings'
   )
+
+  console.log('\n── 2b) 深链保留（带 Referer 探针 · 2026-10-12 修复后新增的护栏）──')
+  {
+    const deep = '/console/settings'
+    assertDeepLinkPreserved(
+      `Referer=${deep} 的 ${deep}`,
+      await req('GET', deep, { headers: { referer: `${BASE}${deep}` } }),
+      deep
+    )
+    const deepQuery = '/console/connections?bucket=CLOSED'
+    assertDeepLinkPreserved(
+      `Referer 带 query 的 ${deepQuery}`,
+      await req('GET', deepQuery, { headers: { referer: `${BASE}${deepQuery}` } }),
+      deepQuery
+    )
+    // 负向对照：Referer 指向**别态**时不得被采信（只接受 /console 命名空间）
+    const r = await req('GET', '/console/missions', {
+      headers: { referer: `${BASE}/dashboard/settings` },
+    })
+    const m = /callbackUrl=([^&]*)/.exec(r.loc)
+    const cb = m ? decodeURIComponent(m[1]) : ''
+    ck('别态 Referer 不被采信 → 回跳入口', cb === '/console', `callbackUrl=${cb || '(空)'}`)
+  }
 
   console.log('\n── 3) 个人态 /dashboard 回归（两态守卫应一致）──')
   assertLoginGuarded('GET /dashboard（匿名）', await req('GET', '/dashboard'))
