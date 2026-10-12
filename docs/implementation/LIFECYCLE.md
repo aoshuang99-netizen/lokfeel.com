@@ -116,7 +116,7 @@ DATABASE_URL=file:/tmp/lifecycle-e2e.db node scripts/qa/lifecycle-sweep.mjs --ap
 npx jest tests/lifecycle        # 13 用例：政策窗口 + 三条不变式
 ```
 
-### 4.4 cron 端点（线上自动跑）
+### 4.4 cron 端点（**就绪，默认不自动跑**）
 
 ```
 POST /api/cron/lifecycle-sweep           # 真删
@@ -124,7 +124,14 @@ POST /api/cron/lifecycle-sweep?dry=1     # 只统计
 Authorization: Bearer $CRON_SECRET
 ```
 
-已注册进 `netlify/functions/cron-runner.ts` 的 `CRON_PATHS`。
+🔴 **默认不随 cron 自动跑** —— 删除不可逆，按约定需运营方**显式开启**：
+
+| 触发方式 | 当前状态 | 如何开启 |
+|---|---|---|
+| `netlify/functions/cron-runner.ts`（小时级） | 🚫 `CRON_PATHS` 里**已注释** | 取消 `"/api/cron/lifecycle-sweep",` 那行注释并重新发版 |
+| `.github/workflows/scheduler.yml` | 🟡 仅手动 dispatch，且带 `?dry=1` | 去掉 `?dry=1` 即为真删（注意 GH Actions 额度，见 `SCHEDULING.md`） |
+
+在此之前，可手工 `GET /api/cron/lifecycle-sweep?dry=1` 观察命中数（只统计、不写库）。
 保留期以**天**计，小时级调度绰绰有余。
 
 ---

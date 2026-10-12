@@ -73,16 +73,18 @@ jobs:
             "$BASE_URL/api/cron/workflow-tick?limit=$TICK_LIMIT" \
             -w '\nhttp=%{http_code}\n' | tee tick.json
 
-      - name: Lifecycle sweep (AC-10)
+      - name: Lifecycle sweep (AC-10, dry-run by default)
         if: steps.guard.outputs.enabled == 'true'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BASE_URL: ${{ vars.CRON_BASE_URL || 'https://app.lokfeel.com' }}
         run: |
           set -euo pipefail
-          echo "── /api/cron/lifecycle-sweep ──"
+          echo "── /api/cron/lifecycle-sweep (dry=1) ──"
           # 保留期以天计，分钟级打它没有意义，这里只是让同一次调度把两个维护动作都覆盖到。
+          # ⚠️ 默认带 `?dry=1`（只统计、不删）：删除不可逆，需运营方显式开启 ——
+          #    确认命中数可接受后，去掉 `?dry=1` 即为真删。
           curl -sS --max-time 60 -X POST \
             -H "Authorization: Bearer $CRON_SECRET" \
-            "$BASE_URL/api/cron/lifecycle-sweep" \
+            "$BASE_URL/api/cron/lifecycle-sweep?dry=1" \
             -w '\nhttp=%{http_code}\n' | tee lifecycle.json

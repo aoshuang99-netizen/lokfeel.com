@@ -373,6 +373,8 @@
 > `docs/implementation/LIFECYCLE.md`（`src/lib/lifecycle/*` + cron 端点 + 自证夹具 + 13 单测）。
 > T06 新增的 `WorkflowJob` / `NotificationDelivery` 自此有保留策略（终态任务 90 天 /
 > 证据 730 天 / 僵死 PENDING 7 天 / 已读站内信 60 天）。
+> 🔴 清理作业**默认不随 cron 自动跑**（删除不可逆，需运营方显式开启；开启方式见
+> `LIFECYCLE.md` §4.4，当前生产命中 0）。
 > ❌ **「导出」与「删除请求」仍未实现** → **AC-10 仍未闭合**，T12 前必须补齐，否则仍会卡在
 > 「BLOCKER 无主」。另见 §5-① 的完整交代。
 

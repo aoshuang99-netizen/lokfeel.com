@@ -26,9 +26,11 @@ const CRON_PATHS = [
   // 并对账补漏（"已双方同意但未入队"的提案）。同样受小时级限制 ——
   // 更细的粒度可让 cron-job.org 直接打这个端点（见文件头说明）。
   "/api/cron/workflow-tick",
-  // AC-10 · 数据生命周期清理：清终态任务 + 僵死 PENDING 投递 + 旧的已读站内信。
-  // 保留期以**天**计，小时级调度绰绰有余。PENDING/RUNNING 任务永不触碰。
-  "/api/cron/lifecycle-sweep",
+  // AC-10 · 数据生命周期清理（端点已就绪，**默认不随 cron 自动跑**）。
+  // 删除不可逆 ⇒ 按约定需运营方显式开启：取消下一行注释并重新发版即可。
+  // 在此之前可手工 `GET /api/cron/lifecycle-sweep?dry=1` 观察命中数（只统计、不写）。
+  // 保留期以**天**计，小时级调度绰绰有余；PENDING/RUNNING 任务永不触碰。
+  // "/api/cron/lifecycle-sweep",
   "/api/cron/status",
 ];
 
