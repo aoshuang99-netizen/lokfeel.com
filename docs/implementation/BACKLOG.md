@@ -164,7 +164,7 @@
 >   ⚠️ `candidate-match.spec.ts` 的 **UI 登录腿**在本机 dev 下不稳（登录页受控组件 hydration 竞态）→ 新增
 >   `scripts/qa/verify-t04-candidate-regress.mjs`（用 `ctx.request` 登录）作为**可复跑**的等价取证。
 > - **迁移 C2（纯新增）**：`ConnectionProposal` + `ProposalDecision`（2 表 + 10 索引，**无** ALTER/DROP/数据订正）→ 迁移与回滚**零停机**。
->   🟡 **生产库待执行** `node scripts/connection/migrate.mjs apply --batch=C2 --yes`（幂等）。回滚演练见 `T05/rollback.md`。
+>   ✅ **生产库已应用**（2026-10-12，`apply --batch=C2 --yes`）—— 与 C3 同批上线；迁移前后快照对照「既有表行数全部未变」。回滚演练见 `T05/rollback.md`。
 > - **交付物**：`src/lib/connection/proposals.ts`（纯内核 + 服务层，新）· `proposal-input.ts`（新）·
 >   `/api/v1/connections/{proposals, introductions}` 与 `/api/v1/connections/{connectionId}/{consent,revoke,introduce}`（新）·
 >   `/m/[token]/proposals`（新，三分区）· `matches` 页接入「我的连接」+ 运营「发起连接」·
@@ -187,6 +187,9 @@
 > - 提交：`165ccf7`（`feat(t06): 可靠介绍与跟进状态机 —— outbox 引擎、统一投递出口与运营视图`，含 `[skip netlify]`）
 > - 文档：`docs/implementation/T06/{changes,tests,risks,rollback}.md`
 > - 迁移：**C3 批次**（`WorkflowJob` / `NotificationDelivery` / `IntroductionWorkflow`；纯新增，无 ALTER/DROP）
+>   ✅ **生产库已应用**（2026-10-12，与 C2 同批）：`verify` **107/107** 全绿（含软引用反向断言）；
+>   迁移前后快照 `User` 12922 / `Profile` 11887 行数未变 → **零影响**
+> - **发版**：本次打破 T02 以来的 `[skip netlify]` 惯例，首次推**不带跳过标记**的发布提交（C2 + C3 已就位后才发版）
 > - 代码：`src/lib/workflow/`（8 文件 / 2731 行）、5 个 API 端点、4 个 T05 路由接钩子、能力矩阵 +2
 > - 测试：`tests/workflow/`（8 套 / **169 用例**）+ `tests/e2e/workflow-execution.spec.ts`（AC-07/09/14/17 故障注入）
 > - 门禁：`tsc --noEmit` **0 error**；`jest tests/workflow tests/connection tests/tenancy` 全绿；`eslint` 0 error / 0 warning；`check:script-decls` ✅；`connection:migrate verify` 108 项 ✅
