@@ -5,8 +5,8 @@
 >
 > | 项 | 值 |
 > |---|---|
-> | 真实仓库基线 | `564802a`（`main`，**已推送 GitHub + 已发布 Netlify 生产**，部署 `6accbb986762d9a96f66970a` ready @ 2026-10-12T10:51:04Z；本批生产复验 **T07 43/43 · T06 25/25 · T04 19/19 · 窗口期 13/13**） |
-> | 上一发布基线 | `0414186`（T07 Slice 1 + T06+）—— 再往前 `233669e`（T05 + T06）、`0c95b89`（T04）；T05/T06 曾长期带跳过标记未发版，已于 `233669e` 补齐 |
+> | 真实仓库基线 | `95da9f1`（`main`，**已推送 GitHub + 已发布 Netlify 生产**，部署 `6accc417082883b04320cd42` ready @ 2026-10-12T11:27:19Z；本批生产复验 **T07 48/48 · T06 25/25 · T04 19/19 · 窗口期 13/13**） |
+> | 上一发布基线 | `564802a`（T07 Slice 2 + Slice 3）—— 再往前 `0414186`（T07 Slice 1 + T06+）、`233669e`（T05 + T06）、`0c95b89`（T04）；T05/T06 曾长期带跳过标记未发版，已于 `233669e` 补齐 |
 > | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**、**T06 Workflow Execution**、**T06+ 死信告警 / AC-10 生命周期**、**T07 Console Slice 1 / Slice 2 / Slice 3**（以上**均已上线**） |
 > | 剩余 | **T07–T12，共 6 个任务** |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
@@ -353,7 +353,8 @@
 部署 `6accbb986762` @ 2026-10-12T10:51:04Z，**无 schema 变更**）；T07 最后两屏
 （Outcomes / Agents → Slice 4，分别等 T08 的成果面与 T09 选型）与 T08 待开工。
 
-> ✅ **已发现的既有不一致 → 已修复并补发**：`src/app/console/layout.tsx` 未登录时把回跳地址
+> ✅ **已发现的既有不一致 → 已修复并补发**（修复提交 `95da9f1` / 部署 `6accc4170828` @ 11:27Z）：
+> `src/app/console/layout.tsx` 未登录时把回跳地址
 > **写死**为 `/console`，与其文件头注释「跳登录（保留回跳地址）」不符 → 深链（如
 > `/console/settings`）登录后被送回控制台入口（**Slice 1 起既有**，2026-10-12 发版复验发现）。
 > 现改为**对齐个人态** `src/app/(dashboard)/layout.tsx` 的做法：**从 Referer 取真实路径**，
@@ -446,6 +447,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T07 · Console Slice 2 | `tsc` 0 错误 | `tests/tenancy` **87**（49 → 87）· 全量 **984**（50 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/members`：API 层测试断言 `MEMBER 403 · OPERATOR 200 · 非法值忽略 · 500 不泄漏内部信息`；AC-18 **仍未认领**（四屏未做） |
 | T07 · Console Slice 3 | `tsc` 0 错误 | `tests/connection` **373 → 408**（16 → 18 套）· `tests/tenancy` **87 → 120**（5 → 7 套）· 全量 **984 → 1052**（50 → 54 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/connections/pipeline`（`workflow.read`）+ `GET/PATCH /api/v1/org`；负向断言防 `withTenant(some)` 降级、`ADMIN` 也不可改组织档案；AC-18 **仍未认领**（Agents 等 T09 / Outcomes 等 T08） |
 | T07 · Slice 2 + 3 **发版**（`564802a`） | `tsc --noEmit` **0 error** | 全量 jest **54 套 1052 passed** | ESLint 0/0（含目录级）· `check:script-decls` 57/0 | **上线复验 43/43**（`verify-t07-prod.mjs` 扩展至 Slice 1–3：五屏匿名 307 落在 `/console`、7 个 API 匿名 401+JSON、0 泄漏）+ `verify-t06-prod` **25/25** · `verify-t04-prod` **19/19** · `verify-public-origin` **13/13**。**发版前基线 19 通过 / 10 失败**（10 处**精确落在**未上线的 Slice 2/3 面）⇒ 证明该脚本能区分「路由缺失」与「已上线但被守卫拦下」 |
+| T07 · `/console` 回跳修复 **补发**（`95da9f1`） | `tsc --noEmit` **0 error** | 全量 jest **54 套 1052 passed** | ESLint 0/0 · `check:script-decls` 57/0 | **上线复验 48/48**（较修复前 +5：新增 §2b 带 Referer 探针 —— `Referer=/console/settings` → **回跳保留深链**、带 query 亦保留、**别态 Referer 不被采信**），同类 T06 25/25 · T04 19/19 · 窗口期 13/13。修掉 `console/layout.tsx` 未登录时写死 `callbackUrl=/console`（**Slice 1 起既有** → 深链登录后回入口） |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash
