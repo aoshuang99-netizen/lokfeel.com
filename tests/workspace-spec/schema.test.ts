@@ -9,8 +9,14 @@
  */
 
 import {
+  ACTION_JOB_STATUSES,
+  ActionNodeSchema,
   CandidateNodeSchema,
+  CONSENT_STATES,
+  ConsentNodeSchema,
   NODE_TYPES,
+  OUTCOME_LEVELS,
+  OutcomeNodeSchema,
   RESERVED_NODE_TYPES,
   WORKSPACE_SPEC_VERSION,
   WorkspaceActionSchema,
@@ -50,6 +56,16 @@ describe('WorkspaceSpecSchema', () => {
       expect(r.data.availableActions).toEqual([])
       expect(r.data.notes).toEqual([])
     }
+  })
+
+  it('版本号本身被**钉住**：语义变更必须显式升版本，旧版本号一律拒绝', () => {
+    // 版本号是"旧前端不得静默误读新 spec"的唯一闸门 ⇒ 必须在此**显式写死**。
+    // 若只在别处引用常量（如 agent runtime 的夹具），升版本时全绿、无人察觉语义已变。
+    expect(WORKSPACE_SPEC_VERSION).toBe('1.1')
+
+    // 负向：旧版本号 / 未来版本号都必须被拒绝（`z.literal` 不是"任意字符串"）。
+    expect(WorkspaceSpecSchema.safeParse({ ...validSpec, version: '1.0' }).success).toBe(false)
+    expect(WorkspaceSpecSchema.safeParse({ ...validSpec, version: '2.0' }).success).toBe(false)
   })
 
   it('拒绝顶层未知字段（严格对象）', () => {
@@ -133,5 +149,55 @@ describe('WorkspaceSpecSchema', () => {
   it('节点数量下限为 1（空画布不是合法 spec）', () => {
     const r = WorkspaceSpecSchema.safeParse({ ...validSpec, nodes: [] })
     expect(r.success).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P1 收口：三类节点的取值域**对齐服务端真实枚举**
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// 为什么值得单独一组用例：首版这三处是**猜的**，而且猜错了三处。契约放宽之后
+// 必须同时钉住"新的合法值被接受"与"旧的猜测值仍被拒绝" —— 只钉前者的话，
+// 把枚举写回宽集合（例如 `z.string()`）也会"通过"，而那等于放弃了白名单。
+
+describe('consent / action / outcome 的取值域', () => {
+  const consent = (status: string) =>
+    ConsentNodeSchema.safeParse({ id: 'c', type: 'consent', title: '同意', data: { fields: [], status } })
+  const action = (status: string) =>
+    ActionNodeSchema.safeParse({
+      id: 'a',
+      type: 'action',
+      title: '执行',
+      data: { jobs: [{ id: 'j', kind: 'K', status, attempts: 0 }] },
+    })
+  const outcome = (level: string) =>
+    OutcomeNodeSchema.safeParse({
+      id: 'o',
+      type: 'outcome',
+      title: '成果',
+      data: { outcomes: [{ id: 'x', label: 'L', level }] },
+    })
+
+  it('consent.status：接受服务端全谱系，拒绝旧猜测值 PENDING/GRANTED', () => {
+    for (const s of CONSENT_STATES) expect(consent(s).success).toBe(true)
+    expect(consent('PENDING').success).toBe(false)
+    expect(consent('GRANTED').success).toBe(false)
+  })
+
+  it('action.jobs[].status：接受服务端全谱系，拒绝旧猜测值 RETRY/DONE', () => {
+    for (const s of ACTION_JOB_STATUSES) expect(action(s).success).toBe(true)
+    expect(action('RETRY').success).toBe(false)
+    expect(action('DONE').success).toBe(false)
+  })
+
+  it('outcome.level：接受三档真实档位，拒绝从未存在的 EVIDENCE_BACKED', () => {
+    for (const l of OUTCOME_LEVELS) expect(outcome(l).success).toBe(true)
+    expect(outcome('EVIDENCE_BACKED').success).toBe(false)
+  })
+
+  it('取值域是**白名单**而非任意字符串', () => {
+    expect(consent('WHATEVER').success).toBe(false)
+    expect(action('WHATEVER').success).toBe(false)
+    expect(outcome('WHATEVER').success).toBe(false)
   })
 })

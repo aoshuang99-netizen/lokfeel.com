@@ -163,9 +163,9 @@ function renderBody(node: WorkspaceNode): React.ReactNode {
               （服务端派生值；单方接受不会进入执行）
             </span>
           </Field>
-          <Field label="拟披露字段">
+          <Field label="披露字段">
             {d.fields.length === 0 ? (
-              <span className="text-xs text-lf-text-faint">尚未选择任何字段。</span>
+              <span className="text-xs text-lf-text-faint">没有可显示的披露字段（服务端未下发，或当前阶段尚未授权）。</span>
             ) : (
               <ul className="flex flex-wrap gap-1">
                 {d.fields.map((f) => (

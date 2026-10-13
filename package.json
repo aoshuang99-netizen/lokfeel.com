@@ -105,7 +105,9 @@
     "billing:reconcile": "node scripts/qa/billing-reconcile.mjs",
     "agent:seed": "npx tsx scripts/qa/seed-t09-agent.mts",
     "agent:emit": "npx tsx scripts/qa/emit-agent-usage.mts",
-    "agent:reconcile": "node scripts/qa/agent-reconcile.mjs"
+    "agent:reconcile": "node scripts/qa/agent-reconcile.mjs",
+    "verify:p1:e2e": "tsx scripts/qa/verify-p1-workspace-e2e.mts",
+    "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

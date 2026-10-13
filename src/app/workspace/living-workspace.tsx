@@ -1,10 +1,10 @@
 'use client'
 
 /**
- * Living Workspace —— 主工作区（P1 · 生成式工作空间）
+ * Living Workspace —— 主工作区（P1 · 生成式工作空间 · 收口）
  *
  * 依据：`docs/implementation/DESIGN/01-design-to-api-map.md`（设计 → 真实 API 映射）
- *       与 `DESIGN/02-plan.md` P1。
+ *       与 `DESIGN/02-plan.md` P1、`DESIGN/04-changes-p1.md` §8（P1 未完项）。
  *
  * 🔴 硬约束（由 `npm run check:ui-invariants` 把守）：
  *   1. **每个数字都来自真实端点**；没有端点的能力一律 `ready:false` → 不可点 + 写明原因。
@@ -14,27 +14,36 @@
  *   4. **画布只渲染 `WorkspaceSpec`**（见 `src/lib/workspace-spec`）——
  *      模型/规则都不得直接产 HTML/React。
  *
- * P1 新增（相对 P0）：
- *   - 底部 Composer 从"只收集文本"升级为 **Intent-to-UI Compiler** 入口：
- *     文本 → `WorkspaceSpec`（zod 严格校验）→ Living Canvas 白名单渲染。
- *   - 动作就绪性来自 **`GET /api/v1/org` 的真实 `capabilities`**
- *     （服务端注释明确：该字段"供界面做降级展示，不是授权依据"，
- *      因此这里只用来**禁用**，真正的授权仍在服务端重做）。
+ * P1 收口新增（相对 P1 首版）：
+ *   - **三类节点接上真实数据**：`consent` ← `GET /api/v1/connections/proposals`、
+ *     `action` ← `GET /api/v1/workflow/jobs`、`outcome` ← `GET /api/v1/outcomes`。
+ *     装配是纯函数（`src/lib/workspace-spec/assemble.ts`），本组件只负责取数与合并。
+ *   - **`POST /api/v1/missions` 真正接线**：`create-mission` 动作带 `Idempotency-Key`
+ *     真发请求；成功只认服务端返回的 id，失败原样展示服务端原因。
+ *   - 🔴 修一处**静默失效**：`GET /api/v1/org` 是 `{success, data}` 信封，首版按裸对象
+ *     读 `data.capabilities` → 能力集**恒为空** → 所有租户动作永久禁用。
+ *     "看着安全"所以没被发现；现在按信封读。
  */
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { AlertCircle, Bell, Compass, Inbox, Loader2, MessageSquare, Wand2 } from 'lucide-react'
+import { AlertCircle, Bell, CheckCircle2, Compass, Inbox, Loader2, MessageSquare, Wand2 } from 'lucide-react'
 import LivingShell, { type LivingNavItem } from '@/components/living/living-shell'
 import LivingCanvas from '@/components/living/living-canvas'
 import { useApiGet } from '@/hooks/use-api'
 import {
   MIN_GOAL_LENGTH,
+  assembleTenantNodes,
   compileWorkspaceSpec,
+  mergeTenantNodes,
+  missionDraftFromSpec,
   type CompileResult,
+  type Source,
+  type WorkspaceSpec,
 } from '@/lib/workspace-spec'
 
 // ── 真实端点响应形状（与 route.ts 一致） ──────────────────────────────
+/** B2C 遗留端点（**不带**信封）。 */
 interface NotificationsRes {
   notifications: Array<{
     id: string
@@ -54,8 +63,16 @@ interface MatchesRes {
   matches: Array<{ id: string; matchType?: string | null; createdAt?: string | null }>
   pagination: { total: number; limit: number; offset: number }
 }
+
+/** `/api/v1/*` 的统一信封（`src/lib/api-response.ts`）。 */
+interface ApiEnvelope<T> {
+  success: boolean
+  data: T
+  error?: { code: string; message: string }
+}
+
 /** `GET /api/v1/org` —— 社群档案 + **我的角色与能力**。 */
-interface OrgOverviewRes {
+interface OrgOverview {
   organization: { id: string; name: string; slug: string; status: string }
   myRole: string
   capabilities: string[]
@@ -79,6 +96,43 @@ const NAV: LivingNavItem[] = [
     reason: 'Agent Runtime（T09）尚未交付 —— 本页不做假的 Agent 拓扑。',
   },
 ]
+
+/** 已接线到真实端点的动作。其余动作**显式禁用**（不允许"点了没反应"）。 */
+const WIRED_ACTION_KEYS: ReadonlySet<string> = new Set(['create-mission', 'create-mission-2'])
+
+/** 幂等键：稳定 → 重试复用同一键（真幂等）；草稿变了 → 换新键（是新一次创建）。 */
+function newIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  return `k-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+interface Loaded<T> {
+  data: T | null
+  error: string | null
+  isLoading: boolean
+}
+
+/**
+ * 把一次 `useApiGet` 的结果折成装配器要的 `Source`。
+ * `null` = **仍在读**（此时既不产节点也不产说明，避免"正在读取"被写进说明里抖动）。
+ */
+function tenantSource<T>(
+  state: Loaded<ApiEnvelope<T>>,
+  pick: (payload: T) => unknown,
+  label: string,
+): Source | null {
+  if (state.isLoading && !state.data) return null
+  if (state.error) return { ok: false, reason: `读取失败（${state.error}）` }
+  const payload = state.data?.data
+  if (payload === undefined || payload === null) return { ok: false, reason: '端点返回了空载荷' }
+  const items = pick(payload)
+  if (!Array.isArray(items)) return { ok: false, reason: `${label}载荷形状与装配器约定不一致（期望数组）` }
+  return { ok: true, items }
+}
+
+type CreateResult =
+  | { kind: 'ok'; missionId: string; title: string | null; status: string | null; replayed: boolean }
+  | { kind: 'error'; message: string }
 
 /** 统一的「真实三态」渲染器：loading / error / empty 都必须是真的。 */
 function Loadable({
@@ -147,12 +201,20 @@ export default function LivingWorkspace() {
   const [activeKey, setActiveKey] = useState('now')
   const [draft, setDraft] = useState('')
   const [compiled, setCompiled] = useState<CompileResult | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [createResult, setCreateResult] = useState<CreateResult | null>(null)
+  /** 幂等键与它所属的请求体指纹（**同体复用、异体换新**）。 */
+  const [attempt, setAttempt] = useState<{ sig: string; key: string } | null>(null)
 
   const notifications = useApiGet<NotificationsRes>('/api/notifications')
   const chats = useApiGet<ChatCountRes>('/api/chats/unread-count')
   const matches = useApiGet<MatchesRes>('/api/matches')
   // 真实能力探测：403 即说明当前账号不是任何 ACTIVE 社群的成员。
-  const org = useApiGet<OrgOverviewRes>('/api/v1/org')
+  const org = useApiGet<ApiEnvelope<OrgOverview>>('/api/v1/org')
+  // P1 收口：三类节点的真实来源。
+  const proposals = useApiGet<ApiEnvelope<{ proposals: unknown[] }>>('/api/v1/connections/proposals')
+  const jobs = useApiGet<ApiEnvelope<{ jobs: unknown[] }>>('/api/v1/workflow/jobs')
+  const outcomes = useApiGet<ApiEnvelope<{ items: unknown[] }>>('/api/v1/outcomes')
 
   const unreadNotifications = notifications.data?.unreadCount ?? null
   const unreadChats = chats.data?.unreadCount ?? null
@@ -163,8 +225,47 @@ export default function LivingWorkspace() {
     [notifications.data],
   )
 
-  /** 服务端下发的真实能力集合；取不到就是空集（取严，不放行）。 */
-  const capabilities = useMemo(() => new Set(org.data?.capabilities ?? []), [org.data])
+  /**
+   * 服务端下发的真实能力集合。
+   * ⚠️ `GET /api/v1/org` 是 `{success, data}` 信封 —— 读错层级会得到一个**恒空**的集合，
+   *    而"全部禁用"看起来与"权限不足"一模一样，因而极难发现。
+   */
+  const orgOverview = org.data?.data ?? null
+  const capabilities = useMemo(() => new Set(orgOverview?.capabilities ?? []), [orgOverview])
+
+  // 拆出原始字段（而不是把 hook 返回的整个对象塞进依赖数组）：
+  // `useApiGet` 每次渲染都返回**新对象**，直接依赖它会让 useMemo 每次都重算。
+  const { data: proposalsData, error: proposalsError, isLoading: proposalsLoading } = proposals
+  const { data: jobsData, error: jobsError, isLoading: jobsLoading } = jobs
+  const { data: outcomesData, error: outcomesError, isLoading: outcomesLoading } = outcomes
+
+  const sources = useMemo(
+    () => ({
+      proposals: tenantSource({ data: proposalsData, error: proposalsError, isLoading: proposalsLoading }, (p) => p.proposals, '提案'),
+      jobs: tenantSource({ data: jobsData, error: jobsError, isLoading: jobsLoading }, (p) => p.jobs, '任务'),
+      outcomes: tenantSource({ data: outcomesData, error: outcomesError, isLoading: outcomesLoading }, (p) => p.items, '成果'),
+    }),
+    [proposalsData, proposalsError, proposalsLoading, jobsData, jobsError, jobsLoading, outcomesData, outcomesError, outcomesLoading],
+  )
+
+  const tenantSettled = sources.proposals !== null && sources.jobs !== null && sources.outcomes !== null
+
+  const assembly = useMemo(
+    () =>
+      assembleTenantNodes({
+        proposals: sources.proposals ?? undefined,
+        jobs: sources.jobs ?? undefined,
+        outcomes: sources.outcomes ?? undefined,
+      }),
+    [sources],
+  )
+
+  /** 编译结果 + 社群真实节点 → 一张画布（合并后再过一遍契约校验）。 */
+  const merged = useMemo(() => {
+    if (!compiled?.ok) return null
+    return mergeTenantNodes(compiled.spec, assembly)
+  }, [compiled, assembly])
+  const mergedSpec: WorkspaceSpec | null = merged?.ok ? merged.spec : null
 
   /** 把当前 spec 的动作能力映射为就绪性。未探测到（org 仍加载/失败）→ 不视为就绪。 */
   const capabilityProbe = useMemo(() => {
@@ -176,12 +277,99 @@ export default function LivingWorkspace() {
     return probe
   }, [compiled, capabilities])
 
+  /** 创建 Mission 的请求体 + **如实**报出的缺口（缺字段时恒为 null，不凑默认值）。 */
+  const missionDraft = useMemo(() => (compiled?.ok ? missionDraftFromSpec(compiled.spec) : null), [compiled])
+
+  /**
+   * 能力之外**由数据本身**决定的阻断。两件事都不该让用户点了才知道：
+   *   ① 创建 Mission 的必填项在描述里根本没写（服务端会 400）；
+   *   ② 动作尚未接线（P1 收口只接线了「创建连接任务」）。
+   */
+  const blockedActions = useMemo(() => {
+    if (!compiled?.ok) return undefined
+    const out: Record<string, string> = {}
+    const missing = missionDraft?.missing ?? []
+    for (const a of compiled.spec.availableActions) {
+      if (WIRED_ACTION_KEYS.has(a.key)) {
+        if (missing.length > 0) out[a.key] = `还不能创建：缺少 ${missing.join('、')}。`
+      } else {
+        out[a.key] = '该动作尚未接线（P1 收口只接线了「创建连接任务」）—— 这里不会出现点了没反应的按钮。'
+      }
+    }
+    return out
+  }, [compiled, missionDraft])
+
   const canCompile = draft.trim().length >= MIN_GOAL_LENGTH
 
   const runCompile = () => {
     setCompiled(compileWorkspaceSpec(draft))
+    setCreateResult(null)
+    setAttempt(null)
     setActiveKey('studio')
   }
+
+  /**
+   * 真正创建 Mission。
+   *
+   * 🔴 纪律：**只有服务端返回了 id 才算成功**。返回码 2xx 但没有 id、或响应无法解析，
+   *    一律按失败处理 —— "乐观成功"是这类接线最典型的自欺。
+   */
+  const runCreateMission = useCallback(async () => {
+    const body = missionDraft?.body
+    if (!body) {
+      setCreateResult({
+        kind: 'error',
+        message: `还不能创建：缺少 ${missionDraft?.missing.join('、') ?? '必要字段'}。`,
+      })
+      return
+    }
+
+    const sig = JSON.stringify(body)
+    const key = attempt?.sig === sig ? attempt.key : newIdempotencyKey()
+    setAttempt({ sig, key })
+    setCreating(true)
+    setCreateResult(null)
+
+    try {
+      const res = await fetch('/api/v1/missions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'Idempotency-Key': key },
+        body: sig,
+      })
+      const json = (await res.json().catch(() => null)) as ApiEnvelope<{ id?: string; title?: string; status?: string }> | null
+      if (!res.ok) {
+        setCreateResult({ kind: 'error', message: json?.error?.message ?? `HTTP ${res.status}` })
+        return
+      }
+      const mission = json?.data
+      if (!mission?.id) {
+        setCreateResult({ kind: 'error', message: '服务端未返回任务 id —— 按失败处理，不报告成功。' })
+        return
+      }
+      setCreateResult({
+        kind: 'ok',
+        missionId: mission.id,
+        title: mission.title ?? null,
+        status: mission.status ?? null,
+        replayed: res.headers.get('Idempotent-Replayed') === 'true',
+      })
+    } catch (e) {
+      setCreateResult({ kind: 'error', message: e instanceof Error ? e.message : '网络错误' })
+    } finally {
+      setCreating(false)
+    }
+  }, [missionDraft, attempt])
+
+  const handleAction = useCallback(
+    (key: string) => {
+      if (WIRED_ACTION_KEYS.has(key)) {
+        void runCreateMission()
+        return
+      }
+      setCreateResult({ kind: 'error', message: `动作「${key}」尚未接线。` })
+    },
+    [runCreateMission],
+  )
 
   const inspector = (
     <div className="space-y-4">
@@ -202,6 +390,30 @@ export default function LivingWorkspace() {
             <code className="text-lf-signal">GET /api/v1/org</code> → 能力{' '}
             {org.isLoading ? '探测中…' : org.error ? `探测失败（${org.error}）` : `${capabilities.size} 项`}
           </li>
+          <li>
+            <code className="text-lf-signal">GET /api/v1/connections/proposals</code> →{' '}
+            {sources.proposals === null
+              ? '读取中…'
+              : sources.proposals.ok
+                ? `${sources.proposals.items.length} 条提案`
+                : `未展示（${sources.proposals.reason}）`}
+          </li>
+          <li>
+            <code className="text-lf-signal">GET /api/v1/workflow/jobs</code> →{' '}
+            {sources.jobs === null
+              ? '读取中…'
+              : sources.jobs.ok
+                ? `${sources.jobs.items.length} 个任务`
+                : `未展示（${sources.jobs.reason}）`}
+          </li>
+          <li>
+            <code className="text-lf-signal">GET /api/v1/outcomes</code> →{' '}
+            {sources.outcomes === null
+              ? '读取中…'
+              : sources.outcomes.ok
+                ? `${sources.outcomes.items.length} 条成果`
+                : `未展示（${sources.outcomes.reason}）`}
+          </li>
         </ul>
       </section>
 
@@ -220,8 +432,14 @@ export default function LivingWorkspace() {
                 </span>
               </li>
               <li>
-                节点：<span className="text-lf-text">{compiled.spec.nodes.length}</span> 个 · 契约 v
-                {compiled.spec.version}
+                节点：草稿 <span className="text-lf-text">{compiled.spec.nodes.length}</span> 个
+                {merged?.ok ? (
+                  <>
+                    {' '}
+                    → 合并社群数据后 <span className="text-lf-text">{merged.spec.nodes.length}</span> 个
+                  </>
+                ) : null}{' '}
+                · 契约 v{compiled.spec.version}
               </li>
             </ul>
           ) : (
@@ -247,10 +465,10 @@ export default function LivingWorkspace() {
       <section>
         <h3 className="text-xs font-medium uppercase tracking-wide text-lf-text-muted">身份</h3>
         <p className="mt-2 break-all text-xs text-lf-text-muted">{session?.user?.email ?? '（未取到会话）'}</p>
-        {org.data && (
+        {orgOverview && (
           <p className="mt-1 text-xs text-lf-text-muted">
-            角色 <span className="text-lf-text">{org.data.myRole}</span> · 社群{' '}
-            <span className="text-lf-text">{org.data.organization.name}</span>（{org.data.organization.status}）
+            角色 <span className="text-lf-text">{orgOverview.myRole}</span> · 社群{' '}
+            <span className="text-lf-text">{orgOverview.organization.name}</span>（{orgOverview.organization.status}）
           </p>
         )}
       </section>
@@ -379,14 +597,78 @@ export default function LivingWorkspace() {
           )}
 
           {compiled?.ok && (
-            <LivingCanvas
-              spec={compiled.spec}
-              capabilityProbe={capabilityProbe}
-              onAction={() => {
-                /* P1 不含服务端执行动作；动作按钮的就绪性来自真实能力探测，
-                   点击后的执行接线在 T09/后续切片落地（此处不伪造成功）。 */
-              }}
-            />
+            <div className="space-y-3">
+              {merged && !merged.ok && (
+                <div
+                  className="flex items-start gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-danger"
+                  role="alert"
+                >
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{merged.reason}</span>
+                </div>
+              )}
+
+              {mergedSpec && (
+                <LivingCanvas
+                  spec={mergedSpec}
+                  capabilityProbe={capabilityProbe}
+                  blockedActions={blockedActions}
+                  onAction={handleAction}
+                  pendingActionKey={creating ? 'create-mission' : null}
+                />
+              )}
+
+              {!tenantSettled && (
+                <p className="flex items-center gap-2 text-xs text-lf-text-muted" role="status" aria-live="polite">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  正在读取社群真实状态（提案 / 任务队列 / 成果）…
+                </p>
+              )}
+
+              {missionDraft && missionDraft.missing.length > 0 && (
+                <div className="rounded-lf border border-lf-line bg-lf-surface p-3">
+                  <p className="text-xs font-medium text-lf-text">还不能创建连接任务</p>
+                  <ul className="mt-1.5 space-y-1 text-xs text-lf-text-muted">
+                    {missionDraft.missing.map((m) => (
+                      <li key={m} className="break-words">
+                        · {m}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1.5 text-[11px] text-lf-text-faint">
+                    服务端要求这三项都非空。这里<strong className="font-medium">不会</strong>替你编一个默认对价或判据 ——
+                    把缺的补进描述里再重新编译即可。
+                  </p>
+                </div>
+              )}
+
+              {createResult?.kind === 'ok' && (
+                <div className="rounded-lf border border-lf-signal/40 bg-lf-surface p-3" role="status">
+                  <p className="flex items-center gap-2 text-sm text-lf-text">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-lf-signal" aria-hidden="true" />
+                    {createResult.replayed ? '服务端判定为重复提交（幂等重放），已返回同一条任务。' : '连接任务已创建。'}
+                  </p>
+                  <p className="mt-1 break-all text-xs text-lf-text-muted">
+                    id <span className="text-lf-text">{createResult.missionId}</span>
+                    {createResult.title ? ` · ${createResult.title}` : ''}
+                    {createResult.status ? ` · ${createResult.status}` : ''}
+                  </p>
+                  <p className="mt-1 text-[11px] text-lf-text-faint">
+                    幂等键 {attempt?.key ?? '—'}（同一份草稿重试会复用该键，因此不会重复创建）。
+                  </p>
+                </div>
+              )}
+
+              {createResult?.kind === 'error' && (
+                <div
+                  className="flex items-start gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-danger"
+                  role="alert"
+                >
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="break-words">创建失败：{createResult.message}</span>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

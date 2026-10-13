@@ -38,6 +38,14 @@ export interface LivingCanvasProps {
    * `undefined` = 尚未探测到 → 不为 true 一律视为不可用（取严）。
    */
   capabilityProbe?: Record<string, boolean>
+  /**
+   * 能力之外**由数据本身**决定的阻断：`actionKey → 原因`。
+   *
+   * 存在的理由：有些动作即使有权限也做不了 —— 例如"创建连接任务"要求
+   * 描述里写了「可提供的对价」与可量化判据。这类缺口不该被"有权限"掩盖，
+   * 也不该让用户点了才被服务端 400 打回。传进来即在按钮上禁用并写明原因。
+   */
+  blockedActions?: Record<string, string>
   /** 已就绪动作被点击时触发（真实调用由上层完成）。 */
   onAction?: (key: string) => void
   /** 正在执行的动作 key（用于禁用并显示进行中）。 */
@@ -56,6 +64,7 @@ function autoLayout(nodes: WorkspaceNode[]): Record<string, Position> {
 export default function LivingCanvas({
   spec,
   capabilityProbe,
+  blockedActions,
   onAction,
   pendingActionKey = null,
 }: LivingCanvasProps) {
@@ -126,7 +135,9 @@ export default function LivingCanvas({
   }, [spec.nodes, positions])
 
   const actions = spec.availableActions
-  const readyCount = actions.filter((a) => capabilityProbe?.[a.capability] === true).length
+  const readyCount = actions.filter(
+    (a) => capabilityProbe?.[a.capability] === true && blockedActions?.[a.key] === undefined,
+  ).length
 
   return (
     <section aria-label="Living Canvas" className="min-w-0 space-y-3">
@@ -156,10 +167,13 @@ export default function LivingCanvas({
       {actions.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lf border border-lf-line bg-lf-surface p-2">
           {actions.map((a) => {
-            const ready = capabilityProbe?.[a.capability] === true
+            const blocked = blockedActions?.[a.key]
+            const ready = capabilityProbe?.[a.capability] === true && blocked === undefined
             const pending = pendingActionKey === a.key
             const blockedReason =
-              a.reason ?? `未探测到 ${a.capability} 能力 —— 不与服务端确认前不会放行该动作。`
+              blocked ??
+              a.reason ??
+              `未探测到 ${a.capability} 能力 —— 不与服务端确认前不会放行该动作。`
             return ready ? (
               <button
                 key={a.key}

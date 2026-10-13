@@ -17,12 +17,17 @@ import {
   type ProviderResolution,
   type RunSkillOptions,
 } from '@/lib/agent'
+// ⚠️ 版本号**不硬编码**：`WorkspaceSpecSchema.version` 是 `z.literal(常量)`，
+//    把字面量写死在这里会让契约版本一升版本（如 P1 收口 1.0→1.1）就整组误判为
+//    "违反契约"（表现为 PROPOSED → DEGRADED，且 `rawText` 变成 null）。见
+//    `tests/workspace-spec/schema.test.ts` 里对版本值本身的**显式钉住**。
+import { WORKSPACE_SPEC_VERSION } from '@/lib/workspace-spec'
 
 const GOAL = '帮助我们社群在 30 天内对接 5 家渠道伙伴'
 
 /** 一份合法的 WorkspaceSpec（满足 strictObject + 节点白名单）。 */
 const VALID_SPEC = {
-  version: '1.0',
+  version: WORKSPACE_SPEC_VERSION,
   title: '渠道 / 资源对接',
   nodes: [
     {
@@ -170,7 +175,7 @@ describe('③ 降级路径', () => {
   })
 
   it('JSON 合法但违反契约 → DEGRADED / OUTPUT_SCHEMA_INVALID', async () => {
-    const out = await runSkill(base({ provider: stub(JSON.stringify({ version: '1.0', title: 'x', nodes: [] })) }))
+    const out = await runSkill(base({ provider: stub(JSON.stringify({ version: WORKSPACE_SPEC_VERSION, title: 'x', nodes: [] })) }))
     expect(out.status).toBe('DEGRADED')
     expect(out.degradeCode).toBe('OUTPUT_SCHEMA_INVALID')
   })
@@ -195,7 +200,7 @@ describe('④ 🔴 AC-08：未校验/越界的内容不得外泄', () => {
     expect(serialized).not.toContain('ADMIN')
     expect(serialized).not.toContain('mission.delete')
     // 兜底产出是规则式编译的（可复算），不是模型原文
-    expect((out.payload as { version?: string })?.version).toBe('1.0')
+    expect((out.payload as { version?: string })?.version).toBe(WORKSPACE_SPEC_VERSION)
   })
 
   it('无降级路径的技能的同类情形 → payload 为 null（宁可不产出，也不给半成品）', async () => {
@@ -275,7 +280,7 @@ describe('⑤ 注入只升级、不放行', () => {
   it('注入不改变产出结构：payload 仍然必须过同一套 zod 契约', async () => {
     const out = await runSkill(base({ input: { goal: INJECTION } }))
     expect(out.payload).not.toBeNull()
-    expect((out.payload as { version: string }).version).toBe('1.0')
+    expect((out.payload as { version: string }).version).toBe(WORKSPACE_SPEC_VERSION)
   })
 
   it('注入文本被包进不可信区（且 provider 收到的是不可信区，不是原始拼接）', async () => {

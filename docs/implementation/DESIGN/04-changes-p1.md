@@ -237,13 +237,150 @@ src/app/workspace/living-workspace.tsx(253,90): error TS2339: Property 'status' 
 3. **门禁范围（SCOPES）本身会漏**：P0 时 `SCOPES` 不含 `src/lib/workspace-spec`
    （当时还不存在）—— 新增目录若忘了加进 SCOPES，该目录就"天然绿"。
 
-## 8. 下一步（P1 未完 + T09）
+## 8. P1 收口（`consent`/`action`/`outcome` 真实数据装配 + Mission 创建接线）
 
-- **P1 剩余**：`Living Canvas` 的 `consent` / `action` / `outcome` 三类节点
-  目前只有渲染分支、**没有真实数据装配**（需要租户上下文）；
-  Mission Studio 的 **`POST /api/v1/missions`（幂等键）** 尚未接线 ——
-  它需要 ACTIVE 社群成员身份，计划在**隔离 E2E 库**（`file:/tmp/t02-e2e.db`，
-  member `e2e.member@example.test`）里做端到端取证，而不是在本机账号上伪造。
+> 承上一版 §8 的"P1 剩余"。本段只记**已交付的事实与证据**。
+
+### 8.1 交付物
+
+| 文件 | 作用 |
+|---|---|
+| `src/lib/workspace-spec/assemble.ts`（新） | **真实数据装配器**（纯函数、零 IO）：三个真实来源 → 三类节点；并含"草稿 → 创建 Mission 请求体"的缺口判定 |
+| `src/lib/workspace-spec/schema.ts`（改） | 三处展示枚举改为**服务端真实枚举的镜像** + **编译期漂移守卫**；契约版本 `1.0 → 1.1` |
+| `src/lib/workspace-spec/index.ts`（改） | 出口补全新符号 |
+| `src/app/workspace/living-workspace.tsx`（改） | 接 3 个真实读端点 → 装配 → 合并进画布；`create-mission` 真发 `POST /api/v1/missions`（带幂等键、诚实三态） |
+| `src/components/living/living-canvas.tsx`（改） | 新增 `blockedActions`：**由数据本身**决定的阻断（能力之外的"做不了"，如缺必填项） |
+| `src/components/living/node-card.tsx`（改） | consent 的字段标签/空态文案改为与真实来源一致 |
+| `tests/workspace-spec/{assemble,schema}.test.ts` | 装配器 **37 例**（新）+ 取值域白名单 **4 例**（新）+ **契约版本值钉住 1 例**（新）；含**枚举镜像的硬编码回归**（`schema.test.ts` 由 9 例增至 **14 例**，`compile.test.ts` 既有 17 例不动） |
+| `tests/agent/runtime.test.ts`（改） | 夹具/断言改用 `WORKSPACE_SPEC_VERSION` 常量，解除与版本号的耦合（见 §8.2 ⑤） |
+| `scripts/qa/verify-workspace-spec-drift.mjs`（新） | **漂移守卫的变异自证**：证明"镜像≠服务端"时 `tsc` 真的会失败 |
+| `scripts/qa/verify-p1-workspace-e2e.mts`（新） | **隔离库端到端取证**：真实 HTTP 全链路 + 用真实载荷跑装配器 |
+| `package.json` | 新增 `verify:p1:e2e` / `verify:workspace-drift` |
+
+### 8.2 🔴 本轮抓到的五个真问题
+
+**① 三处展示枚举全是"猜"的，且**三处都猜错**。**
+
+| 节点 | P1 首版猜测值 | 服务端真实枚举（T05/T06/T08） |
+|---|---|---|
+| `consent.status` | `PENDING` / `GRANTED` / `REVOKED` | `CONSENT_PENDING` / `MUTUALLY_ACCEPTED` / `REJECTED` / `REVOKED` / `EXPIRED` |
+| `action.jobs[].status` | `PENDING` / `RUNNING` / `RETRY` / `DEAD` / `DONE` | `PENDING` / `RUNNING` / `SUCCEEDED` / `FAILED` / `DEAD` / `TAKEN_OVER` / `CANCELLED` |
+| `outcome.outcomes[].level` | `…` / `EVIDENCE_BACKED` | `…` / **`EXTERNALLY_VERIFIED`**（`EVIDENCE_BACKED` 从未存在） |
+
+危险不在"显示得不好看"，而在**真实数据一到就会被 `z.strictObject` 拒绝** →
+整块渲染被阻止，而页面上不会报任何错，只是**永远空着**。
+"只有渲染分支、没有真实数据装配"这一状态恰好**掩盖**了它 —— 没有真实数据，
+就永远触发不到拒绝路径。⇒ 这正说明"接真实数据"不是装饰性工作。
+
+修法不是"把枚举放宽成 `z.string()`"（那等于放弃白名单），而是**逐字镜像 + 编译期双向等价断言**
+（`AssertTrue<Exact<镜像, 服务端>>`）：任一侧增删取值即 `tsc` 失败。
+
+**② `GET /api/v1/org` 的信封读错了一层 —— 能力集恒为空。**
+
+首版按 `org.data.capabilities` 读，而该端点返回 `{success, data:{…, capabilities}}`。
+后果：`capabilities` 恒为 `∅` ⇒ **所有租户动作永久禁用**。而"全部禁用"与"权限不足"
+在界面上**长得一模一样**，所以从 P0 起一直没人发现（它甚至看起来"更安全"）。
+对照证据：`src/app/console/*` 一律走 `data.data`（同一信封，读法正确）。
+**同类风险**：`/api/notifications`、`/api/matches`、`/api/chats/unread-count` 是**裸对象**
+（无信封）—— 两种风格并存，所以"读错层"这件事只能逐个端点核对，不能靠惯例。
+
+**③ `compileWorkspaceSpec` 的产出**不等于**可创建体。**
+
+服务端 `parseMissionCreate` 要求 `goal ≥ 8`、`offer ≥ 1`、`successCriteria ≥ 5` **三者都必填**；
+而草稿里的 `offer` 是可选的、`successCriteria` 是从文本抽出的数组（常常为空）。
+若"凑一个默认对价"发出去，就是**凭空发明用户没说的承诺**。⇒ 装配器
+`missionDraftFromSpec()` 在缺字段时**恒返回 `body: null` + 缺口清单**，
+由界面禁用按钮并写明缺什么（`blockedActions`），而不是让用户点了才吃 400。
+
+**④（顺带）写路径的 `Idempotency-Key` 不止 `/missions`。**
+`POST /api/v1/intents` 与 `POST /api/v1/connections/proposals` 同样必需 ——
+E2E 首轮正是因此拿到 400（而 400 的原因**不在 body 里**，在响应头的约定里）。
+
+**⑤ 契约版本号被**别的模块的测试夹具**硬编码 —— 升版本后 T09 整组用例红（本轮自己造出来又自己修掉的）。**
+
+`version: z.literal(WORKSPACE_SPEC_VERSION)` 一升到 `1.1`，`tests/agent/runtime.test.ts`
+里写死的 `version: '1.0'` 夹具立刻变成**非法 spec** ⇒ 走"违反契约"分支：
+
+| 表面症状 | 实际含义 |
+|---|---|
+| `PROPOSED` → `DEGRADED`（4 例） | 模型产出被拒 → 回落规则式 |
+| `payload.version` 期望 `1.0` 实得 `1.1`（2 例） | 兜底产出用的是**新**常量 |
+| `typeof out.rawText` 期望 `"string"` 实得 `"object"`（1 例） | `rawText` 是 **`null`** —— `typeof null === 'object'` |
+
+最后一条尤其会**误导排查方向**：报错文本读起来像"rawText 类型坏了"，真因却是"根本没走到那条赋值"。
+
+修法（两步，缺一不可）：
+1. 夹具/断言改用**导出的常量** `WORKSPACE_SPEC_VERSION` ⇒ 测试与契约版本解耦，以后升版本不再误红；
+2. 同时在**契约自己的测试**里显式钉住版本值：`expect(WORKSPACE_SPEC_VERSION).toBe('1.1')`
+   且 `version:'1.0'` / `'2.0'` 必须被拒 —— 否则第 1 步会让"版本号"这个**唯一闸门**失去任何断言。
+
+⚠️ 顺带一条**方法论教训**：本文件 §8.5 初稿曾在后台全量回归**尚未打印汇总行**时写下"1483 全部通过"；
+实际结果是 **7 例失败**。**"全量回归全绿"必须以看到 `Test Suites: … , Tests: …` 汇总行为准**，
+不能用"前面若干 suite 都是 PASS"外推。
+
+### 8.3 装配器的五条纪律（每条都是"看起来能用"与"真的能用"的分界）
+
+1. **零 IO**：取数在组件（`useApiGet`），映射是纯函数 ⇒ 可单测，也可被 E2E 直接喂真实载荷。
+2. **不猜、不转义**：状态/档位**逐字**照搬；不做"把 `REJECTED` 归成 `PENDING`"式的美化（那等于隐瞒一次拒绝）。
+3. **来源不可用 ≠ 没有数据**：403/读取失败 → **不产节点**（空节点会被渲染成"暂无…"，是彻底的误导），只产一条写明原因的说明。
+4. **不静默丢**：载荷里有不认识的形状 → **整节点拒绝**并说明原因（跳过坏数据 = 少显示 ≠ 不显示，且无痕迹）。
+5. **截断必须可见**：超节点/条目上限、字段超长、`attempts` 越界钳制 → 都产出一条说明。
+
+> 一处刻意的不对称：`consent` 是"一提案一节点"，**提案为 0 时不产空节点**，
+> 而 `action` / `outcome` 是数组载荷，**空数组仍产节点**（渲染器给真实空态）。
+> 但"查询成功且确实为空"在两种情况下都**产出一条明确说明** —— 否则它与"读不到"无从区分。
+
+### 8.4 证据（全部可复跑）
+
+| 项 | 命令 | 结果 |
+|---|---|---|
+| 类型 | `npx tsc --noEmit` | **exit 0 / 0 error** |
+| 单测（本切片） | `npx jest tests/workspace-spec` | **3 套 / 68 用例通过 / exit 0** |
+| 单测（全量） | `npx jest --maxWorkers=2` | 见 §8.5 |
+| Lint | `eslint src/components/living src/app/workspace src/lib/workspace-spec tests/workspace-spec scripts/qa/verify-*.{mjs,mts} --max-warnings=0` | **exit 0 / 0 error / 0 warning** |
+| UI 不变量 | `npm run check:ui-invariants` | ✅ **11 文件通过（R1–R7）** |
+| UI 变异自证 | `npm run verify:ui-invariants` | ✅ **7/7 规则逐条被证明生效** |
+| 脚本守卫 | `npm run check:script-decls` | **67 脚本 / 0** |
+| **漂移守卫变异自证** | `npm run verify:workspace-drift` | ✅ **13/13**：基线 exit 0 → 三次真实变异各自被 `tsc` 捕获（`TS2344` 精确落在守卫声明行 113–115）→ 还原后逐字一致且 exit 0 |
+| **端到端（隔离库）** | `npm run verify:p1:e2e`（`QA_BASE=http://localhost:3099`） | ✅ **55 通过 / 0 失败 / exit 0** |
+
+**端到端取证做了什么**（`scripts/qa/verify-p1-workspace-e2e.mts`，全部走真实 HTTP）：
+
+1. 两个夹具账号登录取会话 → `GET /api/v1/org` 断言 `capabilities` 非空且 OWNER 含 `mission.create`
+   （这一步同时**否证了问题②**：读错层的话这里就是 0 项）。
+2. `POST /api/v1/missions`（带幂等键）→ 201；**同键重放** → 201 + `Idempotent-Replayed: true` + 同 id，
+   且 `GET /api/v1/missions` 的 `meta.total` **未增加**（这才是"幂等"的判据，光看状态码不够）。
+3. 负向：缺键 → 400 且 `details.field === 'Idempotency-Key'`；MEMBER → 403；两者都**未产生任务**。
+4. 造真实数据全链路：双方加入 → 双方提交意图 → 发起提案（`CONSENT_PENDING`）→
+   发起方接受（**仍 `CONSENT_PENDING`**，AC-04）→ 被介绍方接受（`MUTUALLY_ACCEPTED`）→
+   介绍 → 上报成果（`SELF_REPORTED`）→ 对手方确认（升级为 **`COUNTERPARTY_CONFIRMED`**）。
+5. 用上面三个读端点的**真实响应**喂装配器 → 合并进草稿 spec → 断言
+   `WorkspaceSpecSchema` 通过、`version === 1.1`、且所有状态/档位**都落在服务端枚举内**。
+   ⇒ 这就是"渲染层永远拿得到合法数据"的端到端判据。
+6. 独立断言"来源失败 → 不产节点 + 写明原因"。
+
+> ⚠️ 前置条件写在脚本头注释里：先 `seed-t02-e2e --reset --regenerate` 建隔离库，
+> 再以 `DATABASE_URL=file:/tmp/t02-e2e.db npx next dev -p 3099` 起服务。
+> **脚本刻意不自己起服务** —— 否则"服务起不来"会被误报成"功能坏了"。
+> 该用例会**真的创建** Mission / 提案 / 成果，所以必须跑在隔离库上。
+
+### 8.5 全量回归
+
+`npx jest` → **77 套 / 1498 用例全部通过 / exit 0**（汇总行抄录，非外推）。
+相对上一基线（T09 Slice 3 的 **76 套 / 1456**）：**+1 套（`tests/workspace-spec/assemble`）/ +42 用例**，
+`tests/workspace-spec` 由 2 套 26 例增至 **3 套 68 例**。**既有用例零失败。**
+
+> 🔴 本行数字**修正过一次**：初稿写"77 套 / 1483 全绿"时，后台全量回归其实**尚未打印汇总行**，
+> 真实结果是 **7 例失败**（T09 `tests/agent/runtime.test.ts` 的版本号硬编码，见 §8.2 ⑤）。
+> 教训已写进 §8.2 ⑤：**以汇总行为准**。
+
+## 9. 下一步
+
+- **前端 P1 已收口**。剩余未接线动作（`propose-connection` / `invite-member` / `report-outcome`）
+  一律**显式禁用 + 写明"尚未接线"**，不留"点了没反应"的按钮（AC-18）。
+- **前端 P2**（Field 2.5D 关系网络 → 引 `@xyflow/react`）/ **P3**（首页 3D，且首屏文案与登录入口必须独立于 3D）。
 - **T09 Agent Runtime**：把 `compile.ts` 的**规则式提案器**换成 LLM 提案器
-  （zod 校验 / 提示注入防御 / 成本限额 / 失败降级），契约与渲染层不动。
-  🔴 技术栈分叉（TS 内编排 vs Python/LangGraph）**仍需拍板**。
+  （zod 校验 / 提示注入防御 / 成本限额 / 失败降级），契约与渲染层不动 ——
+  本轮把契约与真实端点对齐之后，这一步的"接线成本"已经降到只剩 `proposeSpecDraft()` 一处。
+- 🔴 **发版前必做**：本地 `npx next build` 复核 §5 的 lucide-react 服务端图风险；
+  并把本轮的唯一未取证项（隔离库 E2E 已覆盖 HTTP 与应用层，**浏览器端交互未取证**）纳入发版复验。

@@ -24,8 +24,23 @@
 
 import { z } from 'zod'
 
-/** 契约版本。字段语义变更必须升版本，避免旧前端静默误读新 spec。 */
-export const WORKSPACE_SPEC_VERSION = '1.0' as const
+// ⚠️ 只引入**类型**（`import type` 零运行时）。用途是对账上面的展示枚举与
+//    服务端真实枚举是否逐字一致 —— 见下方「漂移守卫」。把服务层拖进客户端
+//    bundle 是不允许的，所以这里绝不引入值。
+import type { ProposalState } from '@/lib/connection'
+import type { OutcomeVerificationLevel } from '@/lib/outcome'
+import type { WorkflowJobStatus } from '@/lib/workflow'
+
+/**
+ * 契约版本。
+ * 字段语义变更必须升版本，避免旧前端静默误读新 spec。
+ *
+ * `1.0 → 1.1`（P1 收口）：`consent.status` / `action.jobs[].status` /
+ * `outcome.outcomes[].level` 三处取值域从**猜测值**改为**服务端真实枚举的镜像**
+ * （见下方「漂移守卫」）。这是一次**语义修正**，不是新增字段 —— 旧前端若按 1.0
+ * 的猜测值判断状态，会把这些节点当成非法数据，因此必须升版本。
+ */
+export const WORKSPACE_SPEC_VERSION = '1.1' as const
 
 /** 可出现在画布上的节点类型（白名单）。 */
 export const NODE_TYPES = ['intent', 'candidate', 'consent', 'action', 'outcome'] as const
@@ -38,6 +53,66 @@ export const RESERVED_NODE_TYPES = ['agent'] as const
 
 export type NodeType = (typeof NODE_TYPES)[number]
 export type ReservedNodeType = (typeof RESERVED_NODE_TYPES)[number]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 🟡 漂移守卫：展示枚举 = 服务端真实枚举的**镜像**
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// P1 首版把这三处枚举**按猜测**写成了展示值：
+//   `PENDING/GRANTED/REVOKED` · `PENDING/RUNNING/RETRY/DEAD/DONE` · `…/EVIDENCE_BACKED`
+// 而 T05/T06/T08 落地后的真实枚举**三处全不一致**（`RETRY`/`DONE`/`EVIDENCE_BACKED`
+// 根本不存在，`REJECTED`/`EXPIRED`/`TAKEN_OVER`/`CANCELLED`/`EXTERNALLY_VERIFIED` 全缺）。
+//
+// 危险之处不在于"显示得不好看"，而在于**真实数据一到就会被契约拒绝** ——
+// `z.strictObject` 会把整块渲染**阻止**。而那时页面上什么都不会报错，
+// 只是永远空着：功能看起来在，实际上永远不可能有内容。所以这三处必须逐字对齐。
+//
+// 做法：镜像 + **编译期双向等价断言**。任一侧新增/删除取值 → `tsc` 立刻失败，
+// 而不是等到线上某条数据触发拒绝。为什么不用 `import` 服务端常量：
+// 那会把服务层（含 Prisma）拖进客户端 bundle；`import type` 是零运行时的。
+//
+// 顺带说明为何不"就地复用服务端类型"：展示契约要能**独立演化**（例如未来把
+// 三档成果合成"已验证/未验证"两档），但**每次演化都必须是显式的** ——
+// 断言会在那一刻提醒你"你正在偏离服务端取值域"，而不是让你悄悄漂走。
+
+/** 提案的对外状态。与 `src/lib/connection` 的 `ProposalState` 逐字一致。 */
+export const CONSENT_STATES = [
+  'CONSENT_PENDING',
+  'MUTUALLY_ACCEPTED',
+  'REJECTED',
+  'REVOKED',
+  'EXPIRED',
+] as const
+export type ConsentState = (typeof CONSENT_STATES)[number]
+
+/** 工作流任务状态。与 `src/lib/workflow` 的 `WorkflowJobStatus` 逐字一致。 */
+export const ACTION_JOB_STATUSES = [
+  'PENDING',
+  'RUNNING',
+  'SUCCEEDED',
+  'FAILED',
+  'DEAD',
+  'TAKEN_OVER',
+  'CANCELLED',
+] as const
+export type ActionJobStatus = (typeof ACTION_JOB_STATUSES)[number]
+
+/** 成果验证档位。与 `src/lib/outcome` 的 `OutcomeVerificationLevel` 逐字一致。 */
+export const OUTCOME_LEVELS = [
+  'SELF_REPORTED',
+  'COUNTERPARTY_CONFIRMED',
+  'EXTERNALLY_VERIFIED',
+] as const
+export type OutcomeLevel = (typeof OUTCOME_LEVELS)[number]
+
+/** 双向包含才算等价（单向 `extends` 只能抓住"少写了一个取值"）。 */
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
+/** `AssertTrue<false>` 违反 `T extends true` → **编译失败**。这是守卫的牙齿。 */
+type AssertTrue<T extends true> = T
+
+export type _DriftGuardConsent = AssertTrue<Exact<ConsentState, ProposalState>>
+export type _DriftGuardActionJob = AssertTrue<Exact<ActionJobStatus, WorkflowJobStatus>>
+export type _DriftGuardOutcomeLevel = AssertTrue<Exact<OutcomeLevel, OutcomeVerificationLevel>>
 
 /** 可解析的日期时间（不依赖 zod 的 `datetime()` 变体，避免版本间 API 漂移）。 */
 const isoTemporal = z
@@ -90,14 +165,15 @@ export const CandidateNodeSchema = z.strictObject({
   }),
 })
 
-/** consent —— 双边同意与逐字段披露。数据源：`proposals` + `intents/[id]/disclosure`。 */
+/** consent —— 双边同意与披露字段。数据源：`proposals`。 */
 export const ConsentNodeSchema = z.strictObject({
   ...nodeBase,
   type: z.literal('consent'),
   data: z.strictObject({
+    /** 我会看到/我已授权的披露字段名（装配层只放**服务端确实下发了的**键）。 */
     fields: z.array(shortText).max(50).default([]),
     /** 单方接受不得进入执行（AC-04/AC-05）——状态由服务端派生，前端不得自造。 */
-    status: z.enum(['PENDING', 'GRANTED', 'REVOKED']),
+    status: z.enum(CONSENT_STATES),
   }),
 })
 
@@ -111,7 +187,7 @@ export const ActionNodeSchema = z.strictObject({
         z.strictObject({
           id: identifier,
           kind: shortText,
-          status: z.enum(['PENDING', 'RUNNING', 'RETRY', 'DEAD', 'DONE']),
+          status: z.enum(ACTION_JOB_STATUSES),
           attempts: z.number().int().min(0).max(1000),
           lastError: z.string().max(500).optional(),
         }),
@@ -120,7 +196,7 @@ export const ActionNodeSchema = z.strictObject({
   }),
 })
 
-/** outcome —— `verification_level` 是服务端派生值，前端不得自行推断。 */
+/** outcome —— `verificationLevel` 是服务端派生值，前端不得自行推断。 */
 export const OutcomeNodeSchema = z.strictObject({
   ...nodeBase,
   type: z.literal('outcome'),
@@ -130,7 +206,7 @@ export const OutcomeNodeSchema = z.strictObject({
         z.strictObject({
           id: identifier,
           label: shortText,
-          level: z.enum(['SELF_REPORTED', 'COUNTERPARTY_CONFIRMED', 'EVIDENCE_BACKED']),
+          level: z.enum(OUTCOME_LEVELS),
           occurredAt: isoTemporal.optional(),
         }),
       )

@@ -423,7 +423,26 @@
 >   `SCOPES` 纳入 `src/lib/workspace-spec`；新增**变异自证**脚本 `npm run verify:ui-invariants`
 >   （7/7 规则逐条证明生效 + 负向对照）。
 > - 🔴 **前端 P1 的 `agent` 节点 / Agent 屏与后端 T09 是同一条依赖**：两者都等 §6-⑥ 的技术栈拍板。
+>   （**T09 Slice 1–3 已交付** ⇒ 该依赖的**内核侧**已解，只剩"把规则式提案器换成 LLM 提案器"这一处接线。）
 > - 前端 **P2**（Field 2.5D 关系网络 → 引 `@xyflow/react`）/ **P3**（首页 3D，且**首屏文案与登录入口必须独立于 3D**）待续。
+>
+> **前端线 · P1 收口（2026-10-13，⚠️ 未发版，带免构建标记）** —— 记录 `DESIGN/04-changes-p1.md` §8。
+> - `consent` / `action` / `outcome` 三类节点**接上真实数据**（`/connections/proposals` · `/workflow/jobs` · `/outcomes`）；
+>   装配器 `src/lib/workspace-spec/assemble.ts` **纯函数、零 IO**；来源 403/失败 → **不产节点**（不产"空节点"冒充"没有数据"）。
+> - `POST /api/v1/missions` **真正接线**（带 `Idempotency-Key`：同体复用键、异体换新键；**只有服务端返回 id 才算成功**）。
+> - 🐛 **抓到 5 个真问题**：① 三处展示枚举与 T05/T06/T08 的真实枚举**全部不一致**（`RETRY`/`DONE`/`EVIDENCE_BACKED` 从来不存在）
+>   ⇒ 真实数据一到就被 `strictObject` 拒绝、整块渲染被阻止、页面**永远空着且不报错** → 改为**逐字镜像 + 编译期漂移守卫**
+>   （`AssertTrue<Exact<镜像, 服务端>>`），并新增**变异自证** `verify:workspace-drift`；② `GET /api/v1/org` **信封读错一层**
+>   ⇒ 能力集恒为 `∅` ⇒ **所有租户动作永久禁用**（"全部禁用"与"权限不足"长得一样，故从 P0 起未被发现）；
+>   ③ 草稿 **≠** 可创建体（缺 `offer`/可量化判据时**不补默认值**，改为禁用按钮 + 写明缺什么）；
+>   ④ 写路径的 `Idempotency-Key` 不止 `/missions`（`/intents`、`/connections/proposals` 同样必需）；
+>   ⑤ **契约版本号被 T09 的测试夹具硬编码** ⇒ 升到 `1.1` 后 `tests/agent/runtime.test.ts` **7 例误红**：
+>   伪症状是 `PROPOSED→DEGRADED`，以及 `typeof out.rawText` 由 `"string"` 变 `"object"`
+>   （实际值是 **`null`**，而 `typeof null === 'object'` —— 这条报错会把人往"类型坏了"的方向带）。修法**两步缺一不可**：
+>   夹具改用导出的 `WORKSPACE_SPEC_VERSION`（解耦）**且**在契约自己的测试里显式钉住版本值（`toBe('1.1')` + 旧/未来版本被拒），
+>   否则"版本号"这个唯一闸门就没有任何断言了。
+> - 端到端取证 `verify:p1:e2e`（隔离库 + 真实 HTTP 全链路 + **用真实载荷跑装配器**）：**55 通过 / 0 失败**，exit 0。
+> - 契约版本 `1.0 → 1.1`（**取值域修正**属语义变更，故升版本）。
 > - ⚠️ **不破坏线上**：新令牌只作用于 `[data-lf-theme]` 子树，`/workspace` 未接入主导航，
 >   76 个既有页面**零变化**。
 
@@ -530,6 +549,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T09 · Agent Runtime **Slice 2**（持久化 + HTTP + 审批，**未发版**） | `tsc --noEmit` **0 error**（5m26s；🔴 首轮抓到 1 类真实错误，见下） | `tests/agents` **56**（**新增 5 套**：服务层 24 / HTTP 14 / schema 漂移 11 / 审批一致性 4 / 执行不可达 3）· `tests/tenancy/capabilities` **+2 例（11 断言）** · 全量 **1319 → 1377**（68 → 73 套） | ESLint **0/0**（**目录级**：`src/lib/agents` · `src/app/api/v1/agents` · `tests/agents` · `capabilities.ts`）· `check:agent-invariants` 通过（服务层在**复数**目录，**未**被纳入 —— 这正是设计）· `verify:agent-invariants` 通过 · `check:ui-invariants` 通过 · `check:script-decls` **64/0** | **新增** C6 迁移（`AgentRun` / `AgentCall` / `AgentApproval`，纯新增 3 表 + 14 索引 + 5 外键；DDL 由 `prisma migrate diff` 生成后**逐字**拷入；`verify` **205/205**，含 **5 条一致性断言**：终态必有裁决 / `status`↔`decision` 同向 / 待批态无裁决 / **无 `EXECUTED` 行** / `costMicroCents` 与 `AgentCall` 合计一致）+ 5 个 HTTP 面（`GET/POST /api/v1/agents/runs`、`GET /runs/[id]`、`POST /runs/[id]/approve|reject`、`GET /usage`）+ 服务层（幂等经 `withIdempotency`、限额**调用前**判定、审批过真相表、`rawText` **永不进 DTO**）。能力取严且**刻意分离**：`agent.run`=OPERATOR+、`agent.approve`=ADMIN+（负向断言：MEMBER → 403；🔴 **OPERATOR 能跑不能批** ⇒ 同一人不能自我盖章，「双人复核」是**制度层**保证而不仅是状态机保证）。**目录边界即执法点**：内核 `src/lib/agent`（单数，A1/A2）vs 服务层 `src/lib/agents`（复数）。🔴 **首轮 `tsc` 真实错误**：`PrismaClient` 无 `agentRun`/`agentCall`/`agentApproval` —— 新增 Prisma 模型后**必须重跑 `prisma generate`**（`db push` 不可用的远程 Turso 场景下极易漏掉这一步）。另修 2 处**措辞失准**（schema 注释引用了不存在的 `transitionRun()`；漂移测试被自身注释里的 `@db.` 字面量绊倒）。详见 `T09/slice-2.md`。**未做**：真实 `OpenAIProvider` + 真实成本对账 + 对抗/预算夹具（Slice 3）· 执行器（后续）· 组织级真实额度配置 |
 | T09 · Agent Runtime **Slice 3**（真实 Provider + 对账 + 对抗/预算夹具，**未发版**） | `tsc --noEmit` **0 error**（2m27s） | `tests/agents` **135**（**新增 3 套 79 例**：真实 Provider 32 / 对抗注入 26 / 预算 21）· 全量 **1377 → 1456**（73 → **76** 套） | ESLint **0/0**（**目录级**：`src/lib/agent` · `src/lib/agents` · `tests/agents`）· **A5 新增后** `check:agent-invariants` + `verify:agent-invariants` **双通过**（A1–A5 变异各被捕获）· `check:ui-invariants` 通过 · `check:script-decls` **66/0** | **真实 `OpenAIProvider`**：🔴 实现落在**服务层** `src/lib/agents/provider-openai.ts`，内核只留**纯环境解码** `resolveProviderConfig()`，并给门禁**新增 A5（内核不得出现网络调用）** —— A2 只挡数据库，挡不住网络，不立 A5 则"内核无 IO"退化成口号。失败**映射分开**（401/403 凭据 · 408/504 超时 · 其余请求错）；🔴 **缺 usage 即拒绝**（记 0 = 账本少算，不是免费）· **`finish_reason=length` 即拒绝** · **不传 `response_format`** · 非 http(s) 端点拒绝 · **凭据只出现在鉴权头**（有断言）。**成本对账** `agent-reconcile.mjs`（+ `emit-agent-usage.mts` / `seed-t09-agent.mts`）：原始表 SQL **逐次**复算归因 = **187 通过 / 0 不一致** + **变异自证 15/15**（含"改单价必须让结果变"）+ 期次过滤承重（7/8）+ 诚实条款（`realCallsEnabled=false` ⇒ 无 `OPENAI` 行）。**对抗夹具**：闭合标签逃逸 6 种写法（含零宽）+ 注入语料 8 条 + 权限/披露/审批三组"行为不变"，**每条都配负向对照**。**预算夹具**：判据边界（额度 `>` 才拒 / 次数 `>=` 即停，**刻意不同**）+ `BLOCKED_QUOTA` 时 **provider 零调用** + 账本零新增 A/B 对照 + 期为过滤承重；🔴 为此给 `createAgentRun`/`agentUsage` 加 **`quota`/`price` 注入点**（默认额度 500 分 ≈ 11 万次调用，不注入就无法端到端跑出限额）。🐛 **本轮抓到 3 个真问题**：① **对账脚本有一条恒真断言**（`false ⇒ 无 OPENAI 行` 挡不住"把 false 改成 true"）——**由变异自证抓出，15 个变异里唯一漏网的**，改为"期望值须显式给出（`--expect-real-calls`）"；② 服务层预算是按**技能 `costProfile` 预估**（84,000）判的，不是按"上次实际花了多少"（4,500）—— **差一个数量级**，易被误读成"额度够却不给跑"，已钉成断言；③ 夹具只删主体不删**幂等记录** → 重放抛 `Idempotent replay target no longer exists`。另修 2 处**断言写得太字面**（"整段不含 `</untrusted_data>`" 忽略了包裹器本就以它结尾；负向对照的字面量计数让大写/空格/零宽三种变体**假通过**）。详见 `T09/slice-3.md`。**未做**：真实端点连通性（沙箱探不了外网，**发版前必验**）· 执行器 · 组织级真实额度配置 · AC-03 的 Agent 上下文下游未接线 |
 | T09 Slice 3 · 🔴 **通用教训** | **「A ⇒ B」式断言必须有人测 `not A`** | 否则只挡一半，而漏掉的那一半（**把前提改掉**）恰是攻击者最省力的一步 | 变异自证的价值不在"检查代码对不对"，而在**检查断言有没有牙齿**。另一条：只删主体数据不删**幂等记录/索引** = 半个清理，重放时目标不存在 |
+| 前端 P1 收口（真实数据装配 + Mission 接线，**未发版**） | `tsc --noEmit` **0 error** | `tests/workspace-spec` **3 套 68 例**（2 套 26 例 → 3 套 68 例）· 全量 **76 套 1456 → 77 套 1498** | ESLint **0/0**（`src/components/living` · `src/app/workspace` · `src/lib/workspace-spec` · `tests/workspace-spec` · 2 个新脚本）· `check:ui-invariants` **11 文件通过（R1–R7）** · `verify:ui-invariants` 7/7 · `check:script-decls` **67/0** | **新增** `src/lib/workspace-spec/assemble.ts`（纯函数装配器，零 IO：`proposals→consent` / `jobs→action` / `outcomes→outcome`，含"来源不可用不产节点""截断可见""不静默丢"）+ `missionDraftFromSpec`（缺必填项时**恒 `body:null`**，不补默认值）+ Living Workspace 接 3 个真实读端点并合并进画布 + `create-mission` 真发 `POST /api/v1/missions`（幂等键同体复用/异体换新、只认服务端返回 id）+ `LivingCanvas` 新增 `blockedActions`（**由数据本身**决定的阻断）。**契约 1.0 → 1.1**：三处展示枚举改为**服务端枚举镜像** + 编译期漂移守卫。**漂移守卫变异自证** `verify:workspace-drift` **13/13**（基线 exit 0 → 三次真实变异各被 `tsc` 捕获、`TS2344` 精确落在守卫行 → 还原逐字一致）。**隔离库端到端** `verify:p1:e2e` **55/0**（真实 HTTP 全链路：幂等重放不产生第二条 · 缺键 400 · MEMBER 403 · 加入→意图→提案→双方同意→介绍→成果→对手方确认，再用**真实载荷**跑装配器并要求过 `WorkspaceSpecSchema`）。🐛 **5 个真问题**：① 三处枚举全错（详见 §未闭合前端线）；② `GET /api/v1/org` 信封**读错一层** ⇒ 能力集恒空 ⇒ 全部租户动作永久禁用（从 P0 起既有，**未发版所以线上无影响**）；③ 草稿≠可创建体；④ `/intents`、`/connections/proposals` 的 `Idempotency-Key` 同必需；⑤ 契约版本号硬编码在 T09 测试夹具 ⇒ 升 `1.1` 后 **7 例误红**（`typeof null === 'object'` 让报错指向"类型坏了"，具误导性）→ 夹具改用导出常量 **且** 在契约测试里钉住版本值。 |
 
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
