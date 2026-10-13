@@ -144,21 +144,29 @@ function diff(a, b) {
   }
   if (changed === 0) console.log('    （既有表行数全部未变 ✅）')
 
-  const unexpected = added.filter(
-    (t) =>
-      ![
-        'ConnectionProposal',
-        'ProposalDecision',
-        'WorkflowJob',
-        'NotificationDelivery',
-        'IntroductionWorkflow',
-      ].includes(t),
-  )
+  // 已知的、按批次注册的"预期新增表"白名单 —— 迁移只做纯新增，以下均为预期内。
+  // 每新增一个迁移批次，把它的表加到这里（否则 diff 会误报"预期之外的变更"）。
+  const EXPECTED_NEW_TABLES = [
+    // C2 · T05 双边同意
+    'ConnectionProposal',
+    'ProposalDecision',
+    // C3 · T06 可靠投递与跟进状态机
+    'WorkflowJob',
+    'NotificationDelivery',
+    'IntroductionWorkflow',
+    // C4 · T08 成果验证
+    'Outcome',
+    'OutcomeVerification',
+    // C5 · T08 组织级用量计费
+    'UsageRecord',
+    'BillingEvent',
+  ]
+  const unexpected = added.filter((t) => !EXPECTED_NEW_TABLES.includes(t))
   if (removed.length > 0 || unexpected.length > 0) {
     console.error('🔴 出现预期之外的变更，请人工复核')
     process.exit(1)
   }
-  console.log('✅ 变更范围与「纯新增 C2 + C3」预期一致')
+  console.log('✅ 变更范围与「纯新增 C2–C5」预期一致')
 }
 
 const mode = process.argv[2]
