@@ -88,6 +88,16 @@ model Organization {
   usageRecords  UsageRecord[]
   billingEvents BillingEvent[]
 
+  // ── T09 Agent Runtime 反向关系（agent.prisma）──
+  //
+  // ⚠️ 注意 `AgentRun.requestedBy` / `AgentApproval.actorId` **不在此列**：
+  // 它们是**软引用**（无 FK）—— 用户注销后"谁批准过什么"仍须可查。
+  // `AgentCall` 虽是 `AgentRun` 的子表，但它自己也带 `organizationId` 外键
+  // （本仓铁律：每条账都要能独立按租户查询），故这里仍需一条反向关系。
+  agentRuns      AgentRun[]
+  agentCalls     AgentCall[]
+  agentApprovals AgentApproval[]
+
   @@index([status])
 }
 

@@ -1,0 +1,670 @@
+/**
+ * T09 · Agent 服务层 —— 运行的持久化、审批与用量（Slice 2）
+ *
+ * 🔴 为什么本文件**不在** `src/lib/agent/`（单数）里：
+ *    那个目录是**无 IO 的内核**，由 `scripts/check-agent-invariants.mjs` 的 A1/A2 守着
+ *    （不得 import tenancy、不得 import 数据库）。本文件两样都要 —— 所以它在外面。
+ *    **目录边界就是执法点**：混进内核目录，A1/A2 立刻失效，而"内核无 IO"会**静默**
+ *    退化成一句口头约定。
+ *
+ * 本层承担三件事，且每件都有明确的**唯一**落点：
+ *   1. **持久化** —— `runSkill()` 只返回提案（内存对象），落库是这一层的事；
+ *      `rawText`（模型原文）落库只为审计，**永不进 DTO**（见 dto.ts）。
+ *   2. **限额** —— 从 `AgentCall` 读回**本期**已发生的调用喂给 `runSkill` 做**调用前**
+ *      判定（AC-20）。只看本次请求的账 = "每次请求都从 0 开始算额度"，那不是限额。
+ *   3. **审批** —— 只经 `approval.ts` 的真相表迁移；**没有任何代码**把 `EXECUTED` 写进去
+ *      （本切片未注册执行器）。
+ *
+ * 🔴 本层**不执行任何副作用**：审批的产物是"状态变成 APPROVED"，
+ *    不是"消息发出去了"。后者要有 T05 的披露出口与 T06 的投递出口。
+ */
+
+import { db } from '@/lib/db'
+import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors'
+import { writeTenantAudit } from '@/lib/tenancy/audit'
+import type { TenantContext } from '@/lib/tenancy/resolve'
+import {
+  DEFAULT_PRICE_TABLE,
+  DEFAULT_QUOTA,
+  SKILLS,
+  assertTransition,
+  canTransition,
+  isSkillKey,
+  ledgerTotals,
+  resolveProvider,
+  runSkill,
+  type AgentCallRecord,
+  type AgentRunStatus,
+  type LedgerSnapshot,
+  type PriceTable,
+  type ProviderResolution,
+  type RiskLevel,
+  type SkillKey,
+} from '@/lib/agent'
+import { hashRequest, requireIdempotencyKey, withIdempotency } from '@/lib/connection/idempotency'
+import {
+  providerKindFromDb,
+  providerKindToDb,
+  toAgentRunDto,
+  toAgentRunSummaryDto,
+  type AgentRunDto,
+  type AgentRunRow,
+  type AgentRunSummaryDto,
+} from './dto'
+
+/** 幂等作用域（与 `IdempotencyRecord.scope` 对齐）。 */
+export const AGENT_RUN_SCOPE = 'agent.run'
+
+export const AGENT_LIMITS = {
+  subjectLabelMax: 120,
+  noteMax: 300,
+  /** 列表页单次上限（与 `listOutcomes` 的钳制同一取向）。 */
+  listMax: 100,
+  listDefault: 30,
+} as const
+
+// ═══════════════════════════════════════════════════════════
+// 查询形状
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * 🔴 刻意**不 select `rawText`**：模型原文连进内存的机会都没有，就没有误用它的可能。
+ *    这比"记得不要在 DTO 里带上它"更可靠 —— 后者依赖每个新加字段的人都记得。
+ */
+const CALL_SELECT = {
+  seq: true,
+  skill: true,
+  providerKind: true,
+  risk: true,
+  highCost: true,
+  ok: true,
+  inputTokens: true,
+  outputTokens: true,
+  microCents: true,
+  at: true,
+} as const
+
+const APPROVAL_SELECT = {
+  decision: true,
+  actorId: true,
+  deciderRole: true,
+  note: true,
+  decidedAt: true,
+} as const
+
+const RUN_SELECT = {
+  id: true,
+  skill: true,
+  status: true,
+  risk: true,
+  requiresApproval: true,
+  requestedBy: true,
+  subjectLabel: true,
+  goal: true,
+  proposalJson: true,
+  reason: true,
+  degradeCode: true,
+  providerKind: true,
+  injectionSignals: true,
+  costMicroCents: true,
+  createdAt: true,
+  updatedAt: true,
+} as const
+
+// ═══════════════════════════════════════════════════════════
+// 校验与工具
+// ═══════════════════════════════════════════════════════════
+
+export function requireSkillKey(raw: unknown): SkillKey {
+  if (!isSkillKey(raw)) {
+    throw new ValidationError(`unknown skill: ${String(raw)}`, {
+      field: 'skill',
+      allowed: Object.keys(SKILLS),
+    })
+  }
+  return raw
+}
+
+/**
+ * 输入先用**技能自己的**契约校验，不合格 → 400。
+ *
+ * 为什么在服务层先做一次（`runSkill` 内部也会做）：输入不合法是**调用方的错**，
+ * 不该被持久化成一条 `FAILED` 的运行 —— 那会让"运行列表"里塞满从未真正跑过的记录，
+ * 也会污染按状态统计的用量。这里挡住，`runSkill` 里那次就只是内部兜底。
+ */
+function assertSkillInput(skill: SkillKey, raw: unknown): void {
+  const parsed = SKILLS[skill].inputSchema.safeParse(raw)
+  if (!parsed.success) {
+    const first = parsed.error.issues[0]
+    throw new ValidationError(
+      `输入不符合技能契约：${first?.path.join('.') ?? '(root)'} ${first?.message ?? ''}`,
+      { field: 'input', skill },
+    )
+  }
+}
+
+function normalizeLabel(raw: unknown): string | null {
+  if (raw === null || raw === undefined) return null
+  if (typeof raw !== 'string') {
+    throw new ValidationError('subjectLabel must be a string', { field: 'subjectLabel' })
+  }
+  const label = raw.trim()
+  if (!label) return null
+  if (label.length > AGENT_LIMITS.subjectLabelMax) {
+    throw new ValidationError(
+      `subjectLabel must be at most ${AGENT_LIMITS.subjectLabelMax} characters`,
+      { field: 'subjectLabel' },
+    )
+  }
+  return label
+}
+
+function normalizeNote(raw: unknown): string | null {
+  if (raw === null || raw === undefined) return null
+  if (typeof raw !== 'string') {
+    throw new ValidationError('note must be a string', { field: 'note' })
+  }
+  const note = raw.trim()
+  if (!note) return null
+  if (note.length > AGENT_LIMITS.noteMax) {
+    throw new ValidationError(`note must be at most ${AGENT_LIMITS.noteMax} characters`, {
+      field: 'note',
+    })
+  }
+  return note
+}
+
+/** 从原始输入里取 goal（落库要有"这条运行是为什么跑的"）。 */
+function rawGoalOf(raw: unknown): string {
+  if (raw && typeof raw === 'object') {
+    const g = (raw as { goal?: unknown }).goal
+    if (typeof g === 'string') return g
+  }
+  return ''
+}
+
+/** 自然月期次键（UTC，`YYYY-MM`）。与 T08 用量账同口径：期次是账单本来的概念。 */
+export function periodKeyOf(now: Date): string {
+  const y = now.getUTCFullYear()
+  const m = String(now.getUTCMonth() + 1).padStart(2, '0')
+  return `${y}-${m}`
+}
+
+function startOfPeriod(now: Date): Date {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0))
+}
+
+// ═══════════════════════════════════════════════════════════
+// 账本装载（AC-20 的"调用之前"）
+// ═══════════════════════════════════════════════════════════
+
+function toCallRecord(row: {
+  skill: string
+  providerKind: string
+  risk: string
+  highCost: boolean
+  ok: boolean
+  inputTokens: number
+  outputTokens: number
+  microCents: number
+  at: Date
+}): AgentCallRecord {
+  return {
+    skill: row.skill,
+    providerKind: providerKindFromDb(row.providerKind),
+    risk: row.risk as RiskLevel,
+    highCost: row.highCost,
+    ok: row.ok,
+    usage: { inputTokens: row.inputTokens, outputTokens: row.outputTokens },
+    microCents: row.microCents,
+    at: row.at.toISOString(),
+  }
+}
+
+/**
+ * 读回**本期**（当前 UTC 自然月）已发生的调用，作为限额判定的输入。
+ *
+ * ⚠️ `DEFAULT_QUOTA` 与 `DEFAULT_PRICE_TABLE` 同一取向：是**占位假设**，
+ * 不是任何真实预算。真实额度配置属后续（要接组织级订阅方案）。
+ * 把假设显式写在响应里（见 `agentUsage`），而不是藏在代码里 ——
+ * 否则"额度用完了"这句提示就成了没有依据的断言。
+ */
+async function loadLedger(organizationId: string, now: Date): Promise<LedgerSnapshot> {
+  const rows = await db.agentCall.findMany({
+    where: { organizationId, at: { gte: startOfPeriod(now) } },
+    orderBy: { at: 'asc' },
+    select: {
+      skill: true,
+      providerKind: true,
+      risk: true,
+      highCost: true,
+      ok: true,
+      inputTokens: true,
+      outputTokens: true,
+      microCents: true,
+      at: true,
+    },
+  })
+  return { calls: rows.map(toCallRecord) }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 读取
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * 按 id 读一条运行。**租户谓词不可省** —— 复合条件写在一起，
+ * 而不是"先按 id 查、再断言 organizationId 相等"：
+ * 后者只要有人漏写那次断言，就是一次跨租户读取。
+ */
+async function findRunRow(organizationId: string, runId: string): Promise<AgentRunRow | null> {
+  const row = await db.agentRun.findFirst({
+    where: { id: runId, organizationId },
+    select: {
+      ...RUN_SELECT,
+      calls: { select: CALL_SELECT, orderBy: { seq: 'asc' } },
+      approval: { select: APPROVAL_SELECT },
+    },
+  })
+  return (row as AgentRunRow | null) ?? null
+}
+
+export async function getAgentRun(ctx: TenantContext, runId: string): Promise<AgentRunDto> {
+  if (typeof runId !== 'string' || !runId.trim()) {
+    throw new NotFoundError('Agent run not found')
+  }
+  const row = await findRunRow(ctx.organizationId, runId)
+  if (!row) throw new NotFoundError('Agent run not found')
+  return toAgentRunDto(row)
+}
+
+export interface ListAgentRunsOptions {
+  status?: AgentRunStatus | null
+  skill?: SkillKey | null
+  limit?: number | null
+}
+
+export interface ListAgentRunsResult {
+  items: AgentRunSummaryDto[]
+  count: number
+  filters: { status: AgentRunStatus | null; skill: SkillKey | null; limit: number }
+}
+
+export async function listAgentRuns(
+  ctx: TenantContext,
+  options: ListAgentRunsOptions = {},
+): Promise<ListAgentRunsResult> {
+  const limit = Math.min(
+    Math.max(options.limit ?? AGENT_LIMITS.listDefault, 1),
+    AGENT_LIMITS.listMax,
+  )
+  const status = options.status ?? null
+  const skill = options.skill ?? null
+
+  const rows = await db.agentRun.findMany({
+    where: {
+      organizationId: ctx.organizationId,
+      ...(status ? { status } : {}),
+      ...(skill ? { skill } : {}),
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    select: {
+      ...RUN_SELECT,
+      approval: { select: APPROVAL_SELECT },
+      // 列表要的是"跑了几次"，不是逐次明细 —— 用 `_count` 而不是把 calls 全读进来。
+      _count: { select: { calls: true } },
+    },
+  })
+
+  const items = rows.map((r) => {
+    const { _count, ...rest } = r as unknown as AgentRunRow & { _count: { calls: number } }
+    return toAgentRunSummaryDto({ ...rest, calls: [] }, _count?.calls ?? 0)
+  })
+
+  return { items, count: items.length, filters: { status, skill, limit } }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 创建（AC-08 / AC-20 的入口）
+// ═══════════════════════════════════════════════════════════
+
+export interface CreateAgentRunInput {
+  skill: unknown
+  input: unknown
+  /** 来自 `Idempotency-Key` 请求头（**必需** —— 缺省不退化为非幂等）。 */
+  idempotencyKey: unknown
+  subjectLabel?: unknown
+  /** 测试/接线用：显式覆盖 provider 解析（生产路径不传，走 `resolveProvider(process.env)`）。 */
+  provider?: ProviderResolution
+  now?: Date
+}
+
+export interface CreateAgentRunResult {
+  run: AgentRunDto
+  /** true = 命中幂等记录，本次**没有**产生新的模型调用。 */
+  replayed: boolean
+}
+
+export async function createAgentRun(
+  ctx: TenantContext,
+  input: CreateAgentRunInput,
+): Promise<CreateAgentRunResult> {
+  const skill = requireSkillKey(input.skill)
+  assertSkillInput(skill, input.input)
+  const key = requireIdempotencyKey(input.idempotencyKey)
+  const subjectLabel = normalizeLabel(input.subjectLabel)
+  const now = input.now ?? new Date()
+  const requestHash = hashRequest({ skill, input: input.input, subjectLabel })
+
+  const outcome = await withIdempotency<AgentRunDto>({
+    organizationId: ctx.organizationId,
+    scope: AGENT_RUN_SCOPE,
+    key,
+    requestHash,
+    resourceType: 'agent_run',
+    load: async (id) => {
+      const row = await findRunRow(ctx.organizationId, id)
+      return row ? toAgentRunDto(row) : null
+    },
+    create: async () => {
+      const provider = input.provider ?? resolveProvider(process.env)
+      // ① 先把账本读回来（**调用之前**），② 再跑编排。
+      const ledger = await loadLedger(ctx.organizationId, now)
+      const result = await runSkill({
+        skill,
+        input: input.input,
+        provider,
+        ledger,
+        quota: DEFAULT_QUOTA,
+        now: () => now,
+      })
+
+      // 本次运行**新增**的调用 = 账本尾部（`runSkill` 返回的是"入参账本 + 本次"）。
+      // 用切片而不是"重新算一遍"：重新算就要在这里重复一遍记账逻辑，
+      // 那是同一件事的第二个实现 —— 迟早与内核不一致。
+      const newCalls = result.ledger.calls.slice(ledger.calls.length)
+      const costMicroCents = newCalls.reduce((sum, c) => sum + c.microCents, 0)
+
+      const created = await db.agentRun.create({
+        data: {
+          organizationId: ctx.organizationId,
+          skill,
+          status: result.status,
+          risk: result.risk,
+          requiresApproval: result.requiresApproval,
+          requestedBy: ctx.userId,
+          subjectLabel,
+          goal: rawGoalOf(input.input),
+          proposalJson: result.payload === null ? null : JSON.stringify(result.payload),
+          rawText: result.rawText,
+          reason: result.reason,
+          degradeCode: result.degradeCode,
+          providerKind: providerKindToDb(result.providerKind),
+          injectionSignals:
+            result.injectionSignals.length > 0 ? JSON.stringify(result.injectionSignals) : null,
+          costMicroCents,
+          dedupeKey: key,
+          requestHash,
+          calls: {
+            create: newCalls.map((c, index) => ({
+              organizationId: ctx.organizationId,
+              seq: index + 1,
+              skill: c.skill,
+              providerKind: providerKindToDb(c.providerKind),
+              risk: c.risk,
+              highCost: c.highCost,
+              ok: c.ok,
+              inputTokens: c.usage.inputTokens,
+              outputTokens: c.usage.outputTokens,
+              microCents: c.microCents,
+              at: new Date(c.at),
+            })),
+          },
+        },
+        select: {
+          ...RUN_SELECT,
+          calls: { select: CALL_SELECT, orderBy: { seq: 'asc' } },
+          approval: { select: APPROVAL_SELECT },
+        },
+      }) as AgentRunRow
+
+      // 审计是**旁路**：失败不改变业务结果（与 `writeTenantAudit` 的约定一致）。
+      // safeMetadata 只放枚举与数字 —— `goal` 是用户文本，不进审计。
+      await writeTenantAudit({
+        organizationId: ctx.organizationId,
+        actorId: ctx.userId,
+        eventType: 'agent.run.created',
+        resourceType: 'agent_run',
+        resourceId: created.id,
+        safeMetadata: {
+          skill,
+          status: result.status,
+          providerKind: result.providerKind,
+          costMicroCents,
+          requiresApproval: result.requiresApproval,
+          calls: newCalls.length,
+        },
+      }).catch(() => {})
+
+      if (result.status === 'DEGRADED') {
+        await writeTenantAudit({
+          organizationId: ctx.organizationId,
+          actorId: ctx.userId,
+          eventType: 'agent.run.degraded',
+          resourceType: 'agent_run',
+          resourceId: created.id,
+          safeMetadata: { skill, degradeCode: result.degradeCode, providerKind: result.providerKind },
+        }).catch(() => {})
+      }
+      if (result.status === 'BLOCKED_QUOTA') {
+        await writeTenantAudit({
+          organizationId: ctx.organizationId,
+          actorId: ctx.userId,
+          eventType: 'agent.run.blocked_quota',
+          resourceType: 'agent_run',
+          resourceId: created.id,
+          safeMetadata: { skill, reason: result.reason },
+        }).catch(() => {})
+      }
+
+      return { resourceId: created.id, resource: toAgentRunDto(created) }
+    },
+    // 幂等记录写入失败（并发重放）时回收本次创建出来的孤儿运行。
+    compensate: async (resourceId) => {
+      await db.agentRun.deleteMany({
+        where: { id: resourceId, organizationId: ctx.organizationId },
+      })
+    },
+  })
+
+  return { run: outcome.resource, replayed: outcome.replayed }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 审批（AC-08 的"人工那一环"）
+// ═══════════════════════════════════════════════════════════
+
+export type AgentDecision = 'APPROVED' | 'REJECTED'
+
+function requireDecision(raw: unknown): AgentDecision {
+  if (raw !== 'APPROVED' && raw !== 'REJECTED') {
+    throw new ValidationError(`unknown decision: ${String(raw)}`, {
+      field: 'decision',
+      allowed: ['APPROVED', 'REJECTED'],
+    })
+  }
+  return raw
+}
+
+/**
+ * 裁决一条运行。
+ *
+ * 🔴 三条结构性保证：
+ *   ① **不可改判**：已有裁决 → 409。要推翻就重新发起一次运行 —— 历史裁决是审计证据。
+ *   ② **必须过真相表**：`assertTransition()` 是唯一判据。`AWAITING_APPROVAL → EXECUTED`
+ *      的边不存在，所以这条路**绕不过**人工批准。
+ *   ③ **不执行副作用**：本函数把状态写成 `APPROVED` / `REJECTED` 就结束。
+ *      `EXECUTED` 没有任何写入点（本切片未注册执行器）。
+ */
+export async function decideAgentRun(
+  ctx: TenantContext,
+  runId: string,
+  rawDecision: unknown,
+  rawNote?: unknown,
+  options: { now?: Date } = {},
+): Promise<AgentRunDto> {
+  const decision = requireDecision(rawDecision)
+  const note = normalizeNote(rawNote)
+  const now = options.now ?? new Date()
+
+  if (typeof runId !== 'string' || !runId.trim()) {
+    throw new NotFoundError('Agent run not found')
+  }
+
+  const row = await findRunRow(ctx.organizationId, runId)
+  if (!row) throw new NotFoundError('Agent run not found')
+
+  if (row.approval) {
+    throw new ConflictError(
+      `该运行已有裁决（${row.approval.decision}），不可改判 —— 要推翻请重新发起一次运行`,
+    )
+  }
+
+  const from = row.status as AgentRunStatus
+  try {
+    assertTransition(from, decision)
+  } catch {
+    // 把状态机错误翻成 HTTP 语义：**不是**权限问题，也不是"找不到"，
+    // 而是"当前状态不允许这个动作" → 409（与 T05 §3.6「再介绍一次」同口径）。
+    throw new ConflictError(
+      `当前状态（${from}）不允许${decision === 'APPROVED' ? '批准' : '驳回'}`,
+      { from, to: decision, allowed: canTransition(from, 'APPROVED') ? ['APPROVED', 'REJECTED'] : [] },
+    )
+  }
+
+  // 两条写操作在同一个事务里：否则可能出现"裁决已写入、状态没更新"的中间态，
+  // 而那个中间态在界面上表现为"我点了批准，但还显示待批"。
+  // ⚠️ 并发保护还有第二道：`AgentApproval.runId` 是唯一索引 ——
+  //    两个请求同时到达时，第二条插入会撞唯一约束（由调用方映射为 409）。
+  await db.$transaction([
+    db.agentApproval.create({
+      data: {
+        organizationId: ctx.organizationId,
+        runId: row.id,
+        decision,
+        actorId: ctx.userId,
+        deciderRole: ctx.role,
+        note,
+        decidedAt: now,
+      },
+    }),
+    db.agentRun.update({
+      where: { id: row.id },
+      data: { status: decision },
+    }),
+  ])
+
+  await writeTenantAudit({
+    organizationId: ctx.organizationId,
+    actorId: ctx.userId,
+    eventType: decision === 'APPROVED' ? 'agent.run.approved' : 'agent.run.rejected',
+    resourceType: 'agent_run',
+    resourceId: row.id,
+    // ⚠️ **不记 note**：它是人写的自由文本，可能含档案信息（与「拒绝理由不回流」同一取向）。
+    safeMetadata: { skill: row.skill, risk: row.risk, deciderRole: ctx.role, hasNote: note !== null },
+  }).catch(() => {})
+
+  const updated = await findRunRow(ctx.organizationId, row.id)
+  if (!updated) throw new NotFoundError('Agent run not found')
+  return toAgentRunDto(updated)
+}
+
+// ═══════════════════════════════════════════════════════════
+// 用量（AC-20 的可核对面）
+// ═══════════════════════════════════════════════════════════
+
+export interface AgentUsageDto {
+  /** 期次（UTC 自然月）。 */
+  periodKey: string
+  totals: {
+    calls: number
+    okCalls: number
+    failedCalls: number
+    highCostCalls: number
+    inputTokens: number
+    outputTokens: number
+    microCents: number
+  }
+  bySkill: Array<{ skill: string; calls: number; microCents: number }>
+  runs: {
+    total: number
+    byStatus: Record<string, number>
+  }
+  quota: {
+    maxMicroCents: number
+    maxHighCostCalls: number
+    usedMicroCents: number
+    remainingMicroCents: number
+    highCostCalls: number
+  }
+  /** 🔴 **假设随响应下发**（T08 口径）：额度与单价都是占位假设，不是财务事实。 */
+  assumptions: {
+    quota: string
+    price: PriceTable
+    period: string
+  }
+}
+
+export async function agentUsage(
+  ctx: TenantContext,
+  options: { now?: Date; price?: PriceTable } = {},
+): Promise<AgentUsageDto> {
+  const now = options.now ?? new Date()
+  const price = options.price ?? DEFAULT_PRICE_TABLE
+  const periodKey = periodKeyOf(now)
+
+  const ledger = await loadLedger(ctx.organizationId, now)
+  const totals = ledgerTotals(ledger)
+
+  const runRows = await db.agentRun.findMany({
+    where: { organizationId: ctx.organizationId },
+    select: { status: true },
+  })
+  const byStatus: Record<string, number> = {}
+  for (const r of runRows) {
+    const s = String(r.status)
+    byStatus[s] = (byStatus[s] ?? 0) + 1
+  }
+
+  const bySkill = Object.entries(totals.bySkill)
+    .map(([skill, v]) => ({ skill, calls: v.calls, microCents: v.microCents }))
+    .sort((a, b) => b.calls - a.calls || a.skill.localeCompare(b.skill))
+
+  return {
+    periodKey,
+    totals: {
+      calls: totals.calls,
+      okCalls: totals.okCalls,
+      failedCalls: totals.failedCalls,
+      highCostCalls: totals.highCostCalls,
+      inputTokens: totals.inputTokens,
+      outputTokens: totals.outputTokens,
+      microCents: totals.microCents,
+    },
+    bySkill,
+    runs: { total: runRows.length, byStatus },
+    quota: {
+      maxMicroCents: DEFAULT_QUOTA.maxMicroCents,
+      maxHighCostCalls: DEFAULT_QUOTA.maxHighCostCalls,
+      usedMicroCents: totals.microCents,
+      remainingMicroCents: Math.max(DEFAULT_QUOTA.maxMicroCents - totals.microCents, 0),
+      highCostCalls: totals.highCostCalls,
+    },
+    assumptions: {
+      quota: '占位假设：组织级真实额度配置尚未接线（见 T09/slice-2.md §未覆盖）。',
+      price,
+      period: '按 UTC 自然月归集（与 T08 用量账同口径：期次是纯等值比较，与日期格式解耦）。',
+    },
+  }
+}

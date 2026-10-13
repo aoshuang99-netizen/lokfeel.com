@@ -54,13 +54,14 @@ T09 卡片与 AC-08 的四条要求，逐条对应到**代码里不存在的代�
 | `src/lib/agent/runtime.ts` | 编排：校验输入 → 限额判定 → 守卫 → 调用 → **zod 校验输出** → 失败**降级到 P1 的规则式编译器**并标注原因 → 记成本 → 返回（**不执行副作用**） |
 | `src/lib/agent/index.ts` | 出口 |
 
-### Slice 2 · 持久化 + API + 审计
+### Slice 2 · 持久化 + API + 审计 —— ✅ 已交付（见 `slice-2.md`）
 
-- **C6 迁移**（**纯新增**）：`AgentRun` / `AgentCall`（逐次调用的成本归因）/ 审批记录。
+- **C6 迁移**（**纯新增**）：`AgentRun` / `AgentCall`（逐次调用的成本归因）/ `AgentApproval`。
 - HTTP 面：`POST /api/v1/agents/runs`（幂等键，能力 `agent.run`）、`POST /api/v1/agents/runs/[id]/approve|reject`、
-  `GET /api/v1/agents/runs`、`GET /api/v1/agents/usage`。
+  `GET /api/v1/agents/runs`、`GET /api/v1/agents/runs/[id]`（详情带逐次调用，**交付时新增**）、`GET /api/v1/agents/usage`。
 - 审计事件：`agent.run.created` / `approved` / `rejected` / `degraded` / `blocked_quota`。
 - 🔴 新能力名要加进 `TenantCapability`（`agent.run` / `agent.approve`），并同步 `ROLE_CAPABILITIES`。
+- ⚠️ 交付时补充：`agent.run`（OPERATOR+）与 `agent.approve`（ADMIN+）**必须分离** —— 否则同一人可自我盖章，AC-08 在**制度层**被绕过。
 
 ### Slice 3 · 真实 Provider + 对账 + 对抗/预算测试
 

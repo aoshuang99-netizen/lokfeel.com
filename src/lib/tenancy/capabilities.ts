@@ -54,6 +54,9 @@ export type TenantCapability =
   // ── 工作流（T06）──
   | 'workflow.read' // 查看任务队列 / 死信 / 停滞阶段（运营可见）
   | 'workflow.manage' // 人工接管 / 手动重试（管理动作，影响"消息是否出街"）
+  // ── Agent（T09 / AC-08 / AC-20）──
+  | 'agent.run' // 发起一次 Agent 运行（**消耗组织额度**，且 prompt 可能含他人资料 → 取严）
+  | 'agent.approve' // 批准高风险产出（= 授权一次**对外可见**的副作用）
   // ── 审计 ──
   | 'audit.read'
 
@@ -66,6 +69,7 @@ export const TENANT_CAPABILITIES: readonly TenantCapability[] = [
   'outcome.read', 'outcome.report', 'outcome.verify',
   'billing.read', 'billing.manage',
   'workflow.read', 'workflow.manage',
+  'agent.run', 'agent.approve',
   'audit.read',
 ] as const
 
@@ -93,6 +97,10 @@ const OPERATOR_EXTRA: TenantCapability[] = [
   // T08：用量与限额是**经营信息**（"额度要用完了"是运营该看见的信号），
   // 但**不含**金额明细以外的东西 —— 动钱的动作在 ADMIN_EXTRA 里。
   'billing.read',
+  // T09：运行 Agent 会**消耗组织额度**（AC-20），且草稿类技能的 prompt 可能包含
+  // 对手方资料（经 `discloseSubject()` 投影后）。这两条都超出"只操作自己的资源"，
+  // 故与 `billing.read` 同一取向：**不**放进 SELF_SERVICE，归 OPERATOR+。
+  'agent.run',
 ]
 
 // ── 管理能力：ADMIN 及以上 ──────────────────────────────────────────
@@ -110,6 +118,12 @@ const ADMIN_EXTRA: TenantCapability[] = [
   // T08：升降级/退订/退款都**直接动钱**（AC-21）。与 outcome.verify / workflow.manage
   // 同一取向取严：归 ADMIN+。特别注意**退款**是资金外流动作，没有任何理由下放给运营。
   'billing.manage',
+  // T09：批准 = 授权一次**对外可见**的副作用（发消息 / 披露资料）。
+  // 🔴 关键理由不是"技术上门槛够高"，而是**第二双眼睛**：若同一个人既能触发 Agent
+  // 又能批准它，AC-08「注入不得绕过审批」在**制度层**就被绕过了 ——
+  // 状态机依然正确（AWAITING_APPROVAL → EXECUTED 的边依然不存在），
+  // 但"人工审批"退化成了自我盖章。故归 ADMIN+，与触发权（OPERATOR+）**分离**。
+  'agent.approve',
 ]
 
 // ── 所有者专属 ──────────────────────────────────────────────────────

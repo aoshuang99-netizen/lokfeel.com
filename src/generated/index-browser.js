@@ -117,6 +117,57 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.AgentRunScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  skill: 'skill',
+  status: 'status',
+  risk: 'risk',
+  requiresApproval: 'requiresApproval',
+  requestedBy: 'requestedBy',
+  subjectLabel: 'subjectLabel',
+  goal: 'goal',
+  proposalJson: 'proposalJson',
+  rawText: 'rawText',
+  reason: 'reason',
+  degradeCode: 'degradeCode',
+  providerKind: 'providerKind',
+  injectionSignals: 'injectionSignals',
+  costMicroCents: 'costMicroCents',
+  dedupeKey: 'dedupeKey',
+  requestHash: 'requestHash',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgentCallScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  runId: 'runId',
+  seq: 'seq',
+  skill: 'skill',
+  providerKind: 'providerKind',
+  risk: 'risk',
+  highCost: 'highCost',
+  ok: 'ok',
+  inputTokens: 'inputTokens',
+  outputTokens: 'outputTokens',
+  microCents: 'microCents',
+  at: 'at',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AgentApprovalScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  runId: 'runId',
+  decision: 'decision',
+  actorId: 'actorId',
+  deciderRole: 'deciderRole',
+  note: 'note',
+  decidedAt: 'decidedAt'
+};
+
 exports.Prisma.BillingEventScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -987,6 +1038,34 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.AgentRunStatus = exports.$Enums.AgentRunStatus = {
+  PROPOSED: 'PROPOSED',
+  AWAITING_APPROVAL: 'AWAITING_APPROVAL',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  EXECUTED: 'EXECUTED',
+  DEGRADED: 'DEGRADED',
+  BLOCKED_QUOTA: 'BLOCKED_QUOTA',
+  FAILED: 'FAILED'
+};
+
+exports.AgentRiskLevel = exports.$Enums.AgentRiskLevel = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH'
+};
+
+exports.AgentProviderKind = exports.$Enums.AgentProviderKind = {
+  OPENAI: 'OPENAI',
+  STUB: 'STUB',
+  RULES: 'RULES'
+};
+
+exports.AgentApprovalDecision = exports.$Enums.AgentApprovalDecision = {
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+};
+
 exports.BillingEventType = exports.$Enums.BillingEventType = {
   SUBSCRIPTION_STARTED: 'SUBSCRIPTION_STARTED',
   PLAN_CHANGED: 'PLAN_CHANGED',
@@ -1439,6 +1518,9 @@ exports.MembershipStatus = exports.$Enums.MembershipStatus = {
 };
 
 exports.Prisma.ModelName = {
+  AgentRun: 'AgentRun',
+  AgentCall: 'AgentCall',
+  AgentApproval: 'AgentApproval',
   BillingEvent: 'BillingEvent',
   UsageRecord: 'UsageRecord',
   BotProfile: 'BotProfile',

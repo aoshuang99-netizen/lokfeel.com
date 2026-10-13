@@ -1,0 +1,248 @@
+// ═══════════════════════════════════════════════════════════════
+// AGENT — T09 Agent Runtime（Slice 2：持久化）
+//
+// 对齐：AC-08（注入不得改变权限 / 泄露资料 / 绕过审批）、AC-20（**每次调用可归因**）
+//
+// 设计约束（继承 outcome.prisma / billing.prisma 的同一套）：
+//   1. **纯新增** —— 本文件不改动既有模型的任何列语义，可独立上线（零停机、零回归）。
+//   2. **方言无关** —— 不含任何 `@db.*` 原生类型标注。
+//   3. **软引用优先** —— `requestedBy` / `actorId` / `subjectLabel` 都不建 FK：
+//      用户注销后，**谁批准过什么**必须仍然可查（审计的意义就在于此）。
+//      只有 `organizationId` 与 `AgentCall.runId` / `AgentApproval.runId` 建真 FK。
+//
+// ── 与 `src/lib/agent/`（Slice 1 纯内核）的关系 ──────────────────────
+//   内核**不 import 本文件的任何东西**（它连 Prisma 都不 import —— 见
+//   `scripts/check-agent-invariants.mjs` 的 A2）。本文件是**租户服务层**的存储形态，
+//   服务层在 `src/lib/agents/`。
+//   🔴 目录边界**就是**执法点：`src/lib/agent`（单数）＝无 IO 的内核；
+//      `src/lib/agents`（复数）＝允许碰 DB 的服务层。把这两件事混进一个目录，
+//      A1/A2 门禁立刻失效，而"内核无 IO"这条保证会**静默**退化成口头约定。
+//
+// ── 为什么 `AgentRun.status` **是列**（而不是像 `BillingEvent` 那样不落列）──
+//   T08 在 billing.prisma 里立过"状态是派生值，不落列"，其判据是：
+//   该状态**永远只由事件集派生**、且**不会被下推成 SQL 谓词**。
+//   本表不满足该判据的第二条：「待我审批的运行」是一个**必须下推**的查询
+//   （`WHERE status IN ('AWAITING_APPROVAL','DEGRADED')`）。
+//   不落列就只能"取最近 N 条 → 应用层派生"，那会踩 T07 立下的
+//   「派生过滤无法下推 SQL 时的诚实口径」（SCAN_LIMIT）—— 列表页的**总数**会失真。
+//   ⇒ 落列，但配两条硬约束把"第二个事实来源"的风险压住：
+//     ① `status` **只**经 `src/lib/agents/runs.ts` 的 `transitionRun()` 修改，
+//        该函数在执行 UPDATE 前**必须**先过 `approval.ts` 的真相表断言；
+//     ② 终态一致性有**可复跑的对账断言**（见 `scripts/connection/migrate.mjs` 的
+//        C6 段 + `tests/agents/approval-consistency.test.ts`）：`status='APPROVED'|'REJECTED'`
+//        的运行**必须**有一条对应的 `AgentApproval` 行。
+//
+// ── 为什么 `AgentCall` 是独立表（而不是 AgentRun 上的几个列）──
+//   一次运行可以有**多次**模型调用（重试 / 降级路径 / 将来的多步技能），
+//   而 AC-20 要求"**每次调用**可归因"。挤进 AgentRun 的列就会把
+//   "最后一次调用"当成"这次运行花的钱" —— 重试场景下金额会**静默少算**。
+// ═══════════════════════════════════════════════════════════════
+
+/// 运行状态。**必须与 `src/lib/agent/types.ts` 的 `AGENT_RUN_STATUSES` 逐字一致**
+/// （有测试守着：`tests/agents/schema-drift.test.ts`）。
+///
+/// ⚠️ 为什么用 Prisma enum 而不是裸 `String`：既有的 connection.prisma / billing.prisma
+/// 都这么做；SQLite 下枚举落为 TEXT，不引入数据库方言差异。
+/// 代价是"TS 与 Prisma 两处清单"，因此**必须**有漂移检测 —— 否则新增一个状态时
+/// 只在 TS 加了，写入会在运行期才炸。
+enum AgentRunStatus {
+  PROPOSED
+  AWAITING_APPROVAL
+  APPROVED
+  REJECTED
+  EXECUTED
+  DEGRADED
+  BLOCKED_QUOTA
+  FAILED
+}
+
+/// 风险级。与 `types.ts` 的 `RISK_LEVELS` 逐字一致。
+enum AgentRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+/// 模型提供方种类。与 `types.ts` 的 `PROVIDER_KINDS` 逐字一致。
+/// 🔴 `RULES` = **根本没调模型**（规则式兜底）—— 把它记进账本，
+///    才能使"降级率"可复算，而不是只能靠读日志。
+enum AgentProviderKind {
+  OPENAI
+  STUB
+  RULES
+}
+
+/// 人工裁决结果。**只有两种终局**：批准 / 驳回。
+/// 🔴 这里**没有** `EXECUTED` —— 裁决与执行是两件事（见文件末「执行不在本切片」）。
+enum AgentApprovalDecision {
+  APPROVED
+  REJECTED
+}
+
+/// 一次 Agent 运行（提案的持久形态）。
+///
+/// 🔴 本表**不含**任何主体档案数据：只有 `subjectLabel` 这类**标签**。
+///    真实披露要等接线，且必须经 `discloseSubject()` 投影后再进 prompt（AC-03）。
+model AgentRun {
+  id String @id @default(cuid())
+
+  /// 租户谓词。**不可省** —— 所有查询都以它为首要条件（T01 铁律）。
+  organizationId String
+
+  /// 技能键（`INTENT_EXTRACTION` / `INTRO_DRAFT` / `COORDINATION_ADVICE`）。
+  skill String
+
+  /// 当前状态。创建时落初值，此后只经 `decideAgentRun()` 修改（见文件头）。
+  status AgentRunStatus
+
+  /// 该技能的风险级（快照）。落库理由：以后调整技能风险级，
+  /// 历史运行的**当时**风险级不应被追溯修改。
+  risk AgentRiskLevel
+
+  /// 是否必须人工批准才能执行（含"因注入信号而升级"的情形）。
+  requiresApproval Boolean @default(false)
+
+  /// 发起人（**软引用**，无 FK）：用户注销后"谁批准过什么"仍须可查。
+  requestedBy String
+
+  /// 目标的对象标签（**不是档案**）。Slice 2 只存这个，不存任何字段值。
+  subjectLabel String?
+
+  /// 用户原始目标文本。属于**不可信输入**，落库仅为可追溯。
+  goal String
+
+  /// 经 zod 校验后的结构化产出（JSON 文本）。**这才是可渲染的那一份**。
+  /// 契约拒绝时为 null（`rawText` 可能仍在 —— 那是审计用的证据）。
+  proposalJson String?
+
+  /// 模型原始文本。**仅供审计/调试，永不进 DTO、永不渲染**。
+  /// 留着它的唯一理由：当契约拒绝了产出时，能回答"模型到底说了什么"。
+  rawText String?
+
+  /// 面向用户的说明（降级原因 / 注入升级说明 / 失败原因）。
+  reason String?
+
+  /// 降级/失败原因码（`DegradeReason`）。成功为 null。
+  degradeCode String?
+
+  /// 本次运行最终采用的提供方种类。
+  providerKind AgentProviderKind
+
+  /// 注入信号（JSON 数组）。**只作告警/升级审批的旁证**，不是放行判据。
+  injectionSignals String?
+
+  /// 本次运行**全部调用**的成本合计（微分）。冗余但刻意：
+  /// 列表页/用量页要按运行聚合，逐条 `JOIN AgentCall` 会随历史增长变慢。
+  /// ⚠️ 它**可以**与 `AgentCall` 不一致（写入非原子）→ 由 C6 的对账断言与
+  /// `tests/agents/*` 的一致性用例守着；不允许出现"没人发现的不一致"。
+  costMicroCents Int @default(0)
+
+  /// 幂等键：同一业务动作只产生一次运行。作用域 = `(organizationId, dedupeKey)`。
+  dedupeKey String
+
+  /// 产生本次运行的**请求体指纹**。理由同 `BillingEvent.requestHash`：
+  /// 唯一约束只能保证"不重复"，保证不了"同一把键没被复用于另一个意图"。
+  requestHash String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  calls        AgentCall[]
+  approval     AgentApproval?
+
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, skill])
+}
+
+/// 单次模型调用（或规则式兜底）的**归因记录** —— AC-20 的落点。
+///
+/// 🔴 失败的调用**也记**：否则"失败不花钱"这个假设永远没人验证过。
+model AgentCall {
+  id String @id @default(cuid())
+
+  /// 租户谓词。**不可省**（虽然是冗余的 —— run 已经带租户；但本仓的铁律是
+  /// "每条账都要能独立按租户查询"，冗余换掉一次 JOIN 与一类越权风险）。
+  organizationId String
+
+  runId String
+
+  /// 本次运行内的序号（从 1 开始）。`(runId, seq)` 唯一 ⇒ 重放不会插出重复行。
+  seq Int
+
+  skill String
+
+  providerKind AgentProviderKind
+
+  risk AgentRiskLevel
+
+  /// 是否为"高成本"调用（AC-20「限额触发时停止高成本任务」的判定对象）。
+  highCost Boolean
+
+  /// 调用是否成功。失败也入账。
+  ok Boolean
+
+  inputTokens  Int @default(0)
+  outputTokens Int @default(0)
+
+  /// 本次调用的成本（**微分**，整数 —— 与 `cost.ts` 同口径：1 分 = 1e6 微分）。
+  /// 用整数而非浮点分，是因为浮点累加会让"对账"变成"看运气"。
+  microCents Int @default(0)
+
+  /// 调用发生时刻（**由我们写入**）。注意与 `createdAt` 的区别：
+  /// 前者是业务时间（测试可注入），后者是行落库时间。
+  at DateTime
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  run          AgentRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, seq])
+  @@index([organizationId, at])
+  @@index([organizationId, skill])
+  @@index([organizationId, highCost])
+}
+
+/// 人工裁决（**只增不改**的事件）。
+///
+/// 与 `AgentRun.status` 的分工：本表回答"**谁在何时批了什么**"（审计），
+/// `status` 回答"现在能不能执行"（查询）。两者的不一致由一致性断言守住。
+model AgentApproval {
+  id String @id @default(cuid())
+
+  organizationId String
+
+  runId String
+
+  decision AgentApprovalDecision
+
+  /// 裁决人（**软引用**，无 FK）。
+  actorId String?
+
+  /// 裁决时该人的租户角色（快照）。落库理由同 `AgentRun.risk`：
+  /// 以后改了角色能力矩阵，也不该改写历史裁决的**当时**依据。
+  deciderRole String
+
+  /// 裁决备注（驳回时尤其重要 —— "为什么不行"是要给人看的）。
+  note String?
+
+  decidedAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  run          AgentRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  /// 一次运行只允许**一条**终局裁决（不可改判 —— 要推翻就重新发起一次运行）。
+  @@unique([runId])
+  @@index([organizationId, decidedAt])
+  @@index([organizationId, decision])
+}
+
+// ── 执行不在本切片（Slice 2 的显式非目标）───────────────────────────
+// `AgentRunStatus.EXECUTED` **在 Slice 2 里不可达**：没有任何路由/服务会把它写进去，
+// 因为没有注册任何**执行器**（`EXECUTORS` 为空）。
+// 这不是遗漏，而是刻意的：执行 = 产生对外可见的副作用（发消息 / 披露资料），
+// 那要先有 T05 的披露出口与 T06 的投递出口接线。**宁可不做，也不伪造成功。**
+// 断言见 `tests/agents/execution-unreachable.test.ts`。

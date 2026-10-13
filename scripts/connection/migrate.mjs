@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * T02–T08 · Connection OS 迁移（批次 C0 – C5）
+ * T02–T09 · Connection OS 迁移（批次 C0 – C6）
  *
  * 用法：
  *   node scripts/connection/migrate.mjs probe                      # 只读：表/列/索引现状
@@ -19,6 +19,9 @@
  *        （T08；OutcomeVerification 引用 C4 的 Outcome，Outcome 仅指向 Organization）
  *   C5 = UsageRecord / BillingEvent
  *        （T08；两表**只**指向 Organization —— 账里的 sourceId / chargeId 是软引用，无 FK）
+ *   C6 = AgentRun / AgentCall / AgentApproval
+ *        （T09；AgentCall/AgentApproval 引用 C6 的 AgentRun；三表都**只**指向 Organization ——
+ *          requestedBy / actorId 是**软引用**，用户注销后"谁批准过什么"仍须可查）
  *
  * 设计约束（继承 T01 的 scripts/tenancy/migrate.mjs）：
  *   1. **纯新增** —— 各批次只 `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`，
@@ -84,9 +87,17 @@ export const BATCHES = {
     tables: ['UsageRecord', 'BillingEvent'],
     label: 'T08 · 组织级用量计费（UsageRecord / BillingEvent）',
   },
+  C6: {
+    // C6 内部依赖：AgentCall 与 AgentApproval 的外键都指向 AgentRun。
+    // 三表都只对 Organization 建 FK —— `requestedBy` / `actorId` 是**软引用**（无 FK），
+    // 刻意不随被引用行级联删除：用户注销后"谁批准过什么"仍须可查。
+    // 数组顺序 = 创建顺序；rollback 取其逆序（先删 AgentApproval / AgentCall）。
+    tables: ['AgentRun', 'AgentCall', 'AgentApproval'],
+    label: 'T09 · Agent 运行与审批（AgentRun / AgentCall / AgentApproval）',
+  },
 }
 
-export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5']
+export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6']
 
 // ══════════════════════════════════════════════════════════════════════
 // 环境加载
@@ -470,7 +481,84 @@ function sqlC5() {
   ]
 }
 
-const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5 }
+function sqlC6() {
+  // DDL 来源：`npx prisma migrate diff --from-schema <T09 前的快照> --to-schema prisma/schema --script`
+  // 后**原样抄录**（见文件头约束 5）。三表都只对 Organization 建 FK；
+  // AgentCall / AgentApproval 额外对 AgentRun 建强 FK（CASCADE）。
+  return [
+    // ── AgentRun（一次运行；requestedBy 是软引用，无 FK）──
+    `CREATE TABLE IF NOT EXISTS "AgentRun" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "skill" TEXT NOT NULL,
+  "status" TEXT NOT NULL,
+  "risk" TEXT NOT NULL,
+  "requiresApproval" BOOLEAN NOT NULL DEFAULT false,
+  "requestedBy" TEXT NOT NULL,
+  "subjectLabel" TEXT,
+  "goal" TEXT NOT NULL,
+  "proposalJson" TEXT,
+  "rawText" TEXT,
+  "reason" TEXT,
+  "degradeCode" TEXT,
+  "providerKind" TEXT NOT NULL,
+  "injectionSignals" TEXT,
+  "costMicroCents" INTEGER NOT NULL DEFAULT 0,
+  "dedupeKey" TEXT NOT NULL,
+  "requestHash" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL,
+  CONSTRAINT "AgentRun_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "AgentRun_organizationId_dedupeKey_key" ON "AgentRun"("organizationId", "dedupeKey")`,
+    `CREATE INDEX IF NOT EXISTS "AgentRun_organizationId_status_idx" ON "AgentRun"("organizationId", "status")`,
+    `CREATE INDEX IF NOT EXISTS "AgentRun_organizationId_createdAt_idx" ON "AgentRun"("organizationId", "createdAt")`,
+    `CREATE INDEX IF NOT EXISTS "AgentRun_organizationId_skill_idx" ON "AgentRun"("organizationId", "skill")`,
+
+    // ── AgentCall（逐次调用归因；AC-20 的账）──
+    `CREATE TABLE IF NOT EXISTS "AgentCall" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "runId" TEXT NOT NULL,
+  "seq" INTEGER NOT NULL,
+  "skill" TEXT NOT NULL,
+  "providerKind" TEXT NOT NULL,
+  "risk" TEXT NOT NULL,
+  "highCost" BOOLEAN NOT NULL,
+  "ok" BOOLEAN NOT NULL,
+  "inputTokens" INTEGER NOT NULL DEFAULT 0,
+  "outputTokens" INTEGER NOT NULL DEFAULT 0,
+  "microCents" INTEGER NOT NULL DEFAULT 0,
+  "at" DATETIME NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "AgentCall_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "AgentCall_runId_fkey" FOREIGN KEY ("runId") REFERENCES "AgentRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "AgentCall_runId_seq_key" ON "AgentCall"("runId", "seq")`,
+    `CREATE INDEX IF NOT EXISTS "AgentCall_organizationId_at_idx" ON "AgentCall"("organizationId", "at")`,
+    `CREATE INDEX IF NOT EXISTS "AgentCall_organizationId_skill_idx" ON "AgentCall"("organizationId", "skill")`,
+    `CREATE INDEX IF NOT EXISTS "AgentCall_organizationId_highCost_idx" ON "AgentCall"("organizationId", "highCost")`,
+
+    // ── AgentApproval（人工裁决；actorId 是软引用，无 FK）──
+    `CREATE TABLE IF NOT EXISTS "AgentApproval" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "runId" TEXT NOT NULL,
+  "decision" TEXT NOT NULL,
+  "actorId" TEXT,
+  "deciderRole" TEXT NOT NULL,
+  "note" TEXT,
+  "decidedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "AgentApproval_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "AgentApproval_runId_fkey" FOREIGN KEY ("runId") REFERENCES "AgentRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "AgentApproval_runId_key" ON "AgentApproval"("runId")`,
+    `CREATE INDEX IF NOT EXISTS "AgentApproval_organizationId_decidedAt_idx" ON "AgentApproval"("organizationId", "decidedAt")`,
+    `CREATE INDEX IF NOT EXISTS "AgentApproval_organizationId_decision_idx" ON "AgentApproval"("organizationId", "decision")`,
+  ]
+}
+
+const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5, C6: sqlC6 }
 
 /** 期望存在的索引（verify 断言用）。 */
 const EXPECTED_INDEXES = [
@@ -529,6 +617,18 @@ const EXPECTED_INDEXES = [
   { name: 'BillingEvent_organizationId_occurredAt_idx', table: 'BillingEvent', unique: false },
   { name: 'BillingEvent_organizationId_type_idx', table: 'BillingEvent', unique: false },
   { name: 'BillingEvent_organizationId_chargeId_idx', table: 'BillingEvent', unique: false },
+  // ── C6 ──
+  { name: 'AgentRun_organizationId_dedupeKey_key', table: 'AgentRun', unique: true },
+  { name: 'AgentRun_organizationId_status_idx', table: 'AgentRun', unique: false },
+  { name: 'AgentRun_organizationId_createdAt_idx', table: 'AgentRun', unique: false },
+  { name: 'AgentRun_organizationId_skill_idx', table: 'AgentRun', unique: false },
+  { name: 'AgentCall_runId_seq_key', table: 'AgentCall', unique: true },
+  { name: 'AgentCall_organizationId_at_idx', table: 'AgentCall', unique: false },
+  { name: 'AgentCall_organizationId_skill_idx', table: 'AgentCall', unique: false },
+  { name: 'AgentCall_organizationId_highCost_idx', table: 'AgentCall', unique: false },
+  { name: 'AgentApproval_runId_key', table: 'AgentApproval', unique: true },
+  { name: 'AgentApproval_organizationId_decidedAt_idx', table: 'AgentApproval', unique: false },
+  { name: 'AgentApproval_organizationId_decision_idx', table: 'AgentApproval', unique: false },
 ]
 
 /** 期望存在的外键（表 → 引用目标），verify 断言用。 */
@@ -576,6 +676,15 @@ const EXPECTED_FKS = [
   // 软引用，**故意没有 FK** —— 若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
   { table: 'UsageRecord', target: 'Organization' },
   { table: 'BillingEvent', target: 'Organization' },
+  // ── C6 ──
+  // 三表都指向 Organization；AgentCall / AgentApproval 额外指向 C6 的 AgentRun。
+  // （`AgentRun.requestedBy` / `AgentApproval.actorId` 是软引用，**故意没有 FK** ——
+  //  若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
+  { table: 'AgentRun', target: 'Organization' },
+  { table: 'AgentCall', target: 'Organization' },
+  { table: 'AgentCall', target: 'AgentRun' },
+  { table: 'AgentApproval', target: 'Organization' },
+  { table: 'AgentApproval', target: 'AgentRun' },
 ]
 
 /** 全部受管表（verify 用）。 */
@@ -1068,6 +1177,118 @@ async function cmdVerify(client) {
     ok('OutcomeVerification 关键列均为 NOT NULL', false, '表不存在')
   }
 
+  // 4g) T09 · AgentRun / AgentCall / AgentApproval（C6 · AC-08 / AC-20）
+  const runCols = await tableColumns(client, 'AgentRun')
+  if (runCols) {
+    const sql = (await tableCreateSql(client, 'AgentRun')) || ''
+    const required = [
+      'organizationId',
+      'skill',
+      'status',
+      'risk',
+      'requestedBy',
+      'goal',
+      'providerKind',
+      'dedupeKey',
+    ].every((c) => new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql))
+    ok('AgentRun 关键列均为 NOT NULL', required)
+    ok(
+      'AgentRun.requiresApproval 默认 false（默认不放行执行）',
+      /"requiresApproval"\s+BOOLEAN\s+NOT\s+NULL\s+DEFAULT\s+false/.test(sql)
+    )
+    ok(
+      'AgentRun.costMicroCents 默认 0（缺省即"没花钱"，而不是 NULL 传播）',
+      /"costMicroCents"\s+INTEGER\s+NOT\s+NULL\s+DEFAULT\s+0/.test(sql)
+    )
+    // 可空列：契约拒绝时 proposalJson 为 null（rawText 可能仍在 —— 那是审计证据）；
+    // 成功后 reason/degradeCode 为 null。建成 NOT NULL 会让这些合法状态写不进去。
+    const runNullable = [
+      'subjectLabel',
+      'proposalJson',
+      'rawText',
+      'reason',
+      'degradeCode',
+      'injectionSignals',
+    ].every((c) => new RegExp(`"${c}"\\s+TEXT\\b(?!\\s+NOT)`).test(sql))
+    ok('AgentRun 可选列可为空（产出/原文/原因/降级码/注入信号）', runNullable)
+    // 🔴 **反向断言 × 2**
+    //   ① `requestedBy` 是软引用：用户注销后"谁跑过什么"仍须可查。
+    ok(
+      'AgentRun.requestedBy 无外键（软引用，用户注销仍留痕）',
+      !/FOREIGN KEY\s+\("requestedBy"\)/.test(sql)
+    )
+    //   ② **没有 `executedAt` 列**：Slice 2 不执行任何副作用（无执行器注册）。
+    //      少了这列，"假装执行过"就没有地方可写 —— 用 DDL 把这条非目标钉住。
+    ok('AgentRun 无 executedAt 列（Slice 2 不执行副作用）', !/"executedAt"/.test(sql))
+  } else {
+    ok('AgentRun 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  const callCols = await tableColumns(client, 'AgentCall')
+  if (callCols) {
+    const sql = (await tableCreateSql(client, 'AgentCall')) || ''
+    // ⚠️ 只列 **TEXT NOT NULL** 的列；BOOLEAN/INTEGER/DATETIME 单独断言
+    //    （混进来会让本行恒假 —— 这个坑 C5 踩过一次，见文件头）。
+    const required = ['organizationId', 'runId', 'skill', 'providerKind', 'risk'].every((c) =>
+      new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('AgentCall 关键列均为 NOT NULL', required)
+    ok('AgentCall.seq 为 INTEGER NOT NULL', /"seq"\s+INTEGER\s+NOT\s+NULL/.test(sql))
+    ok('AgentCall.highCost 为 BOOLEAN NOT NULL', /"highCost"\s+BOOLEAN\s+NOT\s+NULL/.test(sql))
+    ok(
+      'AgentCall.ok 为 BOOLEAN NOT NULL（失败的调用**也**入账）',
+      /"ok"\s+BOOLEAN\s+NOT\s+NULL/.test(sql)
+    )
+    ok('AgentCall.at 为 DATETIME NOT NULL', /"at"\s+DATETIME\s+NOT\s+NULL/.test(sql))
+    ok(
+      'AgentCall.microCents 默认 0（规则式兜底是 0 成本，不是 NULL）',
+      /"microCents"\s+INTEGER\s+NOT\s+NULL\s+DEFAULT\s+0/.test(sql)
+    )
+    // 正向：调用记录脱离运行没有意义 → 强 FK **必须**在。
+    ok(
+      'AgentCall.runId → AgentRun 外键存在',
+      /CONSTRAINT\s+"AgentCall_runId_fkey"\s+FOREIGN KEY\s+\("runId"\)\s+REFERENCES\s+"AgentRun"/.test(
+        sql
+      )
+    )
+  } else {
+    ok('AgentCall 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  const approvalCols = await tableColumns(client, 'AgentApproval')
+  if (approvalCols) {
+    const sql = (await tableCreateSql(client, 'AgentApproval')) || ''
+    const required = ['organizationId', 'runId', 'decision', 'deciderRole'].every((c) =>
+      new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('AgentApproval 关键列均为 NOT NULL', required)
+    // 可空列：系统裁决可能没有 actor（actorId）、批准不一定带备注（note）。
+    ok(
+      'AgentApproval.actorId 可为空（系统裁决无 actor）',
+      /"actorId"\s+TEXT\b(?!\s+NOT)/.test(sql)
+    )
+    ok('AgentApproval.note 可为空（批准不是必须写理由）', /"note"\s+TEXT\b(?!\s+NOT)/.test(sql))
+    ok(
+      'AgentApproval.runId → AgentRun 外键存在',
+      /CONSTRAINT\s+"AgentApproval_runId_fkey"\s+FOREIGN KEY\s+\("runId"\)\s+REFERENCES\s+"AgentRun"/.test(
+        sql
+      )
+    )
+    ok(
+      'AgentApproval.actorId 无外键（软引用，用户注销仍留痕）',
+      !/FOREIGN KEY\s+\("actorId"\)/.test(sql)
+    )
+    // 🔴 **反向断言**：裁决表上**不得**出现 status 列 ——
+    //   状态只有一个落点（`AgentRun.status`）。若这里也存一份，
+    //   两个事实来源迟早分叉，而分叉的那一刻没有任何东西会报错。
+    ok(
+      'AgentApproval **没有** status 列（状态只有 AgentRun 一个落点）',
+      !/"status"\s+TEXT/.test(sql) && !/"state"\s+TEXT/.test(sql)
+    )
+  } else {
+    ok('AgentApproval 关键列均为 NOT NULL', false, '表不存在')
+  }
+
   // 5) 孤儿行（跨表完整性）
   const orphanMission = await countRows(
     client,
@@ -1209,6 +1430,149 @@ async function cmdVerify(client) {
       orphanVerifOutcome === 0,
       `孤儿 ${orphanVerifOutcome}`
     )
+  }
+
+  // 5e) T09 · Agent 运行的引用完整性 + **两个事实来源的一致性**
+  //
+  // ⚠️ 刻意**不**断言 `AgentRun.requestedBy` / `AgentApproval.actorId` 的孤儿 ——
+  // 它们是**软引用**：用户注销而运行/裁决痕迹留着，是**设计意图**（审计要的就是这个）。
+  // 为它们写孤儿断言，等于把刻意的设计判成缺陷，且会逼后人"顺手"补 FK。
+  const orphanRunOrg = await countRows(
+    client,
+    'AgentRun',
+    ` WHERE "organizationId" NOT IN (SELECT "id" FROM "Organization")`
+  )
+  if (orphanRunOrg !== null) {
+    ok('AgentRun 无孤儿 organizationId', orphanRunOrg === 0, `孤儿 ${orphanRunOrg}`)
+  }
+
+  const dupRunDedupe = await countRows(
+    client,
+    'AgentRun',
+    ` GROUP BY "organizationId", "dedupeKey" HAVING COUNT(*) > 1`
+  )
+  if (dupRunDedupe !== null) {
+    ok('AgentRun 无重复 (organizationId,dedupeKey)', dupRunDedupe === 0, `重复组 ${dupRunDedupe}`)
+  }
+
+  const orphanCallRun = await countRows(
+    client,
+    'AgentCall',
+    ` WHERE "runId" NOT IN (SELECT "id" FROM "AgentRun")`
+  )
+  if (orphanCallRun !== null) {
+    ok('AgentCall 无孤儿 runId（强 FK，必为 0）', orphanCallRun === 0, `孤儿 ${orphanCallRun}`)
+  }
+
+  const dupCallSeq = await countRows(
+    client,
+    'AgentCall',
+    ` GROUP BY "runId", "seq" HAVING COUNT(*) > 1`
+  )
+  if (dupCallSeq !== null) {
+    ok('AgentCall 无重复 (runId,seq)', dupCallSeq === 0, `重复组 ${dupCallSeq}`)
+  }
+
+  const orphanApprovalRun = await countRows(
+    client,
+    'AgentApproval',
+    ` WHERE "runId" NOT IN (SELECT "id" FROM "AgentRun")`
+  )
+  if (orphanApprovalRun !== null) {
+    ok(
+      'AgentApproval 无孤儿 runId（强 FK，必为 0）',
+      orphanApprovalRun === 0,
+      `孤儿 ${orphanApprovalRun}`
+    )
+  }
+
+  const dupApprovalRun = await countRows(
+    client,
+    'AgentApproval',
+    ` GROUP BY "runId" HAVING COUNT(*) > 1`
+  )
+  if (dupApprovalRun !== null) {
+    ok(
+      'AgentApproval 无重复 runId（一次运行只有一条终局裁决）',
+      dupApprovalRun === 0,
+      `重复组 ${dupApprovalRun}`
+    )
+  }
+
+  // 🔴 一致性①：终态**必须**有裁决行。
+  //    `AgentRun.status` 是刻意落的列（理由见 prisma/schema/agent.prisma 文件头），
+  //    代价是"两个事实来源"—— 本断言就是它的漂移对账。
+  const terminalWithoutApproval = await countRows(
+    client,
+    'AgentRun',
+    ` WHERE "status" IN ('APPROVED','REJECTED') AND "id" NOT IN (SELECT "runId" FROM "AgentApproval")`
+  )
+  if (terminalWithoutApproval !== null) {
+    ok(
+      'AgentRun 终态(APPROVED/REJECTED)必有裁决行',
+      terminalWithoutApproval === 0,
+      `缺失 ${terminalWithoutApproval}`
+    )
+  }
+
+  // 🔴 一致性②：status 与 decision 必须**同向**（不能批了却记成 REJECTED）。
+  const approvalMismatch = await countRows(
+    client,
+    'AgentRun',
+    ` WHERE ("status" = 'APPROVED' AND "id" IN (SELECT "runId" FROM "AgentApproval" WHERE "decision" <> 'APPROVED'))` +
+      ` OR ("status" = 'REJECTED' AND "id" IN (SELECT "runId" FROM "AgentApproval" WHERE "decision" <> 'REJECTED'))`
+  )
+  if (approvalMismatch !== null) {
+    ok(
+      'AgentRun.status 与 AgentApproval.decision 同向',
+      approvalMismatch === 0,
+      `不一致 ${approvalMismatch}`
+    )
+  }
+
+  // 🔴 一致性③：待批的运行**不该**已有裁决行（反向断言）。
+  const pendingWithApproval = await countRows(
+    client,
+    'AgentRun',
+    ` WHERE "status" = 'AWAITING_APPROVAL' AND "id" IN (SELECT "runId" FROM "AgentApproval")`
+  )
+  if (pendingWithApproval !== null) {
+    ok('AgentRun 待批态无裁决行', pendingWithApproval === 0, `越界 ${pendingWithApproval}`)
+  }
+
+  // 🔴 一致性④：**Slice 2 期间 `EXECUTED` 必须为 0** —— 没有注册任何执行器。
+  //    ⚠️ 这是**阶段断言**：接线执行器（T05 披露出口 / T06 投递出口）之后，
+  //       本断言应被**删除**而不是被绕过。留着它，是为了让"假装执行"无法悄悄发生。
+  const executedRuns = await countRows(client, 'AgentRun', ` WHERE "status" = 'EXECUTED'`)
+  if (executedRuns !== null) {
+    ok(
+      'AgentRun 无 EXECUTED 行（Slice 2 未注册执行器）',
+      executedRuns === 0,
+      `EXECUTED ${executedRuns}`
+    )
+  }
+
+  // 🔴 一致性⑤：冗余列 `costMicroCents` 与其 `AgentCall` 合计对账。
+  //    ⚠️ **空库时恒为 0**（无判别力）—— 非空路径由 `tests/agents/` 的一致性用例覆盖。
+  //       写下这句，是为了不让"空库通过"被读成"对账过了"。
+  if (runCols) {
+    try {
+      const driftRes = await client.execute(
+        `SELECT COUNT(*) AS n FROM "AgentRun" r WHERE r."costMicroCents" <> COALESCE((SELECT SUM(c."microCents") FROM "AgentCall" c WHERE c."runId" = r."id"), 0)`
+      )
+      const drift = Number(driftRes.rows[0]?.n ?? 0)
+      ok(
+        'AgentRun.costMicroCents 与 AgentCall 合计一致（冗余列漂移对账）',
+        drift === 0,
+        `漂移 ${drift}`
+      )
+    } catch (err) {
+      ok(
+        'AgentRun.costMicroCents 与 AgentCall 合计一致（冗余列漂移对账）',
+        false,
+        `查询失败：${err?.message || err}`
+      )
+    }
   }
 
   // 6) 计数（信息项，不断言 0 —— 生产可能有真实数据）

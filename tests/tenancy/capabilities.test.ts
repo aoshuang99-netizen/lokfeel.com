@@ -108,6 +108,31 @@ describe('T01 · 租户角色与能力矩阵', () => {
       expect(can('OWNER', 'billing.manage')).toBe(true)
     })
 
+    // ── T09 / AC-08 / AC-20 Agent ──
+    // 这一组钉死"触发"与"批准"的**分离** —— 这是 AC-08「注入不得绕过审批」
+    // 在制度层（而不只是状态机层）的保证：同一个角色不能既跑 Agent 又盖章放行。
+    it('🔴 Agent：MEMBER 既跑不了也批不了；OPERATOR 能跑不能批；ADMIN 才能批', () => {
+      expect(can('MEMBER', 'agent.run')).toBe(false)
+      expect(can('MEMBER', 'agent.approve')).toBe(false)
+
+      expect(can('OPERATOR', 'agent.run')).toBe(true)
+      expect(can('OPERATOR', 'agent.approve')).toBe(false)
+
+      expect(can('ADMIN', 'agent.run')).toBe(true)
+      expect(can('ADMIN', 'agent.approve')).toBe(true)
+
+      expect(can('OWNER', 'agent.run')).toBe(true)
+      expect(can('OWNER', 'agent.approve')).toBe(true)
+    })
+
+    it('🔴 agent.approve 不是 agent.run 的超集 —— 存在"能跑不能批"的角色（OPERATOR）', () => {
+      // 防止有人为了"统一"把两者合并/下放，静默抹平双人复核：
+      const runnersOnly = TENANT_ROLES.filter(
+        (r) => can(r, 'agent.run') && !can(r, 'agent.approve'),
+      )
+      expect(runnersOnly).toEqual(['OPERATOR'])
+    })
+
     it('OWNER 独占租户处置权', () => {
       expect(can('OWNER', 'org.update')).toBe(true)
       expect(can('OWNER', 'org.transfer')).toBe(true)
