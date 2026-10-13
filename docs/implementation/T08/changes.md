@@ -385,3 +385,44 @@ C4 段之所以没踩，是因为它列的全是 TEXT 列。教训：**按类型
    用量直接对应账单金额）。
 6. **归集是"扫描式"的**：若原始行被**硬删除**，账会失去依据。本仓的提案/成果/验证
    没有硬删除路径，且账本行一旦写入不会被删 → 该风险当前**不可达**（`risks.md` R16）。
+
+---
+
+## 9. 发版记录（2026-10-13）—— **Slice 1 + 2 + 3 已上线**
+
+**发布提交** `f6630ea`（`chore(release): 发布 T08 Slice 1+2+3 …`）→ **部署** `6acde3962c8778501cd81f27`
+（`app.lokfeel.com`，production，ready @ 2026-10-13T07:55:42Z）。§5 与 §8 中「不发版」的结论**已由本节取代**。
+
+### 发版链（已执行）
+
+```
+qa:db:snapshot before
+  → connection:migrate plan --batch=C4 / --batch=C5   # dry-run：SQL 全为 CREATE ... IF NOT EXISTS
+  → connection:migrate apply --batch=C4 --yes         # 9 条 DDL
+  → connection:migrate apply --batch=C5 --yes         # 10 条 DDL
+  → connection:migrate verify                         # 159/159
+  → qa:db:snapshot after + diff                       # 纯新增自证
+  → 发布提交（不带跳过标记）→ push → Netlify 构建
+```
+
+### 证据
+
+| 项 | 结果 |
+|---|---|
+| 生产迁移 | C4 = `Outcome` / `OutcomeVerification`；C5 = `UsageRecord` / `BillingEvent`（4 表 + 16 索引） |
+| `snapshot diff before→after` | 表 54 → 58，新增 4（= C4/C5），消失 0，**既有表行数全部未变** |
+| `connection:verify`（生产） | **159/159**（含 C5 四条反向断言） |
+| T08 新增路由上线 | 5/5 受认证保护（`usage` / `subscription` → 401、`charges` → 405、`outcomes` / `outcomes/metrics` → 401），**无 404** |
+| 窗口期守卫 | **13/13**（无部署专用域名泄漏；`/console` 深链回跳保留） |
+| 既有回归 | **T07 48/48 · T06 25/25 · T04 19/19** |
+
+### 附带修复（发版提交内）
+
+`scripts/qa/db-snapshot.mjs` 的「预期新增表」白名单此前只列 C2/C3 → 会把 C4/C5 的 4 张新表
+误报为「预期之外的变更，请人工复核」。现改为 `EXPECTED_NEW_TABLES`（含 C2–C5 全部 10 张表）。
+**这是一次真实的假阳性**：脚本的告警逻辑本身没错，但它覆盖不到新批次 —— **每新增一个迁移批次都要同步白名单**。
+
+### 回滚
+
+见 `rollback.md` §3：`rollback --batch=C5 --yes` → `rollback --batch=C4 --yes` → `verify`
+（对应段转红即证明回滚生效）。
