@@ -10,7 +10,9 @@
 
 ---
 
-## 1. 提交
+## 1. 提交（Slice 1）
+
+> Slice 2 的提交见 **§7.1**（`584975a` / 文档 `<待填>`）。
 
 | 项 | 值 |
 |---|---|
@@ -130,7 +132,7 @@
 | AC | 结论 | 证据 |
 |---|---|---|
 | **AC-15** 自报与双方确认分开，不把系统猜测计为已验证 | **PASS** | ① `isVerified('SELF_REPORTED') === false`（判据本身，有负向断言）；② 级别**不可入参**（请求体塞 `verificationLevel` 无效，有用例）；③ **自我确认被拒**（上报人 → 400，API 层同样）；④ UI 徽章与指标共用一个判据；⑤ 上报只推进到 `ACTION_COMPLETED`，**没有任何**"自动置为已验证"的代码路径 |
-| **AC-16** 任务成本 / 人工工时 / 介绍漏斗**可复算** | ⬜ **未认领** | 属 Slice 2（`outcome-reconcile.mjs` SQL 对账） |
+| **AC-16** 任务成本 / 人工工时 / 介绍漏斗**可复算** | **PASS**（Slice 2） | `scripts/qa/outcome-reconcile.mjs` 用**原始表 SQL** 独立算出 API 下发的**全部 14 个可比字段**并逐项相等（`exit 0`）：全租户 14/0、任务内 14/0；**变异自证**（篡改计数/假设）→ `exit 1`；负向（`verifiedLevels` 含 `SELF_REPORTED`、缺 `--api`）→ `exit 1` |
 | **AC-21** 用量可复算；退款/失败/升降级状态一致 | 🔴 **BLOCKED** | 属 Slice 3；且 Creem 凭据缺失 → **真实扣款/退款永久 BLOCKED**，不得标 PASS（`risks.md` R1） |
 | **AC-18**（增量） | 🚧 **第 6 屏就绪** | `/console/outcomes` 可达且无空按钮（动作按钮由 `canConfirm`/`canVerify` 派生）；**七屏仍差 Agents**（等 T09） |
 
@@ -171,7 +173,73 @@ db-snapshot → plan --batch=C4 → apply --batch=C4 --yes → verify → 发布
 | 检查 | 结果 |
 |---|---|
 | `tsc --noEmit` | **0 error** |
-| 全量 `jest` | **57 套 / 1111 passed**（Slice 1 前为 54 套 / 1052；`tests/outcome` 新增 3 套 59 例） |
+| 全量 `jest` | **59 套 / 1145 passed**（Slice 2 前为 57 套 / 1111；`tests/outcome` 新增 2 套 34 例） |
 | `eslint --max-warnings=0`（改动目录） | **0 error / 0 warning** |
-| `check:script-decls` | 57 脚本，**0 未声明** |
-| `connection:migrate plan --batch=C4` | ✅ SQL 合法（纯 `CREATE TABLE/INDEX IF NOT EXISTS`，无 ALTER/DROP） |
+| `check:script-decls` | 59 脚本，**0 未声明** |
+| `connection:migrate plan --batch=C4` | ✅ SQL 合法（本切片**无 schema 变更**，未新增批次） |
+| `outcome-reconcile.mjs`（AC-16） | ✅ **14/14 一致**（全租户 + 任务内各一遍）；变异自证与两条负向均 `exit 1` |
+
+---
+
+## 7. Slice 2 —— 商业指标（**认领 AC-16**）
+
+> 目标：**介绍漏斗 / 人工工时 / 任务成本**经 `GET /api/v1/outcomes/metrics` 下发，
+> 且每个数字都能被原始表 SQL 独立复算。
+
+### 7.1 提交
+
+| 项 | 值 |
+|---|---|
+| 交付提交 | **`584975a`** — `feat(t08): Slice 2 —— 商业指标 + SQL 对账（AC-16）`（含 `[skip netlify]`） |
+| 文档提交 | **`<待填>`** — 四件套 / BACKLOG 回填（含 `[skip netlify]`） |
+| 发布提交 | **无** —— 未发版（同 §5：C4 未应用到生产） |
+| 生产部署 | 仍为 `6accc4170828`，**未变** |
+
+### 7.2 交付物
+
+| 文件 | 规模 | 说明 |
+|---|---|---|
+| `src/lib/outcome/metrics.ts` | **新建 ~300** | **纯函数内核**：`computeOutcomeMetrics` / `percent` / `round1` / `round2` / `unitsOf` / `METRIC_ASSUMPTIONS`；**零 IO** |
+| `src/lib/outcome/metrics-service.ts` | **新建 ~120** | 服务层：`collectOutcomeMetricCounts`（8 条 `count`）+ `getOutcomeMetrics` |
+| `src/app/api/v1/outcomes/metrics/route.ts` | **新建 ~40** | `GET`，能力 `outcome.read`（**全员**，同 `plan.md` §6） |
+| `src/lib/outcome/index.ts` | +40 | barrel 增补 |
+| `scripts/qa/outcome-reconcile.mjs` | **新建 ~330** | **SQL 对账**：原始表独立复算 + 逐字段比对 + 变异可检 |
+| `scripts/qa/emit-outcome-metrics.mts` | **新建 ~110** | 指标输出器（service 模式 / http 模式）；**被 tsc 覆盖**（`include: **/*.mts`） |
+| `scripts/qa/seed-t08-metrics.mjs` | **新建 ~280** | 计数**完全已知**的夹具（含噪声行 + 第二条 Mission） |
+| `tests/outcome/metrics.test.ts` / `metrics-api.test.ts` | **新建 19 + 15** | 内核与端点 |
+| `package.json` | +4 | `test:outcome` / `metrics:seed` / `metrics:emit` / `metrics:reconcile` |
+
+### 7.3 🔴 三个口径决定（口径不写明 = 数字不可复算）
+
+1. **不做时间窗口**（`basis.scope = 'all-time'`）。库里的 DateTime 是 TEXT 且格式不统一
+   （`...Z` / `...+00:00` / 空格分隔），跨格式的**范围比较**会给出**静默错误**的计数 ——
+   那正好摧毁 AC-16。时段口径与 `UsageRecord` 一起做（`risks.md` R10）。
+   唯一的收窄是 `?missionId=`（**格式无关**的等值过滤）。
+2. **漏斗是"当前状态快照"**，不是历史队列：`mutuallyAccepted` **包含已介绍的**；
+   `REVOKED` **不计入任何一档**（哪怕曾双方同意）。理由：这是**一条 SQL 能算出的**口径；
+   历史队列需要事件日志（不在本切片）。**每一档都能被原始表 SQL 复算** —— 这是 AC-16 的前提。
+3. **假设随响应下发**（`basis.assumptions`：单价 4 项 + 每次介入分钟数）。
+   它们是**占位假设**（`risks.md` R12），不是财务事实；下发它们是为了让"这个数字怎么来的"
+   一眼可见，并让对账脚本**从响应读**而不是自带一份常量 —— 否则改代码不改脚本会让两边同时错。
+
+### 7.4 AC-16 的证据（可复跑）
+
+```
+seed-t02 --reset --regenerate   →  seed-t08-metrics  →  emit-outcome-metrics  →  outcome-reconcile
+```
+
+| 场景 | 结果 |
+|---|---|
+| 全租户 `org_e2e` | **14 通过 / 0 不一致**（提案 9 / 待表态 3 / 同意 5 / 已介绍 4 / 成果 4 / 已验证 2 / 接管 1 / 死信 2；成本 3580 分） |
+| 任务内 `mission_t08_metrics` | **14 通过 / 0 不一致**（7 / 2 / 4 / 3 / 3 / 1；成本 2640 分） |
+| **变异自证**（`proposals=999` + `introduction` 单价改 1） | **exit 1**，4 处不一致；SQL 侧用**被篡改的假设**算出 1143 分 ≠ API 2640 分 ⇒ 证明脚本真的在**读响应里的假设** |
+| 负向（`verifiedLevels` 含 `SELF_REPORTED`） | **exit 1**（在"载荷自洽性"一步拦下） |
+| 负向（缺 `--api`） | **exit 1**（可操作的报错） |
+
+### 7.5 踩坑记录
+
+**对账脚本的第一版把 workflow 计数摊进了漏斗。** `expectedFunnel()` 写了 `{ ...counts }`，
+而 `counts` 里还有 `takeovers` / `deadLettered` —— 于是 SQL 侧多出两个键，与 API 的
+`funnel` 不等。**是脚本自己新加的"字段集一致"断言把它抓出来的**（只比对共同字段会让
+"API 多下发一个没人复算的数字"静默通过）。
+教训：**形状也是契约**；比对要覆盖**两个方向**的字段集差异，而不是只比共同字段。

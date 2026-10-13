@@ -43,6 +43,20 @@ node ./node_modules/eslint/bin/eslint.js src/app/console src/app/api/v1/outcomes
 npm run check:script-decls
 ```
 
+### 2.1 Slice 2（指标）的回滚面 —— 更简单
+
+`Slice 2` **零 schema 变更**（没有新批次、没有新表），全部是**新增只读代码**：
+
+| 资产 | 回滚方式 | 副作用 |
+|---|---|---|
+| `src/lib/outcome/metrics*.ts` + `route.ts`（metrics） | `git revert` 或 `git checkout <基线> -- <路径>` | 无（无写入路径） |
+| `scripts/qa/{seed-t08-metrics,emit-outcome-metrics,outcome-reconcile}` | 同上（纯工具） | 无 |
+| `package.json` 的 4 条脚本 | 同上 | 无 |
+| `tests/outcome/metrics*.test.ts` | 同上 | 无 |
+
+⚠️ **指标端点没有任何写路径** —— 回滚它不会留下不一致的状态（不像 Slice 1 会推进阶段）。
+唯一遗留：若已有人把指标用于外部报表，回滚后该端点 404。因此**优先修而不是回滚**。
+
 ---
 
 ## 3. schema 回滚（C4）

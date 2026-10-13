@@ -1,6 +1,6 @@
 # T08 · Outcome & Billing — 成果验证、成本归因与订阅（开工方案）
 
-> **状态**：🚧 **开工中（Slice 1 落地）**。本文件是设计 + 切片计划 + 验收口径。
+> **状态**：🚧 **开工中（Slice 1 / Slice 2 已落地，均未发版）**。本文件是设计 + 切片计划 + 验收口径。
 > **基线**：`95da9f1`（`main`，已发布 Netlify 生产，部署 `6accc4170828` ready @ 2026-10-12T11:27:19Z）。
 > **AC-21 从开工起就是 `BLOCKED`** —— Creem 凭据缺失（用户已决定暂不提供）。
 > 本文件把「沙箱能做到什么」与「只有真凭据才能做到什么」分开写，**不把沙箱结果冒充 PASS**。
@@ -164,7 +164,7 @@ myRole: 'REPORTER' | 'COUNTERPARTY' | 'OBSERVER'  // 而不是 userId
 | 切片 | 内容 | 验收落点 | 前置 |
 |---|---|---|---|
 | **1** 🚧 | **Outcome 域**：C4 迁移（`Outcome` / `OutcomeVerification`）+ 三级验证服务（派生判据 / 自我确认拒绝 / 租户隔离 / 审计）+ API（`GET /api/v1/outcomes` · `POST …/report` · `…/{id}/confirm` · `…/{id}/verify`）+ **阶段机接线** + Console `/console/outcomes` 屏 | **AC-15** | 无 |
-| 2 | **商业指标**：介绍漏斗（各阶段计数）+ 人工工时（T06 接管/人工介入）+ 任务成本，全部经 `/api/v1/outcomes/metrics` 下发，并配 **SQL 对账脚本**（`scripts/qa/outcome-reconcile.mjs`）逐项复算 | **AC-16** | Slice 1 |
+| 2 | ✅ **商业指标**：介绍漏斗（各阶段计数）+ 人工工时（T06 接手/人工介入）+ 任务成本，全部经 `/api/v1/outcomes/metrics` 下发，并配 **SQL 对账脚本**（`scripts/qa/outcome-reconcile.mjs`）逐项复算 | **AC-16** | Slice 1 |
 | 3 | **用量归集 + 订阅/限额 + 支付沙箱**：`UsageRecord` + 组织订阅状态机（**事件溯源**）+ Creem 适配器（**无凭据 → 沙箱捕获，`status=CAPTURED`**） | **AC-21（沙箱部分；真实扣款/退款 `BLOCKED`）** | Slice 1 |
 | 4 | Playwright 覆盖 AC-18 的 Outcomes 屏（七屏补第 6 屏）+ 无空按钮负测 | AC-18 增量 | 1 |
 
@@ -210,7 +210,7 @@ myRole: 'REPORTER' | 'COUNTERPARTY' | 'OBSERVER'  // 而不是 userId
 | AC | 判据 | 证据形式 |
 |---|---|---|
 | **AC-15** | 自报与双方确认**分开**；**不把系统猜测计为已验证** | ① `deriveVerificationLevel` 纯函数穷举测试；② `isVerified('SELF_REPORTED') === false` 负向断言；③ **自我确认被拒**（400）；④ UI 徽章由同一判据派生；⑤ 阶段机只在上报/确认后推进，**无自动置位** |
-| **AC-16** | 任务成本 / 人工工时 / 介绍漏斗**可复算** | Slice 2：API 下发的每个数字，都能被 `outcome-reconcile.mjs` 用**原始表 SQL** 独立算出同一个值（对账脚本 exit 0 = 一致） |
+| **AC-16** | 任务成本 / 人工工时 / 介绍漏斗**可复算** | ✅ **PASS（Slice 2）**：`GET /api/v1/outcomes/metrics` 下发的**每个数字**都被 `scripts/qa/outcome-reconcile.mjs` 用**原始表 SQL** 独立算出同一个值（全租户 14/0、任务内 14/0，`exit 0`）。**变异自证**：篡改计数或假设 → `exit 1`；负向：`verifiedLevels` 含 `SELF_REPORTED` 或缺 `--api` → `exit 1`。口径：**无时间窗口**（R10）+ **快照式漏斗** + **假设随响应下发**（R12） |
 | **AC-21** | 使用量可复算；退款/失败/升级/降级状态一致 | Slice 3：用量复算同上；状态一致性 = **事件溯源 + 非法迁移拒绝 + 幂等键**。🔴 **真实扣款/退款 = `BLOCKED`**（无 Creem 凭据），沙箱只证明"要发出去的请求是什么" |
 
 ---
@@ -221,3 +221,4 @@ myRole: 'REPORTER' | 'COUNTERPARTY' | 'OBSERVER'  // 而不是 userId
 |---|---|
 | 2026-10-13 | **开工**：读出 T08 的 AC-15/16/21 与依赖（T05/T06），确认阶段机 `ACTION_COMPLETED`/`OUTCOME_RECORDED` 无触发点、能力矩阵已预留 `outcome.*`、`/console/outcomes` 导航已占位。定下两条关键取舍：① **计费域新建**（不复用 B2C 的 `Subscription`/`Payment`）；② 三级验证用**事件溯源 + 纯派生**，使"自报不算验证"成为可断言判据。规划 4 个切片。 |
 | 2026-10-13 | **Slice 1 落地**：C4 迁移（`Outcome` / `OutcomeVerification`）+ 三级验证服务 + 4 个 API + **阶段机接线**（补齐 T06 的触发点空洞）+ Console `/console/outcomes` 屏。**AC-15 认领**；AC-16/21 待 Slice 2/3。 |
+| 2026-10-13 | **Slice 2 落地**：`/api/v1/outcomes/metrics`（`outcome.read` 全员）+ 纯函数指标内核（零 IO）+ **SQL 对账**（`outcome-reconcile.mjs`，原始表独立复算 14 项）+ 计数已知的夹具 + 输出器。**AC-16 认领**。三个口径决定：**不做时间窗口**（避 DateTime 格式混排的静默错算，R10）、**快照式漏斗**（一条 SQL 可复算）、**假设随响应下发**（不藏在代码里，R12）。本地实跑：全租户 14/0、任务内 14/0、变异自证与两条负向均 exit 1。 |
