@@ -102,7 +102,10 @@
     "metrics:reconcile": "node scripts/qa/outcome-reconcile.mjs",
     "billing:seed": "node scripts/qa/seed-t08-billing.mjs",
     "billing:emit": "npx tsx scripts/qa/emit-billing.mts",
-    "billing:reconcile": "node scripts/qa/billing-reconcile.mjs"
+    "billing:reconcile": "node scripts/qa/billing-reconcile.mjs",
+    "agent:seed": "npx tsx scripts/qa/seed-t09-agent.mts",
+    "agent:emit": "npx tsx scripts/qa/emit-agent-usage.mts",
+    "agent:reconcile": "node scripts/qa/agent-reconcile.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

@@ -1,11 +1,15 @@
 /**
- * T09 · Agent Runtime —— 模块出口（Slice 1：纯内核）
+ * T09 · Agent Runtime —— 模块出口（纯内核）
  *
  * 使用约定：
  *   1. **权限与披露不由本模块判定** —— 它只产**提案**；执行要过
  *      `assertExecutable()`，权限要过 `withTenant(capability)`，披露要过 `discloseSubject()`。
  *   2. **任何渲染都必须消费 `payload`（已过 zod），不得消费 `rawText`。**
  *   3. 想省成本就调 `checkQuota`，**不要**在调用之后再算账。
+ *   4. **本模块无 IO**（A1/A2/A5 执法）：要真实模型请用服务层的
+ *      `@/lib/agents` 的 `resolveRuntimeProvider()` —— 它会用这里的
+ *      `resolveProviderConfig()` 做判据，再在服务层构造 HTTP Provider。
+ *      内核只保留"认哪个键、默认模型是哪个"这类**纯**决策。
  */
 
 // ── 类型 ──
@@ -84,14 +88,17 @@ export {
   nextStatuses,
 } from './approval'
 
-// ── Provider ──
+// ── Provider（接口 + 纯环境解码；真实 HTTP 实现在服务层 —— 见 A5） ──
 export {
+  OPENAI_DEFAULTS,
   createFailingProvider,
   createStubProvider,
-  resolveProvider,
+  resolveProviderConfig,
   type ModelProvider,
   type ModelRequest,
   type ModelResult,
+  type OpenAIConfig,
+  type ProviderConfigResolution,
   type ProviderResolution,
 } from './provider'
 

@@ -31,9 +31,9 @@ import {
   canTransition,
   isSkillKey,
   ledgerTotals,
-  resolveProvider,
   runSkill,
   type AgentCallRecord,
+  type AgentQuota,
   type AgentRunStatus,
   type LedgerSnapshot,
   type PriceTable,
@@ -51,6 +51,7 @@ import {
   type AgentRunRow,
   type AgentRunSummaryDto,
 } from './dto'
+import { providerHonesty, resolveRuntimeProvider, type ProviderHonesty } from './provider-openai'
 
 /** 幂等作用域（与 `IdempotencyRecord.scope` 对齐）。 */
 export const AGENT_RUN_SCOPE = 'agent.run'
@@ -335,8 +336,23 @@ export interface CreateAgentRunInput {
   /** 来自 `Idempotency-Key` 请求头（**必需** —— 缺省不退化为非幂等）。 */
   idempotencyKey: unknown
   subjectLabel?: unknown
-  /** 测试/接线用：显式覆盖 provider 解析（生产路径不传，走 `resolveProvider(process.env)`）。 */
+  /**
+   * 测试/接线用：显式覆盖 provider 解析。
+   * 生产路径不传 → 走 `resolveRuntimeProvider(process.env)`：
+   * 缺 `OPENAI_API_KEY` 即 `unavailable` → 内核走**明示降级**（绝不静默用假模型）。
+   */
   provider?: ProviderResolution
+  /**
+   * 额度与单价。**默认是 `DEFAULT_QUOTA` / `DEFAULT_PRICE_TABLE` 这两个占位假设**
+   * （组织级真实额度配置尚未接线）。
+   *
+   * 🔴 为什么把它们做成**注入点**而不是写死：写死意味着"限额逻辑无法被端到端测试"
+   *    —— 默认额度是 500 分（≈11 万次调用），要触发 `BLOCKED_QUOTA` 得先灌 11 万条账。
+   *    注入点让"额度耗尽 → 拒绝且零调用"这件事可以**真的被跑出来**，
+   *    而不是只能靠读代码相信它。缺的是"配置从哪来"，不是"配置能不能生效"。
+   */
+  quota?: AgentQuota
+  price?: PriceTable
   now?: Date
 }
 
@@ -368,7 +384,7 @@ export async function createAgentRun(
       return row ? toAgentRunDto(row) : null
     },
     create: async () => {
-      const provider = input.provider ?? resolveProvider(process.env)
+      const provider = input.provider ?? resolveRuntimeProvider(process.env)
       // ① 先把账本读回来（**调用之前**），② 再跑编排。
       const ledger = await loadLedger(ctx.organizationId, now)
       const result = await runSkill({
@@ -376,7 +392,9 @@ export async function createAgentRun(
         input: input.input,
         provider,
         ledger,
-        quota: DEFAULT_QUOTA,
+        // 两侧同源：注入什么就判什么；不传则同为 `DEFAULT_QUOTA`（占位假设）。
+        quota: input.quota ?? DEFAULT_QUOTA,
+        price: input.price ?? DEFAULT_PRICE_TABLE,
         now: () => now,
       })
 
@@ -614,14 +632,29 @@ export interface AgentUsageDto {
     price: PriceTable
     period: string
   }
+  /**
+   * 🔴 **诚实块**（与 T08 `gateway` 同口径）：真实模型调用到底开没开。
+   *
+   * 为什么要下发它、而不是让前端自己猜：没有它，"跑了 3 次、花了 0 分"
+   * 会被读成"模型免费" —— 而真相是"没配凭据，走的是规则式兜底"。
+   * 对账脚本用它与 `AgentCall.providerKind` **双向核对**（见 `agent-reconcile.mjs` §6）。
+   */
+  provider: ProviderHonesty
 }
 
 export async function agentUsage(
   ctx: TenantContext,
-  options: { now?: Date; price?: PriceTable } = {},
+  options: {
+    now?: Date
+    price?: PriceTable
+    /** 与 `createAgentRun` 同源：**下发的那份额度必须就是执行时用的那份**。 */
+    quota?: AgentQuota
+    env?: Record<string, string | undefined>
+  } = {},
 ): Promise<AgentUsageDto> {
   const now = options.now ?? new Date()
   const price = options.price ?? DEFAULT_PRICE_TABLE
+  const quota = options.quota ?? DEFAULT_QUOTA
   const periodKey = periodKeyOf(now)
 
   const ledger = await loadLedger(ctx.organizationId, now)
@@ -655,16 +688,21 @@ export async function agentUsage(
     bySkill,
     runs: { total: runRows.length, byStatus },
     quota: {
-      maxMicroCents: DEFAULT_QUOTA.maxMicroCents,
-      maxHighCostCalls: DEFAULT_QUOTA.maxHighCostCalls,
+      maxMicroCents: quota.maxMicroCents,
+      maxHighCostCalls: quota.maxHighCostCalls,
       usedMicroCents: totals.microCents,
-      remainingMicroCents: Math.max(DEFAULT_QUOTA.maxMicroCents - totals.microCents, 0),
+      remainingMicroCents: Math.max(quota.maxMicroCents - totals.microCents, 0),
       highCostCalls: totals.highCostCalls,
     },
     assumptions: {
-      quota: '占位假设：组织级真实额度配置尚未接线（见 T09/slice-2.md §未覆盖）。',
+      quota:
+        quota === DEFAULT_QUOTA
+          ? '占位假设：组织级真实额度配置尚未接线（见 T09/slice-2.md §未覆盖）。'
+          : '注入的额度（测试/接线）：与执行时判定用的是同一份对象。',
       price,
       period: '按 UTC 自然月归集（与 T08 用量账同口径：期次是纯等值比较，与日期格式解耦）。',
     },
+    // env 显式可注入：让"真实调用是否开启"这件事在测试里是确定的，而不是看跑测的机器配没配密钥。
+    provider: providerHonesty(options.env ?? process.env),
   }
 }

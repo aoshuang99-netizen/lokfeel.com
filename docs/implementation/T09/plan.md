@@ -63,13 +63,24 @@ T09 卡片与 AC-08 的四条要求，逐条对应到**代码里不存在的代�
 - 🔴 新能力名要加进 `TenantCapability`（`agent.run` / `agent.approve`），并同步 `ROLE_CAPABILITIES`。
 - ⚠️ 交付时补充：`agent.run`（OPERATOR+）与 `agent.approve`（ADMIN+）**必须分离** —— 否则同一人可自我盖章，AC-08 在**制度层**被绕过。
 
-### Slice 3 · 真实 Provider + 对账 + 对抗/预算测试
+### Slice 3 · 真实 Provider + 对账 + 对抗/预算测试 —— ✅ 已交付（见 `slice-3.md`）
 
 - 真实 `OpenAIProvider`（仅当 `OPENAI_API_KEY` 存在；否则该 provider **不可用**并明确报错）。
-- **成本对账脚本**（AC-20）：原始表 SQL 独立复算每次调用的归因，与 API 响应双向比字段集。
-- **对抗测试夹具**（AC-08）：一组注入样本（改权限 / 套资料 / 绕审批 / 闭合标签逃逸），断言
-  **注入后权限判定不变、披露集合不变、审批状态不变**。
-- **预算测试**（AC-20）：限额耗尽 → `BLOCKED_QUOTA`，且**没有**产生模型调用记录。
+  🔴 **交付时的边界调整**：HTTP 实现落在**服务层** `src/lib/agents/provider-openai.ts`，
+  内核只保留**纯环境解码** `resolveProviderConfig(env)`；并给 `check-agent-invariants`
+  **新增 A5**（内核不得出现网络调用）—— 否则"内核无 IO"会从性质退化成口号（A2 只挡数据库）。
+- **成本对账脚本**（AC-20）：`scripts/qa/agent-reconcile.mjs`（+ `emit-agent-usage.mts` /
+  `seed-t09-agent.mts`）用原始表 SQL 独立复算**逐次调用**归因，与 API 响应**双向比字段集**；
+  含**变异自证**（改单价/改 token 必须让结果变）与诚实条款（`realCallsEnabled=false`
+  ⇒ 本期不得有 `OPENAI` 调用行；期望值须显式给出，见 `slice-3.md` §3.1）。
+- **对抗测试夹具**（AC-08）：`tests/agents/adversarial-injection.test.ts` —— 闭合标签逃逸
+  （6 种写法含零宽）+ 注入语料（8 条），断言**注入后权限判定不变、披露集合不变、审批状态不变**；
+  每条"防住了"的断言都配**负向对照**。
+- **预算测试**（AC-20）：`tests/agents/budget.test.ts` —— 限额耗尽 → `BLOCKED_QUOTA`，
+  且**没有**产生模型调用记录（provider 零调用自证 + 账本零新增 A/B 对照）。
+  🔴 为此给 `createAgentRun` / `agentUsage` 加了 `quota` / `price` **注入点**
+  （默认额度 500 分 ≈ 11 万次调用，不注入就无法端到端跑出限额）。
+  ⚠️ 判定用的是技能的 `costProfile` **预估**，不是"上次实际花了多少"（差一个数量级，见 §3.2）。
 
 ## 4. 门禁（沿用既有 + 新增）
 
@@ -84,6 +95,8 @@ npm run check:ui-invariants  # 若 Slice 2/3 触及 living 目录
 **新增（建议）**：`check:agent-invariants` —— 静态断言 `src/lib/agent` 内
 **不存在**从模型输出到权限/白名单/配置的读取路径（例如不得出现
 `providerText` 参与 `capability` / `audience` / `role` 的判定），把"路径不存在"变成**可复跑的检查**。
+已实现为 **A1–A5**：A1 不碰 tenancy · A2 不碰 DB · A3 不当代码执行 · A4 无定时器 ·
+**A5 无网络调用**（Slice 3 新增 —— 真实 Provider 接上后，这条是"内核纯净"的执法点）。
 
 ## 5. 风险与取舍
 
@@ -99,3 +112,6 @@ npm run check:ui-invariants  # 若 Slice 2/3 触及 living 目录
 
 - Slice 1 是**纯新增文件**，回滚 = 删除目录（无副作用）。
 - Slice 2 的 C6 迁移必须是**纯新增表**，回滚 = 停用路由 + 保留表（不删表，与 T08 同口径）。
+- Slice 3 = **纯新增文件**（`provider-openai.ts` + 3 个 QA 脚本 + 3 个测试套件）+
+  `provider.ts` 里把一个永远 `unavailable` 的占位换成纯函数 + `runs.ts` 两个**可选**注入点。
+  回滚 = 删新增文件 / 恢复占位函数；**无 schema 变更**，不涉及迁移与数据。

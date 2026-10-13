@@ -21,6 +21,17 @@
  *   A4  不得 `setTimeout` / `setInterval`
  *       —— 与 UI 门禁 R1 同一理由：不得用定时器伪造"执行成功"。
  *
+ *   A5  不得出现任何**网络调用**（`fetch` / `XMLHttpRequest` / `node:http(s)` /
+ *       `undici` / `axios` / `node-fetch` / `got`）
+ *       —— Slice 3 把真实模型端点接上了（`src/lib/agents/provider-openai.ts`）。
+ *          它**刻意**放在**服务层**（复数目录）：内核的"无 IO"必须是**可执行**的性质
+ *          （跑内核单测不需要网络、不需要凭据），一旦这里出现 `fetch`，
+ *          "内核纯净"就从性质退化成口号 —— 而 A2 只挡数据库，挡不住网络。
+ *          因此判据（认哪个 env 键、默认模型、超时）留内核，
+ *          **怎么打**（HTTP 请求与响应解析）留在服务层。
+ *          ⚠️ 本规则是**文本级**的（`\bfetch\b` 即命中，含 `typeof fetch` 这类类型引用）：
+ *             保守取严 —— 内核本来就不需要提到它；要提就说明边界该重新讨论。
+ *
  * 自证：`node scripts/check-agent-invariants.mjs --self-test`
  *   在扫描目录内写**单条违反**的临时文件 → 断言 exit 1 且命中对应 `[An]`；
  *   再写**合法**文件做负向对照（必须仍 exit 0）；`finally` 删除。
@@ -136,6 +147,15 @@ function checkFile(rel) {
     if (/\bset(Timeout|Interval)\s*\(/.test(line)) {
       problems.push(`[A4] ${at} 使用了 setTimeout/setInterval —— 不得用定时器伪造执行成功`)
     }
+    if (/\bfetch\b/i.test(line)) {
+      problems.push(`[A5] ${at} 内核出现了 fetch —— 网络调用属服务层（src/lib/agents/provider-openai.ts）`)
+    }
+    if (/\bnew\s+XMLHttpRequest\b/.test(line)) {
+      problems.push(`[A5] ${at} 内核出现了 XMLHttpRequest —— 网络调用属服务层`)
+    }
+    if (/from\s+['"](?:node:)?https?['"]/.test(line) || /from\s+['"](?:undici|axios|node-fetch|got|ky)['"]/.test(line)) {
+      problems.push(`[A5] ${at} 内核引入了网络库/网络模块 —— 网络调用属服务层`)
+    }
   })
 }
 
@@ -176,6 +196,7 @@ const MUTANTS = [
   { rule: 'A2', body: `import { db } from '@/lib/db'\nexport const x = db\n` },
   { rule: 'A3', body: `export const F = (html: string) => <div dangerouslySetInnerHTML={{ __html: html }} />\n` },
   { rule: 'A4', body: `export const x = () => setTimeout(() => {}, 0)\n` },
+  { rule: 'A5', body: `export const call = (url: string) => fetch(url, { method: 'POST' })\n` },
 ]
 const CONTROL = `export const ok = { note: '合法文件：不违反任何一条' }\n`
 const PREFIX = '__mutant-agent-'
@@ -251,7 +272,7 @@ function selfTest() {
     for (const f of failures) console.error(`  · ${f}`)
     return 1
   }
-  console.log(`\n✅ Agent 不变量自证通过：${MUTANTS.length} 条规则（A1–A4）全部被证明生效；合法文件未误报；临时文件已清理。`)
+  console.log(`\n✅ Agent 不变量自证通过：${MUTANTS.length} 条规则（A1–A5）全部被证明生效；合法文件未误报；临时文件已清理。`)
   return 0
 }
 
@@ -279,6 +300,6 @@ if (!ok) {
   process.exit(1)
 }
 
-console.log(
-  `\n✅ Agent 不变量全部通过（A1 内核不碰授权 · A2 内核无 IO · A3 模型输出不当代码 · A4 无定时器伪成功）`,
-)
+  console.log(
+    `\n✅ Agent 不变量全部通过（A1 内核不碰授权 · A2 内核无 IO · A3 模型输出不当代码 · A4 无定时器伪成功 · A5 内核无网络调用）`,
+  )
