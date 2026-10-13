@@ -225,6 +225,12 @@
 - **交付**：`Outcome`（`verification_level ∈ {self_reported, counterparty_confirmed, externally_verified}`）+ `UsageRecord` + Creem 接入
 - **风险**：🔴 **Creem 凭据未提供（你已决定暂不提供）→ AC-21 只能标 `BLOCKED`，不得标 PASS**
 - **铁律**：自报结果**不算**验证成功；指标必须可复算（SQL 对账）
+- **进度**：🚧 **Slice 1 已落地（未发版）** —— C4 迁移（`Outcome` / `OutcomeVerification`）+
+  三级验证服务（**级别是派生值、不是入参**）+ 4 个 API（列表 / 上报 / 对手方确认 / 运营核验）+
+  **补齐 T06 留下的阶段机触发点空洞**（`ACTION_COMPLETED` / `OUTCOME_RECORDED` 此前无任何调用点）+
+  Console `/console/outcomes` 屏（**AC-18 七屏中的第 6 屏**）。
+  Slice 2（商业指标可复算）/ Slice 3（用量归集 + 计费沙箱）待开工。
+  方案与切片计划见 `docs/implementation/T08/plan.md`。
 
 ### T09 · Agent Runtime — 结构化意图与沟通建议
 - **目标**：LLM 输出 schema 校验 + 提示注入防御 + 人工批准节点 + 模型成本限额 + 失败降级。
@@ -349,9 +355,21 @@
 
 ## 7. 下一个动作
 
-**T06 已交付并上线 → T07 Slice 1 + Slice 2 + Slice 3 已落地并上线**（发版 `564802a` /
-部署 `6accbb986762` @ 2026-10-12T10:51:04Z，**无 schema 变更**）；T07 最后两屏
-（Outcomes / Agents → Slice 4，分别等 T08 的成果面与 T09 选型）与 T08 待开工。
+**T06 已上线 → T07 全三切片已上线 → T08 Slice 1 已落地（未发版）**。
+
+> **T08 Slice 1（2026-10-13，未发版）**：C4 迁移（`Outcome` / `OutcomeVerification`，**纯新增**）
+> + 三级成果验证服务（**级别是派生值、不是入参** —— AC-15 的落点）+ 4 个 API
+> （列表 / 上报 / 对手方确认 / 运营核验）+ **补齐 T06 留下的阶段机触发点空洞**
+> （`ACTION_COMPLETED` / `OUTCOME_RECORDED` 此前**无任何调用点**）+ Console `/console/outcomes`
+> 屏（**AC-18 七屏中的第 6 屏**）。**AC-15 认领**；AC-16 / AC-21 待 Slice 2 / Slice 3。
+>
+> 🔴 **未发版的原因**：C4 表**尚未在生产创建** —— 若先发版，线上运行时第一步就查
+> `Outcome` → 表不存在 → 500（与 T06 §5.1 同型）。发版必须与 `apply --batch=C4` **绑定**，
+> 顺序：`db-snapshot → plan → apply C4 → verify → 发布提交（不带跳过标记）`。
+> 详见 `docs/implementation/T08/changes.md` §5。
+>
+> 下一步：**T08 Slice 2**（商业指标：漏斗 / 工时 / 成本 + `outcome-reconcile.mjs` SQL 对账
+> → AC-16）或 **发版 T08 Slice 1**。T07 最后一屏（Agents）仍等 T09 技术栈拍板（§6-⑥）。
 
 > ✅ **已发现的既有不一致 → 已修复并补发**（修复提交 `95da9f1` / 部署 `6accc4170828` @ 11:27Z）：
 > `src/app/console/layout.tsx` 未登录时把回跳地址
@@ -448,6 +466,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T07 · Console Slice 3 | `tsc` 0 错误 | `tests/connection` **373 → 408**（16 → 18 套）· `tests/tenancy` **87 → 120**（5 → 7 套）· 全量 **984 → 1052**（50 → 54 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/connections/pipeline`（`workflow.read`）+ `GET/PATCH /api/v1/org`；负向断言防 `withTenant(some)` 降级、`ADMIN` 也不可改组织档案；AC-18 **仍未认领**（Agents 等 T09 / Outcomes 等 T08） |
 | T07 · Slice 2 + 3 **发版**（`564802a`） | `tsc --noEmit` **0 error** | 全量 jest **54 套 1052 passed** | ESLint 0/0（含目录级）· `check:script-decls` 57/0 | **上线复验 43/43**（`verify-t07-prod.mjs` 扩展至 Slice 1–3：五屏匿名 307 落在 `/console`、7 个 API 匿名 401+JSON、0 泄漏）+ `verify-t06-prod` **25/25** · `verify-t04-prod` **19/19** · `verify-public-origin` **13/13**。**发版前基线 19 通过 / 10 失败**（10 处**精确落在**未上线的 Slice 2/3 面）⇒ 证明该脚本能区分「路由缺失」与「已上线但被守卫拦下」 |
 | T07 · `/console` 回跳修复 **补发**（`95da9f1`） | `tsc --noEmit` **0 error** | 全量 jest **54 套 1052 passed** | ESLint 0/0 · `check:script-decls` 57/0 | **上线复验 48/48**（较修复前 +5：新增 §2b 带 Referer 探针 —— `Referer=/console/settings` → **回跳保留深链**、带 query 亦保留、**别态 Referer 不被采信**），同类 T06 25/25 · T04 19/19 · 窗口期 13/13。修掉 `console/layout.tsx` 未登录时写死 `callbackUrl=/console`（**Slice 1 起既有** → 深链登录后回入口） |
+| T08 · Outcome Slice 1（**未发版**） | `tsc --noEmit` **0 error** | `tests/outcome` **59**（**新增 3 套**）· 全量 **1052 → 1111**（54 → 57 套） | ESLint 0/0（含目录级）· `check:script-decls` 57/0 | **新增** C4 迁移（`Outcome` / `OutcomeVerification`，纯新增 2 表 + 7 索引 + 3 外键，含**软引用反向断言**）+ 4 个 API（列表 / 上报 / 对手方确认 / 运营核验）+ **阶段机接线**（补齐 T06 无触发点空洞）+ Console `/console/outcomes` 屏（**AC-18 第 6 屏**）；负向断言：`isVerified('SELF_REPORTED')===false`、**自我确认 → 400**、`OPERATOR → 403` 且**不触碰 DB**（`outcome.verify` 仅 ADMIN+）、请求体塞 `verificationLevel` 无效；`migrate plan --batch=C4` SQL 合法（纯 `CREATE ... IF NOT EXISTS`）。**AC-15 PASS**；AC-16 / AC-21 待 Slice 2 / 3。🔴 **未发版**：C4 尚未应用到生产（发版须与 apply C4 绑定） |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash
