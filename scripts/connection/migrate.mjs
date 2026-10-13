@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * T02–T06 · Connection OS 迁移（批次 C0 – C3）
+ * T02–T08 · Connection OS 迁移（批次 C0 – C4）
  *
  * 用法：
  *   node scripts/connection/migrate.mjs probe                      # 只读：表/列/索引现状
@@ -15,6 +15,8 @@
  *   C2 = ConnectionProposal / ProposalDecision                 （T05）
  *   C3 = WorkflowJob / NotificationDelivery / IntroductionWorkflow
  *        （T06；IntroductionWorkflow 引用 C2，其余两表仅指向 Organization）
+ *   C4 = Outcome / OutcomeVerification
+ *        （T08；OutcomeVerification 引用 C4 的 Outcome，Outcome 仅指向 Organization）
  *
  * 设计约束（继承 T01 的 scripts/tenancy/migrate.mjs）：
  *   1. **纯新增** —— 各批次只 `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`，
@@ -63,9 +65,18 @@ export const BATCHES = {
     tables: ['WorkflowJob', 'NotificationDelivery', 'IntroductionWorkflow'],
     label: 'T06 · 可靠投递与跟进状态机（WorkflowJob / NotificationDelivery / IntroductionWorkflow）',
   },
+  C4: {
+    // C4 内部依赖：OutcomeVerification 的外键指向 Outcome。
+    // Outcome 只对 Organization 建 FK —— 其 proposalId / reporterId / counterpartyId 是
+    // **软引用**（无 FK），刻意不随被引用行级联删除：成果是被删资源的**证据**，
+    // 删提案/注销用户不应抹掉"这里曾经发生过一次成功的连接"。
+    // 数组顺序 = 创建顺序；rollback 取其逆序（先删 OutcomeVerification）。
+    tables: ['Outcome', 'OutcomeVerification'],
+    label: 'T08 · 成果验证（Outcome / OutcomeVerification）',
+  },
 }
 
-export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3']
+export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4']
 
 // ══════════════════════════════════════════════════════════════════════
 // 环境加载
@@ -359,7 +370,48 @@ function sqlC3() {
   ]
 }
 
-const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3 }
+function sqlC4() {
+  return [
+    // ── Outcome（成果；proposalId / reporterId / counterpartyId 均为软引用，无 FK）──
+    `CREATE TABLE IF NOT EXISTS "Outcome" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "proposalId" TEXT NOT NULL,
+  "missionId" TEXT NOT NULL,
+  "reporterId" TEXT NOT NULL,
+  "counterpartyId" TEXT NOT NULL,
+  "summary" TEXT NOT NULL,
+  "verificationLevel" TEXT NOT NULL DEFAULT 'SELF_REPORTED',
+  "occurredAt" DATETIME NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL,
+  CONSTRAINT "Outcome_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "Outcome_proposalId_key" ON "Outcome"("proposalId")`,
+    `CREATE INDEX IF NOT EXISTS "Outcome_organizationId_verificationLevel_idx" ON "Outcome"("organizationId", "verificationLevel")`,
+    `CREATE INDEX IF NOT EXISTS "Outcome_organizationId_createdAt_idx" ON "Outcome"("organizationId", "createdAt")`,
+    `CREATE INDEX IF NOT EXISTS "Outcome_organizationId_missionId_idx" ON "Outcome"("organizationId", "missionId")`,
+
+    // ── OutcomeVerification（验证事件；唯一强 FK 指向 Outcome，CASCADE）──
+    `CREATE TABLE IF NOT EXISTS "OutcomeVerification" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "outcomeId" TEXT NOT NULL,
+  "level" TEXT NOT NULL,
+  "actorId" TEXT,
+  "evidence" TEXT,
+  "note" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "OutcomeVerification_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "OutcomeVerification_outcomeId_fkey" FOREIGN KEY ("outcomeId") REFERENCES "Outcome" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "OutcomeVerification_outcomeId_level_actorId_key" ON "OutcomeVerification"("outcomeId", "level", "actorId")`,
+    `CREATE INDEX IF NOT EXISTS "OutcomeVerification_organizationId_createdAt_idx" ON "OutcomeVerification"("organizationId", "createdAt")`,
+    `CREATE INDEX IF NOT EXISTS "OutcomeVerification_outcomeId_idx" ON "OutcomeVerification"("outcomeId")`,
+  ]
+}
+
+const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4 }
 
 /** 期望存在的索引（verify 断言用）。 */
 const EXPECTED_INDEXES = [
@@ -401,6 +453,14 @@ const EXPECTED_INDEXES = [
   { name: 'IntroductionWorkflow_proposalId_key', table: 'IntroductionWorkflow', unique: true },
   { name: 'IntroductionWorkflow_organizationId_stage_idx', table: 'IntroductionWorkflow', unique: false },
   { name: 'IntroductionWorkflow_organizationId_missionId_idx', table: 'IntroductionWorkflow', unique: false },
+  // ── C4 ──
+  { name: 'Outcome_proposalId_key', table: 'Outcome', unique: true },
+  { name: 'Outcome_organizationId_verificationLevel_idx', table: 'Outcome', unique: false },
+  { name: 'Outcome_organizationId_createdAt_idx', table: 'Outcome', unique: false },
+  { name: 'Outcome_organizationId_missionId_idx', table: 'Outcome', unique: false },
+  { name: 'OutcomeVerification_outcomeId_level_actorId_key', table: 'OutcomeVerification', unique: true },
+  { name: 'OutcomeVerification_organizationId_createdAt_idx', table: 'OutcomeVerification', unique: false },
+  { name: 'OutcomeVerification_outcomeId_idx', table: 'OutcomeVerification', unique: false },
 ]
 
 /** 期望存在的外键（表 → 引用目标），verify 断言用。 */
@@ -436,6 +496,13 @@ const EXPECTED_FKS = [
   { table: 'NotificationDelivery', target: 'Organization' },
   { table: 'IntroductionWorkflow', target: 'Organization' },
   { table: 'IntroductionWorkflow', target: 'ConnectionProposal' },
+  // ── C4 ──
+  // Outcome 只指向 Organization；OutcomeVerification 额外指向 Outcome。
+  // （`Outcome.proposalId` / `.reporterId` / `.counterpartyId` 是软引用，**故意没有 FK** ——
+  //  若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
+  { table: 'Outcome', target: 'Organization' },
+  { table: 'OutcomeVerification', target: 'Organization' },
+  { table: 'OutcomeVerification', target: 'Outcome' },
 ]
 
 /** 全部受管表（verify 用）。 */
@@ -808,6 +875,66 @@ async function cmdVerify(client) {
     ok('IntroductionWorkflow 关键列均为 NOT NULL', false, '表不存在')
   }
 
+  // 4e) T08 · Outcome / OutcomeVerification
+  const outcomeCols = await tableColumns(client, 'Outcome')
+  if (outcomeCols) {
+    const sql = (await tableCreateSql(client, 'Outcome')) || ''
+    const required = [
+      'organizationId',
+      'proposalId',
+      'missionId',
+      'reporterId',
+      'counterpartyId',
+      'summary',
+      'verificationLevel',
+    ].every((c) => new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql))
+    ok('Outcome 关键列均为 NOT NULL', required)
+    ok(
+      "Outcome.verificationLevel 默认 'SELF_REPORTED'（自报是下限，不是验证成功）",
+      /"verificationLevel"\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'SELF_REPORTED'/.test(sql)
+    )
+    // 🔴 **反向断言 × 3**：这三列是软引用，**不该**有外键。
+    // 若有人"顺手"补 FK，删提案/注销用户会级联抹掉成果证据 —— 而那正是要留下的账。
+    ok(
+      'Outcome.proposalId 无外键（软引用，删提案不抹成果证据）',
+      !/FOREIGN KEY\s+\("proposalId"\)/.test(sql)
+    )
+    ok(
+      'Outcome.reporterId 无外键（软引用，用户注销仍留痕）',
+      !/FOREIGN KEY\s+\("reporterId"\)/.test(sql)
+    )
+    ok('Outcome.counterpartyId 无外键（软引用）', !/FOREIGN KEY\s+\("counterpartyId"\)/.test(sql))
+  } else {
+    ok('Outcome 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  const verifCols = await tableColumns(client, 'OutcomeVerification')
+  if (verifCols) {
+    const sql = (await tableCreateSql(client, 'OutcomeVerification')) || ''
+    const required = ['organizationId', 'outcomeId', 'level'].every((c) =>
+      new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('OutcomeVerification 关键列均为 NOT NULL', required)
+    // 可空列：系统核验无 actor、核验不一定带证据 —— 建成 NOT NULL 会让这两条合法路径写不进去。
+    ok(
+      'OutcomeVerification.actorId 可为空（系统核验无 actor）',
+      /"actorId"\s+TEXT\b(?!\s+NOT)/.test(sql)
+    )
+    ok(
+      'OutcomeVerification.evidence 可为空（核验不一定带证据）',
+      /"evidence"\s+TEXT\b(?!\s+NOT)/.test(sql)
+    )
+    // 正向：验证记录脱离成果没有意义 → 强 FK **必须**在。
+    ok(
+      'OutcomeVerification.outcomeId → Outcome 外键存在',
+      /CONSTRAINT\s+"OutcomeVerification_outcomeId_fkey"\s+FOREIGN KEY\s+\("outcomeId"\)\s+REFERENCES\s+"Outcome"/.test(
+        sql
+      )
+    )
+  } else {
+    ok('OutcomeVerification 关键列均为 NOT NULL', false, '表不存在')
+  }
+
   // 5) 孤儿行（跨表完整性）
   const orphanMission = await countRows(
     client,
@@ -903,6 +1030,51 @@ async function cmdVerify(client) {
       'ProposalDecision 无孤儿 proposalId',
       orphanDecisionProposal === 0,
       `孤儿 ${orphanDecisionProposal}`
+    )
+  }
+
+  // 5d) T08 · 成果与验证的引用完整性
+  //
+  // ⚠️ 刻意**不**断言 `Outcome.proposalId` / `.reporterId` / `.counterpartyId` 的孤儿 ——
+  // 它们是**软引用**：提案被删而成果留着、用户注销而痕迹留着，都是**设计意图**（成果是证据）。
+  // 为它们写孤儿断言，等于把刻意的设计判成缺陷，且会逼后人"顺手"补 FK。
+  const orphanOutcomeOrg = await countRows(
+    client,
+    'Outcome',
+    ` WHERE "organizationId" NOT IN (SELECT "id" FROM "Organization")`
+  )
+  if (orphanOutcomeOrg !== null) {
+    ok('Outcome 无孤儿 organizationId', orphanOutcomeOrg === 0, `孤儿 ${orphanOutcomeOrg}`)
+  }
+
+  const dupOutcomeProposal = await countRows(
+    client,
+    'Outcome',
+    ` GROUP BY "proposalId" HAVING COUNT(*) > 1`
+  )
+  if (dupOutcomeProposal !== null) {
+    ok('Outcome 无重复 proposalId', dupOutcomeProposal === 0, `重复组 ${dupOutcomeProposal}`)
+  }
+
+  const orphanVerifOrg = await countRows(
+    client,
+    'OutcomeVerification',
+    ` WHERE "organizationId" NOT IN (SELECT "id" FROM "Organization")`
+  )
+  if (orphanVerifOrg !== null) {
+    ok('OutcomeVerification 无孤儿 organizationId', orphanVerifOrg === 0, `孤儿 ${orphanVerifOrg}`)
+  }
+
+  const orphanVerifOutcome = await countRows(
+    client,
+    'OutcomeVerification',
+    ` WHERE "outcomeId" NOT IN (SELECT "id" FROM "Outcome")`
+  )
+  if (orphanVerifOutcome !== null) {
+    ok(
+      'OutcomeVerification 无孤儿 outcomeId（强 FK，必为 0）',
+      orphanVerifOutcome === 0,
+      `孤儿 ${orphanVerifOutcome}`
     )
   }
 

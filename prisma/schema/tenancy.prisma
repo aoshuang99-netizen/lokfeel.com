@@ -72,6 +72,14 @@ model Organization {
   notificationDeliveries NotificationDelivery[]
   introductionWorkflows IntroductionWorkflow[]
 
+  // ── T08 Connection OS 反向关系（outcome.prisma）──
+  //
+  // ⚠️ 注意 `Outcome.proposalId` / `.reporterId` / `.counterpartyId` **不在此列**：
+  // 它们是**软引用**（无 FK）—— 成果是被删资源的证据。只有 `OutcomeVerification.outcomeId`
+  // 建了真 FK（CASCADE）。
+  outcomes             Outcome[]
+  outcomeVerifications OutcomeVerification[]
+
   @@index([status])
 }
 

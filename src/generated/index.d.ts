@@ -275,6 +275,24 @@ export type AnalyticsEventDef = $Result.DefaultSelection<Prisma.$AnalyticsEventD
  */
 export type AnalyticsDailyAgg = $Result.DefaultSelection<Prisma.$AnalyticsDailyAggPayload>
 /**
+ * Model Outcome
+ * 成果记录：一次连接（提案）的最终产出。
+ * 
+ * 与 `IntroductionWorkflow` 的关系：提案 1:1 绑定一份成果。
+ * `OUTCOME_RECORDED` 是阶段机终态（见 `src/lib/workflow/stage-machine.ts`），
+ * 但本表**不**强 FK 到提案 —— 见下 `proposalId` 注释。
+ */
+export type Outcome = $Result.DefaultSelection<Prisma.$OutcomePayload>
+/**
+ * Model OutcomeVerification
+ * 验证记录：每一次"确认 / 核验"是一条**不可变记录**。
+ * 
+ * 事件溯源：级别由**记录集**派生（`deriveVerificationLevel`），不由单条记录决定。
+ * 想撤销一次确认，就再记一条相反语义的记录，而不是**改写历史** ——
+ * 后者会让"这条成果当时算不算数"永远无法回溯。
+ */
+export type OutcomeVerification = $Result.DefaultSelection<Prisma.$OutcomeVerificationPayload>
+/**
  * Model Organization
  * 租户（组织）。对应契约 organizations 表。
  */
@@ -852,6 +870,15 @@ export const ReportStatus: {
 export type ReportStatus = (typeof ReportStatus)[keyof typeof ReportStatus]
 
 
+export const OutcomeVerificationLevel: {
+  SELF_REPORTED: 'SELF_REPORTED',
+  COUNTERPARTY_CONFIRMED: 'COUNTERPARTY_CONFIRMED',
+  EXTERNALLY_VERIFIED: 'EXTERNALLY_VERIFIED'
+};
+
+export type OutcomeVerificationLevel = (typeof OutcomeVerificationLevel)[keyof typeof OutcomeVerificationLevel]
+
+
 export const MembershipRole: {
   OWNER: 'OWNER',
   ADMIN: 'ADMIN',
@@ -1063,6 +1090,10 @@ export const ReportReason: typeof $Enums.ReportReason
 export type ReportStatus = $Enums.ReportStatus
 
 export const ReportStatus: typeof $Enums.ReportStatus
+
+export type OutcomeVerificationLevel = $Enums.OutcomeVerificationLevel
+
+export const OutcomeVerificationLevel: typeof $Enums.OutcomeVerificationLevel
 
 export type MembershipRole = $Enums.MembershipRole
 
@@ -1678,6 +1709,26 @@ export class PrismaClient<
   get analyticsDailyAgg(): Prisma.AnalyticsDailyAggDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.outcome`: Exposes CRUD operations for the **Outcome** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Outcomes
+    * const outcomes = await prisma.outcome.findMany()
+    * ```
+    */
+  get outcome(): Prisma.OutcomeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.outcomeVerification`: Exposes CRUD operations for the **OutcomeVerification** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more OutcomeVerifications
+    * const outcomeVerifications = await prisma.outcomeVerification.findMany()
+    * ```
+    */
+  get outcomeVerification(): Prisma.OutcomeVerificationDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.organization`: Exposes CRUD operations for the **Organization** model.
     * Example usage:
     * ```ts
@@ -2201,6 +2252,8 @@ export namespace Prisma {
     UserReport: 'UserReport',
     AnalyticsEventDef: 'AnalyticsEventDef',
     AnalyticsDailyAgg: 'AnalyticsDailyAgg',
+    Outcome: 'Outcome',
+    OutcomeVerification: 'OutcomeVerification',
     Organization: 'Organization',
     Membership: 'Membership',
     TenantAuditEvent: 'TenantAuditEvent'
@@ -2219,7 +2272,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "organization" | "membership" | "tenantAuditEvent"
+      modelProps: "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organization" | "membership" | "tenantAuditEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5775,6 +5828,154 @@ export namespace Prisma {
           }
         }
       }
+      Outcome: {
+        payload: Prisma.$OutcomePayload<ExtArgs>
+        fields: Prisma.OutcomeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.OutcomeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.OutcomeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>
+          }
+          findFirst: {
+            args: Prisma.OutcomeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.OutcomeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>
+          }
+          findMany: {
+            args: Prisma.OutcomeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>[]
+          }
+          create: {
+            args: Prisma.OutcomeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>
+          }
+          createMany: {
+            args: Prisma.OutcomeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.OutcomeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>[]
+          }
+          delete: {
+            args: Prisma.OutcomeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>
+          }
+          update: {
+            args: Prisma.OutcomeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>
+          }
+          deleteMany: {
+            args: Prisma.OutcomeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.OutcomeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.OutcomeUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>[]
+          }
+          upsert: {
+            args: Prisma.OutcomeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomePayload>
+          }
+          aggregate: {
+            args: Prisma.OutcomeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOutcome>
+          }
+          groupBy: {
+            args: Prisma.OutcomeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OutcomeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.OutcomeCountArgs<ExtArgs>
+            result: $Utils.Optional<OutcomeCountAggregateOutputType> | number
+          }
+        }
+      }
+      OutcomeVerification: {
+        payload: Prisma.$OutcomeVerificationPayload<ExtArgs>
+        fields: Prisma.OutcomeVerificationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.OutcomeVerificationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.OutcomeVerificationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>
+          }
+          findFirst: {
+            args: Prisma.OutcomeVerificationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.OutcomeVerificationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>
+          }
+          findMany: {
+            args: Prisma.OutcomeVerificationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>[]
+          }
+          create: {
+            args: Prisma.OutcomeVerificationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>
+          }
+          createMany: {
+            args: Prisma.OutcomeVerificationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.OutcomeVerificationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>[]
+          }
+          delete: {
+            args: Prisma.OutcomeVerificationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>
+          }
+          update: {
+            args: Prisma.OutcomeVerificationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>
+          }
+          deleteMany: {
+            args: Prisma.OutcomeVerificationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.OutcomeVerificationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.OutcomeVerificationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>[]
+          }
+          upsert: {
+            args: Prisma.OutcomeVerificationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OutcomeVerificationPayload>
+          }
+          aggregate: {
+            args: Prisma.OutcomeVerificationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOutcomeVerification>
+          }
+          groupBy: {
+            args: Prisma.OutcomeVerificationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OutcomeVerificationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.OutcomeVerificationCountArgs<ExtArgs>
+            result: $Utils.Optional<OutcomeVerificationCountAggregateOutputType> | number
+          }
+        }
+      }
       Organization: {
         payload: Prisma.$OrganizationPayload<ExtArgs>
         fields: Prisma.OrganizationFieldRefs
@@ -6168,6 +6369,8 @@ export namespace Prisma {
     userReport?: UserReportOmit
     analyticsEventDef?: AnalyticsEventDefOmit
     analyticsDailyAgg?: AnalyticsDailyAggOmit
+    outcome?: OutcomeOmit
+    outcomeVerification?: OutcomeVerificationOmit
     organization?: OrganizationOmit
     membership?: MembershipOmit
     tenantAuditEvent?: TenantAuditEventOmit
@@ -6886,6 +7089,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type OutcomeCountOutputType
+   */
+
+  export type OutcomeCountOutputType = {
+    verifications: number
+  }
+
+  export type OutcomeCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    verifications?: boolean | OutcomeCountOutputTypeCountVerificationsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * OutcomeCountOutputType without action
+   */
+  export type OutcomeCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeCountOutputType
+     */
+    select?: OutcomeCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * OutcomeCountOutputType without action
+   */
+  export type OutcomeCountOutputTypeCountVerificationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OutcomeVerificationWhereInput
+  }
+
+
+  /**
    * Count Type OrganizationCountOutputType
    */
 
@@ -6901,6 +7135,8 @@ export namespace Prisma {
     workflowJobs: number
     notificationDeliveries: number
     introductionWorkflows: number
+    outcomes: number
+    outcomeVerifications: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6915,6 +7151,8 @@ export namespace Prisma {
     workflowJobs?: boolean | OrganizationCountOutputTypeCountWorkflowJobsArgs
     notificationDeliveries?: boolean | OrganizationCountOutputTypeCountNotificationDeliveriesArgs
     introductionWorkflows?: boolean | OrganizationCountOutputTypeCountIntroductionWorkflowsArgs
+    outcomes?: boolean | OrganizationCountOutputTypeCountOutcomesArgs
+    outcomeVerifications?: boolean | OrganizationCountOutputTypeCountOutcomeVerificationsArgs
   }
 
   // Custom InputTypes
@@ -7003,6 +7241,20 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountIntroductionWorkflowsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: IntroductionWorkflowWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountOutcomesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OutcomeWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountOutcomeVerificationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OutcomeVerificationWhereInput
   }
 
 
@@ -65198,6 +65450,2325 @@ export namespace Prisma {
 
 
   /**
+   * Model Outcome
+   */
+
+  export type AggregateOutcome = {
+    _count: OutcomeCountAggregateOutputType | null
+    _min: OutcomeMinAggregateOutputType | null
+    _max: OutcomeMaxAggregateOutputType | null
+  }
+
+  export type OutcomeMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    proposalId: string | null
+    missionId: string | null
+    reporterId: string | null
+    counterpartyId: string | null
+    summary: string | null
+    verificationLevel: $Enums.OutcomeVerificationLevel | null
+    occurredAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OutcomeMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    proposalId: string | null
+    missionId: string | null
+    reporterId: string | null
+    counterpartyId: string | null
+    summary: string | null
+    verificationLevel: $Enums.OutcomeVerificationLevel | null
+    occurredAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OutcomeCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    proposalId: number
+    missionId: number
+    reporterId: number
+    counterpartyId: number
+    summary: number
+    verificationLevel: number
+    occurredAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type OutcomeMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    missionId?: true
+    reporterId?: true
+    counterpartyId?: true
+    summary?: true
+    verificationLevel?: true
+    occurredAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OutcomeMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    missionId?: true
+    reporterId?: true
+    counterpartyId?: true
+    summary?: true
+    verificationLevel?: true
+    occurredAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OutcomeCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    proposalId?: true
+    missionId?: true
+    reporterId?: true
+    counterpartyId?: true
+    summary?: true
+    verificationLevel?: true
+    occurredAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type OutcomeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Outcome to aggregate.
+     */
+    where?: OutcomeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Outcomes to fetch.
+     */
+    orderBy?: OutcomeOrderByWithRelationInput | OutcomeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: OutcomeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Outcomes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Outcomes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Outcomes
+    **/
+    _count?: true | OutcomeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OutcomeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OutcomeMaxAggregateInputType
+  }
+
+  export type GetOutcomeAggregateType<T extends OutcomeAggregateArgs> = {
+        [P in keyof T & keyof AggregateOutcome]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOutcome[P]>
+      : GetScalarType<T[P], AggregateOutcome[P]>
+  }
+
+
+
+
+  export type OutcomeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OutcomeWhereInput
+    orderBy?: OutcomeOrderByWithAggregationInput | OutcomeOrderByWithAggregationInput[]
+    by: OutcomeScalarFieldEnum[] | OutcomeScalarFieldEnum
+    having?: OutcomeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OutcomeCountAggregateInputType | true
+    _min?: OutcomeMinAggregateInputType
+    _max?: OutcomeMaxAggregateInputType
+  }
+
+  export type OutcomeGroupByOutputType = {
+    id: string
+    organizationId: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel: $Enums.OutcomeVerificationLevel
+    occurredAt: Date
+    createdAt: Date
+    updatedAt: Date
+    _count: OutcomeCountAggregateOutputType | null
+    _min: OutcomeMinAggregateOutputType | null
+    _max: OutcomeMaxAggregateOutputType | null
+  }
+
+  type GetOutcomeGroupByPayload<T extends OutcomeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OutcomeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OutcomeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OutcomeGroupByOutputType[P]>
+            : GetScalarType<T[P], OutcomeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type OutcomeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    reporterId?: boolean
+    counterpartyId?: boolean
+    summary?: boolean
+    verificationLevel?: boolean
+    occurredAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    verifications?: boolean | Outcome$verificationsArgs<ExtArgs>
+    _count?: boolean | OutcomeCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["outcome"]>
+
+  export type OutcomeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    reporterId?: boolean
+    counterpartyId?: boolean
+    summary?: boolean
+    verificationLevel?: boolean
+    occurredAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["outcome"]>
+
+  export type OutcomeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    reporterId?: boolean
+    counterpartyId?: boolean
+    summary?: boolean
+    verificationLevel?: boolean
+    occurredAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["outcome"]>
+
+  export type OutcomeSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    proposalId?: boolean
+    missionId?: boolean
+    reporterId?: boolean
+    counterpartyId?: boolean
+    summary?: boolean
+    verificationLevel?: boolean
+    occurredAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type OutcomeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "proposalId" | "missionId" | "reporterId" | "counterpartyId" | "summary" | "verificationLevel" | "occurredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["outcome"]>
+  export type OutcomeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    verifications?: boolean | Outcome$verificationsArgs<ExtArgs>
+    _count?: boolean | OutcomeCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type OutcomeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type OutcomeIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+
+  export type $OutcomePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Outcome"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      verifications: Prisma.$OutcomeVerificationPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 租户谓词。**不可省** —— 所有查询都必须以它为首要条件（T01 铁律）。
+       */
+      organizationId: string
+      /**
+       * 软引用：挂载的提案。**刻意无外键** —— 成果是被删资源的证据，
+       * 删提案不应连带抹掉"这里曾经发生过一次成功的连接"。
+       * `@@unique` 保证一个提案只落一份成果（`OUTCOME_RECORDED` 是终态）。
+       */
+      proposalId: string
+      /**
+       * 软引用：租户内筛选用（同 `IntroductionWorkflow.missionId`）。
+       */
+      missionId: string
+      /**
+       * 软引用：上报方。**不进 DTO** —— 返回 userId 等于把"谁跟谁连接了"这条
+       * 关系数据披露给任意 `outcome.read` 持有者（MEMBER 起即有）。DTO 只给角色。
+       */
+      reporterId: string
+      /**
+       * 软引用：对手方。**不进 DTO**，同上。
+       */
+      counterpartyId: string
+      /**
+       * 上报方的陈述（自报内容）。这是**原始事实**，不是结论 —— 它本身不能证明成功。
+       */
+      summary: string
+      /**
+       * 🔴 **派生快照**：只由服务层依 `OutcomeVerification` 记录集写入（`deriveVerificationLevel`），
+       * **不接受客户端入参**。默认 `SELF_REPORTED` 即"下限"：上报即得，但**不是**验证成功。
+       */
+      verificationLevel: $Enums.OutcomeVerificationLevel
+      /**
+       * 成果发生时间（**业务时间**，可回填）。与 `createdAt`（系统看见的时间）刻意分开：
+       * 成本/漏斗按时段复算时，口径必须明确取哪一个。
+       */
+      occurredAt: Date
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["outcome"]>
+    composites: {}
+  }
+
+  type OutcomeGetPayload<S extends boolean | null | undefined | OutcomeDefaultArgs> = $Result.GetResult<Prisma.$OutcomePayload, S>
+
+  type OutcomeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<OutcomeFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OutcomeCountAggregateInputType | true
+    }
+
+  export interface OutcomeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Outcome'], meta: { name: 'Outcome' } }
+    /**
+     * Find zero or one Outcome that matches the filter.
+     * @param {OutcomeFindUniqueArgs} args - Arguments to find a Outcome
+     * @example
+     * // Get one Outcome
+     * const outcome = await prisma.outcome.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends OutcomeFindUniqueArgs>(args: SelectSubset<T, OutcomeFindUniqueArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Outcome that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {OutcomeFindUniqueOrThrowArgs} args - Arguments to find a Outcome
+     * @example
+     * // Get one Outcome
+     * const outcome = await prisma.outcome.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends OutcomeFindUniqueOrThrowArgs>(args: SelectSubset<T, OutcomeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Outcome that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeFindFirstArgs} args - Arguments to find a Outcome
+     * @example
+     * // Get one Outcome
+     * const outcome = await prisma.outcome.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends OutcomeFindFirstArgs>(args?: SelectSubset<T, OutcomeFindFirstArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Outcome that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeFindFirstOrThrowArgs} args - Arguments to find a Outcome
+     * @example
+     * // Get one Outcome
+     * const outcome = await prisma.outcome.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends OutcomeFindFirstOrThrowArgs>(args?: SelectSubset<T, OutcomeFindFirstOrThrowArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Outcomes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Outcomes
+     * const outcomes = await prisma.outcome.findMany()
+     * 
+     * // Get first 10 Outcomes
+     * const outcomes = await prisma.outcome.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const outcomeWithIdOnly = await prisma.outcome.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends OutcomeFindManyArgs>(args?: SelectSubset<T, OutcomeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Outcome.
+     * @param {OutcomeCreateArgs} args - Arguments to create a Outcome.
+     * @example
+     * // Create one Outcome
+     * const Outcome = await prisma.outcome.create({
+     *   data: {
+     *     // ... data to create a Outcome
+     *   }
+     * })
+     * 
+     */
+    create<T extends OutcomeCreateArgs>(args: SelectSubset<T, OutcomeCreateArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Outcomes.
+     * @param {OutcomeCreateManyArgs} args - Arguments to create many Outcomes.
+     * @example
+     * // Create many Outcomes
+     * const outcome = await prisma.outcome.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends OutcomeCreateManyArgs>(args?: SelectSubset<T, OutcomeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Outcomes and returns the data saved in the database.
+     * @param {OutcomeCreateManyAndReturnArgs} args - Arguments to create many Outcomes.
+     * @example
+     * // Create many Outcomes
+     * const outcome = await prisma.outcome.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Outcomes and only return the `id`
+     * const outcomeWithIdOnly = await prisma.outcome.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends OutcomeCreateManyAndReturnArgs>(args?: SelectSubset<T, OutcomeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Outcome.
+     * @param {OutcomeDeleteArgs} args - Arguments to delete one Outcome.
+     * @example
+     * // Delete one Outcome
+     * const Outcome = await prisma.outcome.delete({
+     *   where: {
+     *     // ... filter to delete one Outcome
+     *   }
+     * })
+     * 
+     */
+    delete<T extends OutcomeDeleteArgs>(args: SelectSubset<T, OutcomeDeleteArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Outcome.
+     * @param {OutcomeUpdateArgs} args - Arguments to update one Outcome.
+     * @example
+     * // Update one Outcome
+     * const outcome = await prisma.outcome.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends OutcomeUpdateArgs>(args: SelectSubset<T, OutcomeUpdateArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Outcomes.
+     * @param {OutcomeDeleteManyArgs} args - Arguments to filter Outcomes to delete.
+     * @example
+     * // Delete a few Outcomes
+     * const { count } = await prisma.outcome.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends OutcomeDeleteManyArgs>(args?: SelectSubset<T, OutcomeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Outcomes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Outcomes
+     * const outcome = await prisma.outcome.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends OutcomeUpdateManyArgs>(args: SelectSubset<T, OutcomeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Outcomes and returns the data updated in the database.
+     * @param {OutcomeUpdateManyAndReturnArgs} args - Arguments to update many Outcomes.
+     * @example
+     * // Update many Outcomes
+     * const outcome = await prisma.outcome.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Outcomes and only return the `id`
+     * const outcomeWithIdOnly = await prisma.outcome.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends OutcomeUpdateManyAndReturnArgs>(args: SelectSubset<T, OutcomeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Outcome.
+     * @param {OutcomeUpsertArgs} args - Arguments to update or create a Outcome.
+     * @example
+     * // Update or create a Outcome
+     * const outcome = await prisma.outcome.upsert({
+     *   create: {
+     *     // ... data to create a Outcome
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Outcome we want to update
+     *   }
+     * })
+     */
+    upsert<T extends OutcomeUpsertArgs>(args: SelectSubset<T, OutcomeUpsertArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Outcomes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeCountArgs} args - Arguments to filter Outcomes to count.
+     * @example
+     * // Count the number of Outcomes
+     * const count = await prisma.outcome.count({
+     *   where: {
+     *     // ... the filter for the Outcomes we want to count
+     *   }
+     * })
+    **/
+    count<T extends OutcomeCountArgs>(
+      args?: Subset<T, OutcomeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OutcomeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Outcome.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OutcomeAggregateArgs>(args: Subset<T, OutcomeAggregateArgs>): Prisma.PrismaPromise<GetOutcomeAggregateType<T>>
+
+    /**
+     * Group by Outcome.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends OutcomeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: OutcomeGroupByArgs['orderBy'] }
+        : { orderBy?: OutcomeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, OutcomeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOutcomeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Outcome model
+   */
+  readonly fields: OutcomeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Outcome.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__OutcomeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    verifications<T extends Outcome$verificationsArgs<ExtArgs> = {}>(args?: Subset<T, Outcome$verificationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Outcome model
+   */
+  interface OutcomeFieldRefs {
+    readonly id: FieldRef<"Outcome", 'String'>
+    readonly organizationId: FieldRef<"Outcome", 'String'>
+    readonly proposalId: FieldRef<"Outcome", 'String'>
+    readonly missionId: FieldRef<"Outcome", 'String'>
+    readonly reporterId: FieldRef<"Outcome", 'String'>
+    readonly counterpartyId: FieldRef<"Outcome", 'String'>
+    readonly summary: FieldRef<"Outcome", 'String'>
+    readonly verificationLevel: FieldRef<"Outcome", 'OutcomeVerificationLevel'>
+    readonly occurredAt: FieldRef<"Outcome", 'DateTime'>
+    readonly createdAt: FieldRef<"Outcome", 'DateTime'>
+    readonly updatedAt: FieldRef<"Outcome", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Outcome findUnique
+   */
+  export type OutcomeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * Filter, which Outcome to fetch.
+     */
+    where: OutcomeWhereUniqueInput
+  }
+
+  /**
+   * Outcome findUniqueOrThrow
+   */
+  export type OutcomeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * Filter, which Outcome to fetch.
+     */
+    where: OutcomeWhereUniqueInput
+  }
+
+  /**
+   * Outcome findFirst
+   */
+  export type OutcomeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * Filter, which Outcome to fetch.
+     */
+    where?: OutcomeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Outcomes to fetch.
+     */
+    orderBy?: OutcomeOrderByWithRelationInput | OutcomeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Outcomes.
+     */
+    cursor?: OutcomeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Outcomes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Outcomes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Outcomes.
+     */
+    distinct?: OutcomeScalarFieldEnum | OutcomeScalarFieldEnum[]
+  }
+
+  /**
+   * Outcome findFirstOrThrow
+   */
+  export type OutcomeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * Filter, which Outcome to fetch.
+     */
+    where?: OutcomeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Outcomes to fetch.
+     */
+    orderBy?: OutcomeOrderByWithRelationInput | OutcomeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Outcomes.
+     */
+    cursor?: OutcomeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Outcomes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Outcomes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Outcomes.
+     */
+    distinct?: OutcomeScalarFieldEnum | OutcomeScalarFieldEnum[]
+  }
+
+  /**
+   * Outcome findMany
+   */
+  export type OutcomeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * Filter, which Outcomes to fetch.
+     */
+    where?: OutcomeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Outcomes to fetch.
+     */
+    orderBy?: OutcomeOrderByWithRelationInput | OutcomeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Outcomes.
+     */
+    cursor?: OutcomeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Outcomes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Outcomes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Outcomes.
+     */
+    distinct?: OutcomeScalarFieldEnum | OutcomeScalarFieldEnum[]
+  }
+
+  /**
+   * Outcome create
+   */
+  export type OutcomeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Outcome.
+     */
+    data: XOR<OutcomeCreateInput, OutcomeUncheckedCreateInput>
+  }
+
+  /**
+   * Outcome createMany
+   */
+  export type OutcomeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Outcomes.
+     */
+    data: OutcomeCreateManyInput | OutcomeCreateManyInput[]
+  }
+
+  /**
+   * Outcome createManyAndReturn
+   */
+  export type OutcomeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * The data used to create many Outcomes.
+     */
+    data: OutcomeCreateManyInput | OutcomeCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Outcome update
+   */
+  export type OutcomeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Outcome.
+     */
+    data: XOR<OutcomeUpdateInput, OutcomeUncheckedUpdateInput>
+    /**
+     * Choose, which Outcome to update.
+     */
+    where: OutcomeWhereUniqueInput
+  }
+
+  /**
+   * Outcome updateMany
+   */
+  export type OutcomeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Outcomes.
+     */
+    data: XOR<OutcomeUpdateManyMutationInput, OutcomeUncheckedUpdateManyInput>
+    /**
+     * Filter which Outcomes to update
+     */
+    where?: OutcomeWhereInput
+    /**
+     * Limit how many Outcomes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Outcome updateManyAndReturn
+   */
+  export type OutcomeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * The data used to update Outcomes.
+     */
+    data: XOR<OutcomeUpdateManyMutationInput, OutcomeUncheckedUpdateManyInput>
+    /**
+     * Filter which Outcomes to update
+     */
+    where?: OutcomeWhereInput
+    /**
+     * Limit how many Outcomes to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Outcome upsert
+   */
+  export type OutcomeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Outcome to update in case it exists.
+     */
+    where: OutcomeWhereUniqueInput
+    /**
+     * In case the Outcome found by the `where` argument doesn't exist, create a new Outcome with this data.
+     */
+    create: XOR<OutcomeCreateInput, OutcomeUncheckedCreateInput>
+    /**
+     * In case the Outcome was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<OutcomeUpdateInput, OutcomeUncheckedUpdateInput>
+  }
+
+  /**
+   * Outcome delete
+   */
+  export type OutcomeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    /**
+     * Filter which Outcome to delete.
+     */
+    where: OutcomeWhereUniqueInput
+  }
+
+  /**
+   * Outcome deleteMany
+   */
+  export type OutcomeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Outcomes to delete
+     */
+    where?: OutcomeWhereInput
+    /**
+     * Limit how many Outcomes to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Outcome.verifications
+   */
+  export type Outcome$verificationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    where?: OutcomeVerificationWhereInput
+    orderBy?: OutcomeVerificationOrderByWithRelationInput | OutcomeVerificationOrderByWithRelationInput[]
+    cursor?: OutcomeVerificationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OutcomeVerificationScalarFieldEnum | OutcomeVerificationScalarFieldEnum[]
+  }
+
+  /**
+   * Outcome without action
+   */
+  export type OutcomeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model OutcomeVerification
+   */
+
+  export type AggregateOutcomeVerification = {
+    _count: OutcomeVerificationCountAggregateOutputType | null
+    _min: OutcomeVerificationMinAggregateOutputType | null
+    _max: OutcomeVerificationMaxAggregateOutputType | null
+  }
+
+  export type OutcomeVerificationMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    outcomeId: string | null
+    level: $Enums.OutcomeVerificationLevel | null
+    actorId: string | null
+    evidence: string | null
+    note: string | null
+    createdAt: Date | null
+  }
+
+  export type OutcomeVerificationMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    outcomeId: string | null
+    level: $Enums.OutcomeVerificationLevel | null
+    actorId: string | null
+    evidence: string | null
+    note: string | null
+    createdAt: Date | null
+  }
+
+  export type OutcomeVerificationCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    outcomeId: number
+    level: number
+    actorId: number
+    evidence: number
+    note: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type OutcomeVerificationMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    outcomeId?: true
+    level?: true
+    actorId?: true
+    evidence?: true
+    note?: true
+    createdAt?: true
+  }
+
+  export type OutcomeVerificationMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    outcomeId?: true
+    level?: true
+    actorId?: true
+    evidence?: true
+    note?: true
+    createdAt?: true
+  }
+
+  export type OutcomeVerificationCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    outcomeId?: true
+    level?: true
+    actorId?: true
+    evidence?: true
+    note?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type OutcomeVerificationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OutcomeVerification to aggregate.
+     */
+    where?: OutcomeVerificationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OutcomeVerifications to fetch.
+     */
+    orderBy?: OutcomeVerificationOrderByWithRelationInput | OutcomeVerificationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: OutcomeVerificationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OutcomeVerifications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OutcomeVerifications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned OutcomeVerifications
+    **/
+    _count?: true | OutcomeVerificationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OutcomeVerificationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OutcomeVerificationMaxAggregateInputType
+  }
+
+  export type GetOutcomeVerificationAggregateType<T extends OutcomeVerificationAggregateArgs> = {
+        [P in keyof T & keyof AggregateOutcomeVerification]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOutcomeVerification[P]>
+      : GetScalarType<T[P], AggregateOutcomeVerification[P]>
+  }
+
+
+
+
+  export type OutcomeVerificationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OutcomeVerificationWhereInput
+    orderBy?: OutcomeVerificationOrderByWithAggregationInput | OutcomeVerificationOrderByWithAggregationInput[]
+    by: OutcomeVerificationScalarFieldEnum[] | OutcomeVerificationScalarFieldEnum
+    having?: OutcomeVerificationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OutcomeVerificationCountAggregateInputType | true
+    _min?: OutcomeVerificationMinAggregateInputType
+    _max?: OutcomeVerificationMaxAggregateInputType
+  }
+
+  export type OutcomeVerificationGroupByOutputType = {
+    id: string
+    organizationId: string
+    outcomeId: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId: string | null
+    evidence: string | null
+    note: string | null
+    createdAt: Date
+    _count: OutcomeVerificationCountAggregateOutputType | null
+    _min: OutcomeVerificationMinAggregateOutputType | null
+    _max: OutcomeVerificationMaxAggregateOutputType | null
+  }
+
+  type GetOutcomeVerificationGroupByPayload<T extends OutcomeVerificationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OutcomeVerificationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OutcomeVerificationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OutcomeVerificationGroupByOutputType[P]>
+            : GetScalarType<T[P], OutcomeVerificationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type OutcomeVerificationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    outcomeId?: boolean
+    level?: boolean
+    actorId?: boolean
+    evidence?: boolean
+    note?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    outcome?: boolean | OutcomeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["outcomeVerification"]>
+
+  export type OutcomeVerificationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    outcomeId?: boolean
+    level?: boolean
+    actorId?: boolean
+    evidence?: boolean
+    note?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    outcome?: boolean | OutcomeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["outcomeVerification"]>
+
+  export type OutcomeVerificationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    outcomeId?: boolean
+    level?: boolean
+    actorId?: boolean
+    evidence?: boolean
+    note?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    outcome?: boolean | OutcomeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["outcomeVerification"]>
+
+  export type OutcomeVerificationSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    outcomeId?: boolean
+    level?: boolean
+    actorId?: boolean
+    evidence?: boolean
+    note?: boolean
+    createdAt?: boolean
+  }
+
+  export type OutcomeVerificationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "outcomeId" | "level" | "actorId" | "evidence" | "note" | "createdAt", ExtArgs["result"]["outcomeVerification"]>
+  export type OutcomeVerificationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    outcome?: boolean | OutcomeDefaultArgs<ExtArgs>
+  }
+  export type OutcomeVerificationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    outcome?: boolean | OutcomeDefaultArgs<ExtArgs>
+  }
+  export type OutcomeVerificationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    outcome?: boolean | OutcomeDefaultArgs<ExtArgs>
+  }
+
+  export type $OutcomeVerificationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "OutcomeVerification"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      /**
+       * 正向：验证记录脱离成果没有意义 → **强 FK + CASCADE**
+       * （与 `IntroductionWorkflow.proposalId` 同取向，与 `Outcome.proposalId` 相反）。
+       */
+      outcome: Prisma.$OutcomePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      outcomeId: string
+      /**
+       * 本条记录把级别抬到哪一档。派生时取**记录集中最高**的一档。
+       */
+      level: $Enums.OutcomeVerificationLevel
+      /**
+       * 确认 / 核验人 userId。系统核验为 null。**不进 DTO**。
+       */
+      actorId: string | null
+      /**
+       * 证据摘要（**脱敏后**落库）。**不进 DTO** —— 原文可能含 PII。
+       */
+      evidence: string | null
+      note: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["outcomeVerification"]>
+    composites: {}
+  }
+
+  type OutcomeVerificationGetPayload<S extends boolean | null | undefined | OutcomeVerificationDefaultArgs> = $Result.GetResult<Prisma.$OutcomeVerificationPayload, S>
+
+  type OutcomeVerificationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<OutcomeVerificationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OutcomeVerificationCountAggregateInputType | true
+    }
+
+  export interface OutcomeVerificationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['OutcomeVerification'], meta: { name: 'OutcomeVerification' } }
+    /**
+     * Find zero or one OutcomeVerification that matches the filter.
+     * @param {OutcomeVerificationFindUniqueArgs} args - Arguments to find a OutcomeVerification
+     * @example
+     * // Get one OutcomeVerification
+     * const outcomeVerification = await prisma.outcomeVerification.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends OutcomeVerificationFindUniqueArgs>(args: SelectSubset<T, OutcomeVerificationFindUniqueArgs<ExtArgs>>): Prisma__OutcomeVerificationClient<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one OutcomeVerification that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {OutcomeVerificationFindUniqueOrThrowArgs} args - Arguments to find a OutcomeVerification
+     * @example
+     * // Get one OutcomeVerification
+     * const outcomeVerification = await prisma.outcomeVerification.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends OutcomeVerificationFindUniqueOrThrowArgs>(args: SelectSubset<T, OutcomeVerificationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__OutcomeVerificationClient<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OutcomeVerification that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeVerificationFindFirstArgs} args - Arguments to find a OutcomeVerification
+     * @example
+     * // Get one OutcomeVerification
+     * const outcomeVerification = await prisma.outcomeVerification.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends OutcomeVerificationFindFirstArgs>(args?: SelectSubset<T, OutcomeVerificationFindFirstArgs<ExtArgs>>): Prisma__OutcomeVerificationClient<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OutcomeVerification that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeVerificationFindFirstOrThrowArgs} args - Arguments to find a OutcomeVerification
+     * @example
+     * // Get one OutcomeVerification
+     * const outcomeVerification = await prisma.outcomeVerification.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends OutcomeVerificationFindFirstOrThrowArgs>(args?: SelectSubset<T, OutcomeVerificationFindFirstOrThrowArgs<ExtArgs>>): Prisma__OutcomeVerificationClient<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more OutcomeVerifications that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeVerificationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all OutcomeVerifications
+     * const outcomeVerifications = await prisma.outcomeVerification.findMany()
+     * 
+     * // Get first 10 OutcomeVerifications
+     * const outcomeVerifications = await prisma.outcomeVerification.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const outcomeVerificationWithIdOnly = await prisma.outcomeVerification.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends OutcomeVerificationFindManyArgs>(args?: SelectSubset<T, OutcomeVerificationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a OutcomeVerification.
+     * @param {OutcomeVerificationCreateArgs} args - Arguments to create a OutcomeVerification.
+     * @example
+     * // Create one OutcomeVerification
+     * const OutcomeVerification = await prisma.outcomeVerification.create({
+     *   data: {
+     *     // ... data to create a OutcomeVerification
+     *   }
+     * })
+     * 
+     */
+    create<T extends OutcomeVerificationCreateArgs>(args: SelectSubset<T, OutcomeVerificationCreateArgs<ExtArgs>>): Prisma__OutcomeVerificationClient<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many OutcomeVerifications.
+     * @param {OutcomeVerificationCreateManyArgs} args - Arguments to create many OutcomeVerifications.
+     * @example
+     * // Create many OutcomeVerifications
+     * const outcomeVerification = await prisma.outcomeVerification.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends OutcomeVerificationCreateManyArgs>(args?: SelectSubset<T, OutcomeVerificationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many OutcomeVerifications and returns the data saved in the database.
+     * @param {OutcomeVerificationCreateManyAndReturnArgs} args - Arguments to create many OutcomeVerifications.
+     * @example
+     * // Create many OutcomeVerifications
+     * const outcomeVerification = await prisma.outcomeVerification.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many OutcomeVerifications and only return the `id`
+     * const outcomeVerificationWithIdOnly = await prisma.outcomeVerification.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends OutcomeVerificationCreateManyAndReturnArgs>(args?: SelectSubset<T, OutcomeVerificationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a OutcomeVerification.
+     * @param {OutcomeVerificationDeleteArgs} args - Arguments to delete one OutcomeVerification.
+     * @example
+     * // Delete one OutcomeVerification
+     * const OutcomeVerification = await prisma.outcomeVerification.delete({
+     *   where: {
+     *     // ... filter to delete one OutcomeVerification
+     *   }
+     * })
+     * 
+     */
+    delete<T extends OutcomeVerificationDeleteArgs>(args: SelectSubset<T, OutcomeVerificationDeleteArgs<ExtArgs>>): Prisma__OutcomeVerificationClient<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one OutcomeVerification.
+     * @param {OutcomeVerificationUpdateArgs} args - Arguments to update one OutcomeVerification.
+     * @example
+     * // Update one OutcomeVerification
+     * const outcomeVerification = await prisma.outcomeVerification.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends OutcomeVerificationUpdateArgs>(args: SelectSubset<T, OutcomeVerificationUpdateArgs<ExtArgs>>): Prisma__OutcomeVerificationClient<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more OutcomeVerifications.
+     * @param {OutcomeVerificationDeleteManyArgs} args - Arguments to filter OutcomeVerifications to delete.
+     * @example
+     * // Delete a few OutcomeVerifications
+     * const { count } = await prisma.outcomeVerification.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends OutcomeVerificationDeleteManyArgs>(args?: SelectSubset<T, OutcomeVerificationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OutcomeVerifications.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeVerificationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many OutcomeVerifications
+     * const outcomeVerification = await prisma.outcomeVerification.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends OutcomeVerificationUpdateManyArgs>(args: SelectSubset<T, OutcomeVerificationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OutcomeVerifications and returns the data updated in the database.
+     * @param {OutcomeVerificationUpdateManyAndReturnArgs} args - Arguments to update many OutcomeVerifications.
+     * @example
+     * // Update many OutcomeVerifications
+     * const outcomeVerification = await prisma.outcomeVerification.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more OutcomeVerifications and only return the `id`
+     * const outcomeVerificationWithIdOnly = await prisma.outcomeVerification.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends OutcomeVerificationUpdateManyAndReturnArgs>(args: SelectSubset<T, OutcomeVerificationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one OutcomeVerification.
+     * @param {OutcomeVerificationUpsertArgs} args - Arguments to update or create a OutcomeVerification.
+     * @example
+     * // Update or create a OutcomeVerification
+     * const outcomeVerification = await prisma.outcomeVerification.upsert({
+     *   create: {
+     *     // ... data to create a OutcomeVerification
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the OutcomeVerification we want to update
+     *   }
+     * })
+     */
+    upsert<T extends OutcomeVerificationUpsertArgs>(args: SelectSubset<T, OutcomeVerificationUpsertArgs<ExtArgs>>): Prisma__OutcomeVerificationClient<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of OutcomeVerifications.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeVerificationCountArgs} args - Arguments to filter OutcomeVerifications to count.
+     * @example
+     * // Count the number of OutcomeVerifications
+     * const count = await prisma.outcomeVerification.count({
+     *   where: {
+     *     // ... the filter for the OutcomeVerifications we want to count
+     *   }
+     * })
+    **/
+    count<T extends OutcomeVerificationCountArgs>(
+      args?: Subset<T, OutcomeVerificationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OutcomeVerificationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a OutcomeVerification.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeVerificationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OutcomeVerificationAggregateArgs>(args: Subset<T, OutcomeVerificationAggregateArgs>): Prisma.PrismaPromise<GetOutcomeVerificationAggregateType<T>>
+
+    /**
+     * Group by OutcomeVerification.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OutcomeVerificationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends OutcomeVerificationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: OutcomeVerificationGroupByArgs['orderBy'] }
+        : { orderBy?: OutcomeVerificationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, OutcomeVerificationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOutcomeVerificationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the OutcomeVerification model
+   */
+  readonly fields: OutcomeVerificationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for OutcomeVerification.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__OutcomeVerificationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    outcome<T extends OutcomeDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OutcomeDefaultArgs<ExtArgs>>): Prisma__OutcomeClient<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the OutcomeVerification model
+   */
+  interface OutcomeVerificationFieldRefs {
+    readonly id: FieldRef<"OutcomeVerification", 'String'>
+    readonly organizationId: FieldRef<"OutcomeVerification", 'String'>
+    readonly outcomeId: FieldRef<"OutcomeVerification", 'String'>
+    readonly level: FieldRef<"OutcomeVerification", 'OutcomeVerificationLevel'>
+    readonly actorId: FieldRef<"OutcomeVerification", 'String'>
+    readonly evidence: FieldRef<"OutcomeVerification", 'String'>
+    readonly note: FieldRef<"OutcomeVerification", 'String'>
+    readonly createdAt: FieldRef<"OutcomeVerification", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * OutcomeVerification findUnique
+   */
+  export type OutcomeVerificationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * Filter, which OutcomeVerification to fetch.
+     */
+    where: OutcomeVerificationWhereUniqueInput
+  }
+
+  /**
+   * OutcomeVerification findUniqueOrThrow
+   */
+  export type OutcomeVerificationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * Filter, which OutcomeVerification to fetch.
+     */
+    where: OutcomeVerificationWhereUniqueInput
+  }
+
+  /**
+   * OutcomeVerification findFirst
+   */
+  export type OutcomeVerificationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * Filter, which OutcomeVerification to fetch.
+     */
+    where?: OutcomeVerificationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OutcomeVerifications to fetch.
+     */
+    orderBy?: OutcomeVerificationOrderByWithRelationInput | OutcomeVerificationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OutcomeVerifications.
+     */
+    cursor?: OutcomeVerificationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OutcomeVerifications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OutcomeVerifications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OutcomeVerifications.
+     */
+    distinct?: OutcomeVerificationScalarFieldEnum | OutcomeVerificationScalarFieldEnum[]
+  }
+
+  /**
+   * OutcomeVerification findFirstOrThrow
+   */
+  export type OutcomeVerificationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * Filter, which OutcomeVerification to fetch.
+     */
+    where?: OutcomeVerificationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OutcomeVerifications to fetch.
+     */
+    orderBy?: OutcomeVerificationOrderByWithRelationInput | OutcomeVerificationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OutcomeVerifications.
+     */
+    cursor?: OutcomeVerificationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OutcomeVerifications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OutcomeVerifications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OutcomeVerifications.
+     */
+    distinct?: OutcomeVerificationScalarFieldEnum | OutcomeVerificationScalarFieldEnum[]
+  }
+
+  /**
+   * OutcomeVerification findMany
+   */
+  export type OutcomeVerificationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * Filter, which OutcomeVerifications to fetch.
+     */
+    where?: OutcomeVerificationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OutcomeVerifications to fetch.
+     */
+    orderBy?: OutcomeVerificationOrderByWithRelationInput | OutcomeVerificationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing OutcomeVerifications.
+     */
+    cursor?: OutcomeVerificationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OutcomeVerifications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OutcomeVerifications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OutcomeVerifications.
+     */
+    distinct?: OutcomeVerificationScalarFieldEnum | OutcomeVerificationScalarFieldEnum[]
+  }
+
+  /**
+   * OutcomeVerification create
+   */
+  export type OutcomeVerificationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a OutcomeVerification.
+     */
+    data: XOR<OutcomeVerificationCreateInput, OutcomeVerificationUncheckedCreateInput>
+  }
+
+  /**
+   * OutcomeVerification createMany
+   */
+  export type OutcomeVerificationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many OutcomeVerifications.
+     */
+    data: OutcomeVerificationCreateManyInput | OutcomeVerificationCreateManyInput[]
+  }
+
+  /**
+   * OutcomeVerification createManyAndReturn
+   */
+  export type OutcomeVerificationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * The data used to create many OutcomeVerifications.
+     */
+    data: OutcomeVerificationCreateManyInput | OutcomeVerificationCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * OutcomeVerification update
+   */
+  export type OutcomeVerificationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a OutcomeVerification.
+     */
+    data: XOR<OutcomeVerificationUpdateInput, OutcomeVerificationUncheckedUpdateInput>
+    /**
+     * Choose, which OutcomeVerification to update.
+     */
+    where: OutcomeVerificationWhereUniqueInput
+  }
+
+  /**
+   * OutcomeVerification updateMany
+   */
+  export type OutcomeVerificationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update OutcomeVerifications.
+     */
+    data: XOR<OutcomeVerificationUpdateManyMutationInput, OutcomeVerificationUncheckedUpdateManyInput>
+    /**
+     * Filter which OutcomeVerifications to update
+     */
+    where?: OutcomeVerificationWhereInput
+    /**
+     * Limit how many OutcomeVerifications to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OutcomeVerification updateManyAndReturn
+   */
+  export type OutcomeVerificationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * The data used to update OutcomeVerifications.
+     */
+    data: XOR<OutcomeVerificationUpdateManyMutationInput, OutcomeVerificationUncheckedUpdateManyInput>
+    /**
+     * Filter which OutcomeVerifications to update
+     */
+    where?: OutcomeVerificationWhereInput
+    /**
+     * Limit how many OutcomeVerifications to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * OutcomeVerification upsert
+   */
+  export type OutcomeVerificationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the OutcomeVerification to update in case it exists.
+     */
+    where: OutcomeVerificationWhereUniqueInput
+    /**
+     * In case the OutcomeVerification found by the `where` argument doesn't exist, create a new OutcomeVerification with this data.
+     */
+    create: XOR<OutcomeVerificationCreateInput, OutcomeVerificationUncheckedCreateInput>
+    /**
+     * In case the OutcomeVerification was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<OutcomeVerificationUpdateInput, OutcomeVerificationUncheckedUpdateInput>
+  }
+
+  /**
+   * OutcomeVerification delete
+   */
+  export type OutcomeVerificationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    /**
+     * Filter which OutcomeVerification to delete.
+     */
+    where: OutcomeVerificationWhereUniqueInput
+  }
+
+  /**
+   * OutcomeVerification deleteMany
+   */
+  export type OutcomeVerificationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OutcomeVerifications to delete
+     */
+    where?: OutcomeVerificationWhereInput
+    /**
+     * Limit how many OutcomeVerifications to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * OutcomeVerification without action
+   */
+  export type OutcomeVerificationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model Organization
    */
 
@@ -65380,6 +67951,8 @@ export namespace Prisma {
     workflowJobs?: boolean | Organization$workflowJobsArgs<ExtArgs>
     notificationDeliveries?: boolean | Organization$notificationDeliveriesArgs<ExtArgs>
     introductionWorkflows?: boolean | Organization$introductionWorkflowsArgs<ExtArgs>
+    outcomes?: boolean | Organization$outcomesArgs<ExtArgs>
+    outcomeVerifications?: boolean | Organization$outcomeVerificationsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -65423,6 +67996,8 @@ export namespace Prisma {
     workflowJobs?: boolean | Organization$workflowJobsArgs<ExtArgs>
     notificationDeliveries?: boolean | Organization$notificationDeliveriesArgs<ExtArgs>
     introductionWorkflows?: boolean | Organization$introductionWorkflowsArgs<ExtArgs>
+    outcomes?: boolean | Organization$outcomesArgs<ExtArgs>
+    outcomeVerifications?: boolean | Organization$outcomeVerificationsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -65442,6 +68017,8 @@ export namespace Prisma {
       workflowJobs: Prisma.$WorkflowJobPayload<ExtArgs>[]
       notificationDeliveries: Prisma.$NotificationDeliveryPayload<ExtArgs>[]
       introductionWorkflows: Prisma.$IntroductionWorkflowPayload<ExtArgs>[]
+      outcomes: Prisma.$OutcomePayload<ExtArgs>[]
+      outcomeVerifications: Prisma.$OutcomeVerificationPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -65858,6 +68435,8 @@ export namespace Prisma {
     workflowJobs<T extends Organization$workflowJobsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$workflowJobsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkflowJobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     notificationDeliveries<T extends Organization$notificationDeliveriesArgs<ExtArgs> = {}>(args?: Subset<T, Organization$notificationDeliveriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationDeliveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     introductionWorkflows<T extends Organization$introductionWorkflowsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$introductionWorkflowsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IntroductionWorkflowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    outcomes<T extends Organization$outcomesArgs<ExtArgs> = {}>(args?: Subset<T, Organization$outcomesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    outcomeVerifications<T extends Organization$outcomeVerificationsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$outcomeVerificationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -66545,6 +69124,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: IntroductionWorkflowScalarFieldEnum | IntroductionWorkflowScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.outcomes
+   */
+  export type Organization$outcomesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Outcome
+     */
+    select?: OutcomeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Outcome
+     */
+    omit?: OutcomeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeInclude<ExtArgs> | null
+    where?: OutcomeWhereInput
+    orderBy?: OutcomeOrderByWithRelationInput | OutcomeOrderByWithRelationInput[]
+    cursor?: OutcomeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OutcomeScalarFieldEnum | OutcomeScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.outcomeVerifications
+   */
+  export type Organization$outcomeVerificationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OutcomeVerification
+     */
+    select?: OutcomeVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OutcomeVerification
+     */
+    omit?: OutcomeVerificationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OutcomeVerificationInclude<ExtArgs> | null
+    where?: OutcomeVerificationWhereInput
+    orderBy?: OutcomeVerificationOrderByWithRelationInput | OutcomeVerificationOrderByWithRelationInput[]
+    cursor?: OutcomeVerificationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OutcomeVerificationScalarFieldEnum | OutcomeVerificationScalarFieldEnum[]
   }
 
   /**
@@ -69703,6 +72330,37 @@ export namespace Prisma {
   export type AnalyticsDailyAggScalarFieldEnum = (typeof AnalyticsDailyAggScalarFieldEnum)[keyof typeof AnalyticsDailyAggScalarFieldEnum]
 
 
+  export const OutcomeScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    proposalId: 'proposalId',
+    missionId: 'missionId',
+    reporterId: 'reporterId',
+    counterpartyId: 'counterpartyId',
+    summary: 'summary',
+    verificationLevel: 'verificationLevel',
+    occurredAt: 'occurredAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type OutcomeScalarFieldEnum = (typeof OutcomeScalarFieldEnum)[keyof typeof OutcomeScalarFieldEnum]
+
+
+  export const OutcomeVerificationScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    outcomeId: 'outcomeId',
+    level: 'level',
+    actorId: 'actorId',
+    evidence: 'evidence',
+    note: 'note',
+    createdAt: 'createdAt'
+  };
+
+  export type OutcomeVerificationScalarFieldEnum = (typeof OutcomeVerificationScalarFieldEnum)[keyof typeof OutcomeVerificationScalarFieldEnum]
+
+
   export const OrganizationScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -70103,6 +72761,13 @@ export namespace Prisma {
    * Reference to a field of type 'ReportStatus'
    */
   export type EnumReportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReportStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'OutcomeVerificationLevel'
+   */
+  export type EnumOutcomeVerificationLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OutcomeVerificationLevel'>
     
 
 
@@ -74990,6 +77655,168 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"AnalyticsDailyAgg"> | Date | string
   }
 
+  export type OutcomeWhereInput = {
+    AND?: OutcomeWhereInput | OutcomeWhereInput[]
+    OR?: OutcomeWhereInput[]
+    NOT?: OutcomeWhereInput | OutcomeWhereInput[]
+    id?: StringFilter<"Outcome"> | string
+    organizationId?: StringFilter<"Outcome"> | string
+    proposalId?: StringFilter<"Outcome"> | string
+    missionId?: StringFilter<"Outcome"> | string
+    reporterId?: StringFilter<"Outcome"> | string
+    counterpartyId?: StringFilter<"Outcome"> | string
+    summary?: StringFilter<"Outcome"> | string
+    verificationLevel?: EnumOutcomeVerificationLevelFilter<"Outcome"> | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFilter<"Outcome"> | Date | string
+    createdAt?: DateTimeFilter<"Outcome"> | Date | string
+    updatedAt?: DateTimeFilter<"Outcome"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    verifications?: OutcomeVerificationListRelationFilter
+  }
+
+  export type OutcomeOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    reporterId?: SortOrder
+    counterpartyId?: SortOrder
+    summary?: SortOrder
+    verificationLevel?: SortOrder
+    occurredAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    verifications?: OutcomeVerificationOrderByRelationAggregateInput
+  }
+
+  export type OutcomeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    proposalId?: string
+    AND?: OutcomeWhereInput | OutcomeWhereInput[]
+    OR?: OutcomeWhereInput[]
+    NOT?: OutcomeWhereInput | OutcomeWhereInput[]
+    organizationId?: StringFilter<"Outcome"> | string
+    missionId?: StringFilter<"Outcome"> | string
+    reporterId?: StringFilter<"Outcome"> | string
+    counterpartyId?: StringFilter<"Outcome"> | string
+    summary?: StringFilter<"Outcome"> | string
+    verificationLevel?: EnumOutcomeVerificationLevelFilter<"Outcome"> | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFilter<"Outcome"> | Date | string
+    createdAt?: DateTimeFilter<"Outcome"> | Date | string
+    updatedAt?: DateTimeFilter<"Outcome"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    verifications?: OutcomeVerificationListRelationFilter
+  }, "id" | "proposalId">
+
+  export type OutcomeOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    reporterId?: SortOrder
+    counterpartyId?: SortOrder
+    summary?: SortOrder
+    verificationLevel?: SortOrder
+    occurredAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: OutcomeCountOrderByAggregateInput
+    _max?: OutcomeMaxOrderByAggregateInput
+    _min?: OutcomeMinOrderByAggregateInput
+  }
+
+  export type OutcomeScalarWhereWithAggregatesInput = {
+    AND?: OutcomeScalarWhereWithAggregatesInput | OutcomeScalarWhereWithAggregatesInput[]
+    OR?: OutcomeScalarWhereWithAggregatesInput[]
+    NOT?: OutcomeScalarWhereWithAggregatesInput | OutcomeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Outcome"> | string
+    organizationId?: StringWithAggregatesFilter<"Outcome"> | string
+    proposalId?: StringWithAggregatesFilter<"Outcome"> | string
+    missionId?: StringWithAggregatesFilter<"Outcome"> | string
+    reporterId?: StringWithAggregatesFilter<"Outcome"> | string
+    counterpartyId?: StringWithAggregatesFilter<"Outcome"> | string
+    summary?: StringWithAggregatesFilter<"Outcome"> | string
+    verificationLevel?: EnumOutcomeVerificationLevelWithAggregatesFilter<"Outcome"> | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeWithAggregatesFilter<"Outcome"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"Outcome"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Outcome"> | Date | string
+  }
+
+  export type OutcomeVerificationWhereInput = {
+    AND?: OutcomeVerificationWhereInput | OutcomeVerificationWhereInput[]
+    OR?: OutcomeVerificationWhereInput[]
+    NOT?: OutcomeVerificationWhereInput | OutcomeVerificationWhereInput[]
+    id?: StringFilter<"OutcomeVerification"> | string
+    organizationId?: StringFilter<"OutcomeVerification"> | string
+    outcomeId?: StringFilter<"OutcomeVerification"> | string
+    level?: EnumOutcomeVerificationLevelFilter<"OutcomeVerification"> | $Enums.OutcomeVerificationLevel
+    actorId?: StringNullableFilter<"OutcomeVerification"> | string | null
+    evidence?: StringNullableFilter<"OutcomeVerification"> | string | null
+    note?: StringNullableFilter<"OutcomeVerification"> | string | null
+    createdAt?: DateTimeFilter<"OutcomeVerification"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    outcome?: XOR<OutcomeScalarRelationFilter, OutcomeWhereInput>
+  }
+
+  export type OutcomeVerificationOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    outcomeId?: SortOrder
+    level?: SortOrder
+    actorId?: SortOrderInput | SortOrder
+    evidence?: SortOrderInput | SortOrder
+    note?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    outcome?: OutcomeOrderByWithRelationInput
+  }
+
+  export type OutcomeVerificationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    outcomeId_level_actorId?: OutcomeVerificationOutcomeIdLevelActorIdCompoundUniqueInput
+    AND?: OutcomeVerificationWhereInput | OutcomeVerificationWhereInput[]
+    OR?: OutcomeVerificationWhereInput[]
+    NOT?: OutcomeVerificationWhereInput | OutcomeVerificationWhereInput[]
+    organizationId?: StringFilter<"OutcomeVerification"> | string
+    outcomeId?: StringFilter<"OutcomeVerification"> | string
+    level?: EnumOutcomeVerificationLevelFilter<"OutcomeVerification"> | $Enums.OutcomeVerificationLevel
+    actorId?: StringNullableFilter<"OutcomeVerification"> | string | null
+    evidence?: StringNullableFilter<"OutcomeVerification"> | string | null
+    note?: StringNullableFilter<"OutcomeVerification"> | string | null
+    createdAt?: DateTimeFilter<"OutcomeVerification"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    outcome?: XOR<OutcomeScalarRelationFilter, OutcomeWhereInput>
+  }, "id" | "outcomeId_level_actorId">
+
+  export type OutcomeVerificationOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    outcomeId?: SortOrder
+    level?: SortOrder
+    actorId?: SortOrderInput | SortOrder
+    evidence?: SortOrderInput | SortOrder
+    note?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: OutcomeVerificationCountOrderByAggregateInput
+    _max?: OutcomeVerificationMaxOrderByAggregateInput
+    _min?: OutcomeVerificationMinOrderByAggregateInput
+  }
+
+  export type OutcomeVerificationScalarWhereWithAggregatesInput = {
+    AND?: OutcomeVerificationScalarWhereWithAggregatesInput | OutcomeVerificationScalarWhereWithAggregatesInput[]
+    OR?: OutcomeVerificationScalarWhereWithAggregatesInput[]
+    NOT?: OutcomeVerificationScalarWhereWithAggregatesInput | OutcomeVerificationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"OutcomeVerification"> | string
+    organizationId?: StringWithAggregatesFilter<"OutcomeVerification"> | string
+    outcomeId?: StringWithAggregatesFilter<"OutcomeVerification"> | string
+    level?: EnumOutcomeVerificationLevelWithAggregatesFilter<"OutcomeVerification"> | $Enums.OutcomeVerificationLevel
+    actorId?: StringNullableWithAggregatesFilter<"OutcomeVerification"> | string | null
+    evidence?: StringNullableWithAggregatesFilter<"OutcomeVerification"> | string | null
+    note?: StringNullableWithAggregatesFilter<"OutcomeVerification"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"OutcomeVerification"> | Date | string
+  }
+
   export type OrganizationWhereInput = {
     AND?: OrganizationWhereInput | OrganizationWhereInput[]
     OR?: OrganizationWhereInput[]
@@ -75011,6 +77838,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobListRelationFilter
     notificationDeliveries?: NotificationDeliveryListRelationFilter
     introductionWorkflows?: IntroductionWorkflowListRelationFilter
+    outcomes?: OutcomeListRelationFilter
+    outcomeVerifications?: OutcomeVerificationListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -75031,6 +77860,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobOrderByRelationAggregateInput
     notificationDeliveries?: NotificationDeliveryOrderByRelationAggregateInput
     introductionWorkflows?: IntroductionWorkflowOrderByRelationAggregateInput
+    outcomes?: OutcomeOrderByRelationAggregateInput
+    outcomeVerifications?: OutcomeVerificationOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -75054,6 +77885,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobListRelationFilter
     notificationDeliveries?: NotificationDeliveryListRelationFilter
     introductionWorkflows?: IntroductionWorkflowListRelationFilter
+    outcomes?: OutcomeListRelationFilter
+    outcomeVerifications?: OutcomeVerificationListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -80798,6 +83631,182 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type OutcomeCreateInput = {
+    id?: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel?: $Enums.OutcomeVerificationLevel
+    occurredAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutOutcomesInput
+    verifications?: OutcomeVerificationCreateNestedManyWithoutOutcomeInput
+  }
+
+  export type OutcomeUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel?: $Enums.OutcomeVerificationLevel
+    occurredAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    verifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOutcomeInput
+  }
+
+  export type OutcomeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutOutcomesNestedInput
+    verifications?: OutcomeVerificationUpdateManyWithoutOutcomeNestedInput
+  }
+
+  export type OutcomeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    verifications?: OutcomeVerificationUncheckedUpdateManyWithoutOutcomeNestedInput
+  }
+
+  export type OutcomeCreateManyInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel?: $Enums.OutcomeVerificationLevel
+    occurredAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OutcomeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OutcomeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OutcomeVerificationCreateInput = {
+    id?: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutOutcomeVerificationsInput
+    outcome: OutcomeCreateNestedOneWithoutVerificationsInput
+  }
+
+  export type OutcomeVerificationUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    outcomeId: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
+  }
+
+  export type OutcomeVerificationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutOutcomeVerificationsNestedInput
+    outcome?: OutcomeUpdateOneRequiredWithoutVerificationsNestedInput
+  }
+
+  export type OutcomeVerificationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    outcomeId?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OutcomeVerificationCreateManyInput = {
+    id?: string
+    organizationId: string
+    outcomeId: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
+  }
+
+  export type OutcomeVerificationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OutcomeVerificationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    outcomeId?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type OrganizationCreateInput = {
     id?: string
     name: string
@@ -80816,6 +83825,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -80836,6 +83847,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -80856,6 +83869,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -80876,6 +83891,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -85089,6 +88106,119 @@ export namespace Prisma {
     value?: SortOrder
   }
 
+  export type EnumOutcomeVerificationLevelFilter<$PrismaModel = never> = {
+    equals?: $Enums.OutcomeVerificationLevel | EnumOutcomeVerificationLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.OutcomeVerificationLevel[]
+    notIn?: $Enums.OutcomeVerificationLevel[]
+    not?: NestedEnumOutcomeVerificationLevelFilter<$PrismaModel> | $Enums.OutcomeVerificationLevel
+  }
+
+  export type OutcomeVerificationListRelationFilter = {
+    every?: OutcomeVerificationWhereInput
+    some?: OutcomeVerificationWhereInput
+    none?: OutcomeVerificationWhereInput
+  }
+
+  export type OutcomeVerificationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type OutcomeCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    reporterId?: SortOrder
+    counterpartyId?: SortOrder
+    summary?: SortOrder
+    verificationLevel?: SortOrder
+    occurredAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OutcomeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    reporterId?: SortOrder
+    counterpartyId?: SortOrder
+    summary?: SortOrder
+    verificationLevel?: SortOrder
+    occurredAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OutcomeMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    proposalId?: SortOrder
+    missionId?: SortOrder
+    reporterId?: SortOrder
+    counterpartyId?: SortOrder
+    summary?: SortOrder
+    verificationLevel?: SortOrder
+    occurredAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumOutcomeVerificationLevelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OutcomeVerificationLevel | EnumOutcomeVerificationLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.OutcomeVerificationLevel[]
+    notIn?: $Enums.OutcomeVerificationLevel[]
+    not?: NestedEnumOutcomeVerificationLevelWithAggregatesFilter<$PrismaModel> | $Enums.OutcomeVerificationLevel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOutcomeVerificationLevelFilter<$PrismaModel>
+    _max?: NestedEnumOutcomeVerificationLevelFilter<$PrismaModel>
+  }
+
+  export type OutcomeScalarRelationFilter = {
+    is?: OutcomeWhereInput
+    isNot?: OutcomeWhereInput
+  }
+
+  export type OutcomeVerificationOutcomeIdLevelActorIdCompoundUniqueInput = {
+    outcomeId: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId: string
+  }
+
+  export type OutcomeVerificationCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    outcomeId?: SortOrder
+    level?: SortOrder
+    actorId?: SortOrder
+    evidence?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type OutcomeVerificationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    outcomeId?: SortOrder
+    level?: SortOrder
+    actorId?: SortOrder
+    evidence?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type OutcomeVerificationMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    outcomeId?: SortOrder
+    level?: SortOrder
+    actorId?: SortOrder
+    evidence?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type EnumOrganizationStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.OrganizationStatus | EnumOrganizationStatusFieldRefInput<$PrismaModel>
     in?: $Enums.OrganizationStatus[]
@@ -85126,6 +88256,12 @@ export namespace Prisma {
     none?: IntroductionWorkflowWhereInput
   }
 
+  export type OutcomeListRelationFilter = {
+    every?: OutcomeWhereInput
+    some?: OutcomeWhereInput
+    none?: OutcomeWhereInput
+  }
+
   export type TenantAuditEventOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -85143,6 +88279,10 @@ export namespace Prisma {
   }
 
   export type IntroductionWorkflowOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type OutcomeOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -88609,6 +91749,94 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReportsReceivedInput, UserUpdateWithoutReportsReceivedInput>, UserUncheckedUpdateWithoutReportsReceivedInput>
   }
 
+  export type OrganizationCreateNestedOneWithoutOutcomesInput = {
+    create?: XOR<OrganizationCreateWithoutOutcomesInput, OrganizationUncheckedCreateWithoutOutcomesInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutOutcomesInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type OutcomeVerificationCreateNestedManyWithoutOutcomeInput = {
+    create?: XOR<OutcomeVerificationCreateWithoutOutcomeInput, OutcomeVerificationUncheckedCreateWithoutOutcomeInput> | OutcomeVerificationCreateWithoutOutcomeInput[] | OutcomeVerificationUncheckedCreateWithoutOutcomeInput[]
+    connectOrCreate?: OutcomeVerificationCreateOrConnectWithoutOutcomeInput | OutcomeVerificationCreateOrConnectWithoutOutcomeInput[]
+    createMany?: OutcomeVerificationCreateManyOutcomeInputEnvelope
+    connect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+  }
+
+  export type OutcomeVerificationUncheckedCreateNestedManyWithoutOutcomeInput = {
+    create?: XOR<OutcomeVerificationCreateWithoutOutcomeInput, OutcomeVerificationUncheckedCreateWithoutOutcomeInput> | OutcomeVerificationCreateWithoutOutcomeInput[] | OutcomeVerificationUncheckedCreateWithoutOutcomeInput[]
+    connectOrCreate?: OutcomeVerificationCreateOrConnectWithoutOutcomeInput | OutcomeVerificationCreateOrConnectWithoutOutcomeInput[]
+    createMany?: OutcomeVerificationCreateManyOutcomeInputEnvelope
+    connect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+  }
+
+  export type EnumOutcomeVerificationLevelFieldUpdateOperationsInput = {
+    set?: $Enums.OutcomeVerificationLevel
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutOutcomesNestedInput = {
+    create?: XOR<OrganizationCreateWithoutOutcomesInput, OrganizationUncheckedCreateWithoutOutcomesInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutOutcomesInput
+    upsert?: OrganizationUpsertWithoutOutcomesInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutOutcomesInput, OrganizationUpdateWithoutOutcomesInput>, OrganizationUncheckedUpdateWithoutOutcomesInput>
+  }
+
+  export type OutcomeVerificationUpdateManyWithoutOutcomeNestedInput = {
+    create?: XOR<OutcomeVerificationCreateWithoutOutcomeInput, OutcomeVerificationUncheckedCreateWithoutOutcomeInput> | OutcomeVerificationCreateWithoutOutcomeInput[] | OutcomeVerificationUncheckedCreateWithoutOutcomeInput[]
+    connectOrCreate?: OutcomeVerificationCreateOrConnectWithoutOutcomeInput | OutcomeVerificationCreateOrConnectWithoutOutcomeInput[]
+    upsert?: OutcomeVerificationUpsertWithWhereUniqueWithoutOutcomeInput | OutcomeVerificationUpsertWithWhereUniqueWithoutOutcomeInput[]
+    createMany?: OutcomeVerificationCreateManyOutcomeInputEnvelope
+    set?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    disconnect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    delete?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    connect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    update?: OutcomeVerificationUpdateWithWhereUniqueWithoutOutcomeInput | OutcomeVerificationUpdateWithWhereUniqueWithoutOutcomeInput[]
+    updateMany?: OutcomeVerificationUpdateManyWithWhereWithoutOutcomeInput | OutcomeVerificationUpdateManyWithWhereWithoutOutcomeInput[]
+    deleteMany?: OutcomeVerificationScalarWhereInput | OutcomeVerificationScalarWhereInput[]
+  }
+
+  export type OutcomeVerificationUncheckedUpdateManyWithoutOutcomeNestedInput = {
+    create?: XOR<OutcomeVerificationCreateWithoutOutcomeInput, OutcomeVerificationUncheckedCreateWithoutOutcomeInput> | OutcomeVerificationCreateWithoutOutcomeInput[] | OutcomeVerificationUncheckedCreateWithoutOutcomeInput[]
+    connectOrCreate?: OutcomeVerificationCreateOrConnectWithoutOutcomeInput | OutcomeVerificationCreateOrConnectWithoutOutcomeInput[]
+    upsert?: OutcomeVerificationUpsertWithWhereUniqueWithoutOutcomeInput | OutcomeVerificationUpsertWithWhereUniqueWithoutOutcomeInput[]
+    createMany?: OutcomeVerificationCreateManyOutcomeInputEnvelope
+    set?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    disconnect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    delete?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    connect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    update?: OutcomeVerificationUpdateWithWhereUniqueWithoutOutcomeInput | OutcomeVerificationUpdateWithWhereUniqueWithoutOutcomeInput[]
+    updateMany?: OutcomeVerificationUpdateManyWithWhereWithoutOutcomeInput | OutcomeVerificationUpdateManyWithWhereWithoutOutcomeInput[]
+    deleteMany?: OutcomeVerificationScalarWhereInput | OutcomeVerificationScalarWhereInput[]
+  }
+
+  export type OrganizationCreateNestedOneWithoutOutcomeVerificationsInput = {
+    create?: XOR<OrganizationCreateWithoutOutcomeVerificationsInput, OrganizationUncheckedCreateWithoutOutcomeVerificationsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutOutcomeVerificationsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type OutcomeCreateNestedOneWithoutVerificationsInput = {
+    create?: XOR<OutcomeCreateWithoutVerificationsInput, OutcomeUncheckedCreateWithoutVerificationsInput>
+    connectOrCreate?: OutcomeCreateOrConnectWithoutVerificationsInput
+    connect?: OutcomeWhereUniqueInput
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutOutcomeVerificationsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutOutcomeVerificationsInput, OrganizationUncheckedCreateWithoutOutcomeVerificationsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutOutcomeVerificationsInput
+    upsert?: OrganizationUpsertWithoutOutcomeVerificationsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutOutcomeVerificationsInput, OrganizationUpdateWithoutOutcomeVerificationsInput>, OrganizationUncheckedUpdateWithoutOutcomeVerificationsInput>
+  }
+
+  export type OutcomeUpdateOneRequiredWithoutVerificationsNestedInput = {
+    create?: XOR<OutcomeCreateWithoutVerificationsInput, OutcomeUncheckedCreateWithoutVerificationsInput>
+    connectOrCreate?: OutcomeCreateOrConnectWithoutVerificationsInput
+    upsert?: OutcomeUpsertWithoutVerificationsInput
+    connect?: OutcomeWhereUniqueInput
+    update?: XOR<XOR<OutcomeUpdateToOneWithWhereWithoutVerificationsInput, OutcomeUpdateWithoutVerificationsInput>, OutcomeUncheckedUpdateWithoutVerificationsInput>
+  }
+
   export type MembershipCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -88686,6 +91914,20 @@ export namespace Prisma {
     connect?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
   }
 
+  export type OutcomeCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<OutcomeCreateWithoutOrganizationInput, OutcomeUncheckedCreateWithoutOrganizationInput> | OutcomeCreateWithoutOrganizationInput[] | OutcomeUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: OutcomeCreateOrConnectWithoutOrganizationInput | OutcomeCreateOrConnectWithoutOrganizationInput[]
+    createMany?: OutcomeCreateManyOrganizationInputEnvelope
+    connect?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+  }
+
+  export type OutcomeVerificationCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<OutcomeVerificationCreateWithoutOrganizationInput, OutcomeVerificationUncheckedCreateWithoutOrganizationInput> | OutcomeVerificationCreateWithoutOrganizationInput[] | OutcomeVerificationUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: OutcomeVerificationCreateOrConnectWithoutOrganizationInput | OutcomeVerificationCreateOrConnectWithoutOrganizationInput[]
+    createMany?: OutcomeVerificationCreateManyOrganizationInputEnvelope
+    connect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+  }
+
   export type MembershipUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -88761,6 +92003,20 @@ export namespace Prisma {
     connectOrCreate?: IntroductionWorkflowCreateOrConnectWithoutOrganizationInput | IntroductionWorkflowCreateOrConnectWithoutOrganizationInput[]
     createMany?: IntroductionWorkflowCreateManyOrganizationInputEnvelope
     connect?: IntroductionWorkflowWhereUniqueInput | IntroductionWorkflowWhereUniqueInput[]
+  }
+
+  export type OutcomeUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<OutcomeCreateWithoutOrganizationInput, OutcomeUncheckedCreateWithoutOrganizationInput> | OutcomeCreateWithoutOrganizationInput[] | OutcomeUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: OutcomeCreateOrConnectWithoutOrganizationInput | OutcomeCreateOrConnectWithoutOrganizationInput[]
+    createMany?: OutcomeCreateManyOrganizationInputEnvelope
+    connect?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+  }
+
+  export type OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<OutcomeVerificationCreateWithoutOrganizationInput, OutcomeVerificationUncheckedCreateWithoutOrganizationInput> | OutcomeVerificationCreateWithoutOrganizationInput[] | OutcomeVerificationUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: OutcomeVerificationCreateOrConnectWithoutOrganizationInput | OutcomeVerificationCreateOrConnectWithoutOrganizationInput[]
+    createMany?: OutcomeVerificationCreateManyOrganizationInputEnvelope
+    connect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
   }
 
   export type EnumOrganizationStatusFieldUpdateOperationsInput = {
@@ -88921,6 +92177,34 @@ export namespace Prisma {
     deleteMany?: IntroductionWorkflowScalarWhereInput | IntroductionWorkflowScalarWhereInput[]
   }
 
+  export type OutcomeUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<OutcomeCreateWithoutOrganizationInput, OutcomeUncheckedCreateWithoutOrganizationInput> | OutcomeCreateWithoutOrganizationInput[] | OutcomeUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: OutcomeCreateOrConnectWithoutOrganizationInput | OutcomeCreateOrConnectWithoutOrganizationInput[]
+    upsert?: OutcomeUpsertWithWhereUniqueWithoutOrganizationInput | OutcomeUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: OutcomeCreateManyOrganizationInputEnvelope
+    set?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+    disconnect?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+    delete?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+    connect?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+    update?: OutcomeUpdateWithWhereUniqueWithoutOrganizationInput | OutcomeUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: OutcomeUpdateManyWithWhereWithoutOrganizationInput | OutcomeUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: OutcomeScalarWhereInput | OutcomeScalarWhereInput[]
+  }
+
+  export type OutcomeVerificationUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<OutcomeVerificationCreateWithoutOrganizationInput, OutcomeVerificationUncheckedCreateWithoutOrganizationInput> | OutcomeVerificationCreateWithoutOrganizationInput[] | OutcomeVerificationUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: OutcomeVerificationCreateOrConnectWithoutOrganizationInput | OutcomeVerificationCreateOrConnectWithoutOrganizationInput[]
+    upsert?: OutcomeVerificationUpsertWithWhereUniqueWithoutOrganizationInput | OutcomeVerificationUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: OutcomeVerificationCreateManyOrganizationInputEnvelope
+    set?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    disconnect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    delete?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    connect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    update?: OutcomeVerificationUpdateWithWhereUniqueWithoutOrganizationInput | OutcomeVerificationUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: OutcomeVerificationUpdateManyWithWhereWithoutOrganizationInput | OutcomeVerificationUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: OutcomeVerificationScalarWhereInput | OutcomeVerificationScalarWhereInput[]
+  }
+
   export type MembershipUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -89073,6 +92357,34 @@ export namespace Prisma {
     update?: IntroductionWorkflowUpdateWithWhereUniqueWithoutOrganizationInput | IntroductionWorkflowUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: IntroductionWorkflowUpdateManyWithWhereWithoutOrganizationInput | IntroductionWorkflowUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: IntroductionWorkflowScalarWhereInput | IntroductionWorkflowScalarWhereInput[]
+  }
+
+  export type OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<OutcomeCreateWithoutOrganizationInput, OutcomeUncheckedCreateWithoutOrganizationInput> | OutcomeCreateWithoutOrganizationInput[] | OutcomeUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: OutcomeCreateOrConnectWithoutOrganizationInput | OutcomeCreateOrConnectWithoutOrganizationInput[]
+    upsert?: OutcomeUpsertWithWhereUniqueWithoutOrganizationInput | OutcomeUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: OutcomeCreateManyOrganizationInputEnvelope
+    set?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+    disconnect?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+    delete?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+    connect?: OutcomeWhereUniqueInput | OutcomeWhereUniqueInput[]
+    update?: OutcomeUpdateWithWhereUniqueWithoutOrganizationInput | OutcomeUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: OutcomeUpdateManyWithWhereWithoutOrganizationInput | OutcomeUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: OutcomeScalarWhereInput | OutcomeScalarWhereInput[]
+  }
+
+  export type OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<OutcomeVerificationCreateWithoutOrganizationInput, OutcomeVerificationUncheckedCreateWithoutOrganizationInput> | OutcomeVerificationCreateWithoutOrganizationInput[] | OutcomeVerificationUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: OutcomeVerificationCreateOrConnectWithoutOrganizationInput | OutcomeVerificationCreateOrConnectWithoutOrganizationInput[]
+    upsert?: OutcomeVerificationUpsertWithWhereUniqueWithoutOrganizationInput | OutcomeVerificationUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: OutcomeVerificationCreateManyOrganizationInputEnvelope
+    set?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    disconnect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    delete?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    connect?: OutcomeVerificationWhereUniqueInput | OutcomeVerificationWhereUniqueInput[]
+    update?: OutcomeVerificationUpdateWithWhereUniqueWithoutOrganizationInput | OutcomeVerificationUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: OutcomeVerificationUpdateManyWithWhereWithoutOrganizationInput | OutcomeVerificationUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: OutcomeVerificationScalarWhereInput | OutcomeVerificationScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutMembershipsInput = {
@@ -90123,6 +93435,23 @@ export namespace Prisma {
     _max?: NestedEnumReportStatusFilter<$PrismaModel>
   }
 
+  export type NestedEnumOutcomeVerificationLevelFilter<$PrismaModel = never> = {
+    equals?: $Enums.OutcomeVerificationLevel | EnumOutcomeVerificationLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.OutcomeVerificationLevel[]
+    notIn?: $Enums.OutcomeVerificationLevel[]
+    not?: NestedEnumOutcomeVerificationLevelFilter<$PrismaModel> | $Enums.OutcomeVerificationLevel
+  }
+
+  export type NestedEnumOutcomeVerificationLevelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OutcomeVerificationLevel | EnumOutcomeVerificationLevelFieldRefInput<$PrismaModel>
+    in?: $Enums.OutcomeVerificationLevel[]
+    notIn?: $Enums.OutcomeVerificationLevel[]
+    not?: NestedEnumOutcomeVerificationLevelWithAggregatesFilter<$PrismaModel> | $Enums.OutcomeVerificationLevel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOutcomeVerificationLevelFilter<$PrismaModel>
+    _max?: NestedEnumOutcomeVerificationLevelFilter<$PrismaModel>
+  }
+
   export type NestedEnumOrganizationStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.OrganizationStatus | EnumOrganizationStatusFieldRefInput<$PrismaModel>
     in?: $Enums.OrganizationStatus[]
@@ -90191,6 +93520,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionsInput = {
@@ -90210,6 +93541,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionsInput = {
@@ -90475,6 +93808,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionsInput = {
@@ -90494,6 +93829,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMissionsInput = {
@@ -90737,6 +94074,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSocialIntentsInput = {
@@ -90756,6 +94095,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSocialIntentsInput = {
@@ -90957,6 +94298,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSocialIntentsInput = {
@@ -90976,6 +94319,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutSocialIntentsInput = {
@@ -91173,6 +94518,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionParticipationsInput = {
@@ -91192,6 +94539,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionParticipationsInput = {
@@ -91393,6 +94742,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionParticipationsInput = {
@@ -91412,6 +94763,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutParticipationsInput = {
@@ -91609,6 +94962,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIdempotencyRecordsInput = {
@@ -91628,6 +94983,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIdempotencyRecordsInput = {
@@ -91663,6 +95020,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput = {
@@ -91682,6 +95041,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutConnectionProposalsInput = {
@@ -91701,6 +95062,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutConnectionProposalsInput = {
@@ -91720,6 +95083,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutConnectionProposalsInput = {
@@ -92092,6 +95457,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutConnectionProposalsInput = {
@@ -92111,6 +95478,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutProposalsInput = {
@@ -92493,6 +95862,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutProposalDecisionsInput = {
@@ -92512,6 +95883,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutProposalDecisionsInput = {
@@ -92701,6 +96074,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutProposalDecisionsInput = {
@@ -92720,6 +96095,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ConnectionProposalUpsertWithoutDecisionsInput = {
@@ -92905,6 +96282,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutWorkflowJobsInput = {
@@ -92924,6 +96303,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutWorkflowJobsInput = {
@@ -92959,6 +96340,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutWorkflowJobsInput = {
@@ -92978,6 +96361,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutNotificationDeliveriesInput = {
@@ -92997,6 +96382,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutNotificationDeliveriesInput = {
@@ -93016,6 +96403,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutNotificationDeliveriesInput = {
@@ -93051,6 +96440,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutNotificationDeliveriesInput = {
@@ -93070,6 +96461,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutIntroductionWorkflowsInput = {
@@ -93089,6 +96482,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIntroductionWorkflowsInput = {
@@ -93108,6 +96503,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIntroductionWorkflowsInput = {
@@ -93180,6 +96577,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIntroductionWorkflowsInput = {
@@ -93199,6 +96598,8 @@ export namespace Prisma {
     proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ConnectionProposalUpsertWithoutIntroductionWorkflowInput = {
@@ -105507,6 +108908,337 @@ export namespace Prisma {
     sincerityWallet?: SincerityWalletUncheckedUpdateOneWithoutUserNestedInput
   }
 
+  export type OrganizationCreateWithoutOutcomesInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutOutcomesInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutOutcomesInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutOutcomesInput, OrganizationUncheckedCreateWithoutOutcomesInput>
+  }
+
+  export type OutcomeVerificationCreateWithoutOutcomeInput = {
+    id?: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutOutcomeVerificationsInput
+  }
+
+  export type OutcomeVerificationUncheckedCreateWithoutOutcomeInput = {
+    id?: string
+    organizationId: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
+  }
+
+  export type OutcomeVerificationCreateOrConnectWithoutOutcomeInput = {
+    where: OutcomeVerificationWhereUniqueInput
+    create: XOR<OutcomeVerificationCreateWithoutOutcomeInput, OutcomeVerificationUncheckedCreateWithoutOutcomeInput>
+  }
+
+  export type OutcomeVerificationCreateManyOutcomeInputEnvelope = {
+    data: OutcomeVerificationCreateManyOutcomeInput | OutcomeVerificationCreateManyOutcomeInput[]
+  }
+
+  export type OrganizationUpsertWithoutOutcomesInput = {
+    update: XOR<OrganizationUpdateWithoutOutcomesInput, OrganizationUncheckedUpdateWithoutOutcomesInput>
+    create: XOR<OrganizationCreateWithoutOutcomesInput, OrganizationUncheckedCreateWithoutOutcomesInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutOutcomesInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutOutcomesInput, OrganizationUncheckedUpdateWithoutOutcomesInput>
+  }
+
+  export type OrganizationUpdateWithoutOutcomesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutOutcomesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OutcomeVerificationUpsertWithWhereUniqueWithoutOutcomeInput = {
+    where: OutcomeVerificationWhereUniqueInput
+    update: XOR<OutcomeVerificationUpdateWithoutOutcomeInput, OutcomeVerificationUncheckedUpdateWithoutOutcomeInput>
+    create: XOR<OutcomeVerificationCreateWithoutOutcomeInput, OutcomeVerificationUncheckedCreateWithoutOutcomeInput>
+  }
+
+  export type OutcomeVerificationUpdateWithWhereUniqueWithoutOutcomeInput = {
+    where: OutcomeVerificationWhereUniqueInput
+    data: XOR<OutcomeVerificationUpdateWithoutOutcomeInput, OutcomeVerificationUncheckedUpdateWithoutOutcomeInput>
+  }
+
+  export type OutcomeVerificationUpdateManyWithWhereWithoutOutcomeInput = {
+    where: OutcomeVerificationScalarWhereInput
+    data: XOR<OutcomeVerificationUpdateManyMutationInput, OutcomeVerificationUncheckedUpdateManyWithoutOutcomeInput>
+  }
+
+  export type OutcomeVerificationScalarWhereInput = {
+    AND?: OutcomeVerificationScalarWhereInput | OutcomeVerificationScalarWhereInput[]
+    OR?: OutcomeVerificationScalarWhereInput[]
+    NOT?: OutcomeVerificationScalarWhereInput | OutcomeVerificationScalarWhereInput[]
+    id?: StringFilter<"OutcomeVerification"> | string
+    organizationId?: StringFilter<"OutcomeVerification"> | string
+    outcomeId?: StringFilter<"OutcomeVerification"> | string
+    level?: EnumOutcomeVerificationLevelFilter<"OutcomeVerification"> | $Enums.OutcomeVerificationLevel
+    actorId?: StringNullableFilter<"OutcomeVerification"> | string | null
+    evidence?: StringNullableFilter<"OutcomeVerification"> | string | null
+    note?: StringNullableFilter<"OutcomeVerification"> | string | null
+    createdAt?: DateTimeFilter<"OutcomeVerification"> | Date | string
+  }
+
+  export type OrganizationCreateWithoutOutcomeVerificationsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutOutcomeVerificationsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutOutcomeVerificationsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutOutcomeVerificationsInput, OrganizationUncheckedCreateWithoutOutcomeVerificationsInput>
+  }
+
+  export type OutcomeCreateWithoutVerificationsInput = {
+    id?: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel?: $Enums.OutcomeVerificationLevel
+    occurredAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutOutcomesInput
+  }
+
+  export type OutcomeUncheckedCreateWithoutVerificationsInput = {
+    id?: string
+    organizationId: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel?: $Enums.OutcomeVerificationLevel
+    occurredAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OutcomeCreateOrConnectWithoutVerificationsInput = {
+    where: OutcomeWhereUniqueInput
+    create: XOR<OutcomeCreateWithoutVerificationsInput, OutcomeUncheckedCreateWithoutVerificationsInput>
+  }
+
+  export type OrganizationUpsertWithoutOutcomeVerificationsInput = {
+    update: XOR<OrganizationUpdateWithoutOutcomeVerificationsInput, OrganizationUncheckedUpdateWithoutOutcomeVerificationsInput>
+    create: XOR<OrganizationCreateWithoutOutcomeVerificationsInput, OrganizationUncheckedCreateWithoutOutcomeVerificationsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutOutcomeVerificationsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutOutcomeVerificationsInput, OrganizationUncheckedUpdateWithoutOutcomeVerificationsInput>
+  }
+
+  export type OrganizationUpdateWithoutOutcomeVerificationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutOutcomeVerificationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OutcomeUpsertWithoutVerificationsInput = {
+    update: XOR<OutcomeUpdateWithoutVerificationsInput, OutcomeUncheckedUpdateWithoutVerificationsInput>
+    create: XOR<OutcomeCreateWithoutVerificationsInput, OutcomeUncheckedCreateWithoutVerificationsInput>
+    where?: OutcomeWhereInput
+  }
+
+  export type OutcomeUpdateToOneWithWhereWithoutVerificationsInput = {
+    where?: OutcomeWhereInput
+    data: XOR<OutcomeUpdateWithoutVerificationsInput, OutcomeUncheckedUpdateWithoutVerificationsInput>
+  }
+
+  export type OutcomeUpdateWithoutVerificationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutOutcomesNestedInput
+  }
+
+  export type OutcomeUncheckedUpdateWithoutVerificationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type MembershipCreateWithoutOrganizationInput = {
     id?: string
     role?: $Enums.MembershipRole
@@ -105918,6 +109650,72 @@ export namespace Prisma {
     data: IntroductionWorkflowCreateManyOrganizationInput | IntroductionWorkflowCreateManyOrganizationInput[]
   }
 
+  export type OutcomeCreateWithoutOrganizationInput = {
+    id?: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel?: $Enums.OutcomeVerificationLevel
+    occurredAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    verifications?: OutcomeVerificationCreateNestedManyWithoutOutcomeInput
+  }
+
+  export type OutcomeUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel?: $Enums.OutcomeVerificationLevel
+    occurredAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    verifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOutcomeInput
+  }
+
+  export type OutcomeCreateOrConnectWithoutOrganizationInput = {
+    where: OutcomeWhereUniqueInput
+    create: XOR<OutcomeCreateWithoutOrganizationInput, OutcomeUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type OutcomeCreateManyOrganizationInputEnvelope = {
+    data: OutcomeCreateManyOrganizationInput | OutcomeCreateManyOrganizationInput[]
+  }
+
+  export type OutcomeVerificationCreateWithoutOrganizationInput = {
+    id?: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
+    outcome: OutcomeCreateNestedOneWithoutVerificationsInput
+  }
+
+  export type OutcomeVerificationUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    outcomeId: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
+  }
+
+  export type OutcomeVerificationCreateOrConnectWithoutOrganizationInput = {
+    where: OutcomeVerificationWhereUniqueInput
+    create: XOR<OutcomeVerificationCreateWithoutOrganizationInput, OutcomeVerificationUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type OutcomeVerificationCreateManyOrganizationInputEnvelope = {
+    data: OutcomeVerificationCreateManyOrganizationInput | OutcomeVerificationCreateManyOrganizationInput[]
+  }
+
   export type MembershipUpsertWithWhereUniqueWithoutOrganizationInput = {
     where: MembershipWhereUniqueInput
     update: XOR<MembershipUpdateWithoutOrganizationInput, MembershipUncheckedUpdateWithoutOrganizationInput>
@@ -106187,6 +109985,55 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"IntroductionWorkflow"> | Date | string
   }
 
+  export type OutcomeUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: OutcomeWhereUniqueInput
+    update: XOR<OutcomeUpdateWithoutOrganizationInput, OutcomeUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<OutcomeCreateWithoutOrganizationInput, OutcomeUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type OutcomeUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: OutcomeWhereUniqueInput
+    data: XOR<OutcomeUpdateWithoutOrganizationInput, OutcomeUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type OutcomeUpdateManyWithWhereWithoutOrganizationInput = {
+    where: OutcomeScalarWhereInput
+    data: XOR<OutcomeUpdateManyMutationInput, OutcomeUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type OutcomeScalarWhereInput = {
+    AND?: OutcomeScalarWhereInput | OutcomeScalarWhereInput[]
+    OR?: OutcomeScalarWhereInput[]
+    NOT?: OutcomeScalarWhereInput | OutcomeScalarWhereInput[]
+    id?: StringFilter<"Outcome"> | string
+    organizationId?: StringFilter<"Outcome"> | string
+    proposalId?: StringFilter<"Outcome"> | string
+    missionId?: StringFilter<"Outcome"> | string
+    reporterId?: StringFilter<"Outcome"> | string
+    counterpartyId?: StringFilter<"Outcome"> | string
+    summary?: StringFilter<"Outcome"> | string
+    verificationLevel?: EnumOutcomeVerificationLevelFilter<"Outcome"> | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFilter<"Outcome"> | Date | string
+    createdAt?: DateTimeFilter<"Outcome"> | Date | string
+    updatedAt?: DateTimeFilter<"Outcome"> | Date | string
+  }
+
+  export type OutcomeVerificationUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: OutcomeVerificationWhereUniqueInput
+    update: XOR<OutcomeVerificationUpdateWithoutOrganizationInput, OutcomeVerificationUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<OutcomeVerificationCreateWithoutOrganizationInput, OutcomeVerificationUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type OutcomeVerificationUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: OutcomeVerificationWhereUniqueInput
+    data: XOR<OutcomeVerificationUpdateWithoutOrganizationInput, OutcomeVerificationUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type OutcomeVerificationUpdateManyWithWhereWithoutOrganizationInput = {
+    where: OutcomeVerificationScalarWhereInput
+    data: XOR<OutcomeVerificationUpdateManyMutationInput, OutcomeVerificationUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
   export type OrganizationCreateWithoutMembershipsInput = {
     id?: string
     name: string
@@ -106204,6 +110051,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMembershipsInput = {
@@ -106223,6 +110072,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMembershipsInput = {
@@ -106375,6 +110226,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMembershipsInput = {
@@ -106394,6 +110247,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMembershipsInput = {
@@ -106536,6 +110391,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAuditEventsInput = {
@@ -106555,6 +110412,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
     notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
     introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAuditEventsInput = {
@@ -106590,6 +110449,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAuditEventsInput = {
@@ -106609,6 +110470,8 @@ export namespace Prisma {
     workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
     notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionParticipationCreateManyMissionInput = {
@@ -109525,6 +113388,46 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type OutcomeVerificationCreateManyOutcomeInput = {
+    id?: string
+    organizationId: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
+  }
+
+  export type OutcomeVerificationUpdateWithoutOutcomeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutOutcomeVerificationsNestedInput
+  }
+
+  export type OutcomeVerificationUncheckedUpdateWithoutOutcomeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OutcomeVerificationUncheckedUpdateManyWithoutOutcomeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type MembershipCreateManyOrganizationInput = {
     id?: string
     userId: string
@@ -109674,6 +113577,29 @@ export namespace Prisma {
     timeline?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type OutcomeCreateManyOrganizationInput = {
+    id?: string
+    proposalId: string
+    missionId: string
+    reporterId: string
+    counterpartyId: string
+    summary: string
+    verificationLevel?: $Enums.OutcomeVerificationLevel
+    occurredAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OutcomeVerificationCreateManyOrganizationInput = {
+    id?: string
+    outcomeId: string
+    level: $Enums.OutcomeVerificationLevel
+    actorId?: string | null
+    evidence?: string | null
+    note?: string | null
+    createdAt?: Date | string
   }
 
   export type MembershipUpdateWithoutOrganizationInput = {
@@ -110137,6 +114063,77 @@ export namespace Prisma {
     timeline?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OutcomeUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    verifications?: OutcomeVerificationUpdateManyWithoutOutcomeNestedInput
+  }
+
+  export type OutcomeUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    verifications?: OutcomeVerificationUncheckedUpdateManyWithoutOutcomeNestedInput
+  }
+
+  export type OutcomeUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    proposalId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    reporterId?: StringFieldUpdateOperationsInput | string
+    counterpartyId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    verificationLevel?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OutcomeVerificationUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    outcome?: OutcomeUpdateOneRequiredWithoutVerificationsNestedInput
+  }
+
+  export type OutcomeVerificationUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    outcomeId?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OutcomeVerificationUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    outcomeId?: StringFieldUpdateOperationsInput | string
+    level?: EnumOutcomeVerificationLevelFieldUpdateOperationsInput | $Enums.OutcomeVerificationLevel
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
+    evidence?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

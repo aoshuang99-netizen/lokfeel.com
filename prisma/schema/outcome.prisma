@@ -1,0 +1,116 @@
+// ═══════════════════════════════════════════════════════════════
+// OUTCOME — T08 成果验证、成本归因与订阅
+//
+// 对齐：AC-15（自报与双方确认**分开**，不把系统猜测计为已验证）
+//       AC-16（任务成本 / 人工工时 / 介绍漏斗**可复算**）
+//       AC-21（用量可复算；退款/失败/升级/降级状态一致）
+//
+// 设计约束（继承 tenancy.prisma / connection.prisma 的同一套）：
+//   1. **纯新增** —— 本文件不改动既有模型的任何列语义，可独立上线（零停机、零回归）。
+//   2. **方言无关** —— 不含任何 `@db.*` 原生类型标注，同一份定义可同时为
+//      libSQL（当前生产）与 PostgreSQL（M6 目标）生成；差异只体现在迁移 SQL。
+//   3. **软引用优先** —— 成果与验证是**证据**，不应随被引用行级联消失
+//      （同 `WorkflowJob.proposalId` 的取向，见 connection.prisma 文件头）。
+//   4. **验证级别是派生值，不是入参** —— 见 `src/lib/outcome/verification.ts`。
+//      🔴 若允许客户端直接写 `verificationLevel`，AC-15 会在第一次越权调用时失效。
+//
+// 为什么**不**复用 core.prisma 的 `Subscription` / `Payment`：
+//   它们面向**个人 B2C**（`userId` + Stripe），而 T08 是**组织级用量计费**（`organizationId`）。
+//   混用会让「这个用户是不是会员」这条既有查询悄悄包含社群订阅 —— 最典型的污染方式。
+//   `AnalyticsEvent` 同理不复用：它是"用户做了什么"的行为流，不是"业务产出了什么"的账。
+// ═══════════════════════════════════════════════════════════════
+
+/// 成果验证级别（三级，逐级升高）。
+/// 🔴 **派生自 `OutcomeVerification` 记录集**，不是可自由设置的字段。
+enum OutcomeVerificationLevel {
+  SELF_REPORTED // 仅上报方陈述 —— 🔴 **不算验证成功**（AC-15 的字面要求）
+  COUNTERPARTY_CONFIRMED // 对手方确认
+  EXTERNALLY_VERIFIED // 外部证据核验（运营，`outcome.verify`，仅 ADMIN+）
+}
+
+/// 成果记录：一次连接（提案）的最终产出。
+///
+/// 与 `IntroductionWorkflow` 的关系：提案 1:1 绑定一份成果。
+/// `OUTCOME_RECORDED` 是阶段机终态（见 `src/lib/workflow/stage-machine.ts`），
+/// 但本表**不**强 FK 到提案 —— 见下 `proposalId` 注释。
+model Outcome {
+  id String @id @default(cuid())
+
+  /// 租户谓词。**不可省** —— 所有查询都必须以它为首要条件（T01 铁律）。
+  organizationId String
+
+  /// 软引用：挂载的提案。**刻意无外键** —— 成果是被删资源的证据，
+  /// 删提案不应连带抹掉"这里曾经发生过一次成功的连接"。
+  /// `@@unique` 保证一个提案只落一份成果（`OUTCOME_RECORDED` 是终态）。
+  proposalId String
+
+  /// 软引用：租户内筛选用（同 `IntroductionWorkflow.missionId`）。
+  missionId String
+
+  /// 软引用：上报方。**不进 DTO** —— 返回 userId 等于把"谁跟谁连接了"这条
+  /// 关系数据披露给任意 `outcome.read` 持有者（MEMBER 起即有）。DTO 只给角色。
+  reporterId String
+
+  /// 软引用：对手方。**不进 DTO**，同上。
+  counterpartyId String
+
+  /// 上报方的陈述（自报内容）。这是**原始事实**，不是结论 —— 它本身不能证明成功。
+  summary String
+
+  /// 🔴 **派生快照**：只由服务层依 `OutcomeVerification` 记录集写入（`deriveVerificationLevel`），
+  /// **不接受客户端入参**。默认 `SELF_REPORTED` 即"下限"：上报即得，但**不是**验证成功。
+  verificationLevel OutcomeVerificationLevel @default(SELF_REPORTED)
+
+  /// 成果发生时间（**业务时间**，可回填）。与 `createdAt`（系统看见的时间）刻意分开：
+  /// 成本/漏斗按时段复算时，口径必须明确取哪一个。
+  occurredAt DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization  Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  verifications OutcomeVerification[]
+
+  /// 一个提案只落一份成果。
+  @@unique([proposalId])
+  /// 运营视图按"验证级别"分桶（"已验证 / 仅自报"）是主查询。
+  @@index([organizationId, verificationLevel])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, missionId])
+}
+
+/// 验证记录：每一次"确认 / 核验"是一条**不可变记录**。
+///
+/// 事件溯源：级别由**记录集**派生（`deriveVerificationLevel`），不由单条记录决定。
+/// 想撤销一次确认，就再记一条相反语义的记录，而不是**改写历史** ——
+/// 后者会让"这条成果当时算不算数"永远无法回溯。
+model OutcomeVerification {
+  id String @id @default(cuid())
+
+  organizationId String
+  outcomeId String
+
+  /// 本条记录把级别抬到哪一档。派生时取**记录集中最高**的一档。
+  level OutcomeVerificationLevel
+
+  /// 确认 / 核验人 userId。系统核验为 null。**不进 DTO**。
+  actorId String?
+
+  /// 证据摘要（**脱敏后**落库）。**不进 DTO** —— 原文可能含 PII。
+  evidence String?
+
+  note String?
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// 正向：验证记录脱离成果没有意义 → **强 FK + CASCADE**
+  /// （与 `IntroductionWorkflow.proposalId` 同取向，与 `Outcome.proposalId` 相反）。
+  outcome      Outcome      @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
+
+  /// 幂等：同一人对同一成果的同一级别只算一次确认（重复提交不产生第二条记录）。
+  /// ⚠️ `actorId` 可空，而 SQL 唯一索引**不去重 NULL** —— 故系统核验（`actorId=null`）
+  /// 的幂等由服务层负责，不依赖此约束。
+  @@unique([outcomeId, level, actorId])
+  @@index([organizationId, createdAt])
+  @@index([outcomeId])
+}

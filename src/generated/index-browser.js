@@ -892,6 +892,31 @@ exports.Prisma.AnalyticsDailyAggScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.OutcomeScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  proposalId: 'proposalId',
+  missionId: 'missionId',
+  reporterId: 'reporterId',
+  counterpartyId: 'counterpartyId',
+  summary: 'summary',
+  verificationLevel: 'verificationLevel',
+  occurredAt: 'occurredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.OutcomeVerificationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  outcomeId: 'outcomeId',
+  level: 'level',
+  actorId: 'actorId',
+  evidence: 'evidence',
+  note: 'note',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.OrganizationScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -1329,6 +1354,12 @@ exports.ReportStatus = exports.$Enums.ReportStatus = {
   DISMISSED: 'DISMISSED'
 };
 
+exports.OutcomeVerificationLevel = exports.$Enums.OutcomeVerificationLevel = {
+  SELF_REPORTED: 'SELF_REPORTED',
+  COUNTERPARTY_CONFIRMED: 'COUNTERPARTY_CONFIRMED',
+  EXTERNALLY_VERIFIED: 'EXTERNALLY_VERIFIED'
+};
+
 exports.OrganizationStatus = exports.$Enums.OrganizationStatus = {
   ACTIVE: 'ACTIVE',
   SUSPENDED: 'SUSPENDED'
@@ -1396,6 +1427,8 @@ exports.Prisma.ModelName = {
   UserReport: 'UserReport',
   AnalyticsEventDef: 'AnalyticsEventDef',
   AnalyticsDailyAgg: 'AnalyticsDailyAgg',
+  Outcome: 'Outcome',
+  OutcomeVerification: 'OutcomeVerification',
   Organization: 'Organization',
   Membership: 'Membership',
   TenantAuditEvent: 'TenantAuditEvent'
