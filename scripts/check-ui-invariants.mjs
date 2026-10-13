@@ -183,6 +183,22 @@ function checkFile(rel) {
 
 for (const s of SCOPES) walk(s)
 
+// R0 · 残留变异文件检测
+//   自证脚本被**中断**（沙箱重试 / Ctrl-C / OOM）会留下 `__mutant-*` 文件，
+//   它会被后续扫描当"正常文件"，甚至被 `git add -A` 提交 —— 必须主动报错。
+//   （本仓实测踩过一次。）自证模式自己会创建它们，故用 env 跳过。
+if (process.env.LF_INVARIANT_SELF_TEST !== '1') {
+  for (const s of SCOPES) {
+    const abs = path.join(ROOT, s)
+    if (!fs.existsSync(abs)) continue
+    for (const f of fs.readdirSync(abs)) {
+      if (f.startsWith('__mutant-')) {
+        problems.push(`[R0] ${s}/${f} 存在残留的变异文件（自证脚本被中断所致）—— 删除它再提交`)
+      }
+    }
+  }
+}
+
 if (checked.length === 0) {
   console.error('❌ 未扫描到任何文件 —— 检查 SCOPES 配置：', SCOPES.join(', '))
   process.exit(1)

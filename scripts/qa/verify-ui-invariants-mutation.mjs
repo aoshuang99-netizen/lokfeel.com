@@ -64,7 +64,12 @@ const MUTANTS = [
 const CONTROL_BODY = `export const ok = { key: 'a', label: 'A', hint: 'h', ready: true }\n`
 
 function runChecker() {
-  return spawnSync(process.execPath, [CHECKER], { cwd: ROOT, encoding: 'utf8' })
+  return spawnSync(process.execPath, [CHECKER], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    // 告诉门禁"这是自证的一部分" → 允许 `__mutant-*` 文件存在（否则 R0 会把它自己判失败）。
+    env: { ...process.env, LF_INVARIANT_SELF_TEST: '1' },
+  })
 }
 
 function writeTmp(name, body) {

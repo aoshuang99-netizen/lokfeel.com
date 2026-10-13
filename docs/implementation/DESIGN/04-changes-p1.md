@@ -84,16 +84,16 @@ LLM 提案属于 **T09 Agent Runtime**（那里才有 schema 校验之外的提�
 | Lint | `eslint src/components/living src/app/workspace src/lib/workspace-spec scripts/check-ui-invariants.mjs scripts/qa/verify-ui-invariants-mutation.mjs --max-warnings=0` | 见 §6 |
 | UI 不变量 | `npm run check:ui-invariants` | ✅ 10 文件通过（R1–R7） |
 | **变异自证** | `npm run verify:ui-invariants` | ✅ **7/7 规则逐条被证明生效**；负向对照未误报；临时文件已清理 |
-| 生产构建 | `npx next build` | 见 §6、§5 |
+| 生产构建 | `npx next build` | 🔴 **本机环境级失败（见 §5）** —— 非本切片引入；同一命令在 Netlify 上可成功构建 |
 
 > `verify:ui-invariants` 的设计要点：**不改动真实文件**，而是在被扫描目录内写
 > **单条违反**的临时文件 → 断言 exit 1 且命中对应 `[R<n>]` → 再写一个**合法**文件
 > 做负向对照（必须仍 exit 0）→ `finally` 删除。这样既证明"规则会红"，
 > 也证明"不会无脑红"。
 
-## 5. ⚠️ 环境事故：Turbopack 持久化缓存导致的**伪缺陷**
+## 5. ⚠️ 本地 `next build` 的环境级故障（**结论经过一次修正**）
 
-**现象**：首次 `npx next build` 在 *Collecting page data* 阶段失败：
+本切片期间，本地 `npx next build` 在 *Collecting page data* 阶段反复失败：
 
 ```
 Error: Failed to collect configuration for /careers
@@ -102,29 +102,98 @@ Error: Failed to collect configuration for /careers
   > 3 | import { Briefcase, Globe, Users } from "lucide-react";
 ```
 
-**排查**（三条独立证据）：
+### 5.1 先记录一次**被推翻的结论**（这是本文最该读的一段）
 
-1. 报错页面是 `(public)/18-usc-2257`、`/careers`、`/about` —— **本次改动一行未碰**；
-2. 本仓有大量页面同样 `import … from 'lucide-react'`，却**只有 3 页**报错
-   → 非确定性，不像源码缺陷；
-3. `lucide-react@1.48.0` 的 CJS 入口在**模块顶层**调用 `react.createContext({})`
-   （`dist/cjs/lucide-react.js:140` 的 `LucideContext`）—— 该写法在服务端图里
-   确实可能踩到 `react-server` 条件，**但**这解释不了"只坏 3 页"。
+| 阶段 | 我当时的结论 | 实际是否成立 |
+|---|---|---|
+| 初判 | "Turbopack **持久化缓存损坏**，清 `.next` 即修" | ❌ **不成立** |
+| 依据 | 清缓存后的那次构建**没有**在 page-data 阶段报错 | ❌ **那次构建先卡在类型检查**（我代码的 `TS2339`），**根本没走到 page-data 阶段** ⇒ 不构成任何证据 |
+| 反证 | —— | 复跑（**同样**清了 `.next`）→ **同样失败**，只是报错页换成了 `/cancellations-policy` |
 
-**结论**：`rm -rf .next` 后**同样代码**重新构建，该错误**不再出现**
-（构建推进到 *Running TypeScript*）→ 判定为 **Turbopack 持久化缓存局部损坏**，
-与源码无关。
+> 教训：**"我没看到它失败" ≠ "它没失败"**。中间阶段先失败会截断后续阶段，
+> 从而伪造出"后续阶段已通过"的假象。下结论前必须确认**判据真的被执行过**。
 
-> **留给后来的教训**：本仓 `next build` 出现**同仓同类文件只有个别报错**、
-> 且报错点是"库在模块顶层调 React API"时，**先清 `.next` 再复现**，
-> 不要先去改业务代码。反之，如果清缓存后**仍然复现**，再上万能对照
-> （`git worktree add origin/main` + 软链 `node_modules` 跑同一用例）。
+### 5.2 真实的观测事实（可复跑）
+
+1. **报错页面每次不同**：第一次是 `/18-usc-2257` + `/careers` + `/about`，
+   第二次是 `/cancellations-policy`。
+2. 这些页面的**唯一共同点**：都是 `(public)` 下的 **Server Component**（无 `'use client'`），
+   且都只 `import … from 'lucide-react'`。**本次改动一行未碰**。
+3. **同一份源码 + 同一套依赖在 Netlify 上构建成功**：生产部署
+   `6acde3962c8778501cd81f27` 正是由 `f6630ea` 构建产出，且站点在正常服务。
+
+⇒ 判定：**不是本仓源码缺陷**，而是「`(public)` 页面在**服务端图**里加载 `lucide-react`」
+这条路径在**本机环境**下不稳定。
+
+### 5.3 机制（读依赖源码得出，非猜测）
+
+- `lucide-react@1.48.0` 的 **CJS 入口**在**模块顶层**调用 `react.createContext({})`
+  —— `dist/cjs/lucide-react.js:140` 的 `LucideContext`；
+- 它的 **ESM 入口不含** `createContext`（对 `dist/esm/**` 全目录检索：**零命中**）；
+- React 的 **`react-server` 条件不导出** `createContext`（RSC 中它是客户端专用 API）。
+
+⇒ 只要服务端图解析到 **CJS 入口**，模块求值就会抛 `d.createContext is not a function`。
+该包**没有 `exports` 字段**（只有 `main` / `module`），这会让"挑哪个入口"更依赖
+bundler 的默认优先级 —— 这是它比一般包更脆的原因。
+
+**为什么"只坏个别页面"**：构建在**第一个**失败处中止，报出来的页面只是某个 worker
+恰好**先**求值到的那个 —— 是**调度产物**，不是这些文件的属性。
+
+### 5.4 风险与缓解（**必须记下**）
+
+Netlify 的构建命令也是 `npm run build` ＝ `next build`（Turbopack）。
+本机已证实不稳定 ⇒ **下一次推 `main` 发版可能撞上**，且失败长相与此处一致
+（会表现为"部署失败"，而不是"代码错"）。
+
+候选缓解（**都需要单独验证后再动**，不要凭直觉改）：
+
+| # | 缓解 | 说明 |
+|---|---|---|
+| ① | 把 `lucide-react` 从 `optimizePackageImports` 摘掉 | 代价：该包不再做 barrel 摇树优化，进包体积 |
+| ② | 换一个 **CJS 入口不在顶层调 `createContext`** 的 lucide-react 版本 | 根本修法，但要回退大版本 |
+| ③ | 升级 Next / Turbopack | 若上游已修该解析行为则最干净 |
+
+> 本次用**自还原探针**（`/tmp/lf-probe-lucide.mjs`：备份 → 变异 → 构建 → **`finally` 还原** →
+> `git diff --exit-code next.config.ts` 自证仓库未被改动）验证了 ①，结果见 §5.5。
+> 之所以要"自还原"，是因为**探针本身不能留下副作用** —— 否则下一次构建会带着变异跑，
+> 而没人记得原因。
+
+### 5.5 探针结果（① 被**否定**）+ Netlify 承重事实的核实
+
+**探针**（`/tmp/lf-probe-lucide.mjs`，自还原）：
+
+```text
+已临时移除 lucide-react from optimizePackageImports
+… /about、/18-usc-2257 同样报 TypeError: d.createContext is not a function
+已还原 next.config.ts
+✅ 还原校验通过：next.config.ts 与提交版本逐字节一致
+```
+
+⇒ **候选 ① 被否定**：把 `lucide-react` 从 `optimizePackageImports` 摘掉**并未修复**。
+（顺带：自还原机制工作正常，仓库未被污染 —— `git status` 只有本切片自己的新文件。）
+
+**承重事实核实**（`/tmp/lf-netlify-deploy.mjs`，Node 内置 `fetch` + 重试）：
+
+| 项 | 值 |
+|---|---|
+| deploy | `6acde3962c8778501cd81f27` |
+| state | **`ready`** |
+| commit | `f6630ea`（与本机失败的那份源码同族，且 `lucide-react` 同为 `^1.48.0`） |
+| error_message | （无） |
+
+⇒ **"同源码 + 同依赖 + 同构建命令（`npm run build`）在 Netlify 上构建成功"是已核实的事实**，
+不是推断。因此"本机失败 ≠ 源码缺陷"这条结论**成立**。
+
+**尚未确定的**是本机与 Netlify 在"服务端图如何为该包挑入口"上的差异。候选 ②（版本）
+与 ③（Next/Turbopack）**未验证**；本次**没有**继续深挖，理由是它**不阻塞任何既定门禁**
+（见 §4 与 §6：tsc / jest / eslint / 脚本守卫 / UI 不变量 / 变异自证全部通过），
+且本阶段**未发版**。⇒ 记为**已知环境限制 + 发版风险**（§5.4），留给下一次发版前的核查动作。
 
 ## 6. 收尾核对
 
 - [x] `npm run check:ui-invariants` → 10 文件通过（R1–R7）
 - [x] `npm run verify:ui-invariants` → 7/7 规则证明生效
-- [ ] `npx tsc --noEmit` / `npx jest tests/workspace-spec` / ESLint → **见下方"最终证据"**
+- [x] `npx tsc --noEmit` / `npx jest`（本切片 + 全量）/ ESLint / `check:script-decls` → 全部通过（见下方）
 
 ### 最终证据
 
