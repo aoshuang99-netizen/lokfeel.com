@@ -57,30 +57,61 @@ npm run check:script-decls
 ⚠️ **指标端点没有任何写路径** —— 回滚它不会留下不一致的状态（不像 Slice 1 会推进阶段）。
 唯一遗留：若已有人把指标用于外部报表，回滚后该端点 404。因此**优先修而不是回滚**。
 
+### 2.2 Slice 3（用量计费）的回滚面 —— 🔴 **有写路径，且账只增不减**
+
+`Slice 3` **有 schema 变更（C5）**，且有**三个写入面**：`collectUsage`（归集）、
+`appendBillingEvent`（事件追加）、`startCharge`（款项，沙箱）。
+
+| 资产 | 回滚方式 | 副作用 |
+|---|---|---|
+| `src/lib/billing/**`（6 文件） | `git revert` 或 `git checkout <基线> -- src/lib/billing` | 无（旧代码不读 C5 表） |
+| `src/app/api/v1/billing/**`（5 路由） | 同上 | 5 个端点 404 |
+| `src/lib/tenancy/capabilities.ts` 的 2 条能力 | 同上 | 能力矩阵回到 Slice 2 状态（`billing.*` 消失） |
+| `scripts/qa/{seed-t08-billing,emit-billing,billing-reconcile}` | 同上（纯工具） | 无 |
+| `package.json` 的 3 条脚本 | 同上 | 无 |
+| `tests/billing/**` + `capabilities.test.ts` | 同上 | 无 |
+| **C5 两张表** | 见 §3 | 🔴 **DROP 会删掉已入账的用量与事件** |
+
+🔴 **回滚代码不会撤销已写入的账**（这是**对的**）：`UsageRecord` / `BillingEvent` 是
+**只增不改的账**，"这个月用了 5 次介绍"是一个**已发生的事实**。回滚代码只是把
+"继续记账的能力"撤掉，不改变已记下的账（与 §5 的"阶段不回退"同一取向）。
+
+⚠️ **但要注意一个非对称**：代码回滚后不再有归集，于是**新产生的用量不会被记账**。
+若之后又把代码恢复回来，`collectUsage` 的幂等扫描会**自动补齐**这段空档
+（这正是"扫描式归集"的收益）—— 但 `BillingEvent`（订阅/款项）**没有**这条路：
+它的事件来自调用方，不来自扫描。故若期间发生过管理动作且未入账，**无法自动补**。
+⇒ **回滚 Slice 3 前，先确认「期间没有未入账的计费管理动作」**。
+
 ---
 
-## 3. schema 回滚（C4）
+## 3. schema 回滚（C4 / C5）
 
 ```bash
 # ① 先看会删什么（只读）
 node scripts/connection/migrate.mjs probe
 
-# ② 逆序 DROP 两张表（需 --yes）
+# ② 逆序 DROP（需 --yes）。批次可单独指定，也可同时：
 node scripts/connection/migrate.mjs rollback --batch=C4 --yes
+node scripts/connection/migrate.mjs rollback --batch=C5 --yes
 ```
 
 `rollback` 的行为（继承 T01/T02 的实现）：
 
-1. **逆序**删表 —— 先 `OutcomeVerification` 再 `Outcome`（否则被外键挡住）；
+1. **逆序**删表 —— C4 先 `OutcomeVerification` 再 `Outcome`（否则被外键挡住）；
+   C5 先 `BillingEvent` 再 `UsageRecord`（C5 内部无相互依赖，顺序仍按注册表逆序）；
 2. 删之前若表里**有数据**，先导出到 `.rollback-backup-<table>-<ts>.json`；
-3. 只删 C4 批次的表，**不碰** C0/C1/C2/C3 与任何既有表。
+3. 只删指定批次，**不碰**其他批次与任何既有表。
 
-回滚后 `verify` 应当**部分失败**（C4 的表/索引断言转红）—— 这正是"确实回滚了"的
+回滚后 `verify` 应当**部分失败**（对应批次的表/索引断言转红）—— 这正是"确实回滚了"的
 正向证据，不是错误：
 
 ```bash
-node scripts/connection/migrate.mjs verify   # 期望：C4 段全红，C0–C3 段全绿
+node scripts/connection/migrate.mjs verify   # 期望：C4/C5 段全红，C0–C3 段全绿
 ```
+
+> 💡 **顺序建议**：C4 与 C5 相互独立（C5 两表只指向 `Organization`），
+> 但 `UsageRecord` 的 `sourceId` 语义上指向 C4 的成果/提案 —— 那是**软引用**，
+> 所以**先回滚 C5 再回滚 C4** 更符合"从外层往里拆"的直觉（不是硬约束）。
 
 ---
 
@@ -106,6 +137,16 @@ c.execute('SELECT * FROM \"Outcome\"').then(r=>{
 `OutcomeVerification` 同法导出。两表的关系是 `OutcomeVerification.outcomeId → Outcome.id`，
 按此顺序导入即可恢复。
 
+### 4.1 C5 的两张表（Slice 3）
+
+`UsageRecord` / `BillingEvent` 同法导出（把表名换掉即可）。**关系是软引用**（无 FK）：
+`UsageRecord.sourceId` 指向 C4 的 `Outcome`/`ConnectionProposal`，`BillingEvent.chargeId`
+只是账内的键。因此恢复顺序上**先恢复原始表（C4/C2）、再恢复账**更容易核对，
+但**没有**数据库层面的强约束会挡住顺序。
+
+🔴 **导账之前先确认它是不是"当前事实"**：账是只增的，导出的是一个**时刻快照**；
+若期间还有归集/事件写入，快照会与库不一致（对账脚本的"无悬空来源"断言正是查这个）。
+
 ---
 
 ## 5. 回滚**不**能恢复的东西
@@ -125,9 +166,10 @@ c.execute('SELECT * FROM \"Outcome\"').then(r=>{
 ## 6. 回滚清单（逐项打勾）
 
 - [ ] 确认问题出在 T08（而不是 T07/T06 的既有行为）
-- [ ] 决定是"补修复"还是"整体回滚"（前者优先 —— 回滚会丢已推进的阶段）
+- [ ] 决定是"补修复"还是"整体回滚"（前者优先 —— 回滚会丢已推进的阶段 + 停止记账）
+- [ ] **Slice 3 专属**：确认"期间没有未入账的计费管理动作"（见 §2.2 的非对称说明）
 - [ ] 代码回滚提交（未发版 → 跳过标记；已发版 → 不带跳过标记）
 - [ ] 复跑四门禁（`tsc` / `jest` / `eslint` / `check:script-decls`）
-- [ ] 若需 DROP 表：先 `probe` → `rollback --batch=C4 --yes` → `verify`（期望 C4 段红）
-- [ ] 有数据时先导出（§4）
+- [ ] 若需 DROP 表：先 `probe` → `rollback --batch=C5 --yes`（如需）→ `rollback --batch=C4 --yes` → `verify`（期望对应段红）
+- [ ] 有数据时先导出（§4 / §4.1）
 - [ ] 记录本次回滚的原因与 SHA（回填到 `changes.md`）

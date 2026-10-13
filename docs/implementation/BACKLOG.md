@@ -226,7 +226,7 @@
 - **交付**：`Outcome`（`verification_level ∈ {self_reported, counterparty_confirmed, externally_verified}`）+ `UsageRecord` + Creem 接入
 - **风险**：🔴 **Creem 凭据未提供（你已决定暂不提供）→ AC-21 只能标 `BLOCKED`，不得标 PASS**
 - **铁律**：自报结果**不算**验证成功；指标必须可复算（SQL 对账）
-- **进度**：🚧 **Slice 1 + Slice 2 已落地（均未发版）**
+- **进度**：🚧 **Slice 1 + Slice 2 + Slice 3 已落地（均未发版）**
   - **Slice 1**（AC-15 ✅）—— C4 迁移（`Outcome` / `OutcomeVerification`）+ 三级验证服务
     （**级别是派生值、不是入参**）+ 4 个 API（列表 / 上报 / 对手方确认 / 运营核验）+
     **补齐 T06 留下的阶段机触发点空洞**（`ACTION_COMPLETED` / `OUTCOME_RECORDED` 此前无任何调用点）+
@@ -235,7 +235,15 @@
     纯函数指标内核 + **SQL 对账** `scripts/qa/outcome-reconcile.mjs`（原始表独立复算 14 项，
     本地实跑全租户 14/0、任务内 14/0；**变异自证**与两条负向均 `exit 1`）+ 计数已知的夹具。
     口径：**无时间窗口** / **快照式漏斗** / **假设随响应下发**（见 `T08/risks.md` R10–R12）。
-  - Slice 3（用量归集 + 计费沙箱）待开工。
+  - **Slice 3**（AC-21 **沙箱部分** ✅ / 真实扣款 🔴 `BLOCKED`）—— C5 迁移
+    （`UsageRecord` / `BillingEvent`）+ 订阅状态**纯内核**（事件溯源、**状态不落列**、
+    非法迁移**写入前拒绝**，含 AC-21 点名的 `REFUNDED → SUCCEEDED`）+
+    Creem **沙箱**适配器（无凭据 → `CAPTURED`；有凭据未接入 → **501**，绝不静默沙箱）+
+    5 个 HTTP 面 + **SQL 对账** `scripts/qa/billing-reconcile.mjs`（用量复算 **65/0**、
+    **变异自证 10/10**、归集幂等自证、C5 `verify` 159/159 + 反向断言变异自证）。
+    四个关键设计：**期次列 `periodKey`** / **账本自带幂等**（`dedupeKey` + `requestHash` 指纹）/
+    **归集 = 幂等扫描原始表**（业务路径零回归、可回填）/
+    **账本语义与网关现实两个正交轴**（`charge.status` vs `gatewayStatus`）。
   方案与切片计划见 `docs/implementation/T08/plan.md`。
 
 ### T09 · Agent Runtime — 结构化意图与沟通建议
@@ -355,13 +363,13 @@
 | ④ | T00–T04 提交**是否推送到公开仓库** | — | 你的决定（含生产迁移记录与披露模型） |
 | ⑤ | ~~**T06 工作流引擎**：DB 队列 vs Temporal~~ | — | ✅ 已拍板：**DB outbox**（见 §5-⑤ 更新） |
 | ⑥ | **T09 Agent 运行时**：TS 内编排 vs Python/LangGraph 独立服务 | T09 架构 | 一次拍板 |
-| ⑦ | Creem 凭据是否提供 | AC-21 | 已决定暂不提供 → 保持 `BLOCKED` |
+| ⑦ | Creem 凭据是否提供 | AC-21 | 已决定暂不提供 → **真实扣款/退款保持 `BLOCKED`**；「用量可复算」+「状态一致」已在 T08 Slice 3 以**沙箱**取证为 PASS（`gatewayStatus=CAPTURED`，`realChargesEnabled=false`） |
 
 ---
 
 ## 7. 下一个动作
 
-**T06 已上线 → T07 全三切片已上线 → T08 Slice 1 + Slice 2 已落地（均未发版）**。
+**T06 已上线 → T07 全三切片已上线 → T08 Slice 1 + Slice 2 + Slice 3 已落地（均未发版）**。
 
 > **T08 Slice 1（2026-10-13，未发版）**：C4 迁移（`Outcome` / `OutcomeVerification`，**纯新增**）
 > + 三级成果验证服务（**级别是派生值、不是入参** —— AC-15 的落点）+ 4 个 API
@@ -381,8 +389,24 @@
 > 顺序：`db-snapshot → plan → apply C4 → verify → 发布提交（不带跳过标记）`。
 > 详见 `docs/implementation/T08/changes.md` §5。
 >
-> 下一步：**T08 Slice 3**（用量归集 + 订阅限额 + 计费沙箱 → AC-21 **沙箱部分**；
-> 真实扣款/退款因缺 Creem 凭据**永久 `BLOCKED`**）或 **发版 T08 Slice 1+2**（须与 `apply --batch=C4` 绑定）。
+> **T08 Slice 3（2026-10-13，未发版）**：C5 迁移（`UsageRecord` / `BillingEvent`，**纯新增**）
+> + 订阅状态**纯内核**（事件溯源 + **状态不落列** + **非法迁移写入前拒绝**，
+> 含 AC-21 点名的 `REFUNDED → SUCCEEDED` → 409）+ Creem **沙箱**适配器
+> （无凭据 → `gatewayStatus=CAPTURED`；**有凭据但未接入真实网关 → 501**，绝不静默沙箱）
+> + 5 个 HTTP 面（`usage` / `subscription` / `subscription/events` / `usage/collect` / `charges`）
+> + **SQL 对账** `scripts/qa/billing-reconcile.mjs`：用量复算 **65/0** + **变异自证 10/10**
+> + 归集幂等自证（连跑两次 → 第二次 `inserted=0`）+ C5 `verify` **159/159**
+> （含 4 条反向断言，并用**变异库**自证其承重）。
+> **AC-21 沙箱部分认领**；🔴 **真实扣款/退款保持 `BLOCKED`**（`T08/risks.md` R1）。
+>
+> 🔴 **未发版的原因（新增 C5）**：C4 **与** C5 的表**都尚未在生产创建** —— 若先发版，
+> 线上运行时第一步就查 `Outcome` / `UsageRecord` → 表不存在 → 500（与 T06 §5.1 同型）。
+> 发版必须与 `apply --batch=C4` **和** `apply --batch=C5` **绑定**，顺序：
+> `db-snapshot → plan → apply C4 → apply C5 → verify → 发布提交（不带跳过标记）`。
+> 详见 `docs/implementation/T08/changes.md` §5 / §8。
+>
+> 下一步：**发版 T08 Slice 1+2+3**（须与 `apply --batch=C4` + `--batch=C5` 绑定），
+> 或 **T08 Slice 4**（Console 用量/订阅屏 + 指标屏 + AC-18 第 6 屏的 Playwright E2E）。
 > T07 最后一屏（Agents）仍等 T09 技术栈拍板（§6-⑥）。
 
 > ✅ **已发现的既有不一致 → 已修复并补发**（修复提交 `95da9f1` / 部署 `6accc4170828` @ 11:27Z）：
@@ -482,6 +506,8 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T07 · `/console` 回跳修复 **补发**（`95da9f1`） | `tsc --noEmit` **0 error** | 全量 jest **54 套 1052 passed** | ESLint 0/0 · `check:script-decls` 57/0 | **上线复验 48/48**（较修复前 +5：新增 §2b 带 Referer 探针 —— `Referer=/console/settings` → **回跳保留深链**、带 query 亦保留、**别态 Referer 不被采信**），同类 T06 25/25 · T04 19/19 · 窗口期 13/13。修掉 `console/layout.tsx` 未登录时写死 `callbackUrl=/console`（**Slice 1 起既有** → 深链登录后回入口） |
 | T08 · Outcome Slice 1（**未发版**） | `tsc --noEmit` **0 error** | `tests/outcome` **59**（**新增 3 套**）· 全量 **1052 → 1111**（54 → 57 套） | ESLint 0/0（含目录级）· `check:script-decls` 57/0 | **新增** C4 迁移（`Outcome` / `OutcomeVerification`，纯新增 2 表 + 7 索引 + 3 外键，含**软引用反向断言**）+ 4 个 API（列表 / 上报 / 对手方确认 / 运营核验）+ **阶段机接线**（补齐 T06 无触发点空洞）+ Console `/console/outcomes` 屏（**AC-18 第 6 屏**）；负向断言：`isVerified('SELF_REPORTED')===false`、**自我确认 → 400**、`OPERATOR → 403` 且**不触碰 DB**（`outcome.verify` 仅 ADMIN+）、请求体塞 `verificationLevel` 无效；`migrate plan --batch=C4` SQL 合法（纯 `CREATE ... IF NOT EXISTS`）。**AC-15 PASS**；AC-16 / AC-21 待 Slice 2 / 3。🔴 **未发版**：C4 尚未应用到生产（发版须与 apply C4 绑定） |
 | T08 · Outcome Slice 2（**未发版**） | `tsc --noEmit` **0 error** | `tests/outcome` **93**（**新增 2 套 34 例**）· 全量 **1111 → 1145**（57 → 59 套） | ESLint 0/0（含目录级）· `check:script-decls` **59/0**（+2 个 `.mjs`） | **新增** `GET /api/v1/outcomes/metrics`（`outcome.read` 全员；介绍漏斗 / 人工工时 / 任务成本）+ 纯函数指标内核（零 IO，假设可注入）+ **`scripts/qa/outcome-reconcile.mjs` SQL 对账**：`--api=<file>` 下用**原始表 SQL** 独立复算 **14 项**并与 API 逐字段相等（**全租户 14/0 · 任务内 14/0**）；**变异自证**（篡改计数/假设 → 4 处不一致）与**两条负向**（`verifiedLevels` 含 `SELF_REPORTED`、缺 `--api`）均 `exit 1`；夹具 `seed-t08-metrics.mjs` 含噪声行 + 第二条 Mission 以证明过滤生效。**AC-16 PASS**。口径：**无时间窗口** / **快照式漏斗** / **假设随响应下发**（`T08/risks.md` R10–R12）。🔴 同上**未发版** |
+| T08 · Billing Slice 3（**未发版**） | `tsc --noEmit` **0 error**（4m27s；🔴 首轮抓到 1 个 `TS2322`，见下） | `tests/billing` **87**（**新增 3 套**：订阅内核 34 / 用量内核 23 / API 30）· `tests/tenancy/capabilities` **+1 例（8 断言）** · 全量 **1145 → 1233**（59 → 62 套） | ESLint **0/0**（含目录级 + `.mjs`/`.mts`）· `check:script-decls` **61/0**（+2 脚本） | **新增** C5 迁移（`UsageRecord` / `BillingEvent`，纯新增 2 表 + 8 索引 + 2 外键，含**反向断言** ×4 并用**变异库**自证） + 订阅状态**纯内核**（事件溯源、**状态不落列**、非法迁移**写入前拒绝**，含 AC-21 点名的 `REFUNDED → SUCCEEDED` → 409）+ Creem **沙箱**适配器（无凭据 → `CAPTURED`；有凭据未接入 → **501**）+ 服务层（幂等扫描归集 / 派生汇总 / 事件追加）+ 5 个 HTTP 面 + **`scripts/qa/billing-reconcile.mjs` SQL 对账**：用量复算 **65/0** · **变异自证 10/10** · 归集幂等自证（连跑两次 → `inserted=0`）· 上期正向 **65/0** · 期次错配负向 `exit 1`；C5 `verify` **159/159**。能力取严：`billing.read`=OPERATOR+、`billing.manage`=ADMIN+（负向断言 MEMBER 读 → 403、OPERATOR 动账 → 403）。**AC-21 沙箱部分 PASS**；🔴 **真实扣款/退款 `BLOCKED`**（无 Creem 凭据，`realChargesEnabled` 恒 `false` + 对账硬断言"`gatewayStatus=SUCCEEDED` 计数为 0"）。🔴 **未发版**：C4+C5 均未应用到生产 |
+| T08 Slice 3 · 踩坑（记录） | 🔴 **jest 全绿 ≠ 类型对** | 87 例全过，`tsc` 仍报 `service.ts:588 TS2322`（`BillingEventLike.currency` 是 `string \| null`，Prisma 的 `currency` 非空） | — | ts-jest **只转译不做全量类型检查** ⇒ `tsc --noEmit` 不可省。另一条：对账脚本首版把"同一时刻的 `+00:00` vs `Z` 两种写法"判成不一致（6 处误报）→ 加 `sameTs()` 按**时刻**比较（R10 陷阱的另一种形式）。第三条：C5 `verify` 首版把 `quantity`(INTEGER)/`occurredAt`(DATETIME) 混进「TEXT NOT NULL」组 → 该行恒假，被本地 verify 抓出 |
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
 > ```bash

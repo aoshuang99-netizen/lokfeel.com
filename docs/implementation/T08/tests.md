@@ -9,12 +9,19 @@
 
 | 文件 | 用例 | 覆盖 |
 |---|---|---|
-| `tests/outcome/verification.test.ts` | 22 | 纯函数内核：级别顺序 / `isVerified` 负向 / 派生穷举 3×3×3 / 未知值解析 / 角色判定 |
-| `tests/outcome/outcomes.test.ts` | 22 | 服务层：前置与权限 / 自报不算验证 / 自我确认拒绝 / 幂等 / 阶段机接线 / 隐私边界 |
-| `tests/outcome/outcomes-api.test.ts` | 15 | HTTP 层：401/403/400/201/200/500 全谱系 + 能力边界负向 |
+| `tests/outcome/verification.test.ts` | 16 | 纯函数内核：级别顺序 / `isVerified` 负向 / 派生穷举 3×3×3 / 未知值解析 / 角色判定 |
+| `tests/outcome/outcomes.test.ts` | 26 | 服务层：前置与权限 / 自报不算验证 / 自我确认拒绝 / 幂等 / 阶段机接线 / 隐私边界 |
+| `tests/outcome/outcomes-api.test.ts` | 17 | HTTP 层：401/403/400/201/200/500 全谱系 + 能力边界负向 |
 | `tests/outcome/metrics.test.ts` | 19 | **指标内核**（Slice 2）：舍入确定性 / 分母为 0 / 四段比率分母正确 / 假设可注入的**变异自证** / `verifiedLevels` 不含 `SELF_REPORTED` |
 | `tests/outcome/metrics-api.test.ts` | 15 | **指标端点**（Slice 2）：全员可读 / 8 条 count 全带 `organizationId` / 已介绍按 `introducedAt` 判 / 验证级别**下推** / 响应无 userId 泄漏 |
-| **合计** | **93** | 5 套 |
+| `tests/billing/subscription.test.ts` | 34 | **订阅状态内核**（Slice 3）：穷举迁移表 / 🔴 `REFUNDED → SUCCEEDED 必须失败` / 两层规则承重 / 纯函数性 / 定序稳定 / 开通不算升降级 |
+| `tests/billing/usage.test.ts` | 23 | **用量口径内核**（Slice 3）：词表同源 / 期次边界（上界开）/ 聚合 / **`exhausted`（`>=`）与 `exceeded`（`>`）分开** |
+| `tests/billing/billing-api.test.ts` | 30 | **计费端点**（Slice 3）：能力口径 / MEMBER 读用量 403 / OPERATOR 动账 403 / 同键不同体 409 / 沙箱 `CAPTURED` / 归集幂等 |
+| `tests/tenancy/capabilities.test.ts` | 17 | 能力矩阵；Slice 3 增 **1 例（8 条断言）**：**MEMBER 读不到计费、OPERATOR 只读不写、只有 ADMIN/OWNER 能动账** |
+| **T08 相关合计** | **180** | 计费 87（Slice 3）+ 成果 93（Slice 1/2）；另 T01 的 `capabilities.test.ts` +1 例 → 全量 **1145 → 1233**（59 → 62 套） |
+
+> ⚠️ 上一版表中 outcome 三套的数字（22/22/15）与实测不符（实为 16/26/17，**总数 93 是对的**）。
+> 本轮以 `jest --json` 的实际 `assertionResults.length` 校正 —— 数字要能被机器复核，不能靠回忆。
 
 ---
 
@@ -68,6 +75,52 @@ METRICS_ORG_ID=org_e2e DATABASE_URL=file:$DB \
 | 负向：`basis.verifiedLevels` 里塞进 `SELF_REPORTED` | **exit 1**，在"载荷自洽性"一步就拦下并停止 |
 | 负向：不给 `--api` | **exit 1**，给出可操作的报错 |
 
+### 2.2 AC-21 的 SQL 对账（**需要数据库**，本地隔离库即可）
+
+```bash
+DB=/tmp/t08-billing.db
+
+# ① 建隔离库（必须 --regenerate：否则读陈旧 DDL 快照，缺 C4/C5 两张表）
+E2E_DB_FILE=$DB E2E_DDL_FILE=/tmp/t08-billing-ddl.sql \
+  node scripts/qa/seed-t02-e2e.mjs --reset --regenerate
+
+# ② 播种夹具：计数已知（提案 6 / 介绍 4 / 成果 5 / 核验 2）+ 两类噪声（跨期、跨租户）
+#    + 账本事件序列（覆盖 升级→降级→失败→退款）
+E2E_DB_FILE=$DB node scripts/qa/seed-t08-billing.mjs
+
+# ③ 归集 + 产出"API 会下发的数据"（内部连跑两次 collectUsage，自证归集幂等）
+BILLING_ORG_ID=org_e2e DATABASE_URL=file:$DB \
+  npx tsx scripts/qa/emit-billing.mts > /tmp/t08-billing-api.json
+
+# ④ 原始表 SQL 独立复算 + 逐字段比对 + 变异自证 → exit 0 = 一致
+BILLING_ORG_ID=org_e2e DATABASE_URL=file:$DB \
+  node scripts/qa/billing-reconcile.mjs --api=/tmp/t08-billing-api.json
+
+# ⑤ 上期（证明按期归集真的在跑）
+BILLING_ORG_ID=org_e2e BILLING_PERIOD=2026-09 BILLING_SKIP_COLLECT=1 DATABASE_URL=file:$DB \
+  npx tsx scripts/qa/emit-billing.mts > /tmp/t08-billing-prev.json
+BILLING_ORG_ID=org_e2e DATABASE_URL=file:$DB \
+  node scripts/qa/billing-reconcile.mjs --api=/tmp/t08-billing-prev.json
+
+# ⑥ 迁移 verify（含 C5 段的反向断言）
+node scripts/connection/migrate.mjs verify --url=file:$DB
+```
+
+`npm run billing:seed` / `billing:emit` / `billing:reconcile` 是 ②③④ 的别名。
+
+**实测结果（2026-10-13）**
+
+| 场景 | 结果 |
+|---|---|
+| 归集幂等自证 | 第一次 `inserted=21`；第二次 **`inserted=0` / `skipped=21`** |
+| 当期用量复算（`2026-10`） | **65 通过 / 0 不一致**，exit 0（6 / 4 / 5 / 2；`totalUnits=17`）+ 变异自证 **10/10** |
+| 上期用量复算（`2026-09`） | **65 通过 / 0 不一致**，exit 0 |
+| 负向：当期响应去对账上期 | **exit 1**，9 处不一致（`totals.proposal API=6 账本=1`） |
+| 状态一致（全四类迁移） | 终态 `STARTER` / `REFUNDED` / `paid=3000` / `refunded=2000` / `net=1000` / `DOWNGRADE` / 3 笔款项状态全对 —— 三层独立取证（SQL 聚合 / 账本合法性 / 派生复算）全部一致 |
+| 🔴 沙箱诚实断言 | `gatewayStatus='SUCCEEDED'` 计数 **= 0**；`realChargesEnabled === false`；`mode='sandbox'` |
+| C5 `migrate verify` | **159/159 全绿**（含 `UsageRecord.periodKey 存在且 NOT NULL`、`sourceId 无外键`、`BillingEvent 没有 status 列`、`chargeId 无外键`） |
+| 🔴 C5 verify **变异自证** | 给 `sourceId` 补 FK + 给 `BillingEvent` 加 `status` 列 → 两条反向断言**同时报警** |
+
 ---
 
 ## 3. AC ↔ 测试对照
@@ -87,12 +140,19 @@ METRICS_ORG_ID=org_e2e DATABASE_URL=file:$DB \
 | **AC-16** | 假设**真的被用上**（不是写死的摆设） | `metrics.test.ts` › 换 `minutesPerIntervention`/`unitCostsCents` 必须让工时与成本跟着变 |
 | **AC-16** | 分母为 0 不产生 `NaN` | `metrics.test.ts` › 全 0 输入 → 四段比率全 0；`percent(5, 0) === 0` |
 | **AC-16 / AC-15** | 指标里的"已验证"用同一判据 | `metrics.test.ts` › `basis.verifiedLevels` 不含 `SELF_REPORTED`；`metrics-api.test.ts` › `outcome.count` 的 where 是 `{ in: [...VERIFIED_LEVELS] }` |
+| **AC-21** | 用量**可复算** | `billing-reconcile.mjs` 用**原始表 SQL** 独立算出 `totals` / `totalUnits` / `limits`，并校验账本行自洽与无悬空来源（65/0，exit 0） |
+| **AC-21** | 🔴 `REFUNDED → SUCCEEDED` **必须失败** | `subscription.test.ts` › 逐条穷举 `CHARGE_TRANSITIONS`，`REFUNDED` 的 `allowedTo` 为空 → 抛 `ConflictError(409)`；服务层在**写入前**折叠校验，不通过**不写** |
+| **AC-21** | 退款/失败/升级/降级**状态一致** | `subscription.test.ts` › 每个终态的 `paidTotalCents` / `refundedTotalCents` / `status` 断言；`billing-reconcile.mjs` › **三层独立取证** + 变异自证 10/10 |
+| **AC-21** | 升降级**由方案序推导**（不由调用方声明） | `subscription.test.ts` › `PLAN_CHANGED` 后的 `lastPlanChangeDirection` 由 `classifyPlanChange` 得出；**`SUBSCRIPTION_STARTED` 不算升降级**（方向保持 `null`） |
+| **AC-21** | 🔴 沙箱**不得**冒充真实收款 | `billing-api.test.ts` › 沙箱事件 `gatewayStatus === 'CAPTURED'`；`billing-reconcile.mjs` › 硬断言"`gatewayStatus='SUCCEEDED'` 计数为 0" + `realChargesEnabled === false` |
+| 计费能力边界 | 钱相关取严 | `capabilities.test.ts` › **MEMBER 读用量 → 403**、**OPERATOR 动账 → 403**（`billing.manage` 仅 ADMIN+） |
+| 租户隔离 | 谓词不可省 | `billing-api.test.ts` › 每条查询的 `where.organizationId`；`billing-reconcile.mjs` › 跨租户噪声行**未**计入 |
 
 ---
 
-## 4. 六条"负向判据"（本文件的重点）
+## 4. 十条"负向判据"（本文件的重点）
 
-测试里最有价值的不是"成功路径能跑通"，而是**下面六条"改了就会红"的护栏**：
+测试里最有价值的不是"成功路径能跑通"，而是**下面十条"改了就会红"的护栏**：
 
 1. **`isVerified('SELF_REPORTED') === false`** —— 这一条是 AC-15 的**定义本身**。
    若有人为了"让指标好看"把它改成 `true`，指标会立刻变绿，而 AC-15 已死。
@@ -109,6 +169,17 @@ METRICS_ORG_ID=org_e2e DATABASE_URL=file:$DB \
    而 **AC-15 已死**。对账脚本在"载荷自洽性"一步就拦下。
 6. 🔴 **8 条 `count()` 全带 `organizationId`**（Slice 2）—— 指标是**聚合**，
    漏一处谓词就是"跨租户把别人的数算进我的报表"，而且**看起来完全正常**。
+7. 🔴 **`REFUNDED → SUCCEEDED` 必须抛 409**（Slice 3）—— 这是 AC-21 **点名**的用例。
+   两层规则都要承重：款项层（终态不可复活）+ 订阅层（退订后不再收新款）。
+   只做一层会漏掉另一半（`subscription.test.ts` 对两层各有独立用例）。
+8. 🔴 **`gatewayStatus='SUCCEEDED'` 的事件数必须为 0**（Slice 3）—— 沙箱下若有人
+   把 `CAPTURED` 写成 `SUCCEEDED`，就变成"虚报真实网关已受理"，
+   而这**正好是主指令明令禁止**的那类标记。对账脚本把它当硬断言。
+9. 🔴 **`MEMBER` 读用量必须 403、`OPERATOR` 动账必须 403**（Slice 3）—— 计费取严。
+   防 `billing.read`/`billing.manage` 被"顺手"放进 `SELF_SERVICE`。
+10. 🔴 **C5 `migrate verify` 的两条反向断言**（Slice 3）—— `UsageRecord.sourceId` 必须
+    **没有** FK、`BillingEvent` 必须**没有** `status` 列。前者防"账随原始行级联消失"，
+    后者防"造出第二个事实来源"。已用**变异库**自证：补 FK / 加列 → 断言报警。
 
 ---
 
@@ -118,9 +189,10 @@ METRICS_ORG_ID=org_e2e DATABASE_URL=file:$DB \
 |---|---|---|
 | E2E（Playwright）覆盖成果屏 | Slice 1 的目标是 AC-15 的服务端判据与界面可达；E2E 需要先把七屏收紧（AC-18 的 Slice 4） | T07 Slice 4 / T08 Slice 4 |
 | ~~AC-16（指标可复算）~~ | ✅ **Slice 2 已落地**：内核 + 端点 + `outcome-reconcile.mjs` 对账（全租户 / 任务内 / 变异自证均已实跑） | 已完成 |
-| 真实数据库上的迁移验证 | 本切片**不动生产**（带跳过标记），C4 只在 `plan` 阶段预览过 SQL | **发版时**按 `probe → plan → apply C4 → verify → 发布提交` 顺序做 |
+| 真实数据库上的迁移验证 | 本切片**不动生产**（带跳过标记），C4/C5 只在 `plan` 阶段预览过 SQL | **发版时**按 `probe → plan → apply C4 → apply C5 → verify → 发布提交` 顺序做 |
 | 指标屏（把数字画出来） | Slice 2 只做**数据面**（端点 + 对账）；界面与 E2E 属 Slice 4 | T08 Slice 4 |
-| AC-21（账单一致性） | 属 Slice 3；且真实扣款部分**永久 BLOCKED**（无 Creem 凭据） | Slice 3（沙箱部分） |
+| 用量屏 / 订阅屏（Console） | Slice 3 只做**数据面 + 沙箱**（5 个端点 + 对账）；界面属 Slice 4 | T08 Slice 4 |
+| **真实扣款 / 真实退款 / 真实 webhook 幂等** | 🔴 **永久 `BLOCKED`** —— 无 Creem 凭据（用户已决定暂不提供） | 用户提供凭据后（`risks.md` R1） |
 | 成果屏的视觉回归 | 项目无视觉回归设施 | — |
 
 ---
@@ -132,6 +204,12 @@ METRICS_ORG_ID=org_e2e DATABASE_URL=file:$DB \
 - **AC-16「可复算」** = 一条 SQL 对账脚本，用**原始表**独立算出与 API 相同的数字，
   `exit 0` 表示一致。**不接受**"人工核对过"这种证据。
   → ✅ **已落地**：`scripts/qa/outcome-reconcile.mjs`（14 项比对 + 变异自证）。
-- **AC-21「状态一致」** = 事件溯源 + **非法迁移被拒**的用例（例如
-  `REFUNDED → SUCCEEDED` 必须失败），以及用量复算。
-  真实扣款/退款 = `BLOCKED`，**不得**用沙箱用例冒充。
+- **AC-21「可复算」** = 同一条方法论（原始表 SQL 独立复算 + 变异自证），落在
+  `scripts/qa/billing-reconcile.mjs`（用量 65 项 + 10 例变异自证 + 归集幂等自证）。
+  → ✅ **已落地（沙箱部分）**。
+- **AC-21「状态一致」** = 事件溯源 + **非法迁移被拒**的用例
+  （`REFUNDED → SUCCEEDED` 必须失败），以及三层独立取证的对账
+  （SQL 聚合 / 账本合法性不变量 / 派生复算）。
+  → ✅ **已落地（沙箱部分）**。
+- **真实扣款 / 退款** = 🔴 **`BLOCKED`**，**不得**用沙箱用例冒充。
+  沙箱能证明的只有"要发给 Creem 的请求长什么样"（`requestSnapshot` + `CAPTURED`）。

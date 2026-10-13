@@ -1,8 +1,9 @@
 # T08 · Outcome & Billing — 成果验证、成本归因与订阅（开工方案）
 
-> **状态**：🚧 **开工中（Slice 1 / Slice 2 已落地，均未发版）**。本文件是设计 + 切片计划 + 验收口径。
+> **状态**：🚧 **开工中（Slice 1 / Slice 2 / Slice 3 已全部落地，均未发版）**。本文件是设计 + 切片计划 + 验收口径。
 > **基线**：`95da9f1`（`main`，已发布 Netlify 生产，部署 `6accc4170828` ready @ 2026-10-12T11:27:19Z）。
-> **AC-21 从开工起就是 `BLOCKED`** —— Creem 凭据缺失（用户已决定暂不提供）。
+> **AC-21 的「真实扣款/退款」从开工起就是 `BLOCKED`** —— Creem 凭据缺失（用户已决定暂不提供）；
+> 「**用量可复算**」与「**退款/失败/升降级状态一致**」两部分已在 **Slice 3** 落地为 **PASS（沙箱）**。
 > 本文件把「沙箱能做到什么」与「只有真凭据才能做到什么」分开写，**不把沙箱结果冒充 PASS**。
 
 ## 0. 任务定义（来自 BACKLOG + 交付包 `tasks/T08_OUTCOME_BILLING.md`）
@@ -165,7 +166,7 @@ myRole: 'REPORTER' | 'COUNTERPARTY' | 'OBSERVER'  // 而不是 userId
 |---|---|---|---|
 | **1** 🚧 | **Outcome 域**：C4 迁移（`Outcome` / `OutcomeVerification`）+ 三级验证服务（派生判据 / 自我确认拒绝 / 租户隔离 / 审计）+ API（`GET /api/v1/outcomes` · `POST …/report` · `…/{id}/confirm` · `…/{id}/verify`）+ **阶段机接线** + Console `/console/outcomes` 屏 | **AC-15** | 无 |
 | 2 | ✅ **商业指标**：介绍漏斗（各阶段计数）+ 人工工时（T06 接手/人工介入）+ 任务成本，全部经 `/api/v1/outcomes/metrics` 下发，并配 **SQL 对账脚本**（`scripts/qa/outcome-reconcile.mjs`）逐项复算 | **AC-16** | Slice 1 |
-| 3 | **用量归集 + 订阅/限额 + 支付沙箱**：`UsageRecord` + 组织订阅状态机（**事件溯源**）+ Creem 适配器（**无凭据 → 沙箱捕获，`status=CAPTURED`**） | **AC-21（沙箱部分；真实扣款/退款 `BLOCKED`）** | Slice 1 |
+| 3 | ✅ **用量归集 + 订阅/限额 + 支付沙箱**：`UsageRecord`（**期次列 `periodKey`**）+ 组织订阅状态机（**事件溯源**，状态不落列）+ Creem 适配器（**无凭据 → 沙箱捕获，`gatewayStatus=CAPTURED`**）+ 5 个 HTTP 面 + SQL 对账 | **AC-21（沙箱部分；真实扣款/退款 `BLOCKED`）** | Slice 1 |
 | 4 | Playwright 覆盖 AC-18 的 Outcomes 屏（七屏补第 6 屏）+ 无空按钮负测 | AC-18 增量 | 1 |
 
 > 排序理由是**依赖可用性**：Slice 2/3 都读 Slice 1 的 `Outcome` 表；Slice 4 在屏实现之后。
@@ -174,23 +175,25 @@ myRole: 'REPORTER' | 'COUNTERPARTY' | 'OBSERVER'  // 而不是 userId
 
 ---
 
-## 5. Schema 与迁移策略（C4 批次）
+## 5. Schema 与迁移策略（C4 + C5 两个批次）
 
-- **新增文件** `prisma/schema/outcome.prisma`（领域独立，便于整批回滚）；
-- `Organization` 上加 2 条反向关系（`outcomes` / `outcomeVerifications`）；
-- 在 `scripts/connection/migrate.mjs` 注册 **`C4` 批次**（`tables: ['Outcome','OutcomeVerification']`），
+- **新增文件** `prisma/schema/outcome.prisma` / `prisma/schema/billing.prisma`（领域独立，便于整批回滚）；
+- `Organization` 上加反向关系（`outcomes` / `outcomeVerifications` / `usageRecords` / `billingEvents`）；
+- 在 `scripts/connection/migrate.mjs` 注册 **`C4`**（`Outcome` / `OutcomeVerification`）与
+  **`C5`**（`UsageRecord` / `BillingEvent`）两个批次（`ALL_BATCHES` 现为 `C0`–`C5`），
   SQL 只用 `CREATE TABLE/INDEX IF NOT EXISTS`（**纯新增，无 ALTER/DROP**）；
-- `verify` 增 **C4 段**，含**反向断言**：`Outcome.proposalId` / `Outcome.reporterId`
-  **必须没有外键**（软引用 —— 成果是被删资源的证据，不该随用户/提案消失），
-  `OutcomeVerification.outcomeId` **必须有** FK 且 `CASCADE`（与 `IntroductionWorkflow.proposalId` 同取向）。
+- `verify` 含**反向断言**：`Outcome.proposalId` / `Outcome.reporterId` / `Outcome.counterpartyId`
+  以及 `UsageRecord.sourceId` / `BillingEvent.chargeId` **必须没有外键**（软引用 —— 账是历史，
+  不该随用户/提案/资源消失），`OutcomeVerification.outcomeId` 与两表的 `organizationId`
+  **必须有** FK（前者 CASCADE，后者 CASCADE 到 `Organization`）。
   只断言"有的都在"是盲的，它抓不到"该软的地方被写成硬 FK"（T06 的原话）。
 - **本切片不动生产库**：代码与迁移脚本同批提交，带 `[skip netlify]`；生产迁移在**发版时**按
-  `db-snapshot → plan → apply C4 → verify → 发布提交` 的固定顺序做（T06 §5.1 的教训：
+  `db-snapshot → plan → apply C4 → apply C5 → verify → 发布提交` 的固定顺序做（T06 §5.1 的教训：
   先发版会让运行时第一步就查不存在的表）。
 
 ---
 
-## 6. 权限口径（与 T01 能力矩阵对齐，**已预留、无需新增**）
+## 6. 权限口径（与 T01 能力矩阵对齐）
 
 | 动作 | 能力 | 谁有 |
 |---|---|---|
@@ -198,10 +201,15 @@ myRole: 'REPORTER' | 'COUNTERPARTY' | 'OBSERVER'  // 而不是 userId
 | 上报成果（自报） | `outcome.report` | **全员** |
 | 对手方确认 | `outcome.report` | **全员**（服务层另加"不得自我确认"） |
 | 外部核验（抬到 `EXTERNALLY_VERIFIED`） | `outcome.verify` | **仅 ADMIN+** |
+| **看用量 / 订阅状态**（Slice 3） | `billing.read` | **OPERATOR+** |
+| **归集用量 / 追加计费事件 / 发起扣款**（Slice 3） | `billing.manage` | **仅 ADMIN+** |
 
 > ⚠️ 沿用 T07 的教训：`withTenant` 对能力数组是 **`some()`（任一满足）**。
 > 成果列表若写成 `['outcome.read','outcome.report']` 不会更严（两者同为全员），
 > 但**核验端点必须单 gate `outcome.verify`**，负向断言 `OPERATOR → 403` 护住。
+> **计费取严**：钱相关的动作一律不收进 `SELF_SERVICE`，读取也只到 `OPERATOR`
+> （用量是**经营信息**，MEMBER 不该看到 —— 与 R11 对成本可见性的取舍**刻意不同**，
+> 因为用量直接对应账单金额）。
 
 ---
 
@@ -211,7 +219,7 @@ myRole: 'REPORTER' | 'COUNTERPARTY' | 'OBSERVER'  // 而不是 userId
 |---|---|---|
 | **AC-15** | 自报与双方确认**分开**；**不把系统猜测计为已验证** | ① `deriveVerificationLevel` 纯函数穷举测试；② `isVerified('SELF_REPORTED') === false` 负向断言；③ **自我确认被拒**（400）；④ UI 徽章由同一判据派生；⑤ 阶段机只在上报/确认后推进，**无自动置位** |
 | **AC-16** | 任务成本 / 人工工时 / 介绍漏斗**可复算** | ✅ **PASS（Slice 2）**：`GET /api/v1/outcomes/metrics` 下发的**每个数字**都被 `scripts/qa/outcome-reconcile.mjs` 用**原始表 SQL** 独立算出同一个值（全租户 14/0、任务内 14/0，`exit 0`）。**变异自证**：篡改计数或假设 → `exit 1`；负向：`verifiedLevels` 含 `SELF_REPORTED` 或缺 `--api` → `exit 1`。口径：**无时间窗口**（R10）+ **快照式漏斗** + **假设随响应下发**（R12） |
-| **AC-21** | 使用量可复算；退款/失败/升级/降级状态一致 | Slice 3：用量复算同上；状态一致性 = **事件溯源 + 非法迁移拒绝 + 幂等键**。🔴 **真实扣款/退款 = `BLOCKED`**（无 Creem 凭据），沙箱只证明"要发出去的请求是什么" |
+| **AC-21** | 使用量可复算；退款/失败/升级/降级状态一致 | ✅ **沙箱部分 PASS（Slice 3）**：<br>① **用量可复算** —— `scripts/qa/billing-reconcile.mjs` 用**原始表 SQL** 独立算出 `totals` 四单元、`totalUnits`、四条 `limits`，并校验账本行自洽（期次 = `occurredAt` 的 UTC 月、幂等键 = `<unit>:<sourceId>`）与**无悬空来源**；`65 通过 / 0 不一致`（`exit 0`）。<br>② **状态一致** —— 三层取证：**SQL 聚合**（`paidTotal`/`refundedTotal`/`eventCount`/款项数）+ **账本合法性不变量**（无 成功+失败 并存 / 无退款而无成功 / 金额一致 / 时间单调）+ **派生复算**（status/plan/方向/时间戳/款项快照）。夹具含**升级→降级→失败→退款**全四类迁移。<br>③ **非法迁移在写入前被拒**（`REFUNDED → SUCCEEDED` → 409），由 `reduceBillingEvents` 在写入前折叠校验；<br>④ **变异自证 10/10**（篡改计数/限额/状态/方向一律被抓）；负向（期次错配）→ `exit 1`。<br>🔴 **真实扣款/退款 = `BLOCKED`**（无 Creem 凭据）：`gateway.realChargesEnabled` 恒 `false`，沙箱事件一律 `CAPTURED`（对账脚本硬断言"`gatewayStatus=SUCCEEDED` 的事件数为 0"） |
 
 ---
 
@@ -222,3 +230,4 @@ myRole: 'REPORTER' | 'COUNTERPARTY' | 'OBSERVER'  // 而不是 userId
 | 2026-10-13 | **开工**：读出 T08 的 AC-15/16/21 与依赖（T05/T06），确认阶段机 `ACTION_COMPLETED`/`OUTCOME_RECORDED` 无触发点、能力矩阵已预留 `outcome.*`、`/console/outcomes` 导航已占位。定下两条关键取舍：① **计费域新建**（不复用 B2C 的 `Subscription`/`Payment`）；② 三级验证用**事件溯源 + 纯派生**，使"自报不算验证"成为可断言判据。规划 4 个切片。 |
 | 2026-10-13 | **Slice 1 落地**：C4 迁移（`Outcome` / `OutcomeVerification`）+ 三级验证服务 + 4 个 API + **阶段机接线**（补齐 T06 的触发点空洞）+ Console `/console/outcomes` 屏。**AC-15 认领**；AC-16/21 待 Slice 2/3。 |
 | 2026-10-13 | **Slice 2 落地**：`/api/v1/outcomes/metrics`（`outcome.read` 全员）+ 纯函数指标内核（零 IO）+ **SQL 对账**（`outcome-reconcile.mjs`，原始表独立复算 14 项）+ 计数已知的夹具 + 输出器。**AC-16 认领**。三个口径决定：**不做时间窗口**（避 DateTime 格式混排的静默错算，R10）、**快照式漏斗**（一条 SQL 可复算）、**假设随响应下发**（不藏在代码里，R12）。本地实跑：全租户 14/0、任务内 14/0、变异自证与两条负向均 exit 1。 |
+| 2026-10-13 | **Slice 3 落地**：C5 迁移（`UsageRecord` / `BillingEvent`）+ 订阅状态**纯内核**（事件溯源、状态不落列、非法迁移写入前拒绝）+ `plans.ts`（方案目录与限额假设）+ Creem **沙箱**适配器（无凭据 → `CAPTURED`；有凭据未接入 → **501** 而非静默沙箱）+ 服务层（幂等扫描归集 / 派生汇总 / 事件追加）+ 5 个 HTTP 面 + 三套测试（87 例）+ **SQL 对账**（`billing-reconcile.mjs`：用量复算 65 项 + **变异自证 10/10**）。**AC-21 沙箱部分认领**；真实扣款/退款维持 `BLOCKED`（R1）。四个关键设计：**期次列 `periodKey`**（纯等值比较，避 R10）、**账本自带幂等**（`dedupeKey` 唯一 + `requestHash` 指纹，与 HTTP 幂等层并存不互替）、**归集 = 幂等扫描原始表**（业务路径零回归、可回填、与对账形成两条独立路径）、**账本语义与网关现实两个正交轴**（`charge.status` vs `gatewayStatus`）。 |
