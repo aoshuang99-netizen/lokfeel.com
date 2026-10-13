@@ -12,7 +12,7 @@
 
 ## 1. 提交（Slice 1）
 
-> Slice 2 的提交见 **§7.1**（`584975a` / 文档 `<待填>`）。
+> Slice 2 的提交见 **§7.1**（`584975a` / 文档 `ec0ddea`）。
 
 | 项 | 值 |
 |---|---|
@@ -191,7 +191,7 @@ db-snapshot → plan --batch=C4 → apply --batch=C4 --yes → verify → 发布
 | 项 | 值 |
 |---|---|
 | 交付提交 | **`584975a`** — `feat(t08): Slice 2 —— 商业指标 + SQL 对账（AC-16）`（含 `[skip netlify]`） |
-| 文档提交 | **`<待填>`** — 四件套 / BACKLOG 回填（含 `[skip netlify]`） |
+| 文档提交 | **`ec0ddea`** — 四件套 / BACKLOG 回填（含 `[skip netlify]`） |
 | 发布提交 | **无** —— 未发版（同 §5：C4 未应用到生产） |
 | 生产部署 | 仍为 `6accc4170828`，**未变** |
 
