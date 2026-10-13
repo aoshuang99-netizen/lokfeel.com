@@ -89,6 +89,25 @@ describe('T01 · 租户角色与能力矩阵', () => {
       expect(can('ADMIN', 'org.delete')).toBe(false)
     })
 
+    // ── T08 / AC-21 计费 ──
+    // 这一组刻意钉死"钱"的口径，防止日后被"为了统一"下放：
+    //   · MEMBER **读不到**用量（用量是经营信息，只有成果列表才是全员可见）；
+    //   · OPERATOR **看得到**用量/限额（"额度要用完了"是运营该看见的信号），
+    //     但**动不了**账（写事件 / 扣款 / 退款一律 ADMIN+）。
+    it('🔴 计费：MEMBER 读不到用量，OPERATOR 只读不写，ADMIN 才能动账', () => {
+      expect(can('MEMBER', 'billing.read')).toBe(false)
+      expect(can('MEMBER', 'billing.manage')).toBe(false)
+
+      expect(can('OPERATOR', 'billing.read')).toBe(true)
+      expect(can('OPERATOR', 'billing.manage')).toBe(false)
+
+      expect(can('ADMIN', 'billing.read')).toBe(true)
+      expect(can('ADMIN', 'billing.manage')).toBe(true)
+
+      expect(can('OWNER', 'billing.read')).toBe(true)
+      expect(can('OWNER', 'billing.manage')).toBe(true)
+    })
+
     it('OWNER 独占租户处置权', () => {
       expect(can('OWNER', 'org.update')).toBe(true)
       expect(can('OWNER', 'org.transfer')).toBe(true)

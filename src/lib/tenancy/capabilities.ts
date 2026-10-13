@@ -48,6 +48,9 @@ export type TenantCapability =
   | 'outcome.read'
   | 'outcome.report'
   | 'outcome.verify' // 对手方确认 / 外部核验
+  // ── 计费（T08 / AC-21）──
+  | 'billing.read' // 查看组织用量与限额
+  | 'billing.manage' // 订阅升降级 / 退订 / 退款（**动钱**，取严）
   // ── 工作流（T06）──
   | 'workflow.read' // 查看任务队列 / 死信 / 停滞阶段（运营可见）
   | 'workflow.manage' // 人工接管 / 手动重试（管理动作，影响"消息是否出街"）
@@ -61,6 +64,7 @@ export const TENANT_CAPABILITIES: readonly TenantCapability[] = [
   'intent.read', 'intent.manage',
   'proposal.read', 'proposal.create', 'proposal.decide',
   'outcome.read', 'outcome.report', 'outcome.verify',
+  'billing.read', 'billing.manage',
   'workflow.read', 'workflow.manage',
   'audit.read',
 ] as const
@@ -86,6 +90,9 @@ const OPERATOR_EXTRA: TenantCapability[] = [
   'proposal.create',
   // T06：运营需要看见"哪些通知卡住了"，但**不能**替系统决定放不放行。
   'workflow.read',
+  // T08：用量与限额是**经营信息**（"额度要用完了"是运营该看见的信号），
+  // 但**不含**金额明细以外的东西 —— 动钱的动作在 ADMIN_EXTRA 里。
+  'billing.read',
 ]
 
 // ── 管理能力：ADMIN 及以上 ──────────────────────────────────────────
@@ -100,6 +107,9 @@ const ADMIN_EXTRA: TenantCapability[] = [
   // T06：接管/重试会决定"一条消息是否出街"，是管理动作而非日常运营 ——
   // 与 outcome.verify 同一取向：保守取严。
   'workflow.manage',
+  // T08：升降级/退订/退款都**直接动钱**（AC-21）。与 outcome.verify / workflow.manage
+  // 同一取向取严：归 ADMIN+。特别注意**退款**是资金外流动作，没有任何理由下放给运营。
+  'billing.manage',
 ]
 
 // ── 所有者专属 ──────────────────────────────────────────────────────

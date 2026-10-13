@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * T02–T08 · Connection OS 迁移（批次 C0 – C4）
+ * T02–T08 · Connection OS 迁移（批次 C0 – C5）
  *
  * 用法：
  *   node scripts/connection/migrate.mjs probe                      # 只读：表/列/索引现状
@@ -17,6 +17,8 @@
  *        （T06；IntroductionWorkflow 引用 C2，其余两表仅指向 Organization）
  *   C4 = Outcome / OutcomeVerification
  *        （T08；OutcomeVerification 引用 C4 的 Outcome，Outcome 仅指向 Organization）
+ *   C5 = UsageRecord / BillingEvent
+ *        （T08；两表**只**指向 Organization —— 账里的 sourceId / chargeId 是软引用，无 FK）
  *
  * 设计约束（继承 T01 的 scripts/tenancy/migrate.mjs）：
  *   1. **纯新增** —— 各批次只 `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`，
@@ -74,9 +76,17 @@ export const BATCHES = {
     tables: ['Outcome', 'OutcomeVerification'],
     label: 'T08 · 成果验证（Outcome / OutcomeVerification）',
   },
+  C5: {
+    // C5 内部**没有**批次内依赖：两表都只对 Organization 建 FK。
+    // UsageRecord.sourceId / BillingEvent.chargeId 是**软引用**（无 FK）——
+    // 账是历史，删掉提案/成果/用户不该抹掉"这个月用了 5 次介绍"。
+    // 数组顺序 = 创建顺序；rollback 取其逆序（先删 BillingEvent）。
+    tables: ['UsageRecord', 'BillingEvent'],
+    label: 'T08 · 组织级用量计费（UsageRecord / BillingEvent）',
+  },
 }
 
-export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4']
+export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5']
 
 // ══════════════════════════════════════════════════════════════════════
 // 环境加载
@@ -411,7 +421,56 @@ function sqlC4() {
   ]
 }
 
-const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4 }
+function sqlC5() {
+  // DDL 来源：`npx prisma migrate diff --from-empty --to-schema prisma/schema --script`
+  // 后**原样抄录**（见文件头约束 5）。两表只对 Organization 建 FK。
+  return [
+    // ── UsageRecord（用量账；sourceId 是软引用，无 FK）──
+    `CREATE TABLE IF NOT EXISTS "UsageRecord" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "unit" TEXT NOT NULL,
+  "quantity" INTEGER NOT NULL DEFAULT 1,
+  "occurredAt" DATETIME NOT NULL,
+  "periodKey" TEXT NOT NULL,
+  "sourceType" TEXT NOT NULL,
+  "sourceId" TEXT NOT NULL,
+  "dedupeKey" TEXT NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "UsageRecord_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "UsageRecord_organizationId_dedupeKey_key" ON "UsageRecord"("organizationId", "dedupeKey")`,
+    `CREATE INDEX IF NOT EXISTS "UsageRecord_organizationId_periodKey_unit_idx" ON "UsageRecord"("organizationId", "periodKey", "unit")`,
+    `CREATE INDEX IF NOT EXISTS "UsageRecord_organizationId_occurredAt_idx" ON "UsageRecord"("organizationId", "occurredAt")`,
+    `CREATE INDEX IF NOT EXISTS "UsageRecord_sourceType_sourceId_idx" ON "UsageRecord"("sourceType", "sourceId")`,
+
+    // ── BillingEvent（订阅/账单事件日志；chargeId 是软引用，无 FK）──
+    `CREATE TABLE IF NOT EXISTS "BillingEvent" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "type" TEXT NOT NULL,
+  "plan" TEXT,
+  "chargeId" TEXT,
+  "amountCents" INTEGER,
+  "currency" TEXT NOT NULL DEFAULT 'USD',
+  "providerRef" TEXT,
+  "gatewayStatus" TEXT,
+  "reason" TEXT,
+  "actorId" TEXT,
+  "dedupeKey" TEXT NOT NULL,
+  "requestHash" TEXT,
+  "occurredAt" DATETIME NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "BillingEvent_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "BillingEvent_organizationId_dedupeKey_key" ON "BillingEvent"("organizationId", "dedupeKey")`,
+    `CREATE INDEX IF NOT EXISTS "BillingEvent_organizationId_occurredAt_idx" ON "BillingEvent"("organizationId", "occurredAt")`,
+    `CREATE INDEX IF NOT EXISTS "BillingEvent_organizationId_type_idx" ON "BillingEvent"("organizationId", "type")`,
+    `CREATE INDEX IF NOT EXISTS "BillingEvent_organizationId_chargeId_idx" ON "BillingEvent"("organizationId", "chargeId")`,
+  ]
+}
+
+const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5 }
 
 /** 期望存在的索引（verify 断言用）。 */
 const EXPECTED_INDEXES = [
@@ -461,6 +520,15 @@ const EXPECTED_INDEXES = [
   { name: 'OutcomeVerification_outcomeId_level_actorId_key', table: 'OutcomeVerification', unique: true },
   { name: 'OutcomeVerification_organizationId_createdAt_idx', table: 'OutcomeVerification', unique: false },
   { name: 'OutcomeVerification_outcomeId_idx', table: 'OutcomeVerification', unique: false },
+  // ── C5 ──
+  { name: 'UsageRecord_organizationId_dedupeKey_key', table: 'UsageRecord', unique: true },
+  { name: 'UsageRecord_organizationId_periodKey_unit_idx', table: 'UsageRecord', unique: false },
+  { name: 'UsageRecord_organizationId_occurredAt_idx', table: 'UsageRecord', unique: false },
+  { name: 'UsageRecord_sourceType_sourceId_idx', table: 'UsageRecord', unique: false },
+  { name: 'BillingEvent_organizationId_dedupeKey_key', table: 'BillingEvent', unique: true },
+  { name: 'BillingEvent_organizationId_occurredAt_idx', table: 'BillingEvent', unique: false },
+  { name: 'BillingEvent_organizationId_type_idx', table: 'BillingEvent', unique: false },
+  { name: 'BillingEvent_organizationId_chargeId_idx', table: 'BillingEvent', unique: false },
 ]
 
 /** 期望存在的外键（表 → 引用目标），verify 断言用。 */
@@ -503,6 +571,11 @@ const EXPECTED_FKS = [
   { table: 'Outcome', target: 'Organization' },
   { table: 'OutcomeVerification', target: 'Organization' },
   { table: 'OutcomeVerification', target: 'Outcome' },
+  // ── C5 ──
+  // 两表**只**指向 Organization。（`UsageRecord.sourceId` / `BillingEvent.chargeId` 是
+  // 软引用，**故意没有 FK** —— 若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
+  { table: 'UsageRecord', target: 'Organization' },
+  { table: 'BillingEvent', target: 'Organization' },
 ]
 
 /** 全部受管表（verify 用）。 */
@@ -906,6 +979,66 @@ async function cmdVerify(client) {
     ok('Outcome.counterpartyId 无外键（软引用）', !/FOREIGN KEY\s+\("counterpartyId"\)/.test(sql))
   } else {
     ok('Outcome 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  // 4f) T08 · UsageRecord / BillingEvent（C5 · AC-21）
+  const usageCols = await tableColumns(client, 'UsageRecord')
+  if (usageCols) {
+    const sql = (await tableCreateSql(client, 'UsageRecord')) || ''
+    // ⚠️ 只列 **TEXT NOT NULL** 的列。`quantity` 是 INTEGER、`occurredAt` 是 DATETIME，
+    //    两者单独断言（见下）—— 混进来会让本行恒假（第一版就这么错的，被本地 verify 抓出来）。
+    const required = [
+      'organizationId',
+      'unit',
+      'periodKey',
+      'sourceType',
+      'sourceId',
+      'dedupeKey',
+    ].every((c) => new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql))
+    ok('UsageRecord 关键列均为 NOT NULL', required)
+    ok('UsageRecord.occurredAt 为 DATETIME NOT NULL', /"occurredAt"\s+DATETIME\s+NOT\s+NULL/.test(sql))
+    ok('UsageRecord.quantity 默认 1（一事实一账）', /"quantity"\s+INTEGER\s+NOT\s+NULL\s+DEFAULT\s+1/.test(sql))
+    // 🔴 期次列**必须**存在：AC-21 的"可复算"押在"期次是纯等值比较"上。
+    // 少了它，对账只能回到 `WHERE occurredAt >= ? AND < ?` 的范围比较 —— 而库里的
+    // DateTime 是 TEXT，格式一旦混排就会**静默错算**（见 T08/risks.md R10）。
+    ok(
+      'UsageRecord.periodKey 存在且 NOT NULL（AC-21 可复算的落点）',
+      /"periodKey"\s+TEXT\s+NOT\s+NULL/.test(sql)
+    )
+    // 🔴 **反向断言**：`sourceId` 是软引用，**不该**有外键 ——
+    // 账是历史：删掉提案/成果不该抹掉"这个月用了 5 次介绍"。
+    ok(
+      'UsageRecord.sourceId 无外键（软引用，删原始行不抹用量账）',
+      !/FOREIGN KEY\s+\("sourceId"\)/.test(sql)
+    )
+  } else {
+    ok('UsageRecord 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  const billingCols = await tableColumns(client, 'BillingEvent')
+  if (billingCols) {
+    const sql = (await tableCreateSql(client, 'BillingEvent')) || ''
+    const required = ['organizationId', 'type', 'currency', 'dedupeKey', 'occurredAt'].every((c) =>
+      new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL|"${c}"\\s+DATETIME\\s+NOT\\s+NULL`).test(sql)
+    )
+    ok('BillingEvent 关键列均为 NOT NULL', required)
+    ok("BillingEvent.currency 默认为 'USD'", /"currency"\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'USD'/.test(sql))
+    // 可空列：非款项事件无 chargeId、非方案事件无 plan —— 建成 NOT NULL 会让这些合法事件写不进去。
+    ok('BillingEvent.chargeId 可为空（订阅类事件无款项）', /"chargeId"\s+TEXT\b(?!\s+NOT)/.test(sql))
+    ok('BillingEvent.plan 可为空（款项类事件无方案）', /"plan"\s+TEXT\b(?!\s+NOT)/.test(sql))
+    // 🔴 状态**不落列**：BillingEvent 上不得出现 status/state 列 ——
+    // 落了它就是第二个事实来源，迟早与事件集不一致，而不一致的那一刻没人会报错。
+    ok(
+      'BillingEvent **没有** status 列（状态是派生值，不落库）',
+      !/"status"\s+TEXT/.test(sql) && !/"state"\s+TEXT/.test(sql)
+    )
+    // 🔴 **反向断言**：`chargeId` 是软引用，**不该**有外键（同上，账是历史）。
+    ok(
+      'BillingEvent.chargeId 无外键（软引用，款项只存在于账里）',
+      !/FOREIGN KEY\s+\("chargeId"\)/.test(sql)
+    )
+  } else {
+    ok('BillingEvent 关键列均为 NOT NULL', false, '表不存在')
   }
 
   const verifCols = await tableColumns(client, 'OutcomeVerification')

@@ -80,6 +80,14 @@ model Organization {
   outcomes             Outcome[]
   outcomeVerifications OutcomeVerification[]
 
+  // ── T08 Connection OS 反向关系（billing.prisma）──
+  //
+  // ⚠️ 注意两表里的 id 列（`UsageRecord.sourceId` / `BillingEvent.chargeId`）
+  // **不在此列**：它们是**软引用**（无 FK）—— 账是历史，删提案/删成果不该抹掉用量。
+  // 只有 `organizationId` 建了真 FK。
+  usageRecords  UsageRecord[]
+  billingEvents BillingEvent[]
+
   @@index([status])
 }
 

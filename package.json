@@ -94,7 +94,10 @@
     "test:outcome": "jest tests/outcome",
     "metrics:seed": "node scripts/qa/seed-t08-metrics.mjs",
     "metrics:emit": "npx tsx scripts/qa/emit-outcome-metrics.mts",
-    "metrics:reconcile": "node scripts/qa/outcome-reconcile.mjs"
+    "metrics:reconcile": "node scripts/qa/outcome-reconcile.mjs",
+    "billing:seed": "node scripts/qa/seed-t08-billing.mjs",
+    "billing:emit": "npx tsx scripts/qa/emit-billing.mts",
+    "billing:reconcile": "node scripts/qa/billing-reconcile.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

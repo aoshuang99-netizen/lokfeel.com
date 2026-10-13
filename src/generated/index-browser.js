@@ -117,6 +117,37 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.BillingEventScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  type: 'type',
+  plan: 'plan',
+  chargeId: 'chargeId',
+  amountCents: 'amountCents',
+  currency: 'currency',
+  providerRef: 'providerRef',
+  gatewayStatus: 'gatewayStatus',
+  reason: 'reason',
+  actorId: 'actorId',
+  dedupeKey: 'dedupeKey',
+  requestHash: 'requestHash',
+  occurredAt: 'occurredAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.UsageRecordScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  unit: 'unit',
+  quantity: 'quantity',
+  occurredAt: 'occurredAt',
+  periodKey: 'periodKey',
+  sourceType: 'sourceType',
+  sourceId: 'sourceId',
+  dedupeKey: 'dedupeKey',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.BotProfileScalarFieldEnum = {
   id: 'id',
   profileId: 'profileId',
@@ -956,6 +987,35 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.BillingEventType = exports.$Enums.BillingEventType = {
+  SUBSCRIPTION_STARTED: 'SUBSCRIPTION_STARTED',
+  PLAN_CHANGED: 'PLAN_CHANGED',
+  SUBSCRIPTION_CANCELED: 'SUBSCRIPTION_CANCELED',
+  CHARGE_CREATED: 'CHARGE_CREATED',
+  CHARGE_SUCCEEDED: 'CHARGE_SUCCEEDED',
+  CHARGE_FAILED: 'CHARGE_FAILED',
+  CHARGE_REFUNDED: 'CHARGE_REFUNDED'
+};
+
+exports.BillingPlan = exports.$Enums.BillingPlan = {
+  STARTER: 'STARTER',
+  GROWTH: 'GROWTH',
+  SCALE: 'SCALE'
+};
+
+exports.BillingGatewayStatus = exports.$Enums.BillingGatewayStatus = {
+  CAPTURED: 'CAPTURED',
+  SUCCEEDED: 'SUCCEEDED',
+  FAILED: 'FAILED'
+};
+
+exports.UsageUnit = exports.$Enums.UsageUnit = {
+  PROPOSAL: 'PROPOSAL',
+  INTRODUCTION: 'INTRODUCTION',
+  OUTCOME: 'OUTCOME',
+  VERIFICATION: 'VERIFICATION'
+};
+
 exports.BotType = exports.$Enums.BotType = {
   SEED: 'SEED',
   SIMULATION: 'SIMULATION',
@@ -1379,6 +1439,8 @@ exports.MembershipStatus = exports.$Enums.MembershipStatus = {
 };
 
 exports.Prisma.ModelName = {
+  BillingEvent: 'BillingEvent',
+  UsageRecord: 'UsageRecord',
   BotProfile: 'BotProfile',
   BotInteractionLog: 'BotInteractionLog',
   BotLearningBatch: 'BotLearningBatch',

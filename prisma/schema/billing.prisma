@@ -1,0 +1,197 @@
+// ═══════════════════════════════════════════════════════════════
+// BILLING — T08 组织级用量计费（Slice 3）
+//
+// 对齐：AC-21（**使用量可复算**；退款/失败/升级/降级**状态一致**）
+//
+// 设计约束（继承 outcome.prisma / tenancy.prisma 的同一套）：
+//   1. **纯新增** —— 本文件不改动既有模型的任何列语义，可独立上线（零停机、零回归）。
+//   2. **方言无关** —— 不含任何 `@db.*` 原生类型标注。
+//   3. **软引用优先** —— 账是历史。删掉一个提案/成果，不该抹掉"这个月用了 5 次介绍"。
+//   4. 🔴 **不复用 core.prisma 的 `Subscription` / `Payment`** —— 见下。
+//   5. 🔴 **状态是派生值，不是可写的列** —— 见下。
+//
+// ── 为什么不复用 `Subscription` / `Payment` ──────────────────────────
+//   它们面向**个人 B2C**（`userId` + Stripe + 会员权益），而本域是**组织级用量计费**
+//   （`organizationId` + Creem + 计量单位）。混用有三种污染：
+//     ① 语义污染：「这个用户是不是会员」这条既有查询会**悄悄包含社群订阅**；
+//     ② 网关污染：`stripeCustomerId` / `stripePriceId` 是 `@unique` 列，混入 Creem
+//        数据会迫使写空值，此后无法区分"没订阅"与"非 Stripe 订阅"；
+//     ③ 回滚污染：独立域意味着 C5 可整批 `rollback`（逆序 DROP），不触碰既有表。
+//
+// ── 为什么状态不落列（与 Slice 1 的 `Outcome.verificationLevel` 同取向）──
+//   `verificationLevel` 落列是因为它要被 SQL 计数（`WHERE verificationLevel IN (...)`）
+//   —— 那是一个**已知会被下推**的查询谓词。本域不同：订阅方案与账单状态只在
+//   「读当前状态」时被用到，且**永远由事件集派生**（`deriveSubscriptionState`）。
+//   落一个 `status` 列就等于造了第二个事实来源，它迟早与事件集不一致，
+//   而且不一致的那一刻没有任何东西会报错。⇒ **不落列**，读时派生。
+//
+// ── 事件溯源的两条硬约束 ────────────────────────────────────────────
+//   ① **只增不改**：想撤销一次确认就再记一条相反语义的事件，绝不 UPDATE 历史。
+//      否则"这单当时到底成没成、退没退款"永远无法回溯（AC-21 的全部意义）。
+//   ② **非法迁移必须在写入前被拒**：例如 `REFUNDED → SUCCEEDED` 必须失败。
+//      判据在纯内核里（`src/lib/billing/subscription.ts`），服务层写入前先过一遍。
+// ═══════════════════════════════════════════════════════════════
+
+/// 计费单元。
+///
+/// 🔴 与 `src/lib/outcome/metrics.ts` 的 `MetricUnit` **刻意同源** ——
+/// 用量账与商业指标必须是同一件事的两种视图。若两处各定义一套，
+/// "介绍 3 次"会在报表里变成两个数（AC-16 与 AC-21 会同时崩），
+/// 而**不会报任何错**。枚举顺序也保持一致，便于对账脚本按下标对齐。
+enum UsageUnit {
+  PROPOSAL // 发起一次连接提案
+  INTRODUCTION // 完成一次介绍（提案进入已介绍）
+  OUTCOME // 上报一份成果
+  VERIFICATION // 一份成果被核验（**按"已被核验的成果数"计，不是按核验记录条数** —— 幂等重放不该重复计费）
+}
+
+/// 订阅方案（组织级）。`FREE` **刻意不在枚举里** —— 见 `EffectivePlan`：
+/// "没有订阅"不是一种订阅，用 `null` 表达比用一个假的 `FREE` 行更诚实。
+enum BillingPlan {
+  STARTER
+  GROWTH
+  SCALE
+}
+
+/// 计费事件类型（事件溯源的**唯一**写入面）。
+///
+/// 命名规范 `<主语>_<动作>`，与 `TenantAuditEvent.eventType` 同名风格。
+enum BillingEventType {
+  SUBSCRIPTION_STARTED // 开通（方案由 `plan` 给出）
+  PLAN_CHANGED // 升/降级（方案由 `plan` 给出；升还是降**由纯内核按方案序推导**）
+  SUBSCRIPTION_CANCELED // 退订（退订后不可再收新款项，除非重新 STARTED）
+  CHARGE_CREATED // 一次支付尝试：进入 PENDING（`chargeId` 必填）
+  CHARGE_SUCCEEDED // 该次尝试成功
+  CHARGE_FAILED // 该次尝试失败（`reason` 必填 —— 失败的**原因**是运营要看的）
+  CHARGE_REFUNDED // 对该次成功尝试退款（终态）
+}
+
+/// 一笔支付尝试的**网关侧状态**（保存到事件上的快照）。
+///
+/// 🔴 `CAPTURED` 与 `SUCCEEDED` **必须分开**（与 `NotificationDeliveryStatus` 同一铁律）：
+///   前者是"沙箱捕获了要发出去的请求"，后者是"真实网关已受理"。
+///   把沙箱写成 SUCCEEDED 就是虚报外部服务已接通
+///   （主指令：「没有真实凭据的流程只能标记 MOCKED / BLOCKED，不能标记 PASSED」）。
+enum BillingGatewayStatus {
+  CAPTURED // 沙箱捕获（无 Creem 凭据）：记录"要发什么"，不冒充已扣款
+  SUCCEEDED // 真实网关受理（provider 回执落 `providerRef`）
+  FAILED
+}
+
+/// 计费事件（**不可变日志**）。当前方案 / 状态 / 每笔款项的生命周期全部由它派生。
+model BillingEvent {
+  id String @id @default(cuid())
+
+  /// 租户谓词。**不可省** —— 所有查询都以它为首要条件（T01 铁律）。
+  organizationId String
+
+  type BillingEventType
+
+  /// 目标方案。`SUBSCRIPTION_STARTED` / `PLAN_CHANGED` 必填，其余为 null。
+  plan BillingPlan?
+
+  /// 款项关联 id（**软引用**，无 FK）。同一笔尝试的 CREATED/SUCCEEDED/REFUNDED 共用它。
+  /// 由服务层生成；`CHARGE_*` 事件必填。
+  chargeId String?
+
+  /// 金额（**分**，整数 —— 避免浮点求和误差，与 `metrics.ts` 的 `unitCostsCents` 同口径）。
+  amountCents Int?
+
+  /// 币种（ISO 4217）。
+  currency String @default("USD")
+
+  /// 网关回执引用。**不进 DTO**。
+  /// 沙箱语义下这里是**构造出来的请求指纹** —— 见 `src/lib/billing/creem.ts`。
+  providerRef String?
+
+  /// 本次尝试的网关侧状态快照。沙箱捕获时为 `CAPTURED`。
+  gatewayStatus BillingGatewayStatus?
+
+  /// 失败/退订的原因（`CHARGE_FAILED` / `SUBSCRIPTION_CANCELED` 必填 —— 原因是要给人看的）。
+  reason String?
+
+  /// 操作人（软引用，**不进 DTO**）：退款/退订这类管理动作要留痕。
+  actorId String?
+
+  /// 幂等键：同一业务动作只入账一次。唯一性作用域 = `(organizationId, dedupeKey)`。
+  /// ⚠️ 与 `IdempotencyRecord` **刻意并存**：后者作用在 HTTP 层（同键同体 → 回放首次结果），
+  /// 本字段作用在**账本层**（即使没有 HTTP 幂等头，账也不会重复）。
+  dedupeKey String
+
+  /// 产生本事件的**请求体指纹**（由调用方算好传入）。
+  ///
+  /// 🔴 为什么账本要自带它：`dedupeKey` 唯一约束只能保证"不重复"，**保证不了**
+  /// "同一个键没有被复用于另一个意图"。后者更危险 —— 调用方拿着旧键发新动作，
+  /// 若只按唯一约束处理就会**静默返回旧事件**，而调用方以为新动作生效了。
+  /// 有了指纹，服务层可以在命中时比对：**相同 → 回放（replayed）**、
+  /// **不同 → 409**（与 `src/lib/connection/idempotency.ts` 的语义逐字一致）。
+  /// 放在账本里而不是只放在 HTTP 层，是因为脚本/回填也必须受同一保护。
+  requestHash String?
+
+  /// 业务发生时间。**由我们写入**（格式统一为 Prisma 的 `...+00:00`），
+  /// 因此本域可以做**时段窗口**统计 —— 这正是 `metrics.ts` 口径 2 把时段留到
+  /// 本切片的原因：那边的 `introducedAt` 是历史遗留的混格式列，范围比较会静默错算。
+  occurredAt DateTime
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, occurredAt])
+  @@index([organizationId, type])
+  @@index([organizationId, chargeId])
+}
+
+/// 用量记录（**只增不改**的账）。
+///
+/// 与 `src/lib/outcome/metrics.ts` 的关系（两者都对，但回答不同的问题）：
+///   - 指标（Slice 2）是**当前状态快照** —— "现在有多少碳案双方同意"；
+///   - 用量账（本表）是**历史流水** —— "这个月真实发生了多少次介绍"。
+///   二者在"提案被撤销"这类场景下会**故意**不同：撤销不退款，账不动。
+///   这正是不能用一条 SQL 从现状反推账单的原因，也是本表存在的理由。
+model UsageRecord {
+  id String @id @default(cuid())
+
+  /// 租户谓词。**不可省**。
+  organizationId String
+
+  unit UsageUnit
+
+  /// 数量。目前恒为 1（一条业务事实 = 一次用量），保留字段是为了将来
+  /// "一次介绍覆盖 N 位成员"这类批量单元不必改表。
+  quantity Int @default(1)
+
+  /// 业务发生时间。**由我们写入**（统一格式），供审计与排序。
+  occurredAt DateTime
+
+  /// 🔴 **计费期次**（`YYYY-MM`，UTC 自然月）。归集与限额都按它分组。
+  ///
+  /// 为什么不让对账脚本去 `WHERE occurredAt >= ? AND occurredAt < ?`：
+  /// 库里的 DateTime 是 TEXT，本项目**已经踩过**"多来源格式混排（`...Z` /
+  /// `...+00:00` / 空格分隔）→ 范围比较返回静默错误的计数"（见 `T08/risks.md` R10）。
+  /// 即使本表的 `occurredAt` 全由我们自己写、格式一致，把**可复算的数字**押在
+  /// "字符串字典序恰好等于时间序"上仍是脆的 —— 换一次写入路径就会破。
+  /// 期次是账单本来就有的概念，把它显式落列 ⇒ 对账退化为一次**纯等值比较**，
+  /// 与日期格式彻底解耦。
+  periodKey String
+
+  /// 来源资源的类型（`proposal` / `introduction` / `outcome` / `verification`）。
+  sourceType String
+
+  /// 来源资源 id（**软引用**，无 FK —— 账是历史，见文件头约束 3）。
+  sourceId String
+
+  /// 幂等键：同一来源事实只入账一次。唯一性作用域 = `(organizationId, dedupeKey)`。
+  /// 约定格式：`<unit-lower>:<sourceId>`（由 `usageDedupeKey()` 统一产出）。
+  dedupeKey String
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, periodKey, unit])
+  @@index([organizationId, occurredAt])
+  @@index([sourceType, sourceId])
+}
