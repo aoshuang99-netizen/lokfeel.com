@@ -65,6 +65,8 @@
     "verify:gender": "npx tsx scripts/verify-gender-vocab.mts",
     "verify:ice": "npx tsx scripts/verify-webrtc-ice.mts",
     "check:script-decls": "node scripts/check-script-decls.mjs",
+    "check:ui-invariants": "node scripts/check-ui-invariants.mjs",
+    "verify:ui-invariants": "node scripts/qa/verify-ui-invariants-mutation.mjs",
     "verify:turn:candidate": "node scripts/qa/verify-turn-candidate.mjs",
     "verify:turn:prod": "node scripts/qa/verify-turn-prod.mjs",
     "verify:t06:prod": "node scripts/qa/verify-t06-prod.mjs",

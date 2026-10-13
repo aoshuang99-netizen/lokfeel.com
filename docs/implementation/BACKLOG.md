@@ -406,6 +406,26 @@
 > 或 **T09 Agent Runtime**（须先拍板技术栈，§6-⑥）。
 > T07 最后一屏（Agents）仍等 T09 技术栈拍板（§6-⑥）。
 
+> **前端线《Living Connection OS》P0 + P1 已落地（⚠️ 未发版，带免构建标记）**
+> —— 与上面 T02–T08 的**后端线**并行推进（前端线不占用发布窗口）。
+>
+> - **P0 · Design Foundation**（记录 `DESIGN/03-changes-p0.md`）：**加性作用域化令牌层**
+>   （`--lf-*` + `[data-lf-theme="field"|"paper"]`，**不动既有 Lime 品牌** —— 否则等于全站换皮）
+>   + **五区外壳** `living-shell.tsx` + `/workspace` 路由（守卫 + 真实端点 + 诚实三态）
+>   + 门禁 `check:ui-invariants`。
+> - **P1 · Generative Workspace**（记录 `DESIGN/04-changes-p1.md`）：**`WorkspaceSpec` 契约**
+>   （zod `strictObject`：**未知字段直接拒绝**；节点类型白名单，**`agent` 属保留类型不可产出**）
+>   + **Intent-to-UI Compiler**（规则式/纯函数/确定性；只认 5 类目标，**识别不出即拒绝**；
+>     **原文没写的不补默认值**、候选恒空不预填）+ **白名单渲染 + Living Canvas**
+>   （DOM/SVG 混合，**不引 3D/xyflow**）+ 动作就绪性接 `GET /api/v1/org` 的真实 `capabilities`。
+> - **门禁扩到 R1–R7**（+R6 禁产 `agent` 节点 / +R7 禁 `dangerouslySetInnerHTML`·`eval`），
+>   `SCOPES` 纳入 `src/lib/workspace-spec`；新增**变异自证**脚本 `npm run verify:ui-invariants`
+>   （7/7 规则逐条证明生效 + 负向对照）。
+> - 🔴 **前端 P1 的 `agent` 节点 / Agent 屏与后端 T09 是同一条依赖**：两者都等 §6-⑥ 的技术栈拍板。
+> - 前端 **P2**（Field 2.5D 关系网络 → 引 `@xyflow/react`）/ **P3**（首页 3D，且**首屏文案与登录入口必须独立于 3D**）待续。
+> - ⚠️ **不破坏线上**：新令牌只作用于 `[data-lf-theme]` 子树，`/workspace` 未接入主导航，
+>   76 个既有页面**零变化**。
+
 > ✅ **已发现的既有不一致 → 已修复并补发**（修复提交 `95da9f1` / 部署 `6accc4170828` @ 11:27Z）：
 > `src/app/console/layout.tsx` 未登录时把回跳地址
 > **写死**为 `/console`，与其文件头注释「跳登录（保留回跳地址）」不符 → 深链（如

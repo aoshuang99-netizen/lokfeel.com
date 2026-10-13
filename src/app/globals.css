@@ -1705,3 +1705,135 @@ img {
     filter: brightness(0.5) contrast(1.15) saturate(0.75);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIVING CONNECTION OS — 设计令牌层（加性 · 作用域化）
+   ---------------------------------------------------------------
+   1) 不覆盖既有品牌令牌（--primary 等仍为 Lime）；新令牌走 --lf-* 命名空间，
+      未设置 [data-lf-theme] 的页面**零影响**。
+   2) [data-lf-theme="field"] = Deep Field（深色，默认）
+      [data-lf-theme="paper"] = Living Paper（明亮）
+   3) 动效四档 L0–L3 由 [data-lf-motion] 控制；prefers-reduced-motion 强制 L0。
+   ═══════════════════════════════════════════════════════════════ */
+
+:root,
+[data-lf-theme] {
+  /* 底色 / 面 */
+  --lf-bg: #0b0e11;
+  --lf-surface: #171c21;
+  --lf-surface-2: #1f262d;
+  --lf-line: rgba(242, 241, 236, 0.1);
+  --lf-line-strong: rgba(242, 241, 236, 0.18);
+
+  /* 文字 */
+  --lf-text: #f2f1ec;
+  --lf-text-muted: #9ba5ad;
+  --lf-text-faint: #6b747b;
+
+  /* 品牌强调 / 状态（Warm Signal） */
+  --lf-signal: #d7ac78;
+  --lf-signal-soft: rgba(215, 172, 120, 0.16);
+  --lf-success: #69b49b;
+  --lf-warning: #e5b96b;
+  --lf-danger: #dc8580;
+
+  /* 形 */
+  --lf-radius: 16px;
+  --lf-radius-lg: 20px;
+  --lf-radius-max: 24px;
+
+  /* 动效（默认 = L2 空间档） */
+  --lf-dur-fast: 180ms;
+  --lf-dur: 280ms;
+  --lf-dur-slow: 450ms;
+  --lf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Living Paper（明亮） ── */
+[data-lf-theme='paper'] {
+  --lf-bg: #f7f5f0;
+  --lf-surface: #ffffff;
+  --lf-surface-2: #efebe3;
+  --lf-line: rgba(11, 14, 17, 0.1);
+  --lf-line-strong: rgba(11, 14, 17, 0.18);
+
+  --lf-text: #0b0e11;
+  --lf-text-muted: #5a636b;
+  --lf-text-faint: #8a9298;
+
+  --lf-signal: #b8863f;
+  --lf-signal-soft: rgba(184, 134, 63, 0.14);
+  --lf-success: #3f8c74;
+  --lf-warning: #b8862f;
+  --lf-danger: #b8564f;
+}
+
+/* ── 动效档位：L0 静态 / L1 微动效 / L2 空间（默认）/ L3 沉浸 ── */
+[data-lf-motion='0'] {
+  --lf-dur-fast: 0ms;
+  --lf-dur: 0ms;
+  --lf-dur-slow: 0ms;
+}
+[data-lf-motion='1'] {
+  --lf-dur-fast: 120ms;
+  --lf-dur: 180ms;
+  --lf-dur-slow: 240ms;
+}
+[data-lf-motion='3'] {
+  --lf-dur-fast: 240ms;
+  --lf-dur: 420ms;
+  --lf-dur-slow: 700ms;
+}
+
+/* 用户系统偏好优先：强制 L0（基准 §七 硬要求） */
+@media (prefers-reduced-motion: reduce) {
+  [data-lf-theme] {
+    --lf-dur-fast: 0ms;
+    --lf-dur: 0ms;
+    --lf-dur-slow: 0ms;
+  }
+}
+
+/* ── 映射为 Tailwind 工具类：bg-lf-surface / text-lf-text / border-lf-line / rounded-lf … ── */
+@theme inline {
+  --color-lf-bg: var(--lf-bg);
+  --color-lf-surface: var(--lf-surface);
+  --color-lf-surface-2: var(--lf-surface-2);
+  --color-lf-line: var(--lf-line);
+  --color-lf-line-strong: var(--lf-line-strong);
+  --color-lf-text: var(--lf-text);
+  --color-lf-text-muted: var(--lf-text-muted);
+  --color-lf-text-faint: var(--lf-text-faint);
+  --color-lf-signal: var(--lf-signal);
+  --color-lf-signal-soft: var(--lf-signal-soft);
+  --color-lf-success: var(--lf-success);
+  --color-lf-warning: var(--lf-warning);
+  --color-lf-danger: var(--lf-danger);
+  --radius-lf: var(--lf-radius);
+  --radius-lf-lg: var(--lf-radius-lg);
+  --radius-lf-max: var(--lf-radius-max);
+  --ease-lf: var(--lf-ease);
+}
+
+/* 可见焦点环（基准 §七：键盘可达 + 可见焦点） */
+.lf-focus-ring:focus-visible {
+  outline: 2px solid var(--lf-signal);
+  outline-offset: 2px;
+}
+
+/* 「Signal」脉冲：连接事件发生时的唯一动效（非装饰 —— 只有真实连接事件才触发） */
+@keyframes lf-signal-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--lf-signal-soft);
+  }
+  70% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.lf-signal-pulse {
+  animation: lf-signal-pulse var(--lf-dur-slow) var(--lf-ease) 1;
+}
