@@ -38,3 +38,32 @@ export {
   type VerifyOutcomeInput,
   type ListOutcomesOptions,
 } from './outcomes'
+
+// ── 商业指标（AC-16）──
+export {
+  METRIC_UNITS,
+  METRIC_UNIT_LABELS,
+  METRIC_ASSUMPTIONS,
+  round1,
+  round2,
+  percent,
+  unitsOf,
+  computeOutcomeMetrics,
+  type MetricUnit,
+  type MetricAssumptions,
+  type OutcomeMetricCounts,
+  type OutcomeMetrics,
+  type OutcomeMetricsBasis,
+  type OutcomeFunnelMetrics,
+  type OutcomeWorkloadMetrics,
+  type OutcomeCostMetrics,
+  type OutcomeCostLineItem,
+  type ComputeMetricsParams,
+} from './metrics'
+
+export {
+  collectOutcomeMetricCounts,
+  getOutcomeMetrics,
+  type OutcomeMetricsDto,
+  type OutcomeMetricsOptions,
+} from './metrics-service'

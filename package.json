@@ -90,7 +90,11 @@
     "connection:migrate": "node scripts/connection/migrate.mjs apply",
     "connection:rollback": "node scripts/connection/migrate.mjs rollback",
     "connection:verify": "node scripts/connection/migrate.mjs verify",
-    "test:connection": "jest tests/connection"
+    "test:connection": "jest tests/connection",
+    "test:outcome": "jest tests/outcome",
+    "metrics:seed": "node scripts/qa/seed-t08-metrics.mjs",
+    "metrics:emit": "npx tsx scripts/qa/emit-outcome-metrics.mts",
+    "metrics:reconcile": "node scripts/qa/outcome-reconcile.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
