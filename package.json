@@ -77,6 +77,7 @@
     "lifecycle:sweep": "node scripts/qa/lifecycle-sweep.mjs",
     "lifecycle:sweep:apply": "node scripts/qa/lifecycle-sweep.mjs --apply",
     "qa:db:snapshot": "node scripts/qa/db-snapshot.mjs",
+    "verify:no-release": "node scripts/qa/verify-no-release.mjs",
     "qa:probe:login": "node scripts/qa/probe-qa-login.mjs",
     "turn:setup": "node scripts/setup-cloudflare-turn.mjs",
     "turn:setup:dry": "node scripts/setup-cloudflare-turn.mjs --dry-run",
