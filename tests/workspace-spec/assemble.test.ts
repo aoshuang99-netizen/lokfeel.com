@@ -11,6 +11,9 @@
 
 import {
   ACTION_JOB_STATUSES,
+  AGENT_RISKS,
+  AGENT_SKILLS,
+  AGENT_STATES,
   CONSENT_STATES,
   MAX_CONSENT_NODES,
   MAX_NODE_ITEMS,
@@ -114,6 +117,33 @@ describe('枚举镜像（与服务端真实枚举逐字一致）', () => {
       'EXTERNALLY_VERIFIED',
     ])
     expect(OUTCOME_LEVELS as readonly string[]).not.toContain('EVIDENCE_BACKED')
+  })
+
+  // P2 Slice 2 新增的三组（`agent` 节点转正时引入）。按本仓"两根柱子"纪律：
+  // 编译期守卫防**单侧**漂移，这里的硬编码防**双侧**漂移（两侧一起改时守卫全绿）。
+  it('agent 状态 = AgentRunStatus', () => {
+    expect([...AGENT_STATES]).toEqual([
+      'PROPOSED',
+      'AWAITING_APPROVAL',
+      'APPROVED',
+      'REJECTED',
+      'EXECUTED',
+      'DEGRADED',
+      'BLOCKED_QUOTA',
+      'FAILED',
+    ])
+  })
+
+  it('agent 风险 = RiskLevel', () => {
+    expect([...AGENT_RISKS]).toEqual(['LOW', 'MEDIUM', 'HIGH'])
+  })
+
+  it('agent 技能 = SkillKey', () => {
+    expect([...AGENT_SKILLS]).toEqual([
+      'INTENT_EXTRACTION',
+      'INTRO_DRAFT',
+      'COORDINATION_ADVICE',
+    ])
   })
 })
 

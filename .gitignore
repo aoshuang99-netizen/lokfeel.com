@@ -88,3 +88,11 @@ cloudflare-env.d.ts
 # 这里防的是有人误把它拷进仓库 —— 含机密，一旦入库等于永久泄露）
 .lokfeel-turn-keys/
 .turn-key-*.json
+
+# 自证脚本的临时产物（`verify:workspace-drift` / `verify:ui-invariants`）：
+# 正常路径下脚本自己创建、自己清理；被中断（OOM / Ctrl-C）时会**残留**在
+# 仓库根或源码树里 —— 此时 `git add -A` 会把它当成"正常文件"提交。
+#   · tsconfig.drift-probe.json —— 漂移探针（根目录）
+#   · __mutant-*               —— 变异体（源码树内，UI 门禁 R0 也会主动报错）
+tsconfig.drift-probe.json
+__mutant-*

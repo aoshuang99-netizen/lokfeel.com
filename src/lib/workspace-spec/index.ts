@@ -14,6 +14,9 @@ export {
   CONSENT_STATES,
   ACTION_JOB_STATUSES,
   OUTCOME_LEVELS,
+  AGENT_STATES,
+  AGENT_RISKS,
+  AGENT_SKILLS,
   WorkspaceSpecSchema,
   WorkspaceNodeSchema,
   WorkspaceActionSchema,
@@ -22,11 +25,15 @@ export {
   ConsentNodeSchema,
   ActionNodeSchema,
   OutcomeNodeSchema,
+  AgentNodeSchema,
   type NodeType,
   type ReservedNodeType,
   type ConsentState,
   type ActionJobStatus,
   type OutcomeLevel,
+  type AgentState,
+  type AgentRisk,
+  type AgentSkill,
   type WorkspaceSpec,
   type WorkspaceNode,
   type WorkspaceAction,
@@ -35,6 +42,7 @@ export {
   type ConsentNode,
   type ActionNode,
   type OutcomeNode,
+  type AgentNode,
 } from './schema'
 
 export {
@@ -59,6 +67,7 @@ export {
   assembleConsentNodes,
   assembleActionNode,
   assembleOutcomeNode,
+  assembleAgentNode,
   assembleTenantNodes,
   mergeTenantNodes,
   missionDraftFromSpec,
@@ -69,4 +78,5 @@ export {
   type MergeResult,
   type MissionCreateBody,
   type MissionDraft,
+  type AgentProviderHonesty,
 } from './assemble'

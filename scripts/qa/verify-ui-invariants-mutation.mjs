@@ -16,6 +16,14 @@
  * 用法：node scripts/qa/verify-ui-invariants-mutation.mjs
  * 退出码：0 = 全部规则被证明生效；1 = 有规则未被证明（视为门禁失效）。
  *
+ * ⚠️ **不得与其它扫描型任务并行**（`tsc` / `jest` / `next build`）：本脚本会往
+ *    `src/` 临时写入 `__mutant-*`。并行时对方可能读到"半截文件"，或读到随后被删掉的
+ *    文件 → 报出与被测逻辑无关的**假失败**（本仓实测：与 `tsc` 并行 → `TS6053`）。
+ *    判据是"**这个任务是否写源码树**"，而不是"它重不重"。
+ *    （好消息：本脚本只**新建**文件、不就地改写已有源文件 ⇒ 被中断时最坏是留下
+ *      `__mutant-*`，而门禁 **R0** 会主动把它报出来。与 `verify:workspace-drift`
+ *      不同 —— 那个是就地改写，中断后残留的是"看起来像正常代码"的源文件。)
+ *
  * ⚠️ R8 的变异文件**必须写在 `src/components/living/` 根**（不在 `field/` 子目录内），
  *    否则它自己就落在白名单里，规则当然不会报 —— 那样证明的是"白名单被绕过了"。
  */
@@ -55,6 +63,8 @@ const MUTANTS = [
   },
   {
     rule: 'R6',
+    // T09 落地后 R6 已改为"不得**无源**"：这个变异体正是"无源"的形态 ——
+    // 有 agent 节点却没有 `runs`（真实端点数据）⇒ 必须被拦。
     body: `export const node = { id: 'a', type: 'agent', title: '自动执行', data: {} }\n`,
   },
   {
@@ -71,10 +81,28 @@ const MUTANTS = [
     // 会进界面的字符串里带 markdown 强调标记 ⇒ 必须被 R9 拦下。
     body: `export const note = '这是一条**重点**说明'\n`,
   },
+  {
+    rule: 'R10',
+    // 值导入服务端桶文件 ⇒ 会把 Prisma/守卫拖进客户端 bundle，必须被拦。
+    // （`import type` 的合法写法在负向对照里，用来证明"只禁值导入"而不是"禁一切导入"。）
+    body: `import { decodeDisclosure } from '@/lib/connection'\nexport const F = decodeDisclosure\n`,
+  },
 ]
 
-/** 负向对照：不违反任何规则，门禁必须保持 exit 0。 */
-const CONTROL_BODY = `export const ok = { key: 'a', label: 'A', hint: 'h', ready: true }\n`
+/**
+ * 负向对照：不违反任何规则，门禁必须保持 exit 0。
+ *
+ * 刻意包含两类"看起来像违规、其实合法"的写法，用来证明规则**没有过宽**：
+ *   - `import type { ... } from '@/lib/connection'` —— 零运行时，R10 必须放行；
+ *   - `import { DISCLOSURE_FIELDS } from '@/lib/connection/field-catalog'` —— 白名单。
+ */
+const CONTROL_BODY = [
+  `import type { CandidateList } from '@/lib/connection'`,
+  `import { DISCLOSURE_FIELDS } from '@/lib/connection/field-catalog'`,
+  `export type C = CandidateList`,
+  `export const ok = { key: 'a', label: 'A', hint: 'h', ready: true, fieldCount: DISCLOSURE_FIELDS.length }`,
+  ``,
+].join('\n')
 
 function runChecker() {
   return spawnSync(process.execPath, [CHECKER], {

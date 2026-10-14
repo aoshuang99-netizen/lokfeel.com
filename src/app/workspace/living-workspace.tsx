@@ -32,6 +32,15 @@ import LivingShell, { type LivingNavItem } from '@/components/living/living-shel
 import LivingCanvas from '@/components/living/living-canvas'
 import FieldCanvas from '@/components/living/field/field-canvas'
 import FieldInspector from '@/components/living/field/field-inspector'
+import AgentBoard, { AgentsInspector, useAgentBoardData } from '@/components/living/agents/agent-board'
+import ConsentGate, {
+  ConsentInspector,
+  useConsentGateData,
+} from '@/components/living/consent/consent-gate'
+import OutcomeObservatory, {
+  ObservatoryInspector,
+  useOutcomeObservatoryData,
+} from '@/components/living/observatory/outcome-observatory'
 import { useApiGet } from '@/hooks/use-api'
 import type { FieldGraphNode } from '@/lib/living/field'
 import {
@@ -82,22 +91,24 @@ interface OrgOverview {
   memberTotal: number
 }
 
-const NO_ORG_REASON =
-  '需要 ACTIVE 社群成员身份（本端点为租户域，服务端 `withTenant()` 对非成员一律 403）。'
+/**
+ * Mission **列表区**尚未接线。
+ *
+ * 说清楚为什么不是"需要 ACTIVE 社群成员"：那只是**取数时会 403** 的原因，
+ * 而这里的问题是**没有这个区**（Mission 创建已在 Studio 完成，画布也在那里）。
+ * 把"未接线"写成"需要权限"会让人以为补权限就能用 —— 那是另一回事。
+ */
+const MISSIONS_REASON =
+  '任务列表区尚未接线：创建与画布已在 Studio 提供，这里不做重复入口（待收敛时一并做）。'
 
 const NAV: LivingNavItem[] = [
   { key: 'now', label: 'Now', hint: '今日工作台', ready: true },
   { key: 'studio', label: 'Studio', hint: '目标编译器（自然语言 → 工作区）', ready: true },
   { key: 'field', label: 'Field', hint: '连接场 · 2.5D 关系网络', ready: true },
-  { key: 'missions', label: 'Missions', hint: '连接任务', ready: false, reason: NO_ORG_REASON },
-  { key: 'outcomes', label: 'Outcomes', hint: '成果与成本', ready: false, reason: NO_ORG_REASON },
-  {
-    key: 'agents',
-    label: 'Agents',
-    hint: '智能体协作',
-    ready: false,
-    reason: 'Agent Runtime（T09）尚未交付 —— 本页不做假的 Agent 拓扑。',
-  },
+  { key: 'consent', label: 'Consent', hint: '同意与逐字段披露', ready: true },
+  { key: 'outcomes', label: 'Outcomes', hint: '成果时间轴与指标', ready: true },
+  { key: 'agents', label: 'Agents', hint: 'Agent 运行与审批', ready: true },
+  { key: 'missions', label: 'Missions', hint: '连接任务', ready: false, reason: MISSIONS_REASON },
 ]
 
 /** 已接线到真实端点的动作。其余动作**显式禁用**（不允许"点了没反应"）。 */
@@ -210,6 +221,13 @@ export default function LivingWorkspace() {
   const [attempt, setAttempt] = useState<{ sig: string; key: string } | null>(null)
   /** P2 · Field：当前选中的网络节点（详情面板的输入）。 */
   const [fieldSelection, setFieldSelection] = useState<FieldGraphNode | null>(null)
+  /** P2 · Consent：当前选中的意图与字段（详情面板的输入）。 */
+  const [consentIntentId, setConsentIntentId] = useState<string | null>(null)
+  const [consentFieldKey, setConsentFieldKey] = useState<string | null>(null)
+  /** P2 · Observatory：当前选中的成果（详情面板的输入）。 */
+  const [selectedOutcomeId, setSelectedOutcomeId] = useState<string | null>(null)
+  /** P2 · Agents：当前选中的运行（详情面板的输入）。 */
+  const [selectedAgentRunId, setSelectedAgentRunId] = useState<string | null>(null)
 
   const notifications = useApiGet<NotificationsRes>('/api/notifications')
   const chats = useApiGet<ChatCountRes>('/api/chats/unread-count')
@@ -220,6 +238,19 @@ export default function LivingWorkspace() {
   const proposals = useApiGet<ApiEnvelope<{ proposals: unknown[] }>>('/api/v1/connections/proposals')
   const jobs = useApiGet<ApiEnvelope<{ jobs: unknown[] }>>('/api/v1/workflow/jobs')
   const outcomes = useApiGet<ApiEnvelope<{ items: unknown[] }>>('/api/v1/outcomes')
+
+  /**
+   * P2 剩余三项的真实来源。
+   *
+   * 三个 hook 内部完成"取数 + 纯函数装配"，并共享同一份结果给主视图与详情面板
+   * （避免两次请求、两次装配）。`enabled` 只在**当前所在的区**为 true ——
+   * 这些是租户域端点，没进这一区就没必要去打它们。
+   *
+   * ⚠️ 三者都是 hook，必须在任何提前 return 之前调用（React 的调用顺序约束）。
+   */
+  const consentData = useConsentGateData(consentIntentId, activeKey === 'consent')
+  const observatoryData = useOutcomeObservatoryData(activeKey === 'outcomes')
+  const agentData = useAgentBoardData(activeKey === 'agents')
 
   const unreadNotifications = notifications.data?.unreadCount ?? null
   const unreadChats = chats.data?.unreadCount ?? null
@@ -520,11 +551,21 @@ export default function LivingWorkspace() {
   )
 
   /**
-   * P2：Field 区自带详情面板（"点选节点 → 看它的依据"是这一区的核心交互）；
+   * P2：Field / Consent / Outcomes / Agents 四区各自带详情面板
+   * （"点选一条记录 → 看它的依据"是这些区的核心交互）；
    * 其余区沿用原来的 Evidence Lens。`inspector` 只是一个 ReactNode，
    * 所以按当前区切换即可 —— shell 不需要知道差异。
    */
-  const inspector = activeKey === 'field' ? <FieldInspector node={fieldSelection} /> : evidenceInspector
+  const inspector = (() => {
+    if (activeKey === 'field') return <FieldInspector node={fieldSelection} />
+    if (activeKey === 'consent')
+      return <ConsentInspector data={consentData} selectedFieldKey={consentFieldKey} />
+    if (activeKey === 'outcomes')
+      return <ObservatoryInspector data={observatoryData} selectedOutcomeId={selectedOutcomeId} />
+    if (activeKey === 'agents')
+      return <AgentsInspector data={agentData} selectedRunId={selectedAgentRunId} />
+    return evidenceInspector
+  })()
 
   return (
     <LivingShell
@@ -687,6 +728,31 @@ export default function LivingWorkspace() {
 
       {activeKey === 'field' && (
         <FieldCanvas onSelectNode={setFieldSelection} selectedNodeId={fieldSelection?.id ?? null} />
+      )}
+
+      {activeKey === 'consent' && (
+        <ConsentGate
+          data={consentData}
+          onSelectIntent={setConsentIntentId}
+          selectedFieldKey={consentFieldKey}
+          onSelectField={setConsentFieldKey}
+        />
+      )}
+
+      {activeKey === 'outcomes' && (
+        <OutcomeObservatory
+          data={observatoryData}
+          selectedOutcomeId={selectedOutcomeId}
+          onSelectOutcome={setSelectedOutcomeId}
+        />
+      )}
+
+      {activeKey === 'agents' && (
+        <AgentBoard
+          data={agentData}
+          selectedRunId={selectedAgentRunId}
+          onSelectRun={setSelectedAgentRunId}
+        />
       )}
     </LivingShell>
   )

@@ -1,5 +1,5 @@
 /**
- * Living Connection OS · P1 —— `WorkspaceSpec` 契约（唯一执法点）
+ * Living Connection OS · P1/P2 —— `WorkspaceSpec` 契约（唯一执法点）
  *
  * 依据：`docs/implementation/DESIGN/02-plan.md` P1「Intent-to-UI Compiler」，
  *       以及设计基准 §二「**禁止**让模型直接产 HTML/React 代码」。
@@ -7,8 +7,10 @@
  * 设计要点（每一条都是可验证的安全属性）：
  *
  *   1. **白名单节点类型**：`NODE_TYPES` 是唯一允许出现在画布上的类型。
- *      `agent` 被**显式排除**（见 `RESERVED_NODE_TYPES`）—— T09 Agent Runtime 交付前
- *      产出 agent 节点就等于"生成虚假结果"（阻断标准 #6/#9）。
+ *      `agent` **自 P2 起纳入白名单**（T09 Agent Runtime 已交付）——
+ *      但它的 `data` 必须自带 `runs`（真实端点数据）与 `provider` 诚实块，
+ *      否则就是"生成虚假结果"（阻断标准 #6/#9）。这条由
+ *      `check:ui-invariants` 的 R6 额外把守（契约保证形状，门禁保证来源）。
  *
  *   2. **严格对象（`z.strictObject`）**：任何未知字段一律**拒绝**，而不是静默丢弃。
  *      这样"模型想塞一个 `dangerouslySetInnerHTML` / `onClick` 字段"会在**校验层**失败，
@@ -27,6 +29,7 @@ import { z } from 'zod'
 // ⚠️ 只引入**类型**（`import type` 零运行时）。用途是对账上面的展示枚举与
 //    服务端真实枚举是否逐字一致 —— 见下方「漂移守卫」。把服务层拖进客户端
 //    bundle 是不允许的，所以这里绝不引入值。
+import type { AgentRunStatus, RiskLevel, SkillKey } from '@/lib/agent'
 import type { ProposalState } from '@/lib/connection'
 import type { OutcomeVerificationLevel } from '@/lib/outcome'
 import type { WorkflowJobStatus } from '@/lib/workflow'
@@ -39,17 +42,28 @@ import type { WorkflowJobStatus } from '@/lib/workflow'
  * `outcome.outcomes[].level` 三处取值域从**猜测值**改为**服务端真实枚举的镜像**
  * （见下方「漂移守卫」）。这是一次**语义修正**，不是新增字段 —— 旧前端若按 1.0
  * 的猜测值判断状态，会把这些节点当成非法数据，因此必须升版本。
+ *
+ * `1.1 → 1.2`（P2）：新增 `agent` 节点类型。`WorkspaceNodeSchema` 是
+ * `discriminatedUnion`，**旧前端遇到 `agent` 节点会整块拒绝**（而不是忽略那一个节点）
+ * —— 这正是要升版本的原因：让"能不能读"取决于版本，而不是取决于渲染层是否宽厚。
  */
-export const WORKSPACE_SPEC_VERSION = '1.1' as const
+export const WORKSPACE_SPEC_VERSION = '1.2' as const
 
 /** 可出现在画布上的节点类型（白名单）。 */
-export const NODE_TYPES = ['intent', 'candidate', 'consent', 'action', 'outcome'] as const
+export const NODE_TYPES = ['intent', 'candidate', 'consent', 'action', 'outcome', 'agent'] as const
 
 /**
  * 已保留但**当前禁止产出**的节点类型。
- * `agent` 依赖 T09 Agent Runtime；P1 若产出该类型即为伪造能力。
+ *
+ * 🔴 P2 起**为空**：`agent` 已随 T09 交付转入白名单。
+ *    数组本身保留（而不是删掉这个机制），因为它是 `compile.ts` 的过滤依据、
+ *    也是未来"某个类型要先占位再实现"时的现成出口 —— 删掉它会让下一次
+ *    需要保留位的人**重新发明**一个规则，而重新发明出来的那个很可能没人遵守。
+ *
+ * ⚠️ 空数组意味着 `ReservedNodeType = never`，`compile.ts` 的过滤恒不命中。
+ *    这是**预期的**：真正的守卫已移交 R6（"agent 节点必须带真实数据来源"）。
  */
-export const RESERVED_NODE_TYPES = ['agent'] as const
+export const RESERVED_NODE_TYPES = [] as const
 
 export type NodeType = (typeof NODE_TYPES)[number]
 export type ReservedNodeType = (typeof RESERVED_NODE_TYPES)[number]
@@ -105,6 +119,27 @@ export const OUTCOME_LEVELS = [
 ] as const
 export type OutcomeLevel = (typeof OUTCOME_LEVELS)[number]
 
+/** Agent 运行状态。与 `src/lib/agent` 的 `AgentRunStatus` 逐字一致。 */
+export const AGENT_STATES = [
+  'PROPOSED',
+  'AWAITING_APPROVAL',
+  'APPROVED',
+  'REJECTED',
+  'EXECUTED',
+  'DEGRADED',
+  'BLOCKED_QUOTA',
+  'FAILED',
+] as const
+export type AgentState = (typeof AGENT_STATES)[number]
+
+/** Agent 风险级。与 `src/lib/agent` 的 `RiskLevel` 逐字一致。 */
+export const AGENT_RISKS = ['LOW', 'MEDIUM', 'HIGH'] as const
+export type AgentRisk = (typeof AGENT_RISKS)[number]
+
+/** Agent 技能。与 `src/lib/agent` 的 `SkillKey` 逐字一致。 */
+export const AGENT_SKILLS = ['INTENT_EXTRACTION', 'INTRO_DRAFT', 'COORDINATION_ADVICE'] as const
+export type AgentSkill = (typeof AGENT_SKILLS)[number]
+
 /** 双向包含才算等价（单向 `extends` 只能抓住"少写了一个取值"）。 */
 type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
 /** `AssertTrue<false>` 违反 `T extends true` → **编译失败**。这是守卫的牙齿。 */
@@ -113,6 +148,9 @@ type AssertTrue<T extends true> = T
 export type _DriftGuardConsent = AssertTrue<Exact<ConsentState, ProposalState>>
 export type _DriftGuardActionJob = AssertTrue<Exact<ActionJobStatus, WorkflowJobStatus>>
 export type _DriftGuardOutcomeLevel = AssertTrue<Exact<OutcomeLevel, OutcomeVerificationLevel>>
+export type _DriftGuardAgentState = AssertTrue<Exact<AgentState, AgentRunStatus>>
+export type _DriftGuardAgentRisk = AssertTrue<Exact<AgentRisk, RiskLevel>>
+export type _DriftGuardAgentSkill = AssertTrue<Exact<AgentSkill, SkillKey>>
 
 /** 可解析的日期时间（不依赖 zod 的 `datetime()` 变体，避免版本间 API 漂移）。 */
 const isoTemporal = z
@@ -146,7 +184,9 @@ export const IntentNodeSchema = z.strictObject({
   }),
 })
 
-/** candidate —— 候选必须带 `rationale`（空理由无法通过校验，对应 AC-13）。 */
+/**
+ * candidate —— 候选必须带 `rationale`（空理由无法通过校验，对应 AC-13）。
+ */
 export const CandidateNodeSchema = z.strictObject({
   ...nodeBase,
   type: z.literal('candidate'),
@@ -214,12 +254,50 @@ export const OutcomeNodeSchema = z.strictObject({
   }),
 })
 
+/**
+ * agent —— Agent 运行（T09）。数据源：`/api/v1/agents/runs` + `/api/v1/agents/usage`。
+ *
+ * 🔴 `runs` 是这个节点**存在的理由**：没有它，"Agent 拓扑"就是画上去的装饰。
+ *    门禁 R6 会额外扫描"`type: 'agent'` 附近有没有 `runs:`"，两者共同保证
+ *    "画布上的 agent 节点一定有真实数据来源"。
+ *
+ * 🔴 `provider` 是**诚实块**（与 T08 指标里的 `assumptions` 同一取向）：
+ *    缺凭据时"跑了 3 次花 0 分"不是"模型免费"，而是"走的是规则式兜底"。
+ *    把它放进契约（而不是留给 UI 自由发挥），是为了让"能不能这么说"只有一个答案。
+ */
+export const AgentNodeSchema = z.strictObject({
+  ...nodeBase,
+  type: z.literal('agent'),
+  data: z.strictObject({
+    runs: z
+      .array(
+        z.strictObject({
+          id: identifier,
+          skill: z.enum(AGENT_SKILLS),
+          status: z.enum(AGENT_STATES),
+          risk: z.enum(AGENT_RISKS),
+          requiresApproval: z.boolean(),
+          goal: longText,
+          costMicroCents: z.number().int().min(0),
+          callCount: z.number().int().min(0),
+        }),
+      )
+      .max(50),
+    /** 真实模型调用是否开启（来自 `/agents/usage` 的 `provider` 诚实块）。 */
+    provider: z.strictObject({
+      realCallsEnabled: z.boolean(),
+      reason: shortText,
+    }),
+  }),
+})
+
 export const WorkspaceNodeSchema = z.discriminatedUnion('type', [
   IntentNodeSchema,
   CandidateNodeSchema,
   ConsentNodeSchema,
   ActionNodeSchema,
   OutcomeNodeSchema,
+  AgentNodeSchema,
 ])
 
 /**
@@ -258,3 +336,4 @@ export type CandidateNode = z.infer<typeof CandidateNodeSchema>
 export type ConsentNode = z.infer<typeof ConsentNodeSchema>
 export type ActionNode = z.infer<typeof ActionNodeSchema>
 export type OutcomeNode = z.infer<typeof OutcomeNodeSchema>
+export type AgentNode = z.infer<typeof AgentNodeSchema>

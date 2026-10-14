@@ -15,6 +15,12 @@
  */
 
 import { AlertTriangle, ChevronDown, ChevronRight, Info } from 'lucide-react'
+import {
+  formatMicroCents,
+  LIVING_AGENT_RISK_LABELS,
+  LIVING_AGENT_SKILL_LABELS,
+  LIVING_AGENT_STATUS_LABELS,
+} from '@/lib/living/agents'
 import type { WorkspaceNode } from '@/lib/workspace-spec'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -221,6 +227,45 @@ function renderBody(node: WorkspaceNode): React.ReactNode {
             </li>
           ))}
         </ul>
+      )
+    }
+
+    case 'agent': {
+      const d = node.data
+      return (
+        <dl className="grid grid-cols-1 gap-3">
+          <Field label="真实模型调用">
+            {d.provider.realCallsEnabled ? (
+              <span className="text-sm">已启用（推理走真实模型端点）</span>
+            ) : (
+              <span className="text-sm text-lf-warning">未启用 —— {d.provider.reason}</span>
+            )}
+          </Field>
+          <Field label="运行记录">
+            {d.runs.length === 0 ? (
+              <NodeEmpty text="暂无 Agent 运行记录。运行来自 /api/v1/agents/runs，本文件不会预填任何一条。" />
+            ) : (
+              <ul className="space-y-2">
+                {d.runs.map((r) => (
+                  <li key={r.id} className="rounded-lf border border-lf-line p-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-sm">{LIVING_AGENT_SKILL_LABELS[r.skill]}</span>
+                      <span className="shrink-0 rounded-lf border border-lf-line px-1.5 py-0.5 text-[10px]">
+                        {LIVING_AGENT_STATUS_LABELS[r.status]}
+                      </span>
+                    </div>
+                    <p className="mt-1 break-words text-xs text-lf-text-muted">{r.goal}</p>
+                    <p className="mt-1 text-[11px] text-lf-text-faint">
+                      {LIVING_AGENT_RISK_LABELS[r.risk]}
+                      {r.requiresApproval ? ' · 需人工批准' : ''}
+                      {` · 调用 ${r.callCount} 次 · 花费 ${formatMicroCents(r.costMicroCents)}`}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Field>
+        </dl>
       )
     }
 

@@ -31,10 +31,14 @@
 
 import {
   ACTION_JOB_STATUSES,
+  AGENT_RISKS,
+  AGENT_SKILLS,
+  AGENT_STATES,
   CONSENT_STATES,
   OUTCOME_LEVELS,
   WorkspaceSpecSchema,
   type ActionNode,
+  type AgentNode,
   type ConsentNode,
   type OutcomeNode,
   type WorkspaceNode,
@@ -231,6 +235,87 @@ export function assembleOutcomeNode(items: readonly unknown[]): Assembly<Outcome
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// agent ← agents/runs（+ usage 的诚实块）
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// 🔴 这一个装配器与上面三个有一处结构差别：它需要**两个**来源。
+//    `runs` 本身来自 `/api/v1/agents/runs`，而 `provider`（真实模型调用是否开启）
+//    来自 `/api/v1/agents/usage`。后者缺席时**不产节点** —— 因为缺了它，
+//    "跑了 3 次花 0 分"就无法与"模型免费"区分，而这正是 T09 反复强调的诚实边界。
+//    宁可不画这个节点，也不画一个说不出话的节点。
+
+const AgentRunLikeSchema = z.looseObject({
+  id: z.string().min(1),
+  skill: z.enum(AGENT_SKILLS),
+  status: z.enum(AGENT_STATES),
+  risk: z.enum(AGENT_RISKS),
+  requiresApproval: z.boolean(),
+  goal: z.string().min(1),
+  costMicroCents: z.number().int().min(0),
+  callCount: z.number().int().min(0),
+})
+
+/** Agent 诚实块（与 `/agents/usage` 的 `provider` 同形状）。 */
+export interface AgentProviderHonesty {
+  realCallsEnabled: boolean
+  reason: string
+}
+
+export function assembleAgentNode(
+  items: readonly unknown[],
+  provider: AgentProviderHonesty | null,
+): Assembly<AgentNode> {
+  if (!provider) {
+    return {
+      ok: false,
+      error:
+        '缺少 provider 诚实块（GET /api/v1/agents/usage 未取到）—— ' +
+        '不产 agent 节点，因为无法说明"是否真的调用了模型"',
+    }
+  }
+
+  const parsed = z.array(AgentRunLikeSchema).safeParse(items)
+  if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) }
+
+  const dropped = Math.max(0, parsed.data.length - MAX_NODE_ITEMS)
+  let clipped = false
+
+  const providerReason = clip(provider.reason, MAX_LEN.short)
+  clipped = clipped || providerReason.clipped
+
+  const runs = parsed.data.slice(0, MAX_NODE_ITEMS).map((r) => {
+    const id = clip(r.id, MAX_LEN.id)
+    const goal = clip(r.goal, MAX_LEN.long)
+    clipped = clipped || id.clipped || goal.clipped
+    return {
+      id: id.value,
+      skill: r.skill,
+      status: r.status,
+      risk: r.risk,
+      requiresApproval: r.requiresApproval,
+      goal: goal.value,
+      costMicroCents: r.costMicroCents,
+      callCount: r.callCount,
+    }
+  })
+
+  return {
+    ok: true,
+    value: {
+      id: 'agent-tenant',
+      type: 'agent',
+      title: 'Agent 运行（本社群）',
+      data: {
+        runs: runs,
+        provider: { realCallsEnabled: provider.realCallsEnabled, reason: providerReason.value },
+      },
+    },
+    clipped,
+    dropped,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 汇总装配
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -239,6 +324,13 @@ export interface TenantSources {
   proposals?: Source
   jobs?: Source
   outcomes?: Source
+  /** Agent 运行列表（`/api/v1/agents/runs`）。 */
+  agents?: Source
+  /**
+   * Agent 诚实块（`/api/v1/agents/usage` 的 `provider`）。
+   * `null` / 省略 → agent 节点**不产出**（原因见上方 agent 段的注释）。
+   */
+  agentsProvider?: AgentProviderHonesty | null
 }
 
 export interface TenantAssembly {
@@ -284,15 +376,19 @@ function fold<T extends WorkspaceNode>(
 }
 
 /**
- * 由三个真实来源装配出社群节点。
+ * 由四个真实来源装配出社群节点。
  *
- * 顺序即画布的生命周期顺序：同意 → 执行 → 成果。
+ * 顺序即画布的生命周期顺序：同意 → 执行 → 成果 → Agent（P2 新增，排在最后：
+ * Agent 产出的是"下一步建议"，不是已经发生的事）。
  */
 export function assembleTenantNodes(sources: TenantSources): TenantAssembly {
   const out: TenantAssembly = { nodes: [], notes: [] }
   fold(out, '同意状态', sources.proposals, assembleConsentNodes)
   fold(out, '执行状态', sources.jobs, assembleActionNode)
   fold(out, '成果记录', sources.outcomes, assembleOutcomeNode)
+  fold(out, 'Agent 运行', sources.agents, (items) =>
+    assembleAgentNode(items, sources.agentsProvider ?? null),
+  )
   return out
 }
 

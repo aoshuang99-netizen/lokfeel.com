@@ -10,8 +10,13 @@
  *   R3  P0 范围内不得依赖 3D（three / @react-three/*）—— 避免"先做 3D 再做内部"
  *   R4  `ready: false` 的导航项必须写清 `reason`（不许"敬请期待"式空话）
  *   R5  被检查的文件不得出现 `mock` / `fakeData` / `dummyData` 这类假数据标识
- *   R6  【P1】不得产出保留节点类型（`type: 'agent'`）—— 它依赖 T09 Agent Runtime
- *   R7  【P1】不得使用 `dangerouslySetInnerHTML` / `eval` / `new Function` ——
+ *   R6  【P1→P2 改造】**agent 节点不得无源**。T09 Agent Runtime 已交付，故本规则
+ *       从"禁止产出 `type: 'agent'`"改为"产出就必须带 `runs`"：
+ *       `runs` 只能来自 `GET /api/v1/agents/runs`；没有它的 agent 节点是**手写的
+ *       拓扑**，与 P1 禁止的那件事是同一种伪造（阻断标准 #6/#9）。
+ *       ⚠️ 规则**变松**（从禁止到有条件允许）是升级带来的，不是标准降低 ——
+ *       所以判据必须落在"有没有真实数据来源"上，而不是落在"有没有写这个字面量"上。
+ *   R7  不得使用 `dangerouslySetInnerHTML` / `eval` / `new Function` ——
  *       `WorkspaceSpec` 只能被"白名单组件"渲染，绝不能当代码执行
  *   R8  【P2】画布库 `@xyflow/react` 只允许出现在 `src/components/living/field/`
  *       —— P2 的设计基准明确"不强迫一个库承担所有场景"（DESIGN/02-plan.md D5），
@@ -19,6 +24,11 @@
  *   R9  【P2】会进界面的字符串 / JSX 文本里不得出现 markdown 强调标记（`**`）
  *       —— React 把字符串**原样**渲染成文本，`**重点**` 到了屏幕上就是两个星号。
  *       本切片踩过两次（详情面板 + 装配器的 note），所以固化成规则。
+ *   R10 【P2】客户端可达的 Living 代码**只能 `import type`** 服务端模块。
+ *       值导入会把服务层（Prisma / 租户守卫 / 网络）拖进客户端 bundle ——
+ *       P1 的 `@/lib/connection` 桶文件正是这样：一行 `import { X }` 就够。
+ *       唯一放行的是 `@/lib/connection/field-catalog`（**零 import** 的纯字段目录，
+ *       它的全部意义就是被展示层引用）。
  *
  * 用法：node scripts/check-ui-invariants.mjs   （退出码 0 = 通过）
  * 环境：纯静态扫描，不连数据库、不读 .env。
@@ -43,6 +53,37 @@ const SCOPES = [
  * 注意：用带尾斜杠的前缀比较，避免 `field-extra/` 这类"前缀相同但不是它"的目录混进来。
  */
 const XYFLOW_SCOPE = 'src/components/living/field/'
+
+/**
+ * R10 的适用范围：客户端可达的 Living 代码（组件 + 装配层）。
+ * `src/app/workspace` 是 `'use client'` 页面，同样适用。
+ */
+const CLIENT_REACHABLE_SCOPES = ['src/components/living/', 'src/lib/living/', 'src/app/workspace/']
+
+/**
+ * R10 黑名单：**服务端模块前缀**。值导入它们 = 把 Prisma/守卫/网络拖进客户端。
+ * 用 `=== prefix || startsWith(prefix + '/')` 精确匹配，避免
+ * `@/lib/agent`（纯内核，允许）被 `@/lib/agents`（服务层，禁止）的规则误伤。
+ */
+const SERVER_MODULE_PREFIXES = [
+  '@/lib/connection',
+  '@/lib/outcome',
+  '@/lib/agents',
+  '@/lib/workflow',
+  '@/lib/db',
+  '@/lib/tenancy',
+]
+
+/** R10 白名单：允许**值导入**的服务端子模块（唯一：零 import 的字段目录）。 */
+const VALUE_IMPORT_ALLOWLIST = new Set(['@/lib/connection/field-catalog'])
+
+/**
+ * R6：agent 节点被判为"有源"所必需的字段（来自 `/api/v1/agents/runs`）。
+ *
+ * 同时接受**简写**（`data: { runs, provider }`）与**显式赋值**（`runs: value`）两种写法
+ * —— 只认 `runs:` 会让前者被误判为"无源"，而简写是这块代码最自然的写法。
+ */
+const AGENT_NODE_SOURCE_FIELD = /\bruns\b\s*[:,}]/
 
 const problems = []
 const checked = []
@@ -125,6 +166,32 @@ function stripComments(code) {
   return out
 }
 
+/**
+ * 抓出源码里**全部** import / export-from 语句（含多行写法）。
+ *
+ * 为什么要整条语句而不是逐行：`import {\n a,\n b,\n} from 'x'` 的多行写法
+ * 逐行匹配会**漏检**——而 R10 的漏检后果正是"值导入混进客户端"。惰性量词
+ * 配合 `from '...'` 能跨行，且不会吃掉下一条语句（因为遇到第一个 from 就停）。
+ */
+function collectImportStatements(src) {
+  const re = /(?:^|\n)[ \t]*(import|export)\s+([\s\S]*?)\bfrom\s+['"]([^'"]+)['"]/g
+  const out = []
+  let m
+  while ((m = re.exec(src)) !== null) {
+    out.push({
+      kind: m[1],
+      clause: m[2],
+      spec: m[3],
+      index: m.index + (m[0].startsWith('\n') ? 1 : 0),
+    })
+  }
+  return out
+}
+
+function lineOf(src, index) {
+  return src.slice(0, index).split('\n').length
+}
+
 function checkFile(rel) {
   const raw = fs.readFileSync(path.join(ROOT, rel), 'utf8')
   // 🔴 先剥离注释（把注释字符替换成空格，**保留换行与偏移**），否则注释里的
@@ -154,12 +221,22 @@ function checkFile(rel) {
     }
   })
 
-  // R6 · 保留节点类型（agent 依赖 T09，产出即为伪造能力）
-  lines.forEach((line, i) => {
-    if (/\btype\s*:\s*['"]agent['"]/.test(line)) {
-      problems.push(`[R6] ${rel}:${i + 1} 产出了保留节点类型 "agent" —— 依赖 T09 Agent Runtime，P1 不得生成`)
+  // R6 · agent 节点**不得无源**（T09 已交付 ⇒ 由"禁止"改为"必须带真实数据"）
+  //   判据刻意落在"有没有 runs 字段"上，而不是"有没有写 type: 'agent'"：
+  //   前者对应"这条拓扑是从 /api/v1/agents/runs 来的吗"，后者只对应"你写了这七个字母吗"。
+  const agentRe = /\btype\s*:\s*['"]agent['"]/g
+  let am
+  while ((am = agentRe.exec(src)) !== null) {
+    // 同一条对象字面量内 `data: { runs: [...] }` 紧随其后（实测 < 200 字符），
+    // 600 字符窗口足够覆盖格式化后的多行写法。
+    const tail = src.slice(am.index, am.index + 600)
+    if (!AGENT_NODE_SOURCE_FIELD.test(tail)) {
+      problems.push(
+        `[R6] ${rel}:${lineOf(src, am.index)} 产出了 agent 节点但没有 runs 字段 —— ` +
+          `无数据来源的 agent 拓扑就是伪造（runs 必须来自 GET /api/v1/agents/runs）`,
+      )
     }
-  })
+  }
 
   // R7 · spec 不得被当代码执行
   lines.forEach((line, i) => {
@@ -196,6 +273,23 @@ function checkFile(rel) {
       )
     }
   })
+
+  // R10 · 客户端可达代码**只能 `import type`** 服务端模块
+  //   值导入会把服务层（Prisma / 租户守卫 / 网络）拖进客户端 bundle。
+  //   豁免：唯一的零 import 纯目录 `@/lib/connection/field-catalog`。
+  if (CLIENT_REACHABLE_SCOPES.some((p) => rel.startsWith(p))) {
+    for (const stmt of collectImportStatements(src)) {
+      if (!SERVER_MODULE_PREFIXES.some((p) => stmt.spec === p || stmt.spec.startsWith(`${p}/`))) continue
+      if (VALUE_IMPORT_ALLOWLIST.has(stmt.spec)) continue
+      // `import type { ... }` / `export type { ... }` = 零运行时 ⇒ 允许。
+      if (/^\s*type\b/.test(stmt.clause)) continue
+      problems.push(
+        `[R10] ${rel}:${lineOf(src, stmt.index)} 值导入了服务端模块 "${stmt.spec}" —— ` +
+          `客户端可达代码只能用 \`import type\`（否则会把 Prisma/守卫拖进 bundle）；` +
+          `确需取值请走零依赖目录或本地装配层`,
+      )
+    }
+  }
 
   // R2 · 空按钮：逐个 <button ...> 开标签检查
   const btnRe = /<button\b([\s\S]*?)>/g
@@ -264,5 +358,5 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `\n✅ UI 不变量全部通过（R1 无伪成功 · R2 无空按钮 · R3 无 3D 依赖 · R4 未就绪有原因 · R5 无假数据标识 · R6 无保留节点类型 · R7 无代码执行面 · R8 画布库作用域收敛 · R9 无 markdown 字面量）`,
+  `\n✅ UI 不变量全部通过（R1 无伪成功 · R2 无空按钮 · R3 无 3D 依赖 · R4 未就绪有原因 · R5 无假数据标识 · R6 agent 节点有源 · R7 无代码执行面 · R8 画布库作用域收敛 · R9 无 markdown 字面量 · R10 服务端模块仅类型导入）`,
 )
