@@ -40,12 +40,25 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 
-/** 被检查范围：Living 界面层（P0/P1/P2）+ `WorkspaceSpec` 契约层 + P2 装配层。 */
+/**
+ * 被检查范围：Living 界面层（P0/P1/P2）+ `WorkspaceSpec` 契约层 + P2 装配层
+ *            + **社群控制台**（AC-18 的落点）。
+ *
+ * 🔴 为什么到 T08 Slice 4 才把 `src/app/console` 加进来（2026-10-14）：
+ *   R2（无空按钮）与 R4（未就绪要说明原因）**本来就是 AC-18 的判据**，但这个数组
+ *   自 T07 起就**没有** console ⇒ 规则在、扫描面不在，七屏从未被门禁管过。
+ *   首次纳入即抓出 **11 处真实违规**（1×R4 + 10×R9），且 R9 的星号
+ *   **此刻正渲染在生产界面上**（`/console` 与 `/console/outcomes`）。
+ *   配套地，`verify-ui-invariants-mutation.mjs` 也补了"**每个 scope 都要被证明扫到**"
+ *   的覆盖面自证 —— 否则把这里的一行删掉，自证仍然全绿（哨兵不能只守自己）。
+ */
 const SCOPES = [
   'src/components/living',
   'src/app/workspace',
   'src/lib/workspace-spec',
   'src/lib/living',
+  // T08 Slice 4：AC-18 判的就是这七屏 —— 规则 R2/R4 不覆盖它，等于没判。
+  'src/app/console',
 ]
 
 /**

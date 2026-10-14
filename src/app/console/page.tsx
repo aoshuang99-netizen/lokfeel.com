@@ -167,7 +167,7 @@ export default function ConsoleDashboardPage() {
       <div>
         <h1 className="text-xl font-semibold text-foreground font-display">社群总览</h1>
         <p className="text-xs text-foreground-muted mt-0.5">
-          连接从提案到介绍的全过程是否顺畅 —— 数据每秒都在变，这里读的是**此刻**。
+          连接从提案到介绍的全过程是否顺畅 —— 数据每秒都在变，这里读的是<strong>此刻</strong>。
         </p>
       </div>
 
@@ -224,7 +224,7 @@ export default function ConsoleDashboardPage() {
         </ul>
         <p className="text-[11px] text-foreground-subtle mt-3">
           接管 / 手动重试的操作界面尚未实现，接口已就绪：
-          `/api/v1/workflow/jobs/&lt;id&gt;/takeover`、`/requeue`。在此之前这里**只展示不操作**
+          `/api/v1/workflow/jobs/&lt;id&gt;/takeover`、`/requeue`。在此之前这里<strong>只展示不操作</strong>
           —— 渲染一个点了没反应的按钮，正是 AC-18 要排除的「空按钮」。
         </p>
       </Panel>
@@ -272,8 +272,8 @@ export default function ConsoleDashboardPage() {
           <Stat label="待投" value={data.deliveries.pending} />
         </div>
         <p className="text-[11px] text-foreground-subtle mt-3">
-          「沙箱捕获」表示系统记下了要发什么、但**没有**真实外发（未配置邮件凭据）。
-          它**不**计入「已送出」—— 把两者混在一起就是虚报外部服务已接通。
+          「沙箱捕获」表示系统记下了要发什么、但<strong>没有</strong>真实外发（未配置邮件凭据）。
+          它<strong>不</strong>计入「已送出」—— 把两者混在一起就是虚报外部服务已接通。
         </p>
       </Panel>
 

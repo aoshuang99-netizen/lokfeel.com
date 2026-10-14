@@ -181,7 +181,7 @@ export default function ConsoleMissionDetailPage() {
         <h2 className="text-sm font-semibold text-foreground font-display mb-1">任务状态</h2>
         {actions.length === 0 ? (
           <p className="text-sm text-foreground-muted">
-            已关闭的任务是**终态**，不能再发布、暂停或恢复 —— 需要继续推进时请新建一条任务。
+            已关闭的任务是<strong>终态</strong>，不能再发布、暂停或恢复 —— 需要继续推进时请新建一条任务。
           </p>
         ) : (
           <>

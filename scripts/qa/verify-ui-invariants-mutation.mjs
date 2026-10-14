@@ -11,7 +11,10 @@
  *   2. 跑一次门禁 → 必须 exit 1 且输出里出现对应的 `[R<n>]`；
  *   3. 再写一个**不违反任何规则**的对照文件 → 门禁必须仍然 exit 0（负向对照，
  *      证明"变红"确实来自那条违反，而不是脚本本身坏掉）；
- *   4. 无论成功失败都在 `finally` 里删掉临时文件。
+ *   4. 无论成功失败都在 `finally` 里删掉临时文件；
+ *   5. 【2026-10-14 · T08 Slice 4】对**每一个** scope 根目录（`SCOPE_ROOTS`）
+ *      各注入一次最小 R9 违规，证明"SCOPES 确实把它管进来了" ——
+ *      只有 1–4 的话，删掉 `SCOPES` 里的某一行仍是全绿（本仓真实发生过）。
  *
  * 用法：node scripts/qa/verify-ui-invariants-mutation.mjs
  * 退出码：0 = 全部规则被证明生效；1 = 有规则未被证明（视为门禁失效）。
@@ -38,6 +41,26 @@ const CHECKER = path.join(ROOT, 'scripts', 'check-ui-invariants.mjs')
 const SCOPE_DIR = path.join(ROOT, 'src', 'components', 'living')
 
 const MUTANT_PREFIX = '__mutant-check-'
+
+/**
+ * 覆盖面自证用的前缀与 scope 根目录（2026-10-14 · T08 Slice 4 新增）。
+ *
+ * 🔴 为什么需要它：上面那组变异**全部写在 `src/components/living/` 里**，
+ *   所以它只能证明"规则实现是承重的"，**证明不了"SCOPES 配得对"**。
+ *   若有人把 `SCOPES` 里的一行删掉（本仓真实发生：`src/app/console` 自 T07 起
+ *   一直不在扫描面内，而 R2/R4 恰恰是 AC-18 的判据），上面 10 条仍然全绿 ——
+ *   这就是"哨兵只守自己"。
+ *   所以下面对**每一个** scope 根目录各注入一次最小 R9 违规，
+ *   断言"该目录被扫到 **且** 规则命中"。
+ */
+const MUTANT_SCOPE_PREFIX = '__mutant-scope-'
+const SCOPE_ROOTS = [
+  'src/components/living',
+  'src/app/workspace',
+  'src/lib/workspace-spec',
+  'src/lib/living',
+  'src/app/console',
+]
 
 /** 只违反单条规则的最小文件。 */
 const MUTANTS = [
@@ -189,6 +212,38 @@ try {
     fs.unlinkSync(p)
     created.splice(created.indexOf(p), 1)
   }
+
+  // ── 覆盖面自证：**每一个** scope 根目录都必须被证明"扫得到 + 规则生效" ──
+  //   用 R9 做探针：它的判据最简单（剥注释后含 `**` 即命中），不依赖语言特性，
+  //   是"这个目录到底在不在扫描面里"的最干净的指示剂。
+  for (const root of SCOPE_ROOTS) {
+    const absRoot = path.join(ROOT, root)
+    if (!fs.existsSync(absRoot)) {
+      failures.push(`[覆盖面] scope 目录不存在：${root}`)
+      continue
+    }
+    const name = `${MUTANT_SCOPE_PREFIX}${root.replace(/[^a-zA-Z0-9]+/g, '-')}.tsx`
+    const p = path.join(absRoot, name)
+    fs.writeFileSync(p, `export const note = '这是一条**重点**说明'\n`, 'utf8')
+    created.push(p)
+
+    const res = runChecker()
+    const output = `${res.stdout}\n${res.stderr}`
+    const scanned = res.stdout.includes(name)
+    const fired = output.includes('[R9]')
+
+    if (scanned && fired && res.status === 1) {
+      console.log(`✅ 覆盖面：${root} 在扫描面内（注入 R9 违规 → exit=1，命中 [R9]）`)
+    } else {
+      failures.push(
+        `[覆盖面] ${root} 的违规未被捕获（扫到=${scanned} · 命中 R9=${fired} · exit=${res.status}）` +
+          ` —— 该目录可能已从 SCOPES 里被移除`,
+      )
+    }
+
+    fs.unlinkSync(p)
+    created.splice(created.indexOf(p), 1)
+  }
 } finally {
   cleanup()
   // 收尾复验：临时文件都删干净后，门禁必须重新变绿。
@@ -206,5 +261,6 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `\n✅ 变异自证通过：${MUTANTS.length} 条规则（${MUTANTS.map((m) => m.rule).join(' / ')}）全部被证明生效；合法文件未误报；临时文件已清理。`,
+  `\n✅ 变异自证通过：${MUTANTS.length} 条规则（${MUTANTS.map((m) => m.rule).join(' / ')}）全部被证明生效；` +
+    `${SCOPE_ROOTS.length} 个 scope 目录全部被证明在扫描面内；合法文件未误报；临时文件已清理。`,
 )

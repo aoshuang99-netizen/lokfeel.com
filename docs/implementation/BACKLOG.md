@@ -226,7 +226,13 @@
 - **交付**：`Outcome`（`verification_level ∈ {self_reported, counterparty_confirmed, externally_verified}`）+ `UsageRecord` + Creem 接入
 - **风险**：🔴 **Creem 凭据未提供（你已决定暂不提供）→ AC-21 只能标 `BLOCKED`，不得标 PASS**
 - **铁律**：自报结果**不算**验证成功；指标必须可复算（SQL 对账）
-- **进度**：✅ **Slice 1 + Slice 2 + Slice 3 已上线**（发版 `f6630ea` → 部署 `6acde3962c8778501cd81f27`，2026-10-13）
+- **进度**：✅ **Slice 1 + Slice 2 + Slice 3 已上线**（发版 `f6630ea` → 部署 `6acde3962c8778501cd81f27`，2026-10-13）；
+  ✅ **Slice 4 已落地（未发版，2026-10-14）—— AC-18 认领**：`npm run verify:ac18:console`
+  （真实 Chrome + 隔离库组织夹具）六屏可达 + 数据面 2xx + **无空按钮动态负测**（逐个真点）+
+  未就绪项不可点，**75 通过 / 0 失败**；`check:ui-invariants` 扫描面**首次纳入 `src/app/console`**
+  （R2/R4 本就是 AC-18 的判据，此前不覆盖 console）—— 首扫抓出 **11 处真实违规**并全部修复
+  （其中 10 处 markdown 星号**已渲染在生产界面**）；自证补**覆盖面检查**（删 SCOPES 行 → 自证失败）。
+  **第 7 屏 Agents 未实现**（等 T09 接线）—— 导航不可点 + 直访 404，与"无空按钮"口径一致。
   - **Slice 1**（AC-15 ✅）—— C4 迁移（`Outcome` / `OutcomeVerification`）+ 三级验证服务
     （**级别是派生值、不是入参**）+ 4 个 API（列表 / 上报 / 对手方确认 / 运营核验）+
     **补齐 T06 留下的阶段机触发点空洞**（`ACTION_COMPLETED` / `OUTCOME_RECORDED` 此前无任何调用点）+
@@ -403,9 +409,10 @@
 > （含 4 条反向断言，并用**变异库**自证其承重）。
 > **AC-21 沙箱部分认领**；🔴 **真实扣款/退款保持 `BLOCKED`**（`T08/risks.md` R1）。
 >
-> 下一步：**T08 Slice 4**（Console 用量/订阅屏 + 指标屏 + AC-18 第 6 屏的 Playwright E2E）
-> 或 **T09 Agent Runtime** 收尾（技术栈**已拍板**：TS 内编排，§6-⑥）。
-> T07 最后一屏（Agents）**不再被技术栈阻塞** —— 它等的是 T09 的 Agent 屏与接线（§6-⑥ 已解）。
+> ✅ **T08 Slice 4 已落地（2026-10-14，未发版）**：AC-18 渲染层取证 `verify:ac18:console`（**75/0**）
+> + `check:ui-invariants` 扫描面纳入 console（首扫 11 处真实违规已修）+ 自证覆盖面检查。
+> 下一步：**T09 Agent Runtime 收尾**（TS 内编排**已拍板**）—— 三切片已交付未发版；
+> 剩：**真实端点连通性验证（发版前必验）**、执行器接线、第 7 屏 Agents、组织级真实额度配置。
 
 > **前端线《Living Connection OS》P0 + P1 已落地（⚠️ 未发版，带免构建标记）**
 > —— 与上面 T02–T08 的**后端线**并行推进（前端线不占用发布窗口）。
@@ -626,6 +633,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | 前端 P2 Slice 2 · 🔴 **通用教训** | **自证类脚本不得与其他扫描型任务并行** | 变异自证会往 `src/` 写临时文件；与 `tsc` / `jest` 并行 ⇒ 后者读到"半截文件"或已被删除的文件 → `TS6053` 之类的**假失败**（更坏的情况是漏检）。判据是"**这个任务是否写源码树**"，不是"它重不重" | 另一条：**负向用例也会假绿** —— 我写的"对手方可见项超出组织者"用例用了**其实在组织者集合里**的键，退化成"无倒挂"（测不出东西）。它是在**变红时**救了自己 ⇒ 负向用例必须**自证变异确实发生**；**再一条**：自证脚本的**归因边界**（此处 = "报错必须落在守卫声明行"）不得引用一个**会被追加**的列表里的**具名元素** —— 原写法取 `_DriftGuardConsent` → `_DriftGuardOutcomeLevel` 当首尾，区间就被钉死在 **148–150**；本切片新增的 3 条 Agent 守卫在 **151–153**，**落在区间之外** ⇒ 一旦有变异指向它们，"守卫确实响了"会被判成**假失败**。而变异集里当时**没有 agent 变异**，所以这条缺陷自己不会暴露 —— 是**审证据**审出来的（日志报 148–150，源码里守卫有 6 条，数字对不上）。**归因边界要取"首尾"，不要取"具名"。** |
 | 前端 P2 · **端到端取证（HTTP 层）**（`verify:p2:e2e`，**未发版**，带免构建标记） | `tsc --noEmit` **0 error** | 全量 jest **85 套 1699 例**（既有零失败；本任务**不新增 jest 用例** —— 取证脚本打的是**真实 HTTP**，不是单测） | ESLint **0/0** · `check:script-decls` **68/0**（+1 = 新增 `fake-openai-provider.mjs`；该门禁**只扫 `.mjs`**，新 `.mts` 由 `tsc` 覆盖）· `check:ui-invariants` **32 文件（R1–R10）** · `verify:ui-invariants` **10/10** · `verify:workspace-drift` **16/16** | **`verify:p2:e2e` 130 通过 / 0 失败**（**隔离库 + 真实 HTTP + 真实装配器**，9 节）。补的是 P2 验收原文「**全链路真实 API、审批与状态更新**」—— 单测只覆盖**装配器纯函数**，与"端点契约 / 写路径真的改了状态"**没有交集**。关键实证：披露**逐字段**三受众**集合精确相等**（`org={displayName,bio,company}` / `cp={bio,company}` / `cand={bio}`，**先断言三者非空**）· 状态更新**刷新后仍成立** · `AWAITING_APPROVAL → APPROVED → 200` + **两条语义不同的 409**（已有裁决不可改判 / 状态不允许）+ `MEMBER` 批准 **403** · 契约 1.2 `assembleAgentNode(items, null)` **不产节点**。🔴 "批准成功"可复跑的唯一办法 = **本地假模型端点**（无 key 时 `INTRO_DRAFT` 无降级路径 ⇒ 必 `FAILED` ⇒ 批准必 409）：**按 `max_tokens` 路由技能**、**未知值 400**（`costProfile` 一漂移就自曝），服务端仍走完整真实调用链。**浏览器渲染层仍未取证** |
 | 前端 P2 取证 · 🔴 **通用教训** | **"不含 X / 是子集"类断言在空集上必然成立** | 投影取值来自 **`Profile` 行**（**不是** `User.name`），夹具不写 Profile ⇒ 三受众全 `{}` ⇒ 那句 `✅ 值级：preview 三个受众都**不含** email 键   org=0 cp=0 cand=0` 是**空集套空集**，**等于没测**却显示全 ✅ | **值级断言必须"先证前置非空，再断言集合精确相等"**；只写"不含 / 子集"会在空集上恒真 | 另一条：**服务端下发的用户可见文案不在前端门禁的扫描面内** —— R9 只扫前端源码，`runtime.ts` 的 `已**升级**为需人工批准` 会被 `agent-board.tsx` 直接渲染成**字面星号**；修法 = 源码去 markdown **且**在 e2e 里扫**整张列表**的 `reason` / `execution.reason` 不含 `**`（**类级**守卫，而非逐例钉）。再一条：`.mts` 的**静态具名导入看不穿 `export *` 桶导出**（`.ts` 按 CJS 加载 ⇒ `cjs-module-lexer` 静态识别），而 `await import()` **却成功** ⇒ 只有静态导入报 `does not provide an export named …`，修法是**深路径导入** |
+| T08 · Outcome **Slice 4**（AC-18 端到端取证 + 门禁收口，**未发版**） | `tsc --noEmit` **0 error**（4m43s；🔴 首轮 exit 2 是**假失败**：AC-18 取证的 dev server 留下半截 `.next/dev/types/validator.ts`，它被 tsconfig include ⇒ 清掉重跑即 0） | 全量 jest **85 套 1699 例**（既有零失败；本任务不新增 jest 用例） | ESLint **0/0**（`src/app/console` 目录级 + 3 个脚本）· `check:ui-invariants` **27 文件（R1–R10，扫描面 +`src/app/console`）** · `verify:ui-invariants` 10 规则 + **5 scope 覆盖面自证** · `check:script-decls` **70/0**（+1）· `verify:workspace-drift` **16/16** | **新增** `verify:ac18:console`（真实 Chrome + 隔离库组织夹具 `seed-t02-e2e.mjs`）：六屏可达 + **各屏数据面 `/api/v1/*` 全部 < 400** + **无空按钮动态负测**（渲染层读 React fiber props 做静态双保险 + 逐个真点要求可观察变化；已激活 tab 走「组内活性」复核）+ 未就绪项不可点 + 直访 404 + pageerror=0 —— **75 通过 / 0 失败**。**门禁扩面**：`SCOPES` 首次纳入 `src/app/console`，**首扫即抓出 11 处真实违规**（1×R4：导航「智能体」`ready:false` 无 reason；10×R9：markdown 星号**已渲染在生产界面**——`/console` 总览、outcomes 屏、missions 详情、1 处 placeholder）并全部修复（`<strong>` / 措辞）。自证补**覆盖面检查**并**负向验证承重**（删 SCOPES 一行 → 自证 exit 1）。取证脚本三轮 **67/8 → 69/6 → 75/0**，两类假失败（dev 按需编译 / session→fetch 链路采样时序）记入 `T08/changes.md` §10.3。**AC-18 认领**（六屏 PASS；第 7 屏 Agents 等 T09 —— 导航不可点 + 直访 404）。⚠️ 本轮还实测两条已知坑：`verify:workspace-drift` 被 OOM（exit 137）中断两次会**把 `schema.ts` 留在半改状态**（变异未还原）⇒ 恢复后重跑 16/16 |
 
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：

@@ -36,6 +36,8 @@ interface ConsoleNavItem {
   ready: boolean
   /** 需要的租户能力（与服务端 `withTenant(...)` 口径一致）。 */
   capability: string
+  /** 未就绪时**必须**写明原因（R4：不许"敬请期待"式空话）。 */
+  reason?: string
 }
 
 const CONSOLE_NAV: readonly ConsoleNavItem[] = [
@@ -43,7 +45,14 @@ const CONSOLE_NAV: readonly ConsoleNavItem[] = [
   { href: '/console/missions', label: '任务', icon: Target, ready: true, capability: 'mission.read' },
   { href: '/console/members', label: '成员', icon: Users, ready: true, capability: 'member.read' },
   { href: '/console/connections', label: '连接', icon: Link2, ready: true, capability: 'workflow.read' },
-  { href: '/console/agents', label: '智能体', icon: Bot, ready: false, capability: 'outcome.read' },
+  {
+    href: '/console/agents',
+    label: '智能体',
+    icon: Bot,
+    ready: false,
+    capability: 'outcome.read',
+    reason: 'Agent 屏等 T09 接线：内核 / API / 审批状态机已交付，屏幕与执行器尚未做',
+  },
   // T08：成果屏已实现。gate 的是**读**能力（`outcome.read`，所有成员都有）——
   // 能不能确认/核验由页面按服务端下发的 canConfirm / canVerify 降级渲染。
   { href: '/console/outcomes', label: '成果', icon: BadgeCheck, ready: true, capability: 'outcome.read' },

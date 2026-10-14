@@ -134,7 +134,7 @@ export default function ConsoleOutcomesPage() {
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-semibold text-foreground font-display">成果</h1>
           <p className="text-xs text-foreground-muted mt-0.5">
-            连接产生了什么 —— 以及它**被验证到什么程度**。自报不等于验证成功。
+            连接产生了什么 —— 以及它<strong>被验证到什么程度</strong>。自报不等于验证成功。
           </p>
         </div>
         <button
@@ -198,7 +198,7 @@ export default function ConsoleOutcomesPage() {
                       onChange={(e) => setDraft(e.target.value)}
                       rows={3}
                       maxLength={1000}
-                      placeholder="这次连接产生了什么成果？（至少 8 个字；上报本身**不算**验证成功）"
+                      placeholder="这次连接产生了什么成果？（至少 8 个字；上报本身不算验证成功）"
                       className="w-full rounded-lg border border-card-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-foreground-subtle focus:outline-none focus:border-primary"
                     />
                     <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@ export default function ConsoleOutcomesPage() {
                 </p>
               ) : (
                 <p className="mt-1 text-[11px] text-warning">
-                  尚未收到任何确认 —— 自报**不算**验证成功。
+                  尚未收到任何确认 —— 自报<strong>不算</strong>验证成功。
                 </p>
               )}
 
@@ -368,8 +368,8 @@ export default function ConsoleOutcomesPage() {
       {/* ── 口径声明 ── */}
       {!outcomes.isLoading && !outcomes.error ? (
         <p className="text-[11px] text-foreground-subtle">
-          验证级别三级：**仅自报**（上报即得，不算验证成功）→ **对手方已确认** → **外部已核验**。
-          级别由验证记录派生，**不能**由客户端直接设置。本屏只列最近 {items.length} 条。
+          验证级别三级：<strong>仅自报</strong>（上报即得，不算验证成功）→ <strong>对手方已确认</strong> → <strong>外部已核验</strong>。
+          级别由验证记录派生，<strong>不能</strong>由客户端直接设置。本屏只列最近 {items.length} 条。
         </p>
       ) : null}
     </div>

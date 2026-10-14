@@ -426,3 +426,47 @@ qa:db:snapshot before
 
 见 `rollback.md` §3：`rollback --batch=C5 --yes` → `rollback --batch=C4 --yes` → `verify`
 （对应段转红即证明回滚生效）。
+
+## 10. Slice 4 —— AC-18 七屏「可达 + 无空按钮」端到端取证 + 门禁收口（2026-10-14）
+
+### 10.1 交付物
+
+| 文件 | 内容 |
+|---|---|
+| `scripts/qa/verify-ac18-console-e2e.mjs`（`npm run verify:ac18:console`） | **AC-18 的渲染层取证**（真实 Chrome + 隔离库自管服务，复用 `seed-t02-e2e.mjs` 的组织夹具）：六屏可达 + 数据面 2xx + 无空按钮动态负测 + 未就绪项不可点 + 直访 404 + pageerror=0。**75 通过 / 0 失败** |
+| `scripts/check-ui-invariants.mjs` | `SCOPES` **首次纳入 `src/app/console`** —— R2（无空按钮）/R4（未就绪要原因）本就是 AC-18 的判据，但数组里从来没有 console ⇒ 规则在、扫描面不在，七屏从未被门禁管过 |
+| `scripts/qa/verify-ui-invariants-mutation.mjs` | 新增**覆盖面自证**：对每个 scope 根目录注入最小 R9 违规，断言"被扫到 + 命中"。**负向验证过**：把 `src/app/console` 从 SCOPES 删掉 → 自证立即 exit 1 |
+| `src/app/console/*`（4 文件 11 处） | 修复首扫暴露的**真实违规**：R9 ×10（markdown 强调标记 `**` 会**原样渲染成星号**——`/console` 总览、outcomes 屏、missions 详情；placeholder 里的一处改措辞，其余改 `<strong>`）+ R4 ×1（导航「智能体」`ready:false` 补 `reason`） |
+
+### 10.2 为什么"首扫即抓出 11 处"本身是本切片的主要发现
+
+R2/R4 的规则实现**自 T07 起就是对的**（变异自证也一直绿），但 `SCOPES` 不含
+`src/app/console` ⇒ **AC-18 的判据在源码层从未生效**。这印证了自证脚本注释里的那句话：
+"规则实现正确"不等于"规则管到了该管的目录"。因此 Slice 4 给自证补了覆盖面检查 ——
+**哨兵不能只守自己**。
+
+### 10.3 踩坑记录（取证脚本三轮 67/8 → 69/6 → 75/0，两类假失败都是脚本自身时序）
+
+1. **dev 模式按需编译**：`goto + domcontentloaded + 固定 sleep` 会在 Turbopack 现场编译
+   该路由（5–20s）完成前采样 —— 第一轮把**渲染完全正常**的 `/console` 采样成
+   "h1 空 / 0 条 API / 0 个按钮"（截图里屏是好的，左下角挂着 dev overlay 的 "1 Issue"）。
+   修法：等**内容信号**（main h1 非空，90s）而非固定时长。
+2. **session → fetch 链路**：`useApiGet` 在 `authStatus === 'loading'` 期间**不发**请求
+   （session 要 1–3s）+ dev 模式 API 响应 2–4s ⇒ 首个 API 响应要 4–7s 才到。
+   "数据面静止 1.2s 即认为稳定"会在第一条响应到达**之前**退出 —— 把好屏判成"0 条 API"，
+   把"刷新"按钮判成"点了没反应"（它只发请求不改 DOM）。修法：先等**第一条** API 响应
+   再等静止；点击后改为轮询"新 API 响应或状态变化"（15s）。
+3. **空表单型按钮**：成员屏"搜索"（form submit）在空输入下**合理地**无请求（业务规则
+   "≥2 字"）—— 点击前先给所有可见输入框填探针词，`stateSig` 基线在填写**之后**采集。
+4. **组内活性复核**：点**已选中**的 tab 当然页面不变 —— 惰性按钮若与某个"确实有反应"
+   的按钮共享父容器（同一控件族），判"组活性已证"；只有孤立且无反应的才判空按钮。
+   第三轮里 3 个已激活 tab 全部由此放行（missions「全部」/ members「全部」/ outcomes「全部」）。
+
+### 10.4 与 AC-18 的口径
+
+- **六屏 PASS**（Dashboard / Missions / Members / Connections / Outcomes / Settings）；
+- **第 7 屏 Agents 未实现**（等 T09 接线）—— 但"无空按钮"口径已在其上生效：
+  导航渲染为 `aria-disabled` 非链接 + 写明 reason，直访 `/console/agents` 404；
+- 本切片**不发版**（`[skip netlify]`）：改动是取证脚本 + 门禁 + 文案修复，文案修复
+  （10 处星号）会随下一次发版自然上线。
+
