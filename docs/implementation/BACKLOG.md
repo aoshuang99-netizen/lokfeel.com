@@ -447,7 +447,24 @@
 >   ⑤ **方法论**：首次 `tsc` 与接线**并行**启动 ⇒ 那次绿只覆盖"改之前"的树，必须在改动落地后**重跑**。
 > - ⚠️ 首次在沙箱内装 npm 包遇 `CODEBUDDY_BROKER_DENY`（`reify` 的 `mkdir` 被拦）→ 可行解 =
 >   `--package-lock-only` + `/tmp` 空目录安装 + 按 lock 精确复制（**含嵌套依赖**）；lock **只增 177 行 / 0 删除**。
-> - P2 剩余三项：② Consent Gate 逐字段披露 / ③ Outcome Observatory 时间轴 / ④ Agent 区（**先解除 R6**）。
+> - ~~P2 剩余三项：② Consent Gate 逐字段披露 / ③ Outcome Observatory 时间轴 / ④ Agent 区（先解除 R6）~~ ⇒ **三项已于 P2 Slice 2 全部落地**。
+>
+> **前端线 · P2 Slice 2（Consent Gate / Outcome Observatory / Agent 区）已落地（2026-10-14，⚠️ 未发版，带免构建标记）** —— 记录 `DESIGN/06-changes-p2b.md`。
+> - **三区库层**（各「服务端取值域逐字镜像 + 编译期双向等价守卫 + **装配器纯函数零 IO**」）：`src/lib/living/{consent,observatory,agents}/` 共 9 文件；
+>   渲染层 `living-states.tsx`（共享四态，**读失败与"空"分开**）/ `use-living-post.ts`（写操作统一出口："成功"只有一条判据；错误文案**原文优先** —— 409 的「该运行已有裁决，不可改判」不可被概括成「操作失败」）。
+> - **三区共享同一条纪律：不重算服务端派生值** —— Consent 档位可见性（包含式 `rank(granted) >= rank(viewer)`）/ Observatory「已验证」（只读 `verified` 布尔，不写 `level === 'EXTERNALLY_VERIFIED'`）/ Agents「能否批准」（服务端 `decideAgentRun` 才是判据）。
+>   三处的错法**都是静默的**（越权展示 / 静默漏算 / 按钮被错误禁用）。
+> - **结构性不可授权 ≠ 用户没开**：`protectedFields`（`disclosable: false`，如 email）既不在受众分组、也不在 `withheld` ⇒ 三者必须分开渲染（混为一谈会让用户以为"勾上就能披露邮箱"）。
+> - **`consentPending` 不入漏斗主线**：它是 `proposals` 的**子集状态**；判据是服务端 4 个 `rates` 恰好对应 5 级主线的 4 次相邻转化（单测钉住 `stages.length - 1 === rates.length`）。
+> - **契约 1.1 → 1.2**：`agent` 转入白名单 + `AgentNodeSchema`（`data.runs[]` + `data.provider` **诚实块**）；`assembleAgentNode()` 在 `provider === null` 时**不产节点**；
+>   `NODE_TYPES` 是 `discriminatedUnion` 的判别依据 ⇒ 新增取值**必须**升版本（否则旧前端整块拒绝）。`RESERVED_NODE_TYPES` 保留为空数组（空数组是现成的预留位出口，删掉会让下一个人重新发明一条没人遵守的规则）。
+> - **门禁**：R6 由**句法改语义**（判据从"有没有写 `type:'agent'`"改为"有没有 `runs` = 真实端点数据来源"）+ **新增 R10**（客户端可达代码只能 `import type` 服务端模块；唯一放行零依赖 `field-catalog`；必须抓**跨行**整条 import 语句 —— 逐行匹配漏检的正是它要防的那件事）。
+> - **金额换算改为复用纯内核**：原镜像实现有进位缺陷（`999_999` 微分算成 `0.10000 分`）⇒ 直接 `import` `@/lib/agent/cost` 的 `formatMicroCents`（**单数** `@/lib/agent` 是零 IO 内核；**复数** `@/lib/agents` 才是服务层）—— 只保留一处本地表述并显式钉住。
+> - 🐛 **抓到 10 个真问题**（详见 `06-changes-p2b.md` §8）。最值钱的两条见下表"通用教训"行：**被中断的自证脚本会就地留下半改源码**（#5，一度让我误判成"`tsc` 增量假绿"，已用受控对照 A/B/C **证伪** —— 真因是 SIGTERM 打断了自证、`CANCELLED` 被删后留在磁盘上）；
+>   **门禁自证的归因边界不得引用会被追加的列表里的具名元素**（#10，区间被钉死在 148–150，本切片新增的 3 条 Agent 守卫落在区间外 ⇒ 改取首尾 148–153，并补第 4 条 agent 变异）。
+> - 门禁全绿：`tsc --noEmit` 0 error · `tests/living` **8 套 198 例** · 全量 **85 套 1699 例**（既有零失败）· ESLint 0/0 · `check:ui-invariants` **32 文件（R1–R10）** · `verify:ui-invariants` **10/10** · `verify:workspace-drift` **16/16** · `check:script-decls` 67/0。
+> - **P2 四项至此全部落地**（① 见 `05-changes-p2.md`；②③④ 见 `06-changes-p2b.md`）。
+>   **仍未闭合**：**浏览器端交互取证**（三区真实数据渲染 / 审批写操作 / 360px 无横向溢出 / 两套主题跟随 / 键盘可达）—— 本切片仍无浏览器取证（沙箱探不了外部端口）。
 >
 > **前端线 · P1 收口（2026-10-13，⚠️ 未发版，带免构建标记）** —— 记录 `DESIGN/04-changes-p1.md` §8。
 > - `consent` / `action` / `outcome` 三类节点**接上真实数据**（`/connections/proposals` · `/workflow/jobs` · `/outcomes`）；
@@ -589,4 +606,4 @@ C2/C3 已在 `233669e` 应用到生产）。
 
 ---
 *本文件由 T00/T01 交付后盘点生成；每个任务收尾时回填提交 SHA 与 AC 结论。*
-*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14*
+*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 Slice 2**（`3e6b342`，Consent Gate / Outcome Observatory / Agent 区 + 门禁 R10 + 契约 1.2）—— **未发版**，`verify:no-release --commit=3e6b342` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14*
