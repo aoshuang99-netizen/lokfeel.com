@@ -137,7 +137,7 @@ export function checkConstrained(
     const allowed = new Set(Array.isArray(rawAllowed) ? rawAllowed.filter((x): x is string => typeof x === 'string') : [])
     const bad = outVal.filter((x) => typeof x !== 'string' || !allowed.has(x))
     if (bad.length > 0) {
-      return `${c.outputField} 含**未授权项**（${bad.slice(0, 3).join('、')}）—— 越界产出一律拒绝，不截断。`
+      return `${c.outputField} 含「未授权项」（${bad.slice(0, 3).join('、')}）—— 越界产出一律拒绝，不截断。`
     }
   }
   return null
@@ -199,7 +199,7 @@ function degrade(
         injectionSignals: signals,
         cost: attribution,
         ledger: nextLedger,
-        reason: `${reason} 已降级为**规则式**抽取（能力弱于模型路径，结果仍需你确认）。`,
+        reason: `${reason} 已降级为「规则式」抽取（能力弱于模型路径，结果仍需你确认）。`,
         degradeCode: code,
         providerKind: 'rules',
       }
@@ -358,7 +358,7 @@ export async function runSkill(opts: RunSkillOptions): Promise<AgentOutcome> {
     injectionSignals: signals,
     cost: record,
     ledger: nextLedger,
-    reason: signals.length > 0 ? '检测到注入信号 → 已**升级**为需人工批准（信号本身不作为拒绝判据）。' : null,
+    reason: signals.length > 0 ? '检测到注入信号 → 已「升级」为需人工批准（信号本身不作为拒绝判据）。' : null,
     degradeCode: null,
     providerKind: provider.kind,
   }

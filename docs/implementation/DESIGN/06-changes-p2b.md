@@ -4,7 +4,7 @@
 >
 > ⚠️ P2 共**四项**：① Field 升级为 2.5D 关系网络 ← `05-changes-p2.md`；
 > ② Consent Gate 接逐字段披露投影；③ Outcome Observatory 时间轴；④ Agent 区 —— ②③④ 即**本文**。
-> 至此 P2 四项**全部落地**（未发版）。
+> 至此 P2 四项**全部落地**（未发版），并已补 **HTTP 层端到端取证**（§9，`130/0`）。
 
 ## 1. 交付物
 
@@ -36,6 +36,10 @@
 | `tests/workspace-spec/assemble.test.ts` | 改 | 补 `AGENT_STATES` / `AGENT_RISKS` / `AGENT_SKILLS` **三条硬编码回归**（镜像的"第二根柱子"，见 §8 #9） |
 | `scripts/qa/verify-workspace-spec-drift.mjs` | 改 | ① 归因区间改取**首尾**守卫（148–153，原先被具名守卫钉死在 148–150）；② 补第 4 条 **agent 变异**；③ 加固：启动期锚点自检 + SIGINT/SIGTERM 还原后再退出（见 §8 #5 / #10） |
 | `.gitignore` | 改 | 补 `tsconfig.drift-probe.json` + `__mutant-*`（自证脚本被中断时的残留，此前会被 `git add -A` 误提交） |
+| `scripts/qa/verify-p2-workspace-e2e.mts` | 新 | **P2 端到端取证**（隔离库 + 真实 HTTP + 真实装配器，9 节）—— 披露逐字段投影 / 时间轴·指标 / 审批写路径（含两条 409 负向）/ 用量归因 / 契约 1.2 agent 节点装配（见 §9） |
+| `scripts/qa/fake-openai-provider.mjs` | 新 | 本地**假模型端点**（OpenAI 兼容；按 `max_tokens` 路由技能，未知值 **400**）—— 让"批准成功"这条写路径**可复跑**（见 §9.1） |
+| `src/lib/agent/runtime.ts` | 改 | 三处**用户可见** `reason` 文案去掉 markdown 强调标记（R9 只扫前端源码，扫不到**服务端下发**的文案，见 §8 #11） |
+| `package.json` | 改 | 注册 `verify:p2:e2e` |
 
 ## 2. 三条纪律在本切片是**同一条**：不重算服务端派生值
 
@@ -122,7 +126,7 @@ P1 的 `@/lib/connection` 桶文件一行 `import { X }` 就够。唯一放行 `
 零成本是「规则式兜底」路径下最常见的读数，4 个零只会变成噪音；界面文案也依赖这个读法。
 这条分歧由单测**显式钉住**，其余值逐值等于内核。
 
-## 8. 本轮抓到的真问题（10 个）
+## 8. 本轮抓到的真问题（12 个）
 
 | # | 问题 | 怎么发现的 | 处置 |
 |---|---|---|---|
@@ -136,6 +140,8 @@ P1 的 `@/lib/connection` 桶文件一行 `import { X }` 就够。唯一放行 `
 | 8 | **我自己把用例写废了一条**：测"对手方可见项超出组织者"时，用的键其实**在**组织者集合里 ⇒ 该用例退化成"无倒挂"，测不出东西 | 单测断言"产 note"失败 | 换成确实不在组织者集合里的键；这条失败说明"用例也会假绿"的反面 —— 它在**变红时**救了自己 |
 | 9 | **新镜像只挂了编译期守卫、没挂硬编码回归**：`AGENT_STATES` / `AGENT_RISKS` / `AGENT_SKILLS` 只有 `AssertTrue<Exact<…>>`，而本仓自己的纪律是**两根柱子缺一不可**（守卫只防单侧漂移） | 自查（写 §2 时对照 `assemble.test.ts` 既有三段硬编码） | 在 `tests/workspace-spec/assemble.test.ts` 补三条硬编码期望 |
 | 10 | 🔴 **门禁自证的"归因边界"引用了一个会被追加的列表里的具名元素**：`verify:workspace-drift` 的 `guardLineRange` 用 `_DriftGuardConsent` → `_DriftGuardOutcomeLevel` 算区间 ⇒ 区间被钉死在 **148–150**；本切片新增的 3 条 Agent 守卫在 **151–153**，**落在区间之外**。同时变异集里**没有 agent 变异** ⇒ 新守卫"到底接没接对服务端类型"从未被证 | 审**证据本身**：日志报的行号是 `148–150`，而源码里守卫有 **6 条** —— 数字对不上 | ① `guardLineRange` 改取**首尾**守卫（现为 148–153）；② 补第 4 条变异（`AGENT_SKILLS` 的 `COORDINATION_ADVICE` → 从未存在的 `OUTCOME_NARRATIVE`）。加固后 **16/16**，新变异命中 `line=153`（正是 `_DriftGuardAgentSkill`）⇒ 两条都证明：区间缺陷是真的，新守卫也确实有牙 |
+| 11 | 🔴 **服务端下发的文案自带 markdown 强调标记**：`runtime.ts` 的 `reason` 里有 `已**升级**为需人工批准`、`含**未授权项**`、`已降级为**规则式**抽取`，而 `agent-board.tsx` 直接渲染 `{run.reason}` ⇒ 界面显示**字面星号** | e2e 输出里打出 `⚠️ 原因文案说明"已**升级**为…"` —— 断言通过了，但**打印出来的东西**不对 | **R9 只扫前端源码，扫不到服务端下发的文案** ⇒ ① 三处改「」（**单次原子写入 + 每锚点唯一命中校验**，避开本仓"同文件多改静默丢一处"的坑）；② e2e §8 加**类级守卫**（扫整张列表的 `reason` + `execution.reason` **不含 `**`**）。这是**第 3 次**同类缺陷（前两次见 §8 #6 与 `05-changes-p2.md` §5），但**首次出现在服务端** |
+| 12 | 🔴 **我自己写出了一条空集假绿**：`✅ 值级：preview 三个受众都**不含** email 键   org=0 cp=0 cand=0` —— 三个投影**全空** ⇒ "不含 email"和"单调"都是**空集套空集**，**等于什么都没测**，却显示全 ✅ | 审**证据本身**：`org=0 cp=0 cand=0` 三个零摆在一起时，任何"不含 / 子集 / 相等"断言都**必然成立** | ① 脚本先用真实端点 `PUT /api/profile` 写入 `displayName/company/bio`（投影取值来自 **`Profile` 行**，不是 `User.name` —— 夹具不写 Profile 就会全空）；② 加**前置断言**（三个投影都非空）；③ 值级断言从"不含 X"升级为**集合精确相等**。重跑后 `org=3 cp=2 cand=1`，才是真断言 |
 
 ### 8.1 第 5 条的完整经过（因为它一度让我得出**错误结论**）
 
@@ -183,7 +189,56 @@ npx tsc --noEmit --incremental false  # exit 2  # schema.ts(148,47) TS2344
 另顺手修掉上一轮遗留的一处笔误：`WorkspaceSpecSchema.IntentNodeSchema` 里
 `isoemporalGuard(),`（正确为 `isoTemporal`）。
 
-## 9. 验证结果（可复跑）
+## 9. P2 端到端取证（HTTP 层，`npm run verify:p2:e2e`）
+
+**为什么必须有它**：本切片此前只有单测绿 —— 单测测的是**装配器**（纯函数），而 P2 验收原文是
+「**全链路真实 API、审批与状态更新**」。两者覆盖的东西**没有交集**：装配器正确 ≠ 端点契约正确 ≠
+审批写路径**真的把状态改了**。故新建 9 节取证（隔离库 + 真实 HTTP + 真实装配器）：
+
+1. **材料准备**：`PUT /api/profile` 写 `displayName/company/bio`。
+   🔴 这一步**是必需的，不是装饰** —— 披露投影的取值来自 **`Profile` 行**（不是 `User.name`），
+   不写 Profile 会让三个受众的 `preview` 全是 `{}`，下面所有"值级"断言都退化成**空集套空集**（见 §8 #12）；
+2. **Consent 读 · 逐字段投影**：断言三受众**集合精确相等**（`org={displayName,bio,company}` /
+   `cp={bio,company}` / `cand={bio}`），且**先断言三者都非空**。`COUNTERPARTY` 档的 `company`
+   对候选**不可见** ⇒ 验的是**值级**，不是"字段清单里有这个名字"；
+3. **Consent 写 · fail loud**：受保护字段（`disclosable:false`）写入一律 **400**；
+4. **链路数据**：提案 / 成果落库（后续各节的数据来源）；
+5. **Observatory**：时间轴排序 + 指标口径（`consentPending` 不入主线、`rates` 恰为 4）；
+6. **状态更新**：**刷新后仍成立**（不是"响应里对了一次"）；
+7. **Agents 读**：`usage` 与列表形状（**无 `injectionCount`**）；
+8. **Agents 写**：`AWAITING_APPROVAL → APPROVED → 200` + **两条语义不同的 409**（已有裁决不可改判 / 状态不允许）
+   + `MEMBER` 批准 **403**（触发权与批准权是两个能力，AC-08）；另加**类级守卫**：整张列表的
+   `reason` 与 `execution.reason` **不含 `**`**（见 §8 #11）；
+9. **契约 1.2**：`assembleAgentNode(runs, honesty)` → 节点过 `WorkspaceSpecSchema`；
+   `assembleAgentNode(runs, null)` 必须**不产节点**，且原因**点名** provider 诚实块。
+
+### 9.1 让"批准成功"可复跑：假模型端点
+
+无 `OPENAI_API_KEY` 时 `INTRO_DRAFT` **没有降级路径** ⇒ 运行落 `FAILED` ⇒ 批准**必然** 409
+（那条负向用例会"通过"，但正向用例**永远走不到**）。故用**本地假端点**（`fake-openai-provider.mjs`，
+把 `OPENAI_BASE_URL` 指向 `127.0.0.1:3199`）让服务端走**完整真实调用链**
+（`fetch → usage 归因 → zod → 越界检查 → 状态机`），只把"模型说什么"变成确定性：
+
+- **按 `max_tokens` 路由技能**（`INTRO_DRAFT 1200` / `COORDINATION_ADVICE 900` / `INTENT_EXTRACTION 800`
+  三值互不相同 ⇒ **稳定判别键**），**不靠猜 prompt 文本**；
+- **未知 `max_tokens` ⇒ 400**（而不是"给个默认应答"）⇒ `costProfile` 一漂移就**自曝**，不会静默假绿；
+- `finish_reason` 必须是 `stop`（`length` 会被判"半截产出"而拒绝）；必须带
+  `usage.{prompt_tokens,completion_tokens}`（缺失 ⇒ `PROVIDER_ERROR`，AC-20 要求**每次调用可归因**）。
+
+它**不是**对 T09「无凭据即不可用」的放宽：生产**没有任何代码**读 `OPENAI_BASE_URL`，T09 的诚实纪律不变。
+
+### 9.2 一个必须写下来的坑：`.mts` 看不见 `export *` 桶导出
+
+脚本导入 `src/` 下的 `.ts` 时，`.ts` 按 **CJS** 加载，具名导出由 `cjs-module-lexer` **静态**识别 ——
+它**看不穿 `export * from './x'`**（esbuild 编成 `__reExport(...)` 助手）⇒ `.mts` 里报
+`SyntaxError: does not provide an export named …`。而 `await import()` **却能成功**
+（运行时命名空间里有那个键），所以症状**只在静态具名导入时**出现。修法 = **深路径导入**
+（`@/lib/living/agents/board`）；理由已写进脚本文件头，防止后人"顺手改回桶导出"。
+
+另有一处同类陷阱：JSDoc 里写 glob 时，`*` + `/` 两个字符连在一起会**提前闭合块注释**
+⇒ esbuild `ERROR: Unexpected "*"`。注释里别写 glob 的字面形式。
+
+## 10. 验证结果（可复跑）
 
 | 项 | 命令 | 结果 |
 |---|---|---|
@@ -194,11 +249,14 @@ npx tsc --noEmit --incremental false  # exit 2  # schema.ts(148,47) TS2344
 | UI 不变量 | `npm run check:ui-invariants` | **32 文件通过（R1–R10）**（P2 Slice 1 时为 18 文件 / R1–R9） |
 | UI 门禁自证 | `npm run verify:ui-invariants` | **10/10**（R1–R10 变异各被捕获 `exit=1`；负向对照无漏报；收尾复验 `exit=0`） |
 | **枚举漂移自证** | `npm run verify:workspace-drift` | **16/16**（基线 `exit 0` → **四条**真实变异各被 `tsc` 捕获（`exit=2`）、`TS2344` 精确落在守卫行 **148–153** → 还原**逐字一致**、探针已清理）。P2 Slice 1 时为 13/13（3 条变异、区间 148–150） |
-| 脚本声明 | `npm run check:script-decls` | **67 脚本 / 0 未声明引用** |
+| **P2 端到端取证** | `npm run verify:p2:e2e` | **130 通过 / 0 失败**（exit 0）—— 9 节：披露逐字段投影 → 时间轴/指标 → 状态更新（刷新后仍成立）→ 审批 + 两条语义不同的 409 + 权限负向 → 契约 1.2 装配。**隔离库 + 真实 HTTP + 真实装配器**；"批准成功"经**本地假模型端点**（见 §9） |
+| 脚本声明 | `npm run check:script-decls` | **68 脚本 / 0 未声明引用**（67 → 68，+1 = 新增的 `fake-openai-provider.mjs`；新脚本 `verify-p2-workspace-e2e.mts` 由 `tsc` 覆盖 —— 该门禁**只扫 `.mjs`**） |
 
-## 10. 仍未闭合（本切片未做）
+## 11. 仍未闭合（本切片未做）
 
 1. **浏览器端交互取证**：三区真实数据渲染、审批写操作、360px 无横向溢出、两套主题跟随、
    键盘可达 —— **本切片仍无浏览器取证**（沙箱探不了外部端口，见 `2026-10-14` 记忆）。
+   ✅ **HTTP 层**端到端取证**已补**（§9，`130/0`）：端点契约、审批写路径与状态更新、契约 1.2 装配
+   均已**可复跑**；**未覆盖的只剩渲染层**。
 2. **P2 四项已完成但仍未发版**：`[skip netlify]` 状态维持，发版时机由运营决定。
 3. 支付生产不可用（缺 Creem 凭据）—— 既有未闭合项，用户明确排除。
