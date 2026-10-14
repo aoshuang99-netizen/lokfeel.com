@@ -238,6 +238,9 @@ npx tsc --noEmit --incremental false  # exit 2  # schema.ts(148,47) TS2344
 另有一处同类陷阱：JSDoc 里写 glob 时，`*` + `/` 两个字符连在一起会**提前闭合块注释**
 ⇒ esbuild `ERROR: Unexpected "*"`。注释里别写 glob 的字面形式。
 
+> 提交：`6df1881`。免构建实证：`verify:no-release --commit=6df1881` **exit 0**（无该提交的部署记录，
+> 最新部署仍为 `f6630ea6b`）⇒ `[skip netlify]` 生效，**保持"可发版未发版"**。
+
 ## 10. 验证结果（可复跑）
 
 | 项 | 命令 | 结果 |
