@@ -257,9 +257,60 @@ npx tsc --noEmit --incremental false  # exit 2  # schema.ts(148,47) TS2344
 
 ## 11. 仍未闭合（本切片未做）
 
-1. **浏览器端交互取证**：三区真实数据渲染、审批写操作、360px 无横向溢出、两套主题跟随、
-   键盘可达 —— **本切片仍无浏览器取证**（沙箱探不了外部端口，见 `2026-10-14` 记忆）。
-   ✅ **HTTP 层**端到端取证**已补**（§9，`130/0`）：端点契约、审批写路径与状态更新、契约 1.2 装配
-   均已**可复跑**；**未覆盖的只剩渲染层**。
+1. ~~**浏览器端交互取证**：三区真实数据渲染、审批写操作、360px 无横向溢出、两套主题跟随、
+   键盘可达~~ ⇒ ✅ **渲染层已补**（§12，`79/0`，真实 Chrome）：至此 §9 的 HTTP 层 + §12 的渲染层
+   合起来把 P2 验收原文「全链路真实 API、审批与状态更新」**全部覆盖且可复跑**。
+   遗留仅一条观感项：prefers-light 用户**首帧闪色**（见 §12 #3），非功能缺陷。
 2. **P2 四项已完成但仍未发版**：`[skip netlify]` 状态维持，发版时机由运营决定。
 3. 支付生产不可用（缺 Creem 凭据）—— 既有未闭合项，用户明确排除。
+
+## 12. P2 渲染层取证（浏览器层，`npm run verify:p2:render`）
+
+§9 补了 HTTP 层之后，**未覆盖的只剩"像素真的画对了吗"**。沙箱探不了外部端口 ⇒ 这一层必须
+**真机 Chrome**（`chromium.launch({ channel: 'chrome' })` —— ms-playwright 缓存里没有
+`@playwright/test@1.63.0` 要的 `chromium_headless_shell-1243`，系统 Chrome 可用）。
+
+脚本是**自管**的：一次运行完成 隔离库 seed → 本地假模型端点 → dev server → 真实登录
+（`/api/auth/login`）→ 经真实端点写全套夹具（16 步，含**双方**意图 —— 漏掉对方意图会让
+`introduce` 的 IO 层判据 `candidate_intent_not_live` 拦下介绍，进而在渲染层**伪装成"成果区没数据"**）
+→ 浏览器断言 → 收尾 kill，**退出码即结论**。结果：**79 通过 / 0 失败**（exit 0，约 5 分钟）。
+
+覆盖（七节）：hydration 门禁 + 可交互预自证 → 三区真实数据**值级**渲染（含反向断言：空态/错误态
+文案**不可见**）→ 浏览器里点批准 + 二次批准 409 原文到界面 + 按钮不卡 pending → **360px 四区**
+页面级无横向溢出（披露表落在**可滚动**容器，`scrollWidth=560 > clientWidth=334` 但内容可及）→
+两套主题（跟随系统偏好 / 手动切换 / `--lf-bg` 令牌真变 `#0b0e11 → #f7f5f0` / 对比度 ≥4.5 /
+localStorage 持久化 / 明色上下文反向再验）→ 键盘可达（Tab 到 composer 与导航、`lf-focus-ring`
+全覆盖、回车切区）→ 全程 **pageerror = 0**。
+
+### 12.1 抓到 3 类"取证工具自己造假"（本轮最值钱）
+
+1. **"DOM 出现了" ≠ "可以交互了"**。`nav` 是 SSR 输出，DOM 一出现就"可见"，但 React 未接管前
+   `onClick` **尚未挂上**，此时点击被**静默丢弃**（无报错、无 console 输出）—— 上一轮 6 个失败里
+   3 个是它。修法 = `waitHydrated()` 门禁（判据 = fiber key 已挂在 body/根节点）+ 用**纯客户端状态**
+   的主题开关做"事件真的挂上了"的预自证 + `goZone` 失败打现场（`h1 / aria-current / hydrated`
+   三件套，把"没被响应"与"切了别的区"分开）。
+   `eval() is not supported` 的 console 噪音是 **dev 专属** React 调试警告
+   （`next.config.ts` 刻意移除 `unsafe-eval`），**不影响交互**，生产无此路径 —— 不要被它带偏归因。
+2. **runs 与 usage 是两个请求**。run 卡片先到就抓 `innerText`，"usage 还在路上"被误判成
+   "诚实块缺失" —— 而截图里诚实块明明渲染着。修法 = 先等「真实模型调用」
+   （已启用/未启用两条变体的公共键）再断言档位。**教训：断言 B 的前提是"B 的数据源到了"，
+   不是"A 的数据源到了"。**
+3. **主题跟随是"最终一致"，不是"首帧一致"**。React 在 hydration 期间**不排** `useSyncExternalStore`
+   的快照一致性检查（react-dom 19.3 源码：`isHydrating || … || pushStoreConsistencyCheck`），
+   而 `LivingShell` 不持有数据 hook（children 是 prop）⇒ 挂载后可能**没有重渲染**，
+   `data-lf-theme` 停在 SSR 快照 `field`，直到某次重渲染才落到客户端快照 —— 实测 light 偏好下
+   **663ms** 后才变 `paper`。单次读取必踩时序 ⇒ 改轮询（上限 10s）+ 现场诊断
+   （`matchMedia / localStorage / settle` 三值随断言打印）。产品侧含义：prefers-light 用户
+   **首帧闪色**（先暗后亮）—— 记为已知观感，非功能缺陷，本切片不修。
+
+### 12.2 工具坑 2 条
+
+1. 补丁脚本 `String.replace(from, to)`：替换串里含 **`$'`**（本例是 `'__reactFiber$'`）会被当
+   **替换模式**展开成"匹配之后的全部内容" ⇒ 文件尾部被**静默复制**、8 个锚点同时报"命中 3 次"
+   （文件其实是好的，`grep -c` 各 1 次）。修法 = **函数形式** `replace(from, () => to)`；
+   回读判据用"`from` 出现次数没变多"（有的 `to` 本就包含 `from`）。
+2. `/tmp` 下的 ESM 脚本解析不到 `playwright`（逐级向上找不到 `node_modules`，`NODE_PATH` 对
+   ESM 无效）⇒ 探针必须落**仓库内**（`scripts/qa/`），用完即删。
+
+> `check:script-decls` 68 → **69**（+`verify-p2-render-e2e.mjs`）；该门禁的 `GLOBALS` 白名单含
+> `document/window/localStorage` 等 ⇒ 页面内求值的探针函数不会误报。

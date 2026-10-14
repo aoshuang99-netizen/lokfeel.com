@@ -216,7 +216,7 @@
 - **风险**：🟡 与既有 B2C 页面**共存** → 必须做明确的「个人态 vs 组织态」导航分层，否则用户看不懂
 - **进度**：🚧 **Slice 1 + Slice 2 + Slice 3 已落地并上线**（`/console` 骨架 + Dashboard · Missions · Members · Connections · Settings；发版 `564802a` / 部署 `6accbb986762`）。
   **AC-18 **已认领 6/7 屏**：Missions / Members / Connections / Settings 已上线；**Outcomes 屏由 T08 Slice 1 交付**
-  （`/console/outcomes`，已 `ready`，但**尚未随 T08 发版**）；仅差 **Agents**（等 T09 技术栈拍板，§6-⑥）。
+  （`/console/outcomes`，已 `ready`，但**尚未随 T08 发版**）；仅差 **Agents**（T09 技术栈**已拍板**：TS 内编排，见 §6-⑥）。
   方案与切片计划见 `docs/implementation/T07/plan.md`。
 
 ### T08 · Outcome & Billing — 成果验证、成本归因、订阅
@@ -350,7 +350,7 @@
    > 替换点已隔离在 `src/lib/workflow/runtime.ts` 的驱动器接口，日后若要换引擎不必动业务层。
    > 消息通道同批拍板为 **站内信 + 邮件沙箱**。
 
-⑥ **Agent 运行时技术栈分叉**：战略方案 → Python + LangGraph；现有仓 → 纯 TS。**T09 开工前必须决策**（见 §6-⑥）。
+⑥ **Agent 运行时技术栈分叉**：战略方案 → Python + LangGraph；现有仓 → 纯 TS。✅ **已拍板：TS 内编排** —— 判据是平台约束（Netlify 免费计划无常驻进程 ⇒ 跑不了 LangGraph 服务；TS 内用既有编排原语无此限制），见 §6-⑥。
 
 ---
 
@@ -363,7 +363,7 @@
 | ③ | 主键策略：保持 `cuid()` 还是改 `@db.Uuid` | 38 表回归范围 | 一次拍板 |
 | ④ | T00–T04 提交**是否推送到公开仓库** | — | 你的决定（含生产迁移记录与披露模型） |
 | ⑤ | ~~**T06 工作流引擎**：DB 队列 vs Temporal~~ | — | ✅ 已拍板：**DB outbox**（见 §5-⑤ 更新） |
-| ⑥ | **T09 Agent 运行时**：TS 内编排 vs Python/LangGraph 独立服务 | T09 架构 | 一次拍板 |
+| ⑥ | ~~**T09 Agent 运行时**：TS 内编排 vs Python/LangGraph 独立服务~~ | — | ✅ 已拍板：**TS 内编排**（判据是平台约束 —— Netlify 免费计划**无常驻进程** ⇒ LangGraph 服务跑不起来；替代方案用既有 TS 编排原语，无此限制） |
 | ⑦ | Creem 凭据是否提供 | AC-21 | 已决定暂不提供 → **真实扣款/退款保持 `BLOCKED`**；「用量可复算」+「状态一致」已在 T08 Slice 3 以**沙箱**取证为 PASS（`gatewayStatus=CAPTURED`，`realChargesEnabled=false`） |
 
 ---
@@ -404,8 +404,8 @@
 > **AC-21 沙箱部分认领**；🔴 **真实扣款/退款保持 `BLOCKED`**（`T08/risks.md` R1）。
 >
 > 下一步：**T08 Slice 4**（Console 用量/订阅屏 + 指标屏 + AC-18 第 6 屏的 Playwright E2E）
-> 或 **T09 Agent Runtime**（须先拍板技术栈，§6-⑥）。
-> T07 最后一屏（Agents）仍等 T09 技术栈拍板（§6-⑥）。
+> 或 **T09 Agent Runtime** 收尾（技术栈**已拍板**：TS 内编排，§6-⑥）。
+> T07 最后一屏（Agents）**不再被技术栈阻塞** —— 它等的是 T09 的 Agent 屏与接线（§6-⑥ 已解）。
 
 > **前端线《Living Connection OS》P0 + P1 已落地（⚠️ 未发版，带免构建标记）**
 > —— 与上面 T02–T08 的**后端线**并行推进（前端线不占用发布窗口）。
@@ -422,7 +422,7 @@
 > - **门禁扩到 R1–R7**（+R6 禁产 `agent` 节点 / +R7 禁 `dangerouslySetInnerHTML`·`eval`），
 >   `SCOPES` 纳入 `src/lib/workspace-spec`；新增**变异自证**脚本 `npm run verify:ui-invariants`
 >   （7/7 规则逐条证明生效 + 负向对照）。
-> - 🔴 **前端 P1 的 `agent` 节点 / Agent 屏与后端 T09 是同一条依赖**：两者都等 §6-⑥ 的技术栈拍板。
+> - 🔴 **前端 P1 的 `agent` 节点 / Agent 屏与后端 T09 是同一条依赖**：§6-⑥ 的技术栈**已拍板**（TS 内编排，判据见该行）。
 >   （**T09 Slice 1–3 已交付** ⇒ 该依赖的**内核侧**已解，只剩"把规则式提案器换成 LLM 提案器"这一处接线。）
 > - 前端 **P2**（Field 2.5D 关系网络 → 引 `@xyflow/react`）/ **P3**（首页 3D，且**首屏文案与登录入口必须独立于 3D**）待续。
 >
@@ -482,7 +482,19 @@
 >   ② **我自己写出了一条空集假绿**（`org=0 cp=0 cand=0` 时任何"不含 X / 子集"断言**必然成立**，却显示全 ✅）⇒ 已加**前置非空断言** + 值级断言升级为**集合精确相等**（重跑得 `org=3 cp=2 cand=1`）。
 > - 坑：`.mts` 里**静态具名导入看不穿 `export *` 桶导出**（`.ts` 按 CJS 加载、`cjs-module-lexer` 静态识别）⇒ 报 `does not provide an export named …`；
 >   而 `await import()` **却成功** ⇒ 只有静态导入会炸。修法 = **深路径导入**，理由写进脚本文件头。
-> - **仍未闭合**：**浏览器端渲染取证**（三区真实数据渲染 / 360px 无横向溢出 / 两套主题跟随 / 键盘可达）—— 本轮补的是 **HTTP 层**。
+> - ~~**仍未闭合**：**浏览器端渲染取证**（三区真实数据渲染 / 360px 无横向溢出 / 两套主题跟随 / 键盘可达）—— 本轮补的是 **HTTP 层**~~ ⇒ ✅ **已于同日补上**（见下一条记录，`79/0`）。
+>
+> **前端线 · P2 浏览器渲染层取证已落地（2026-10-14，⚠️ 未发版，带免构建标记）** —— 记录 `DESIGN/06-changes-p2b.md` §12。
+> - 新增 `npm run verify:p2:render`（`scripts/qa/verify-p2-render-e2e.mjs`，**79 通过 / 0 失败**，exit 0，约 5 分钟）：
+>   **自管服务 0 次引导**（隔离库 seed → 本地假模型端点 → dev server → 真实登录 → 经真实端点写 16 步夹具（**双方都要有意图**，漏一侧会被 `candidate_intent_not_live` 拦下介绍、伪装成"成果区没数据"）→ **真实 Chrome**（`channel:'chrome'`，headless-shell 1243 无缓存））→ 退出码即结论。
+> - 覆盖七节：**hydration 门禁 + 可交互预自证**（主题开关能拨动，证明事件真的挂上）→ 三区真实数据**值级**渲染（displayName 只在组织者列 / company 不对同任务伙伴 / email 行「不可授权」+ 三受众「联系方式走同意流程」= **结构性不可授权 ≠ 用户没开**；空态/错误态文案反向断言**不可见**）→ **浏览器里点批准**（「裁决：已批准」+ 二次批准 409 原文「不可改判」到达界面 + 按钮不卡 pending）→ **360px 四区页面级无横向溢出**（披露表落在可滚动容器，内容可及）→ 两套主题（跟随系统偏好 / 手动切换 / `--lf-bg` 令牌真变 / 对比度 ≥4.5 / localStorage 持久化 / 明色上下文反向再验）→ 键盘可达（Tab 到导航与 composer、焦点环全覆盖、回车切区）→ 全程 **pageerror = 0**。
+> - 🐛 **抓到 3 类"取证工具自己造假"**：① **"DOM 出现了" ≠ "可以交互了"** —— nav 是 SSR 输出，React 未接管前 `onClick` 未挂，点击**静默丢弃**（无报错）⇒ `waitHydrated()`（fiber 判据）+ 预自证；② **runs 与 usage 是两个请求** —— run 卡片先到就抓文本，把"usage 在路上"误判成"诚实块缺失"（截图里块明明在）⇒ 等公共键「真实模型调用」再断言；③ **主题跟随是"最终一致"不是"首帧一致"** —— React hydration 期间**不排** `useSyncExternalStore` 一致性检查（19.3 源码），LivingShell 又不持有数据 hook ⇒ light 偏好下 `data-lf-theme` 停留 field 到挂载后 **663ms** 才落 paper ⇒ 改轮询 + 现场诊断。产品侧 **prefers-light 首帧闪色**记为已知观感，本切片不修。
+> - 坑 2 条：补丁脚本 `replace(from, to)` 的替换串含 **`$'`**（`'__reactFiber$'`）被当**替换模式**展开 ⇒ 文件尾部被静默复制、"锚点命中 3 次"假数 → **函数形式** `replace(from, () => to)`；`/tmp` 下 ESM 脚本解析不到 `playwright`（`NODE_PATH` 对 ESM 无效）⇒ 探针必须落仓库内、用完即删。`eval() is not supported` = dev 专属调试警告（CSP 刻意无 `unsafe-eval`），不影响交互。
+> - `check:script-decls` 68 → **69**。
+> - 🐛 **`npx next build`（发版前必做项）抓到一个真·发版拦截器**：`lucide-react@1.48.0` 的包发布**缺了 `module` 字段指向的 `dist/esm/lucide-react.mjs`**（esm 目录只有 `icons/`）⇒ 服务端回退 CJS 构建，其顶层 `react.createContext({})` 在 **react-server 运行时**求值必炸 —— React 19.3 的 react-server 构建只导出 24 项（`forwardRef`/`createElement` 在，`createContext` **不在**），症状是页面数据收集阶段 `TypeError: d.createContext is not a function`（`/about` 等公开页）。
+>   该依赖批次（`f57e53e`：next 16.3.6 + lucide 1.48.0 同批进来）之后的 **111 个提交全部免构建** ⇒ 这套依赖**从未被任何构建验证过**，下次真实发版**必然失败**。
+>   **修复**：升 `lucide-react@^1.57.0`（实测 1.50+ 的包才有完整 ESM；1.57 的 ESM 根构建 **0 处 `createContext`**、上下文隔离进独立 `context.mjs` 且图标模块不引用 ⇒ RSC 安全）。仅 `package.json` 一行 + lock 条目 + node_modules；复验 `tsc` **0 error**、`tests/living` **198 例全绿**。
+>   ⚠️ 完整本地 build 因**宿主机过载**（`uptime` load avg **132**、swap 8.6G/9.2G）无法在合理时间内跑完：Turbopack 编译 ~17 分钟可过，页面数据收集阶段停滞（判据 = `.next` 文件 mtime 停止推进 + load avg 异常）；修复后已实证**越过了原崩溃点**（上轮 23 分钟即报错退出，本轮 31+ 分钟无该错误）。**发版时由 Netlify CI 构建做最终验证**。
 >
 > **前端线 · P1 收口（2026-10-13，⚠️ 未发版，带免构建标记）** —— 记录 `DESIGN/04-changes-p1.md` §8。
 > - `consent` / `action` / `outcome` 三类节点**接上真实数据**（`/connections/proposals` · `/workflow/jobs` · `/outcomes`）；
@@ -529,8 +541,9 @@
 > 与 Members（角色过滤 + 搜索 + 分页）两屏。门禁：`tests/tenancy` **87**（49 → 87）· 全量 **984** ·
 > ESLint 0/0 · `tsc` 0 error。
 
-> 🟡 **三个待拍板项仍未定**（都不阻塞当前主线）：① AC-10 自动清理是否开启（`LIFECYCLE.md` §4.4）；
-> ② 分钟级调度走哪条路（`SCHEDULING.md`，涉及 CI 额度成本）；③ T09 Agent 运行时选型。
+> 🟡 **两个待拍板项仍未定**（都不阻塞当前主线）：① AC-10 自动清理是否开启（`LIFECYCLE.md` §4.4）；
+> ② 分钟级调度走哪条路（`SCHEDULING.md`，涉及 CI 额度成本）。
+> （原第 ③ 项 T09 Agent 运行时选型**已于 2026-10-14 拍板为 TS 内编排**，见 §6-⑥。）
 
 理由：
 
@@ -541,8 +554,8 @@
 2. **T08 是 T06 的下游闭环**：阶段机的 `ACTION_COMPLETED` / `OUTCOME_RECORDED`
    目前**没有自动触发点** —— 它们等的是 T08 的"成果记录"入口。两个任务都可先做，
    但 **T08 会让 T06 的阶段机真正完整**。
-3. **决策点仍然到期的是 §6-⑥**（T09 Agent 运行时技术栈：TS 内编排 vs Python/LangGraph）——
-   那是 T09 开工前的阻塞项，**不**影响 T07/T08。
+3. ~~**决策点仍然到期的是 §6-⑥**（T09 Agent 运行时技术栈：TS 内编排 vs Python/LangGraph）~~
+   ✅ **2026-10-14 已拍板：TS 内编排**（判据是平台约束，见 §6-⑥）。该阻塞项**已解除**。
 
 **T07 开工前必读**：
 - `T06/changes.md` §2.5（运营视图的四个面：计数 / 需人处置 / 停滞 / 投递计数）与
