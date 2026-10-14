@@ -30,7 +30,10 @@ import { useSession } from 'next-auth/react'
 import { AlertCircle, Bell, CheckCircle2, Compass, Inbox, Loader2, MessageSquare, Wand2 } from 'lucide-react'
 import LivingShell, { type LivingNavItem } from '@/components/living/living-shell'
 import LivingCanvas from '@/components/living/living-canvas'
+import FieldCanvas from '@/components/living/field/field-canvas'
+import FieldInspector from '@/components/living/field/field-inspector'
 import { useApiGet } from '@/hooks/use-api'
+import type { FieldGraphNode } from '@/lib/living/field'
 import {
   MIN_GOAL_LENGTH,
   assembleTenantNodes,
@@ -85,7 +88,7 @@ const NO_ORG_REASON =
 const NAV: LivingNavItem[] = [
   { key: 'now', label: 'Now', hint: '今日工作台', ready: true },
   { key: 'studio', label: 'Studio', hint: '目标编译器（自然语言 → 工作区）', ready: true },
-  { key: 'field', label: 'Field', hint: '连接场（我的匹配）', ready: true },
+  { key: 'field', label: 'Field', hint: '连接场 · 2.5D 关系网络', ready: true },
   { key: 'missions', label: 'Missions', hint: '连接任务', ready: false, reason: NO_ORG_REASON },
   { key: 'outcomes', label: 'Outcomes', hint: '成果与成本', ready: false, reason: NO_ORG_REASON },
   {
@@ -205,6 +208,8 @@ export default function LivingWorkspace() {
   const [createResult, setCreateResult] = useState<CreateResult | null>(null)
   /** 幂等键与它所属的请求体指纹（**同体复用、异体换新**）。 */
   const [attempt, setAttempt] = useState<{ sig: string; key: string } | null>(null)
+  /** P2 · Field：当前选中的网络节点（详情面板的输入）。 */
+  const [fieldSelection, setFieldSelection] = useState<FieldGraphNode | null>(null)
 
   const notifications = useApiGet<NotificationsRes>('/api/notifications')
   const chats = useApiGet<ChatCountRes>('/api/chats/unread-count')
@@ -371,7 +376,7 @@ export default function LivingWorkspace() {
     [runCreateMission],
   )
 
-  const inspector = (
+  const evidenceInspector = (
     <div className="space-y-4">
       <section>
         <h3 className="text-xs font-medium uppercase tracking-wide text-lf-text-muted">Evidence Lens · 这些数字从哪来</h3>
@@ -513,6 +518,13 @@ export default function LivingWorkspace() {
       </div>
     </div>
   )
+
+  /**
+   * P2：Field 区自带详情面板（"点选节点 → 看它的依据"是这一区的核心交互）；
+   * 其余区沿用原来的 Evidence Lens。`inspector` 只是一个 ReactNode，
+   * 所以按当前区切换即可 —— shell 不需要知道差异。
+   */
+  const inspector = activeKey === 'field' ? <FieldInspector node={fieldSelection} /> : evidenceInspector
 
   return (
     <LivingShell
@@ -674,31 +686,7 @@ export default function LivingWorkspace() {
       )}
 
       {activeKey === 'field' && (
-        <div className="space-y-4">
-          <h1 className="text-lg font-semibold">连接场</h1>
-          <p className="text-sm text-lf-text-muted">
-            这里展示你的<strong className="font-medium text-lf-text">个人匹配</strong>（真实数据）。社群内的候选与关系网络需要 ACTIVE
-            社群权限（T04/T05）。
-          </p>
-          <Loadable
-            isLoading={matches.isLoading}
-            error={matches.error}
-            empty={(matches.data?.matches?.length ?? 0) === 0}
-            emptyText="暂无匹配。没有候选时本页不会伪造匹配对象（AC-13）。"
-          >
-            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {(matches.data?.matches ?? []).map((m) => (
-                <li key={m.id} className="rounded-lf border border-lf-line bg-lf-surface p-3">
-                  <p className="text-sm">匹配 {m.id.slice(0, 8)}…</p>
-                  <p className="mt-1 text-[11px] text-lf-text-faint">
-                    {m.matchType ?? '—'}
-                    {m.createdAt ? ` · ${new Date(m.createdAt).toLocaleDateString()}` : ''}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </Loadable>
-        </div>
+        <FieldCanvas onSelectNode={setFieldSelection} selectedNodeId={fieldSelection?.id ?? null} />
       )}
     </LivingShell>
   )

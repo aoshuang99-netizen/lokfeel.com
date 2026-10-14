@@ -14,7 +14,10 @@
  *   4. 无论成功失败都在 `finally` 里删掉临时文件。
  *
  * 用法：node scripts/qa/verify-ui-invariants-mutation.mjs
- * 退出码：0 = 7 条规则全部被证明生效；1 = 有规则未被证明（视为门禁失效）。
+ * 退出码：0 = 全部规则被证明生效；1 = 有规则未被证明（视为门禁失效）。
+ *
+ * ⚠️ R8 的变异文件**必须写在 `src/components/living/` 根**（不在 `field/` 子目录内），
+ *    否则它自己就落在白名单里，规则当然不会报 —— 那样证明的是"白名单被绕过了"。
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -57,6 +60,16 @@ const MUTANTS = [
   {
     rule: 'R7',
     body: `export const Danger = ({ html }: { html: string }) => <div dangerouslySetInnerHTML={{ __html: html }} />\n`,
+  },
+  {
+    rule: 'R8',
+    // 写在 `living/` 根（不在白名单目录 `living/field/` 内）⇒ 必须被 R8 拦下。
+    body: `import { ReactFlow } from '@xyflow/react'\nexport const X = ReactFlow\n`,
+  },
+  {
+    rule: 'R9',
+    // 会进界面的字符串里带 markdown 强调标记 ⇒ 必须被 R9 拦下。
+    body: `export const note = '这是一条**重点**说明'\n`,
   },
 ]
 

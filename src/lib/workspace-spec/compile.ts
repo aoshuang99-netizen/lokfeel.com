@@ -302,7 +302,7 @@ export function compileWorkspaceSpec(rawInput: string): CompileResult {
       reason: `需服务端校验 ${a.capability} 能力（需要 ACTIVE 社群成员身份）。`,
     })),
     notes: [
-      '约束与成功判据是**从你的描述里抽出的草稿**，原文没写的（例如预算）不会被补默认值 —— 请在创建前确认。',
+      '约束与成功判据是从你的描述里抽出的草稿，原文没写的（例如预算）不会被补默认值 —— 请在创建前确认。',
       '候选区当前为空：真实候选需要 ACTIVE 社群成员身份后由服务端召回，本页不会预填。',
       ...(expiresAt ? [`期限按描述中的最短时间折算为 ${expiresAt.slice(0, 10)}。`] : []),
     ],

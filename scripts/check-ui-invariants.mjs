@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * P0 前端不变量门禁（Living Connection OS）
+ * P0/P1/P2 前端不变量门禁（Living Connection OS）
  * -----------------------------------------
  * 把设计基准里"必须成立、否则就是假功能"的几条，变成**可复跑的静态检查**：
  *
@@ -9,10 +9,16 @@
  *      —— 否则就是 AC-18 说的"空按钮"（点了没反应）
  *   R3  P0 范围内不得依赖 3D（three / @react-three/*）—— 避免"先做 3D 再做内部"
  *   R4  `ready: false` 的导航项必须写清 `reason`（不许"敬请期待"式空话）
- *   R5  被检查的文件不得出现 `mock` / `fakeData` / `dummy` 这类假数据标识
+ *   R5  被检查的文件不得出现 `mock` / `fakeData` / `dummyData` 这类假数据标识
  *   R6  【P1】不得产出保留节点类型（`type: 'agent'`）—— 它依赖 T09 Agent Runtime
  *   R7  【P1】不得使用 `dangerouslySetInnerHTML` / `eval` / `new Function` ——
  *       `WorkspaceSpec` 只能被"白名单组件"渲染，绝不能当代码执行
+ *   R8  【P2】画布库 `@xyflow/react` 只允许出现在 `src/components/living/field/`
+ *       —— P2 的设计基准明确"不强迫一个库承担所有场景"（DESIGN/02-plan.md D5），
+ *       因此把它**收敛到一个目录**：要换/要加第二套渲染方案时，影响面是可数的。
+ *   R9  【P2】会进界面的字符串 / JSX 文本里不得出现 markdown 强调标记（`**`）
+ *       —— React 把字符串**原样**渲染成文本，`**重点**` 到了屏幕上就是两个星号。
+ *       本切片踩过两次（详情面板 + 装配器的 note），所以固化成规则。
  *
  * 用法：node scripts/check-ui-invariants.mjs   （退出码 0 = 通过）
  * 环境：纯静态扫描，不连数据库、不读 .env。
@@ -24,8 +30,19 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 
-/** 被检查范围：P0/P1 新增的 Living 界面层 + `WorkspaceSpec` 契约层。 */
-const SCOPES = ['src/components/living', 'src/app/workspace', 'src/lib/workspace-spec']
+/** 被检查范围：Living 界面层（P0/P1/P2）+ `WorkspaceSpec` 契约层 + P2 装配层。 */
+const SCOPES = [
+  'src/components/living',
+  'src/app/workspace',
+  'src/lib/workspace-spec',
+  'src/lib/living',
+]
+
+/**
+ * R8 的白名单目录。**只此一处**允许引画布库。
+ * 注意：用带尾斜杠的前缀比较，避免 `field-extra/` 这类"前缀相同但不是它"的目录混进来。
+ */
+const XYFLOW_SCOPE = 'src/components/living/field/'
 
 const problems = []
 const checked = []
@@ -154,6 +171,32 @@ function checkFile(rel) {
     }
   })
 
+  // R8 · 画布库作用域收敛（白名单目录之外一律不得出现）
+  //   放在"剥离注释后"的源码上判断，避免散文里的库名（如本文件的说明）被误报。
+  //   匹配两种写法：`import ... from '@xyflow/react'` 与副作用 `import '@xyflow/react/dist/style.css'`。
+  if (!rel.startsWith(XYFLOW_SCOPE)) {
+    lines.forEach((line, i) => {
+      const mentionsLib = /['"]@xyflow\/react(?:\/[^'"]*)?['"]/.test(line)
+      const isImport = /(?:^|\s)(?:import|from)\s/.test(line) || /^\s*import\b/.test(line)
+      if (mentionsLib && isImport) {
+        problems.push(
+          `[R8] ${rel}:${i + 1} 引用了 @xyflow/react —— 该库只允许出现在 ${XYFLOW_SCOPE}（D5：不强迫一个库承担所有场景）`,
+        )
+      }
+    })
+  }
+
+  // R9 · 用户可见文本里不得出现 markdown 强调标记
+  //   注释已被剥掉 ⇒ 命中的必然是"会进界面的字符串或 JSX 文本"。
+  //   （不查反引号：模板串的界定符到处都是，会淹没真信号。）
+  lines.forEach((line, i) => {
+    if (line.includes('**')) {
+      problems.push(
+        `[R9] ${rel}:${i + 1} 字符串/JSX 文本里出现 markdown 强调标记（**）—— 会被原样渲染成星号，改用 <strong> 或调整措辞`,
+      )
+    }
+  })
+
   // R2 · 空按钮：逐个 <button ...> 开标签检查
   const btnRe = /<button\b([\s\S]*?)>/g
   let m
@@ -191,10 +234,17 @@ if (process.env.LF_INVARIANT_SELF_TEST !== '1') {
   for (const s of SCOPES) {
     const abs = path.join(ROOT, s)
     if (!fs.existsSync(abs)) continue
-    for (const f of fs.readdirSync(abs)) {
-      if (f.startsWith('__mutant-')) {
-        problems.push(`[R0] ${s}/${f} 存在残留的变异文件（自证脚本被中断所致）—— 删除它再提交`)
-      }
+    walkMutants(s, abs)
+  }
+}
+
+/** 递归找 `__mutant-*`（子目录也要查：R8 的变异会写在 `living/` 下）。 */
+function walkMutants(relDir, absDir) {
+  for (const entry of fs.readdirSync(absDir, { withFileTypes: true })) {
+    const rel = posixJoin(relDir, entry.name)
+    if (entry.isDirectory()) walkMutants(rel, path.join(absDir, entry.name))
+    else if (entry.name.startsWith('__mutant-')) {
+      problems.push(`[R0] ${rel} 存在残留的变异文件（自证脚本被中断所致）—— 删除它再提交`)
     }
   }
 }
@@ -214,5 +264,5 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `\n✅ UI 不变量全部通过（R1 无伪成功 · R2 无空按钮 · R3 无 3D 依赖 · R4 未就绪有原因 · R5 无假数据标识 · R6 无保留节点类型 · R7 无代码执行面）`,
+  `\n✅ UI 不变量全部通过（R1 无伪成功 · R2 无空按钮 · R3 无 3D 依赖 · R4 未就绪有原因 · R5 无假数据标识 · R6 无保留节点类型 · R7 无代码执行面 · R8 画布库作用域收敛 · R9 无 markdown 字面量）`,
 )

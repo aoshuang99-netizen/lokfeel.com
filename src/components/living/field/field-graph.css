@@ -1,0 +1,55 @@
+/**
+ * P2 · Field 关系网络 —— xyflow 的作用域化主题
+ *
+ * 为什么需要它：`@xyflow/react/dist/style.css` 把默认配色写在 `.react-flow`
+ * 自身的 `--xy-*-default` 变量上（实测确认，见 `node_modules/@xyflow/react/dist/style.css` 第 3 行）。
+ * 我们不引它那套预设配色，而是把每个变量**指向 `--lf-*` 令牌** ——
+ * 于是 Deep Field / Living Paper 两套主题**自动跟随**，组件层无需知道当前主题
+ * （也就不必把 `theme` 一路 prop 传下来）。
+ *
+ * ⚠️ 选择器用 `.lf-field-network .react-flow`（特异性 0,2,0）> xyflow 的
+ *    `.react-flow`（0,1,0）。因此**不要**给 `<ReactFlow colorMode>` 传值 ——
+ *    那会加上 `.react-flow.dark`（同为 0,2,0），两条规则的特异性打平，
+ *    胜负取决于样式表加载顺序，属于不可依赖的运气。
+ */
+
+.lf-field-network .react-flow {
+  --xy-background-color-default: transparent;
+  --xy-edge-stroke-default: var(--lf-line-strong);
+  --xy-edge-stroke-width-default: 1.5;
+  --xy-edge-label-background-color-default: var(--lf-surface);
+  --xy-edge-label-color-default: var(--lf-text-muted);
+  --xy-attribution-background-color-default: transparent;
+  --xy-controls-box-shadow-default: none;
+  --xy-controls-button-background-color-default: var(--lf-surface);
+  --xy-controls-button-background-color-hover-default: var(--lf-surface-2);
+  --xy-controls-button-color-default: var(--lf-text-muted);
+  --xy-controls-button-color-hover-default: var(--lf-text);
+  --xy-controls-button-border-color-default: var(--lf-line);
+  --xy-handle-background-color-default: var(--lf-line-strong);
+  --xy-handle-border-color-default: var(--lf-surface);
+  --xy-background-pattern-dots-color-default: var(--lf-line);
+  --xy-background-pattern-lines-color-default: var(--lf-line);
+}
+
+/* 归因标识必须保留（这是 xyflow 的使用条件），但压低存在感，不抢画布视觉。 */
+.lf-field-network .react-flow__attribution {
+  font-size: 9px;
+  opacity: 0.4;
+}
+.lf-field-network .react-flow__attribution a {
+  color: var(--lf-text-faint);
+}
+
+/* 选中节点的边加粗 —— 让"我在看谁"在拓扑上也有反馈，而不只是右侧面板变了。 */
+.lf-field-network .react-flow__edge.lf-edge-active .react-flow__edge-path {
+  stroke: var(--lf-signal);
+  stroke-width: 2;
+}
+
+/* 焦点可见（阻断标准 #14）：xyflow 的节点默认可聚焦，但焦点环要显式给。 */
+.lf-field-network .react-flow__node:focus-visible {
+  outline: 2px solid var(--lf-signal);
+  outline-offset: 2px;
+  border-radius: var(--lf-radius);
+}

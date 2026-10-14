@@ -426,6 +426,29 @@
 >   （**T09 Slice 1–3 已交付** ⇒ 该依赖的**内核侧**已解，只剩"把规则式提案器换成 LLM 提案器"这一处接线。）
 > - 前端 **P2**（Field 2.5D 关系网络 → 引 `@xyflow/react`）/ **P3**（首页 3D，且**首屏文案与登录入口必须独立于 3D**）待续。
 >
+> **前端线 · P2 Slice 1（Field 2.5D 关系网络）已落地（2026-10-14，⚠️ 未发版，带免构建标记）** —— 记录 `DESIGN/05-changes-p2.md`。
+> - Field 从 `/api/matches` 列表升级为 **2.5D 关系网络**（`@xyflow/react@12.12.0`）：**半径 = 关系强度**，
+>   唯一来源是服务端算好的 `matchedTokens`（双向命中词元数，**不是概率/百分比**），在本图候选内 min-max 归一化 →
+>   半径/缩放/不透明度；`ringPosition()` 取整 ⇒ 布局**可断言**（断言"两次装配深度相等 + 坐标皆整数"）。
+>   **刻意不用**随机抖动/力导向 —— "看起来在动"与"数据变了"长得一样，属**假状态**。
+> - 五组服务端取值域**逐字镜像 + 编译期双向等价守卫**（`AssertTrue<Exact<镜像,服务端>>`，任一侧增删取值即 `tsc` 失败）；
+>   并**升级为真值比对**：测试直接跑 `RECALL_GATES` / `CONNECTION_BUCKETS`+`BUCKET_LABELS` /
+>   `deriveProposalState()` 全可达输出 / `evaluateIntroducibility()`，断言镜像与其一致（不只是钉字符串）。
+> - **画布可降级**：`dynamic(ssr:false)` + class 错误边界失败 → **自动回落列表**；列表与图**同源**同一份 `FieldGraph`，
+>   且列表同时是 **<1024px 的默认形态**（阻断标准 #12/#13/#14 同源纪律）。
+> - **两条"不编造"**：① 节点**不可拖动**（位置编码数据；拖动会让"位置"同时表示偏好与强度）；
+>   ② 提案节点走**独立外环、不连向任何候选** —— 服务端运营投影**刻意不含**双方身份，硬连就是编造关系。
+> - **门禁扩到 R1–R9**：+**R8**（`@xyflow/react` 只允许出现在 `src/components/living/field/`，D5「不强迫一个库承担所有场景」）
+>   / +**R9**（JSX 文本与字符串里禁 markdown 字面量 —— **本切片踩了两次**）；`SCOPES` 纳入 `src/lib/living`；R0 改**递归**；
+>   变异自证 **9/9**（R8 的变异必须写在白名单**之外**才成立）。
+> - 🐛 **抓到 5 个真问题**：① 7 处 **JSX 可见文本**里混进 markdown（会渲染成星号）→ 加 R9；
+>   ② 装配器 note / 空候选文案同类 → 同修；③ **P1 遗留同类缺陷** `workspace-spec/compile.ts:305`（**已修**）；
+>   ④ 列表与图把提案**原始码**直接秀给用户（`CONSENT_PENDING · PENDING_CONSENT`）→ 改走文案表；
+>   ⑤ **方法论**：首次 `tsc` 与接线**并行**启动 ⇒ 那次绿只覆盖"改之前"的树，必须在改动落地后**重跑**。
+> - ⚠️ 首次在沙箱内装 npm 包遇 `CODEBUDDY_BROKER_DENY`（`reify` 的 `mkdir` 被拦）→ 可行解 =
+>   `--package-lock-only` + `/tmp` 空目录安装 + 按 lock 精确复制（**含嵌套依赖**）；lock **只增 177 行 / 0 删除**。
+> - P2 剩余三项：② Consent Gate 逐字段披露 / ③ Outcome Observatory 时间轴 / ④ Agent 区（**先解除 R6**）。
+>
 > **前端线 · P1 收口（2026-10-13，⚠️ 未发版，带免构建标记）** —— 记录 `DESIGN/04-changes-p1.md` §8。
 > - `consent` / `action` / `outcome` 三类节点**接上真实数据**（`/connections/proposals` · `/workflow/jobs` · `/outcomes`）；
 >   装配器 `src/lib/workspace-spec/assemble.ts` **纯函数、零 IO**；来源 403/失败 → **不产节点**（不产"空节点"冒充"没有数据"）。
@@ -550,6 +573,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T09 · Agent Runtime **Slice 3**（真实 Provider + 对账 + 对抗/预算夹具，**未发版**） | `tsc --noEmit` **0 error**（2m27s） | `tests/agents` **135**（**新增 3 套 79 例**：真实 Provider 32 / 对抗注入 26 / 预算 21）· 全量 **1377 → 1456**（73 → **76** 套） | ESLint **0/0**（**目录级**：`src/lib/agent` · `src/lib/agents` · `tests/agents`）· **A5 新增后** `check:agent-invariants` + `verify:agent-invariants` **双通过**（A1–A5 变异各被捕获）· `check:ui-invariants` 通过 · `check:script-decls` **66/0** | **真实 `OpenAIProvider`**：🔴 实现落在**服务层** `src/lib/agents/provider-openai.ts`，内核只留**纯环境解码** `resolveProviderConfig()`，并给门禁**新增 A5（内核不得出现网络调用）** —— A2 只挡数据库，挡不住网络，不立 A5 则"内核无 IO"退化成口号。失败**映射分开**（401/403 凭据 · 408/504 超时 · 其余请求错）；🔴 **缺 usage 即拒绝**（记 0 = 账本少算，不是免费）· **`finish_reason=length` 即拒绝** · **不传 `response_format`** · 非 http(s) 端点拒绝 · **凭据只出现在鉴权头**（有断言）。**成本对账** `agent-reconcile.mjs`（+ `emit-agent-usage.mts` / `seed-t09-agent.mts`）：原始表 SQL **逐次**复算归因 = **187 通过 / 0 不一致** + **变异自证 15/15**（含"改单价必须让结果变"）+ 期次过滤承重（7/8）+ 诚实条款（`realCallsEnabled=false` ⇒ 无 `OPENAI` 行）。**对抗夹具**：闭合标签逃逸 6 种写法（含零宽）+ 注入语料 8 条 + 权限/披露/审批三组"行为不变"，**每条都配负向对照**。**预算夹具**：判据边界（额度 `>` 才拒 / 次数 `>=` 即停，**刻意不同**）+ `BLOCKED_QUOTA` 时 **provider 零调用** + 账本零新增 A/B 对照 + 期为过滤承重；🔴 为此给 `createAgentRun`/`agentUsage` 加 **`quota`/`price` 注入点**（默认额度 500 分 ≈ 11 万次调用，不注入就无法端到端跑出限额）。🐛 **本轮抓到 3 个真问题**：① **对账脚本有一条恒真断言**（`false ⇒ 无 OPENAI 行` 挡不住"把 false 改成 true"）——**由变异自证抓出，15 个变异里唯一漏网的**，改为"期望值须显式给出（`--expect-real-calls`）"；② 服务层预算是按**技能 `costProfile` 预估**（84,000）判的，不是按"上次实际花了多少"（4,500）—— **差一个数量级**，易被误读成"额度够却不给跑"，已钉成断言；③ 夹具只删主体不删**幂等记录** → 重放抛 `Idempotent replay target no longer exists`。另修 2 处**断言写得太字面**（"整段不含 `</untrusted_data>`" 忽略了包裹器本就以它结尾；负向对照的字面量计数让大写/空格/零宽三种变体**假通过**）。详见 `T09/slice-3.md`。**未做**：真实端点连通性（沙箱探不了外网，**发版前必验**）· 执行器 · 组织级真实额度配置 · AC-03 的 Agent 上下文下游未接线 |
 | T09 Slice 3 · 🔴 **通用教训** | **「A ⇒ B」式断言必须有人测 `not A`** | 否则只挡一半，而漏掉的那一半（**把前提改掉**）恰是攻击者最省力的一步 | 变异自证的价值不在"检查代码对不对"，而在**检查断言有没有牙齿**。另一条：只删主体数据不删**幂等记录/索引** = 半个清理，重放时目标不存在 |
 | 前端 P1 收口（真实数据装配 + Mission 接线，**未发版**） | `tsc --noEmit` **0 error** | `tests/workspace-spec` **3 套 68 例**（2 套 26 例 → 3 套 68 例）· 全量 **76 套 1456 → 77 套 1498** | ESLint **0/0**（`src/components/living` · `src/app/workspace` · `src/lib/workspace-spec` · `tests/workspace-spec` · 2 个新脚本）· `check:ui-invariants` **11 文件通过（R1–R7）** · `verify:ui-invariants` 7/7 · `check:script-decls` **67/0** | **新增** `src/lib/workspace-spec/assemble.ts`（纯函数装配器，零 IO：`proposals→consent` / `jobs→action` / `outcomes→outcome`，含"来源不可用不产节点""截断可见""不静默丢"）+ `missionDraftFromSpec`（缺必填项时**恒 `body:null`**，不补默认值）+ Living Workspace 接 3 个真实读端点并合并进画布 + `create-mission` 真发 `POST /api/v1/missions`（幂等键同体复用/异体换新、只认服务端返回 id）+ `LivingCanvas` 新增 `blockedActions`（**由数据本身**决定的阻断）。**契约 1.0 → 1.1**：三处展示枚举改为**服务端枚举镜像** + 编译期漂移守卫。**漂移守卫变异自证** `verify:workspace-drift` **13/13**（基线 exit 0 → 三次真实变异各被 `tsc` 捕获、`TS2344` 精确落在守卫行 → 还原逐字一致）。**隔离库端到端** `verify:p1:e2e` **55/0**（真实 HTTP 全链路：幂等重放不产生第二条 · 缺键 400 · MEMBER 403 · 加入→意图→提案→双方同意→介绍→成果→对手方确认，再用**真实载荷**跑装配器并要求过 `WorkspaceSpecSchema`）。🐛 **5 个真问题**：① 三处枚举全错（详见 §未闭合前端线）；② `GET /api/v1/org` 信封**读错一层** ⇒ 能力集恒空 ⇒ 全部租户动作永久禁用（从 P0 起既有，**未发版所以线上无影响**）；③ 草稿≠可创建体；④ `/intents`、`/connections/proposals` 的 `Idempotency-Key` 同必需；⑤ 契约版本号硬编码在 T09 测试夹具 ⇒ 升 `1.1` 后 **7 例误红**（`typeof null === 'object'` 让报错指向"类型坏了"，具误导性）→ 夹具改用导出常量 **且** 在契约测试里钉住版本值。 |
+| 前端 P2 · Slice 1（Field → **2.5D 关系网络**，**未发版**） | `tsc --noEmit` **0 error**（全改动落地后**重跑**；🔴 首次绿与接线**并行**⇒ 只覆盖"改之前"的树，见下） | `tests/living` **2 套 51 例**（新）· 全量 **77 套 1498 → 79 套 1549**（+2 套 / +51 例，**既有零失败**） | ESLint **0/0**（`src/lib/living` · `src/components/living/field` · `src/app/workspace` · `src/lib/workspace-spec`）· `check:ui-invariants` **18 文件通过（R1–R9）** · `verify:ui-invariants` **9/9** · `check:script-decls` **67/0** | **新增** `src/lib/living/field/{types,graph,index}.ts`（五组服务端取值域**镜像 + 编译期漂移守卫**；**装配器纯函数零 IO**）+ `src/components/living/field/*`（`field-graph.tsx` 是**唯一**引 `@xyflow/react` 的文件 / 列表兜底 / 容器 / 只读详情）+ Field 段接线 + `inspector` 按区切换。**门禁扩到 R1–R9**：+**R8**（画布库作用域收敛，D5「不强迫一个库承担所有场景」）/ +**R9**（JSX 文本与字符串禁 markdown 字面量 —— **本切片踩了两次**）；`SCOPES` 纳入 `src/lib/living`；R0 改**递归**。镜像测试**不只钉字符串**：直接跑服务端运行期数据与纯函数做**真值比对**（`RECALL_GATES` / `CONNECTION_BUCKETS`+`BUCKET_LABELS` / `deriveProposalState()` 全可达输出 / `evaluateIntroducibility()`）。**2.5D = 可验证映射**（深度 z = 关系强度 ← `matchedTokens`；候选内 min-max → 半径/缩放/不透明度；坐标取整 ⇒ 布局**可断言**；**刻意不用**随机/力导向）。**画布可降级**（`dynamic(ssr:false)` + class 错误边界 → 自动回落列表；列表与图**同源**同一份 `FieldGraph`；列表同时是 <1024px 默认形态）。**两条不编造**：节点不可拖动（位置编码数据）/ 提案走独立外环**不连候选**（运营投影刻意不含双方身份）。🐛 **5 个真问题**：① 7 处 **JSX 可见文本**混进 markdown（会渲染成星号）→ 加 R9；② 装配器 note / 空候选文案同类；③ **P1 遗留**同类缺陷 `workspace-spec/compile.ts:305`（**已修**，从 P1 起就在代码里、未发版故线上无影响）；④ 列表与图把提案**原始码**直接秀给用户（`CONSENT_PENDING · PENDING_CONSENT`）→ 改走文案表；⑤ **方法论**：`tsc` 与接线并行 ⇒ 首次 `exit 0` **无意义**，必须重跑（同 P1 §5.1「我没看到它失败 ≠ 它没失败」）。⚠️ 沙箱装包遇 `CODEBUDDY_BROKER_DENY`（`reify` 的 `mkdir` 被拦，**网络是通的**）→ 可行解 = `--package-lock-only` + `/tmp` 空目录安装 + 按 lock 精确复制（**含嵌套依赖**：`zustand@4.5.7` 落 `@xyflow/react/node_modules/`）；lock **只增 177 行 / 0 删除**。 |
 
 
 > **T04 的零 DDL 结论可用一条命令复核**（Prisma 7 参数为 `--from-schema/--to-schema`）：
