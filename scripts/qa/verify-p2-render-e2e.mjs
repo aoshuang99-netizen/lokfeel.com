@@ -766,6 +766,20 @@ async function main() {
 
     const approved = await waitText(page, '裁决：已批准', 40_000)
     ck('🔴 点击批准 → 服务端接受 → 界面出现「裁决：已批准」', approved, approved ? '' : (await textOf(page)).slice(-300))
+    // 🔴 裁决 toast 先到、run 列表 refetch **后到** —— 不等就把"refetch 还在路上"
+    //    误判成"状态没变"。实测形态：断言抓到的文本里仍是旧标签「等待人工批准」，
+    //    而紧随其后拍的截图（05-agents-approved）里已经是「已批准」——产品行为正确，
+    //    是断言抢跑（与文件头纪律 ⑤ 同一类故障，修法同源：等待，而不是放宽断言）。
+    //    判据用"旧标签消失"，与下面断言的"新标签出现"构成正反两半。
+    const labelFlipped = await page
+      .waitForFunction(
+        () => !(document.body.innerText || '').includes('等待人工批准'),
+        undefined,
+        { timeout: 30_000 },
+      )
+      .then(() => true)
+      .catch(() => false)
+    ck('run 列表 refetch 完成（旧状态标签「等待人工批准」已消失）', labelFlipped)
     const afterApprove = await textOf(page)
     ck('审批结果文案来自 `useLivingPost`（「裁决已写入」）', afterApprove.includes('裁决已写入'))
     ck('状态标签由「等待人工批准」变为「已批准」', afterApprove.includes('已批准') && !afterApprove.includes('等待人工批准'))
