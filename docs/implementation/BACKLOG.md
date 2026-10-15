@@ -261,7 +261,7 @@
 - **验收**：**AC-08 / AC-20**
 - **交付**：意图抽取 / 介绍草稿 / 协调建议 三类技能 + 成本归集
 - **已拍板**：**TS 内编排**（不引 Python/LangGraph）。判据是平台约束 —— Netlify 免费计划无常驻进程，跑不了 LangGraph 服务；替代方案（TS 内用既有编排原语）无此限制。
-- **进度**：✅ Slice 1 纯内核（`T09/slice-1.md`）→ ✅ Slice 2 持久化 + HTTP + 审批（`T09/slice-2.md`）→ ✅ Slice 3 真实 Provider + 成本对账 + 对抗/预算夹具（`T09/slice-3.md`）→ ✅ Slice 4 **执行器落地**（`T09/slice-4.md`；C7 `AgentExecution`）→ ✅ Slice 5 **组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证**（`T09/slice-5.md`）——**五者均未发版**；🔴 执行效果**当前只是内部回执**（收件人恒为发起人），**对外送达**待接入 target 身份 + T05 披露出口；✅ **组织级额度已接线**（方案 → `PLAN_LIMITS` → `AgentQuota`，**不新造第二张额度表**；FREE 档逐字沿用旧 `DEFAULT_QUOTA` ⇒ 回归面为零）；✅ **真实端点连通性：网络侧与端点身份已实证**（本机经 `127.0.0.1:10808` → HTTP 401 + OpenAI 形状 error）、**凭据侧 `BLOCKED`**（无 `OPENAI_API_KEY`，**不得报绿**）—— 🔴 生产侧仍须在部署环境重跑 `verify:agent:connectivity`
+- **进度**：✅ Slice 1 纯内核（`T09/slice-1.md`）→ ✅ Slice 2 持久化 + HTTP + 审批（`T09/slice-2.md`）→ ✅ Slice 3 真实 Provider + 成本对账 + 对抗/预算夹具（`T09/slice-3.md`）→ ✅ Slice 4 **执行器落地**（`T09/slice-4.md`；C7 `AgentExecution`）→ ✅ Slice 5 **组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证**（`T09/slice-5.md`）→ ✅ Slice 6 **对外送达（收件人 = 创建时固定的对手方）+ 生产侧连通性入口 + 对账端到端实跑**（`T09/slice-6.md`；C8 `AgentDeliveryTarget`）——**六者均未发版**；✅ **对外送达已接线**（内核**两道门**：`planExecution()` 管"动作能不能发生"、`planOutboundDelivery()` 管"能不能送到目标"；目标身份在**创建时**由服务端固定并被那次批准覆盖，执行时只复验；T05「撤销即刻生效」在**投递侧**有落点 —— 授权归零或被收窄一律 **409**，且不留副作用；送达的站内信**不含任何档案字段**，披露出口仍只有页面投影）；✅ **组织级额度已接线**（方案 → `PLAN_LIMITS` → `AgentQuota`，**不新造第二张额度表**；FREE 档逐字沿用旧 `DEFAULT_QUOTA` ⇒ 回归面为零）；✅ **真实端点连通性**：本机侧网络与端点身份已实证、凭据侧 `BLOCKED`；**生产侧**已交付入口 `GET /api/v1/agents/diagnostics/connectivity` + `npm run verify:agent:connectivity:server` —— 🔴 **尚未在生产跑过**，发版后必须实跑一次才算闭合；✅ **`agent-reconcile.mjs` 端到端实跑**（隔离库全链路：对账 **217 通过 / 0 不一致**，变异自证 **15/15**）
 - **铁律**：**LLM 不做最终权限判断**；Agent 不得自主发送高风险消息
 
 ### T10 · Community Bridge — 跨社群授权与连接
@@ -414,12 +414,20 @@
 >
 > ✅ **T08 Slice 4 已落地（2026-10-14，未发版）**：AC-18 渲染层取证 `verify:ac18:console`（**75/0**）
 > + `check:ui-invariants` 扫描面纳入 console（首扫 11 处真实违规已修）+ 自证覆盖面检查。
-> 下一步：**T09 Agent Runtime 收尾**（TS 内编排**已拍板**）—— **五切片**已交付未发版；
+> 下一步：**T09 Agent Runtime 收尾**（TS 内编排**已拍板**）—— **六切片**已交付未发版；
 > **Slice 5（2026-10-15）已完成三处接线**：① 组织级额度派生（方案 → `PLAN_LIMITS` → `AgentQuota`，
 > **不新造第二张额度表**）② 第 7 屏 Agents（导航 `ready:true` + 直访 200 + AC-18 七屏 **84/0**）
 > ③ 真实端点连通性取证 `verify:agent:connectivity`（三层分离：路由 / 网络 / 身份 **PASS** · 凭据 **BLOCKED**）。
-> 剩：**对外送达**（需 target 身份 + T05 披露出口；当前执行只做内部回执）、
-> **生产侧连通性复验**（必须在部署环境重跑 —— 本机验绿只证明「本机出口能到」，不证明 Netlify 函数能到）。
+> **Slice 6（2026-10-15）已完成用户点选的三项**（`T09/slice-6.md`）：
+> ① **对外送达** —— `INTRO_DRAFT` 的收件人由"发起人"改为**创建时固定的对手方**（C8 `AgentDeliveryTarget`）；
+>    内核**两道门**分工（`planExecution()` 管动作 / `planOutboundDelivery()` 管送达），
+>    T05「撤销即刻生效」在**投递侧**有落点（授权归零或收窄 ⇒ **409** 且不留副作用）；
+>    送达的站内信**不含任何档案字段**（T06 纪律不变）—— 故执行效果**不再只是内部回执**；
+> ② **生产侧连通性入口** `GET /api/v1/agents/diagnostics/connectivity` +
+>    `npm run verify:agent:connectivity:server`（五段报告 / 不泄漏密钥 / 不自相矛盾）；
+> ③ **`agent-reconcile.mjs` 端到端实跑**（隔离库全链路：**217/0** + 变异自证 **15/15**）。
+> 剩：🔴 **生产侧连通性尚未在生产跑过**（发版后必须实跑一次才算闭合）；`EMAIL` 渠道未做；
+> 规则式提案器换 LLM（前端 `agent` 节点的能力升级，非接线缺口）。
 
 > **前端线《Living Connection OS》P0 + P1 已落地（⚠️ 未发版，带免构建标记）**
 > —— 与上面 T02–T08 的**后端线**并行推进（前端线不占用发布窗口）。
@@ -437,7 +445,7 @@
 >   `SCOPES` 纳入 `src/lib/workspace-spec`；新增**变异自证**脚本 `npm run verify:ui-invariants`
 >   （7/7 规则逐条证明生效 + 负向对照）。
 > - 🔴 **前端 P1 的 `agent` 节点 / Agent 屏与后端 T09 是同一条依赖**：§6-⑥ 的技术栈**已拍板**（TS 内编排，判据见该行）。
->   （**T09 Slice 1–5 已交付** ⇒ 该依赖**三侧全解**：内核侧、执行侧、**第 7 屏 Agents**（Slice 5 已接线）；只剩"把规则式提案器换成 LLM 提案器"—— 第 7 屏已于 Slice 5 接线，故此处**只剩「提案器换 LLM」这一处能力升级**，不再是接线缺口。）
+>   （**T09 Slice 1–6 已交付** ⇒ 该依赖**三侧全解**：内核侧、执行侧、**第 7 屏 Agents**（Slice 5 已接线）；只剩"把规则式提案器换成 LLM 提案器"—— 第 7 屏已于 Slice 5 接线，故此处**只剩「提案器换 LLM」这一处能力升级**，不再是接线缺口。）
 > - 前端 **P2**（Field 2.5D 关系网络 → 引 `@xyflow/react`）/ **P3**（首页 3D，且**首屏文案与登录入口必须独立于 3D**）待续。
 >
 > **前端线 · P2 Slice 1（Field 2.5D 关系网络）已落地（2026-10-14，⚠️ 未发版，带免构建标记）** —— 记录 `DESIGN/05-changes-p2.md`。

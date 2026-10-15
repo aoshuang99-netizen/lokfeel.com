@@ -23,15 +23,18 @@ import {
   canTransition,
   isSkillKey,
   planExecution,
+  planOutboundDelivery,
   type AgentRunStatus,
   type DegradeReason,
   type ExecutionChannel,
+  type ExecutionGateCode,
   type ExecutionKind,
-  type ExecutionRefusalCode,
   type InjectionSignal,
   type ProviderKind,
   type RiskLevel,
 } from '@/lib/agent'
+// ⚠️ **只**为行形状而 import 类型：`dto.ts` 不碰数据库，也不该知道目标怎么解析。
+import type { DeliveryTargetRow } from './delivery-target'
 
 // ═══════════════════════════════════════════════════════════
 // 内核 ↔ 数据库 的枚举映射
@@ -130,6 +133,13 @@ export interface AgentRunRow {
   calls?: readonly AgentCallRow[]
   approval?: AgentApprovalRow | null
   /**
+   * 对外送达的目标（Slice 6）。
+   *
+   * ⚠️ 它是**创建时**落库的事实（`AgentDeliveryTarget`，一条运行最多一行）。
+   *    这里只投影"送给谁"与"依据的授权快照"；**是否还能送**由 `executionOf()` 经内核判据算。
+   */
+  deliveryTarget?: DeliveryTargetRow | null
+  /**
    * 执行记录（Slice 4 起）。
    *
    * ⚠️ 命名注意：**行**上的 `execution` 是 Prisma 关系（"执行发生了吗/怎么发生的"），
@@ -170,15 +180,23 @@ export interface AgentApprovalDto {
  * 「能不能执行」——只有一个答案，且答案永远可核对。
  *
  * 🔴 与 Slice 2 的区别：那时这里是**写死**的 `available:false`（"本切片没有执行器"）。
- *    现在它由内核的 `planExecution()` **算出来** —— 于是答案只有一个来源，
- *    且新增执行器时**不需要**改这里（改的是内核真相表）。
+ *    现在它由内核**两道门**算出来（`planExecution()` + `planOutboundDelivery()`）——
+ *    于是答案只有一个来源，且新增执行器/新增送达目标时**不需要**改这里。
+ *
+ * ⚠️ 为什么两道门的结果并进**同一个**字段：界面上只有"执行"这一个按钮。
+ *    若对外送达那一道失败却不反映在这里，就会出现"界面说能执行、点了必然 409"
+ *    的空按钮 —— 正是 AC-18 要挡的东西。
  */
 export interface AgentExecutionAvailability {
   available: boolean
   /** `available:false` 时**必须**有原因（前端据此禁用按钮，而不是留一个点了必然失败的入口）。 */
   reason: string
-  /** 可判定的原因码（`available:true` 时为 null）—— 前端与测试据此分支，不解析文案。 */
-  code: ExecutionRefusalCode | null
+  /**
+   * 可判定的原因码（`available:true` 时为 null）—— 前端与测试据此分支，不解析文案。
+   * 取值域 = 两道门的并集（`EXECUTION_GATE_CODES`）：前者答"能不能跑"，
+   * 后者答"能不能送到目标"（`NO_TARGET` / `DISCLOSURE_*`）。
+   */
+  code: ExecutionGateCode | null
   /** 执行效果与渠道（`available:true` 时给出，供 UI 说明"点了会发生什么"）。 */
   kind: ExecutionKind | null
   channel: ExecutionChannel | null
@@ -194,7 +212,10 @@ export interface AgentExecutionDto {
   id: string
   kind: ExecutionKind
   channel: ExecutionChannel
-  /** 收件人（当前恒为发起人 —— 服务端决定，见内核 `ExecutionPlan.recipient`）。 */
+  /**
+   * 收件人（**服务端决定**，见内核 `ExecutionPlan.recipient` 与 `AgentDeliveryTarget`）：
+   * 计划收件人为发起人时是发起人，为对手方时是**创建时**固定的那个目标身份。
+   */
   recipientId: string
   /** T06 投递归宿的 `NotificationDelivery.id`（软引用）。 */
   deliveryId: string | null
@@ -230,6 +251,13 @@ export interface AgentRunDto {
   execution: AgentExecutionAvailability
   /** 「执行实际发生了什么」——`null` = 还没执行过。 */
   executionRecord: AgentExecutionDto | null
+  /**
+   * 这条运行的对外送达目标（`null` = 执行计划不涉及对外送达，或创建时未给出目标）。
+   *
+   * 🔴 只下发**目标身份**，不下发"授权快照"：后者是内部判据的输入，
+   *    对外只需要回答"这条产出送给谁"，多下发一个数组就多一处会漂移的对外承诺。
+   */
+  deliveryTarget: { targetUserId: string } | null
   /**
    * 当前**观察者**能否批准 / 驳回这条运行。
    *
@@ -309,7 +337,11 @@ function toApprovalDto(row: AgentApprovalRow | null | undefined): AgentApprovalD
  *   - `hasApprovedDecision` 来自**裁决关系**（只增不改的事件表）。
  *     纵深防御：状态列可以被人工改坏，裁决表不会。
  */
-function executionOf(row: AgentRunRow, status: AgentRunStatus): AgentExecutionAvailability {
+function executionOf(
+  row: AgentRunRow,
+  status: AgentRunStatus,
+  viewer: AgentRunViewer,
+): AgentExecutionAvailability {
   // 技能键来自数据库（TEXT），可能存在"映射表之外的值"（手工改库 / TS↔Prisma 漂移）。
   // 那种情况下**必须显式不可执行**，而不是套一个默认计划 —— 否则一个脏 skill 会拿到执行器。
   const skill = isSkillKey(row.skill) ? row.skill : null
@@ -335,6 +367,28 @@ function executionOf(row: AgentRunRow, status: AgentRunStatus): AgentExecutionAv
       channel: null,
     }
   }
+
+  // 🔴 第二道门：**只**对收件人是对手方的计划生效（内核里 `REQUESTER` 恒放行）。
+  //    与执行器用的是**同一对**纯函数 + 同一份取值来源（服务端算好的 `viewer.outbound`）——
+  //    所以"界面说能执行、执行器说不给执行"在结构上不存在。
+  //    ⚠️ 缺省 `viewer.outbound`（未传）会被读成"没有目标" ⇒ 拒绝。
+  //    **默认拒绝**是刻意的：忘传的后果是"按钮不可点"，而不是"点了一个会 403 的东西"。
+  const outbound = planOutboundDelivery({
+    recipient: decision.plan.recipient,
+    targetUserId: viewer.outbound?.targetUserId ?? null,
+    authorizedFieldKeys: viewer.outbound?.authorizedFieldKeys ?? [],
+    visibleFieldKeys: viewer.outbound?.visibleFieldKeys ?? [],
+  })
+  if (!outbound.deliverable) {
+    return {
+      available: false,
+      reason: outbound.reason,
+      code: outbound.code,
+      kind: null,
+      channel: null,
+    }
+  }
+
   return {
     available: true,
     reason: decision.plan.description,
@@ -342,6 +396,13 @@ function executionOf(row: AgentRunRow, status: AgentRunStatus): AgentExecutionAv
     kind: decision.plan.kind,
     channel: decision.plan.channel,
   }
+}
+
+/** 送达目标的对外投影（`null` = 这条运行没有对外送达这一步）。 */
+function toDeliveryTargetDto(row: AgentRunRow): { targetUserId: string } | null {
+  const t = row.deliveryTarget
+  if (!t) return null
+  return { targetUserId: t.targetUserId }
 }
 
 export function toExecutionDto(row: AgentExecutionRow | null | undefined): AgentExecutionDto | null {
@@ -366,6 +427,19 @@ export function toExecutionDto(row: AgentExecutionRow | null | undefined): Agent
 export interface AgentRunViewer {
   /** 观察者是否持有 `agent.approve`（由服务层判）。缺省 = 不持有（默认拒绝）。 */
   canDecide?: boolean
+  /**
+   * 对外送达闸门的**输入**（由服务层取好：目标身份 + 授权快照 + 实时可见字段）。
+   *
+   * ⚠️ 与 `canDecide` 同一取向：DTO **不查库**、也不自己算披露 —— 它只把内核判据喂饱。
+   *    缺省（undefined）= "这条运行没有对外送达这一步"（等价于内核判据里的 `REQUESTER` 分支）；
+   *    若运行**确实**要送达却漏传，内核会以 `NO_TARGET` 拒绝 —— 界面少一个按钮，
+   *    而不是多一个必然失败的按钮。
+   */
+  outbound?: {
+    targetUserId: string | null
+    authorizedFieldKeys: readonly string[]
+    visibleFieldKeys: readonly string[]
+  }
 }
 
 export function toAgentRunDto(row: AgentRunRow, viewer: AgentRunViewer = {}): AgentRunDto {
@@ -392,8 +466,9 @@ export function toAgentRunDto(row: AgentRunRow, viewer: AgentRunViewer = {}): Ag
     costMicroCents: row.costMicroCents,
     calls: toCallDtos(row.calls ?? []),
     approval: toApprovalDto(row.approval),
-    execution: executionOf(row, status),
+    execution: executionOf(row, status, viewer),
     executionRecord: toExecutionDto(row.execution),
+    deliveryTarget: toDeliveryTargetDto(row),
     canApprove: decidable && canTransition(status, 'APPROVED'),
     canReject: decidable && canTransition(status, 'REJECTED'),
     createdAt: row.createdAt.toISOString(),
@@ -435,6 +510,7 @@ export function toAgentRunSummaryDto(
     approval: full.approval,
     execution: full.execution,
     executionRecord: full.executionRecord,
+    deliveryTarget: full.deliveryTarget,
     canApprove: full.canApprove,
     canReject: full.canReject,
     createdAt: full.createdAt,

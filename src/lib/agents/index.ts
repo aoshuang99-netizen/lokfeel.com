@@ -49,6 +49,31 @@ export {
   type ExecuteAgentRunResult,
 } from './executor'
 
+// ── 对外送达（Slice 6）：目标身份在**创建时**固定，披露依据在**执行时**复验 ──
+export {
+  DELIVERY_PROFILE_AUDIENCE,
+  decodeAuthorizedFieldKeys,
+  loadOutboundGate,
+  loadOutboundGates,
+  normalizeDeliveryInput,
+  resolveDeliveryTarget,
+  skillSupportsOutboundDelivery,
+  toDeliveryTargetRow,
+  type DeliveryTargetRow,
+  type OutboundGate,
+  type ResolvedDeliveryTarget,
+} from './delivery-target'
+
+// ── 服务端出口自检（生产侧连通性可复验；只读 / 不计费 / 不落库）──
+export {
+  probeAgentConnectivity,
+  summarizeConnectivity,
+  type ConnectivityLayer,
+  type ConnectivityReport,
+  type ProbeOptions,
+  type ProbeVerdict,
+} from './connectivity'
+
 // ── Provider（真实 HTTP 实现 —— IO 归服务层，内核只留纯判据）──
 export {
   createOpenAIProvider,

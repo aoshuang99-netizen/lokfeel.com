@@ -89,20 +89,32 @@ export {
 } from './approval'
 
 // ── 执行计划（"能不能执行 / 效果是什么"的唯一判据；真正的 IO 在服务层） ──
+//
+// 两道门同处一个模块，因为它们必须**一起**被读：`planExecution()` 决定"能不能跑"，
+// `planOutboundDelivery()` 决定"能不能送到目标"。合成一个函数会把权限/状态/披露
+// 三类失败压成同一个现象；拆到两个文件又会让人只改一处。
 export {
   EXECUTION_CHANNELS,
+  EXECUTION_GATE_CODES,
   EXECUTION_KINDS,
   EXECUTION_PLANS,
+  EXECUTION_RECIPIENTS,
   EXECUTION_REFUSAL_CODES,
+  OUTBOUND_REFUSAL_CODES,
   agentExecutionDedupeKey,
   executionPlanOf,
   planExecution,
+  planOutboundDelivery,
   skillsWithoutExecutionPlan,
   type ExecutionChannel,
   type ExecutionDecision,
+  type ExecutionGateCode,
   type ExecutionKind,
   type ExecutionPlan,
+  type ExecutionRecipient,
   type ExecutionRefusalCode,
+  type OutboundDeliveryDecision,
+  type OutboundRefusalCode,
 } from './execution'
 
 // ── Provider（接口 + 纯环境解码；真实 HTTP 实现在服务层 —— 见 A5） ──

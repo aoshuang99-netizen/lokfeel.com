@@ -70,6 +70,7 @@
     "check:agent-invariants": "node scripts/check-agent-invariants.mjs",
     "verify:agent-invariants": "node scripts/check-agent-invariants.mjs --self-test",
     "verify:agent:connectivity": "npx tsx scripts/qa/verify-agent-connectivity.mts",
+    "verify:agent:connectivity:server": "node scripts/qa/verify-agent-connectivity-server.mjs",
     "verify:turn:candidate": "node scripts/qa/verify-turn-candidate.mjs",
     "verify:turn:prod": "node scripts/qa/verify-turn-prod.mjs",
     "verify:t06:prod": "node scripts/qa/verify-t06-prod.mjs",

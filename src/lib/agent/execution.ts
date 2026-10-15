@@ -16,14 +16,23 @@
  *    （`src/lib/agents/executor.ts`）。内核只做**判据** —— 这样"能不能执行"可以被离线单测，
  *    而"执行做了什么"必须去服务层读代码/看证据。
  *
- * ── 本切片的效果（`RECEIPT`）：诚实边界 ──────────────────────────────────
- *   本切片落地的执行效果是**内部回执**：经 T06 的统一投递出口
- *   （`deliverNotification()`）给**发起人**发一条站内信。
- *   🔴 它**不是**"把介绍消息发给对手方"。原因不是偷懒，而是**没有收件人身份**：
- *      `AgentRun` 只存 `subjectLabel` / `counterpartLabel` 这类**标签**（刻意的，见 agent.prisma 文件头），
- *      而"把 A 介绍给谁"这件事必须在**创建时**就由服务端确定、并被**那次批准**覆盖 ——
- *      在执行时才由调用方传入收件人，等于允许"批准的是 A、发出去的是 B"。
- *   因此对外送达要等下一片（需要 target 身份 + T05 的 `discloseSubject()` 出口）。
+ * ── 两道门的分工（Slice 6 起）──────────────────────────────────────────
+ *   ① `planExecution()`          ：**动作**能不能发生（技能有执行器 / 状态机 / 真实裁决）
+ *   ② `planOutboundDelivery()`   ：**送到目标**这一步能不能发生（目标身份 / 披露依据）
+ *   两者都是纯函数、都只在放行方向做加法（② 只会让 ① 的放行**更严**），
+ *   且都**不查库** —— 读数由服务层取好传进来。合成一个函数会让"网络/披露/权限"
+ *   三类完全不同的失败被压成同一个现象，出问题时说不清该修哪一侧。
+ *
+ * ── Slice 6 的效果（对外送达）──────────────────────────────────────────
+ *   `INTRO_DRAFT` 的执行计划从 `recipient: 'REQUESTER'` 改为 `'TARGET'`：
+ *   产出以站内信送达**对手方**（创建时就固定、并被那次批准覆盖的那个身份）。
+ *   🔴 送达的**通知体里没有任何档案字段** —— 这是 T06 立下的纪律
+ *      （`notification-content.ts` 的文件头：通知只是"有事在等你"，
+ *      披露的唯一出口是页面上的 `discloseSubject()` 投影）。
+ *      因此 ② 守的不是"通知体里有没有敏感词"，而是**送达这件事本身的前提**：
+ *      创建时存在对该受众非空的披露授权，且**执行时这份授权仍然覆盖创建时快照的那批字段**
+ *      —— 即 T05「撤销即刻生效」在投递侧的落点。授权被撤销/收窄后仍以发起人的名义
+ *      去敲门，等于用一次已失效的授权替人代言。
  *   本文件把这个边界写成**类型与判据**，而不是写在注释里祈祷别人看到。
  */
 
@@ -42,7 +51,7 @@ export const EXECUTION_KINDS = ['RECEIPT'] as const
 export type ExecutionKind = (typeof EXECUTION_KINDS)[number]
 
 /**
- * 执行渠道。**本切片只有 `IN_APP`**。
+ * 执行渠道。**当前只有 `IN_APP`**。
  *
  * 为什么不做 `EMAIL`：邮件要外部凭据（`RESEND_API_KEY`），且"发到对方邮箱"属**对外送达** ——
  * 与上面的诚实边界同一件事。渠道是闭集且与 `NotificationChannel` 的取值对齐
@@ -51,18 +60,30 @@ export type ExecutionKind = (typeof EXECUTION_KINDS)[number]
 export const EXECUTION_CHANNELS = ['IN_APP'] as const
 export type ExecutionChannel = (typeof EXECUTION_CHANNELS)[number]
 
+/**
+ * 收件人的**类别**（不是 id）。
+ *
+ * 🔴 这是一个**闭集**，而不是一个"收件人字段"：
+ *    `'REQUESTER'` = 发起人本人（内部回执，不涉及任何对外动作）；
+ *    `'TARGET'`    = 创建时就固定下来的对手方（`AgentDeliveryTarget` 那一行）。
+ *    两者都不是"调用方在执行时传进来的地址" —— 那会让"执行"退化成
+ *    "把已批准的产出送到任意地址"，而那次批准覆盖的**不是**那个地址。
+ *    ⇒ 收件人能不能由请求体指定，是一个**类型级**的决定，不是运行期的校验。
+ */
+export const EXECUTION_RECIPIENTS = ['REQUESTER', 'TARGET'] as const
+export type ExecutionRecipient = (typeof EXECUTION_RECIPIENTS)[number]
+
 export interface ExecutionPlan {
   skill: SkillKey
   kind: ExecutionKind
   channel: ExecutionChannel
   /**
-   * 收件人**由服务端决定**，不接受调用方指定。
-   *
-   * `'REQUESTER'` = 发起人（`AgentRun.requestedBy`）。为什么是这个形状而不是一个 id：
-   * 收件人一旦可以由请求体给出，"执行"就变成了"把已批准的产出送到任意地址"，
-   * 而那次批准覆盖的**不是**那个地址 —— 审批会被降级成一个橡皮图章。
+   * 收件人**类别**（`EXECUTION_RECIPIENTS` 之一）。具体是谁由服务端决定：
+   *   - `'REQUESTER'` → `AgentRun.requestedBy`
+   *   - `'TARGET'`    → `AgentDeliveryTarget.targetUserId`（**创建时**落库，与运行同行）
+   * 调用方在任何一步都不能指定"发给谁"。
    */
-  recipient: 'REQUESTER'
+  recipient: ExecutionRecipient
   /** 人话说明（会进 DTO 的 `execution.reason` 与审计元数据）。 */
   description: string
 }
@@ -91,9 +112,9 @@ export const EXECUTION_PLANS: Readonly<Record<SkillKey, ExecutionPlan | null>> =
     skill: 'INTRO_DRAFT',
     kind: 'RECEIPT',
     channel: 'IN_APP',
-    recipient: 'REQUESTER',
+    recipient: 'TARGET',
     description:
-      '把已人工批准的介绍草稿以站内信回执给发起人，供其走后续人工渠道送达；本切片不直接发给对手方（缺 target 身份 + T05 披露出口）。',
+      '把已人工批准的介绍草稿送达创建时就固定的对手方（站内信）；通知体不含任何档案字段，档案内容仍只在连接页经披露投影展示。',
   },
   COORDINATION_ADVICE: {
     skill: 'COORDINATION_ADVICE',
@@ -119,9 +140,37 @@ export const EXECUTION_REFUSAL_CODES = [
 ] as const
 export type ExecutionRefusalCode = (typeof EXECUTION_REFUSAL_CODES)[number]
 
+/**
+ * **对外送达**被拒的原因码（第二道门，只对 `recipient === 'TARGET'` 的计划适用）。
+ *
+ * 与 `EXECUTION_REFUSAL_CODES` 分开列：前者是"这条运行能不能跑"，
+ * 后者是"跑完之后这一步能不能送到目标"。混成一个闭集会让 DTO/UI 无法
+ * 区分"还要等批准"与"授权已经撤回，需要重新发起" —— 那是两种不同的处置动作。
+ */
+export const OUTBOUND_REFUSAL_CODES = [
+  /** 计划要求送达对手方，但这条运行**没有**目标身份（创建时没定，执行时也不补）。 */
+  'NO_TARGET',
+  /** 没有任何对该受众生效的披露授权（从未授权 / 已被撤销 / 已过期）—— 没有可送达的介绍内容。 */
+  'DISCLOSURE_EMPTY',
+  /** 授权仍在，但**已被收窄**：创建时快照里的字段不再全部可见。需要重新走一次创建与批准。 */
+  'DISCLOSURE_NARROWED',
+] as const
+export type OutboundRefusalCode = (typeof OUTBOUND_REFUSAL_CODES)[number]
+
+/** DTO 的 `execution.code` 取值域 = 两道门的并集（对外形状只有一个字段，故必须合并）。 */
+export const EXECUTION_GATE_CODES = [
+  ...EXECUTION_REFUSAL_CODES,
+  ...OUTBOUND_REFUSAL_CODES,
+] as const
+export type ExecutionGateCode = (typeof EXECUTION_GATE_CODES)[number]
+
 export type ExecutionDecision =
   | { executable: true; plan: ExecutionPlan }
   | { executable: false; code: ExecutionRefusalCode; reason: string }
+
+export type OutboundDeliveryDecision =
+  | { deliverable: true }
+  | { deliverable: false; code: OutboundRefusalCode; reason: string }
 
 /**
  * 唯一的执行放行判据。
@@ -169,6 +218,69 @@ export function planExecution(input: {
   return { executable: true, plan }
 }
 
+/**
+ * 第二道门：**这一步能不能送到目标**。
+ *
+ * 🔴 三个入参的性质：
+ *   - `recipient`            ：来自执行计划（闭集，编译期就定死）；
+ *   - `targetUserId`         ：**创建时**落库的对手方身份（`AgentDeliveryTarget`），不是调用方给的；
+ *   - `authorizedFieldKeys`  ：**创建那一刻** T05 的读数（快照，落库）；
+ *   - `visibleFieldKeys`     ：**执行这一刻** T05 的读数（实时）。
+ *   后两个都由服务层取（要查库），内核只做比较 —— 于是"撤销即刻生效"这条规则
+ *   在投递侧有一个**可离线穷举**的判据，而不是埋在 executor 的一个 if 里。
+ *
+ * ⚠️ `recipient === 'REQUESTER'` 时**恒**放行：内部回执不涉及任何对外动作，
+ *    给它加披露闸门只会制造一个永远为真的条件（那是装饰，不是判据）。
+ */
+export function planOutboundDelivery(input: {
+  recipient: ExecutionRecipient
+  targetUserId: string | null
+  /** 创建时快照的、对该受众可见的字段键（T05 `fieldsVisibleTo()` 的读数）。 */
+  authorizedFieldKeys: readonly string[]
+  /** 执行时**当前**对该受众可见的字段键（T05 的实时读数）。 */
+  visibleFieldKeys: readonly string[]
+}): OutboundDeliveryDecision {
+  if (input.recipient === 'REQUESTER') return { deliverable: true }
+
+  if (!input.targetUserId) {
+    return {
+      deliverable: false,
+      code: 'NO_TARGET',
+      reason:
+        '这条运行计划送给对手方，但没有目标身份 —— 收件人必须在创建时由服务端固定（执行时不补，否则批准覆盖的就不是真正收到东西的那个人）。',
+    }
+  }
+
+  if (input.authorizedFieldKeys.length === 0) {
+    return {
+      deliverable: false,
+      code: 'DISCLOSURE_EMPTY',
+      reason: '创建时对该受众没有任何披露授权 —— 这不是一次介绍，没有任何内容可送达。',
+    }
+  }
+
+  if (input.visibleFieldKeys.length === 0) {
+    return {
+      deliverable: false,
+      code: 'DISCLOSURE_EMPTY',
+      reason:
+        '披露授权已归零（意图被撤销或过期）—— 按「撤销即刻生效」，不再以此名义送达；要送达需重新发起一次运行并重新批准。',
+    }
+  }
+
+  const visible = new Set(input.visibleFieldKeys)
+  const narrowed = input.authorizedFieldKeys.filter((k) => !visible.has(k))
+  if (narrowed.length > 0) {
+    return {
+      deliverable: false,
+      code: 'DISCLOSURE_NARROWED',
+      reason: `披露授权已被收窄：创建时授权的字段中，${narrowed.join('、')} 已不再对目标可见 —— 这次批准所覆盖的材料前提已经变了，需重新发起并重新批准。`,
+    }
+  }
+
+  return { deliverable: true }
+}
+
 /** 把"为什么状态不行"说清楚。措辞按**用户能不能据此行动**来分。 */
 function refusalReasonFor(status: AgentRunStatus, requiresApproval: boolean): string {
   if (requiresApproval && status === 'AWAITING_APPROVAL') {
@@ -188,7 +300,7 @@ function refusalReasonFor(status: AgentRunStatus, requiresApproval: boolean): st
  * 执行记录的幂等键。
  *
  * 传给 `deliverNotification()` 作为 `dedupeKey` —— 一次运行**只投递一次**。
- * 传的是 runId（不是"运行 + 时间"）：重试、并发、进程重启都不该让发起人收到第二条回执。
+ * 传的是 runId（不是"运行 + 时间"）：重试、并发、进程重启都不该让收件人收到第二条回执。
  */
 export function agentExecutionDedupeKey(runId: string): string {
   return `agent-exec:${runId}`
@@ -198,7 +310,7 @@ export function agentExecutionDedupeKey(runId: string): string {
  * 真相表的**完整性**自检（供门禁与单测调用，不在运行期执行）。
  *
  * 返回"缺执行器"的技能清单。为什么留它：`Record<SkillKey, …>` 的穷举是**编译期**保证，
- * 而"计划里的 kind 确实是 `EXECUTION_KINDS` 之一""recipient 只能是 REQUESTER"
+ * 而"计划里的 kind 确实是 `EXECUTION_KINDS` 之一""recipient 确实是 `EXECUTION_RECIPIENTS` 之一"
  * 这类**取值**约束编译期管不了 —— 那些由单测穷举断言。
  */
 export function skillsWithoutExecutionPlan(): SkillKey[] {

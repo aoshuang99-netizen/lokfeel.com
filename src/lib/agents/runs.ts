@@ -49,6 +49,15 @@ import { hashRequest, requireIdempotencyKey, withIdempotency } from '@/lib/conne
 // 额度的**来源**：方案的限额表（T08）—— 本层不新造第二张额度表，见 ./quota.ts 的文件头。
 import { PLAN_LABELS, type EffectivePlan } from '@/lib/billing/plans'
 import { resolveOrganizationAgentQuota } from './quota'
+// 对外送达（Slice 6）：目标在**创建时**解析并落库；披露依据在读取/执行时复验。
+import {
+  loadOutboundGates,
+  normalizeDeliveryInput,
+  resolveDeliveryTarget,
+  toDeliveryTargetCreate,
+  toDeliveryTargetRow,
+  type OutboundGate,
+} from './delivery-target'
 import {
   providerKindFromDb,
   providerKindToDb,
@@ -57,6 +66,7 @@ import {
   type AgentRunDto,
   type AgentRunRow,
   type AgentRunSummaryDto,
+  type AgentRunViewer,
 } from './dto'
 import { providerHonesty, resolveRuntimeProvider, type ProviderHonesty } from './provider-openai'
 
@@ -70,8 +80,13 @@ export const AGENT_RUN_SCOPE = 'agent.run'
  *    布尔传下去，而不是把角色传进 DTO。判据与路由的 `withTenant('agent.approve')`
  *    用的是**同一个函数**，因此"界面说能点、接口说 403"这种分叉在结构上不存在。
  */
-function viewerOf(ctx: TenantContext): { canDecide: boolean } {
-  return { canDecide: can(ctx.role, 'agent.approve') }
+function viewerOf(ctx: TenantContext, outbound?: OutboundGate): AgentRunViewer {
+  // ⚠️ `undefined` 与"空闸门"是**不同**的事：前者 = 这条运行根本没有对外送达这一步；
+  //    后者会被 DTO 读成"要送、但没有目标" ⇒ 界面显示不可执行（那是错的，不是保守）。
+  return {
+    canDecide: can(ctx.role, 'agent.approve'),
+    ...(outbound ? { outbound } : {}),
+  }
 }
 
 export const AGENT_LIMITS = {
@@ -121,6 +136,20 @@ const EXECUTION_SELECT = {
   deliveryStatus: true,
   actorId: true,
   executedAt: true,
+} as const
+
+/**
+ * 送达目标的行形状（Slice 6）。
+ *
+ * ⚠️ 四个字段都要：`targetUserId` / `authorizedFieldKeys` 是内核判据的输入，
+ *    `intentId` 用来在执行时读回**当时生效**的披露表（撤销即刻生效的落点），
+ *    `audience` 只进审计（"当时按哪一档送的"）。
+ */
+const DELIVERY_TARGET_SELECT = {
+  targetUserId: true,
+  intentId: true,
+  audience: true,
+  authorizedFieldKeys: true,
 } as const
 
 const RUN_SELECT = {
@@ -305,6 +334,7 @@ export async function findRunRow(
       calls: { select: CALL_SELECT, orderBy: { seq: 'asc' } },
       approval: { select: APPROVAL_SELECT },
       execution: { select: EXECUTION_SELECT },
+      deliveryTarget: { select: DELIVERY_TARGET_SELECT },
     },
   })
   return (row as AgentRunRow | null) ?? null
@@ -316,7 +346,8 @@ export async function getAgentRun(ctx: TenantContext, runId: string): Promise<Ag
   }
   const row = await findRunRow(ctx.organizationId, runId)
   if (!row) throw new NotFoundError('Agent run not found')
-  return toAgentRunDto(row, viewerOf(ctx))
+  const gates = await loadOutboundGates(ctx.organizationId, [row], new Date())
+  return toAgentRunDto(row, viewerOf(ctx, gates.get(row.id)))
 }
 
 export interface ListAgentRunsOptions {
@@ -355,14 +386,24 @@ export async function listAgentRuns(
       approval: { select: APPROVAL_SELECT },
       // 列表也带执行记录：列表页要用它显示"已执行/未执行"，缺了就只能显示成"从未执行"。
       execution: { select: EXECUTION_SELECT },
+      // 同上：列表页的"能不能执行"按钮同样要过对外送达闸门 —— 缺了它，列表会给出
+      // 一个点了必然 409 的按钮（与详情页不一致，而"不一致"本身就是缺陷）。
+      deliveryTarget: { select: DELIVERY_TARGET_SELECT },
       // 列表要的是"跑了几次"，不是逐次明细 —— 用 `_count` 而不是把 calls 全读进来。
       _count: { select: { calls: true } },
     },
   })
 
+  // 🔴 一次批量取闸门（把所有 intentId 去重成一次查询）—— 逐条查意图就是 N+1。
+  const gates = await loadOutboundGates(ctx.organizationId, rows as unknown as AgentRunRow[], new Date())
+
   const items = rows.map((r) => {
     const { _count, ...rest } = r as unknown as AgentRunRow & { _count: { calls: number } }
-    return toAgentRunSummaryDto({ ...rest, calls: [] }, _count?.calls ?? 0, viewerOf(ctx))
+    return toAgentRunSummaryDto(
+      { ...rest, calls: [] },
+      _count?.calls ?? 0,
+      viewerOf(ctx, gates.get(r.id)),
+    )
   })
 
   return { items, count: items.length, filters: { status, skill, limit } }
@@ -378,6 +419,14 @@ export interface CreateAgentRunInput {
   /** 来自 `Idempotency-Key` 请求头（**必需** —— 缺省不退化为非幂等）。 */
   idempotencyKey: unknown
   subjectLabel?: unknown
+  /**
+   * 对外送达目标（**仅**收件人为对手方的技能接受，当前只有 `INTRO_DRAFT`）。
+   *
+   * `{ targetUserId, intentId }`：后者是**发起人自己**的意图 —— 披露依据必须是"我授权了什么"，
+   * 而不是调用方声称的字段集。形状校验在服务层入口（无 IO），语义校验在
+   * `resolveDeliveryTarget()`（要查库：意图归属、同任务参与、披露非空）。
+   */
+  delivery?: unknown
   /**
    * 测试/接线用：显式覆盖 provider 解析。
    * 生产路径不传 → 走 `resolveRuntimeProvider(process.env)`：
@@ -413,8 +462,12 @@ export async function createAgentRun(
   assertSkillInput(skill, input.input)
   const key = requireIdempotencyKey(input.idempotencyKey)
   const subjectLabel = normalizeLabel(input.subjectLabel)
+  // 形状校验（无 IO）刻意放在 `withIdempotency` **之前**：形状都不对就不该占一把幂等键。
+  // 🔴 `delivery` 要进请求指纹：同一把幂等键配"送给 A"与"送给 B"是**两件事**，
+  //    唯一约束只能保证"不重复"，保证不了"同一把键没被复用于另一个意图"。
+  const delivery = normalizeDeliveryInput(input.delivery)
   const now = input.now ?? new Date()
-  const requestHash = hashRequest({ skill, input: input.input, subjectLabel })
+  const requestHash = hashRequest({ skill, input: input.input, subjectLabel, delivery })
 
   const outcome = await withIdempotency<AgentRunDto>({
     organizationId: ctx.organizationId,
@@ -427,14 +480,30 @@ export async function createAgentRun(
       return row ? toAgentRunDto(row, viewerOf(ctx)) : null
     },
     create: async () => {
+      // ① 先把"送给谁"定下来（要查库：意图归属 / 同任务参与 / 披露非空）。
+      //    放在花钱之前：目标不合法就该一条调用都不发生。
+      const resolved = delivery ? await resolveDeliveryTarget(ctx, { skill, ...delivery }, now) : null
+
+      // ② 🔴 披露授权集合由**服务端**给出（T05 当刻的读数），**不采信**调用方传的
+      //    `allowedFieldKeys` —— 否则"模型能用哪些字段"就变成了请求体的一个字段。
+      //    ⚠️ 只在输入契约里**有**这个位置时注入：其余技能的输入是 strictObject，
+      //       多一个键会被契约拒掉（那是正确行为，但会把一次合法请求变成 400）。
+      const canInject = (raw: unknown): raw is Record<string, unknown> =>
+        Boolean(raw) && typeof raw === 'object' && !Array.isArray(raw) && 'allowedFieldKeys' in (raw as object)
+      const effectiveInput =
+        resolved && canInject(input.input)
+          ? { ...input.input, allowedFieldKeys: resolved.authorizedFieldKeys }
+          : input.input
+      if (effectiveInput !== input.input) assertSkillInput(skill, effectiveInput)
+
       const provider = input.provider ?? resolveRuntimeProvider(process.env)
-      // ① 先把账本与额度都读回来（**调用之前**），② 再跑编排。
+      // ③ 先把账本与额度都读回来（**调用之前**），④ 再跑编排。
       //    顺序是刻意的：额度必须在"决定要不要花钱"之前就知道（AC-20）。
       const ledger = await loadLedger(ctx.organizationId, now)
       const quota = input.quota ?? (await resolveOrganizationAgentQuota(ctx)).quota
       const result = await runSkill({
         skill,
-        input: input.input,
+        input: effectiveInput,
         provider,
         ledger,
         // 两侧同源：注入什么就判什么；不注入则从**订阅方案**派生（FREE = 从未订阅）。
@@ -469,6 +538,13 @@ export async function createAgentRun(
           costMicroCents,
           dedupeKey: key,
           requestHash,
+          // 🔴 送达目标与运行**同一个 create** 落库（嵌套写 = 原子）：
+          //    否则会出现"运行有了、目标没落"的中间态，而那种运行永远执行不了。
+          //    ⚠️ 用**写形状**（多一个 organizationId）：嵌套写里 Prisma 推不出组织外键，
+          //       缺了是编译期错误 —— 这是好事，好过落一条组织为空的孤儿行。
+          ...(resolved
+            ? { deliveryTarget: { create: toDeliveryTargetCreate(resolved, ctx.organizationId) } }
+            : {}),
           calls: {
             create: newCalls.map((c, index) => ({
               organizationId: ctx.organizationId,
@@ -492,6 +568,7 @@ export async function createAgentRun(
           // 新建的运行必然没有执行记录 —— 但 select 保持一致，
           // 否则 DTO 的 `executionRecord` 在这里会是 undefined 而不是 null（形状漂移）。
           execution: { select: EXECUTION_SELECT },
+          deliveryTarget: { select: DELIVERY_TARGET_SELECT },
         },
       }) as AgentRunRow
 
@@ -510,6 +587,10 @@ export async function createAgentRun(
           costMicroCents,
           requiresApproval: result.requiresApproval,
           calls: newCalls.length,
+          // 只记"送不送、按哪一档送、授权了几项"—— 目标 id 与字段名都不进审计面。
+          outbound: resolved
+            ? { audience: resolved.audience, authorizedFieldCount: resolved.authorizedFieldKeys.length }
+            : null,
         },
       }).catch(() => {})
 
@@ -534,7 +615,19 @@ export async function createAgentRun(
         }).catch(() => {})
       }
 
-      return { resourceId: created.id, resource: toAgentRunDto(created, viewerOf(ctx)) }
+      // 读回一次闸门（与 get/list 走**同一条**取值路径），而不是拿"刚解析的那份"顶替：
+      // 后者会在派生逻辑变化时与详情页给出不同答案。
+      const createdGates = resolved
+        ? await loadOutboundGates(
+            ctx.organizationId,
+            [{ id: created.id, deliveryTarget: toDeliveryTargetRow(resolved) }],
+            now,
+          )
+        : null
+      return {
+        resourceId: created.id,
+        resource: toAgentRunDto(created, viewerOf(ctx, createdGates?.get(created.id))),
+      }
     },
     // 幂等记录写入失败（并发重放）时回收本次创建出来的孤儿运行。
     compensate: async (resourceId) => {
@@ -657,7 +750,8 @@ export async function decideAgentRun(
 
   const updated = await findRunRow(ctx.organizationId, row.id)
   if (!updated) throw new NotFoundError('Agent run not found')
-  return toAgentRunDto(updated, viewerOf(ctx))
+  const gates = await loadOutboundGates(ctx.organizationId, [updated], new Date())
+  return toAgentRunDto(updated, viewerOf(ctx, gates.get(updated.id)))
 }
 
 // ═══════════════════════════════════════════════════════════

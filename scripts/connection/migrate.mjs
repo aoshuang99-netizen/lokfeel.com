@@ -22,6 +22,12 @@
  *   C6 = AgentRun / AgentCall / AgentApproval
  *        （T09；AgentCall/AgentApproval 引用 C6 的 AgentRun；三表都**只**指向 Organization ——
  *          requestedBy / actorId 是**软引用**，用户注销后"谁批准过什么"仍须可查）
+ *   C7 = AgentExecution
+ *        （T09 Slice 4；强 FK 两条：Organization + AgentRun。执行是**事件**，
+ *          独立成表顺带拿到 @@unique([runId]) 的库级幂等）
+ *   C8 = AgentDeliveryTarget
+ *        （T09 Slice 6；强 FK 两条：Organization + AgentRun。**创建时**固定的送达目标 +
+ *          披露依据快照 —— 同样是"加列会破纯新增纪律"的落点）
  *
  * 设计约束（继承 T01 的 scripts/tenancy/migrate.mjs）：
  *   1. **纯新增** —— 各批次只 `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`，
@@ -104,9 +110,17 @@ export const BATCHES = {
     tables: ['AgentExecution'],
     label: 'T09 · Agent 执行记录（AgentExecution）',
   },
+  C8: {
+    // C8 只有一个新表，且它**依赖 C6 的 AgentRun**（强 FK）⇒ 必须排在 C6 之后。
+    // 🔴 与 C7 同一条理由：本脚本只支持 CREATE TABLE/INDEX IF NOT EXISTS，没有 ALTER 形态。
+    //    "这条运行送给谁"不是 AgentRun 的一个属性列，而是一次**独立的事实**
+    //    （创建时固定 + 披露依据快照 + @@unique([runId]) 的库级幂等）。
+    tables: ['AgentDeliveryTarget'],
+    label: 'T09 · Agent 对外送达目标（AgentDeliveryTarget）',
+  },
 }
 
-export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7']
+export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8']
 
 // ══════════════════════════════════════════════════════════════════════
 // 环境加载
@@ -594,7 +608,31 @@ function sqlC7() {
   ]
 }
 
-const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5, C6: sqlC6, C7: sqlC7 }
+function sqlC8() {
+  // DDL 来源：`npx prisma migrate diff --from-schema <C8 前的快照> --to-schema prisma/schema --script`
+  // 后**原样抄录**（见文件头约束 5）。只有一张新表：Organization 与 AgentRun 各一条强 FK。
+  // ⚠️ `targetUserId` / `intentId` 是**软引用**（无 FK）—— 用户注销 / 意图被删之后，
+  //    "这条运行当时打算送给谁、依据哪份披露"仍须可查。
+  return [
+    `CREATE TABLE IF NOT EXISTS "AgentDeliveryTarget" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "runId" TEXT NOT NULL,
+  "targetUserId" TEXT NOT NULL,
+  "intentId" TEXT NOT NULL,
+  "audience" TEXT NOT NULL,
+  "authorizedFieldKeys" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "AgentDeliveryTarget_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "AgentDeliveryTarget_runId_fkey" FOREIGN KEY ("runId") REFERENCES "AgentRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "AgentDeliveryTarget_runId_key" ON "AgentDeliveryTarget"("runId")`,
+    `CREATE INDEX IF NOT EXISTS "AgentDeliveryTarget_organizationId_targetUserId_idx" ON "AgentDeliveryTarget"("organizationId", "targetUserId")`,
+    `CREATE INDEX IF NOT EXISTS "AgentDeliveryTarget_organizationId_createdAt_idx" ON "AgentDeliveryTarget"("organizationId", "createdAt")`,
+  ]
+}
+
+const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5, C6: sqlC6, C7: sqlC7, C8: sqlC8 }
 
 /** 期望存在的索引（verify 断言用）。 */
 const EXPECTED_INDEXES = [
@@ -670,6 +708,11 @@ const EXPECTED_INDEXES = [
   { name: 'AgentExecution_runId_key', table: 'AgentExecution', unique: true },
   { name: 'AgentExecution_organizationId_executedAt_idx', table: 'AgentExecution', unique: false },
   { name: 'AgentExecution_organizationId_channel_idx', table: 'AgentExecution', unique: false },
+  // ── C8 ──
+  // 同上：`runId` 唯一 = "一条运行最多一个送达目标"的库级保证。
+  { name: 'AgentDeliveryTarget_runId_key', table: 'AgentDeliveryTarget', unique: true },
+  { name: 'AgentDeliveryTarget_organizationId_targetUserId_idx', table: 'AgentDeliveryTarget', unique: false },
+  { name: 'AgentDeliveryTarget_organizationId_createdAt_idx', table: 'AgentDeliveryTarget', unique: false },
 ]
 
 /** 期望存在的外键（表 → 引用目标），verify 断言用。 */
@@ -732,6 +775,11 @@ const EXPECTED_FKS = [
   //  若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
   { table: 'AgentExecution', target: 'Organization' },
   { table: 'AgentExecution', target: 'AgentRun' },
+  // ── C8 ──
+  // 同样只有两条强 FK。（`targetUserId` / `intentId` 是软引用，**故意没有 FK** ——
+  //  若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
+  { table: 'AgentDeliveryTarget', target: 'Organization' },
+  { table: 'AgentDeliveryTarget', target: 'AgentRun' },
 ]
 
 /** 全部受管表（verify 用）。 */
@@ -1375,6 +1423,40 @@ async function cmdVerify(client) {
     )
   } else {
     ok('AgentExecution 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  // 4i) T09 Slice 6 · AgentDeliveryTarget（C8 · 对外送达的创建时事实）
+  const dtCols = await tableColumns(client, 'AgentDeliveryTarget')
+  if (dtCols) {
+    const sql = (await tableCreateSql(client, 'AgentDeliveryTarget')) || ''
+    const required =
+      dtCols.includes('id') &&
+      dtCols.includes('organizationId') &&
+      dtCols.includes('runId') &&
+      dtCols.includes('targetUserId') &&
+      dtCols.includes('intentId') &&
+      dtCols.includes('audience') &&
+      dtCols.includes('authorizedFieldKeys') &&
+      dtCols.includes('createdAt')
+    ok('AgentDeliveryTarget 列齐备（目标身份 + 披露依据 + 档位 + 快照）', required, dtCols.join(','))
+    ok(
+      'AgentDeliveryTarget.runId → AgentRun 外键存在（送达脱离运行没有意义）',
+      /CONSTRAINT\s+"AgentDeliveryTarget_runId_fkey"\s+FOREIGN\s+KEY\s+\("runId"\)\s+REFERENCES\s+"AgentRun"/.test(
+        sql,
+      ),
+    )
+    ok(
+      'AgentDeliveryTarget 的 targetUserId / intentId **无**外键（软引用，注销/删除后仍须可查）',
+      !/"targetUserId"[^,]*REFERENCES/.test(sql) && !/"intentId"[^,]*REFERENCES/.test(sql),
+    )
+    // 结构断言：送达不引入第二套状态机（状态只有 AgentRun.status 一个落点）。
+    // ⚠️ 括号不能省：`!/a|b/.test(x)` 会被解析成 `(!/a|b/).test(x)`。
+    ok(
+      'AgentDeliveryTarget **没有** status/state 列（送达不是第二个状态机）',
+      !(/"status"|"state"/.test(sql)),
+    )
+  } else {
+    ok('AgentDeliveryTarget 列齐备（目标身份 + 披露依据 + 档位 + 快照）', false, '表不存在')
   }
 
   // 5) 孤儿行（跨表完整性）

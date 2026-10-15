@@ -81,6 +81,9 @@ export const POST = withTenant('agent.run')(async (req: NextRequest, tenant) => 
       input: body.input,
       idempotencyKey,
       subjectLabel: body.subjectLabel,
+      // 对外送达目标（形状 `{ targetUserId, intentId }`）。**服务端**校验：
+      // 只有一个技能的计划收件人是对手方，且目标必须是披露依据所属任务里的参与成员。
+      delivery: body.delivery,
     })
 
     // 命中幂等记录时**不**返回 201 —— 本次没有创建资源，返回 200 更诚实。

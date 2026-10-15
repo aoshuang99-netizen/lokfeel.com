@@ -182,6 +182,17 @@ exports.Prisma.AgentExecutionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.AgentDeliveryTargetScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  runId: 'runId',
+  targetUserId: 'targetUserId',
+  intentId: 'intentId',
+  audience: 'audience',
+  authorizedFieldKeys: 'authorizedFieldKeys',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.BillingEventScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -1540,6 +1551,7 @@ exports.Prisma.ModelName = {
   AgentCall: 'AgentCall',
   AgentApproval: 'AgentApproval',
   AgentExecution: 'AgentExecution',
+  AgentDeliveryTarget: 'AgentDeliveryTarget',
   BillingEvent: 'BillingEvent',
   UsageRecord: 'UsageRecord',
   BotProfile: 'BotProfile',

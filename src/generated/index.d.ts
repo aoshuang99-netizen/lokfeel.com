@@ -54,6 +54,23 @@ export type AgentApproval = $Result.DefaultSelection<Prisma.$AgentApprovalPayloa
  */
 export type AgentExecution = $Result.DefaultSelection<Prisma.$AgentExecutionPayload>
 /**
+ * Model AgentDeliveryTarget
+ * 一次**对外送达**的目标（Slice 6）—— "这条产出送给谁"的**创建时**事实。
+ * 
+ * 🔴 为什么是独立表而不是 `AgentRun.targetUserId` 列：本仓迁移机制只支持
+ * `CREATE TABLE/INDEX IF NOT EXISTS`（见 `scripts/connection/migrate.mjs` 文件头约束 1），
+ * 给既有表加列会破掉"纯新增"这条纪律。独立成表还顺带拿到
+ * `@@unique([runId])` 的库级保证：**一条运行最多一个送达目标**。
+ * 
+ * 🔴 为什么必须在**创建时**落库、执行时**不补**：
+ * 若执行时才由调用方传入收件人，就等于允许"批准的是 A、发出去的是 B"——
+ * 审批会退化成橡皮图章。这里存的是**那次批准覆盖的那个身份**。
+ * 
+ * `targetUserId` / `intentId` 是**软引用**（无 FK）：用户注销、意图被删之后，
+ * "这条运行当时打算送给谁、依据哪份披露"仍须可查（与 `AgentRun.requestedBy` 同一理由）。
+ */
+export type AgentDeliveryTarget = $Result.DefaultSelection<Prisma.$AgentDeliveryTargetPayload>
+/**
  * Model BillingEvent
  * 计费事件（**不可变日志**）。当前方案 / 状态 / 每笔款项的生命周期全部由它派生。
  */
@@ -1449,6 +1466,16 @@ export class PrismaClient<
   get agentExecution(): Prisma.AgentExecutionDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.agentDeliveryTarget`: Exposes CRUD operations for the **AgentDeliveryTarget** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AgentDeliveryTargets
+    * const agentDeliveryTargets = await prisma.agentDeliveryTarget.findMany()
+    * ```
+    */
+  get agentDeliveryTarget(): Prisma.AgentDeliveryTargetDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.billingEvent`: Exposes CRUD operations for the **BillingEvent** model.
     * Example usage:
     * ```ts
@@ -2448,6 +2475,7 @@ export namespace Prisma {
     AgentCall: 'AgentCall',
     AgentApproval: 'AgentApproval',
     AgentExecution: 'AgentExecution',
+    AgentDeliveryTarget: 'AgentDeliveryTarget',
     BillingEvent: 'BillingEvent',
     UsageRecord: 'UsageRecord',
     BotProfile: 'BotProfile',
@@ -2518,7 +2546,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "billingEvent" | "usageRecord" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organization" | "membership" | "tenantAuditEvent"
+      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organization" | "membership" | "tenantAuditEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2815,6 +2843,80 @@ export namespace Prisma {
           count: {
             args: Prisma.AgentExecutionCountArgs<ExtArgs>
             result: $Utils.Optional<AgentExecutionCountAggregateOutputType> | number
+          }
+        }
+      }
+      AgentDeliveryTarget: {
+        payload: Prisma.$AgentDeliveryTargetPayload<ExtArgs>
+        fields: Prisma.AgentDeliveryTargetFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AgentDeliveryTargetFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AgentDeliveryTargetFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>
+          }
+          findFirst: {
+            args: Prisma.AgentDeliveryTargetFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AgentDeliveryTargetFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>
+          }
+          findMany: {
+            args: Prisma.AgentDeliveryTargetFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>[]
+          }
+          create: {
+            args: Prisma.AgentDeliveryTargetCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>
+          }
+          createMany: {
+            args: Prisma.AgentDeliveryTargetCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AgentDeliveryTargetCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>[]
+          }
+          delete: {
+            args: Prisma.AgentDeliveryTargetDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>
+          }
+          update: {
+            args: Prisma.AgentDeliveryTargetUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>
+          }
+          deleteMany: {
+            args: Prisma.AgentDeliveryTargetDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AgentDeliveryTargetUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AgentDeliveryTargetUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>[]
+          }
+          upsert: {
+            args: Prisma.AgentDeliveryTargetUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentDeliveryTargetPayload>
+          }
+          aggregate: {
+            args: Prisma.AgentDeliveryTargetAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAgentDeliveryTarget>
+          }
+          groupBy: {
+            args: Prisma.AgentDeliveryTargetGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AgentDeliveryTargetGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AgentDeliveryTargetCountArgs<ExtArgs>
+            result: $Utils.Optional<AgentDeliveryTargetCountAggregateOutputType> | number
           }
         }
       }
@@ -7015,6 +7117,7 @@ export namespace Prisma {
     agentCall?: AgentCallOmit
     agentApproval?: AgentApprovalOmit
     agentExecution?: AgentExecutionOmit
+    agentDeliveryTarget?: AgentDeliveryTargetOmit
     billingEvent?: BillingEventOmit
     usageRecord?: UsageRecordOmit
     botProfile?: BotProfileOmit
@@ -7870,6 +7973,7 @@ export namespace Prisma {
     agentCalls: number
     agentApprovals: number
     agentExecutions: number
+    agentDeliveryTargets: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7892,6 +7996,7 @@ export namespace Prisma {
     agentCalls?: boolean | OrganizationCountOutputTypeCountAgentCallsArgs
     agentApprovals?: boolean | OrganizationCountOutputTypeCountAgentApprovalsArgs
     agentExecutions?: boolean | OrganizationCountOutputTypeCountAgentExecutionsArgs
+    agentDeliveryTargets?: boolean | OrganizationCountOutputTypeCountAgentDeliveryTargetsArgs
   }
 
   // Custom InputTypes
@@ -8036,6 +8141,13 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountAgentExecutionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AgentExecutionWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountAgentDeliveryTargetsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentDeliveryTargetWhereInput
   }
 
 
@@ -8365,6 +8477,7 @@ export namespace Prisma {
     calls?: boolean | AgentRun$callsArgs<ExtArgs>
     approval?: boolean | AgentRun$approvalArgs<ExtArgs>
     execution?: boolean | AgentRun$executionArgs<ExtArgs>
+    deliveryTarget?: boolean | AgentRun$deliveryTargetArgs<ExtArgs>
     _count?: boolean | AgentRunCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["agentRun"]>
 
@@ -8445,6 +8558,7 @@ export namespace Prisma {
     calls?: boolean | AgentRun$callsArgs<ExtArgs>
     approval?: boolean | AgentRun$approvalArgs<ExtArgs>
     execution?: boolean | AgentRun$executionArgs<ExtArgs>
+    deliveryTarget?: boolean | AgentRun$deliveryTargetArgs<ExtArgs>
     _count?: boolean | AgentRunCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type AgentRunIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8461,6 +8575,10 @@ export namespace Prisma {
       calls: Prisma.$AgentCallPayload<ExtArgs>[]
       approval: Prisma.$AgentApprovalPayload<ExtArgs> | null
       execution: Prisma.$AgentExecutionPayload<ExtArgs> | null
+      /**
+       * Slice 6 · 对外送达的目标（**创建时**落库；决定权在服务层，不在批次里）。
+       */
+      deliveryTarget: Prisma.$AgentDeliveryTargetPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -8939,6 +9057,7 @@ export namespace Prisma {
     calls<T extends AgentRun$callsArgs<ExtArgs> = {}>(args?: Subset<T, AgentRun$callsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentCallPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     approval<T extends AgentRun$approvalArgs<ExtArgs> = {}>(args?: Subset<T, AgentRun$approvalArgs<ExtArgs>>): Prisma__AgentApprovalClient<$Result.GetResult<Prisma.$AgentApprovalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     execution<T extends AgentRun$executionArgs<ExtArgs> = {}>(args?: Subset<T, AgentRun$executionArgs<ExtArgs>>): Prisma__AgentExecutionClient<$Result.GetResult<Prisma.$AgentExecutionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    deliveryTarget<T extends AgentRun$deliveryTargetArgs<ExtArgs> = {}>(args?: Subset<T, AgentRun$deliveryTargetArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9446,6 +9565,25 @@ export namespace Prisma {
      */
     include?: AgentExecutionInclude<ExtArgs> | null
     where?: AgentExecutionWhereInput
+  }
+
+  /**
+   * AgentRun.deliveryTarget
+   */
+  export type AgentRun$deliveryTargetArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    where?: AgentDeliveryTargetWhereInput
   }
 
   /**
@@ -12136,7 +12274,10 @@ export namespace Prisma {
        */
       channel: $Enums.NotificationChannel
       /**
-       * 收件人（**服务端决定**：当前恒为发起人 `AgentRun.requestedBy`）。
+       * 收件人（**服务端决定**，不接受调用方指定）。两种来源，都由计划决定：
+       * - 计划 `recipient = 'REQUESTER'` → `AgentRun.requestedBy`（内部回执）；
+       * - 计划 `recipient = 'TARGET'`（Slice 6 起）→ `AgentDeliveryTarget.targetUserId`
+       * （**创建时**就固定、并被那次批准覆盖的那个身份）。
        */
       recipientId: string
       /**
@@ -13007,6 +13148,1137 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: AgentExecutionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AgentDeliveryTarget
+   */
+
+  export type AggregateAgentDeliveryTarget = {
+    _count: AgentDeliveryTargetCountAggregateOutputType | null
+    _min: AgentDeliveryTargetMinAggregateOutputType | null
+    _max: AgentDeliveryTargetMaxAggregateOutputType | null
+  }
+
+  export type AgentDeliveryTargetMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    runId: string | null
+    targetUserId: string | null
+    intentId: string | null
+    audience: string | null
+    authorizedFieldKeys: string | null
+    createdAt: Date | null
+  }
+
+  export type AgentDeliveryTargetMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    runId: string | null
+    targetUserId: string | null
+    intentId: string | null
+    audience: string | null
+    authorizedFieldKeys: string | null
+    createdAt: Date | null
+  }
+
+  export type AgentDeliveryTargetCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    runId: number
+    targetUserId: number
+    intentId: number
+    audience: number
+    authorizedFieldKeys: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AgentDeliveryTargetMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    runId?: true
+    targetUserId?: true
+    intentId?: true
+    audience?: true
+    authorizedFieldKeys?: true
+    createdAt?: true
+  }
+
+  export type AgentDeliveryTargetMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    runId?: true
+    targetUserId?: true
+    intentId?: true
+    audience?: true
+    authorizedFieldKeys?: true
+    createdAt?: true
+  }
+
+  export type AgentDeliveryTargetCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    runId?: true
+    targetUserId?: true
+    intentId?: true
+    audience?: true
+    authorizedFieldKeys?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AgentDeliveryTargetAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentDeliveryTarget to aggregate.
+     */
+    where?: AgentDeliveryTargetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDeliveryTargets to fetch.
+     */
+    orderBy?: AgentDeliveryTargetOrderByWithRelationInput | AgentDeliveryTargetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AgentDeliveryTargetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDeliveryTargets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDeliveryTargets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AgentDeliveryTargets
+    **/
+    _count?: true | AgentDeliveryTargetCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AgentDeliveryTargetMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AgentDeliveryTargetMaxAggregateInputType
+  }
+
+  export type GetAgentDeliveryTargetAggregateType<T extends AgentDeliveryTargetAggregateArgs> = {
+        [P in keyof T & keyof AggregateAgentDeliveryTarget]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAgentDeliveryTarget[P]>
+      : GetScalarType<T[P], AggregateAgentDeliveryTarget[P]>
+  }
+
+
+
+
+  export type AgentDeliveryTargetGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentDeliveryTargetWhereInput
+    orderBy?: AgentDeliveryTargetOrderByWithAggregationInput | AgentDeliveryTargetOrderByWithAggregationInput[]
+    by: AgentDeliveryTargetScalarFieldEnum[] | AgentDeliveryTargetScalarFieldEnum
+    having?: AgentDeliveryTargetScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AgentDeliveryTargetCountAggregateInputType | true
+    _min?: AgentDeliveryTargetMinAggregateInputType
+    _max?: AgentDeliveryTargetMaxAggregateInputType
+  }
+
+  export type AgentDeliveryTargetGroupByOutputType = {
+    id: string
+    organizationId: string
+    runId: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys: string | null
+    createdAt: Date
+    _count: AgentDeliveryTargetCountAggregateOutputType | null
+    _min: AgentDeliveryTargetMinAggregateOutputType | null
+    _max: AgentDeliveryTargetMaxAggregateOutputType | null
+  }
+
+  type GetAgentDeliveryTargetGroupByPayload<T extends AgentDeliveryTargetGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AgentDeliveryTargetGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AgentDeliveryTargetGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AgentDeliveryTargetGroupByOutputType[P]>
+            : GetScalarType<T[P], AgentDeliveryTargetGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AgentDeliveryTargetSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    runId?: boolean
+    targetUserId?: boolean
+    intentId?: boolean
+    audience?: boolean
+    authorizedFieldKeys?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    run?: boolean | AgentRunDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["agentDeliveryTarget"]>
+
+  export type AgentDeliveryTargetSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    runId?: boolean
+    targetUserId?: boolean
+    intentId?: boolean
+    audience?: boolean
+    authorizedFieldKeys?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    run?: boolean | AgentRunDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["agentDeliveryTarget"]>
+
+  export type AgentDeliveryTargetSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    runId?: boolean
+    targetUserId?: boolean
+    intentId?: boolean
+    audience?: boolean
+    authorizedFieldKeys?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    run?: boolean | AgentRunDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["agentDeliveryTarget"]>
+
+  export type AgentDeliveryTargetSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    runId?: boolean
+    targetUserId?: boolean
+    intentId?: boolean
+    audience?: boolean
+    authorizedFieldKeys?: boolean
+    createdAt?: boolean
+  }
+
+  export type AgentDeliveryTargetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "runId" | "targetUserId" | "intentId" | "audience" | "authorizedFieldKeys" | "createdAt", ExtArgs["result"]["agentDeliveryTarget"]>
+  export type AgentDeliveryTargetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    run?: boolean | AgentRunDefaultArgs<ExtArgs>
+  }
+  export type AgentDeliveryTargetIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    run?: boolean | AgentRunDefaultArgs<ExtArgs>
+  }
+  export type AgentDeliveryTargetIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    run?: boolean | AgentRunDefaultArgs<ExtArgs>
+  }
+
+  export type $AgentDeliveryTargetPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AgentDeliveryTarget"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      run: Prisma.$AgentRunPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 租户谓词。**不可省**（T01 铁律）。
+       */
+      organizationId: string
+      /**
+       * 被送达的运行。**强 FK + 唯一**：一条运行最多一个送达目标。
+       */
+      runId: string
+      /**
+       * 目标身份（对手方）。**创建时**由服务端校验并固定
+       * （须与披露依据同属一个任务、且仍在参与 —— 见 `delivery-target.ts`）。
+       */
+      targetUserId: string
+      /**
+       * 披露依据：**发起人自己**的 `SocialIntent.id`。执行时用它读回**当时生效**的披露表
+       * —— T05「撤销即刻生效」在投递侧的落点。
+       */
+      intentId: string
+      /**
+       * 送达档位（T05 的外部档位；当前恒为 `COUNTERPARTY`）。
+       * 落列而不写死：审计要能读出"当时是按哪一档送的"。
+       */
+      audience: string
+      /**
+       * 创建那一刻该受众可见的字段键（JSON 文本数组）—— **快照**。
+       * 执行时用它判"授权是否被收窄"（内核 `planOutboundDelivery()`）。
+       * 空数组存 null（与 `discloseSubject` 的"空即不存在"同一取向）。
+       */
+      authorizedFieldKeys: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["agentDeliveryTarget"]>
+    composites: {}
+  }
+
+  type AgentDeliveryTargetGetPayload<S extends boolean | null | undefined | AgentDeliveryTargetDefaultArgs> = $Result.GetResult<Prisma.$AgentDeliveryTargetPayload, S>
+
+  type AgentDeliveryTargetCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AgentDeliveryTargetFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AgentDeliveryTargetCountAggregateInputType | true
+    }
+
+  export interface AgentDeliveryTargetDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AgentDeliveryTarget'], meta: { name: 'AgentDeliveryTarget' } }
+    /**
+     * Find zero or one AgentDeliveryTarget that matches the filter.
+     * @param {AgentDeliveryTargetFindUniqueArgs} args - Arguments to find a AgentDeliveryTarget
+     * @example
+     * // Get one AgentDeliveryTarget
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AgentDeliveryTargetFindUniqueArgs>(args: SelectSubset<T, AgentDeliveryTargetFindUniqueArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AgentDeliveryTarget that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AgentDeliveryTargetFindUniqueOrThrowArgs} args - Arguments to find a AgentDeliveryTarget
+     * @example
+     * // Get one AgentDeliveryTarget
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AgentDeliveryTargetFindUniqueOrThrowArgs>(args: SelectSubset<T, AgentDeliveryTargetFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentDeliveryTarget that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDeliveryTargetFindFirstArgs} args - Arguments to find a AgentDeliveryTarget
+     * @example
+     * // Get one AgentDeliveryTarget
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AgentDeliveryTargetFindFirstArgs>(args?: SelectSubset<T, AgentDeliveryTargetFindFirstArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentDeliveryTarget that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDeliveryTargetFindFirstOrThrowArgs} args - Arguments to find a AgentDeliveryTarget
+     * @example
+     * // Get one AgentDeliveryTarget
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AgentDeliveryTargetFindFirstOrThrowArgs>(args?: SelectSubset<T, AgentDeliveryTargetFindFirstOrThrowArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AgentDeliveryTargets that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDeliveryTargetFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AgentDeliveryTargets
+     * const agentDeliveryTargets = await prisma.agentDeliveryTarget.findMany()
+     * 
+     * // Get first 10 AgentDeliveryTargets
+     * const agentDeliveryTargets = await prisma.agentDeliveryTarget.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const agentDeliveryTargetWithIdOnly = await prisma.agentDeliveryTarget.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AgentDeliveryTargetFindManyArgs>(args?: SelectSubset<T, AgentDeliveryTargetFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AgentDeliveryTarget.
+     * @param {AgentDeliveryTargetCreateArgs} args - Arguments to create a AgentDeliveryTarget.
+     * @example
+     * // Create one AgentDeliveryTarget
+     * const AgentDeliveryTarget = await prisma.agentDeliveryTarget.create({
+     *   data: {
+     *     // ... data to create a AgentDeliveryTarget
+     *   }
+     * })
+     * 
+     */
+    create<T extends AgentDeliveryTargetCreateArgs>(args: SelectSubset<T, AgentDeliveryTargetCreateArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AgentDeliveryTargets.
+     * @param {AgentDeliveryTargetCreateManyArgs} args - Arguments to create many AgentDeliveryTargets.
+     * @example
+     * // Create many AgentDeliveryTargets
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AgentDeliveryTargetCreateManyArgs>(args?: SelectSubset<T, AgentDeliveryTargetCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AgentDeliveryTargets and returns the data saved in the database.
+     * @param {AgentDeliveryTargetCreateManyAndReturnArgs} args - Arguments to create many AgentDeliveryTargets.
+     * @example
+     * // Create many AgentDeliveryTargets
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AgentDeliveryTargets and only return the `id`
+     * const agentDeliveryTargetWithIdOnly = await prisma.agentDeliveryTarget.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AgentDeliveryTargetCreateManyAndReturnArgs>(args?: SelectSubset<T, AgentDeliveryTargetCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AgentDeliveryTarget.
+     * @param {AgentDeliveryTargetDeleteArgs} args - Arguments to delete one AgentDeliveryTarget.
+     * @example
+     * // Delete one AgentDeliveryTarget
+     * const AgentDeliveryTarget = await prisma.agentDeliveryTarget.delete({
+     *   where: {
+     *     // ... filter to delete one AgentDeliveryTarget
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AgentDeliveryTargetDeleteArgs>(args: SelectSubset<T, AgentDeliveryTargetDeleteArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AgentDeliveryTarget.
+     * @param {AgentDeliveryTargetUpdateArgs} args - Arguments to update one AgentDeliveryTarget.
+     * @example
+     * // Update one AgentDeliveryTarget
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AgentDeliveryTargetUpdateArgs>(args: SelectSubset<T, AgentDeliveryTargetUpdateArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AgentDeliveryTargets.
+     * @param {AgentDeliveryTargetDeleteManyArgs} args - Arguments to filter AgentDeliveryTargets to delete.
+     * @example
+     * // Delete a few AgentDeliveryTargets
+     * const { count } = await prisma.agentDeliveryTarget.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AgentDeliveryTargetDeleteManyArgs>(args?: SelectSubset<T, AgentDeliveryTargetDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentDeliveryTargets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDeliveryTargetUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AgentDeliveryTargets
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AgentDeliveryTargetUpdateManyArgs>(args: SelectSubset<T, AgentDeliveryTargetUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentDeliveryTargets and returns the data updated in the database.
+     * @param {AgentDeliveryTargetUpdateManyAndReturnArgs} args - Arguments to update many AgentDeliveryTargets.
+     * @example
+     * // Update many AgentDeliveryTargets
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AgentDeliveryTargets and only return the `id`
+     * const agentDeliveryTargetWithIdOnly = await prisma.agentDeliveryTarget.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AgentDeliveryTargetUpdateManyAndReturnArgs>(args: SelectSubset<T, AgentDeliveryTargetUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AgentDeliveryTarget.
+     * @param {AgentDeliveryTargetUpsertArgs} args - Arguments to update or create a AgentDeliveryTarget.
+     * @example
+     * // Update or create a AgentDeliveryTarget
+     * const agentDeliveryTarget = await prisma.agentDeliveryTarget.upsert({
+     *   create: {
+     *     // ... data to create a AgentDeliveryTarget
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AgentDeliveryTarget we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AgentDeliveryTargetUpsertArgs>(args: SelectSubset<T, AgentDeliveryTargetUpsertArgs<ExtArgs>>): Prisma__AgentDeliveryTargetClient<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AgentDeliveryTargets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDeliveryTargetCountArgs} args - Arguments to filter AgentDeliveryTargets to count.
+     * @example
+     * // Count the number of AgentDeliveryTargets
+     * const count = await prisma.agentDeliveryTarget.count({
+     *   where: {
+     *     // ... the filter for the AgentDeliveryTargets we want to count
+     *   }
+     * })
+    **/
+    count<T extends AgentDeliveryTargetCountArgs>(
+      args?: Subset<T, AgentDeliveryTargetCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AgentDeliveryTargetCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AgentDeliveryTarget.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDeliveryTargetAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AgentDeliveryTargetAggregateArgs>(args: Subset<T, AgentDeliveryTargetAggregateArgs>): Prisma.PrismaPromise<GetAgentDeliveryTargetAggregateType<T>>
+
+    /**
+     * Group by AgentDeliveryTarget.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentDeliveryTargetGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AgentDeliveryTargetGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AgentDeliveryTargetGroupByArgs['orderBy'] }
+        : { orderBy?: AgentDeliveryTargetGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AgentDeliveryTargetGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAgentDeliveryTargetGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AgentDeliveryTarget model
+   */
+  readonly fields: AgentDeliveryTargetFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AgentDeliveryTarget.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AgentDeliveryTargetClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    run<T extends AgentRunDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AgentRunDefaultArgs<ExtArgs>>): Prisma__AgentRunClient<$Result.GetResult<Prisma.$AgentRunPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AgentDeliveryTarget model
+   */
+  interface AgentDeliveryTargetFieldRefs {
+    readonly id: FieldRef<"AgentDeliveryTarget", 'String'>
+    readonly organizationId: FieldRef<"AgentDeliveryTarget", 'String'>
+    readonly runId: FieldRef<"AgentDeliveryTarget", 'String'>
+    readonly targetUserId: FieldRef<"AgentDeliveryTarget", 'String'>
+    readonly intentId: FieldRef<"AgentDeliveryTarget", 'String'>
+    readonly audience: FieldRef<"AgentDeliveryTarget", 'String'>
+    readonly authorizedFieldKeys: FieldRef<"AgentDeliveryTarget", 'String'>
+    readonly createdAt: FieldRef<"AgentDeliveryTarget", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AgentDeliveryTarget findUnique
+   */
+  export type AgentDeliveryTargetFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDeliveryTarget to fetch.
+     */
+    where: AgentDeliveryTargetWhereUniqueInput
+  }
+
+  /**
+   * AgentDeliveryTarget findUniqueOrThrow
+   */
+  export type AgentDeliveryTargetFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDeliveryTarget to fetch.
+     */
+    where: AgentDeliveryTargetWhereUniqueInput
+  }
+
+  /**
+   * AgentDeliveryTarget findFirst
+   */
+  export type AgentDeliveryTargetFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDeliveryTarget to fetch.
+     */
+    where?: AgentDeliveryTargetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDeliveryTargets to fetch.
+     */
+    orderBy?: AgentDeliveryTargetOrderByWithRelationInput | AgentDeliveryTargetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentDeliveryTargets.
+     */
+    cursor?: AgentDeliveryTargetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDeliveryTargets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDeliveryTargets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentDeliveryTargets.
+     */
+    distinct?: AgentDeliveryTargetScalarFieldEnum | AgentDeliveryTargetScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDeliveryTarget findFirstOrThrow
+   */
+  export type AgentDeliveryTargetFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDeliveryTarget to fetch.
+     */
+    where?: AgentDeliveryTargetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDeliveryTargets to fetch.
+     */
+    orderBy?: AgentDeliveryTargetOrderByWithRelationInput | AgentDeliveryTargetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentDeliveryTargets.
+     */
+    cursor?: AgentDeliveryTargetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDeliveryTargets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDeliveryTargets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentDeliveryTargets.
+     */
+    distinct?: AgentDeliveryTargetScalarFieldEnum | AgentDeliveryTargetScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDeliveryTarget findMany
+   */
+  export type AgentDeliveryTargetFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * Filter, which AgentDeliveryTargets to fetch.
+     */
+    where?: AgentDeliveryTargetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentDeliveryTargets to fetch.
+     */
+    orderBy?: AgentDeliveryTargetOrderByWithRelationInput | AgentDeliveryTargetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AgentDeliveryTargets.
+     */
+    cursor?: AgentDeliveryTargetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentDeliveryTargets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentDeliveryTargets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentDeliveryTargets.
+     */
+    distinct?: AgentDeliveryTargetScalarFieldEnum | AgentDeliveryTargetScalarFieldEnum[]
+  }
+
+  /**
+   * AgentDeliveryTarget create
+   */
+  export type AgentDeliveryTargetCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AgentDeliveryTarget.
+     */
+    data: XOR<AgentDeliveryTargetCreateInput, AgentDeliveryTargetUncheckedCreateInput>
+  }
+
+  /**
+   * AgentDeliveryTarget createMany
+   */
+  export type AgentDeliveryTargetCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AgentDeliveryTargets.
+     */
+    data: AgentDeliveryTargetCreateManyInput | AgentDeliveryTargetCreateManyInput[]
+  }
+
+  /**
+   * AgentDeliveryTarget createManyAndReturn
+   */
+  export type AgentDeliveryTargetCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * The data used to create many AgentDeliveryTargets.
+     */
+    data: AgentDeliveryTargetCreateManyInput | AgentDeliveryTargetCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AgentDeliveryTarget update
+   */
+  export type AgentDeliveryTargetUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AgentDeliveryTarget.
+     */
+    data: XOR<AgentDeliveryTargetUpdateInput, AgentDeliveryTargetUncheckedUpdateInput>
+    /**
+     * Choose, which AgentDeliveryTarget to update.
+     */
+    where: AgentDeliveryTargetWhereUniqueInput
+  }
+
+  /**
+   * AgentDeliveryTarget updateMany
+   */
+  export type AgentDeliveryTargetUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AgentDeliveryTargets.
+     */
+    data: XOR<AgentDeliveryTargetUpdateManyMutationInput, AgentDeliveryTargetUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentDeliveryTargets to update
+     */
+    where?: AgentDeliveryTargetWhereInput
+    /**
+     * Limit how many AgentDeliveryTargets to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentDeliveryTarget updateManyAndReturn
+   */
+  export type AgentDeliveryTargetUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * The data used to update AgentDeliveryTargets.
+     */
+    data: XOR<AgentDeliveryTargetUpdateManyMutationInput, AgentDeliveryTargetUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentDeliveryTargets to update
+     */
+    where?: AgentDeliveryTargetWhereInput
+    /**
+     * Limit how many AgentDeliveryTargets to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AgentDeliveryTarget upsert
+   */
+  export type AgentDeliveryTargetUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AgentDeliveryTarget to update in case it exists.
+     */
+    where: AgentDeliveryTargetWhereUniqueInput
+    /**
+     * In case the AgentDeliveryTarget found by the `where` argument doesn't exist, create a new AgentDeliveryTarget with this data.
+     */
+    create: XOR<AgentDeliveryTargetCreateInput, AgentDeliveryTargetUncheckedCreateInput>
+    /**
+     * In case the AgentDeliveryTarget was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AgentDeliveryTargetUpdateInput, AgentDeliveryTargetUncheckedUpdateInput>
+  }
+
+  /**
+   * AgentDeliveryTarget delete
+   */
+  export type AgentDeliveryTargetDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    /**
+     * Filter which AgentDeliveryTarget to delete.
+     */
+    where: AgentDeliveryTargetWhereUniqueInput
+  }
+
+  /**
+   * AgentDeliveryTarget deleteMany
+   */
+  export type AgentDeliveryTargetDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentDeliveryTargets to delete
+     */
+    where?: AgentDeliveryTargetWhereInput
+    /**
+     * Limit how many AgentDeliveryTargets to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentDeliveryTarget without action
+   */
+  export type AgentDeliveryTargetDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
   }
 
 
@@ -76172,6 +77444,7 @@ export namespace Prisma {
     agentCalls?: boolean | Organization$agentCallsArgs<ExtArgs>
     agentApprovals?: boolean | Organization$agentApprovalsArgs<ExtArgs>
     agentExecutions?: boolean | Organization$agentExecutionsArgs<ExtArgs>
+    agentDeliveryTargets?: boolean | Organization$agentDeliveryTargetsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -76223,6 +77496,7 @@ export namespace Prisma {
     agentCalls?: boolean | Organization$agentCallsArgs<ExtArgs>
     agentApprovals?: boolean | Organization$agentApprovalsArgs<ExtArgs>
     agentExecutions?: boolean | Organization$agentExecutionsArgs<ExtArgs>
+    agentDeliveryTargets?: boolean | Organization$agentDeliveryTargetsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -76250,6 +77524,7 @@ export namespace Prisma {
       agentCalls: Prisma.$AgentCallPayload<ExtArgs>[]
       agentApprovals: Prisma.$AgentApprovalPayload<ExtArgs>[]
       agentExecutions: Prisma.$AgentExecutionPayload<ExtArgs>[]
+      agentDeliveryTargets: Prisma.$AgentDeliveryTargetPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -76674,6 +77949,7 @@ export namespace Prisma {
     agentCalls<T extends Organization$agentCallsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentCallsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentCallPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agentApprovals<T extends Organization$agentApprovalsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentApprovalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentApprovalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agentExecutions<T extends Organization$agentExecutionsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentExecutionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentExecutionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    agentDeliveryTargets<T extends Organization$agentDeliveryTargetsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentDeliveryTargetsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -77553,6 +78829,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AgentExecutionScalarFieldEnum | AgentExecutionScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.agentDeliveryTargets
+   */
+  export type Organization$agentDeliveryTargetsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentDeliveryTarget
+     */
+    select?: AgentDeliveryTargetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentDeliveryTarget
+     */
+    omit?: AgentDeliveryTargetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgentDeliveryTargetInclude<ExtArgs> | null
+    where?: AgentDeliveryTargetWhereInput
+    orderBy?: AgentDeliveryTargetOrderByWithRelationInput | AgentDeliveryTargetOrderByWithRelationInput[]
+    cursor?: AgentDeliveryTargetWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AgentDeliveryTargetScalarFieldEnum | AgentDeliveryTargetScalarFieldEnum[]
   }
 
   /**
@@ -79869,6 +81169,20 @@ export namespace Prisma {
   export type AgentExecutionScalarFieldEnum = (typeof AgentExecutionScalarFieldEnum)[keyof typeof AgentExecutionScalarFieldEnum]
 
 
+  export const AgentDeliveryTargetScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    runId: 'runId',
+    targetUserId: 'targetUserId',
+    intentId: 'intentId',
+    audience: 'audience',
+    authorizedFieldKeys: 'authorizedFieldKeys',
+    createdAt: 'createdAt'
+  };
+
+  export type AgentDeliveryTargetScalarFieldEnum = (typeof AgentDeliveryTargetScalarFieldEnum)[keyof typeof AgentDeliveryTargetScalarFieldEnum]
+
+
   export const BillingEventScalarFieldEnum: {
     id: 'id',
     organizationId: 'organizationId',
@@ -81381,6 +82695,7 @@ export namespace Prisma {
     calls?: AgentCallListRelationFilter
     approval?: XOR<AgentApprovalNullableScalarRelationFilter, AgentApprovalWhereInput> | null
     execution?: XOR<AgentExecutionNullableScalarRelationFilter, AgentExecutionWhereInput> | null
+    deliveryTarget?: XOR<AgentDeliveryTargetNullableScalarRelationFilter, AgentDeliveryTargetWhereInput> | null
   }
 
   export type AgentRunOrderByWithRelationInput = {
@@ -81408,6 +82723,7 @@ export namespace Prisma {
     calls?: AgentCallOrderByRelationAggregateInput
     approval?: AgentApprovalOrderByWithRelationInput
     execution?: AgentExecutionOrderByWithRelationInput
+    deliveryTarget?: AgentDeliveryTargetOrderByWithRelationInput
   }
 
   export type AgentRunWhereUniqueInput = Prisma.AtLeast<{
@@ -81439,6 +82755,7 @@ export namespace Prisma {
     calls?: AgentCallListRelationFilter
     approval?: XOR<AgentApprovalNullableScalarRelationFilter, AgentApprovalWhereInput> | null
     execution?: XOR<AgentExecutionNullableScalarRelationFilter, AgentExecutionWhereInput> | null
+    deliveryTarget?: XOR<AgentDeliveryTargetNullableScalarRelationFilter, AgentDeliveryTargetWhereInput> | null
   }, "id" | "organizationId_dedupeKey">
 
   export type AgentRunOrderByWithAggregationInput = {
@@ -81760,6 +83077,79 @@ export namespace Prisma {
     actorId?: StringNullableWithAggregatesFilter<"AgentExecution"> | string | null
     executedAt?: DateTimeWithAggregatesFilter<"AgentExecution"> | Date | string
     createdAt?: DateTimeWithAggregatesFilter<"AgentExecution"> | Date | string
+  }
+
+  export type AgentDeliveryTargetWhereInput = {
+    AND?: AgentDeliveryTargetWhereInput | AgentDeliveryTargetWhereInput[]
+    OR?: AgentDeliveryTargetWhereInput[]
+    NOT?: AgentDeliveryTargetWhereInput | AgentDeliveryTargetWhereInput[]
+    id?: StringFilter<"AgentDeliveryTarget"> | string
+    organizationId?: StringFilter<"AgentDeliveryTarget"> | string
+    runId?: StringFilter<"AgentDeliveryTarget"> | string
+    targetUserId?: StringFilter<"AgentDeliveryTarget"> | string
+    intentId?: StringFilter<"AgentDeliveryTarget"> | string
+    audience?: StringFilter<"AgentDeliveryTarget"> | string
+    authorizedFieldKeys?: StringNullableFilter<"AgentDeliveryTarget"> | string | null
+    createdAt?: DateTimeFilter<"AgentDeliveryTarget"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    run?: XOR<AgentRunScalarRelationFilter, AgentRunWhereInput>
+  }
+
+  export type AgentDeliveryTargetOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    targetUserId?: SortOrder
+    intentId?: SortOrder
+    audience?: SortOrder
+    authorizedFieldKeys?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    run?: AgentRunOrderByWithRelationInput
+  }
+
+  export type AgentDeliveryTargetWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    runId?: string
+    AND?: AgentDeliveryTargetWhereInput | AgentDeliveryTargetWhereInput[]
+    OR?: AgentDeliveryTargetWhereInput[]
+    NOT?: AgentDeliveryTargetWhereInput | AgentDeliveryTargetWhereInput[]
+    organizationId?: StringFilter<"AgentDeliveryTarget"> | string
+    targetUserId?: StringFilter<"AgentDeliveryTarget"> | string
+    intentId?: StringFilter<"AgentDeliveryTarget"> | string
+    audience?: StringFilter<"AgentDeliveryTarget"> | string
+    authorizedFieldKeys?: StringNullableFilter<"AgentDeliveryTarget"> | string | null
+    createdAt?: DateTimeFilter<"AgentDeliveryTarget"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    run?: XOR<AgentRunScalarRelationFilter, AgentRunWhereInput>
+  }, "id" | "runId">
+
+  export type AgentDeliveryTargetOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    targetUserId?: SortOrder
+    intentId?: SortOrder
+    audience?: SortOrder
+    authorizedFieldKeys?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: AgentDeliveryTargetCountOrderByAggregateInput
+    _max?: AgentDeliveryTargetMaxOrderByAggregateInput
+    _min?: AgentDeliveryTargetMinOrderByAggregateInput
+  }
+
+  export type AgentDeliveryTargetScalarWhereWithAggregatesInput = {
+    AND?: AgentDeliveryTargetScalarWhereWithAggregatesInput | AgentDeliveryTargetScalarWhereWithAggregatesInput[]
+    OR?: AgentDeliveryTargetScalarWhereWithAggregatesInput[]
+    NOT?: AgentDeliveryTargetScalarWhereWithAggregatesInput | AgentDeliveryTargetScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AgentDeliveryTarget"> | string
+    organizationId?: StringWithAggregatesFilter<"AgentDeliveryTarget"> | string
+    runId?: StringWithAggregatesFilter<"AgentDeliveryTarget"> | string
+    targetUserId?: StringWithAggregatesFilter<"AgentDeliveryTarget"> | string
+    intentId?: StringWithAggregatesFilter<"AgentDeliveryTarget"> | string
+    audience?: StringWithAggregatesFilter<"AgentDeliveryTarget"> | string
+    authorizedFieldKeys?: StringNullableWithAggregatesFilter<"AgentDeliveryTarget"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"AgentDeliveryTarget"> | Date | string
   }
 
   export type BillingEventWhereInput = {
@@ -87004,6 +88394,7 @@ export namespace Prisma {
     agentCalls?: AgentCallListRelationFilter
     agentApprovals?: AgentApprovalListRelationFilter
     agentExecutions?: AgentExecutionListRelationFilter
+    agentDeliveryTargets?: AgentDeliveryTargetListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -87032,6 +88423,7 @@ export namespace Prisma {
     agentCalls?: AgentCallOrderByRelationAggregateInput
     agentApprovals?: AgentApprovalOrderByRelationAggregateInput
     agentExecutions?: AgentExecutionOrderByRelationAggregateInput
+    agentDeliveryTargets?: AgentDeliveryTargetOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -87063,6 +88455,7 @@ export namespace Prisma {
     agentCalls?: AgentCallListRelationFilter
     agentApprovals?: AgentApprovalListRelationFilter
     agentExecutions?: AgentExecutionListRelationFilter
+    agentDeliveryTargets?: AgentDeliveryTargetListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -87252,6 +88645,7 @@ export namespace Prisma {
     calls?: AgentCallCreateNestedManyWithoutRunInput
     approval?: AgentApprovalCreateNestedOneWithoutRunInput
     execution?: AgentExecutionCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunUncheckedCreateInput = {
@@ -87278,6 +88672,7 @@ export namespace Prisma {
     calls?: AgentCallUncheckedCreateNestedManyWithoutRunInput
     approval?: AgentApprovalUncheckedCreateNestedOneWithoutRunInput
     execution?: AgentExecutionUncheckedCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunUpdateInput = {
@@ -87304,6 +88699,7 @@ export namespace Prisma {
     calls?: AgentCallUpdateManyWithoutRunNestedInput
     approval?: AgentApprovalUpdateOneWithoutRunNestedInput
     execution?: AgentExecutionUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUpdateOneWithoutRunNestedInput
   }
 
   export type AgentRunUncheckedUpdateInput = {
@@ -87330,6 +88726,7 @@ export namespace Prisma {
     calls?: AgentCallUncheckedUpdateManyWithoutRunNestedInput
     approval?: AgentApprovalUncheckedUpdateOneWithoutRunNestedInput
     execution?: AgentExecutionUncheckedUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedUpdateOneWithoutRunNestedInput
   }
 
   export type AgentRunCreateManyInput = {
@@ -87685,6 +89082,81 @@ export namespace Prisma {
     deliveryStatus?: StringFieldUpdateOperationsInput | string
     actorId?: NullableStringFieldUpdateOperationsInput | string | null
     executedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDeliveryTargetCreateInput = {
+    id?: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys?: string | null
+    createdAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutAgentDeliveryTargetsInput
+    run: AgentRunCreateNestedOneWithoutDeliveryTargetInput
+  }
+
+  export type AgentDeliveryTargetUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    runId: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys?: string | null
+    createdAt?: Date | string
+  }
+
+  export type AgentDeliveryTargetUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutAgentDeliveryTargetsNestedInput
+    run?: AgentRunUpdateOneRequiredWithoutDeliveryTargetNestedInput
+  }
+
+  export type AgentDeliveryTargetUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDeliveryTargetCreateManyInput = {
+    id?: string
+    organizationId: string
+    runId: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys?: string | null
+    createdAt?: Date | string
+  }
+
+  export type AgentDeliveryTargetUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDeliveryTargetUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -93684,6 +95156,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -93712,6 +95185,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -93740,6 +95214,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -93768,6 +95243,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -94036,6 +95512,11 @@ export namespace Prisma {
   export type AgentExecutionNullableScalarRelationFilter = {
     is?: AgentExecutionWhereInput | null
     isNot?: AgentExecutionWhereInput | null
+  }
+
+  export type AgentDeliveryTargetNullableScalarRelationFilter = {
+    is?: AgentDeliveryTargetWhereInput | null
+    isNot?: AgentDeliveryTargetWhereInput | null
   }
 
   export type SortOrderInput = {
@@ -94430,6 +95911,39 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumNotificationChannelFilter<$PrismaModel>
     _max?: NestedEnumNotificationChannelFilter<$PrismaModel>
+  }
+
+  export type AgentDeliveryTargetCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    targetUserId?: SortOrder
+    intentId?: SortOrder
+    audience?: SortOrder
+    authorizedFieldKeys?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentDeliveryTargetMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    targetUserId?: SortOrder
+    intentId?: SortOrder
+    audience?: SortOrder
+    authorizedFieldKeys?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentDeliveryTargetMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    targetUserId?: SortOrder
+    intentId?: SortOrder
+    audience?: SortOrder
+    authorizedFieldKeys?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type EnumBillingEventTypeFilter<$PrismaModel = never> = {
@@ -98691,6 +100205,12 @@ export namespace Prisma {
     none?: AgentExecutionWhereInput
   }
 
+  export type AgentDeliveryTargetListRelationFilter = {
+    every?: AgentDeliveryTargetWhereInput
+    some?: AgentDeliveryTargetWhereInput
+    none?: AgentDeliveryTargetWhereInput
+  }
+
   export type TenantAuditEventOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -98732,6 +100252,10 @@ export namespace Prisma {
   }
 
   export type AgentExecutionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AgentDeliveryTargetOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -98899,6 +100423,12 @@ export namespace Prisma {
     connect?: AgentExecutionWhereUniqueInput
   }
 
+  export type AgentDeliveryTargetCreateNestedOneWithoutRunInput = {
+    create?: XOR<AgentDeliveryTargetCreateWithoutRunInput, AgentDeliveryTargetUncheckedCreateWithoutRunInput>
+    connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutRunInput
+    connect?: AgentDeliveryTargetWhereUniqueInput
+  }
+
   export type AgentCallUncheckedCreateNestedManyWithoutRunInput = {
     create?: XOR<AgentCallCreateWithoutRunInput, AgentCallUncheckedCreateWithoutRunInput> | AgentCallCreateWithoutRunInput[] | AgentCallUncheckedCreateWithoutRunInput[]
     connectOrCreate?: AgentCallCreateOrConnectWithoutRunInput | AgentCallCreateOrConnectWithoutRunInput[]
@@ -98916,6 +100446,12 @@ export namespace Prisma {
     create?: XOR<AgentExecutionCreateWithoutRunInput, AgentExecutionUncheckedCreateWithoutRunInput>
     connectOrCreate?: AgentExecutionCreateOrConnectWithoutRunInput
     connect?: AgentExecutionWhereUniqueInput
+  }
+
+  export type AgentDeliveryTargetUncheckedCreateNestedOneWithoutRunInput = {
+    create?: XOR<AgentDeliveryTargetCreateWithoutRunInput, AgentDeliveryTargetUncheckedCreateWithoutRunInput>
+    connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutRunInput
+    connect?: AgentDeliveryTargetWhereUniqueInput
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -98996,6 +100532,16 @@ export namespace Prisma {
     update?: XOR<XOR<AgentExecutionUpdateToOneWithWhereWithoutRunInput, AgentExecutionUpdateWithoutRunInput>, AgentExecutionUncheckedUpdateWithoutRunInput>
   }
 
+  export type AgentDeliveryTargetUpdateOneWithoutRunNestedInput = {
+    create?: XOR<AgentDeliveryTargetCreateWithoutRunInput, AgentDeliveryTargetUncheckedCreateWithoutRunInput>
+    connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutRunInput
+    upsert?: AgentDeliveryTargetUpsertWithoutRunInput
+    disconnect?: AgentDeliveryTargetWhereInput | boolean
+    delete?: AgentDeliveryTargetWhereInput | boolean
+    connect?: AgentDeliveryTargetWhereUniqueInput
+    update?: XOR<XOR<AgentDeliveryTargetUpdateToOneWithWhereWithoutRunInput, AgentDeliveryTargetUpdateWithoutRunInput>, AgentDeliveryTargetUncheckedUpdateWithoutRunInput>
+  }
+
   export type AgentCallUncheckedUpdateManyWithoutRunNestedInput = {
     create?: XOR<AgentCallCreateWithoutRunInput, AgentCallUncheckedCreateWithoutRunInput> | AgentCallCreateWithoutRunInput[] | AgentCallUncheckedCreateWithoutRunInput[]
     connectOrCreate?: AgentCallCreateOrConnectWithoutRunInput | AgentCallCreateOrConnectWithoutRunInput[]
@@ -99028,6 +100574,16 @@ export namespace Prisma {
     delete?: AgentExecutionWhereInput | boolean
     connect?: AgentExecutionWhereUniqueInput
     update?: XOR<XOR<AgentExecutionUpdateToOneWithWhereWithoutRunInput, AgentExecutionUpdateWithoutRunInput>, AgentExecutionUncheckedUpdateWithoutRunInput>
+  }
+
+  export type AgentDeliveryTargetUncheckedUpdateOneWithoutRunNestedInput = {
+    create?: XOR<AgentDeliveryTargetCreateWithoutRunInput, AgentDeliveryTargetUncheckedCreateWithoutRunInput>
+    connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutRunInput
+    upsert?: AgentDeliveryTargetUpsertWithoutRunInput
+    disconnect?: AgentDeliveryTargetWhereInput | boolean
+    delete?: AgentDeliveryTargetWhereInput | boolean
+    connect?: AgentDeliveryTargetWhereUniqueInput
+    update?: XOR<XOR<AgentDeliveryTargetUpdateToOneWithWhereWithoutRunInput, AgentDeliveryTargetUpdateWithoutRunInput>, AgentDeliveryTargetUncheckedUpdateWithoutRunInput>
   }
 
   export type OrganizationCreateNestedOneWithoutAgentCallsInput = {
@@ -99124,6 +100680,34 @@ export namespace Prisma {
     upsert?: AgentRunUpsertWithoutExecutionInput
     connect?: AgentRunWhereUniqueInput
     update?: XOR<XOR<AgentRunUpdateToOneWithWhereWithoutExecutionInput, AgentRunUpdateWithoutExecutionInput>, AgentRunUncheckedUpdateWithoutExecutionInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutAgentDeliveryTargetsInput = {
+    create?: XOR<OrganizationCreateWithoutAgentDeliveryTargetsInput, OrganizationUncheckedCreateWithoutAgentDeliveryTargetsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutAgentDeliveryTargetsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type AgentRunCreateNestedOneWithoutDeliveryTargetInput = {
+    create?: XOR<AgentRunCreateWithoutDeliveryTargetInput, AgentRunUncheckedCreateWithoutDeliveryTargetInput>
+    connectOrCreate?: AgentRunCreateOrConnectWithoutDeliveryTargetInput
+    connect?: AgentRunWhereUniqueInput
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutAgentDeliveryTargetsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutAgentDeliveryTargetsInput, OrganizationUncheckedCreateWithoutAgentDeliveryTargetsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutAgentDeliveryTargetsInput
+    upsert?: OrganizationUpsertWithoutAgentDeliveryTargetsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutAgentDeliveryTargetsInput, OrganizationUpdateWithoutAgentDeliveryTargetsInput>, OrganizationUncheckedUpdateWithoutAgentDeliveryTargetsInput>
+  }
+
+  export type AgentRunUpdateOneRequiredWithoutDeliveryTargetNestedInput = {
+    create?: XOR<AgentRunCreateWithoutDeliveryTargetInput, AgentRunUncheckedCreateWithoutDeliveryTargetInput>
+    connectOrCreate?: AgentRunCreateOrConnectWithoutDeliveryTargetInput
+    upsert?: AgentRunUpsertWithoutDeliveryTargetInput
+    connect?: AgentRunWhereUniqueInput
+    update?: XOR<XOR<AgentRunUpdateToOneWithWhereWithoutDeliveryTargetInput, AgentRunUpdateWithoutDeliveryTargetInput>, AgentRunUncheckedUpdateWithoutDeliveryTargetInput>
   }
 
   export type OrganizationCreateNestedOneWithoutBillingEventsInput = {
@@ -102687,6 +104271,13 @@ export namespace Prisma {
     connect?: AgentExecutionWhereUniqueInput | AgentExecutionWhereUniqueInput[]
   }
 
+  export type AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<AgentDeliveryTargetCreateWithoutOrganizationInput, AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput> | AgentDeliveryTargetCreateWithoutOrganizationInput[] | AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput | AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput[]
+    createMany?: AgentDeliveryTargetCreateManyOrganizationInputEnvelope
+    connect?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+  }
+
   export type MembershipUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -102818,6 +104409,13 @@ export namespace Prisma {
     connectOrCreate?: AgentExecutionCreateOrConnectWithoutOrganizationInput | AgentExecutionCreateOrConnectWithoutOrganizationInput[]
     createMany?: AgentExecutionCreateManyOrganizationInputEnvelope
     connect?: AgentExecutionWhereUniqueInput | AgentExecutionWhereUniqueInput[]
+  }
+
+  export type AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<AgentDeliveryTargetCreateWithoutOrganizationInput, AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput> | AgentDeliveryTargetCreateWithoutOrganizationInput[] | AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput | AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput[]
+    createMany?: AgentDeliveryTargetCreateManyOrganizationInputEnvelope
+    connect?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
   }
 
   export type EnumOrganizationStatusFieldUpdateOperationsInput = {
@@ -103090,6 +104688,20 @@ export namespace Prisma {
     deleteMany?: AgentExecutionScalarWhereInput | AgentExecutionScalarWhereInput[]
   }
 
+  export type AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<AgentDeliveryTargetCreateWithoutOrganizationInput, AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput> | AgentDeliveryTargetCreateWithoutOrganizationInput[] | AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput | AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput[]
+    upsert?: AgentDeliveryTargetUpsertWithWhereUniqueWithoutOrganizationInput | AgentDeliveryTargetUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: AgentDeliveryTargetCreateManyOrganizationInputEnvelope
+    set?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+    disconnect?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+    delete?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+    connect?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+    update?: AgentDeliveryTargetUpdateWithWhereUniqueWithoutOrganizationInput | AgentDeliveryTargetUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: AgentDeliveryTargetUpdateManyWithWhereWithoutOrganizationInput | AgentDeliveryTargetUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: AgentDeliveryTargetScalarWhereInput | AgentDeliveryTargetScalarWhereInput[]
+  }
+
   export type MembershipUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -103354,6 +104966,20 @@ export namespace Prisma {
     update?: AgentExecutionUpdateWithWhereUniqueWithoutOrganizationInput | AgentExecutionUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: AgentExecutionUpdateManyWithWhereWithoutOrganizationInput | AgentExecutionUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: AgentExecutionScalarWhereInput | AgentExecutionScalarWhereInput[]
+  }
+
+  export type AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<AgentDeliveryTargetCreateWithoutOrganizationInput, AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput> | AgentDeliveryTargetCreateWithoutOrganizationInput[] | AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput | AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput[]
+    upsert?: AgentDeliveryTargetUpsertWithWhereUniqueWithoutOrganizationInput | AgentDeliveryTargetUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: AgentDeliveryTargetCreateManyOrganizationInputEnvelope
+    set?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+    disconnect?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+    delete?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+    connect?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+    update?: AgentDeliveryTargetUpdateWithWhereUniqueWithoutOrganizationInput | AgentDeliveryTargetUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: AgentDeliveryTargetUpdateManyWithWhereWithoutOrganizationInput | AgentDeliveryTargetUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: AgentDeliveryTargetScalarWhereInput | AgentDeliveryTargetScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutMembershipsInput = {
@@ -104650,6 +106276,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentRunsInput = {
@@ -104677,6 +106304,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentRunsInput = {
@@ -104781,6 +106409,31 @@ export namespace Prisma {
     create: XOR<AgentExecutionCreateWithoutRunInput, AgentExecutionUncheckedCreateWithoutRunInput>
   }
 
+  export type AgentDeliveryTargetCreateWithoutRunInput = {
+    id?: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys?: string | null
+    createdAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutAgentDeliveryTargetsInput
+  }
+
+  export type AgentDeliveryTargetUncheckedCreateWithoutRunInput = {
+    id?: string
+    organizationId: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys?: string | null
+    createdAt?: Date | string
+  }
+
+  export type AgentDeliveryTargetCreateOrConnectWithoutRunInput = {
+    where: AgentDeliveryTargetWhereUniqueInput
+    create: XOR<AgentDeliveryTargetCreateWithoutRunInput, AgentDeliveryTargetUncheckedCreateWithoutRunInput>
+  }
+
   export type OrganizationUpsertWithoutAgentRunsInput = {
     update: XOR<OrganizationUpdateWithoutAgentRunsInput, OrganizationUncheckedUpdateWithoutAgentRunsInput>
     create: XOR<OrganizationCreateWithoutAgentRunsInput, OrganizationUncheckedCreateWithoutAgentRunsInput>
@@ -104817,6 +106470,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentRunsInput = {
@@ -104844,6 +106498,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentCallUpsertWithWhereUniqueWithoutRunInput = {
@@ -104950,6 +106605,37 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AgentDeliveryTargetUpsertWithoutRunInput = {
+    update: XOR<AgentDeliveryTargetUpdateWithoutRunInput, AgentDeliveryTargetUncheckedUpdateWithoutRunInput>
+    create: XOR<AgentDeliveryTargetCreateWithoutRunInput, AgentDeliveryTargetUncheckedCreateWithoutRunInput>
+    where?: AgentDeliveryTargetWhereInput
+  }
+
+  export type AgentDeliveryTargetUpdateToOneWithWhereWithoutRunInput = {
+    where?: AgentDeliveryTargetWhereInput
+    data: XOR<AgentDeliveryTargetUpdateWithoutRunInput, AgentDeliveryTargetUncheckedUpdateWithoutRunInput>
+  }
+
+  export type AgentDeliveryTargetUpdateWithoutRunInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutAgentDeliveryTargetsNestedInput
+  }
+
+  export type AgentDeliveryTargetUncheckedUpdateWithoutRunInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type OrganizationCreateWithoutAgentCallsInput = {
     id?: string
     name: string
@@ -104975,6 +106661,7 @@ export namespace Prisma {
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentCallsInput = {
@@ -105002,6 +106689,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentCallsInput = {
@@ -105032,6 +106720,7 @@ export namespace Prisma {
     organization: OrganizationCreateNestedOneWithoutAgentRunsInput
     approval?: AgentApprovalCreateNestedOneWithoutRunInput
     execution?: AgentExecutionCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunUncheckedCreateWithoutCallsInput = {
@@ -105057,6 +106746,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     approval?: AgentApprovalUncheckedCreateNestedOneWithoutRunInput
     execution?: AgentExecutionUncheckedCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunCreateOrConnectWithoutCallsInput = {
@@ -105100,6 +106790,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentCallsInput = {
@@ -105127,6 +106818,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentRunUpsertWithoutCallsInput = {
@@ -105163,6 +106855,7 @@ export namespace Prisma {
     organization?: OrganizationUpdateOneRequiredWithoutAgentRunsNestedInput
     approval?: AgentApprovalUpdateOneWithoutRunNestedInput
     execution?: AgentExecutionUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUpdateOneWithoutRunNestedInput
   }
 
   export type AgentRunUncheckedUpdateWithoutCallsInput = {
@@ -105188,6 +106881,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     approval?: AgentApprovalUncheckedUpdateOneWithoutRunNestedInput
     execution?: AgentExecutionUncheckedUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedUpdateOneWithoutRunNestedInput
   }
 
   export type OrganizationCreateWithoutAgentApprovalsInput = {
@@ -105215,6 +106909,7 @@ export namespace Prisma {
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentApprovalsInput = {
@@ -105242,6 +106937,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentApprovalsInput = {
@@ -105272,6 +106968,7 @@ export namespace Prisma {
     organization: OrganizationCreateNestedOneWithoutAgentRunsInput
     calls?: AgentCallCreateNestedManyWithoutRunInput
     execution?: AgentExecutionCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunUncheckedCreateWithoutApprovalInput = {
@@ -105297,6 +106994,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     calls?: AgentCallUncheckedCreateNestedManyWithoutRunInput
     execution?: AgentExecutionUncheckedCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunCreateOrConnectWithoutApprovalInput = {
@@ -105340,6 +107038,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentApprovalsInput = {
@@ -105367,6 +107066,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentRunUpsertWithoutApprovalInput = {
@@ -105403,6 +107103,7 @@ export namespace Prisma {
     organization?: OrganizationUpdateOneRequiredWithoutAgentRunsNestedInput
     calls?: AgentCallUpdateManyWithoutRunNestedInput
     execution?: AgentExecutionUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUpdateOneWithoutRunNestedInput
   }
 
   export type AgentRunUncheckedUpdateWithoutApprovalInput = {
@@ -105428,6 +107129,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     calls?: AgentCallUncheckedUpdateManyWithoutRunNestedInput
     execution?: AgentExecutionUncheckedUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedUpdateOneWithoutRunNestedInput
   }
 
   export type OrganizationCreateWithoutAgentExecutionsInput = {
@@ -105455,6 +107157,7 @@ export namespace Prisma {
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentExecutionsInput = {
@@ -105482,6 +107185,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentExecutionsInput = {
@@ -105512,6 +107216,7 @@ export namespace Prisma {
     organization: OrganizationCreateNestedOneWithoutAgentRunsInput
     calls?: AgentCallCreateNestedManyWithoutRunInput
     approval?: AgentApprovalCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunUncheckedCreateWithoutExecutionInput = {
@@ -105537,6 +107242,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     calls?: AgentCallUncheckedCreateNestedManyWithoutRunInput
     approval?: AgentApprovalUncheckedCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunCreateOrConnectWithoutExecutionInput = {
@@ -105580,6 +107286,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentExecutionsInput = {
@@ -105607,6 +107314,7 @@ export namespace Prisma {
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentRunUpsertWithoutExecutionInput = {
@@ -105643,6 +107351,7 @@ export namespace Prisma {
     organization?: OrganizationUpdateOneRequiredWithoutAgentRunsNestedInput
     calls?: AgentCallUpdateManyWithoutRunNestedInput
     approval?: AgentApprovalUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUpdateOneWithoutRunNestedInput
   }
 
   export type AgentRunUncheckedUpdateWithoutExecutionInput = {
@@ -105668,6 +107377,255 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     calls?: AgentCallUncheckedUpdateManyWithoutRunNestedInput
     approval?: AgentApprovalUncheckedUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedUpdateOneWithoutRunNestedInput
+  }
+
+  export type OrganizationCreateWithoutAgentDeliveryTargetsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
+    usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
+    billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
+    agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
+    agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
+    agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutAgentDeliveryTargetsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
+    usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
+    agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
+    agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
+    agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutAgentDeliveryTargetsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutAgentDeliveryTargetsInput, OrganizationUncheckedCreateWithoutAgentDeliveryTargetsInput>
+  }
+
+  export type AgentRunCreateWithoutDeliveryTargetInput = {
+    id?: string
+    skill: string
+    status: $Enums.AgentRunStatus
+    risk: $Enums.AgentRiskLevel
+    requiresApproval?: boolean
+    requestedBy: string
+    subjectLabel?: string | null
+    goal: string
+    proposalJson?: string | null
+    rawText?: string | null
+    reason?: string | null
+    degradeCode?: string | null
+    providerKind: $Enums.AgentProviderKind
+    injectionSignals?: string | null
+    costMicroCents?: number
+    dedupeKey: string
+    requestHash?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutAgentRunsInput
+    calls?: AgentCallCreateNestedManyWithoutRunInput
+    approval?: AgentApprovalCreateNestedOneWithoutRunInput
+    execution?: AgentExecutionCreateNestedOneWithoutRunInput
+  }
+
+  export type AgentRunUncheckedCreateWithoutDeliveryTargetInput = {
+    id?: string
+    organizationId: string
+    skill: string
+    status: $Enums.AgentRunStatus
+    risk: $Enums.AgentRiskLevel
+    requiresApproval?: boolean
+    requestedBy: string
+    subjectLabel?: string | null
+    goal: string
+    proposalJson?: string | null
+    rawText?: string | null
+    reason?: string | null
+    degradeCode?: string | null
+    providerKind: $Enums.AgentProviderKind
+    injectionSignals?: string | null
+    costMicroCents?: number
+    dedupeKey: string
+    requestHash?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    calls?: AgentCallUncheckedCreateNestedManyWithoutRunInput
+    approval?: AgentApprovalUncheckedCreateNestedOneWithoutRunInput
+    execution?: AgentExecutionUncheckedCreateNestedOneWithoutRunInput
+  }
+
+  export type AgentRunCreateOrConnectWithoutDeliveryTargetInput = {
+    where: AgentRunWhereUniqueInput
+    create: XOR<AgentRunCreateWithoutDeliveryTargetInput, AgentRunUncheckedCreateWithoutDeliveryTargetInput>
+  }
+
+  export type OrganizationUpsertWithoutAgentDeliveryTargetsInput = {
+    update: XOR<OrganizationUpdateWithoutAgentDeliveryTargetsInput, OrganizationUncheckedUpdateWithoutAgentDeliveryTargetsInput>
+    create: XOR<OrganizationCreateWithoutAgentDeliveryTargetsInput, OrganizationUncheckedCreateWithoutAgentDeliveryTargetsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutAgentDeliveryTargetsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutAgentDeliveryTargetsInput, OrganizationUncheckedUpdateWithoutAgentDeliveryTargetsInput>
+  }
+
+  export type OrganizationUpdateWithoutAgentDeliveryTargetsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
+    usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
+    billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
+    agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
+    agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
+    agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutAgentDeliveryTargetsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
+    usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type AgentRunUpsertWithoutDeliveryTargetInput = {
+    update: XOR<AgentRunUpdateWithoutDeliveryTargetInput, AgentRunUncheckedUpdateWithoutDeliveryTargetInput>
+    create: XOR<AgentRunCreateWithoutDeliveryTargetInput, AgentRunUncheckedCreateWithoutDeliveryTargetInput>
+    where?: AgentRunWhereInput
+  }
+
+  export type AgentRunUpdateToOneWithWhereWithoutDeliveryTargetInput = {
+    where?: AgentRunWhereInput
+    data: XOR<AgentRunUpdateWithoutDeliveryTargetInput, AgentRunUncheckedUpdateWithoutDeliveryTargetInput>
+  }
+
+  export type AgentRunUpdateWithoutDeliveryTargetInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skill?: StringFieldUpdateOperationsInput | string
+    status?: EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
+    risk?: EnumAgentRiskLevelFieldUpdateOperationsInput | $Enums.AgentRiskLevel
+    requiresApproval?: BoolFieldUpdateOperationsInput | boolean
+    requestedBy?: StringFieldUpdateOperationsInput | string
+    subjectLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    goal?: StringFieldUpdateOperationsInput | string
+    proposalJson?: NullableStringFieldUpdateOperationsInput | string | null
+    rawText?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    degradeCode?: NullableStringFieldUpdateOperationsInput | string | null
+    providerKind?: EnumAgentProviderKindFieldUpdateOperationsInput | $Enums.AgentProviderKind
+    injectionSignals?: NullableStringFieldUpdateOperationsInput | string | null
+    costMicroCents?: IntFieldUpdateOperationsInput | number
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    requestHash?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutAgentRunsNestedInput
+    calls?: AgentCallUpdateManyWithoutRunNestedInput
+    approval?: AgentApprovalUpdateOneWithoutRunNestedInput
+    execution?: AgentExecutionUpdateOneWithoutRunNestedInput
+  }
+
+  export type AgentRunUncheckedUpdateWithoutDeliveryTargetInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    skill?: StringFieldUpdateOperationsInput | string
+    status?: EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
+    risk?: EnumAgentRiskLevelFieldUpdateOperationsInput | $Enums.AgentRiskLevel
+    requiresApproval?: BoolFieldUpdateOperationsInput | boolean
+    requestedBy?: StringFieldUpdateOperationsInput | string
+    subjectLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    goal?: StringFieldUpdateOperationsInput | string
+    proposalJson?: NullableStringFieldUpdateOperationsInput | string | null
+    rawText?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    degradeCode?: NullableStringFieldUpdateOperationsInput | string | null
+    providerKind?: EnumAgentProviderKindFieldUpdateOperationsInput | $Enums.AgentProviderKind
+    injectionSignals?: NullableStringFieldUpdateOperationsInput | string | null
+    costMicroCents?: IntFieldUpdateOperationsInput | number
+    dedupeKey?: StringFieldUpdateOperationsInput | string
+    requestHash?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    calls?: AgentCallUncheckedUpdateManyWithoutRunNestedInput
+    approval?: AgentApprovalUncheckedUpdateOneWithoutRunNestedInput
+    execution?: AgentExecutionUncheckedUpdateOneWithoutRunNestedInput
   }
 
   export type OrganizationCreateWithoutBillingEventsInput = {
@@ -105695,6 +107653,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutBillingEventsInput = {
@@ -105722,6 +107681,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutBillingEventsInput = {
@@ -105765,6 +107725,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutBillingEventsInput = {
@@ -105792,6 +107753,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutUsageRecordsInput = {
@@ -105819,6 +107781,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutUsageRecordsInput = {
@@ -105846,6 +107809,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutUsageRecordsInput = {
@@ -105889,6 +107853,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutUsageRecordsInput = {
@@ -105916,6 +107881,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutMissionsInput = {
@@ -105943,6 +107909,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionsInput = {
@@ -105970,6 +107937,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionsInput = {
@@ -106243,6 +108211,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionsInput = {
@@ -106270,6 +108239,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMissionsInput = {
@@ -106521,6 +108491,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSocialIntentsInput = {
@@ -106548,6 +108519,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSocialIntentsInput = {
@@ -106757,6 +108729,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSocialIntentsInput = {
@@ -106784,6 +108757,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutSocialIntentsInput = {
@@ -106989,6 +108963,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionParticipationsInput = {
@@ -107016,6 +108991,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionParticipationsInput = {
@@ -107225,6 +109201,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionParticipationsInput = {
@@ -107252,6 +109229,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutParticipationsInput = {
@@ -107457,6 +109435,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIdempotencyRecordsInput = {
@@ -107484,6 +109463,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIdempotencyRecordsInput = {
@@ -107527,6 +109507,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput = {
@@ -107554,6 +109535,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutConnectionProposalsInput = {
@@ -107581,6 +109563,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutConnectionProposalsInput = {
@@ -107608,6 +109591,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutConnectionProposalsInput = {
@@ -107988,6 +109972,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutConnectionProposalsInput = {
@@ -108015,6 +110000,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutProposalsInput = {
@@ -108405,6 +110391,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutProposalDecisionsInput = {
@@ -108432,6 +110419,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutProposalDecisionsInput = {
@@ -108629,6 +110617,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutProposalDecisionsInput = {
@@ -108656,6 +110645,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ConnectionProposalUpsertWithoutDecisionsInput = {
@@ -108849,6 +110839,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutWorkflowJobsInput = {
@@ -108876,6 +110867,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutWorkflowJobsInput = {
@@ -108919,6 +110911,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutWorkflowJobsInput = {
@@ -108946,6 +110939,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutNotificationDeliveriesInput = {
@@ -108973,6 +110967,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutNotificationDeliveriesInput = {
@@ -109000,6 +110995,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutNotificationDeliveriesInput = {
@@ -109043,6 +111039,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutNotificationDeliveriesInput = {
@@ -109070,6 +111067,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutIntroductionWorkflowsInput = {
@@ -109097,6 +111095,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIntroductionWorkflowsInput = {
@@ -109124,6 +111123,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIntroductionWorkflowsInput = {
@@ -109204,6 +111204,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIntroductionWorkflowsInput = {
@@ -109231,6 +111232,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ConnectionProposalUpsertWithoutIntroductionWorkflowInput = {
@@ -121564,6 +123566,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutOutcomesInput = {
@@ -121591,6 +123594,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutOutcomesInput = {
@@ -121663,6 +123667,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutOutcomesInput = {
@@ -121690,6 +123695,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OutcomeVerificationUpsertWithWhereUniqueWithoutOutcomeInput = {
@@ -121747,6 +123753,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutOutcomeVerificationsInput = {
@@ -121774,6 +123781,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutOutcomeVerificationsInput = {
@@ -121850,6 +123858,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutOutcomeVerificationsInput = {
@@ -121877,6 +123886,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OutcomeUpsertWithoutVerificationsInput = {
@@ -122494,6 +124504,7 @@ export namespace Prisma {
     calls?: AgentCallCreateNestedManyWithoutRunInput
     approval?: AgentApprovalCreateNestedOneWithoutRunInput
     execution?: AgentExecutionCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunUncheckedCreateWithoutOrganizationInput = {
@@ -122519,6 +124530,7 @@ export namespace Prisma {
     calls?: AgentCallUncheckedCreateNestedManyWithoutRunInput
     approval?: AgentApprovalUncheckedCreateNestedOneWithoutRunInput
     execution?: AgentExecutionUncheckedCreateNestedOneWithoutRunInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedCreateNestedOneWithoutRunInput
   }
 
   export type AgentRunCreateOrConnectWithoutOrganizationInput = {
@@ -122633,6 +124645,35 @@ export namespace Prisma {
 
   export type AgentExecutionCreateManyOrganizationInputEnvelope = {
     data: AgentExecutionCreateManyOrganizationInput | AgentExecutionCreateManyOrganizationInput[]
+  }
+
+  export type AgentDeliveryTargetCreateWithoutOrganizationInput = {
+    id?: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys?: string | null
+    createdAt?: Date | string
+    run: AgentRunCreateNestedOneWithoutDeliveryTargetInput
+  }
+
+  export type AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    runId: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys?: string | null
+    createdAt?: Date | string
+  }
+
+  export type AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput = {
+    where: AgentDeliveryTargetWhereUniqueInput
+    create: XOR<AgentDeliveryTargetCreateWithoutOrganizationInput, AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type AgentDeliveryTargetCreateManyOrganizationInputEnvelope = {
+    data: AgentDeliveryTargetCreateManyOrganizationInput | AgentDeliveryTargetCreateManyOrganizationInput[]
   }
 
   export type MembershipUpsertWithWhereUniqueWithoutOrganizationInput = {
@@ -123143,6 +125184,36 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"AgentExecution"> | Date | string
   }
 
+  export type AgentDeliveryTargetUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: AgentDeliveryTargetWhereUniqueInput
+    update: XOR<AgentDeliveryTargetUpdateWithoutOrganizationInput, AgentDeliveryTargetUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<AgentDeliveryTargetCreateWithoutOrganizationInput, AgentDeliveryTargetUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type AgentDeliveryTargetUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: AgentDeliveryTargetWhereUniqueInput
+    data: XOR<AgentDeliveryTargetUpdateWithoutOrganizationInput, AgentDeliveryTargetUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type AgentDeliveryTargetUpdateManyWithWhereWithoutOrganizationInput = {
+    where: AgentDeliveryTargetScalarWhereInput
+    data: XOR<AgentDeliveryTargetUpdateManyMutationInput, AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type AgentDeliveryTargetScalarWhereInput = {
+    AND?: AgentDeliveryTargetScalarWhereInput | AgentDeliveryTargetScalarWhereInput[]
+    OR?: AgentDeliveryTargetScalarWhereInput[]
+    NOT?: AgentDeliveryTargetScalarWhereInput | AgentDeliveryTargetScalarWhereInput[]
+    id?: StringFilter<"AgentDeliveryTarget"> | string
+    organizationId?: StringFilter<"AgentDeliveryTarget"> | string
+    runId?: StringFilter<"AgentDeliveryTarget"> | string
+    targetUserId?: StringFilter<"AgentDeliveryTarget"> | string
+    intentId?: StringFilter<"AgentDeliveryTarget"> | string
+    audience?: StringFilter<"AgentDeliveryTarget"> | string
+    authorizedFieldKeys?: StringNullableFilter<"AgentDeliveryTarget"> | string | null
+    createdAt?: DateTimeFilter<"AgentDeliveryTarget"> | Date | string
+  }
+
   export type OrganizationCreateWithoutMembershipsInput = {
     id?: string
     name: string
@@ -123168,6 +125239,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMembershipsInput = {
@@ -123195,6 +125267,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMembershipsInput = {
@@ -123355,6 +125428,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMembershipsInput = {
@@ -123382,6 +125456,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMembershipsInput = {
@@ -123532,6 +125607,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAuditEventsInput = {
@@ -123559,6 +125635,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAuditEventsInput = {
@@ -123602,6 +125679,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAuditEventsInput = {
@@ -123629,6 +125707,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentCallCreateManyRunInput = {
@@ -126913,6 +128992,16 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type AgentDeliveryTargetCreateManyOrganizationInput = {
+    id?: string
+    runId: string
+    targetUserId: string
+    intentId: string
+    audience: string
+    authorizedFieldKeys?: string | null
+    createdAt?: Date | string
+  }
+
   export type MembershipUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
@@ -127557,6 +129646,7 @@ export namespace Prisma {
     calls?: AgentCallUpdateManyWithoutRunNestedInput
     approval?: AgentApprovalUpdateOneWithoutRunNestedInput
     execution?: AgentExecutionUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUpdateOneWithoutRunNestedInput
   }
 
   export type AgentRunUncheckedUpdateWithoutOrganizationInput = {
@@ -127582,6 +129672,7 @@ export namespace Prisma {
     calls?: AgentCallUncheckedUpdateManyWithoutRunNestedInput
     approval?: AgentApprovalUncheckedUpdateOneWithoutRunNestedInput
     execution?: AgentExecutionUncheckedUpdateOneWithoutRunNestedInput
+    deliveryTarget?: AgentDeliveryTargetUncheckedUpdateOneWithoutRunNestedInput
   }
 
   export type AgentRunUncheckedUpdateManyWithoutOrganizationInput = {
@@ -127720,6 +129811,36 @@ export namespace Prisma {
     deliveryStatus?: StringFieldUpdateOperationsInput | string
     actorId?: NullableStringFieldUpdateOperationsInput | string | null
     executedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDeliveryTargetUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    run?: AgentRunUpdateOneRequiredWithoutDeliveryTargetNestedInput
+  }
+
+  export type AgentDeliveryTargetUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    targetUserId?: StringFieldUpdateOperationsInput | string
+    intentId?: StringFieldUpdateOperationsInput | string
+    audience?: StringFieldUpdateOperationsInput | string
+    authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

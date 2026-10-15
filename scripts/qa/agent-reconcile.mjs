@@ -752,6 +752,8 @@ function compareAll(payload, raw, expect) {
           'approval',
           'execution',
           'executionRecord',
+          // T09 Slice 6：对外送达目标（null = 这条运行没有对外送达这一步）。
+          'deliveryTarget',
           // T09 组织级额度接线时新增：**服务端派生**的"我能批/我能驳"（AC-18 无空按钮）。
           'canApprove',
           'canReject',

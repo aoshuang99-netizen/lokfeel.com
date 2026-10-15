@@ -18,14 +18,18 @@
  *   ③ **副作用先发生、状态后落库**（见下面 ⑥ 的顺序论证）。
  *
  * ═══════════════════════════════════════════════════════════════
- * 🔴 本切片的效果是**内部回执**，不是"把介绍发给对手方"
+ * 🔴 收件人分两路，而"哪一路"由**执行计划**决定（闭集），不由调用方
  * ═══════════════════════════════════════════════════════════════
- * 收件人**恒为发起人**（`AgentRun.requestedBy`），渠道恒为站内信。理由：
- *   - `AgentRun` 只存 `subjectLabel` / `counterpartLabel` 这类**标签**（刻意的）；
- *   - "把 A 介绍给 B"里的 B 必须在**创建时**由服务端确定、并被**那一次批准**覆盖；
- *     若在执行时才由调用方传入收件人，就等于允许"批准的是 A、发出去的是 B" ——
- *     审批会退化成橡皮图章。
- * ⇒ 对外送达需要 target 身份 + T05 的 `discloseSubject()` 出口，属**下一片**。
+ *   - `recipient = 'REQUESTER'` → `AgentRun.requestedBy`（内部回执）；
+ *   - `recipient = 'TARGET'`（Slice 6，当前只有 `INTRO_DRAFT`）→
+ *     `AgentDeliveryTarget.targetUserId`：**创建时**由服务端固定、并被**那一次批准**覆盖。
+ *   若在执行时才由调用方传入收件人，就等于允许"批准的是 A、发出去的是 B" ——
+ *   审批会退化成橡皮图章。所以目标身份在**另一个时刻**（创建）落库，这里只**复验**。
+ *
+ *   第二道门 = 内核的 `planOutboundDelivery()`：目标存在 + 披露授权非空 +
+ *   创建时的授权快照**仍被**当前披露表覆盖（T05「撤销即刻生效」在投递侧的落点）。
+ *   送达的站内信**不含任何档案字段**（T06 的纪律不变；披露的唯一出口是页面投影）——
+ *   这道门守的是"送达这件事的前提"，而不是"通知体里有没有敏感词"。
  *   本文件的诚实声明写在 `executeAgentRun` 的返回值与审计元数据里，而不是只写在注释中。
  */
 
@@ -38,11 +42,19 @@ import {
   agentExecutionDedupeKey,
   isSkillKey,
   planExecution,
+  planOutboundDelivery,
   type AgentRunStatus,
   type ExecutionDecision,
 } from '@/lib/agent'
 import { deliverNotification, type DeliveryResult, type DeliveryStatus } from '@/lib/workflow'
-import { toAgentRunDto, toExecutionDto, type AgentExecutionDto, type AgentRunDto } from './dto'
+import {
+  toAgentRunDto,
+  toExecutionDto,
+  type AgentExecutionDto,
+  type AgentRunDto,
+  type AgentRunViewer,
+} from './dto'
+import { DELIVERY_PROFILE_AUDIENCE, loadOutboundGate, type OutboundGate } from './delivery-target'
 import { findRunRow } from './runs'
 
 /** 投递出口的形状（可注入 —— 单测用它把"投递失败"变成可控输入，而不是靠网络）。 */
@@ -76,13 +88,11 @@ export interface ExecuteAgentRunResult {
  * ⚠️ 执行器只持 `agent.execute`，**不**代表能批准 —— 但这次响应里回的就是这条运行，
  *    界面拿到它之后要能显示"我还能不能批"，所以口径与 `runs.ts` 的 `viewerOf` 一致。
  */
-function viewerOf(ctx: TenantContext): { canDecide: boolean } {
-  return { canDecide: can(ctx.role, 'agent.approve') }
-}
-
-/** 收件人恒为发起人 —— 单独抽成函数，是为了让"谁是收件人"只有一处可改、且改动要过评审。 */
-function resolveRecipient(row: { requestedBy: string }): string {
-  return row.requestedBy
+function viewerOf(ctx: TenantContext, outbound: OutboundGate | null): AgentRunViewer {
+  return {
+    canDecide: can(ctx.role, 'agent.approve'),
+    ...(outbound ? { outbound } : {}),
+  }
 }
 
 /**
@@ -117,12 +127,17 @@ export async function executeAgentRun(
   const row = await findRunRow(ctx.organizationId, runId)
   if (!row) throw new NotFoundError('Agent run not found')
 
+  // 取一次对外送达闸门（无目标行时为 null）—— 本方法返回的**所有** DTO 都用它，
+  // 包括"已执行过"的幂等返回：DTO 与执行器必须给出同一个"能不能执行"的答案。
+  const gate = await loadOutboundGate(ctx.organizationId, row, now)
+  const viewer = viewerOf(ctx, gate)
+
   // ② 已执行过 → **幂等返回**。放在放行判据**之前**：执行是终态，重复请求是"再问一次结果"，
   //    不是"再执行一次"。若放在之后，第二次请求会拿到 409（"状态不允许"），
   //    而调用方真正想知道的是"它执行过了吗、结果如何"。
   if (row.execution) {
     return {
-      run: toAgentRunDto(row, viewerOf(ctx)),
+      run: toAgentRunDto(row, viewer),
       execution: toExecutionDto(row.execution),
       replayed: true,
       delivery: null,
@@ -156,7 +171,49 @@ export async function executeAgentRun(
   }
 
   const plan = decision.plan
-  const recipientId = resolveRecipient(row)
+
+  // 🔴 收件人分两路，而"哪一路"由**执行计划**决定（闭集），不由调用方：
+  //    REQUESTER → 发起人（内部回执）；TARGET → 创建时固定的对手方。
+  let recipientId = row.requestedBy
+  /** 审计用的对外送达读数（只记计数与档位；目标 id 与字段名都不进审计面）。 */
+  let outboundAudit: {
+    audience: string
+    authorizedFieldCount: number
+    visibleFieldCount: number
+  } | null = null
+
+  if (plan.recipient === 'TARGET') {
+    // 第二道门（内核纯函数）：与 DTO 用的是**同一对**判据 + 同一份 `gate` 取值。
+    const out = planOutboundDelivery({
+      recipient: 'TARGET',
+      targetUserId: gate?.targetUserId ?? null,
+      authorizedFieldKeys: gate?.authorizedFieldKeys ?? [],
+      visibleFieldKeys: gate?.visibleFieldKeys ?? [],
+    })
+    if (!out.deliverable) {
+      // 409 而不是 403：这不是"你没权限"，是"这条运行现在的状态/依据不允许这一步"
+      // —— 与状态机拒绝同语义（前端按 `code` 分支，不解析文案）。
+      throw new ConflictError(out.reason, {
+        code: out.code,
+        skill: row.skill,
+        recipient: plan.recipient,
+      })
+    }
+    // 放行之后仍**显式收窄**（不用非空断言）：断言会把"内核判据被改松"变成运行期崩溃，
+    // 显式分支则让这种不一致在类型层面就必须被处理。
+    if (!gate || !gate.targetUserId) {
+      throw new ConflictError('内部不一致：内核放行了对外送达，但这条运行没有目标身份', {
+        code: 'NO_TARGET',
+        skill: row.skill,
+      })
+    }
+    recipientId = gate.targetUserId
+    outboundAudit = {
+      audience: DELIVERY_PROFILE_AUDIENCE,
+      authorizedFieldCount: gate.authorizedFieldKeys.length,
+      visibleFieldCount: gate.visibleFieldKeys.length,
+    }
+  }
 
   // ④ 组织名：通知的身份声明需要它（AC-09「不得静默冒充真人」）。
   //    取不到就用兜底文案 —— 与 T06 的 `runtime.ts` 同一取向（宁可文案朴素，也不要发不出去）。
@@ -225,7 +282,7 @@ export async function executeAgentRun(
       const fresh = await findRunRow(ctx.organizationId, row.id)
       if (fresh) {
         return {
-          run: toAgentRunDto(fresh, viewerOf(ctx)),
+          run: toAgentRunDto(fresh, viewer),
           execution: toExecutionDto(winner),
           replayed: true,
           delivery: null,
@@ -249,8 +306,11 @@ export async function executeAgentRun(
       channel: plan.channel,
       deliveryStatus: delivery.status,
       deliveryProvider: delivery.provider,
-      /** 收件人是"发起人本人"这一**事实**（而不是把 id 写进审计面）。 */
-      recipientIsRequester: true,
+      /** 收件人**类别**这一事实（而不是把 id 写进审计面）。 */
+      recipientKind: plan.recipient,
+      recipientIsRequester: plan.recipient === 'REQUESTER',
+      /** 对外送达时的披露读数（null = 这条计划不涉及对外送达）。 */
+      outbound: outboundAudit,
       actorRole: ctx.role,
     },
   })
@@ -259,7 +319,7 @@ export async function executeAgentRun(
   if (!updated) throw new NotFoundError('Agent run not found')
 
   return {
-    run: toAgentRunDto(updated, viewerOf(ctx)),
+    run: toAgentRunDto(updated, viewer),
     execution: toExecutionDto(updated.execution),
     replayed: false,
     delivery: { id: delivery.id, status: delivery.status, provider: delivery.provider },

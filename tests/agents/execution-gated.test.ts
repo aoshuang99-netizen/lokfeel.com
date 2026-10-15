@@ -76,6 +76,38 @@ const ctx = (role: Role = 'ADMIN', userId = 'u_1'): TenantContext => ({
   membershipId: 'ms_1',
 })
 
+/* ── Slice 6 对外送达夹具（介绍草稿的收件人是**创建时固定**的对手方）────── */
+
+const TARGET_USER = 'u_target'
+const INTENT_ID = 'intent_1'
+const MISSION_ID = 'm_1'
+
+/**
+ * 摆好"当时生效的披露读数"：发起人自己的一条 ACTIVE 意图 + 目标在该任务里 INTERESTED。
+ *
+ * ⚠️ 这两张表在假库里是**只读**的（见 `_fake-db.ts`）：本文件只负责摆事实，
+ *    **不**实现"授权/撤销"的业务链路 —— 那是 T03/T05 的测试域，重复实现只会得到
+ *    两套会漂移的披露语义（那正是最危险的那类测试缺陷）。
+ */
+function seedDeliveryFixture(disclosure: Record<string, string> = { bio: 'COUNTERPARTY' }) {
+  fake.socialIntents.push({
+    id: INTENT_ID,
+    organizationId: ORG,
+    userId: 'u_1',
+    missionId: MISSION_ID,
+    disclosure: JSON.stringify(disclosure),
+    status: 'ACTIVE',
+    expiresAt: null,
+  })
+  fake.participations.push({
+    id: 'mp_1',
+    organizationId: ORG,
+    missionId: MISSION_ID,
+    userId: TARGET_USER,
+    status: 'INTERESTED',
+  })
+}
+
 /* ── 测试用技能输入 / 产出 ─────────────────────────────────────────── */
 
 const ADVICE_GOAL = '为社群成员对接合适的合作伙伴'
@@ -101,16 +133,26 @@ async function createAdvice(key = 'e-advice') {
   return run
 }
 
+/**
+ * 造一条介绍草稿运行。
+ *
+ * 🔴 Slice 6 起 `INTRO_DRAFT` 的执行计划收件人是**对手方** ⇒ 创建时**必须**给出
+ *    送达目标（`delivery`），否则这条运行永远执行不了（内核会判 `NO_TARGET`）。
+ *    这里顺带把 `allowedFieldKeys` 填成**调用方声称**的值（`['goal']`）——
+ *    服务端会用 T05 的读数覆盖它（"模型能用哪些字段"不能由请求体决定）。
+ */
 async function createIntro(key = 'e-intro') {
+  seedDeliveryFixture()
   const { run } = await createAgentRun(ctx(), {
     skill: 'INTRO_DRAFT',
     input: {
       goal: INTRO_GOAL,
       subjectLabel: 'A',
       counterpartLabel: 'B',
-      allowedFieldKeys: [],
+      allowedFieldKeys: ['goal'],
     },
     idempotencyKey: key,
+    delivery: { targetUserId: TARGET_USER, intentId: INTENT_ID },
     provider: { kind: 'ready', provider: introProvider() },
   })
   return run
@@ -314,7 +356,7 @@ describe('T09 · 执行器（服务层）', () => {
  * ══════════════════════════════════════════════════════════════════ */
 
 describe('T09 · 执行副作用的形状与披露边界', () => {
-  it('收件人恒为**发起人**、渠道 IN_APP、模板 agent.delivery、幂等键按运行派生', async () => {
+  it('内部回执技能：收件人由服务端从**运行**上取（= 发起人）、渠道 IN_APP、幂等键按运行派生', async () => {
     const run = await createAdvice('e-shape')
     const seen: Array<Record<string, unknown>> = []
 
@@ -343,14 +385,17 @@ describe('T09 · 执行副作用的形状与披露边界', () => {
     expect(fake.executions[0].actorId).toBe('u_requester')
   })
 
-  it('🔴 通知体**不含**运行目标与草稿正文（通知渠道不是披露渠道）', async () => {
+  it('🔴 通知体**不含**运行目标与草稿正文；收件人是**对手方**（Slice 6）', async () => {
     const run = await createIntro('e-leak')
     await decideAgentRun(ctx(), run.id, 'APPROVED')
     await executeAgentRun(ctx(), run.id)
 
     const note = fake.notifications[0]
     expect(note).toBeTruthy()
-    expect(note.userId).toBe('u_1')
+    // 🔴 Slice 6 的核心语义变化：介绍草稿的站内信送到**创建时固定的对手方**，
+    //    不是发起人自己。少了这一条，"对外送达"就退化成了"给自己发一份回执"。
+    expect(note.userId).toBe(TARGET_USER)
+    expect(note.userId).not.toBe('u_1')
     expect(note.body).not.toContain(INTRO_GOAL)
     expect(note.body).not.toContain(INTRO_DRAFT_TEXT)
     // 但必须带上身份声明（AC-09：不得静默冒充真人）

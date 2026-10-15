@@ -163,6 +163,9 @@ model AgentRun {
   approval     AgentApproval?
   execution    AgentExecution?
 
+  /// Slice 6 · 对外送达的目标（**创建时**落库；决定权在服务层，不在批次里）。
+  deliveryTarget AgentDeliveryTarget?
+
   @@unique([organizationId, dedupeKey])
   @@index([organizationId, status])
   @@index([organizationId, createdAt])
@@ -279,7 +282,10 @@ model AgentExecution {
   /// 实际投递渠道。与 T06 的 `NotificationChannel` 取值域一致（枚举复用，非新造）。
   channel NotificationChannel
 
-  /// 收件人（**服务端决定**：当前恒为发起人 `AgentRun.requestedBy`）。
+  /// 收件人（**服务端决定**，不接受调用方指定）。两种来源，都由计划决定：
+  ///   - 计划 `recipient = 'REQUESTER'` → `AgentRun.requestedBy`（内部回执）；
+  ///   - 计划 `recipient = 'TARGET'`（Slice 6 起）→ `AgentDeliveryTarget.targetUserId`
+  ///     （**创建时**就固定、并被那次批准覆盖的那个身份）。
   recipientId String
 
   /// T06 投递归宿的 `NotificationDelivery.id`（软引用）—— 执行与投递留痕的挂钩点。
@@ -316,6 +322,56 @@ model AgentExecution {
 // 一致性由 `scripts/connection/migrate.mjs` 的 C7 段断言守着：
 //   ① `status='EXECUTED'` ⇒ 恰有一条 `AgentExecution`；
 //   ② `AgentExecution` 行的 run 必须是 `EXECUTED`。
+
+/// 一次**对外送达**的目标（Slice 6）—— "这条产出送给谁"的**创建时**事实。
+///
+/// 🔴 为什么是独立表而不是 `AgentRun.targetUserId` 列：本仓迁移机制只支持
+///    `CREATE TABLE/INDEX IF NOT EXISTS`（见 `scripts/connection/migrate.mjs` 文件头约束 1），
+///    给既有表加列会破掉"纯新增"这条纪律。独立成表还顺带拿到
+///    `@@unique([runId])` 的库级保证：**一条运行最多一个送达目标**。
+///
+/// 🔴 为什么必须在**创建时**落库、执行时**不补**：
+///    若执行时才由调用方传入收件人，就等于允许"批准的是 A、发出去的是 B"——
+///    审批会退化成橡皮图章。这里存的是**那次批准覆盖的那个身份**。
+///
+/// `targetUserId` / `intentId` 是**软引用**（无 FK）：用户注销、意图被删之后，
+/// "这条运行当时打算送给谁、依据哪份披露"仍须可查（与 `AgentRun.requestedBy` 同一理由）。
+model AgentDeliveryTarget {
+  id String @id @default(cuid())
+
+  /// 租户谓词。**不可省**（T01 铁律）。
+  organizationId String
+
+  /// 被送达的运行。**强 FK + 唯一**：一条运行最多一个送达目标。
+  runId String
+
+  /// 目标身份（对手方）。**创建时**由服务端校验并固定
+  /// （须与披露依据同属一个任务、且仍在参与 —— 见 `delivery-target.ts`）。
+  targetUserId String
+
+  /// 披露依据：**发起人自己**的 `SocialIntent.id`。执行时用它读回**当时生效**的披露表
+  /// —— T05「撤销即刻生效」在投递侧的落点。
+  intentId String
+
+  /// 送达档位（T05 的外部档位；当前恒为 `COUNTERPARTY`）。
+  /// 落列而不写死：审计要能读出"当时是按哪一档送的"。
+  audience String
+
+  /// 创建那一刻该受众可见的字段键（JSON 文本数组）—— **快照**。
+  /// 执行时用它判"授权是否被收窄"（内核 `planOutboundDelivery()`）。
+  /// 空数组存 null（与 `discloseSubject` 的"空即不存在"同一取向）。
+  authorizedFieldKeys String?
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  run          AgentRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  /// 一条运行最多一个送达目标 ⇒ 库级幂等（并发下第二条撞唯一键）。
+  @@unique([runId])
+  @@index([organizationId, targetUserId])
+  @@index([organizationId, createdAt])
+}
 
 // ═══════════════════════════════════════════════════════════════
 // BILLING — T08 组织级用量计费（Slice 3）
@@ -3090,10 +3146,11 @@ model Organization {
   // 它们是**软引用**（无 FK）—— 用户注销后"谁批准过什么"仍须可查。
   // `AgentCall` 虽是 `AgentRun` 的子表，但它自己也带 `organizationId` 外键
   // （本仓铁律：每条账都要能独立按租户查询），故这里仍需一条反向关系。
-  agentRuns       AgentRun[]
-  agentCalls      AgentCall[]
-  agentApprovals  AgentApproval[]
-  agentExecutions AgentExecution[]
+  agentRuns            AgentRun[]
+  agentCalls           AgentCall[]
+  agentApprovals       AgentApproval[]
+  agentExecutions      AgentExecution[]
+  agentDeliveryTargets AgentDeliveryTarget[]
 
   @@index([status])
 }

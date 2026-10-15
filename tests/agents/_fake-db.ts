@@ -145,6 +145,45 @@ export interface FakeBillingEventRow {
   createdAt: Date
 }
 
+/** 一行 SocialIntent（**只读**；Slice 6 用它做"披露依据"）。 */
+export interface FakeSocialIntentRow {
+  id: string
+  organizationId: string
+  userId: string
+  missionId: string
+  /** JSON 文本（真实列就是文本）—— 读路径 `decodeDisclosure` 也吃对象形态。 */
+  disclosure: string | null
+  status: string
+  expiresAt: Date | null
+}
+
+/** 一行 MissionParticipation（**只读**；Slice 6 用它证明"目标与意图同任务且仍在参与"）。 */
+export interface FakeMissionParticipationRow {
+  id: string
+  organizationId: string
+  missionId: string
+  userId: string
+  status: string
+}
+
+/**
+ * 一行 AgentDeliveryTarget（Slice 6）。
+ *
+ * 🔴 `@@unique([runId])`（"一条运行最多一个送达目标"）由下面的 create 实现 ——
+ *    与真实库一样，它必须**抛错**而不是静默覆盖；否则"目标被换掉"这种最危险的
+ *    缺陷会在测试里被悄悄放过。
+ */
+export interface FakeDeliveryTargetRow {
+  id: string
+  organizationId: string
+  runId: string
+  targetUserId: string
+  intentId: string
+  audience: string
+  authorizedFieldKeys: string | null
+  createdAt: Date
+}
+
 export interface FakeAgentDb {
   runs: FakeRunRow[]
   calls: FakeCallRow[]
@@ -160,6 +199,16 @@ export interface FakeAgentDb {
   organizationName: string
   /** 订阅事件（T08）。**默认空** ⇒ 有效方案 = `FREE` ⇒ Agent 额度 = FREE 档。 */
   billingEvents: FakeBillingEventRow[]
+  /**
+   * 披露依据（只读；Slice 6）。
+   * ⚠️ 由**测试自己**填 —— 本假库不实现"意图怎么被创建/撤销"，
+   *    因为那条链路属于 T03/T05 的测试域，重复实现只会得到两套会漂移的语义。
+   */
+  socialIntents: FakeSocialIntentRow[]
+  /** 任务参与（只读；Slice 6）。同上：由测试填。 */
+  participations: FakeMissionParticipationRow[]
+  /** 对外送达目标（Slice 6）。`@@unique([runId])` 由 create 实现。 */
+  deliveryTargets: FakeDeliveryTargetRow[]
 }
 
 export function createFakeAgentDb(): FakeAgentDb {
@@ -173,6 +222,9 @@ export function createFakeAgentDb(): FakeAgentDb {
     deliveries: [],
     organizationName: '测试社群',
     billingEvents: [],
+    socialIntents: [],
+    participations: [],
+    deliveryTargets: [],
   }
 }
 
@@ -198,6 +250,7 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
   const nextExecutionId = makeCounter('exec')
   const nextNotificationId = makeCounter('notif')
   const nextDeliveryId = makeCounter('delivery')
+  const nextDeliveryTargetId = makeCounter('dtarget')
 
   // 🔴 先补齐命名空间与要安装的方法。
   //
@@ -222,6 +275,9 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
     ['tenantAuditEvent', ['create']],
     // 组织级 Agent 额度经 `getSubscriptionState()` 派生 ⇒ 读 BillingEvent。
     ['billingEvent', ['findMany']],
+    // Slice 6 对外送达：目标解析要读意图与任务参与；闸门取数要读意图（批量走 findMany）。
+    ['socialIntent', ['findFirst', 'findMany']],
+    ['missionParticipation', ['findFirst']],
   ]
   for (const [space, methods] of NEEDED) {
     const existing = d[space]
@@ -248,6 +304,8 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
     calls: state.calls.filter((c) => c.runId === row.id).sort((a, b) => a.seq - b.seq),
     approval: state.approvals.find((a) => a.runId === row.id) ?? null,
     execution: state.executions.find((e) => e.runId === row.id) ?? null,
+    // Slice 6：一条运行最多一个送达目标（对应真实 schema 的 `@@unique([runId])`）。
+    deliveryTarget: state.deliveryTargets.find((x) => x.runId === row.id) ?? null,
     _count: { calls: state.calls.filter((c) => c.runId === row.id).length },
   })
 
@@ -256,9 +314,11 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
       data: Omit<FakeRunRow, 'id' | 'createdAt' | 'updatedAt'> & {
         createdAt?: Date
         calls?: { create: Array<Omit<FakeCallRow, 'id' | 'runId'>> }
+        /** Slice 6：与运行**同一个** create 落库（嵌套写 = 原子）。 */
+        deliveryTarget?: { create: Omit<FakeDeliveryTargetRow, 'id' | 'runId' | 'createdAt'> }
       }
     }) => {
-      const { calls: nested, ...rest } = args.data
+      const { calls: nested, deliveryTarget: nestedTarget, ...rest } = args.data
       const dup = state.runs.find(
         (r) => r.organizationId === rest.organizationId && r.dedupeKey === rest.dedupeKey,
       )
@@ -276,6 +336,14 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
       state.runs.push(row)
       for (const c of nested?.create ?? []) {
         state.calls.push({ ...(c as Omit<FakeCallRow, 'id' | 'runId'>), id: nextCallId(), runId: row.id })
+      }
+      if (nestedTarget?.create) {
+        state.deliveryTargets.push({
+          ...nestedTarget.create,
+          id: nextDeliveryTargetId(),
+          runId: row.id,
+          createdAt: now,
+        })
       }
       return hydrate(row)
     },
@@ -333,6 +401,7 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
       state.calls = state.calls.filter((c) => liveIds.has(c.runId))
       state.approvals = state.approvals.filter((a) => liveIds.has(a.runId))
       state.executions = state.executions.filter((e) => liveIds.has(e.runId))
+      state.deliveryTargets = state.deliveryTargets.filter((x) => liveIds.has(x.runId))
       const removed = before - state.runs.length
       // 重新赋值 state.runs 会打断外部引用 —— 原地替换。
       return { count: removed }
@@ -475,6 +544,55 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
             a.createdAt.getTime() - b.createdAt.getTime() ||
             a.id.localeCompare(b.id),
         ),
+  )
+
+  // ── Slice 6：对外送达的两张**只读**依据表 ──
+  //
+  // ⚠️ 这两张表只实现 `findFirst`/`findMany`：本假库的职责是驱动 Agent 服务层，
+  //    "意图怎么被授权/撤销"属于 T03/T05 的测试域。在这里再造一套写入口，
+  //    只会得到两套会漂移的披露语义 —— 那正是最危险的那类测试缺陷。
+  const socialIntent = d.socialIntent as Record<string, jest.Mock>
+  socialIntent.findFirst.mockImplementation(
+    async (args: {
+      where: { id?: string; organizationId: string; userId?: string; missionId?: string }
+    }) => {
+      const w = args.where
+      return (
+        state.socialIntents.find(
+          (r) =>
+            r.organizationId === w.organizationId &&
+            (w.id === undefined || r.id === w.id) &&
+            (w.userId === undefined || r.userId === w.userId) &&
+            (w.missionId === undefined || r.missionId === w.missionId),
+        ) ?? null
+      )
+    },
+  )
+  socialIntent.findMany.mockImplementation(
+    async (args: { where: { organizationId: string; id?: { in: string[] } } }) =>
+      state.socialIntents.filter(
+        (r) =>
+          r.organizationId === args.where.organizationId &&
+          (args.where.id === undefined || args.where.id.in.includes(r.id)),
+      ),
+  )
+
+  const missionParticipation = d.missionParticipation as Record<string, jest.Mock>
+  missionParticipation.findFirst.mockImplementation(
+    async (args: {
+      where: { organizationId: string; missionId: string; userId: string; status?: string }
+    }) => {
+      const w = args.where
+      return (
+        state.participations.find(
+          (r) =>
+            r.organizationId === w.organizationId &&
+            r.missionId === w.missionId &&
+            r.userId === w.userId &&
+            (w.status === undefined || r.status === w.status),
+        ) ?? null
+      )
+    },
   )
 
   // writeTenantAudit 的落点（旁路，不参与业务结果）
