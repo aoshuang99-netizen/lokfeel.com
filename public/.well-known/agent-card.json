@@ -1,0 +1,80 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "LokFeel Connection OS",
+  "description": "跨社群连接引擎。在双方组织的授权范围内，发现自愿披露的连接机会并记录成果。所有访问都经租户能力守卫：无会话 401，能力不足一律拒绝。本卡片不含任何凭据。",
+  "url": "https://app.lokfeel.com/api/v1/a2a/tasks",
+  "preferredTransport": "JSONRPC",
+  "version": "0.2.0",
+  "provider": {
+    "organization": "LokFeel",
+    "url": "https://app.lokfeel.com"
+  },
+  "documentationUrl": "https://app.lokfeel.com/api/v1/a2a/tasks",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "defaultInputModes": ["application/json"],
+  "defaultOutputModes": ["application/json"],
+  "securitySchemes": {
+    "bearerAuth": {
+      "type": "http",
+      "scheme": "bearer",
+      "description": "会话令牌。凭据一律由调用方持有时注入，本服务不签发、也不在卡片里出现任何密钥。"
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "skills": [
+    {
+      "id": "list_missions",
+      "name": "列出任务",
+      "description": "列出本组织的任务（Mission）。只返回本组织可见的任务。",
+      "tags": ["missions", "read"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "x-required-capability": "mission.read",
+      "examples": ["列出最近 5 条任务"]
+    },
+    {
+      "id": "list_bridges",
+      "name": "列出跨社群协议",
+      "description": "列出本组织参与的跨社群协议（作为发起方或被邀方）。",
+      "tags": ["bridges", "read"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "x-required-capability": "bridge.read",
+      "examples": ["本组织有哪些已生效的跨社群协议？"]
+    },
+    {
+      "id": "bridge_discovery",
+      "name": "跨社群成员发现",
+      "description": "在已生效的跨社群协议下，发现对方组织中自愿披露的成员及其可见字段。可见字段是「群主配置 ∩ 成员 opt-in ∩ 成员意图档位」的三方交集，逐层只能收窄；协议未生效时返回空列表与拒绝码，而不是报错。",
+      "tags": ["bridges", "discovery", "read"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "x-required-capability": "bridge.read",
+      "examples": ["看看协议 br_xxx 对方有哪些人可以连接"]
+    },
+    {
+      "id": "list_outcomes",
+      "name": "列出成果",
+      "description": "列出本组织的连接成果及其核验档位。",
+      "tags": ["outcomes", "read"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "x-required-capability": "outcome.read",
+      "examples": ["最近有哪些已核验的成果？"]
+    },
+    {
+      "id": "report_outcome",
+      "name": "上报连接成果",
+      "description": "为一条已建立的连接上报成果。上报不等于核验 —— 成果仍需对手方确认或外部核验才会被计费归因。",
+      "tags": ["outcomes", "write"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "x-required-capability": "outcome.report",
+      "examples": ["为提案 p_xxx 记录一次成功面谈"]
+    }
+  ]
+}

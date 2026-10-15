@@ -1,0 +1,738 @@
+openapi: 3.1.0
+info:
+  title: LokFeel Connection OS API contract
+  version: 0.2.0
+  description: |
+    LokFeel 连接引擎的对外 API 契约 —— T11「OpenAPI 固化」的产物。
+
+    ## 准确度分层（诚实声明，勿误读）
+    - **路径 / 方法 / 权限标注 `x-required-capability`：权威。**
+      与实现同源核对 —— `npm run verify:ac22:open-sdk` 会逐条验证
+      「契约里声明的每条路径**真实存在**，且**匿名 / 低权调用必失败**（不是 404）」。
+      能力名取自 `src/lib/tenancy/capabilities.ts`（权限的**唯一**来源）。
+    - **请求体 schema**：精确到必填项与边界（这是与外部调用方的契约面）。
+    - **响应体 schema**：只固化**关键字段**；完整形状以 `src/lib/**/dto.ts` 为准，
+      本文件不复制类型（复制会产生第二份"真相"，迟早漂移）。
+
+    ## 认证
+    同源会话 cookie，或 `Authorization: Bearer <token>`。
+    所有端点经 `withTenant(capability)`，失败语义**统一**：
+    匿名 `401` · 无成员关系/能力不足 `403` · 资源存在但非当事方 `404`（**不泄漏资源是否存在**）。
+
+    ## 幂等
+    产生副作用的 POST 必须带 `Idempotency-Key`（缺失 → `400`，**不**退化为非幂等）。
+    同键同体重放 → `200` + `replayed: true`（首次为 `201`）；同键不同体 → `409`。
+
+    ## 越权语义（AC-19 / AC-22 的共同执法点）
+    跨组织资源（`bridges`）永远只对**当事方组织**可见：非当事方读详情/投影/裁决一律 `404`。
+    能力守卫（403）**先于**当事方判定（404）—— 因此"没有该能力"与"不是当事方"是两件事，不可混淆。
+servers:
+  - url: /api/v1
+    description: Next.js App Router 路由处理器（同源部署）
+security:
+  - bearerAuth: []
+tags:
+  - {name: missions, description: 任务（T02）}
+  - {name: intents, description: 意图与披露（T03）}
+  - {name: connections, description: 双向匹配与介绍（T04 / T05 / T06）}
+  - {name: outcomes, description: 成果与核验（T08）}
+  - {name: agents, description: Agent Runtime（T09）—— 触发 / 审批 / 执行三段分离}
+  - {name: bridges, description: Community Bridge（T10）—— 跨社群授权的三方交集}
+
+paths:
+  # ────────────────────────────────────────────────────────────────
+  # T02 · 任务
+  # ────────────────────────────────────────────────────────────────
+  /missions:
+    get:
+      tags: [missions]
+      operationId: listMissions
+      summary: 列出本组织任务
+      x-required-capability: mission.read
+      parameters:
+        - {in: query, name: status, schema: {type: string}}
+        - {in: query, name: limit, schema: {type: integer, minimum: 1, maximum: 100}}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+    post:
+      tags: [missions]
+      operationId: createMission
+      summary: 创建任务（幂等）
+      x-required-capability: mission.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MissionCreate'}
+      responses:
+        '201': {$ref: '#/components/responses/Created'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /missions/{missionId}:
+    parameters:
+      - $ref: '#/components/parameters/MissionId'
+    get:
+      tags: [missions]
+      operationId: getMission
+      summary: 任务详情（不可见即 404）
+      x-required-capability: mission.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    patch:
+      tags: [missions]
+      operationId: updateMission
+      x-required-capability: mission.update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: true}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /missions/{missionId}/pause:
+    parameters:
+      - $ref: '#/components/parameters/MissionId'
+    post:
+      tags: [missions]
+      operationId: pauseMission
+      summary: 暂停任务（状态机派生的迁移）
+      x-required-capability: mission.update
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /missions/{missionId}/intents:
+    parameters:
+      - $ref: '#/components/parameters/MissionId'
+    get:
+      tags: [missions, intents]
+      operationId: listMissionIntents
+      x-required-capability: mission.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  # ────────────────────────────────────────────────────────────────
+  # T03 · 意图与披露
+  # ────────────────────────────────────────────────────────────────
+  /intents:
+    get:
+      tags: [intents]
+      operationId: listIntents
+      x-required-capability: intent.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+    post:
+      tags: [intents]
+      operationId: upsertIntent
+      summary: 创建或更新「本人」的意图（含披露档位）
+      x-required-capability: intent.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/IntentUpsert'}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /intents/fields:
+    get:
+      tags: [intents]
+      operationId: listIntentFields
+      summary: 可披露字段目录（14 项；`email` 永久不可披露）
+      x-required-capability: intent.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /intents/{intentId}:
+    parameters:
+      - $ref: '#/components/parameters/IntentId'
+    get:
+      tags: [intents]
+      operationId: getIntent
+      x-required-capability: intent.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    patch:
+      tags: [intents]
+      operationId: patchIntent
+      x-required-capability: intent.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: true}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /intents/{intentId}/status:
+    parameters:
+      - $ref: '#/components/parameters/IntentId'
+    post:
+      tags: [intents]
+      operationId: setIntentStatus
+      x-required-capability: intent.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [status], properties: {status: {type: string}}}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /intents/{intentId}/disclosure:
+    parameters:
+      - $ref: '#/components/parameters/IntentId'
+    get:
+      tags: [intents]
+      operationId: getIntentDisclosure
+      summary: 披露投影（**唯一**的字段值出口；键不存在 ≠ 值为 null）
+      x-required-capability: intent.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  # ────────────────────────────────────────────────────────────────
+  # T04 / T05 / T06 · 连接提案与介绍
+  # ────────────────────────────────────────────────────────────────
+  /connections/proposals:
+    get:
+      tags: [connections]
+      operationId: listConnectionProposals
+      x-required-capability: proposal.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+    post:
+      tags: [connections]
+      operationId: createConnectionProposal
+      summary: 创建连接提案（幂等）
+      x-required-capability: proposal.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProposalCreate'}
+      responses:
+        '201': {$ref: '#/components/responses/Created'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /connections/introductions:
+    get:
+      tags: [connections]
+      operationId: listIntroductions
+      x-required-capability: proposal.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /connections/candidates:
+    get:
+      tags: [connections]
+      operationId: listCandidates
+      summary: 候选装配（**reciprocal** 双向匹配；披露档位 CANDIDATE）
+      x-required-capability: intent.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /connections/pipeline:
+    get:
+      tags: [connections]
+      operationId: getConnectionPipeline
+      summary: 连接运营视图（分桶 / 停滞 / 与执行点同源的「可介绍」判据）
+      x-required-capability: workflow.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /connections/{connectionId}/consent:
+    parameters:
+      - $ref: '#/components/parameters/ConnectionId'
+    post:
+      tags: [connections]
+      operationId: decideConsent
+      summary: 以**本人**身份接受 / 拒绝（双边同意）
+      x-required-capability: proposal.decide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: {type: string, enum: [accept, reject]}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /connections/{connectionId}/revoke:
+    parameters:
+      - $ref: '#/components/parameters/ConnectionId'
+    post:
+      tags: [connections]
+      operationId: revokeConsent
+      summary: 撤销（终态，即刻生效）
+      x-required-capability: proposal.decide
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /connections/{connectionId}/introduce:
+    parameters:
+      - $ref: '#/components/parameters/ConnectionId'
+    post:
+      tags: [connections]
+      operationId: introduceConnection
+      summary: 执行介绍（受 T06 工作流与披露闸门约束）
+      x-required-capability: proposal.create
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+
+  # ────────────────────────────────────────────────────────────────
+  # T08 · 成果与核验
+  # ────────────────────────────────────────────────────────────────
+  /outcomes:
+    get:
+      tags: [outcomes]
+      operationId: listOutcomes
+      x-required-capability: outcome.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+    post:
+      tags: [outcomes]
+      operationId: reportOutcome
+      summary: 上报成果（**不自动视为已核验**）
+      x-required-capability: outcome.report
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/OutcomeReport'}
+      responses:
+        '201': {$ref: '#/components/responses/Created'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /outcomes/metrics:
+    get:
+      tags: [outcomes]
+      operationId: getOutcomeMetrics
+      summary: 漏斗 / 工时 / 成本（快照式漏斗；假设随响应下发）
+      x-required-capability: outcome.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /outcomes/{outcomeId}/confirm:
+    parameters:
+      - $ref: '#/components/parameters/OutcomeId'
+    post:
+      tags: [outcomes]
+      operationId: confirmOutcome
+      summary: 对手方确认
+      x-required-capability: outcome.report
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /outcomes/{outcomeId}/verify:
+    parameters:
+      - $ref: '#/components/parameters/OutcomeId'
+    post:
+      tags: [outcomes]
+      operationId: verifyOutcome
+      summary: 外部 / 管理员核验（影响计费归因，取严）
+      x-required-capability: outcome.verify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: true}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+  # ────────────────────────────────────────────────────────────────
+  # T09 · Agent Runtime（本轮固化；此前缺收录）
+  # 三段分离：run（OPERATOR+）→ approve（ADMIN+）→ execute（OPERATOR+）
+  # ────────────────────────────────────────────────────────────────
+  /agents/runs:
+    get:
+      tags: [agents]
+      operationId: listAgentRuns
+      x-required-capability: agent.run
+      parameters:
+        - {in: query, name: status, schema: {type: string}}
+        - {in: query, name: skill, schema: {type: string}}
+        - {in: query, name: limit, schema: {type: integer, minimum: 1, maximum: 100}}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+    post:
+      tags: [agents]
+      operationId: createAgentRun
+      summary: 发起一次运行（**消耗组织额度**；幂等）
+      x-required-capability: agent.run
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentRunCreate'}
+      responses:
+        '201': {$ref: '#/components/responses/Created'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /agents/runs/{runId}:
+    parameters:
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [agents]
+      operationId: getAgentRun
+      x-required-capability: agent.run
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /agents/runs/{runId}/approve:
+    parameters:
+      - $ref: '#/components/parameters/RunId'
+    post:
+      tags: [agents]
+      operationId: approveAgentRun
+      summary: 批准（**ADMIN+**：审批权与触发权刻意分离，防自我盖章）
+      x-required-capability: agent.approve
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentDecision'}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /agents/runs/{runId}/reject:
+    parameters:
+      - $ref: '#/components/parameters/RunId'
+    post:
+      tags: [agents]
+      operationId: rejectAgentRun
+      x-required-capability: agent.approve
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AgentDecision'}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /agents/runs/{runId}/execute:
+    parameters:
+      - $ref: '#/components/parameters/RunId'
+    post:
+      tags: [agents]
+      operationId: executeAgentRun
+      summary: 执行已批准运行（增量 201 / 重试 200 + replayed）
+      x-required-capability: agent.execute
+      responses:
+        '201': {$ref: '#/components/responses/Ok'}
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /agents/usage:
+    get:
+      tags: [agents]
+      operationId: getAgentUsage
+      summary: 组织级用量与限额
+      x-required-capability: agent.run
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /agents/diagnostics/connectivity:
+    get:
+      tags: [agents]
+      operationId: agentConnectivityDiagnostics
+      summary: 出口连通性自检（只读 / 不计费 / 不落库 / **不泄漏 key**）
+      x-required-capability: agent.execute
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+
+  # ────────────────────────────────────────────────────────────────
+  # T10 · Community Bridge（本轮固化；此前缺收录）
+  # 跨群可见 = 群主配置 ∩ 成员 opt-in ∩ 成员意图档位（三方交集，逐层只能收窄）
+  # ────────────────────────────────────────────────────────────────
+  /bridges:
+    get:
+      tags: [bridges]
+      operationId: listBridges
+      summary: 列本组织**参与**的协议（作为发起方或被邀方；谓词写进 SQL）
+      x-required-capability: bridge.read
+      parameters:
+        - {in: query, name: status, schema: {type: string, enum: [PENDING, ACTIVE, REVOKED, EXPIRED]}}
+        - {in: query, name: limit, schema: {type: integer, minimum: 1, maximum: 100}}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+    post:
+      tags: [bridges]
+      operationId: createBridge
+      summary: 发起协议（落库即 PENDING；**单边不得共享**；幂等）
+      x-required-capability: bridge.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/BridgeCreate'}
+      responses:
+        '201': {$ref: '#/components/responses/Created'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /bridges/{bridgeId}:
+    parameters:
+      - $ref: '#/components/parameters/BridgeId'
+    get:
+      tags: [bridges]
+      operationId: getBridge
+      summary: 协议详情 + **本人**可见性投影（唯一带逐字段归因的形状）
+      x-required-capability: bridge.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /bridges/{bridgeId}/approve:
+    parameters:
+      - $ref: '#/components/parameters/BridgeId'
+    post:
+      tags: [bridges]
+      operationId: approveBridge
+      summary: 被邀方批准（ACTIVE 的**唯一**入口；发起方调用 → 403 WRONG_SIDE）
+      x-required-capability: bridge.manage
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /bridges/{bridgeId}/revoke:
+    parameters:
+      - $ref: '#/components/parameters/BridgeId'
+    post:
+      tags: [bridges]
+      operationId: revokeBridge
+      summary: 任一方撤销（终态，即刻生效）
+      x-required-capability: bridge.manage
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /bridges/{bridgeId}/opt-in:
+    parameters:
+      - $ref: '#/components/parameters/BridgeId'
+    post:
+      tags: [bridges]
+      operationId: optInBridgeMember
+      summary: 成员逐个加入（**自助**能力；`disclosedFieldKeys` 必须 ⊆ 本侧协议允许集；天然幂等）
+      x-required-capability: bridge.optin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/BridgeOptIn'}
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /bridges/{bridgeId}/opt-out:
+    parameters:
+      - $ref: '#/components/parameters/BridgeId'
+    post:
+      tags: [bridges]
+      operationId: optOutBridgeMember
+      summary: 退出（置 WITHDRAWN 保留行；**收窄方向不受协议状态限制**）
+      x-required-capability: bridge.optin
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /bridges/{bridgeId}/discovery:
+    parameters:
+      - $ref: '#/components/parameters/BridgeId'
+    get:
+      tags: [bridges]
+      operationId: getBridgeDiscovery
+      summary: 跨群可见成员投影（**唯一**的跨群读取路径；不可用回 200 + 空 + 拒绝码，**不**回 4xx）
+      x-required-capability: bridge.read
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      description: 同键同体重放返回 200 + `replayed:true`；同键不同体 → 409。
+      schema: {type: string, minLength: 1}
+    MissionId: {in: path, name: missionId, required: true, schema: {type: string}}
+    IntentId: {in: path, name: intentId, required: true, schema: {type: string}}
+    ConnectionId: {in: path, name: connectionId, required: true, schema: {type: string}}
+    OutcomeId: {in: path, name: outcomeId, required: true, schema: {type: string}}
+    RunId: {in: path, name: runId, required: true, schema: {type: string}}
+    BridgeId: {in: path, name: bridgeId, required: true, schema: {type: string}}
+  responses:
+    Ok: {description: OK, content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+    Created: {description: Created, content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+    BadRequest: {description: 输入不合法（含缺 Idempotency-Key）, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    Unauthenticated: {description: 未认证, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    Forbidden: {description: 无成员关系或能力不足（写入 `tenant.capability_denied` 审计）, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    NotFound: {description: 不存在**或**调用方不是当事方（刻意不区分）, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    Conflict: {description: 状态冲突 / 幂等键同键不同体, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string}
+    MissionCreate:
+      type: object
+      required: [goal, offer, success_criteria]
+      properties:
+        goal: {type: string, minLength: 8, maxLength: 1000}
+        offer: {type: string, minLength: 1, maxLength: 500}
+        constraints: {type: array, items: {type: string}}
+        success_criteria: {type: string, minLength: 5}
+        discoverable: {type: boolean, default: false}
+    IntentUpsert:
+      type: object
+      additionalProperties: true
+      description: 完整字段见 `src/lib/connection/intents.ts`。
+    ProposalCreate:
+      type: object
+      additionalProperties: true
+      description: 完整字段见 `src/lib/connection/**`。
+    OutcomeReport:
+      type: object
+      additionalProperties: true
+      description: 完整字段见 `src/lib/outcome/**`。
+    AgentRunCreate:
+      type: object
+      required: [skill, input]
+      properties:
+        skill: {type: string, description: 见 T09 技能注册表}
+        input: {type: object, additionalProperties: true}
+        subjectLabel: {type: string}
+        delivery: {type: object, additionalProperties: true}
+    AgentDecision:
+      type: object
+      properties:
+        note: {type: string, maxLength: 500}
+    BridgeCreate:
+      type: object
+      required: [recipientOrgId, initiatorFieldKeys, recipientFieldKeys, purpose]
+      properties:
+        recipientOrgId: {type: string}
+        initiatorFieldKeys: {type: array, items: {type: string}}
+        recipientFieldKeys: {type: array, items: {type: string}}
+        shareableMissionKinds: {type: array, items: {type: string}}
+        purpose: {type: string}
+        expiresAt: {type: string, format: date-time, nullable: true}
+    BridgeOptIn:
+      type: object
+      required: [disclosedFieldKeys]
+      properties:
+        disclosedFieldKeys:
+          type: array
+          items: {type: string}
+          description: 必须 ⊆ 本侧协议允许集；超出即整单拒绝（400 + `bridge.optin_rejected` 审计）。

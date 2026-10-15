@@ -30,7 +30,7 @@
 | 8 | 完成 Community SaaS Console | **T07** | 全模块的门面 | ⬜ |
 | 9 | 接入 LangGraph 与模型调用网关 | **T09** | 05 Agent Workforce | ⬜ |
 | 10 | 实现 Community Bridge 与跨群权限 | **T10** | 04 Community Bridge | ✅ 完成（Slice 1–4 全交付，AC-19 E2E **69/69**；**未发版**） |
-| 11 | 接入 A2A / MCP 和开发者 SDK | **T11** | 10 Integrations | ⬜ |
+| 11 | 接入 A2A / MCP 和开发者 SDK | **T11** | 10 Integrations | ✅ 完成（Slice 1–5，AC-22 端到端 **57/57**；**未发版**） |
 | 12 | 完成 E2E、安全、负载与回归测试 | **T12** | — | ⬜ |
 
 **6 个「值得长期自研」的引擎**（战略方案 §四）落点：Intent → **T03(+T09)**｜Reciprocal Connection → **T04**｜Consent & Trust → **T05(+T01)**｜Connection Orchestrator → **T06**｜Community Bridge → **T10**｜Outcome Learning → **T08**。
@@ -290,13 +290,51 @@
   - ⚠️ **交接 T11**：本切片新增的 8 个端点**未**写入 `contracts/connection.openapi.yaml`
     （该契约文件位于工作区交付包 `lokfeel_workbuddy_v1/contracts/`，不在本仓库内）。
     T11 做「OpenAPI 固化」时需一并补齐 —— 连同 T09 的 `/api/v1/agents/*`（同样尚未收录）。
+    > ✅ **已在 T11 Slice 1 闭合**：契约从 8 路径扩到 **34 路径 / 42 操作**（42/42 带 `x-required-capability`），
+    > 并新增 `npm run check:openapi-contract` 做契约↔实现的同源核对（消掉这类「实现跑了、契约没跟上」的漂移）。
 
 ### T11 · Open SDK — 标准互操作与开源准备
 - **目标**：A2A / MCP 适配 + OpenAPI 固化 + SDK 示例 + 许可证审计。
 - **依赖**：T04 / T05 的 API 面稳定后
-- **验收**：**AC-22**
+- **验收**：**AC-22**（「第三方 Agent 在授权范围内完成发现/协作，越权失败」）
 - **交付**：适配层 + 示例 + 贡献指南
 - **铁律**：外部示例可运行；**越权必须失败**；开源仓**无凭据**
+- **状态**：✅ **Slice 1–5 全部交付**（细节见 `T11/plan.md` 与 `T11/slice-1..5.md`）
+
+**已完成**
+- **Slice 1 · 契约 + 开源审计**：`contracts/connection.openapi.yaml` 8 → **34 路径 / 42 操作**；
+  `check:openapi-contract`（契约↔实现同源，5 项断言）；`audit:open-source`（许可证分级 + 凭据扫描，5 项断言）。
+- **Slice 2 · MCP 适配层**：`POST /api/mcp`（Streamable HTTP）；**工具目录单一来源** `src/lib/interop/tools.ts`
+  （MCP 与 A2A 共用，防两套清单静默漂移）；**逐工具**能力授权（不用 `withTenant` 包整条路由）。单测 25/25。
+- **Slice 3 · A2A 最小可用**：`GET /.well-known/agent-card.json` + `POST /api/v1/a2a/tasks`；**无状态**（task 不落库，
+  避免与 T09 `AgentRun` 产生第二套运行记录）。单测 22/22。
+- **Slice 4 · SDK 示例**：`examples/sdk/`（零依赖客户端 + 3 组授权/越权成对演示 + README）；纳入 `tsc` 覆盖（不腐烂）。
+- **Slice 5 · AC-22 端到端取证**：`npm run verify:ac22:open-sdk` → **57 通过 / 0 失败**（真 dev server + 真隔离库 +
+  三档角色真实登录会话；9 段断言）。
+
+**证据**
+- `npm run verify:ac22:open-sdk` → **57/0**，exit 0。发现面（匿名）· 协作（授权，断言真实数据）·
+  越权（无会话 401 / 能力不足 `isError`·`failed`·403 / 跨租户 403）· 协议健壮性（-32700/-32600/-32601/-32602）·
+  **实跑 `examples/sdk/` 四个脚本（退出码均 0）**。
+- `npx jest tests/mcp` 25/25；`npx jest tests/a2a` 22/22；`npx tsc --noEmit` exit 0。
+- `check:openapi-contract` / `audit:open-source`（1489 文件扫描）各 5 项全绿；`check:script-decls` 80 脚本 0 未声明引用。
+
+**🔴 本轮抓到的真实问题（都已修）**
+- **开源审计抓到一处真实凭据泄漏**：`scripts/fix-bot-photos-http.mjs` 硬编码了**真实可用的 Turso 读写 token**
+  （已在 git 历史里）→ 改为 `process.env.TURSO_TOKEN`（缺失即 `exit 1`），注释注明「必须视为已泄漏并轮换」。
+- **示例差点是不可运行的**：初版用 `LOKFEEL_TOKEN` + `Authorization: Bearer` —— 而本服务身份来自 NextAuth
+  **会话 cookie**，代码里**没有** Bearer 分支，跑一次必 401。已改为与浏览器同形（`/api/auth/login` 换 cookie）。
+  ⇒ 通用规则：**示例里出现的每个机制都必须在真实代码里存在**。
+- **就绪判据把 404 当"就绪"（假绿）**：`waitForHttp` 只要求"fetch 没抛"；Turbopack 路由清单残留导致全站 404 时
+  仍判"就绪"，症状被推迟并伪装成"登录 404"。已改为**必须 200** + 失败清 `.next` 重试；同一缺陷在
+  `verify-ac19-bridge-e2e.mjs` 里同源存在，**一并修**。
+- **凭据审计漏扫未跟踪新文件**：`git ls-files` 只扫 index ⇒ 新写的文件在 `git add` 前不在范围内（1463 → 1489 文件）。
+  已改为 `--cached --others --exclude-standard`。
+
+**未闭合 / 交接 T12**
+- **LDCP 在交付包中无任何规格定义**（仅 PRD 一处缩写）⇒ **不实现**，验收记 `N/A`，不虚报。
+- **MCP / A2A 端点暂无独立速率限制** —— 不在 T11 口径内，但应在 **T12 的负载项**里被看见。
+- 「示例可运行」以**只读**协作取证（写工具需真实 `proposalId`，隔离库里只能得到 400），**未**声称写入链路端到端打通。
 
 ### T12 · Release E2E — 全链路验证与上线门禁
 - **目标**：Playwright E2E + API + 权限 + 对抗 + 迁移 + 故障 + 负载 + 计费 + 回滚演练。

@@ -3,11 +3,18 @@
  * 绕过 Prisma 的慢速，直接 HTTP 请求
  */
 
-const https = require('https');
-const http = require('http');
+import https from 'node:https';
 
-const DB_URL = 'https://lokfeelcom-lokfeelboss.aws-us-east-1.turso.io';
-const TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Nzc1LTEzMTcsImlkIjoiMDE5ZGRkMDMtZGQwMS03Y2VmLWI5NjQtNzg4OThmMjljNTgwIiwicmlkIjoiNTNmMGQ0MjYtNjgzNC00ZjJkLTg1YjAtZTY3MTk4MmI2YTg1In0.ELXcqcJUSGKZpS6HPc8hjY2KZL7ZsKeGYmCr9UdwhfyYrTM57-4_mC5h8b8OrjUgjrcN_DO_xwWGGC1ajs7pCw';
+// 🔴 凭据一律从环境变量注入。
+//    本文件**曾经硬编码过一个 Turso 读写 token**（`"a":"rw"`），它已进入 git 历史 ⇒
+//    必须视为**已泄漏并轮换**（由 T11 开源合规审计 `npm run audit:open-source` 发现，2026-10-15）。
+//    DB_URL 保留默认值（主机名不是秘密），token 不得再出现字面量。
+const DB_URL = process.env.TURSO_DB_URL || 'https://lokfeelcom-lokfeelboss.aws-us-east-1.turso.io';
+const TOKEN = process.env.TURSO_TOKEN;
+if (!TOKEN) {
+  console.error('❌ 缺少 TURSO_TOKEN —— 本脚本不再内置凭据。用法：TURSO_TOKEN=… node scripts/fix-bot-photos-http.mjs');
+  process.exit(1);
+}
 
 function tursoQuery(sql, params = []) {
   return new Promise((resolve, reject) => {
@@ -33,7 +40,7 @@ function tursoQuery(sql, params = []) {
       res.on('end', () => {
         try {
           resolve(JSON.parse(data));
-        } catch (e) {
+        } catch {
           reject(new Error(`Parse error: ${data.slice(0, 200)}`));
         }
       });
@@ -76,7 +83,7 @@ async function main() {
 
   let updated = 0;
   for (const row of rows) {
-    const [id, displayName, gender, avatar, avatarType, email] = row;
+    const [id, displayName, gender] = row;
     try {
       const photoUrl = generateRealPhotoUrl(displayName || id, gender);
       

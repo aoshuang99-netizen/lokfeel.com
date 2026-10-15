@@ -264,8 +264,15 @@ const main = async () => {
     'next-dev',
   )
   const devReady = await waitForHttp(`${BASE}/api/health`, { timeoutMs: 240_000, label: 'dev server' })
-  ck('dev server 就绪（/api/health 可达）', devReady.ok, `status=${devReady.status}`)
-  if (!devReady.ok) return
+  // 🔴 `waitForHttp` 只保证"fetch 没抛"，**不保证**服务器能路由 —— 全站 404 也会让它返回 ok。
+  //    故这里额外要求 200：路由清单不完整（Turbopack 产物残留）会让后续所有断言以
+  //    "404" 的形式失败，指向完全错误的方向（T11 取证时真实踩到过）。
+  ck(
+    'dev server 就绪（/api/health **200**，而非仅仅"请求能通"）',
+    devReady.ok && devReady.status === 200,
+    `status=${devReady.status}`,
+  )
+  if (!devReady.ok || devReady.status !== 200) return
 
   // bMember3 也要登录：它是「已 opt-in 但**无意图**」那条反向证据的主角。
   const ids = ['aOwner', 'aMember', 'bOwner', 'bMember', 'bMember3']
