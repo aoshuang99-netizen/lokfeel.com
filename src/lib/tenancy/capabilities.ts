@@ -58,6 +58,10 @@ export type TenantCapability =
   | 'agent.run' // 发起一次 Agent 运行（**消耗组织额度**，且 prompt 可能含他人资料 → 取严）
   | 'agent.approve' // 批准高风险产出（= 授权一次**对外可见**的副作用）
   | 'agent.execute' // 执行一条已放行的运行（= **真正产生副作用**的那一步）
+  // ── 跨社群协议（T10 / AC-19）──
+  | 'bridge.read' // 看见本组织有哪些协议、我是否已加入、我的数据会被谁看到
+  | 'bridge.manage' // 发起 / 批准 / 撤销跨群共享（= 决定「本群成员数据能否出街」，取严）
+  | 'bridge.optin' // 成员**自主**决定自己是否加入 —— AC-19 的「逐个 opt-in」就是它
   // ── 审计 ──
   | 'audit.read'
 
@@ -71,6 +75,7 @@ export const TENANT_CAPABILITIES: readonly TenantCapability[] = [
   'billing.read', 'billing.manage',
   'workflow.read', 'workflow.manage',
   'agent.run', 'agent.approve', 'agent.execute',
+  'bridge.read', 'bridge.manage', 'bridge.optin',
   'audit.read',
 ] as const
 
@@ -83,6 +88,11 @@ const SELF_SERVICE: TenantCapability[] = [
   'proposal.decide',
   'outcome.read',
   'outcome.report',
+  // T10 / AC-19：成员要能看见「本组织有哪些协议、我是否已加入、我的数据会被投给谁」，
+  // 也要能**自己**决定是否加入。这两条都只作用于「自己」，因此属自助能力。
+  // 🔴 而「发起/批准/撤销」不在此列 —— 那是决定**别人**的数据能否出街（见 ADMIN_EXTRA）。
+  'bridge.read',
+  'bridge.optin',
 ]
 
 // ── 运营能力：OPERATOR 及以上 ────────────────────────────────────────
@@ -132,6 +142,10 @@ const ADMIN_EXTRA: TenantCapability[] = [
   // 状态机依然正确（AWAITING_APPROVAL → EXECUTED 的边依然不存在），
   // 但"人工审批"退化成了自我盖章。故归 ADMIN+，与触发权（OPERATOR+）**分离**。
   'agent.approve',
+  // T10 / AC-19：发起/批准/撤销跨群协议 = 决定「本群成员的数据能否出街」。
+  // 与 agent.approve 同一取向取严（ADMIN+）：它对**整个群的成员**产生授权效果，
+  // 而成员个人层面的加入与否由 bridge.optin（自助）单独把关 —— 两层互不替代。
+  'bridge.manage',
 ]
 
 // ── 所有者专属 ──────────────────────────────────────────────────────

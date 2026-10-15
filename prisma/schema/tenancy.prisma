@@ -100,6 +100,14 @@ model Organization {
   agentExecutions AgentExecution[]
   agentDeliveryTargets AgentDeliveryTarget[]
 
+  // ── T10 Community Bridge 反向关系（bridge.prisma）──
+  //
+  // ⚠️ 只列出 `BridgeMemberOptIn`。`CommunityBridge.initiatorOrgId` / `.recipientOrgId`
+  //    是**软引用**（无 FK）—— 协议是两个组织之间的**历史记录**，组织注销后仍须可查，
+  //    且组织重建后**不得**继承旧协议。故本模型上**没有**对应的反向关系字段。
+  //    这不表示"查不到协议"，而是"不靠 FK 保证其完整性"（见 bridge.prisma 约束 3）。
+  bridgeMemberOptIns BridgeMemberOptIn[]
+
   @@index([status])
 }
 

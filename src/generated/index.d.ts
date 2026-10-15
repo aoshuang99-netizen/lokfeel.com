@@ -117,6 +117,16 @@ export type BotPreference = $Result.DefaultSelection<Prisma.$BotPreferencePayloa
  */
 export type BotAvatar = $Result.DefaultSelection<Prisma.$BotAvatarPayload>
 /**
+ * Model CommunityBridge
+ * 跨社群合作协议（组织 ↔ 组织，**双边**）。
+ */
+export type CommunityBridge = $Result.DefaultSelection<Prisma.$CommunityBridgePayload>
+/**
+ * Model BridgeMemberOptIn
+ * 成员的**逐个** opt-in。
+ */
+export type BridgeMemberOptIn = $Result.DefaultSelection<Prisma.$BridgeMemberOptInPayload>
+/**
  * Model Mission
  * 连接任务。对应契约 missions 表。
  */
@@ -527,6 +537,23 @@ export const OnlinePattern: {
 };
 
 export type OnlinePattern = (typeof OnlinePattern)[keyof typeof OnlinePattern]
+
+
+export const CommunityBridgeStatus: {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  REVOKED: 'REVOKED'
+};
+
+export type CommunityBridgeStatus = (typeof CommunityBridgeStatus)[keyof typeof CommunityBridgeStatus]
+
+
+export const BridgeMemberOptInStatus: {
+  ACTIVE: 'ACTIVE',
+  WITHDRAWN: 'WITHDRAWN'
+};
+
+export type BridgeMemberOptInStatus = (typeof BridgeMemberOptInStatus)[keyof typeof BridgeMemberOptInStatus]
 
 
 export const MissionStatus: {
@@ -1120,6 +1147,14 @@ export type OnlinePattern = $Enums.OnlinePattern
 
 export const OnlinePattern: typeof $Enums.OnlinePattern
 
+export type CommunityBridgeStatus = $Enums.CommunityBridgeStatus
+
+export const CommunityBridgeStatus: typeof $Enums.CommunityBridgeStatus
+
+export type BridgeMemberOptInStatus = $Enums.BridgeMemberOptInStatus
+
+export const BridgeMemberOptInStatus: typeof $Enums.BridgeMemberOptInStatus
+
 export type MissionStatus = $Enums.MissionStatus
 
 export const MissionStatus: typeof $Enums.MissionStatus
@@ -1554,6 +1589,26 @@ export class PrismaClient<
     * ```
     */
   get botAvatar(): Prisma.BotAvatarDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.communityBridge`: Exposes CRUD operations for the **CommunityBridge** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CommunityBridges
+    * const communityBridges = await prisma.communityBridge.findMany()
+    * ```
+    */
+  get communityBridge(): Prisma.CommunityBridgeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.bridgeMemberOptIn`: Exposes CRUD operations for the **BridgeMemberOptIn** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BridgeMemberOptIns
+    * const bridgeMemberOptIns = await prisma.bridgeMemberOptIn.findMany()
+    * ```
+    */
+  get bridgeMemberOptIn(): Prisma.BridgeMemberOptInDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.mission`: Exposes CRUD operations for the **Mission** model.
@@ -2484,6 +2539,8 @@ export namespace Prisma {
     BotLearningRecord: 'BotLearningRecord',
     BotPreference: 'BotPreference',
     BotAvatar: 'BotAvatar',
+    CommunityBridge: 'CommunityBridge',
+    BridgeMemberOptIn: 'BridgeMemberOptIn',
     Mission: 'Mission',
     SocialIntent: 'SocialIntent',
     MissionParticipation: 'MissionParticipation',
@@ -2546,7 +2603,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organization" | "membership" | "tenantAuditEvent"
+      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "communityBridge" | "bridgeMemberOptIn" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organization" | "membership" | "tenantAuditEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3509,6 +3566,154 @@ export namespace Prisma {
           count: {
             args: Prisma.BotAvatarCountArgs<ExtArgs>
             result: $Utils.Optional<BotAvatarCountAggregateOutputType> | number
+          }
+        }
+      }
+      CommunityBridge: {
+        payload: Prisma.$CommunityBridgePayload<ExtArgs>
+        fields: Prisma.CommunityBridgeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CommunityBridgeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CommunityBridgeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>
+          }
+          findFirst: {
+            args: Prisma.CommunityBridgeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CommunityBridgeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>
+          }
+          findMany: {
+            args: Prisma.CommunityBridgeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>[]
+          }
+          create: {
+            args: Prisma.CommunityBridgeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>
+          }
+          createMany: {
+            args: Prisma.CommunityBridgeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CommunityBridgeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>[]
+          }
+          delete: {
+            args: Prisma.CommunityBridgeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>
+          }
+          update: {
+            args: Prisma.CommunityBridgeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>
+          }
+          deleteMany: {
+            args: Prisma.CommunityBridgeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CommunityBridgeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CommunityBridgeUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>[]
+          }
+          upsert: {
+            args: Prisma.CommunityBridgeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommunityBridgePayload>
+          }
+          aggregate: {
+            args: Prisma.CommunityBridgeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCommunityBridge>
+          }
+          groupBy: {
+            args: Prisma.CommunityBridgeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CommunityBridgeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CommunityBridgeCountArgs<ExtArgs>
+            result: $Utils.Optional<CommunityBridgeCountAggregateOutputType> | number
+          }
+        }
+      }
+      BridgeMemberOptIn: {
+        payload: Prisma.$BridgeMemberOptInPayload<ExtArgs>
+        fields: Prisma.BridgeMemberOptInFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BridgeMemberOptInFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BridgeMemberOptInFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>
+          }
+          findFirst: {
+            args: Prisma.BridgeMemberOptInFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BridgeMemberOptInFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>
+          }
+          findMany: {
+            args: Prisma.BridgeMemberOptInFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>[]
+          }
+          create: {
+            args: Prisma.BridgeMemberOptInCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>
+          }
+          createMany: {
+            args: Prisma.BridgeMemberOptInCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BridgeMemberOptInCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>[]
+          }
+          delete: {
+            args: Prisma.BridgeMemberOptInDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>
+          }
+          update: {
+            args: Prisma.BridgeMemberOptInUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>
+          }
+          deleteMany: {
+            args: Prisma.BridgeMemberOptInDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BridgeMemberOptInUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BridgeMemberOptInUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>[]
+          }
+          upsert: {
+            args: Prisma.BridgeMemberOptInUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BridgeMemberOptInPayload>
+          }
+          aggregate: {
+            args: Prisma.BridgeMemberOptInAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBridgeMemberOptIn>
+          }
+          groupBy: {
+            args: Prisma.BridgeMemberOptInGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BridgeMemberOptInGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BridgeMemberOptInCountArgs<ExtArgs>
+            result: $Utils.Optional<BridgeMemberOptInCountAggregateOutputType> | number
           }
         }
       }
@@ -7126,6 +7331,8 @@ export namespace Prisma {
     botLearningRecord?: BotLearningRecordOmit
     botPreference?: BotPreferenceOmit
     botAvatar?: BotAvatarOmit
+    communityBridge?: CommunityBridgeOmit
+    bridgeMemberOptIn?: BridgeMemberOptInOmit
     mission?: MissionOmit
     socialIntent?: SocialIntentOmit
     missionParticipation?: MissionParticipationOmit
@@ -7276,6 +7483,37 @@ export namespace Prisma {
    */
   export type AgentRunCountOutputTypeCountCallsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AgentCallWhereInput
+  }
+
+
+  /**
+   * Count Type CommunityBridgeCountOutputType
+   */
+
+  export type CommunityBridgeCountOutputType = {
+    memberOptIns: number
+  }
+
+  export type CommunityBridgeCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    memberOptIns?: boolean | CommunityBridgeCountOutputTypeCountMemberOptInsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CommunityBridgeCountOutputType without action
+   */
+  export type CommunityBridgeCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridgeCountOutputType
+     */
+    select?: CommunityBridgeCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CommunityBridgeCountOutputType without action
+   */
+  export type CommunityBridgeCountOutputTypeCountMemberOptInsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BridgeMemberOptInWhereInput
   }
 
 
@@ -7974,6 +8212,7 @@ export namespace Prisma {
     agentApprovals: number
     agentExecutions: number
     agentDeliveryTargets: number
+    bridgeMemberOptIns: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7997,6 +8236,7 @@ export namespace Prisma {
     agentApprovals?: boolean | OrganizationCountOutputTypeCountAgentApprovalsArgs
     agentExecutions?: boolean | OrganizationCountOutputTypeCountAgentExecutionsArgs
     agentDeliveryTargets?: boolean | OrganizationCountOutputTypeCountAgentDeliveryTargetsArgs
+    bridgeMemberOptIns?: boolean | OrganizationCountOutputTypeCountBridgeMemberOptInsArgs
   }
 
   // Custom InputTypes
@@ -8148,6 +8388,13 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountAgentDeliveryTargetsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AgentDeliveryTargetWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountBridgeMemberOptInsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BridgeMemberOptInWhereInput
   }
 
 
@@ -23686,6 +23933,2407 @@ export namespace Prisma {
      * Omit specific fields from the BotAvatar
      */
     omit?: BotAvatarOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CommunityBridge
+   */
+
+  export type AggregateCommunityBridge = {
+    _count: CommunityBridgeCountAggregateOutputType | null
+    _min: CommunityBridgeMinAggregateOutputType | null
+    _max: CommunityBridgeMaxAggregateOutputType | null
+  }
+
+  export type CommunityBridgeMinAggregateOutputType = {
+    id: string | null
+    initiatorOrgId: string | null
+    recipientOrgId: string | null
+    status: $Enums.CommunityBridgeStatus | null
+    initiatorFieldKeys: string | null
+    recipientFieldKeys: string | null
+    shareableMissionKinds: string | null
+    purpose: string | null
+    initiatorApprovedAt: Date | null
+    recipientApprovedAt: Date | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    revokedBy: string | null
+    createdBy: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CommunityBridgeMaxAggregateOutputType = {
+    id: string | null
+    initiatorOrgId: string | null
+    recipientOrgId: string | null
+    status: $Enums.CommunityBridgeStatus | null
+    initiatorFieldKeys: string | null
+    recipientFieldKeys: string | null
+    shareableMissionKinds: string | null
+    purpose: string | null
+    initiatorApprovedAt: Date | null
+    recipientApprovedAt: Date | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    revokedBy: string | null
+    createdBy: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CommunityBridgeCountAggregateOutputType = {
+    id: number
+    initiatorOrgId: number
+    recipientOrgId: number
+    status: number
+    initiatorFieldKeys: number
+    recipientFieldKeys: number
+    shareableMissionKinds: number
+    purpose: number
+    initiatorApprovedAt: number
+    recipientApprovedAt: number
+    expiresAt: number
+    revokedAt: number
+    revokedBy: number
+    createdBy: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CommunityBridgeMinAggregateInputType = {
+    id?: true
+    initiatorOrgId?: true
+    recipientOrgId?: true
+    status?: true
+    initiatorFieldKeys?: true
+    recipientFieldKeys?: true
+    shareableMissionKinds?: true
+    purpose?: true
+    initiatorApprovedAt?: true
+    recipientApprovedAt?: true
+    expiresAt?: true
+    revokedAt?: true
+    revokedBy?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CommunityBridgeMaxAggregateInputType = {
+    id?: true
+    initiatorOrgId?: true
+    recipientOrgId?: true
+    status?: true
+    initiatorFieldKeys?: true
+    recipientFieldKeys?: true
+    shareableMissionKinds?: true
+    purpose?: true
+    initiatorApprovedAt?: true
+    recipientApprovedAt?: true
+    expiresAt?: true
+    revokedAt?: true
+    revokedBy?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CommunityBridgeCountAggregateInputType = {
+    id?: true
+    initiatorOrgId?: true
+    recipientOrgId?: true
+    status?: true
+    initiatorFieldKeys?: true
+    recipientFieldKeys?: true
+    shareableMissionKinds?: true
+    purpose?: true
+    initiatorApprovedAt?: true
+    recipientApprovedAt?: true
+    expiresAt?: true
+    revokedAt?: true
+    revokedBy?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CommunityBridgeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CommunityBridge to aggregate.
+     */
+    where?: CommunityBridgeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CommunityBridges to fetch.
+     */
+    orderBy?: CommunityBridgeOrderByWithRelationInput | CommunityBridgeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CommunityBridgeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CommunityBridges from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CommunityBridges.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CommunityBridges
+    **/
+    _count?: true | CommunityBridgeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CommunityBridgeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CommunityBridgeMaxAggregateInputType
+  }
+
+  export type GetCommunityBridgeAggregateType<T extends CommunityBridgeAggregateArgs> = {
+        [P in keyof T & keyof AggregateCommunityBridge]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCommunityBridge[P]>
+      : GetScalarType<T[P], AggregateCommunityBridge[P]>
+  }
+
+
+
+
+  export type CommunityBridgeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CommunityBridgeWhereInput
+    orderBy?: CommunityBridgeOrderByWithAggregationInput | CommunityBridgeOrderByWithAggregationInput[]
+    by: CommunityBridgeScalarFieldEnum[] | CommunityBridgeScalarFieldEnum
+    having?: CommunityBridgeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CommunityBridgeCountAggregateInputType | true
+    _min?: CommunityBridgeMinAggregateInputType
+    _max?: CommunityBridgeMaxAggregateInputType
+  }
+
+  export type CommunityBridgeGroupByOutputType = {
+    id: string
+    initiatorOrgId: string
+    recipientOrgId: string
+    status: $Enums.CommunityBridgeStatus
+    initiatorFieldKeys: string
+    recipientFieldKeys: string
+    shareableMissionKinds: string
+    purpose: string
+    initiatorApprovedAt: Date
+    recipientApprovedAt: Date | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    revokedBy: string | null
+    createdBy: string
+    createdAt: Date
+    updatedAt: Date
+    _count: CommunityBridgeCountAggregateOutputType | null
+    _min: CommunityBridgeMinAggregateOutputType | null
+    _max: CommunityBridgeMaxAggregateOutputType | null
+  }
+
+  type GetCommunityBridgeGroupByPayload<T extends CommunityBridgeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CommunityBridgeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CommunityBridgeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CommunityBridgeGroupByOutputType[P]>
+            : GetScalarType<T[P], CommunityBridgeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CommunityBridgeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    initiatorOrgId?: boolean
+    recipientOrgId?: boolean
+    status?: boolean
+    initiatorFieldKeys?: boolean
+    recipientFieldKeys?: boolean
+    shareableMissionKinds?: boolean
+    purpose?: boolean
+    initiatorApprovedAt?: boolean
+    recipientApprovedAt?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    revokedBy?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    memberOptIns?: boolean | CommunityBridge$memberOptInsArgs<ExtArgs>
+    _count?: boolean | CommunityBridgeCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["communityBridge"]>
+
+  export type CommunityBridgeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    initiatorOrgId?: boolean
+    recipientOrgId?: boolean
+    status?: boolean
+    initiatorFieldKeys?: boolean
+    recipientFieldKeys?: boolean
+    shareableMissionKinds?: boolean
+    purpose?: boolean
+    initiatorApprovedAt?: boolean
+    recipientApprovedAt?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    revokedBy?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["communityBridge"]>
+
+  export type CommunityBridgeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    initiatorOrgId?: boolean
+    recipientOrgId?: boolean
+    status?: boolean
+    initiatorFieldKeys?: boolean
+    recipientFieldKeys?: boolean
+    shareableMissionKinds?: boolean
+    purpose?: boolean
+    initiatorApprovedAt?: boolean
+    recipientApprovedAt?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    revokedBy?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["communityBridge"]>
+
+  export type CommunityBridgeSelectScalar = {
+    id?: boolean
+    initiatorOrgId?: boolean
+    recipientOrgId?: boolean
+    status?: boolean
+    initiatorFieldKeys?: boolean
+    recipientFieldKeys?: boolean
+    shareableMissionKinds?: boolean
+    purpose?: boolean
+    initiatorApprovedAt?: boolean
+    recipientApprovedAt?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    revokedBy?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CommunityBridgeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "initiatorOrgId" | "recipientOrgId" | "status" | "initiatorFieldKeys" | "recipientFieldKeys" | "shareableMissionKinds" | "purpose" | "initiatorApprovedAt" | "recipientApprovedAt" | "expiresAt" | "revokedAt" | "revokedBy" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["communityBridge"]>
+  export type CommunityBridgeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    memberOptIns?: boolean | CommunityBridge$memberOptInsArgs<ExtArgs>
+    _count?: boolean | CommunityBridgeCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CommunityBridgeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type CommunityBridgeIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $CommunityBridgePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CommunityBridge"
+    objects: {
+      memberOptIns: Prisma.$BridgeMemberOptInPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 发起方组织。**软引用**（无 FK）—— 见文件头约束 3。
+       */
+      initiatorOrgId: string
+      /**
+       * 被邀方组织。**软引用**（无 FK）。
+       */
+      recipientOrgId: string
+      /**
+       * 当前状态。只经 `src/lib/bridges/bridges.ts` 的 `transitionBridge()` 修改，
+       * 且该函数在执行 UPDATE 前**必须**先过 `planBridgeTransition()` 的真相表断言。
+       */
+      status: $Enums.CommunityBridgeStatus
+      /**
+       * 发起方允许共享的字段键（JSON 数组文本）。
+       */
+      initiatorFieldKeys: string
+      /**
+       * 被邀方允许共享的字段键（JSON 数组文本）。
+       * 🔴 共享字段 = 两者**交集**（只有双方都允许才生效）。
+       */
+      recipientFieldKeys: string
+      /**
+       * 可共享的任务类型（JSON 数组文本）。用途是收窄范围，不是枚举白名单的替代。
+       */
+      shareableMissionKinds: string
+      /**
+       * 用途声明（purpose limitation）。**必填** —— 跨群共享必须有可陈述的目的。
+       */
+      purpose: string
+      /**
+       * 发起方批准时刻。**创建时即落值**（创建 = 发起方同意）。
+       */
+      initiatorApprovedAt: Date
+      /**
+       * 被邀方批准时刻。`null` ⇒ 协议仍停 `PENDING`（**不是**"默认同意"）。
+       */
+      recipientApprovedAt: Date | null
+      /**
+       * 有效期。`null` = 永久。
+       */
+      expiresAt: Date | null
+      revokedAt: Date | null
+      /**
+       * 撤销者（**软引用**）。
+       */
+      revokedBy: string | null
+      /**
+       * 创建者（**软引用**）。
+       */
+      createdBy: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["communityBridge"]>
+    composites: {}
+  }
+
+  type CommunityBridgeGetPayload<S extends boolean | null | undefined | CommunityBridgeDefaultArgs> = $Result.GetResult<Prisma.$CommunityBridgePayload, S>
+
+  type CommunityBridgeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CommunityBridgeFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CommunityBridgeCountAggregateInputType | true
+    }
+
+  export interface CommunityBridgeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CommunityBridge'], meta: { name: 'CommunityBridge' } }
+    /**
+     * Find zero or one CommunityBridge that matches the filter.
+     * @param {CommunityBridgeFindUniqueArgs} args - Arguments to find a CommunityBridge
+     * @example
+     * // Get one CommunityBridge
+     * const communityBridge = await prisma.communityBridge.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CommunityBridgeFindUniqueArgs>(args: SelectSubset<T, CommunityBridgeFindUniqueArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CommunityBridge that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CommunityBridgeFindUniqueOrThrowArgs} args - Arguments to find a CommunityBridge
+     * @example
+     * // Get one CommunityBridge
+     * const communityBridge = await prisma.communityBridge.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CommunityBridgeFindUniqueOrThrowArgs>(args: SelectSubset<T, CommunityBridgeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CommunityBridge that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommunityBridgeFindFirstArgs} args - Arguments to find a CommunityBridge
+     * @example
+     * // Get one CommunityBridge
+     * const communityBridge = await prisma.communityBridge.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CommunityBridgeFindFirstArgs>(args?: SelectSubset<T, CommunityBridgeFindFirstArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CommunityBridge that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommunityBridgeFindFirstOrThrowArgs} args - Arguments to find a CommunityBridge
+     * @example
+     * // Get one CommunityBridge
+     * const communityBridge = await prisma.communityBridge.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CommunityBridgeFindFirstOrThrowArgs>(args?: SelectSubset<T, CommunityBridgeFindFirstOrThrowArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CommunityBridges that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommunityBridgeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CommunityBridges
+     * const communityBridges = await prisma.communityBridge.findMany()
+     * 
+     * // Get first 10 CommunityBridges
+     * const communityBridges = await prisma.communityBridge.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const communityBridgeWithIdOnly = await prisma.communityBridge.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CommunityBridgeFindManyArgs>(args?: SelectSubset<T, CommunityBridgeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CommunityBridge.
+     * @param {CommunityBridgeCreateArgs} args - Arguments to create a CommunityBridge.
+     * @example
+     * // Create one CommunityBridge
+     * const CommunityBridge = await prisma.communityBridge.create({
+     *   data: {
+     *     // ... data to create a CommunityBridge
+     *   }
+     * })
+     * 
+     */
+    create<T extends CommunityBridgeCreateArgs>(args: SelectSubset<T, CommunityBridgeCreateArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CommunityBridges.
+     * @param {CommunityBridgeCreateManyArgs} args - Arguments to create many CommunityBridges.
+     * @example
+     * // Create many CommunityBridges
+     * const communityBridge = await prisma.communityBridge.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CommunityBridgeCreateManyArgs>(args?: SelectSubset<T, CommunityBridgeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CommunityBridges and returns the data saved in the database.
+     * @param {CommunityBridgeCreateManyAndReturnArgs} args - Arguments to create many CommunityBridges.
+     * @example
+     * // Create many CommunityBridges
+     * const communityBridge = await prisma.communityBridge.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CommunityBridges and only return the `id`
+     * const communityBridgeWithIdOnly = await prisma.communityBridge.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CommunityBridgeCreateManyAndReturnArgs>(args?: SelectSubset<T, CommunityBridgeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CommunityBridge.
+     * @param {CommunityBridgeDeleteArgs} args - Arguments to delete one CommunityBridge.
+     * @example
+     * // Delete one CommunityBridge
+     * const CommunityBridge = await prisma.communityBridge.delete({
+     *   where: {
+     *     // ... filter to delete one CommunityBridge
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CommunityBridgeDeleteArgs>(args: SelectSubset<T, CommunityBridgeDeleteArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CommunityBridge.
+     * @param {CommunityBridgeUpdateArgs} args - Arguments to update one CommunityBridge.
+     * @example
+     * // Update one CommunityBridge
+     * const communityBridge = await prisma.communityBridge.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CommunityBridgeUpdateArgs>(args: SelectSubset<T, CommunityBridgeUpdateArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CommunityBridges.
+     * @param {CommunityBridgeDeleteManyArgs} args - Arguments to filter CommunityBridges to delete.
+     * @example
+     * // Delete a few CommunityBridges
+     * const { count } = await prisma.communityBridge.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CommunityBridgeDeleteManyArgs>(args?: SelectSubset<T, CommunityBridgeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CommunityBridges.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommunityBridgeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CommunityBridges
+     * const communityBridge = await prisma.communityBridge.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CommunityBridgeUpdateManyArgs>(args: SelectSubset<T, CommunityBridgeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CommunityBridges and returns the data updated in the database.
+     * @param {CommunityBridgeUpdateManyAndReturnArgs} args - Arguments to update many CommunityBridges.
+     * @example
+     * // Update many CommunityBridges
+     * const communityBridge = await prisma.communityBridge.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CommunityBridges and only return the `id`
+     * const communityBridgeWithIdOnly = await prisma.communityBridge.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CommunityBridgeUpdateManyAndReturnArgs>(args: SelectSubset<T, CommunityBridgeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CommunityBridge.
+     * @param {CommunityBridgeUpsertArgs} args - Arguments to update or create a CommunityBridge.
+     * @example
+     * // Update or create a CommunityBridge
+     * const communityBridge = await prisma.communityBridge.upsert({
+     *   create: {
+     *     // ... data to create a CommunityBridge
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CommunityBridge we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CommunityBridgeUpsertArgs>(args: SelectSubset<T, CommunityBridgeUpsertArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CommunityBridges.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommunityBridgeCountArgs} args - Arguments to filter CommunityBridges to count.
+     * @example
+     * // Count the number of CommunityBridges
+     * const count = await prisma.communityBridge.count({
+     *   where: {
+     *     // ... the filter for the CommunityBridges we want to count
+     *   }
+     * })
+    **/
+    count<T extends CommunityBridgeCountArgs>(
+      args?: Subset<T, CommunityBridgeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CommunityBridgeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CommunityBridge.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommunityBridgeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CommunityBridgeAggregateArgs>(args: Subset<T, CommunityBridgeAggregateArgs>): Prisma.PrismaPromise<GetCommunityBridgeAggregateType<T>>
+
+    /**
+     * Group by CommunityBridge.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommunityBridgeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CommunityBridgeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CommunityBridgeGroupByArgs['orderBy'] }
+        : { orderBy?: CommunityBridgeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CommunityBridgeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCommunityBridgeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CommunityBridge model
+   */
+  readonly fields: CommunityBridgeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CommunityBridge.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CommunityBridgeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    memberOptIns<T extends CommunityBridge$memberOptInsArgs<ExtArgs> = {}>(args?: Subset<T, CommunityBridge$memberOptInsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CommunityBridge model
+   */
+  interface CommunityBridgeFieldRefs {
+    readonly id: FieldRef<"CommunityBridge", 'String'>
+    readonly initiatorOrgId: FieldRef<"CommunityBridge", 'String'>
+    readonly recipientOrgId: FieldRef<"CommunityBridge", 'String'>
+    readonly status: FieldRef<"CommunityBridge", 'CommunityBridgeStatus'>
+    readonly initiatorFieldKeys: FieldRef<"CommunityBridge", 'String'>
+    readonly recipientFieldKeys: FieldRef<"CommunityBridge", 'String'>
+    readonly shareableMissionKinds: FieldRef<"CommunityBridge", 'String'>
+    readonly purpose: FieldRef<"CommunityBridge", 'String'>
+    readonly initiatorApprovedAt: FieldRef<"CommunityBridge", 'DateTime'>
+    readonly recipientApprovedAt: FieldRef<"CommunityBridge", 'DateTime'>
+    readonly expiresAt: FieldRef<"CommunityBridge", 'DateTime'>
+    readonly revokedAt: FieldRef<"CommunityBridge", 'DateTime'>
+    readonly revokedBy: FieldRef<"CommunityBridge", 'String'>
+    readonly createdBy: FieldRef<"CommunityBridge", 'String'>
+    readonly createdAt: FieldRef<"CommunityBridge", 'DateTime'>
+    readonly updatedAt: FieldRef<"CommunityBridge", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CommunityBridge findUnique
+   */
+  export type CommunityBridgeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * Filter, which CommunityBridge to fetch.
+     */
+    where: CommunityBridgeWhereUniqueInput
+  }
+
+  /**
+   * CommunityBridge findUniqueOrThrow
+   */
+  export type CommunityBridgeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * Filter, which CommunityBridge to fetch.
+     */
+    where: CommunityBridgeWhereUniqueInput
+  }
+
+  /**
+   * CommunityBridge findFirst
+   */
+  export type CommunityBridgeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * Filter, which CommunityBridge to fetch.
+     */
+    where?: CommunityBridgeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CommunityBridges to fetch.
+     */
+    orderBy?: CommunityBridgeOrderByWithRelationInput | CommunityBridgeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CommunityBridges.
+     */
+    cursor?: CommunityBridgeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CommunityBridges from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CommunityBridges.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CommunityBridges.
+     */
+    distinct?: CommunityBridgeScalarFieldEnum | CommunityBridgeScalarFieldEnum[]
+  }
+
+  /**
+   * CommunityBridge findFirstOrThrow
+   */
+  export type CommunityBridgeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * Filter, which CommunityBridge to fetch.
+     */
+    where?: CommunityBridgeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CommunityBridges to fetch.
+     */
+    orderBy?: CommunityBridgeOrderByWithRelationInput | CommunityBridgeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CommunityBridges.
+     */
+    cursor?: CommunityBridgeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CommunityBridges from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CommunityBridges.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CommunityBridges.
+     */
+    distinct?: CommunityBridgeScalarFieldEnum | CommunityBridgeScalarFieldEnum[]
+  }
+
+  /**
+   * CommunityBridge findMany
+   */
+  export type CommunityBridgeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * Filter, which CommunityBridges to fetch.
+     */
+    where?: CommunityBridgeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CommunityBridges to fetch.
+     */
+    orderBy?: CommunityBridgeOrderByWithRelationInput | CommunityBridgeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CommunityBridges.
+     */
+    cursor?: CommunityBridgeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CommunityBridges from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CommunityBridges.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CommunityBridges.
+     */
+    distinct?: CommunityBridgeScalarFieldEnum | CommunityBridgeScalarFieldEnum[]
+  }
+
+  /**
+   * CommunityBridge create
+   */
+  export type CommunityBridgeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CommunityBridge.
+     */
+    data: XOR<CommunityBridgeCreateInput, CommunityBridgeUncheckedCreateInput>
+  }
+
+  /**
+   * CommunityBridge createMany
+   */
+  export type CommunityBridgeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CommunityBridges.
+     */
+    data: CommunityBridgeCreateManyInput | CommunityBridgeCreateManyInput[]
+  }
+
+  /**
+   * CommunityBridge createManyAndReturn
+   */
+  export type CommunityBridgeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * The data used to create many CommunityBridges.
+     */
+    data: CommunityBridgeCreateManyInput | CommunityBridgeCreateManyInput[]
+  }
+
+  /**
+   * CommunityBridge update
+   */
+  export type CommunityBridgeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CommunityBridge.
+     */
+    data: XOR<CommunityBridgeUpdateInput, CommunityBridgeUncheckedUpdateInput>
+    /**
+     * Choose, which CommunityBridge to update.
+     */
+    where: CommunityBridgeWhereUniqueInput
+  }
+
+  /**
+   * CommunityBridge updateMany
+   */
+  export type CommunityBridgeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CommunityBridges.
+     */
+    data: XOR<CommunityBridgeUpdateManyMutationInput, CommunityBridgeUncheckedUpdateManyInput>
+    /**
+     * Filter which CommunityBridges to update
+     */
+    where?: CommunityBridgeWhereInput
+    /**
+     * Limit how many CommunityBridges to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CommunityBridge updateManyAndReturn
+   */
+  export type CommunityBridgeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * The data used to update CommunityBridges.
+     */
+    data: XOR<CommunityBridgeUpdateManyMutationInput, CommunityBridgeUncheckedUpdateManyInput>
+    /**
+     * Filter which CommunityBridges to update
+     */
+    where?: CommunityBridgeWhereInput
+    /**
+     * Limit how many CommunityBridges to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CommunityBridge upsert
+   */
+  export type CommunityBridgeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CommunityBridge to update in case it exists.
+     */
+    where: CommunityBridgeWhereUniqueInput
+    /**
+     * In case the CommunityBridge found by the `where` argument doesn't exist, create a new CommunityBridge with this data.
+     */
+    create: XOR<CommunityBridgeCreateInput, CommunityBridgeUncheckedCreateInput>
+    /**
+     * In case the CommunityBridge was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CommunityBridgeUpdateInput, CommunityBridgeUncheckedUpdateInput>
+  }
+
+  /**
+   * CommunityBridge delete
+   */
+  export type CommunityBridgeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+    /**
+     * Filter which CommunityBridge to delete.
+     */
+    where: CommunityBridgeWhereUniqueInput
+  }
+
+  /**
+   * CommunityBridge deleteMany
+   */
+  export type CommunityBridgeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CommunityBridges to delete
+     */
+    where?: CommunityBridgeWhereInput
+    /**
+     * Limit how many CommunityBridges to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CommunityBridge.memberOptIns
+   */
+  export type CommunityBridge$memberOptInsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    where?: BridgeMemberOptInWhereInput
+    orderBy?: BridgeMemberOptInOrderByWithRelationInput | BridgeMemberOptInOrderByWithRelationInput[]
+    cursor?: BridgeMemberOptInWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: BridgeMemberOptInScalarFieldEnum | BridgeMemberOptInScalarFieldEnum[]
+  }
+
+  /**
+   * CommunityBridge without action
+   */
+  export type CommunityBridgeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommunityBridge
+     */
+    select?: CommunityBridgeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommunityBridge
+     */
+    omit?: CommunityBridgeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommunityBridgeInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BridgeMemberOptIn
+   */
+
+  export type AggregateBridgeMemberOptIn = {
+    _count: BridgeMemberOptInCountAggregateOutputType | null
+    _min: BridgeMemberOptInMinAggregateOutputType | null
+    _max: BridgeMemberOptInMaxAggregateOutputType | null
+  }
+
+  export type BridgeMemberOptInMinAggregateOutputType = {
+    id: string | null
+    bridgeId: string | null
+    organizationId: string | null
+    userId: string | null
+    status: $Enums.BridgeMemberOptInStatus | null
+    disclosedFieldKeys: string | null
+    optedInAt: Date | null
+    withdrawnAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BridgeMemberOptInMaxAggregateOutputType = {
+    id: string | null
+    bridgeId: string | null
+    organizationId: string | null
+    userId: string | null
+    status: $Enums.BridgeMemberOptInStatus | null
+    disclosedFieldKeys: string | null
+    optedInAt: Date | null
+    withdrawnAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BridgeMemberOptInCountAggregateOutputType = {
+    id: number
+    bridgeId: number
+    organizationId: number
+    userId: number
+    status: number
+    disclosedFieldKeys: number
+    optedInAt: number
+    withdrawnAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type BridgeMemberOptInMinAggregateInputType = {
+    id?: true
+    bridgeId?: true
+    organizationId?: true
+    userId?: true
+    status?: true
+    disclosedFieldKeys?: true
+    optedInAt?: true
+    withdrawnAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BridgeMemberOptInMaxAggregateInputType = {
+    id?: true
+    bridgeId?: true
+    organizationId?: true
+    userId?: true
+    status?: true
+    disclosedFieldKeys?: true
+    optedInAt?: true
+    withdrawnAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BridgeMemberOptInCountAggregateInputType = {
+    id?: true
+    bridgeId?: true
+    organizationId?: true
+    userId?: true
+    status?: true
+    disclosedFieldKeys?: true
+    optedInAt?: true
+    withdrawnAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type BridgeMemberOptInAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BridgeMemberOptIn to aggregate.
+     */
+    where?: BridgeMemberOptInWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BridgeMemberOptIns to fetch.
+     */
+    orderBy?: BridgeMemberOptInOrderByWithRelationInput | BridgeMemberOptInOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BridgeMemberOptInWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BridgeMemberOptIns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BridgeMemberOptIns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BridgeMemberOptIns
+    **/
+    _count?: true | BridgeMemberOptInCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BridgeMemberOptInMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BridgeMemberOptInMaxAggregateInputType
+  }
+
+  export type GetBridgeMemberOptInAggregateType<T extends BridgeMemberOptInAggregateArgs> = {
+        [P in keyof T & keyof AggregateBridgeMemberOptIn]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBridgeMemberOptIn[P]>
+      : GetScalarType<T[P], AggregateBridgeMemberOptIn[P]>
+  }
+
+
+
+
+  export type BridgeMemberOptInGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BridgeMemberOptInWhereInput
+    orderBy?: BridgeMemberOptInOrderByWithAggregationInput | BridgeMemberOptInOrderByWithAggregationInput[]
+    by: BridgeMemberOptInScalarFieldEnum[] | BridgeMemberOptInScalarFieldEnum
+    having?: BridgeMemberOptInScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BridgeMemberOptInCountAggregateInputType | true
+    _min?: BridgeMemberOptInMinAggregateInputType
+    _max?: BridgeMemberOptInMaxAggregateInputType
+  }
+
+  export type BridgeMemberOptInGroupByOutputType = {
+    id: string
+    bridgeId: string
+    organizationId: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt: Date
+    withdrawnAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: BridgeMemberOptInCountAggregateOutputType | null
+    _min: BridgeMemberOptInMinAggregateOutputType | null
+    _max: BridgeMemberOptInMaxAggregateOutputType | null
+  }
+
+  type GetBridgeMemberOptInGroupByPayload<T extends BridgeMemberOptInGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BridgeMemberOptInGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BridgeMemberOptInGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BridgeMemberOptInGroupByOutputType[P]>
+            : GetScalarType<T[P], BridgeMemberOptInGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BridgeMemberOptInSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    bridgeId?: boolean
+    organizationId?: boolean
+    userId?: boolean
+    status?: boolean
+    disclosedFieldKeys?: boolean
+    optedInAt?: boolean
+    withdrawnAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    bridge?: boolean | CommunityBridgeDefaultArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["bridgeMemberOptIn"]>
+
+  export type BridgeMemberOptInSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    bridgeId?: boolean
+    organizationId?: boolean
+    userId?: boolean
+    status?: boolean
+    disclosedFieldKeys?: boolean
+    optedInAt?: boolean
+    withdrawnAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    bridge?: boolean | CommunityBridgeDefaultArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["bridgeMemberOptIn"]>
+
+  export type BridgeMemberOptInSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    bridgeId?: boolean
+    organizationId?: boolean
+    userId?: boolean
+    status?: boolean
+    disclosedFieldKeys?: boolean
+    optedInAt?: boolean
+    withdrawnAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    bridge?: boolean | CommunityBridgeDefaultArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["bridgeMemberOptIn"]>
+
+  export type BridgeMemberOptInSelectScalar = {
+    id?: boolean
+    bridgeId?: boolean
+    organizationId?: boolean
+    userId?: boolean
+    status?: boolean
+    disclosedFieldKeys?: boolean
+    optedInAt?: boolean
+    withdrawnAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type BridgeMemberOptInOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "bridgeId" | "organizationId" | "userId" | "status" | "disclosedFieldKeys" | "optedInAt" | "withdrawnAt" | "createdAt" | "updatedAt", ExtArgs["result"]["bridgeMemberOptIn"]>
+  export type BridgeMemberOptInInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bridge?: boolean | CommunityBridgeDefaultArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type BridgeMemberOptInIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bridge?: boolean | CommunityBridgeDefaultArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type BridgeMemberOptInIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bridge?: boolean | CommunityBridgeDefaultArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+
+  export type $BridgeMemberOptInPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BridgeMemberOptIn"
+    objects: {
+      bridge: Prisma.$CommunityBridgePayload<ExtArgs>
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * **真 FK**：协议删除必须级联清 opt-in —— 否则孤儿行会被投影当成"有效授权"。
+       */
+      bridgeId: string
+      /**
+       * 成员所属组织。**真 FK**。
+       */
+      organizationId: string
+      /**
+       * 成员。**软引用**（无 FK）—— 用户注销后"谁曾加入"仍须可查。
+       */
+      userId: string
+      status: $Enums.BridgeMemberOptInStatus
+      /**
+       * 成员选择共享的字段键（JSON 数组文本）。
+       * 必须 ⊆ 本组织在协议里配置的字段（`initiatorFieldKeys` 或 `recipientFieldKeys`）。
+       */
+      disclosedFieldKeys: string
+      optedInAt: Date
+      withdrawnAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["bridgeMemberOptIn"]>
+    composites: {}
+  }
+
+  type BridgeMemberOptInGetPayload<S extends boolean | null | undefined | BridgeMemberOptInDefaultArgs> = $Result.GetResult<Prisma.$BridgeMemberOptInPayload, S>
+
+  type BridgeMemberOptInCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BridgeMemberOptInFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BridgeMemberOptInCountAggregateInputType | true
+    }
+
+  export interface BridgeMemberOptInDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BridgeMemberOptIn'], meta: { name: 'BridgeMemberOptIn' } }
+    /**
+     * Find zero or one BridgeMemberOptIn that matches the filter.
+     * @param {BridgeMemberOptInFindUniqueArgs} args - Arguments to find a BridgeMemberOptIn
+     * @example
+     * // Get one BridgeMemberOptIn
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BridgeMemberOptInFindUniqueArgs>(args: SelectSubset<T, BridgeMemberOptInFindUniqueArgs<ExtArgs>>): Prisma__BridgeMemberOptInClient<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BridgeMemberOptIn that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BridgeMemberOptInFindUniqueOrThrowArgs} args - Arguments to find a BridgeMemberOptIn
+     * @example
+     * // Get one BridgeMemberOptIn
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BridgeMemberOptInFindUniqueOrThrowArgs>(args: SelectSubset<T, BridgeMemberOptInFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BridgeMemberOptInClient<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BridgeMemberOptIn that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BridgeMemberOptInFindFirstArgs} args - Arguments to find a BridgeMemberOptIn
+     * @example
+     * // Get one BridgeMemberOptIn
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BridgeMemberOptInFindFirstArgs>(args?: SelectSubset<T, BridgeMemberOptInFindFirstArgs<ExtArgs>>): Prisma__BridgeMemberOptInClient<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BridgeMemberOptIn that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BridgeMemberOptInFindFirstOrThrowArgs} args - Arguments to find a BridgeMemberOptIn
+     * @example
+     * // Get one BridgeMemberOptIn
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BridgeMemberOptInFindFirstOrThrowArgs>(args?: SelectSubset<T, BridgeMemberOptInFindFirstOrThrowArgs<ExtArgs>>): Prisma__BridgeMemberOptInClient<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BridgeMemberOptIns that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BridgeMemberOptInFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BridgeMemberOptIns
+     * const bridgeMemberOptIns = await prisma.bridgeMemberOptIn.findMany()
+     * 
+     * // Get first 10 BridgeMemberOptIns
+     * const bridgeMemberOptIns = await prisma.bridgeMemberOptIn.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const bridgeMemberOptInWithIdOnly = await prisma.bridgeMemberOptIn.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BridgeMemberOptInFindManyArgs>(args?: SelectSubset<T, BridgeMemberOptInFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BridgeMemberOptIn.
+     * @param {BridgeMemberOptInCreateArgs} args - Arguments to create a BridgeMemberOptIn.
+     * @example
+     * // Create one BridgeMemberOptIn
+     * const BridgeMemberOptIn = await prisma.bridgeMemberOptIn.create({
+     *   data: {
+     *     // ... data to create a BridgeMemberOptIn
+     *   }
+     * })
+     * 
+     */
+    create<T extends BridgeMemberOptInCreateArgs>(args: SelectSubset<T, BridgeMemberOptInCreateArgs<ExtArgs>>): Prisma__BridgeMemberOptInClient<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BridgeMemberOptIns.
+     * @param {BridgeMemberOptInCreateManyArgs} args - Arguments to create many BridgeMemberOptIns.
+     * @example
+     * // Create many BridgeMemberOptIns
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BridgeMemberOptInCreateManyArgs>(args?: SelectSubset<T, BridgeMemberOptInCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BridgeMemberOptIns and returns the data saved in the database.
+     * @param {BridgeMemberOptInCreateManyAndReturnArgs} args - Arguments to create many BridgeMemberOptIns.
+     * @example
+     * // Create many BridgeMemberOptIns
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BridgeMemberOptIns and only return the `id`
+     * const bridgeMemberOptInWithIdOnly = await prisma.bridgeMemberOptIn.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BridgeMemberOptInCreateManyAndReturnArgs>(args?: SelectSubset<T, BridgeMemberOptInCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BridgeMemberOptIn.
+     * @param {BridgeMemberOptInDeleteArgs} args - Arguments to delete one BridgeMemberOptIn.
+     * @example
+     * // Delete one BridgeMemberOptIn
+     * const BridgeMemberOptIn = await prisma.bridgeMemberOptIn.delete({
+     *   where: {
+     *     // ... filter to delete one BridgeMemberOptIn
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BridgeMemberOptInDeleteArgs>(args: SelectSubset<T, BridgeMemberOptInDeleteArgs<ExtArgs>>): Prisma__BridgeMemberOptInClient<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BridgeMemberOptIn.
+     * @param {BridgeMemberOptInUpdateArgs} args - Arguments to update one BridgeMemberOptIn.
+     * @example
+     * // Update one BridgeMemberOptIn
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BridgeMemberOptInUpdateArgs>(args: SelectSubset<T, BridgeMemberOptInUpdateArgs<ExtArgs>>): Prisma__BridgeMemberOptInClient<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BridgeMemberOptIns.
+     * @param {BridgeMemberOptInDeleteManyArgs} args - Arguments to filter BridgeMemberOptIns to delete.
+     * @example
+     * // Delete a few BridgeMemberOptIns
+     * const { count } = await prisma.bridgeMemberOptIn.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BridgeMemberOptInDeleteManyArgs>(args?: SelectSubset<T, BridgeMemberOptInDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BridgeMemberOptIns.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BridgeMemberOptInUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BridgeMemberOptIns
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BridgeMemberOptInUpdateManyArgs>(args: SelectSubset<T, BridgeMemberOptInUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BridgeMemberOptIns and returns the data updated in the database.
+     * @param {BridgeMemberOptInUpdateManyAndReturnArgs} args - Arguments to update many BridgeMemberOptIns.
+     * @example
+     * // Update many BridgeMemberOptIns
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BridgeMemberOptIns and only return the `id`
+     * const bridgeMemberOptInWithIdOnly = await prisma.bridgeMemberOptIn.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BridgeMemberOptInUpdateManyAndReturnArgs>(args: SelectSubset<T, BridgeMemberOptInUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BridgeMemberOptIn.
+     * @param {BridgeMemberOptInUpsertArgs} args - Arguments to update or create a BridgeMemberOptIn.
+     * @example
+     * // Update or create a BridgeMemberOptIn
+     * const bridgeMemberOptIn = await prisma.bridgeMemberOptIn.upsert({
+     *   create: {
+     *     // ... data to create a BridgeMemberOptIn
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BridgeMemberOptIn we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BridgeMemberOptInUpsertArgs>(args: SelectSubset<T, BridgeMemberOptInUpsertArgs<ExtArgs>>): Prisma__BridgeMemberOptInClient<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BridgeMemberOptIns.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BridgeMemberOptInCountArgs} args - Arguments to filter BridgeMemberOptIns to count.
+     * @example
+     * // Count the number of BridgeMemberOptIns
+     * const count = await prisma.bridgeMemberOptIn.count({
+     *   where: {
+     *     // ... the filter for the BridgeMemberOptIns we want to count
+     *   }
+     * })
+    **/
+    count<T extends BridgeMemberOptInCountArgs>(
+      args?: Subset<T, BridgeMemberOptInCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BridgeMemberOptInCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BridgeMemberOptIn.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BridgeMemberOptInAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BridgeMemberOptInAggregateArgs>(args: Subset<T, BridgeMemberOptInAggregateArgs>): Prisma.PrismaPromise<GetBridgeMemberOptInAggregateType<T>>
+
+    /**
+     * Group by BridgeMemberOptIn.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BridgeMemberOptInGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BridgeMemberOptInGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BridgeMemberOptInGroupByArgs['orderBy'] }
+        : { orderBy?: BridgeMemberOptInGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BridgeMemberOptInGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBridgeMemberOptInGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BridgeMemberOptIn model
+   */
+  readonly fields: BridgeMemberOptInFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BridgeMemberOptIn.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BridgeMemberOptInClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    bridge<T extends CommunityBridgeDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CommunityBridgeDefaultArgs<ExtArgs>>): Prisma__CommunityBridgeClient<$Result.GetResult<Prisma.$CommunityBridgePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BridgeMemberOptIn model
+   */
+  interface BridgeMemberOptInFieldRefs {
+    readonly id: FieldRef<"BridgeMemberOptIn", 'String'>
+    readonly bridgeId: FieldRef<"BridgeMemberOptIn", 'String'>
+    readonly organizationId: FieldRef<"BridgeMemberOptIn", 'String'>
+    readonly userId: FieldRef<"BridgeMemberOptIn", 'String'>
+    readonly status: FieldRef<"BridgeMemberOptIn", 'BridgeMemberOptInStatus'>
+    readonly disclosedFieldKeys: FieldRef<"BridgeMemberOptIn", 'String'>
+    readonly optedInAt: FieldRef<"BridgeMemberOptIn", 'DateTime'>
+    readonly withdrawnAt: FieldRef<"BridgeMemberOptIn", 'DateTime'>
+    readonly createdAt: FieldRef<"BridgeMemberOptIn", 'DateTime'>
+    readonly updatedAt: FieldRef<"BridgeMemberOptIn", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BridgeMemberOptIn findUnique
+   */
+  export type BridgeMemberOptInFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * Filter, which BridgeMemberOptIn to fetch.
+     */
+    where: BridgeMemberOptInWhereUniqueInput
+  }
+
+  /**
+   * BridgeMemberOptIn findUniqueOrThrow
+   */
+  export type BridgeMemberOptInFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * Filter, which BridgeMemberOptIn to fetch.
+     */
+    where: BridgeMemberOptInWhereUniqueInput
+  }
+
+  /**
+   * BridgeMemberOptIn findFirst
+   */
+  export type BridgeMemberOptInFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * Filter, which BridgeMemberOptIn to fetch.
+     */
+    where?: BridgeMemberOptInWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BridgeMemberOptIns to fetch.
+     */
+    orderBy?: BridgeMemberOptInOrderByWithRelationInput | BridgeMemberOptInOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BridgeMemberOptIns.
+     */
+    cursor?: BridgeMemberOptInWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BridgeMemberOptIns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BridgeMemberOptIns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BridgeMemberOptIns.
+     */
+    distinct?: BridgeMemberOptInScalarFieldEnum | BridgeMemberOptInScalarFieldEnum[]
+  }
+
+  /**
+   * BridgeMemberOptIn findFirstOrThrow
+   */
+  export type BridgeMemberOptInFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * Filter, which BridgeMemberOptIn to fetch.
+     */
+    where?: BridgeMemberOptInWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BridgeMemberOptIns to fetch.
+     */
+    orderBy?: BridgeMemberOptInOrderByWithRelationInput | BridgeMemberOptInOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BridgeMemberOptIns.
+     */
+    cursor?: BridgeMemberOptInWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BridgeMemberOptIns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BridgeMemberOptIns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BridgeMemberOptIns.
+     */
+    distinct?: BridgeMemberOptInScalarFieldEnum | BridgeMemberOptInScalarFieldEnum[]
+  }
+
+  /**
+   * BridgeMemberOptIn findMany
+   */
+  export type BridgeMemberOptInFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * Filter, which BridgeMemberOptIns to fetch.
+     */
+    where?: BridgeMemberOptInWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BridgeMemberOptIns to fetch.
+     */
+    orderBy?: BridgeMemberOptInOrderByWithRelationInput | BridgeMemberOptInOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BridgeMemberOptIns.
+     */
+    cursor?: BridgeMemberOptInWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BridgeMemberOptIns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BridgeMemberOptIns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BridgeMemberOptIns.
+     */
+    distinct?: BridgeMemberOptInScalarFieldEnum | BridgeMemberOptInScalarFieldEnum[]
+  }
+
+  /**
+   * BridgeMemberOptIn create
+   */
+  export type BridgeMemberOptInCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * The data needed to create a BridgeMemberOptIn.
+     */
+    data: XOR<BridgeMemberOptInCreateInput, BridgeMemberOptInUncheckedCreateInput>
+  }
+
+  /**
+   * BridgeMemberOptIn createMany
+   */
+  export type BridgeMemberOptInCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BridgeMemberOptIns.
+     */
+    data: BridgeMemberOptInCreateManyInput | BridgeMemberOptInCreateManyInput[]
+  }
+
+  /**
+   * BridgeMemberOptIn createManyAndReturn
+   */
+  export type BridgeMemberOptInCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * The data used to create many BridgeMemberOptIns.
+     */
+    data: BridgeMemberOptInCreateManyInput | BridgeMemberOptInCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BridgeMemberOptIn update
+   */
+  export type BridgeMemberOptInUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * The data needed to update a BridgeMemberOptIn.
+     */
+    data: XOR<BridgeMemberOptInUpdateInput, BridgeMemberOptInUncheckedUpdateInput>
+    /**
+     * Choose, which BridgeMemberOptIn to update.
+     */
+    where: BridgeMemberOptInWhereUniqueInput
+  }
+
+  /**
+   * BridgeMemberOptIn updateMany
+   */
+  export type BridgeMemberOptInUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BridgeMemberOptIns.
+     */
+    data: XOR<BridgeMemberOptInUpdateManyMutationInput, BridgeMemberOptInUncheckedUpdateManyInput>
+    /**
+     * Filter which BridgeMemberOptIns to update
+     */
+    where?: BridgeMemberOptInWhereInput
+    /**
+     * Limit how many BridgeMemberOptIns to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BridgeMemberOptIn updateManyAndReturn
+   */
+  export type BridgeMemberOptInUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * The data used to update BridgeMemberOptIns.
+     */
+    data: XOR<BridgeMemberOptInUpdateManyMutationInput, BridgeMemberOptInUncheckedUpdateManyInput>
+    /**
+     * Filter which BridgeMemberOptIns to update
+     */
+    where?: BridgeMemberOptInWhereInput
+    /**
+     * Limit how many BridgeMemberOptIns to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BridgeMemberOptIn upsert
+   */
+  export type BridgeMemberOptInUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * The filter to search for the BridgeMemberOptIn to update in case it exists.
+     */
+    where: BridgeMemberOptInWhereUniqueInput
+    /**
+     * In case the BridgeMemberOptIn found by the `where` argument doesn't exist, create a new BridgeMemberOptIn with this data.
+     */
+    create: XOR<BridgeMemberOptInCreateInput, BridgeMemberOptInUncheckedCreateInput>
+    /**
+     * In case the BridgeMemberOptIn was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BridgeMemberOptInUpdateInput, BridgeMemberOptInUncheckedUpdateInput>
+  }
+
+  /**
+   * BridgeMemberOptIn delete
+   */
+  export type BridgeMemberOptInDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    /**
+     * Filter which BridgeMemberOptIn to delete.
+     */
+    where: BridgeMemberOptInWhereUniqueInput
+  }
+
+  /**
+   * BridgeMemberOptIn deleteMany
+   */
+  export type BridgeMemberOptInDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BridgeMemberOptIns to delete
+     */
+    where?: BridgeMemberOptInWhereInput
+    /**
+     * Limit how many BridgeMemberOptIns to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BridgeMemberOptIn without action
+   */
+  export type BridgeMemberOptInDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
   }
 
 
@@ -77445,6 +80093,7 @@ export namespace Prisma {
     agentApprovals?: boolean | Organization$agentApprovalsArgs<ExtArgs>
     agentExecutions?: boolean | Organization$agentExecutionsArgs<ExtArgs>
     agentDeliveryTargets?: boolean | Organization$agentDeliveryTargetsArgs<ExtArgs>
+    bridgeMemberOptIns?: boolean | Organization$bridgeMemberOptInsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -77497,6 +80146,7 @@ export namespace Prisma {
     agentApprovals?: boolean | Organization$agentApprovalsArgs<ExtArgs>
     agentExecutions?: boolean | Organization$agentExecutionsArgs<ExtArgs>
     agentDeliveryTargets?: boolean | Organization$agentDeliveryTargetsArgs<ExtArgs>
+    bridgeMemberOptIns?: boolean | Organization$bridgeMemberOptInsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -77525,6 +80175,7 @@ export namespace Prisma {
       agentApprovals: Prisma.$AgentApprovalPayload<ExtArgs>[]
       agentExecutions: Prisma.$AgentExecutionPayload<ExtArgs>[]
       agentDeliveryTargets: Prisma.$AgentDeliveryTargetPayload<ExtArgs>[]
+      bridgeMemberOptIns: Prisma.$BridgeMemberOptInPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -77950,6 +80601,7 @@ export namespace Prisma {
     agentApprovals<T extends Organization$agentApprovalsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentApprovalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentApprovalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agentExecutions<T extends Organization$agentExecutionsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentExecutionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentExecutionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agentDeliveryTargets<T extends Organization$agentDeliveryTargetsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentDeliveryTargetsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentDeliveryTargetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    bridgeMemberOptIns<T extends Organization$bridgeMemberOptInsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$bridgeMemberOptInsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BridgeMemberOptInPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -78853,6 +81505,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AgentDeliveryTargetScalarFieldEnum | AgentDeliveryTargetScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.bridgeMemberOptIns
+   */
+  export type Organization$bridgeMemberOptInsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BridgeMemberOptIn
+     */
+    select?: BridgeMemberOptInSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BridgeMemberOptIn
+     */
+    omit?: BridgeMemberOptInOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BridgeMemberOptInInclude<ExtArgs> | null
+    where?: BridgeMemberOptInWhereInput
+    orderBy?: BridgeMemberOptInOrderByWithRelationInput | BridgeMemberOptInOrderByWithRelationInput[]
+    cursor?: BridgeMemberOptInWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: BridgeMemberOptInScalarFieldEnum | BridgeMemberOptInScalarFieldEnum[]
   }
 
   /**
@@ -81342,6 +84018,44 @@ export namespace Prisma {
   export type BotAvatarScalarFieldEnum = (typeof BotAvatarScalarFieldEnum)[keyof typeof BotAvatarScalarFieldEnum]
 
 
+  export const CommunityBridgeScalarFieldEnum: {
+    id: 'id',
+    initiatorOrgId: 'initiatorOrgId',
+    recipientOrgId: 'recipientOrgId',
+    status: 'status',
+    initiatorFieldKeys: 'initiatorFieldKeys',
+    recipientFieldKeys: 'recipientFieldKeys',
+    shareableMissionKinds: 'shareableMissionKinds',
+    purpose: 'purpose',
+    initiatorApprovedAt: 'initiatorApprovedAt',
+    recipientApprovedAt: 'recipientApprovedAt',
+    expiresAt: 'expiresAt',
+    revokedAt: 'revokedAt',
+    revokedBy: 'revokedBy',
+    createdBy: 'createdBy',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CommunityBridgeScalarFieldEnum = (typeof CommunityBridgeScalarFieldEnum)[keyof typeof CommunityBridgeScalarFieldEnum]
+
+
+  export const BridgeMemberOptInScalarFieldEnum: {
+    id: 'id',
+    bridgeId: 'bridgeId',
+    organizationId: 'organizationId',
+    userId: 'userId',
+    status: 'status',
+    disclosedFieldKeys: 'disclosedFieldKeys',
+    optedInAt: 'optedInAt',
+    withdrawnAt: 'withdrawnAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type BridgeMemberOptInScalarFieldEnum = (typeof BridgeMemberOptInScalarFieldEnum)[keyof typeof BridgeMemberOptInScalarFieldEnum]
+
+
   export const MissionScalarFieldEnum: {
     id: 'id',
     organizationId: 'organizationId',
@@ -82360,6 +85074,20 @@ export namespace Prisma {
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'CommunityBridgeStatus'
+   */
+  export type EnumCommunityBridgeStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommunityBridgeStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'BridgeMemberOptInStatus'
+   */
+  export type EnumBridgeMemberOptInStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BridgeMemberOptInStatus'>
     
 
 
@@ -83943,6 +86671,201 @@ export namespace Prisma {
     lastUsedAt?: DateTimeNullableWithAggregatesFilter<"BotAvatar"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"BotAvatar"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"BotAvatar"> | Date | string
+  }
+
+  export type CommunityBridgeWhereInput = {
+    AND?: CommunityBridgeWhereInput | CommunityBridgeWhereInput[]
+    OR?: CommunityBridgeWhereInput[]
+    NOT?: CommunityBridgeWhereInput | CommunityBridgeWhereInput[]
+    id?: StringFilter<"CommunityBridge"> | string
+    initiatorOrgId?: StringFilter<"CommunityBridge"> | string
+    recipientOrgId?: StringFilter<"CommunityBridge"> | string
+    status?: EnumCommunityBridgeStatusFilter<"CommunityBridge"> | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringFilter<"CommunityBridge"> | string
+    recipientFieldKeys?: StringFilter<"CommunityBridge"> | string
+    shareableMissionKinds?: StringFilter<"CommunityBridge"> | string
+    purpose?: StringFilter<"CommunityBridge"> | string
+    initiatorApprovedAt?: DateTimeFilter<"CommunityBridge"> | Date | string
+    recipientApprovedAt?: DateTimeNullableFilter<"CommunityBridge"> | Date | string | null
+    expiresAt?: DateTimeNullableFilter<"CommunityBridge"> | Date | string | null
+    revokedAt?: DateTimeNullableFilter<"CommunityBridge"> | Date | string | null
+    revokedBy?: StringNullableFilter<"CommunityBridge"> | string | null
+    createdBy?: StringFilter<"CommunityBridge"> | string
+    createdAt?: DateTimeFilter<"CommunityBridge"> | Date | string
+    updatedAt?: DateTimeFilter<"CommunityBridge"> | Date | string
+    memberOptIns?: BridgeMemberOptInListRelationFilter
+  }
+
+  export type CommunityBridgeOrderByWithRelationInput = {
+    id?: SortOrder
+    initiatorOrgId?: SortOrder
+    recipientOrgId?: SortOrder
+    status?: SortOrder
+    initiatorFieldKeys?: SortOrder
+    recipientFieldKeys?: SortOrder
+    shareableMissionKinds?: SortOrder
+    purpose?: SortOrder
+    initiatorApprovedAt?: SortOrder
+    recipientApprovedAt?: SortOrderInput | SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    revokedBy?: SortOrderInput | SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    memberOptIns?: BridgeMemberOptInOrderByRelationAggregateInput
+  }
+
+  export type CommunityBridgeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    initiatorOrgId_recipientOrgId?: CommunityBridgeInitiatorOrgIdRecipientOrgIdCompoundUniqueInput
+    AND?: CommunityBridgeWhereInput | CommunityBridgeWhereInput[]
+    OR?: CommunityBridgeWhereInput[]
+    NOT?: CommunityBridgeWhereInput | CommunityBridgeWhereInput[]
+    initiatorOrgId?: StringFilter<"CommunityBridge"> | string
+    recipientOrgId?: StringFilter<"CommunityBridge"> | string
+    status?: EnumCommunityBridgeStatusFilter<"CommunityBridge"> | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringFilter<"CommunityBridge"> | string
+    recipientFieldKeys?: StringFilter<"CommunityBridge"> | string
+    shareableMissionKinds?: StringFilter<"CommunityBridge"> | string
+    purpose?: StringFilter<"CommunityBridge"> | string
+    initiatorApprovedAt?: DateTimeFilter<"CommunityBridge"> | Date | string
+    recipientApprovedAt?: DateTimeNullableFilter<"CommunityBridge"> | Date | string | null
+    expiresAt?: DateTimeNullableFilter<"CommunityBridge"> | Date | string | null
+    revokedAt?: DateTimeNullableFilter<"CommunityBridge"> | Date | string | null
+    revokedBy?: StringNullableFilter<"CommunityBridge"> | string | null
+    createdBy?: StringFilter<"CommunityBridge"> | string
+    createdAt?: DateTimeFilter<"CommunityBridge"> | Date | string
+    updatedAt?: DateTimeFilter<"CommunityBridge"> | Date | string
+    memberOptIns?: BridgeMemberOptInListRelationFilter
+  }, "id" | "initiatorOrgId_recipientOrgId">
+
+  export type CommunityBridgeOrderByWithAggregationInput = {
+    id?: SortOrder
+    initiatorOrgId?: SortOrder
+    recipientOrgId?: SortOrder
+    status?: SortOrder
+    initiatorFieldKeys?: SortOrder
+    recipientFieldKeys?: SortOrder
+    shareableMissionKinds?: SortOrder
+    purpose?: SortOrder
+    initiatorApprovedAt?: SortOrder
+    recipientApprovedAt?: SortOrderInput | SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    revokedBy?: SortOrderInput | SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CommunityBridgeCountOrderByAggregateInput
+    _max?: CommunityBridgeMaxOrderByAggregateInput
+    _min?: CommunityBridgeMinOrderByAggregateInput
+  }
+
+  export type CommunityBridgeScalarWhereWithAggregatesInput = {
+    AND?: CommunityBridgeScalarWhereWithAggregatesInput | CommunityBridgeScalarWhereWithAggregatesInput[]
+    OR?: CommunityBridgeScalarWhereWithAggregatesInput[]
+    NOT?: CommunityBridgeScalarWhereWithAggregatesInput | CommunityBridgeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CommunityBridge"> | string
+    initiatorOrgId?: StringWithAggregatesFilter<"CommunityBridge"> | string
+    recipientOrgId?: StringWithAggregatesFilter<"CommunityBridge"> | string
+    status?: EnumCommunityBridgeStatusWithAggregatesFilter<"CommunityBridge"> | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringWithAggregatesFilter<"CommunityBridge"> | string
+    recipientFieldKeys?: StringWithAggregatesFilter<"CommunityBridge"> | string
+    shareableMissionKinds?: StringWithAggregatesFilter<"CommunityBridge"> | string
+    purpose?: StringWithAggregatesFilter<"CommunityBridge"> | string
+    initiatorApprovedAt?: DateTimeWithAggregatesFilter<"CommunityBridge"> | Date | string
+    recipientApprovedAt?: DateTimeNullableWithAggregatesFilter<"CommunityBridge"> | Date | string | null
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"CommunityBridge"> | Date | string | null
+    revokedAt?: DateTimeNullableWithAggregatesFilter<"CommunityBridge"> | Date | string | null
+    revokedBy?: StringNullableWithAggregatesFilter<"CommunityBridge"> | string | null
+    createdBy?: StringWithAggregatesFilter<"CommunityBridge"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"CommunityBridge"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CommunityBridge"> | Date | string
+  }
+
+  export type BridgeMemberOptInWhereInput = {
+    AND?: BridgeMemberOptInWhereInput | BridgeMemberOptInWhereInput[]
+    OR?: BridgeMemberOptInWhereInput[]
+    NOT?: BridgeMemberOptInWhereInput | BridgeMemberOptInWhereInput[]
+    id?: StringFilter<"BridgeMemberOptIn"> | string
+    bridgeId?: StringFilter<"BridgeMemberOptIn"> | string
+    organizationId?: StringFilter<"BridgeMemberOptIn"> | string
+    userId?: StringFilter<"BridgeMemberOptIn"> | string
+    status?: EnumBridgeMemberOptInStatusFilter<"BridgeMemberOptIn"> | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFilter<"BridgeMemberOptIn"> | string
+    optedInAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+    withdrawnAt?: DateTimeNullableFilter<"BridgeMemberOptIn"> | Date | string | null
+    createdAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+    updatedAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+    bridge?: XOR<CommunityBridgeScalarRelationFilter, CommunityBridgeWhereInput>
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }
+
+  export type BridgeMemberOptInOrderByWithRelationInput = {
+    id?: SortOrder
+    bridgeId?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    disclosedFieldKeys?: SortOrder
+    optedInAt?: SortOrder
+    withdrawnAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    bridge?: CommunityBridgeOrderByWithRelationInput
+    organization?: OrganizationOrderByWithRelationInput
+  }
+
+  export type BridgeMemberOptInWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    bridgeId_userId?: BridgeMemberOptInBridgeIdUserIdCompoundUniqueInput
+    AND?: BridgeMemberOptInWhereInput | BridgeMemberOptInWhereInput[]
+    OR?: BridgeMemberOptInWhereInput[]
+    NOT?: BridgeMemberOptInWhereInput | BridgeMemberOptInWhereInput[]
+    bridgeId?: StringFilter<"BridgeMemberOptIn"> | string
+    organizationId?: StringFilter<"BridgeMemberOptIn"> | string
+    userId?: StringFilter<"BridgeMemberOptIn"> | string
+    status?: EnumBridgeMemberOptInStatusFilter<"BridgeMemberOptIn"> | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFilter<"BridgeMemberOptIn"> | string
+    optedInAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+    withdrawnAt?: DateTimeNullableFilter<"BridgeMemberOptIn"> | Date | string | null
+    createdAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+    updatedAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+    bridge?: XOR<CommunityBridgeScalarRelationFilter, CommunityBridgeWhereInput>
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }, "id" | "bridgeId_userId">
+
+  export type BridgeMemberOptInOrderByWithAggregationInput = {
+    id?: SortOrder
+    bridgeId?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    disclosedFieldKeys?: SortOrder
+    optedInAt?: SortOrder
+    withdrawnAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: BridgeMemberOptInCountOrderByAggregateInput
+    _max?: BridgeMemberOptInMaxOrderByAggregateInput
+    _min?: BridgeMemberOptInMinOrderByAggregateInput
+  }
+
+  export type BridgeMemberOptInScalarWhereWithAggregatesInput = {
+    AND?: BridgeMemberOptInScalarWhereWithAggregatesInput | BridgeMemberOptInScalarWhereWithAggregatesInput[]
+    OR?: BridgeMemberOptInScalarWhereWithAggregatesInput[]
+    NOT?: BridgeMemberOptInScalarWhereWithAggregatesInput | BridgeMemberOptInScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BridgeMemberOptIn"> | string
+    bridgeId?: StringWithAggregatesFilter<"BridgeMemberOptIn"> | string
+    organizationId?: StringWithAggregatesFilter<"BridgeMemberOptIn"> | string
+    userId?: StringWithAggregatesFilter<"BridgeMemberOptIn"> | string
+    status?: EnumBridgeMemberOptInStatusWithAggregatesFilter<"BridgeMemberOptIn"> | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringWithAggregatesFilter<"BridgeMemberOptIn"> | string
+    optedInAt?: DateTimeWithAggregatesFilter<"BridgeMemberOptIn"> | Date | string
+    withdrawnAt?: DateTimeNullableWithAggregatesFilter<"BridgeMemberOptIn"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"BridgeMemberOptIn"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BridgeMemberOptIn"> | Date | string
   }
 
   export type MissionWhereInput = {
@@ -88395,6 +91318,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalListRelationFilter
     agentExecutions?: AgentExecutionListRelationFilter
     agentDeliveryTargets?: AgentDeliveryTargetListRelationFilter
+    bridgeMemberOptIns?: BridgeMemberOptInListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -88424,6 +91348,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalOrderByRelationAggregateInput
     agentExecutions?: AgentExecutionOrderByRelationAggregateInput
     agentDeliveryTargets?: AgentDeliveryTargetOrderByRelationAggregateInput
+    bridgeMemberOptIns?: BridgeMemberOptInOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -88456,6 +91381,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalListRelationFilter
     agentExecutions?: AgentExecutionListRelationFilter
     agentDeliveryTargets?: AgentDeliveryTargetListRelationFilter
+    bridgeMemberOptIns?: BridgeMemberOptInListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -90099,6 +93025,232 @@ export namespace Prisma {
     useCount?: IntFieldUpdateOperationsInput | number
     generatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CommunityBridgeCreateInput = {
+    id?: string
+    initiatorOrgId: string
+    recipientOrgId: string
+    status: $Enums.CommunityBridgeStatus
+    initiatorFieldKeys: string
+    recipientFieldKeys: string
+    shareableMissionKinds: string
+    purpose: string
+    initiatorApprovedAt: Date | string
+    recipientApprovedAt?: Date | string | null
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberOptIns?: BridgeMemberOptInCreateNestedManyWithoutBridgeInput
+  }
+
+  export type CommunityBridgeUncheckedCreateInput = {
+    id?: string
+    initiatorOrgId: string
+    recipientOrgId: string
+    status: $Enums.CommunityBridgeStatus
+    initiatorFieldKeys: string
+    recipientFieldKeys: string
+    shareableMissionKinds: string
+    purpose: string
+    initiatorApprovedAt: Date | string
+    recipientApprovedAt?: Date | string | null
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutBridgeInput
+  }
+
+  export type CommunityBridgeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    initiatorOrgId?: StringFieldUpdateOperationsInput | string
+    recipientOrgId?: StringFieldUpdateOperationsInput | string
+    status?: EnumCommunityBridgeStatusFieldUpdateOperationsInput | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringFieldUpdateOperationsInput | string
+    recipientFieldKeys?: StringFieldUpdateOperationsInput | string
+    shareableMissionKinds?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    initiatorApprovedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    recipientApprovedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberOptIns?: BridgeMemberOptInUpdateManyWithoutBridgeNestedInput
+  }
+
+  export type CommunityBridgeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    initiatorOrgId?: StringFieldUpdateOperationsInput | string
+    recipientOrgId?: StringFieldUpdateOperationsInput | string
+    status?: EnumCommunityBridgeStatusFieldUpdateOperationsInput | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringFieldUpdateOperationsInput | string
+    recipientFieldKeys?: StringFieldUpdateOperationsInput | string
+    shareableMissionKinds?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    initiatorApprovedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    recipientApprovedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutBridgeNestedInput
+  }
+
+  export type CommunityBridgeCreateManyInput = {
+    id?: string
+    initiatorOrgId: string
+    recipientOrgId: string
+    status: $Enums.CommunityBridgeStatus
+    initiatorFieldKeys: string
+    recipientFieldKeys: string
+    shareableMissionKinds: string
+    purpose: string
+    initiatorApprovedAt: Date | string
+    recipientApprovedAt?: Date | string | null
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CommunityBridgeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    initiatorOrgId?: StringFieldUpdateOperationsInput | string
+    recipientOrgId?: StringFieldUpdateOperationsInput | string
+    status?: EnumCommunityBridgeStatusFieldUpdateOperationsInput | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringFieldUpdateOperationsInput | string
+    recipientFieldKeys?: StringFieldUpdateOperationsInput | string
+    shareableMissionKinds?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    initiatorApprovedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    recipientApprovedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CommunityBridgeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    initiatorOrgId?: StringFieldUpdateOperationsInput | string
+    recipientOrgId?: StringFieldUpdateOperationsInput | string
+    status?: EnumCommunityBridgeStatusFieldUpdateOperationsInput | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringFieldUpdateOperationsInput | string
+    recipientFieldKeys?: StringFieldUpdateOperationsInput | string
+    shareableMissionKinds?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    initiatorApprovedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    recipientApprovedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BridgeMemberOptInCreateInput = {
+    id?: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bridge: CommunityBridgeCreateNestedOneWithoutMemberOptInsInput
+    organization: OrganizationCreateNestedOneWithoutBridgeMemberOptInsInput
+  }
+
+  export type BridgeMemberOptInUncheckedCreateInput = {
+    id?: string
+    bridgeId: string
+    organizationId: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BridgeMemberOptInUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bridge?: CommunityBridgeUpdateOneRequiredWithoutMemberOptInsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutBridgeMemberOptInsNestedInput
+  }
+
+  export type BridgeMemberOptInUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    bridgeId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BridgeMemberOptInCreateManyInput = {
+    id?: string
+    bridgeId: string
+    organizationId: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BridgeMemberOptInUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BridgeMemberOptInUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    bridgeId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -95157,6 +98309,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -95186,6 +98339,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -95215,6 +98369,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -95244,6 +98399,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -96658,6 +99814,161 @@ export namespace Prisma {
 
   export type BotAvatarSumOrderByAggregateInput = {
     useCount?: SortOrder
+  }
+
+  export type EnumCommunityBridgeStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommunityBridgeStatus | EnumCommunityBridgeStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.CommunityBridgeStatus[]
+    notIn?: $Enums.CommunityBridgeStatus[]
+    not?: NestedEnumCommunityBridgeStatusFilter<$PrismaModel> | $Enums.CommunityBridgeStatus
+  }
+
+  export type BridgeMemberOptInListRelationFilter = {
+    every?: BridgeMemberOptInWhereInput
+    some?: BridgeMemberOptInWhereInput
+    none?: BridgeMemberOptInWhereInput
+  }
+
+  export type BridgeMemberOptInOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CommunityBridgeInitiatorOrgIdRecipientOrgIdCompoundUniqueInput = {
+    initiatorOrgId: string
+    recipientOrgId: string
+  }
+
+  export type CommunityBridgeCountOrderByAggregateInput = {
+    id?: SortOrder
+    initiatorOrgId?: SortOrder
+    recipientOrgId?: SortOrder
+    status?: SortOrder
+    initiatorFieldKeys?: SortOrder
+    recipientFieldKeys?: SortOrder
+    shareableMissionKinds?: SortOrder
+    purpose?: SortOrder
+    initiatorApprovedAt?: SortOrder
+    recipientApprovedAt?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    revokedBy?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CommunityBridgeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    initiatorOrgId?: SortOrder
+    recipientOrgId?: SortOrder
+    status?: SortOrder
+    initiatorFieldKeys?: SortOrder
+    recipientFieldKeys?: SortOrder
+    shareableMissionKinds?: SortOrder
+    purpose?: SortOrder
+    initiatorApprovedAt?: SortOrder
+    recipientApprovedAt?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    revokedBy?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CommunityBridgeMinOrderByAggregateInput = {
+    id?: SortOrder
+    initiatorOrgId?: SortOrder
+    recipientOrgId?: SortOrder
+    status?: SortOrder
+    initiatorFieldKeys?: SortOrder
+    recipientFieldKeys?: SortOrder
+    shareableMissionKinds?: SortOrder
+    purpose?: SortOrder
+    initiatorApprovedAt?: SortOrder
+    recipientApprovedAt?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    revokedBy?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumCommunityBridgeStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommunityBridgeStatus | EnumCommunityBridgeStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.CommunityBridgeStatus[]
+    notIn?: $Enums.CommunityBridgeStatus[]
+    not?: NestedEnumCommunityBridgeStatusWithAggregatesFilter<$PrismaModel> | $Enums.CommunityBridgeStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCommunityBridgeStatusFilter<$PrismaModel>
+    _max?: NestedEnumCommunityBridgeStatusFilter<$PrismaModel>
+  }
+
+  export type EnumBridgeMemberOptInStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.BridgeMemberOptInStatus | EnumBridgeMemberOptInStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BridgeMemberOptInStatus[]
+    notIn?: $Enums.BridgeMemberOptInStatus[]
+    not?: NestedEnumBridgeMemberOptInStatusFilter<$PrismaModel> | $Enums.BridgeMemberOptInStatus
+  }
+
+  export type CommunityBridgeScalarRelationFilter = {
+    is?: CommunityBridgeWhereInput
+    isNot?: CommunityBridgeWhereInput
+  }
+
+  export type BridgeMemberOptInBridgeIdUserIdCompoundUniqueInput = {
+    bridgeId: string
+    userId: string
+  }
+
+  export type BridgeMemberOptInCountOrderByAggregateInput = {
+    id?: SortOrder
+    bridgeId?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    disclosedFieldKeys?: SortOrder
+    optedInAt?: SortOrder
+    withdrawnAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BridgeMemberOptInMaxOrderByAggregateInput = {
+    id?: SortOrder
+    bridgeId?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    disclosedFieldKeys?: SortOrder
+    optedInAt?: SortOrder
+    withdrawnAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BridgeMemberOptInMinOrderByAggregateInput = {
+    id?: SortOrder
+    bridgeId?: SortOrder
+    organizationId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    disclosedFieldKeys?: SortOrder
+    optedInAt?: SortOrder
+    withdrawnAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumBridgeMemberOptInStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BridgeMemberOptInStatus | EnumBridgeMemberOptInStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BridgeMemberOptInStatus[]
+    notIn?: $Enums.BridgeMemberOptInStatus[]
+    not?: NestedEnumBridgeMemberOptInStatusWithAggregatesFilter<$PrismaModel> | $Enums.BridgeMemberOptInStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBridgeMemberOptInStatusFilter<$PrismaModel>
+    _max?: NestedEnumBridgeMemberOptInStatusFilter<$PrismaModel>
   }
 
   export type EnumMissionStatusFilter<$PrismaModel = never> = {
@@ -100790,6 +104101,84 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
+  export type BridgeMemberOptInCreateNestedManyWithoutBridgeInput = {
+    create?: XOR<BridgeMemberOptInCreateWithoutBridgeInput, BridgeMemberOptInUncheckedCreateWithoutBridgeInput> | BridgeMemberOptInCreateWithoutBridgeInput[] | BridgeMemberOptInUncheckedCreateWithoutBridgeInput[]
+    connectOrCreate?: BridgeMemberOptInCreateOrConnectWithoutBridgeInput | BridgeMemberOptInCreateOrConnectWithoutBridgeInput[]
+    createMany?: BridgeMemberOptInCreateManyBridgeInputEnvelope
+    connect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+  }
+
+  export type BridgeMemberOptInUncheckedCreateNestedManyWithoutBridgeInput = {
+    create?: XOR<BridgeMemberOptInCreateWithoutBridgeInput, BridgeMemberOptInUncheckedCreateWithoutBridgeInput> | BridgeMemberOptInCreateWithoutBridgeInput[] | BridgeMemberOptInUncheckedCreateWithoutBridgeInput[]
+    connectOrCreate?: BridgeMemberOptInCreateOrConnectWithoutBridgeInput | BridgeMemberOptInCreateOrConnectWithoutBridgeInput[]
+    createMany?: BridgeMemberOptInCreateManyBridgeInputEnvelope
+    connect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+  }
+
+  export type EnumCommunityBridgeStatusFieldUpdateOperationsInput = {
+    set?: $Enums.CommunityBridgeStatus
+  }
+
+  export type BridgeMemberOptInUpdateManyWithoutBridgeNestedInput = {
+    create?: XOR<BridgeMemberOptInCreateWithoutBridgeInput, BridgeMemberOptInUncheckedCreateWithoutBridgeInput> | BridgeMemberOptInCreateWithoutBridgeInput[] | BridgeMemberOptInUncheckedCreateWithoutBridgeInput[]
+    connectOrCreate?: BridgeMemberOptInCreateOrConnectWithoutBridgeInput | BridgeMemberOptInCreateOrConnectWithoutBridgeInput[]
+    upsert?: BridgeMemberOptInUpsertWithWhereUniqueWithoutBridgeInput | BridgeMemberOptInUpsertWithWhereUniqueWithoutBridgeInput[]
+    createMany?: BridgeMemberOptInCreateManyBridgeInputEnvelope
+    set?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    disconnect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    delete?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    connect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    update?: BridgeMemberOptInUpdateWithWhereUniqueWithoutBridgeInput | BridgeMemberOptInUpdateWithWhereUniqueWithoutBridgeInput[]
+    updateMany?: BridgeMemberOptInUpdateManyWithWhereWithoutBridgeInput | BridgeMemberOptInUpdateManyWithWhereWithoutBridgeInput[]
+    deleteMany?: BridgeMemberOptInScalarWhereInput | BridgeMemberOptInScalarWhereInput[]
+  }
+
+  export type BridgeMemberOptInUncheckedUpdateManyWithoutBridgeNestedInput = {
+    create?: XOR<BridgeMemberOptInCreateWithoutBridgeInput, BridgeMemberOptInUncheckedCreateWithoutBridgeInput> | BridgeMemberOptInCreateWithoutBridgeInput[] | BridgeMemberOptInUncheckedCreateWithoutBridgeInput[]
+    connectOrCreate?: BridgeMemberOptInCreateOrConnectWithoutBridgeInput | BridgeMemberOptInCreateOrConnectWithoutBridgeInput[]
+    upsert?: BridgeMemberOptInUpsertWithWhereUniqueWithoutBridgeInput | BridgeMemberOptInUpsertWithWhereUniqueWithoutBridgeInput[]
+    createMany?: BridgeMemberOptInCreateManyBridgeInputEnvelope
+    set?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    disconnect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    delete?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    connect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    update?: BridgeMemberOptInUpdateWithWhereUniqueWithoutBridgeInput | BridgeMemberOptInUpdateWithWhereUniqueWithoutBridgeInput[]
+    updateMany?: BridgeMemberOptInUpdateManyWithWhereWithoutBridgeInput | BridgeMemberOptInUpdateManyWithWhereWithoutBridgeInput[]
+    deleteMany?: BridgeMemberOptInScalarWhereInput | BridgeMemberOptInScalarWhereInput[]
+  }
+
+  export type CommunityBridgeCreateNestedOneWithoutMemberOptInsInput = {
+    create?: XOR<CommunityBridgeCreateWithoutMemberOptInsInput, CommunityBridgeUncheckedCreateWithoutMemberOptInsInput>
+    connectOrCreate?: CommunityBridgeCreateOrConnectWithoutMemberOptInsInput
+    connect?: CommunityBridgeWhereUniqueInput
+  }
+
+  export type OrganizationCreateNestedOneWithoutBridgeMemberOptInsInput = {
+    create?: XOR<OrganizationCreateWithoutBridgeMemberOptInsInput, OrganizationUncheckedCreateWithoutBridgeMemberOptInsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutBridgeMemberOptInsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type EnumBridgeMemberOptInStatusFieldUpdateOperationsInput = {
+    set?: $Enums.BridgeMemberOptInStatus
+  }
+
+  export type CommunityBridgeUpdateOneRequiredWithoutMemberOptInsNestedInput = {
+    create?: XOR<CommunityBridgeCreateWithoutMemberOptInsInput, CommunityBridgeUncheckedCreateWithoutMemberOptInsInput>
+    connectOrCreate?: CommunityBridgeCreateOrConnectWithoutMemberOptInsInput
+    upsert?: CommunityBridgeUpsertWithoutMemberOptInsInput
+    connect?: CommunityBridgeWhereUniqueInput
+    update?: XOR<XOR<CommunityBridgeUpdateToOneWithWhereWithoutMemberOptInsInput, CommunityBridgeUpdateWithoutMemberOptInsInput>, CommunityBridgeUncheckedUpdateWithoutMemberOptInsInput>
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutBridgeMemberOptInsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutBridgeMemberOptInsInput, OrganizationUncheckedCreateWithoutBridgeMemberOptInsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutBridgeMemberOptInsInput
+    upsert?: OrganizationUpsertWithoutBridgeMemberOptInsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutBridgeMemberOptInsInput, OrganizationUpdateWithoutBridgeMemberOptInsInput>, OrganizationUncheckedUpdateWithoutBridgeMemberOptInsInput>
+  }
+
   export type OrganizationCreateNestedOneWithoutMissionsInput = {
     create?: XOR<OrganizationCreateWithoutMissionsInput, OrganizationUncheckedCreateWithoutMissionsInput>
     connectOrCreate?: OrganizationCreateOrConnectWithoutMissionsInput
@@ -104278,6 +107667,13 @@ export namespace Prisma {
     connect?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
   }
 
+  export type BridgeMemberOptInCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<BridgeMemberOptInCreateWithoutOrganizationInput, BridgeMemberOptInUncheckedCreateWithoutOrganizationInput> | BridgeMemberOptInCreateWithoutOrganizationInput[] | BridgeMemberOptInUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: BridgeMemberOptInCreateOrConnectWithoutOrganizationInput | BridgeMemberOptInCreateOrConnectWithoutOrganizationInput[]
+    createMany?: BridgeMemberOptInCreateManyOrganizationInputEnvelope
+    connect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+  }
+
   export type MembershipUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -104416,6 +107812,13 @@ export namespace Prisma {
     connectOrCreate?: AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput | AgentDeliveryTargetCreateOrConnectWithoutOrganizationInput[]
     createMany?: AgentDeliveryTargetCreateManyOrganizationInputEnvelope
     connect?: AgentDeliveryTargetWhereUniqueInput | AgentDeliveryTargetWhereUniqueInput[]
+  }
+
+  export type BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<BridgeMemberOptInCreateWithoutOrganizationInput, BridgeMemberOptInUncheckedCreateWithoutOrganizationInput> | BridgeMemberOptInCreateWithoutOrganizationInput[] | BridgeMemberOptInUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: BridgeMemberOptInCreateOrConnectWithoutOrganizationInput | BridgeMemberOptInCreateOrConnectWithoutOrganizationInput[]
+    createMany?: BridgeMemberOptInCreateManyOrganizationInputEnvelope
+    connect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
   }
 
   export type EnumOrganizationStatusFieldUpdateOperationsInput = {
@@ -104702,6 +108105,20 @@ export namespace Prisma {
     deleteMany?: AgentDeliveryTargetScalarWhereInput | AgentDeliveryTargetScalarWhereInput[]
   }
 
+  export type BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<BridgeMemberOptInCreateWithoutOrganizationInput, BridgeMemberOptInUncheckedCreateWithoutOrganizationInput> | BridgeMemberOptInCreateWithoutOrganizationInput[] | BridgeMemberOptInUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: BridgeMemberOptInCreateOrConnectWithoutOrganizationInput | BridgeMemberOptInCreateOrConnectWithoutOrganizationInput[]
+    upsert?: BridgeMemberOptInUpsertWithWhereUniqueWithoutOrganizationInput | BridgeMemberOptInUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: BridgeMemberOptInCreateManyOrganizationInputEnvelope
+    set?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    disconnect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    delete?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    connect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    update?: BridgeMemberOptInUpdateWithWhereUniqueWithoutOrganizationInput | BridgeMemberOptInUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: BridgeMemberOptInUpdateManyWithWhereWithoutOrganizationInput | BridgeMemberOptInUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: BridgeMemberOptInScalarWhereInput | BridgeMemberOptInScalarWhereInput[]
+  }
+
   export type MembershipUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<MembershipCreateWithoutOrganizationInput, MembershipUncheckedCreateWithoutOrganizationInput> | MembershipCreateWithoutOrganizationInput[] | MembershipUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: MembershipCreateOrConnectWithoutOrganizationInput | MembershipCreateOrConnectWithoutOrganizationInput[]
@@ -104980,6 +108397,20 @@ export namespace Prisma {
     update?: AgentDeliveryTargetUpdateWithWhereUniqueWithoutOrganizationInput | AgentDeliveryTargetUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: AgentDeliveryTargetUpdateManyWithWhereWithoutOrganizationInput | AgentDeliveryTargetUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: AgentDeliveryTargetScalarWhereInput | AgentDeliveryTargetScalarWhereInput[]
+  }
+
+  export type BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<BridgeMemberOptInCreateWithoutOrganizationInput, BridgeMemberOptInUncheckedCreateWithoutOrganizationInput> | BridgeMemberOptInCreateWithoutOrganizationInput[] | BridgeMemberOptInUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: BridgeMemberOptInCreateOrConnectWithoutOrganizationInput | BridgeMemberOptInCreateOrConnectWithoutOrganizationInput[]
+    upsert?: BridgeMemberOptInUpsertWithWhereUniqueWithoutOrganizationInput | BridgeMemberOptInUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: BridgeMemberOptInCreateManyOrganizationInputEnvelope
+    set?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    disconnect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    delete?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    connect?: BridgeMemberOptInWhereUniqueInput | BridgeMemberOptInWhereUniqueInput[]
+    update?: BridgeMemberOptInUpdateWithWhereUniqueWithoutOrganizationInput | BridgeMemberOptInUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: BridgeMemberOptInUpdateManyWithWhereWithoutOrganizationInput | BridgeMemberOptInUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: BridgeMemberOptInScalarWhereInput | BridgeMemberOptInScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutMembershipsInput = {
@@ -105485,6 +108916,40 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumCommunityBridgeStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommunityBridgeStatus | EnumCommunityBridgeStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.CommunityBridgeStatus[]
+    notIn?: $Enums.CommunityBridgeStatus[]
+    not?: NestedEnumCommunityBridgeStatusFilter<$PrismaModel> | $Enums.CommunityBridgeStatus
+  }
+
+  export type NestedEnumCommunityBridgeStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommunityBridgeStatus | EnumCommunityBridgeStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.CommunityBridgeStatus[]
+    notIn?: $Enums.CommunityBridgeStatus[]
+    not?: NestedEnumCommunityBridgeStatusWithAggregatesFilter<$PrismaModel> | $Enums.CommunityBridgeStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCommunityBridgeStatusFilter<$PrismaModel>
+    _max?: NestedEnumCommunityBridgeStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumBridgeMemberOptInStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.BridgeMemberOptInStatus | EnumBridgeMemberOptInStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BridgeMemberOptInStatus[]
+    notIn?: $Enums.BridgeMemberOptInStatus[]
+    not?: NestedEnumBridgeMemberOptInStatusFilter<$PrismaModel> | $Enums.BridgeMemberOptInStatus
+  }
+
+  export type NestedEnumBridgeMemberOptInStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BridgeMemberOptInStatus | EnumBridgeMemberOptInStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BridgeMemberOptInStatus[]
+    notIn?: $Enums.BridgeMemberOptInStatus[]
+    not?: NestedEnumBridgeMemberOptInStatusWithAggregatesFilter<$PrismaModel> | $Enums.BridgeMemberOptInStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBridgeMemberOptInStatusFilter<$PrismaModel>
+    _max?: NestedEnumBridgeMemberOptInStatusFilter<$PrismaModel>
   }
 
   export type NestedEnumMissionStatusFilter<$PrismaModel = never> = {
@@ -106277,6 +109742,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentRunsInput = {
@@ -106305,6 +109771,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentRunsInput = {
@@ -106471,6 +109938,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentRunsInput = {
@@ -106499,6 +109967,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentCallUpsertWithWhereUniqueWithoutRunInput = {
@@ -106662,6 +110131,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentCallsInput = {
@@ -106690,6 +110160,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentCallsInput = {
@@ -106791,6 +110262,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentCallsInput = {
@@ -106819,6 +110291,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentRunUpsertWithoutCallsInput = {
@@ -106910,6 +110383,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentApprovalsInput = {
@@ -106938,6 +110412,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentApprovalsInput = {
@@ -107039,6 +110514,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentApprovalsInput = {
@@ -107067,6 +110543,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentRunUpsertWithoutApprovalInput = {
@@ -107158,6 +110635,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentExecutionsInput = {
@@ -107186,6 +110664,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentExecutionsInput = {
@@ -107287,6 +110766,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentExecutionsInput = {
@@ -107315,6 +110795,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentRunUpsertWithoutExecutionInput = {
@@ -107406,6 +110887,7 @@ export namespace Prisma {
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAgentDeliveryTargetsInput = {
@@ -107434,6 +110916,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAgentDeliveryTargetsInput = {
@@ -107535,6 +111018,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAgentDeliveryTargetsInput = {
@@ -107563,6 +111047,7 @@ export namespace Prisma {
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentRunUpsertWithoutDeliveryTargetInput = {
@@ -107654,6 +111139,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutBillingEventsInput = {
@@ -107682,6 +111168,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutBillingEventsInput = {
@@ -107726,6 +111213,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutBillingEventsInput = {
@@ -107754,6 +111242,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutUsageRecordsInput = {
@@ -107782,6 +111271,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutUsageRecordsInput = {
@@ -107810,6 +111300,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutUsageRecordsInput = {
@@ -107854,6 +111345,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutUsageRecordsInput = {
@@ -107876,6 +111368,296 @@ export namespace Prisma {
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
     outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type BridgeMemberOptInCreateWithoutBridgeInput = {
+    id?: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutBridgeMemberOptInsInput
+  }
+
+  export type BridgeMemberOptInUncheckedCreateWithoutBridgeInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BridgeMemberOptInCreateOrConnectWithoutBridgeInput = {
+    where: BridgeMemberOptInWhereUniqueInput
+    create: XOR<BridgeMemberOptInCreateWithoutBridgeInput, BridgeMemberOptInUncheckedCreateWithoutBridgeInput>
+  }
+
+  export type BridgeMemberOptInCreateManyBridgeInputEnvelope = {
+    data: BridgeMemberOptInCreateManyBridgeInput | BridgeMemberOptInCreateManyBridgeInput[]
+  }
+
+  export type BridgeMemberOptInUpsertWithWhereUniqueWithoutBridgeInput = {
+    where: BridgeMemberOptInWhereUniqueInput
+    update: XOR<BridgeMemberOptInUpdateWithoutBridgeInput, BridgeMemberOptInUncheckedUpdateWithoutBridgeInput>
+    create: XOR<BridgeMemberOptInCreateWithoutBridgeInput, BridgeMemberOptInUncheckedCreateWithoutBridgeInput>
+  }
+
+  export type BridgeMemberOptInUpdateWithWhereUniqueWithoutBridgeInput = {
+    where: BridgeMemberOptInWhereUniqueInput
+    data: XOR<BridgeMemberOptInUpdateWithoutBridgeInput, BridgeMemberOptInUncheckedUpdateWithoutBridgeInput>
+  }
+
+  export type BridgeMemberOptInUpdateManyWithWhereWithoutBridgeInput = {
+    where: BridgeMemberOptInScalarWhereInput
+    data: XOR<BridgeMemberOptInUpdateManyMutationInput, BridgeMemberOptInUncheckedUpdateManyWithoutBridgeInput>
+  }
+
+  export type BridgeMemberOptInScalarWhereInput = {
+    AND?: BridgeMemberOptInScalarWhereInput | BridgeMemberOptInScalarWhereInput[]
+    OR?: BridgeMemberOptInScalarWhereInput[]
+    NOT?: BridgeMemberOptInScalarWhereInput | BridgeMemberOptInScalarWhereInput[]
+    id?: StringFilter<"BridgeMemberOptIn"> | string
+    bridgeId?: StringFilter<"BridgeMemberOptIn"> | string
+    organizationId?: StringFilter<"BridgeMemberOptIn"> | string
+    userId?: StringFilter<"BridgeMemberOptIn"> | string
+    status?: EnumBridgeMemberOptInStatusFilter<"BridgeMemberOptIn"> | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFilter<"BridgeMemberOptIn"> | string
+    optedInAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+    withdrawnAt?: DateTimeNullableFilter<"BridgeMemberOptIn"> | Date | string | null
+    createdAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+    updatedAt?: DateTimeFilter<"BridgeMemberOptIn"> | Date | string
+  }
+
+  export type CommunityBridgeCreateWithoutMemberOptInsInput = {
+    id?: string
+    initiatorOrgId: string
+    recipientOrgId: string
+    status: $Enums.CommunityBridgeStatus
+    initiatorFieldKeys: string
+    recipientFieldKeys: string
+    shareableMissionKinds: string
+    purpose: string
+    initiatorApprovedAt: Date | string
+    recipientApprovedAt?: Date | string | null
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CommunityBridgeUncheckedCreateWithoutMemberOptInsInput = {
+    id?: string
+    initiatorOrgId: string
+    recipientOrgId: string
+    status: $Enums.CommunityBridgeStatus
+    initiatorFieldKeys: string
+    recipientFieldKeys: string
+    shareableMissionKinds: string
+    purpose: string
+    initiatorApprovedAt: Date | string
+    recipientApprovedAt?: Date | string | null
+    expiresAt?: Date | string | null
+    revokedAt?: Date | string | null
+    revokedBy?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CommunityBridgeCreateOrConnectWithoutMemberOptInsInput = {
+    where: CommunityBridgeWhereUniqueInput
+    create: XOR<CommunityBridgeCreateWithoutMemberOptInsInput, CommunityBridgeUncheckedCreateWithoutMemberOptInsInput>
+  }
+
+  export type OrganizationCreateWithoutBridgeMemberOptInsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
+    usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
+    billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
+    agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
+    agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
+    agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutBridgeMemberOptInsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
+    usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
+    agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
+    agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
+    agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutBridgeMemberOptInsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutBridgeMemberOptInsInput, OrganizationUncheckedCreateWithoutBridgeMemberOptInsInput>
+  }
+
+  export type CommunityBridgeUpsertWithoutMemberOptInsInput = {
+    update: XOR<CommunityBridgeUpdateWithoutMemberOptInsInput, CommunityBridgeUncheckedUpdateWithoutMemberOptInsInput>
+    create: XOR<CommunityBridgeCreateWithoutMemberOptInsInput, CommunityBridgeUncheckedCreateWithoutMemberOptInsInput>
+    where?: CommunityBridgeWhereInput
+  }
+
+  export type CommunityBridgeUpdateToOneWithWhereWithoutMemberOptInsInput = {
+    where?: CommunityBridgeWhereInput
+    data: XOR<CommunityBridgeUpdateWithoutMemberOptInsInput, CommunityBridgeUncheckedUpdateWithoutMemberOptInsInput>
+  }
+
+  export type CommunityBridgeUpdateWithoutMemberOptInsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    initiatorOrgId?: StringFieldUpdateOperationsInput | string
+    recipientOrgId?: StringFieldUpdateOperationsInput | string
+    status?: EnumCommunityBridgeStatusFieldUpdateOperationsInput | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringFieldUpdateOperationsInput | string
+    recipientFieldKeys?: StringFieldUpdateOperationsInput | string
+    shareableMissionKinds?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    initiatorApprovedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    recipientApprovedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CommunityBridgeUncheckedUpdateWithoutMemberOptInsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    initiatorOrgId?: StringFieldUpdateOperationsInput | string
+    recipientOrgId?: StringFieldUpdateOperationsInput | string
+    status?: EnumCommunityBridgeStatusFieldUpdateOperationsInput | $Enums.CommunityBridgeStatus
+    initiatorFieldKeys?: StringFieldUpdateOperationsInput | string
+    recipientFieldKeys?: StringFieldUpdateOperationsInput | string
+    shareableMissionKinds?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    initiatorApprovedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    recipientApprovedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OrganizationUpsertWithoutBridgeMemberOptInsInput = {
+    update: XOR<OrganizationUpdateWithoutBridgeMemberOptInsInput, OrganizationUncheckedUpdateWithoutBridgeMemberOptInsInput>
+    create: XOR<OrganizationCreateWithoutBridgeMemberOptInsInput, OrganizationUncheckedCreateWithoutBridgeMemberOptInsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutBridgeMemberOptInsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutBridgeMemberOptInsInput, OrganizationUncheckedUpdateWithoutBridgeMemberOptInsInput>
+  }
+
+  export type OrganizationUpdateWithoutBridgeMemberOptInsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
+    usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
+    billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
+    agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
+    agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
+    agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutBridgeMemberOptInsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
+    usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -107910,6 +111692,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionsInput = {
@@ -107938,6 +111721,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionsInput = {
@@ -108212,6 +111996,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionsInput = {
@@ -108240,6 +112025,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMissionsInput = {
@@ -108492,6 +112278,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSocialIntentsInput = {
@@ -108520,6 +112307,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSocialIntentsInput = {
@@ -108730,6 +112518,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSocialIntentsInput = {
@@ -108758,6 +112547,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutSocialIntentsInput = {
@@ -108964,6 +112754,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMissionParticipationsInput = {
@@ -108992,6 +112783,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMissionParticipationsInput = {
@@ -109202,6 +112994,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMissionParticipationsInput = {
@@ -109230,6 +113023,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutParticipationsInput = {
@@ -109436,6 +113230,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIdempotencyRecordsInput = {
@@ -109464,6 +113259,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIdempotencyRecordsInput = {
@@ -109508,6 +113304,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIdempotencyRecordsInput = {
@@ -109536,6 +113333,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutConnectionProposalsInput = {
@@ -109564,6 +113362,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutConnectionProposalsInput = {
@@ -109592,6 +113391,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutConnectionProposalsInput = {
@@ -109973,6 +113773,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutConnectionProposalsInput = {
@@ -110001,6 +113802,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type MissionUpsertWithoutProposalsInput = {
@@ -110392,6 +114194,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutProposalDecisionsInput = {
@@ -110420,6 +114223,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutProposalDecisionsInput = {
@@ -110618,6 +114422,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutProposalDecisionsInput = {
@@ -110646,6 +114451,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ConnectionProposalUpsertWithoutDecisionsInput = {
@@ -110840,6 +114646,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutWorkflowJobsInput = {
@@ -110868,6 +114675,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutWorkflowJobsInput = {
@@ -110912,6 +114720,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutWorkflowJobsInput = {
@@ -110940,6 +114749,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutNotificationDeliveriesInput = {
@@ -110968,6 +114778,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutNotificationDeliveriesInput = {
@@ -110996,6 +114807,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutNotificationDeliveriesInput = {
@@ -111040,6 +114852,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutNotificationDeliveriesInput = {
@@ -111068,6 +114881,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutIntroductionWorkflowsInput = {
@@ -111096,6 +114910,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutIntroductionWorkflowsInput = {
@@ -111124,6 +114939,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutIntroductionWorkflowsInput = {
@@ -111205,6 +115021,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutIntroductionWorkflowsInput = {
@@ -111233,6 +115050,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ConnectionProposalUpsertWithoutIntroductionWorkflowInput = {
@@ -123567,6 +127385,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutOutcomesInput = {
@@ -123595,6 +127414,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutOutcomesInput = {
@@ -123668,6 +127488,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutOutcomesInput = {
@@ -123696,6 +127517,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OutcomeVerificationUpsertWithWhereUniqueWithoutOutcomeInput = {
@@ -123754,6 +127576,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutOutcomeVerificationsInput = {
@@ -123782,6 +127605,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutOutcomeVerificationsInput = {
@@ -123859,6 +127683,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutOutcomeVerificationsInput = {
@@ -123887,6 +127712,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OutcomeUpsertWithoutVerificationsInput = {
@@ -124676,6 +128502,39 @@ export namespace Prisma {
     data: AgentDeliveryTargetCreateManyOrganizationInput | AgentDeliveryTargetCreateManyOrganizationInput[]
   }
 
+  export type BridgeMemberOptInCreateWithoutOrganizationInput = {
+    id?: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bridge: CommunityBridgeCreateNestedOneWithoutMemberOptInsInput
+  }
+
+  export type BridgeMemberOptInUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    bridgeId: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BridgeMemberOptInCreateOrConnectWithoutOrganizationInput = {
+    where: BridgeMemberOptInWhereUniqueInput
+    create: XOR<BridgeMemberOptInCreateWithoutOrganizationInput, BridgeMemberOptInUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type BridgeMemberOptInCreateManyOrganizationInputEnvelope = {
+    data: BridgeMemberOptInCreateManyOrganizationInput | BridgeMemberOptInCreateManyOrganizationInput[]
+  }
+
   export type MembershipUpsertWithWhereUniqueWithoutOrganizationInput = {
     where: MembershipWhereUniqueInput
     update: XOR<MembershipUpdateWithoutOrganizationInput, MembershipUncheckedUpdateWithoutOrganizationInput>
@@ -125214,6 +129073,22 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"AgentDeliveryTarget"> | Date | string
   }
 
+  export type BridgeMemberOptInUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: BridgeMemberOptInWhereUniqueInput
+    update: XOR<BridgeMemberOptInUpdateWithoutOrganizationInput, BridgeMemberOptInUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<BridgeMemberOptInCreateWithoutOrganizationInput, BridgeMemberOptInUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type BridgeMemberOptInUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: BridgeMemberOptInWhereUniqueInput
+    data: XOR<BridgeMemberOptInUpdateWithoutOrganizationInput, BridgeMemberOptInUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type BridgeMemberOptInUpdateManyWithWhereWithoutOrganizationInput = {
+    where: BridgeMemberOptInScalarWhereInput
+    data: XOR<BridgeMemberOptInUpdateManyMutationInput, BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
   export type OrganizationCreateWithoutMembershipsInput = {
     id?: string
     name: string
@@ -125240,6 +129115,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutMembershipsInput = {
@@ -125268,6 +129144,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutMembershipsInput = {
@@ -125429,6 +129306,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutMembershipsInput = {
@@ -125457,6 +129335,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutMembershipsInput = {
@@ -125608,6 +129487,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAuditEventsInput = {
@@ -125636,6 +129516,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAuditEventsInput = {
@@ -125680,6 +129561,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAuditEventsInput = {
@@ -125708,6 +129590,7 @@ export namespace Prisma {
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
     agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type AgentCallCreateManyRunInput = {
@@ -125772,6 +129655,54 @@ export namespace Prisma {
     microCents?: IntFieldUpdateOperationsInput | number
     at?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BridgeMemberOptInCreateManyBridgeInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type BridgeMemberOptInUpdateWithoutBridgeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutBridgeMemberOptInsNestedInput
+  }
+
+  export type BridgeMemberOptInUncheckedUpdateWithoutBridgeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BridgeMemberOptInUncheckedUpdateManyWithoutBridgeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MissionParticipationCreateManyMissionInput = {
@@ -129002,6 +132933,18 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type BridgeMemberOptInCreateManyOrganizationInput = {
+    id?: string
+    bridgeId: string
+    userId: string
+    status: $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys: string
+    optedInAt?: Date | string
+    withdrawnAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type MembershipUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     role?: EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
@@ -129842,6 +133785,42 @@ export namespace Prisma {
     audience?: StringFieldUpdateOperationsInput | string
     authorizedFieldKeys?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BridgeMemberOptInUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bridge?: CommunityBridgeUpdateOneRequiredWithoutMemberOptInsNestedInput
+  }
+
+  export type BridgeMemberOptInUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    bridgeId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    bridgeId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumBridgeMemberOptInStatusFieldUpdateOperationsInput | $Enums.BridgeMemberOptInStatus
+    disclosedFieldKeys?: StringFieldUpdateOperationsInput | string
+    optedInAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    withdrawnAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

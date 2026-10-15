@@ -29,7 +29,7 @@
 | 7 | 实现 Outcome 与单位成本统计 | **T08** | 08 Outcome Intel | ⬜ |
 | 8 | 完成 Community SaaS Console | **T07** | 全模块的门面 | ⬜ |
 | 9 | 接入 LangGraph 与模型调用网关 | **T09** | 05 Agent Workforce | ⬜ |
-| 10 | 实现 Community Bridge 与跨群权限 | **T10** | 04 Community Bridge | ⬜ |
+| 10 | 实现 Community Bridge 与跨群权限 | **T10** | 04 Community Bridge | 🟡 内核 + 服务层 + 8 端点已交付；Slice 4（前端 + AC-19 E2E）待做 |
 | 11 | 接入 A2A / MCP 和开发者 SDK | **T11** | 10 Integrations | ⬜ |
 | 12 | 完成 E2E、安全、负载与回归测试 | **T12** | — | ⬜ |
 
@@ -270,6 +270,22 @@
 - **验收**：**AC-19**
 - **交付**：`CommunityBridge`（可共享任务类型 / 可披露字段 / 有效期 / 撤销）+ 双边审批
 - **铁律**：**无跨群默认共享**；不得直接查询对方私有行
+- **进度（2026-10-15，**未发版**）**：
+  - **已完成**：Slice 1 纯内核（三方交集 + 状态机真相表，34 例）、Slice 2 C9 落库 + 服务层 + 能力 + 审计
+    （`CommunityBridge` / `BridgeMemberOptIn`；`bridge.read`/`bridge.optin` 归 SELF_SERVICE、
+    `bridge.manage` 归 ADMIN+）、Slice 3 八个 HTTP 端点（含超出计划的 `GET /{bridgeId}`，
+    理由见 `T10/slice-3.md` §1）。
+  - **证据**：`npx jest tests/bridge tests/bridges tests/tenancy` → **211 通过 / 0 失败**；
+    全量 `npx jest` → **92 套 / 1893 例通过**；`npx tsc --noEmit` exit 0；
+    `check:bridge-invariants` 基线 exit 0 且 `--self-test` **B1–B5 五条全被捕获**。
+  - **剩余（Slice 4）**：Bridge 面板并入 Consent 区子面板 + `scripts/qa/verify-ac19-bridge-e2e.mjs`
+    三组取证（**正向**：双群主批准 + 双方 opt-in ⇒ 交集字段可见；**反向**：未 opt-in / `PENDING` /
+    收窄后 / revoke 后 四者皆不可见；**越权**：以 A 群成员身份读 B 群私有行 ⇒ 失败）。
+  - 🔴 **C9 迁移批次尚未 apply 到生产**（C0–C8 已 apply）。按用户决策「等 B 做完统一发版」，
+    发版前需再跑一次 `npm run connection:migrate` 的 `apply`。
+  - ⚠️ **交接 T11**：本切片新增的 8 个端点**未**写入 `contracts/connection.openapi.yaml`
+    （该契约文件位于工作区交付包 `lokfeel_workbuddy_v1/contracts/`，不在本仓库内）。
+    T11 做「OpenAPI 固化」时需一并补齐 —— 连同 T09 的 `/api/v1/agents/*`（同样尚未收录）。
 
 ### T11 · Open SDK — 标准互操作与开源准备
 - **目标**：A2A / MCP 适配 + OpenAPI 固化 + SDK 示例 + 许可证审计。

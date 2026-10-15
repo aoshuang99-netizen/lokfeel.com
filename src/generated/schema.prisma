@@ -815,6 +815,141 @@ model BotAvatar {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// BRIDGE — T10 Community Bridge（跨社群授权与连接）
+//
+// 对齐：AC-19（跨社群**仅**共享明确 opt-in 的数据，**双边群主配置生效**）
+//
+// 设计约束（继承 agent.prisma / outcome.prisma 的同一套）：
+//   1. **纯新增** —— 不改动既有模型的任何列语义（零停机、零回归）。
+//   2. **方言无关** —— 不含任何 `@db.*` 原生类型标注。
+//   3. **软引用优先** —— `createdBy` / `revokedBy` / `BridgeMemberOptIn.userId`
+//      都不建 FK（用户注销后"谁 opt-in 过什么"仍须可查）；
+//      `initiatorOrgId` / `recipientOrgId` 同样**软引用** —— 协议是两个组织之间的
+//      **历史记录**，组织注销后仍应可查，且组织重建后**不得**继承旧协议。
+//      只有 `BridgeMemberOptIn.bridgeId` / `.organizationId` 建真 FK。
+//
+// ── 为什么是「协议 + 逐成员 opt-in」两张表，而不是一张 ──────────────
+//   AC-19 的两半是**不同主体**的授权：
+//     · 「双边群主配置生效」→ 协议层（谁有权开启共享）—— 组织级，需双方批准；
+//     · 「仅共享明确 opt-in 的数据」→ 成员层（谁被共享）—— 个人级，逐个加入。
+//   合成一张表就没法表达"协议生效了、但张三没加入"这种**正常**状态 ——
+//   而那恰恰是最常见的状态。故必须分开。
+//
+// ── JSON 列用 `String` 而非 `Json` ─────────────────────────────
+//   与 connection.prisma 的 `SocialIntent.disclosure` 同一取向：libSQL 下 `Json`
+//   落为 TEXT，Prisma 的 Json 解析对历史脏数据不够宽容（一个坏字符会打挂整行读取）。
+//   因此统一存文本、用 `src/lib/connection/json-codec` 的**容错**编解码，
+//   使"一行脏数据"只影响那一行，而不是整页。
+// ═══════════════════════════════════════════════════════════════
+
+/// 合作协议状态。**必须与 `src/lib/bridge/types.ts` 的 `BRIDGE_STATUSES` 逐字一致**
+/// （有漂移守卫：`tests/bridge/schema-drift.test.ts`）。
+///
+/// 🔴 刻意**没有** `EXPIRED`：过期是**派生值**（`expiresAt` 与当下时刻比较），
+///    落一个 `EXPIRED` 列就多出第二个事实来源、且需要 sweeper。
+///    查询一律带 `status = 'ACTIVE'`，过期行在 SQL 层即被排除（双保险）。
+/// 🔴 刻意**没有** `DRAFT`：发起方**创建即视为发起方已批准**，协议直接落 `PENDING`。
+///    留一个永不出现的 `DRAFT` 只会制造死状态。
+enum CommunityBridgeStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+/// 成员 opt-in 状态。**必须与 `BridgeMemberOptInStatus`（types.ts）逐字一致**。
+/// `WITHDRAWN` **保留行**（不删）—— 「谁曾加入过、何时退出」是审计问题。
+enum BridgeMemberOptInStatus {
+  ACTIVE
+  WITHDRAWN
+}
+
+/// 跨社群合作协议（组织 ↔ 组织，**双边**）。
+model CommunityBridge {
+  id String @id @default(cuid())
+
+  /// 发起方组织。**软引用**（无 FK）—— 见文件头约束 3。
+  initiatorOrgId String
+  /// 被邀方组织。**软引用**（无 FK）。
+  recipientOrgId String
+
+  /// 当前状态。只经 `src/lib/bridges/bridges.ts` 的 `transitionBridge()` 修改，
+  /// 且该函数在执行 UPDATE 前**必须**先过 `planBridgeTransition()` 的真相表断言。
+  status CommunityBridgeStatus
+
+  /// 发起方允许共享的字段键（JSON 数组文本）。
+  initiatorFieldKeys    String
+  /// 被邀方允许共享的字段键（JSON 数组文本）。
+  /// 🔴 共享字段 = 两者**交集**（只有双方都允许才生效）。
+  recipientFieldKeys    String
+  /// 可共享的任务类型（JSON 数组文本）。用途是收窄范围，不是枚举白名单的替代。
+  shareableMissionKinds String
+
+  /// 用途声明（purpose limitation）。**必填** —— 跨群共享必须有可陈述的目的。
+  purpose String
+
+  /// 发起方批准时刻。**创建时即落值**（创建 = 发起方同意）。
+  initiatorApprovedAt DateTime
+  /// 被邀方批准时刻。`null` ⇒ 协议仍停 `PENDING`（**不是**"默认同意"）。
+  recipientApprovedAt DateTime?
+
+  /// 有效期。`null` = 永久。
+  expiresAt DateTime?
+  revokedAt DateTime?
+  /// 撤销者（**软引用**）。
+  revokedBy String?
+  /// 创建者（**软引用**）。
+  createdBy String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberOptIns BridgeMemberOptIn[]
+
+  /// 一对组织之间**同时只有一份**协议 —— 重复发起是幂等更新，不是新增行。
+  /// 库级保证：没有这条约束，"同一对组织开两份协议"会静默产生**双倍授权面**。
+  @@unique([initiatorOrgId, recipientOrgId])
+  /// 反查「我作为发起方/被邀方的协议」是列表页热路径。
+  @@index([initiatorOrgId, status])
+  @@index([recipientOrgId, status])
+  /// 「有没有即将过期的活跃协议」= 运营巡检查询。
+  @@index([status, expiresAt])
+}
+
+/// 成员的**逐个** opt-in。
+model BridgeMemberOptIn {
+  id String @id @default(cuid())
+
+  /// **真 FK**：协议删除必须级联清 opt-in —— 否则孤儿行会被投影当成"有效授权"。
+  bridgeId String
+
+  /// 成员所属组织。**真 FK**。
+  organizationId String
+
+  /// 成员。**软引用**（无 FK）—— 用户注销后"谁曾加入"仍须可查。
+  userId String
+
+  status BridgeMemberOptInStatus
+
+  /// 成员选择共享的字段键（JSON 数组文本）。
+  /// 必须 ⊆ 本组织在协议里配置的字段（`initiatorFieldKeys` 或 `recipientFieldKeys`）。
+  disclosedFieldKeys String
+
+  optedInAt   DateTime  @default(now())
+  withdrawnAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bridge       CommunityBridge @relation(fields: [bridgeId], references: [id], onDelete: Cascade)
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  /// 一人对一份协议只有一行 —— 重复 opt-in 是幂等更新（不是新增行）。
+  @@unique([bridgeId, userId])
+  @@index([organizationId, status])
+  @@index([userId, status])
+}
+
+// ═══════════════════════════════════════════════════════════════
 // CONNECTION OS — 业务闭环实体（自 T02 起逐任务追加）
 //
 // 对齐契约：
@@ -3151,6 +3286,14 @@ model Organization {
   agentApprovals       AgentApproval[]
   agentExecutions      AgentExecution[]
   agentDeliveryTargets AgentDeliveryTarget[]
+
+  // ── T10 Community Bridge 反向关系（bridge.prisma）──
+  //
+  // ⚠️ 只列出 `BridgeMemberOptIn`。`CommunityBridge.initiatorOrgId` / `.recipientOrgId`
+  //    是**软引用**（无 FK）—— 协议是两个组织之间的**历史记录**，组织注销后仍须可查，
+  //    且组织重建后**不得**继承旧协议。故本模型上**没有**对应的反向关系字段。
+  //    这不表示"查不到协议"，而是"不靠 FK 保证其完整性"（见 bridge.prisma 约束 3）。
+  bridgeMemberOptIns BridgeMemberOptIn[]
 
   @@index([status])
 }

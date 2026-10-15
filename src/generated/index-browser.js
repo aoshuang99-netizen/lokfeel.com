@@ -328,6 +328,38 @@ exports.Prisma.BotAvatarScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CommunityBridgeScalarFieldEnum = {
+  id: 'id',
+  initiatorOrgId: 'initiatorOrgId',
+  recipientOrgId: 'recipientOrgId',
+  status: 'status',
+  initiatorFieldKeys: 'initiatorFieldKeys',
+  recipientFieldKeys: 'recipientFieldKeys',
+  shareableMissionKinds: 'shareableMissionKinds',
+  purpose: 'purpose',
+  initiatorApprovedAt: 'initiatorApprovedAt',
+  recipientApprovedAt: 'recipientApprovedAt',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  revokedBy: 'revokedBy',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BridgeMemberOptInScalarFieldEnum = {
+  id: 'id',
+  bridgeId: 'bridgeId',
+  organizationId: 'organizationId',
+  userId: 'userId',
+  status: 'status',
+  disclosedFieldKeys: 'disclosedFieldKeys',
+  optedInAt: 'optedInAt',
+  withdrawnAt: 'withdrawnAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.MissionScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -1165,6 +1197,17 @@ exports.OnlinePattern = exports.$Enums.OnlinePattern = {
   AFTER_WORK: 'AFTER_WORK'
 };
 
+exports.CommunityBridgeStatus = exports.$Enums.CommunityBridgeStatus = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  REVOKED: 'REVOKED'
+};
+
+exports.BridgeMemberOptInStatus = exports.$Enums.BridgeMemberOptInStatus = {
+  ACTIVE: 'ACTIVE',
+  WITHDRAWN: 'WITHDRAWN'
+};
+
 exports.MissionStatus = exports.$Enums.MissionStatus = {
   DRAFT: 'DRAFT',
   ACTIVE: 'ACTIVE',
@@ -1560,6 +1603,8 @@ exports.Prisma.ModelName = {
   BotLearningRecord: 'BotLearningRecord',
   BotPreference: 'BotPreference',
   BotAvatar: 'BotAvatar',
+  CommunityBridge: 'CommunityBridge',
+  BridgeMemberOptIn: 'BridgeMemberOptIn',
   Mission: 'Mission',
   SocialIntent: 'SocialIntent',
   MissionParticipation: 'MissionParticipation',

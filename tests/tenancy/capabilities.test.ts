@@ -133,6 +133,33 @@ describe('T01 · 租户角色与能力矩阵', () => {
       expect(runnersOnly).toEqual(['OPERATOR'])
     })
 
+    // ── T10 / AC-19 跨社群协议 ──
+    // 这一组钉死「成员自助」与「群主管理」的**分离**：AC-19 的"明确 opt-in"要求
+    // 加入与否**只能由成员自己**决定，因此 bridge.optin 必须是自助能力，
+    // 而"本群成员的数据能否出街"是群主级决定（bridge.manage）。
+    it('🔴 Bridge：MEMBER 能看、能自己加入，但**不能**发起/批准/撤销', () => {
+      expect(can('MEMBER', 'bridge.read')).toBe(true)
+      expect(can('MEMBER', 'bridge.optin')).toBe(true)
+      expect(can('MEMBER', 'bridge.manage')).toBe(false)
+
+      expect(can('OPERATOR', 'bridge.read')).toBe(true)
+      expect(can('OPERATOR', 'bridge.optin')).toBe(true)
+      expect(can('OPERATOR', 'bridge.manage')).toBe(false)
+
+      expect(can('ADMIN', 'bridge.manage')).toBe(true)
+      expect(can('OWNER', 'bridge.manage')).toBe(true)
+    })
+
+    it('🔴 bridge.optin 与 bridge.manage 是两条独立的路 —— 成员自助不被群主的管理权替代', () => {
+      // 若有人把 bridge.manage 当成"顺便也能替成员 opt-in"，那就等于群主可以**代成员同意**
+      // 披露其数据 —— AC-19 的"明确 opt-in"当场失效（状态机依然正确，但授权主体错了）。
+      const optInWithoutManage = TENANT_ROLES.filter(
+        (r) => can(r, 'bridge.optin') && !can(r, 'bridge.manage'),
+      )
+      // ⚠️ 顺序跟随 `TENANT_ROLES`（OWNER → ADMIN → OPERATOR → MEMBER），而不是从高到低排。
+      expect(optInWithoutManage).toEqual(['OPERATOR', 'MEMBER'])
+    })
+
     it('OWNER 独占租户处置权', () => {
       expect(can('OWNER', 'org.update')).toBe(true)
       expect(can('OWNER', 'org.transfer')).toBe(true)

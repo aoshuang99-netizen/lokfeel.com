@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * T02–T09 · Connection OS 迁移（批次 C0 – C7）
+ * T02–T10 · Connection OS 迁移（批次 C0 – C9）
  *
  * 用法：
  *   node scripts/connection/migrate.mjs probe                      # 只读：表/列/索引现状
@@ -28,6 +28,12 @@
  *   C8 = AgentDeliveryTarget
  *        （T09 Slice 6；强 FK 两条：Organization + AgentRun。**创建时**固定的送达目标 +
  *          披露依据快照 —— 同样是"加列会破纯新增纪律"的落点）
+ *   C9 = CommunityBridge / BridgeMemberOptIn
+ *        （T10；**两表之间有依赖方向**：BridgeMemberOptIn 的外键指向 CommunityBridge，
+ *          故创建顺序为 CommunityBridge → BridgeMemberOptIn，回滚取逆序。
+ *          与 C6/C7/C8 的对比：那三批是"加列会破纯新增纪律"，本批**不是**那个问题 ——
+ *          跨群协议（组织级）与逐成员 opt-in（个人级）本就是**两个主体**的授权，
+ *          挤进一张表就表达不了"协议生效了、但某人没加入"这个最常见的状态）
  *
  * 设计约束（继承 T01 的 scripts/tenancy/migrate.mjs）：
  *   1. **纯新增** —— 各批次只 `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`，
@@ -118,9 +124,17 @@ export const BATCHES = {
     tables: ['AgentDeliveryTarget'],
     label: 'T09 · Agent 对外送达目标（AgentDeliveryTarget）',
   },
+  C9: {
+    // 🔴 与 C7/C8 不同：本批次**两表之间有依赖**（BridgeMemberOptIn → CommunityBridge）。
+    //    数组顺序 = 创建顺序；rollback 取其逆序，故会先删 BridgeMemberOptIn。
+    //    软引用纪律的例外说明见 bridge.prisma 文件头：协议的两个组织 id 是软引用，
+    //    而 BridgeMemberOptIn 的 bridgeId / organizationId 是强 FK。
+    tables: ['CommunityBridge', 'BridgeMemberOptIn'],
+    label: 'T10 · 跨社群合作协议与逐成员 opt-in（CommunityBridge / BridgeMemberOptIn）',
+  },
 }
 
-export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8']
+export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
 
 // ══════════════════════════════════════════════════════════════════════
 // 环境加载
@@ -632,7 +646,63 @@ function sqlC8() {
   ]
 }
 
-const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5, C6: sqlC6, C7: sqlC7, C8: sqlC8 }
+/**
+ * C9 —— T10 Community Bridge。
+ *
+ * DDL 来源：`npx prisma migrate diff --from-empty --to-schema prisma/schema --script`
+ * 后**原样抄录**（见文件头约束 5），仅去掉分号、缩进改为 2 空格、补 `IF NOT EXISTS`。
+ *
+ * ⚠️ **两表有依赖方向**：`BridgeMemberOptIn.bridgeId` 的外键指向 `CommunityBridge`，
+ *    故此处**必须**先建 CommunityBridge。回滚按数组逆序，会先删 BridgeMemberOptIn
+ *    —— 否则删 CommunityBridge 会被外键挡住。
+ * ⚠️ `initiatorOrgId` / `recipientOrgId` / `userId` / `createdBy` / `revokedBy`
+ *    是**软引用**（无 FK）：协议是组织之间的历史记录，用户注销后"谁加入过"仍须可查。
+ */
+function sqlC9() {
+  return [
+    `CREATE TABLE IF NOT EXISTS "CommunityBridge" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "initiatorOrgId" TEXT NOT NULL,
+  "recipientOrgId" TEXT NOT NULL,
+  "status" TEXT NOT NULL,
+  "initiatorFieldKeys" TEXT NOT NULL,
+  "recipientFieldKeys" TEXT NOT NULL,
+  "shareableMissionKinds" TEXT NOT NULL,
+  "purpose" TEXT NOT NULL,
+  "initiatorApprovedAt" DATETIME NOT NULL,
+  "recipientApprovedAt" DATETIME,
+  "expiresAt" DATETIME,
+  "revokedAt" DATETIME,
+  "revokedBy" TEXT,
+  "createdBy" TEXT NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL
+)`,
+    `CREATE TABLE IF NOT EXISTS "BridgeMemberOptIn" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "bridgeId" TEXT NOT NULL,
+  "organizationId" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "status" TEXT NOT NULL,
+  "disclosedFieldKeys" TEXT NOT NULL,
+  "optedInAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "withdrawnAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL,
+  CONSTRAINT "BridgeMemberOptIn_bridgeId_fkey" FOREIGN KEY ("bridgeId") REFERENCES "CommunityBridge" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "BridgeMemberOptIn_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE INDEX IF NOT EXISTS "CommunityBridge_initiatorOrgId_status_idx" ON "CommunityBridge"("initiatorOrgId", "status")`,
+    `CREATE INDEX IF NOT EXISTS "CommunityBridge_recipientOrgId_status_idx" ON "CommunityBridge"("recipientOrgId", "status")`,
+    `CREATE INDEX IF NOT EXISTS "CommunityBridge_status_expiresAt_idx" ON "CommunityBridge"("status", "expiresAt")`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "CommunityBridge_initiatorOrgId_recipientOrgId_key" ON "CommunityBridge"("initiatorOrgId", "recipientOrgId")`,
+    `CREATE INDEX IF NOT EXISTS "BridgeMemberOptIn_organizationId_status_idx" ON "BridgeMemberOptIn"("organizationId", "status")`,
+    `CREATE INDEX IF NOT EXISTS "BridgeMemberOptIn_userId_status_idx" ON "BridgeMemberOptIn"("userId", "status")`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "BridgeMemberOptIn_bridgeId_userId_key" ON "BridgeMemberOptIn"("bridgeId", "userId")`,
+  ]
+}
+
+const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5, C6: sqlC6, C7: sqlC7, C8: sqlC8, C9: sqlC9 }
 
 /** 期望存在的索引（verify 断言用）。 */
 const EXPECTED_INDEXES = [
@@ -713,6 +783,14 @@ const EXPECTED_INDEXES = [
   { name: 'AgentDeliveryTarget_runId_key', table: 'AgentDeliveryTarget', unique: true },
   { name: 'AgentDeliveryTarget_organizationId_targetUserId_idx', table: 'AgentDeliveryTarget', unique: false },
   { name: 'AgentDeliveryTarget_organizationId_createdAt_idx', table: 'AgentDeliveryTarget', unique: false },
+  // ── C9 ──
+  { name: 'CommunityBridge_initiatorOrgId_status_idx', table: 'CommunityBridge', unique: false },
+  { name: 'CommunityBridge_recipientOrgId_status_idx', table: 'CommunityBridge', unique: false },
+  { name: 'CommunityBridge_status_expiresAt_idx', table: 'CommunityBridge', unique: false },
+  { name: 'CommunityBridge_initiatorOrgId_recipientOrgId_key', table: 'CommunityBridge', unique: true },
+  { name: 'BridgeMemberOptIn_organizationId_status_idx', table: 'BridgeMemberOptIn', unique: false },
+  { name: 'BridgeMemberOptIn_userId_status_idx', table: 'BridgeMemberOptIn', unique: false },
+  { name: 'BridgeMemberOptIn_bridgeId_userId_key', table: 'BridgeMemberOptIn', unique: true },
 ]
 
 /** 期望存在的外键（表 → 引用目标），verify 断言用。 */
@@ -780,6 +858,13 @@ const EXPECTED_FKS = [
   //  若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
   { table: 'AgentDeliveryTarget', target: 'Organization' },
   { table: 'AgentDeliveryTarget', target: 'AgentRun' },
+  // ── C9 ──
+  // 两条强 FK，且**只有两条**：BridgeMemberOptIn → CommunityBridge（协议删了 opt-in 必须级联清，
+  // 否则孤儿行会被投影当成有效授权）+ → Organization。
+  // （CommunityBridge 的 initiatorOrgId / recipientOrgId 与 BridgeMemberOptIn.userId 是软引用，
+  //  若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
+  { table: 'BridgeMemberOptIn', target: 'CommunityBridge' },
+  { table: 'BridgeMemberOptIn', target: 'Organization' },
 ]
 
 /** 全部受管表（verify 用）。 */
@@ -1459,7 +1544,75 @@ async function cmdVerify(client) {
     ok('AgentDeliveryTarget 列齐备（目标身份 + 披露依据 + 档位 + 快照）', false, '表不存在')
   }
 
+  // 4j) T10 · CommunityBridge / BridgeMemberOptIn（C9 · 跨社群协议与逐成员 opt-in）
+  const cbCols = await tableColumns(client, 'CommunityBridge')
+  if (cbCols) {
+    const cbSql = (await tableCreateSql(client, 'CommunityBridge')) || ''
+    const required =
+      cbCols.includes('id') &&
+      cbCols.includes('initiatorOrgId') &&
+      cbCols.includes('recipientOrgId') &&
+      cbCols.includes('status') &&
+      cbCols.includes('initiatorFieldKeys') &&
+      cbCols.includes('recipientFieldKeys') &&
+      cbCols.includes('shareableMissionKinds') &&
+      cbCols.includes('purpose') &&
+      cbCols.includes('initiatorApprovedAt') &&
+      cbCols.includes('recipientApprovedAt') &&
+      cbCols.includes('expiresAt') &&
+      cbCols.includes('revokedAt') &&
+      cbCols.includes('revokedBy') &&
+      cbCols.includes('createdBy') &&
+      cbCols.includes('createdAt') &&
+      cbCols.includes('updatedAt')
+    ok('CommunityBridge 列齐备（双边批准 + 双侧字段配置 + 有效期 + 用途）', required, cbCols.join(','))
+    // 🔴 **反向对照**：AgentDeliveryTarget 断言的是"**没有** status"（送达不是状态机），
+    //    而本表恰恰**必须**有 status —— 协议**是**一台状态机（PENDING/ACTIVE/REVOKED）。
+    //    两条断言方向相反、同时存在，才能证明判据是"这个模型该不该有状态"，
+    //    而不是"谁抄了谁的模板"。
+    ok(
+      'CommunityBridge **有** status 列（协议是状态机；与 AgentDeliveryTarget 的"没有 status"形成反向对照）',
+      /"status"\s+TEXT/.test(cbSql),
+    )
+    ok(
+      'CommunityBridge 的 initiatorOrgId / recipientOrgId **无**外键（软引用，组织注销后协议仍须可查）',
+      !/"initiatorOrgId"[^,]*REFERENCES/.test(cbSql) && !/"recipientOrgId"[^,]*REFERENCES/.test(cbSql),
+    )
+  } else {
+    ok('CommunityBridge 列齐备（双边批准 + 双侧字段配置 + 有效期 + 用途）', false, '表不存在')
+  }
+
+  const boCols = await tableColumns(client, 'BridgeMemberOptIn')
+  if (boCols) {
+    const boSql = (await tableCreateSql(client, 'BridgeMemberOptIn')) || ''
+    const required =
+      boCols.includes('id') &&
+      boCols.includes('bridgeId') &&
+      boCols.includes('organizationId') &&
+      boCols.includes('userId') &&
+      boCols.includes('status') &&
+      boCols.includes('disclosedFieldKeys') &&
+      boCols.includes('optedInAt') &&
+      boCols.includes('withdrawnAt') &&
+      boCols.includes('createdAt') &&
+      boCols.includes('updatedAt')
+    ok('BridgeMemberOptIn 列齐备（成员选项 + 退出时刻 + 审计时间戳）', required, boCols.join(','))
+    ok(
+      'BridgeMemberOptIn.bridgeId → CommunityBridge 外键存在（协议删了必须级联清 opt-in，否则孤儿行会被当成有效授权）',
+      /CONSTRAINT\s+"BridgeMemberOptIn_bridgeId_fkey"\s+FOREIGN\s+KEY\s+\("bridgeId"\)\s+REFERENCES\s+"CommunityBridge"/.test(
+        boSql,
+      ),
+    )
+    ok(
+      'BridgeMemberOptIn 的 userId **无**外键（软引用，用户注销后"谁曾加入"仍须可查）',
+      !/"userId"[^,]*REFERENCES/.test(boSql),
+    )
+  } else {
+    ok('BridgeMemberOptIn 列齐备（成员选项 + 退出时刻 + 审计时间戳）', false, '表不存在')
+  }
+
   // 5) 孤儿行（跨表完整性）
+
   const orphanMission = await countRows(
     client,
     'Mission',
