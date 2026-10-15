@@ -71,6 +71,15 @@ export interface ExecuteAgentRunResult {
   delivery: { id: string; status: DeliveryStatus; provider: string } | null
 }
 
+/**
+ * 观察者视角（供 DTO 算 `canApprove` / `canReject`）。
+ * ⚠️ 执行器只持 `agent.execute`，**不**代表能批准 —— 但这次响应里回的就是这条运行，
+ *    界面拿到它之后要能显示"我还能不能批"，所以口径与 `runs.ts` 的 `viewerOf` 一致。
+ */
+function viewerOf(ctx: TenantContext): { canDecide: boolean } {
+  return { canDecide: can(ctx.role, 'agent.approve') }
+}
+
 /** 收件人恒为发起人 —— 单独抽成函数，是为了让"谁是收件人"只有一处可改、且改动要过评审。 */
 function resolveRecipient(row: { requestedBy: string }): string {
   return row.requestedBy
@@ -113,7 +122,7 @@ export async function executeAgentRun(
   //    而调用方真正想知道的是"它执行过了吗、结果如何"。
   if (row.execution) {
     return {
-      run: toAgentRunDto(row),
+      run: toAgentRunDto(row, viewerOf(ctx)),
       execution: toExecutionDto(row.execution),
       replayed: true,
       delivery: null,
@@ -216,7 +225,7 @@ export async function executeAgentRun(
       const fresh = await findRunRow(ctx.organizationId, row.id)
       if (fresh) {
         return {
-          run: toAgentRunDto(fresh),
+          run: toAgentRunDto(fresh, viewerOf(ctx)),
           execution: toExecutionDto(winner),
           replayed: true,
           delivery: null,
@@ -250,7 +259,7 @@ export async function executeAgentRun(
   if (!updated) throw new NotFoundError('Agent run not found')
 
   return {
-    run: toAgentRunDto(updated),
+    run: toAgentRunDto(updated, viewerOf(ctx)),
     execution: toExecutionDto(updated.execution),
     replayed: false,
     delivery: { id: delivery.id, status: delivery.status, provider: delivery.provider },

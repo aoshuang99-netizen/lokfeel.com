@@ -34,6 +34,13 @@ export {
   type ListAgentRunsResult,
 } from './runs'
 
+// ── 组织级额度（按订阅方案派生 —— 额度的**来源**，不做判定）──
+export {
+  agentQuotaOf,
+  resolveOrganizationAgentQuota,
+  type OrganizationAgentQuota,
+} from './quota'
+
 // ── 执行器（`EXECUTED` 的**唯一**写入点）──
 export {
   executeAgentRun,

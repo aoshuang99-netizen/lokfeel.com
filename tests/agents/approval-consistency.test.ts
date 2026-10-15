@@ -31,8 +31,8 @@ jest.mock('@/lib/db', () => ({
 jest.mock('@/lib/auth/auth', () => ({ requireAuth: jest.fn(), auth: jest.fn() }))
 
 import { db } from '@/lib/db'
-import { createStubProvider } from '@/lib/agent'
-import { createAgentRun, decideAgentRun } from '@/lib/agents'
+import { AGENT_RUN_STATUSES, createStubProvider } from '@/lib/agent'
+import { createAgentRun, decideAgentRun, getAgentRun, listAgentRuns } from '@/lib/agents'
 import type { TenantContext } from '@/lib/tenancy/resolve'
 import { createFakeAgentDb, installFakeAgentDb, type FakeAgentDb } from './_fake-db'
 
@@ -161,5 +161,138 @@ describe('T09 · 审批一致性', () => {
     // 复原 → 通过
     fake.approvals = saved
     expect(() => assertConsistent()).not.toThrow()
+  })
+})
+
+
+// ═══════════════════════════════════════════════════════════
+// 「我能批 / 我能驳」—— AC-18 的"无空按钮"在服务端的落点
+// ═══════════════════════════════════════════════════════════
+//
+// 这一块测的不是"某个字段算得对不对"，而是**两个东西说的是不是同一件事**：
+//   DTO 说 `canApprove: true`  ⇔  `decideAgentRun(..., 'APPROVED')` 真的会成功。
+// 两者一旦分叉，界面上就会出现"点了必然 403/409"的空按钮 —— 而单看任何一边都是"正常"的。
+// 所以下面是**逐格交叉验证**，不是复述实现。
+
+/** 直接往内存表塞一条指定状态的运行（其余状态机路径由本文件上半部分覆盖）。 */
+function seedRun(status: string, overrides: Partial<FakeAgentDb['runs'][number]> = {}): string {
+  const id = `run_seed_${fake.runs.length + 1}`
+  fake.runs.push({
+    id,
+    organizationId: ORG,
+    skill: 'INTRO_DRAFT',
+    status,
+    risk: 'HIGH',
+    requiresApproval: true,
+    requestedBy: 'u_2',
+    subjectLabel: null,
+    goal: '为两位成员起草开场介绍',
+    proposalJson: null,
+    rawText: null,
+    reason: null,
+    degradeCode: null,
+    providerKind: 'STUB',
+    injectionSignals: null,
+    costMicroCents: 0,
+    dedupeKey: `seed-${id}`,
+    requestHash: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  })
+  return id
+}
+
+function seedApproval(runId: string, decision: 'APPROVED' | 'REJECTED'): void {
+  fake.approvals.push({
+    id: `ap_seed_${fake.approvals.length + 1}`,
+    organizationId: ORG,
+    runId,
+    decision,
+    actorId: 'u_9',
+    deciderRole: 'ADMIN',
+    note: null,
+    decidedAt: new Date(),
+  })
+}
+
+const ctxWithRole = (role: TenantContext['role']): TenantContext => ({
+  organizationId: ORG,
+  userId: 'u_1',
+  role,
+  membershipId: 'ms_1',
+})
+
+describe('DTO 的 canApprove / canReject 与实际裁决行为逐格一致', () => {
+  it('🔴 全状态 × 全角色 × 有无裁决：canApprove === "decideAgentRun 真的会成功"', async () => {
+    for (const status of AGENT_RUN_STATUSES) {
+      for (const role of ['ADMIN', 'OPERATOR'] as const) {
+        for (const withApproval of [false, true]) {
+          // 每个格子用干净的库，避免上一格留下的裁决影响本格。
+          fake.runs.length = 0
+          fake.approvals.length = 0
+          fake.calls.length = 0
+
+          const id = seedRun(status)
+          if (withApproval) seedApproval(id, status === 'REJECTED' ? 'REJECTED' : 'APPROVED')
+
+          const viewer = ctxWithRole(role)
+          const dto = await getAgentRun(viewer, id)
+
+          let actuallyWorked = false
+          try {
+            await decideAgentRun(viewer, id, 'APPROVED')
+            actuallyWorked = true
+          } catch {
+            actuallyWorked = false
+          }
+
+          expect({ status, role, withApproval, canApprove: dto.canApprove }).toEqual({
+            status,
+            role,
+            withApproval,
+            canApprove: actuallyWorked,
+          })
+        }
+      }
+    }
+  })
+
+  it('🔴 能跑不能批：OPERATOR 看待批运行，两个按钮都是 false（制度层 AC-08）', async () => {
+    const id = seedRun('AWAITING_APPROVAL')
+    const dto = await getAgentRun(ctxWithRole('OPERATOR'), id)
+    expect(dto.status).toBe('AWAITING_APPROVAL')
+    expect(dto.canApprove).toBe(false)
+    expect(dto.canReject).toBe(false)
+    // 对照：同一行、换成 ADMIN（持有 agent.approve）→ 两个都 true
+    const admin = await getAgentRun(ctxWithRole('ADMIN'), id)
+    expect(admin.canApprove).toBe(true)
+    expect(admin.canReject).toBe(true)
+  })
+
+  it('已有裁决 → 不可改判，两个按钮都为 false（与 409 一致）', async () => {
+    const id = seedRun('APPROVED')
+    seedApproval(id, 'APPROVED')
+    const dto = await getAgentRun(ctxWithRole('ADMIN'), id)
+    expect(dto.canApprove).toBe(false)
+    expect(dto.canReject).toBe(false)
+  })
+
+  it('列表 DTO 也带这两个字段（否则列表页只能自己猜 → 空按钮）', async () => {
+    seedRun('AWAITING_APPROVAL')
+    const list = await listAgentRuns(ctxWithRole('ADMIN'))
+    expect(list.items).toHaveLength(1)
+    expect(list.items[0].canApprove).toBe(true)
+    expect(list.items[0].canReject).toBe(true)
+  })
+
+  it('缺省观察者（未传 viewer）→ 默认拒绝，不默认放行', async () => {
+    const id = seedRun('AWAITING_APPROVAL')
+    const list = await listAgentRuns(ctxWithRole('MEMBER'))
+    expect(list.items).toHaveLength(1)
+    expect(list.items[0].canApprove).toBe(false)
+    // 同一行的详情在 MEMBER 视角下同样为 false（不存在"列表 false、详情 true"的分叉）
+    const dto = await getAgentRun(ctxWithRole('MEMBER'), id)
+    expect(dto.canApprove).toBe(false)
   })
 })

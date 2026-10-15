@@ -23,15 +23,16 @@
  */
 
 import { db } from '@/lib/db'
-import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors'
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors'
 import { writeTenantAudit } from '@/lib/tenancy/audit'
+import { can } from '@/lib/tenancy/capabilities'
 import type { TenantContext } from '@/lib/tenancy/resolve'
 import {
   DEFAULT_PRICE_TABLE,
-  DEFAULT_QUOTA,
   SKILLS,
   assertTransition,
   canTransition,
+  formatMicroCents,
   isSkillKey,
   ledgerTotals,
   runSkill,
@@ -45,6 +46,9 @@ import {
   type SkillKey,
 } from '@/lib/agent'
 import { hashRequest, requireIdempotencyKey, withIdempotency } from '@/lib/connection/idempotency'
+// 额度的**来源**：方案的限额表（T08）—— 本层不新造第二张额度表，见 ./quota.ts 的文件头。
+import { PLAN_LABELS, type EffectivePlan } from '@/lib/billing/plans'
+import { resolveOrganizationAgentQuota } from './quota'
 import {
   providerKindFromDb,
   providerKindToDb,
@@ -58,6 +62,17 @@ import { providerHonesty, resolveRuntimeProvider, type ProviderHonesty } from '.
 
 /** 幂等作用域（与 `IdempotencyRecord.scope` 对齐）。 */
 export const AGENT_RUN_SCOPE = 'agent.run'
+
+/**
+ * DTO 的 `canApprove` / `canReject` 里**权限那一半**。
+ *
+ * 🔴 只在这一层判：权限判定（`can`）属服务层，DTO 只做投影 —— 所以这里把它算成一个
+ *    布尔传下去，而不是把角色传进 DTO。判据与路由的 `withTenant('agent.approve')`
+ *    用的是**同一个函数**，因此"界面说能点、接口说 403"这种分叉在结构上不存在。
+ */
+function viewerOf(ctx: TenantContext): { canDecide: boolean } {
+  return { canDecide: can(ctx.role, 'agent.approve') }
+}
 
 export const AGENT_LIMITS = {
   subjectLabelMax: 120,
@@ -240,10 +255,10 @@ function toCallRecord(row: {
 /**
  * 读回**本期**（当前 UTC 自然月）已发生的调用，作为限额判定的输入。
  *
- * ⚠️ `DEFAULT_QUOTA` 与 `DEFAULT_PRICE_TABLE` 同一取向：是**占位假设**，
- * 不是任何真实预算。真实额度配置属后续（要接组织级订阅方案）。
- * 把假设显式写在响应里（见 `agentUsage`），而不是藏在代码里 ——
- * 否则"额度用完了"这句提示就成了没有依据的断言。
+ * ⚠️ 返回的是**本期**（UTC 自然月）的流水，不是"这个组织有多少额度"。
+ * 额度从哪来见 `./quota.ts`：按订阅方案派生（不再是全局常量）。
+ * 数字本身**仍是占位假设**，因此随响应下发（见 `agentUsage` 的 `assumptions`），
+ * 而不是藏在代码里 —— 否则"额度用完了"这句提示就成了没有依据的断言。
  */
 async function loadLedger(organizationId: string, now: Date): Promise<LedgerSnapshot> {
   const rows = await db.agentCall.findMany({
@@ -301,7 +316,7 @@ export async function getAgentRun(ctx: TenantContext, runId: string): Promise<Ag
   }
   const row = await findRunRow(ctx.organizationId, runId)
   if (!row) throw new NotFoundError('Agent run not found')
-  return toAgentRunDto(row)
+  return toAgentRunDto(row, viewerOf(ctx))
 }
 
 export interface ListAgentRunsOptions {
@@ -347,7 +362,7 @@ export async function listAgentRuns(
 
   const items = rows.map((r) => {
     const { _count, ...rest } = r as unknown as AgentRunRow & { _count: { calls: number } }
-    return toAgentRunSummaryDto({ ...rest, calls: [] }, _count?.calls ?? 0)
+    return toAgentRunSummaryDto({ ...rest, calls: [] }, _count?.calls ?? 0, viewerOf(ctx))
   })
 
   return { items, count: items.length, filters: { status, skill, limit } }
@@ -370,13 +385,14 @@ export interface CreateAgentRunInput {
    */
   provider?: ProviderResolution
   /**
-   * 额度与单价。**默认是 `DEFAULT_QUOTA` / `DEFAULT_PRICE_TABLE` 这两个占位假设**
-   * （组织级真实额度配置尚未接线）。
+   * 单价。默认 `DEFAULT_PRICE_TABLE`（**占位假设**）。
+   */
+  /**
+   * 额度。**不传** → 按本组织的有效订阅方案派生（`resolveOrganizationAgentQuota`）。
    *
-   * 🔴 为什么把它们做成**注入点**而不是写死：写死意味着"限额逻辑无法被端到端测试"
-   *    —— 默认额度是 500 分（≈11 万次调用），要触发 `BLOCKED_QUOTA` 得先灌 11 万条账。
-   *    注入点让"额度耗尽 → 拒绝且零调用"这件事可以**真的被跑出来**，
-   *    而不是只能靠读代码相信它。缺的是"配置从哪来"，不是"配置能不能生效"。
+   * 🔴 为什么仍然保留这个**注入点**：注入才能让"额度耗尽 → 拒绝且零调用"这件事
+   *    **真的被跑出来**（FREE 档是 500 分，要触发 `BLOCKED_QUOTA` 得先灌真实账）。
+   *    注入点解决的是"能不能测"，方案派生解决的是"配置从哪来" —— 两件事，都要。
    */
   quota?: AgentQuota
   price?: PriceTable
@@ -408,19 +424,21 @@ export async function createAgentRun(
     resourceType: 'agent_run',
     load: async (id) => {
       const row = await findRunRow(ctx.organizationId, id)
-      return row ? toAgentRunDto(row) : null
+      return row ? toAgentRunDto(row, viewerOf(ctx)) : null
     },
     create: async () => {
       const provider = input.provider ?? resolveRuntimeProvider(process.env)
-      // ① 先把账本读回来（**调用之前**），② 再跑编排。
+      // ① 先把账本与额度都读回来（**调用之前**），② 再跑编排。
+      //    顺序是刻意的：额度必须在"决定要不要花钱"之前就知道（AC-20）。
       const ledger = await loadLedger(ctx.organizationId, now)
+      const quota = input.quota ?? (await resolveOrganizationAgentQuota(ctx)).quota
       const result = await runSkill({
         skill,
         input: input.input,
         provider,
         ledger,
-        // 两侧同源：注入什么就判什么；不传则同为 `DEFAULT_QUOTA`（占位假设）。
-        quota: input.quota ?? DEFAULT_QUOTA,
+        // 两侧同源：注入什么就判什么；不注入则从**订阅方案**派生（FREE = 从未订阅）。
+        quota,
         price: input.price ?? DEFAULT_PRICE_TABLE,
         now: () => now,
       })
@@ -516,7 +534,7 @@ export async function createAgentRun(
         }).catch(() => {})
       }
 
-      return { resourceId: created.id, resource: toAgentRunDto(created) }
+      return { resourceId: created.id, resource: toAgentRunDto(created, viewerOf(ctx)) }
     },
     // 幂等记录写入失败（并发重放）时回收本次创建出来的孤儿运行。
     compensate: async (resourceId) => {
@@ -563,6 +581,19 @@ export async function decideAgentRun(
   rawNote?: unknown,
   options: { now?: Date } = {},
 ): Promise<AgentRunDto> {
+  // ① 服务端**重新**判能力（纵深防御，与 `executeAgentRun` / `updateOrganization` 同一口径）。
+  //
+  //    🔴 这条不是装饰：路由层的 `withTenant('agent.approve')` 只挡得住 HTTP 入口，
+  //    而服务函数可以被脚本 / cron / 任务直接调用 —— 少了它，"OPERATOR 能跑不能批"
+  //    这条**制度层**的 AC-08 保证就只存在于路由里，任何内部调用者都能绕过它。
+  //    （本仓已有先例：`updateOrganization` 与 `executeAgentRun` 都复判。）
+  if (!can(ctx.role, 'agent.approve')) {
+    throw new ForbiddenError('当前角色不能裁决 Agent 运行（需要 agent.approve）', {
+      capability: 'agent.approve',
+      role: ctx.role,
+    })
+  }
+
   const decision = requireDecision(rawDecision)
   const note = normalizeNote(rawNote)
   const now = options.now ?? new Date()
@@ -626,7 +657,7 @@ export async function decideAgentRun(
 
   const updated = await findRunRow(ctx.organizationId, row.id)
   if (!updated) throw new NotFoundError('Agent run not found')
-  return toAgentRunDto(updated)
+  return toAgentRunDto(updated, viewerOf(ctx))
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -657,6 +688,14 @@ export interface AgentUsageDto {
     remainingMicroCents: number
     highCostCalls: number
   }
+  /**
+   * 额度派生所用的**有效订阅方案**（`FREE` = 本组织从未订阅）。
+   *
+   * `null` = 本次**未走**组织级派生（调用方显式注入了额度：测试/脚本路径）。
+   * 让这个字段可空、而不是回填一个假的 `FREE` —— 否则界面上会出现
+   * "测试注入的额度"被标成"FREE 档额度"这种假陈述。
+   */
+  plan: EffectivePlan | null
   /** 🔴 **假设随响应下发**（T08 口径）：额度与单价都是占位假设，不是财务事实。 */
   assumptions: {
     quota: string
@@ -678,14 +717,30 @@ export async function agentUsage(
   options: {
     now?: Date
     price?: PriceTable
-    /** 与 `createAgentRun` 同源：**下发的那份额度必须就是执行时用的那份**。 */
+    /**
+     * 与 `createAgentRun` 同源：**下发的那份额度必须就是执行时用的那份**。
+     * 不传 → 与 `createAgentRun` 走**同一段**派生（`resolveOrganizationAgentQuota`），
+     * 于是"界面显示的上限"与"判定时用的上限"在结构上不可能分叉。
+     */
     quota?: AgentQuota
     env?: Record<string, string | undefined>
   } = {},
 ): Promise<AgentUsageDto> {
   const now = options.now ?? new Date()
   const price = options.price ?? DEFAULT_PRICE_TABLE
-  const quota = options.quota ?? DEFAULT_QUOTA
+  // 🔴 只在**不注入**时查订阅：纯注入路径因此不需要任何订阅夹具（测试不用起库造事件），
+  //    而生产路径**永远**走组织级派生 —— 不存在"忘了传就退回全局常量"的暗门。
+  // 显式分支而不是 `?? organization!.quota`：后者要用非空断言，而断言会把
+  // "这段逻辑被改错"变成运行期崩溃，而不是编译期报错。
+  let quota: AgentQuota
+  let plan: EffectivePlan | null = null
+  if (options.quota !== undefined) {
+    quota = options.quota
+  } else {
+    const resolved = await resolveOrganizationAgentQuota(ctx)
+    quota = resolved.quota
+    plan = resolved.plan
+  }
   const periodKey = periodKeyOf(now)
 
   const ledger = await loadLedger(ctx.organizationId, now)
@@ -725,11 +780,16 @@ export async function agentUsage(
       remainingMicroCents: Math.max(quota.maxMicroCents - totals.microCents, 0),
       highCostCalls: totals.highCostCalls,
     },
+    // 契约固定：这个字段要么是派生方案，要么是显式 null（注入路径）—— 见 DTO 注释。
+    plan,
     assumptions: {
+      // ⚠️ 这串字会**原样渲染**在 Agents 屏上 ⇒ 不含 markdown 星号（R9）。
       quota:
-        quota === DEFAULT_QUOTA
-          ? '占位假设：组织级真实额度配置尚未接线（见 T09/slice-2.md §未覆盖）。'
-          : '注入的额度（测试/接线）：与执行时判定用的是同一份对象。',
+        plan === null
+          ? '注入的额度（测试/接线）：与执行时判定用的是同一份对象，本次未查订阅方案。'
+          : `组织级额度：按有效订阅方案派生 —— 方案 ${PLAN_LABELS[plan]}，` +
+            `每月上限 ${formatMicroCents(quota.maxMicroCents)}、高成本调用 ${quota.maxHighCostCalls} 次。` +
+            '这些数字仍是待定价的占位假设（见 T08/changes.md 假设表），不是已定价格。',
       price,
       period: '按 UTC 自然月归集（与 T08 用量账同口径：期次是纯等值比较，与日期格式解耦）。',
     },

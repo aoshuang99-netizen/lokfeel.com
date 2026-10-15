@@ -20,6 +20,7 @@
 
 import {
   PROVIDER_KINDS,
+  canTransition,
   isSkillKey,
   planExecution,
   type AgentRunStatus,
@@ -229,6 +230,19 @@ export interface AgentRunDto {
   execution: AgentExecutionAvailability
   /** 「执行实际发生了什么」——`null` = 还没执行过。 */
   executionRecord: AgentExecutionDto | null
+  /**
+   * 当前**观察者**能否批准 / 驳回这条运行。
+   *
+   * 🔴 由**服务端**算，前端不许自己判（"前端不重写状态机"）。三项合取：
+   *    ① 观察者持有 `agent.approve`（**由服务层判**，见 `AgentRunViewer.canDecide`）；
+   *    ② 当前状态允许迁移到 APPROVED / REJECTED（内核 `canTransition`，与
+   *       `decideAgentRun` 用的是**同一张真相表**）；
+   *    ③ 尚无裁决（已有裁决 → 服务层抛 409，不可改判）。
+   *    少任何一项，界面上就会出现"点了必然 403/409"的空按钮 —— 正是 AC-18 要挡的东西。
+   *    与 T08 成果屏的 `canConfirm` / `canVerify` 同一手法。
+   */
+  canApprove: boolean
+  canReject: boolean
   createdAt: string
   updatedAt: string
 }
@@ -344,9 +358,22 @@ export function toExecutionDto(row: AgentExecutionRow | null | undefined): Agent
   }
 }
 
-export function toAgentRunDto(row: AgentRunRow): AgentRunDto {
+/**
+ * 观察者视角。**刻意只收一个布尔**（而不是整个 `TenantContext` 或角色字符串）：
+ * 角色 → 能力的映射只应存在于 `src/lib/tenancy/capabilities.ts` 一处；
+ * 把角色传进来，DTO 迟早会自己长出一张判定表。
+ */
+export interface AgentRunViewer {
+  /** 观察者是否持有 `agent.approve`（由服务层判）。缺省 = 不持有（默认拒绝）。 */
+  canDecide?: boolean
+}
+
+export function toAgentRunDto(row: AgentRunRow, viewer: AgentRunViewer = {}): AgentRunDto {
   const status = row.status as AgentRunStatus
   const signals = toSignals(row.injectionSignals)
+  // 已有裁决 → 不可改判（`decideAgentRun` 会抛 409）。把它算进"能不能点"，
+  // 界面才不会给出一个注定被拒的按钮。
+  const decidable = viewer.canDecide === true && !row.approval
   return {
     id: row.id,
     skill: row.skill,
@@ -367,6 +394,8 @@ export function toAgentRunDto(row: AgentRunRow): AgentRunDto {
     approval: toApprovalDto(row.approval),
     execution: executionOf(row, status),
     executionRecord: toExecutionDto(row.execution),
+    canApprove: decidable && canTransition(status, 'APPROVED'),
+    canReject: decidable && canTransition(status, 'REJECTED'),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   }
@@ -377,8 +406,12 @@ export type AgentRunSummaryDto = Omit<AgentRunDto, 'calls' | 'injectionSignals'>
   callCount: number
 }
 
-export function toAgentRunSummaryDto(row: AgentRunRow, callCount: number): AgentRunSummaryDto {
-  const full = toAgentRunDto(row)
+export function toAgentRunSummaryDto(
+  row: AgentRunRow,
+  callCount: number,
+  viewer: AgentRunViewer = {},
+): AgentRunSummaryDto {
+  const full = toAgentRunDto(row, viewer)
   // 显式逐字段列出（而不是 `{...rest}` + 解构丢弃）：
   // 后者依赖 eslint 的 `ignoreRestSiblings`，且新增字段时会**静默**跟着进入列表 DTO
   // —— 列表页是"最小可见集"的地方，多一个字段就是一次计划外的对外暴露。
@@ -402,6 +435,8 @@ export function toAgentRunSummaryDto(row: AgentRunRow, callCount: number): Agent
     approval: full.approval,
     execution: full.execution,
     executionRecord: full.executionRecord,
+    canApprove: full.canApprove,
+    canReject: full.canReject,
     createdAt: full.createdAt,
     updatedAt: full.updatedAt,
     callCount,

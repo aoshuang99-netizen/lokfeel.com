@@ -124,6 +124,27 @@ export interface FakeDeliveryRow {
   sentAt: Date | null
 }
 
+/**
+ * 一行 BillingEvent（**只读**，用作组织级 Agent 额度的派生输入）。
+ *
+ * ⚠️ 这里只实现 \`findMany\`：本假库的职责是驱动 **Agent 服务层**，
+ *    计费写入面由 \`tests/billing/*\` 自己那套夹具负责。给两个测试域各留一个写入口
+ *    只会得到"两套事件构造方式"，而它们迟早对不上。
+ */
+export interface FakeBillingEventRow {
+  id: string
+  organizationId: string
+  type: string
+  plan: string | null
+  chargeId: string | null
+  amountCents: number | null
+  currency: string
+  gatewayStatus: string | null
+  reason: string | null
+  occurredAt: Date
+  createdAt: Date
+}
+
 export interface FakeAgentDb {
   runs: FakeRunRow[]
   calls: FakeCallRow[]
@@ -137,6 +158,8 @@ export interface FakeAgentDb {
   deliveries: FakeDeliveryRow[]
   /** 组织名（通知的身份声明要它）。 */
   organizationName: string
+  /** 订阅事件（T08）。**默认空** ⇒ 有效方案 = `FREE` ⇒ Agent 额度 = FREE 档。 */
+  billingEvents: FakeBillingEventRow[]
 }
 
 export function createFakeAgentDb(): FakeAgentDb {
@@ -149,6 +172,7 @@ export function createFakeAgentDb(): FakeAgentDb {
     notifications: [],
     deliveries: [],
     organizationName: '测试社群',
+    billingEvents: [],
   }
 }
 
@@ -196,6 +220,8 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
     ['organization', ['findUnique']],
     ['user', ['findUnique']],
     ['tenantAuditEvent', ['create']],
+    // 组织级 Agent 额度经 `getSubscriptionState()` 派生 ⇒ 读 BillingEvent。
+    ['billingEvent', ['findMany']],
   ]
   for (const [space, methods] of NEEDED) {
     const existing = d[space]
@@ -432,6 +458,24 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
     state.notifications.push(row)
     return row
   })
+
+  // ── 组织级 Agent 额度的派生输入：订阅事件（只读）──
+  //
+  // 排序与真实查询一致（occurredAt → createdAt → id）：折叠是**顺序敏感**的
+  // （最后的 PLAN_CHANGED 决定方案），假库若换个顺序，"降级后额度变小"这类用例
+  // 会以另一种方式通过 —— 那就不是在测同一件事了。
+  const billingEvent = d.billingEvent as Record<string, jest.Mock>
+  billingEvent.findMany.mockImplementation(
+    async (args: { where: { organizationId: string } }) =>
+      state.billingEvents
+        .filter((e) => e.organizationId === args.where.organizationId)
+        .sort(
+          (a, b) =>
+            a.occurredAt.getTime() - b.occurredAt.getTime() ||
+            a.createdAt.getTime() - b.createdAt.getTime() ||
+            a.id.localeCompare(b.id),
+        ),
+  )
 
   // writeTenantAudit 的落点（旁路，不参与业务结果）
   const audit = d.tenantAuditEvent as Record<string, jest.Mock>

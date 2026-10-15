@@ -45,14 +45,11 @@ const CONSOLE_NAV: readonly ConsoleNavItem[] = [
   { href: '/console/missions', label: '任务', icon: Target, ready: true, capability: 'mission.read' },
   { href: '/console/members', label: '成员', icon: Users, ready: true, capability: 'member.read' },
   { href: '/console/connections', label: '连接', icon: Link2, ready: true, capability: 'workflow.read' },
-  {
-    href: '/console/agents',
-    label: '智能体',
-    icon: Bot,
-    ready: false,
-    capability: 'outcome.read',
-    reason: 'Agent 屏等 T09 接线：内核 / API / 审批状态机已交付，屏幕与执行器尚未做',
-  },
+  // T09：Agents 屏已实现。gate 的是**读**能力 —— 该屏的两个数据面
+  //（`GET /api/v1/agents/runs` 与 `/usage`）都要求 `agent.run`（OPERATOR+），
+  // 所以这里也 gate `agent.run`：MEMBER 会看到"无权限"而不是一个进去就 403 的死入口。
+  // 能不能批准/执行由页面读服务端下发的 canApprove / canReject / execution.available 决定。
+  { href: '/console/agents', label: '智能体', icon: Bot, ready: true, capability: 'agent.run' },
   // T08：成果屏已实现。gate 的是**读**能力（`outcome.read`，所有成员都有）——
   // 能不能确认/核验由页面按服务端下发的 canConfirm / canVerify 降级渲染。
   { href: '/console/outcomes', label: '成果', icon: BadgeCheck, ready: true, capability: 'outcome.read' },

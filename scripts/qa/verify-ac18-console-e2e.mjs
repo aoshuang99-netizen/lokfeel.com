@@ -78,15 +78,20 @@ const PASSWORD = process.env.E2E_PASSWORD || 'E2E-Test-Passw0rd!'
 const OWNER_EMAIL = process.env.E2E_OWNER_EMAIL || 'e2e.owner@example.test'
 
 /**
- * 六屏的定义。`h1` 是**值级**期望（取自各屏源码），`expectVisible` 是
+ * **七屏**的定义。`h1` 是**值级**期望（取自各屏源码），`expectVisible` 是
  * 夹具里已知会渲染出来的字符串（只在有夹具数据的屏上用）。
- * 第 7 屏 Agents 不在列表里 —— 它尚未实现，由 (f) 单独断言"不可点"。
+ *
+ * 🔴 T09 接线后第 7 屏 Agents 已实现 ⇒ 它从"由 (f) 断言不可点"变成**本列表的一员**。
+ *    这不是把断言放松，而是把判据从"未实现的屏要诚实"换成"七屏都要真的打开"。
+ *    Agents 屏不设 `expectVisible`：夹具里没有 Agent 运行（运行由 ② 现场造一条，
+ *    用来证明动作按钮有真实数据来源，而不是硬编码的假按钮）。
  */
 const ZONES = [
   { path: '/console', h1: '社群总览' },
   { path: '/console/missions', h1: '连接任务', expectVisible: '寻找东南亚渠道伙伴' },
   { path: '/console/members', h1: '成员' },
   { path: '/console/connections', h1: '连接' },
+  { path: '/console/agents', h1: '智能体' },
   { path: '/console/outcomes', h1: '成果' },
   { path: '/console/settings', h1: '设置', expectVisible: 'E2E 跨境社群' },
 ]
@@ -345,7 +350,7 @@ const main = async () => {
   })
 
   // ═══════════════════════════════════════════════════════════
-  section('── ① 真实 Chrome：六屏可达 + 无空按钮')
+  section('── ① 真实 Chrome：七屏可达 + 无空按钮')
   // ═══════════════════════════════════════════════════════════
   const browser = await chromium.launch({ channel: 'chrome' })
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } })
@@ -583,24 +588,23 @@ const main = async () => {
       )
     }
 
-    // (f) 未就绪项：不可点、不是死链
+    // (f) 七屏全部就绪：OWNER 视角下导航里**不应再有** aria-disabled 项。
+    //     （此前第 7 屏 Agents 未实现，是全站唯一一项；T09 接线后它已成为链接。）
+    //     ⚠️ 断言方向是刻意反转的：旧断言"必须存在一个不可点项"在接线后会**恒假**，
+    //        若继续留着，它就从"判据"退化成了"阻碍接线"。而"未就绪项必须有原因"
+    //        这条（R4）由 check:ui-invariants 在**静态**层覆盖，不因本处反转而失守。
     const disabledNav = await page.evaluate(PAGE_HELPERS.disabledNav)
     ck(
-      `${tag} 未就绪的「智能体」是不可点元素（不是死链）`,
-      disabledNav.length >= 1 && disabledNav.every((d) => !d.isLink),
-      disabledNav.map((d) => `${d.tag}「${d.text}」`).join(' ') || '(未找到 aria-disabled 项)',
-    )
-    ck(
-      `${tag} 未就绪项写明了状态原因`,
-      disabledNav.some((d) => /施工中|无权限/.test(d.text) || d.title.length > 0),
-      disabledNav.map((d) => d.title).join(' / '),
+      `${tag} 导航里没有"施工中/无权限"项（七屏全部就绪）`,
+      disabledNav.length === 0,
+      disabledNav.map((d) => `「${d.text}」title=${d.title}`).join(' ') || '(0 项)',
     )
 
     // (g) 导航链接可达（只需验一次 —— shell 是共享的）
     if (!navLinksChecked) {
       navLinksChecked = true
       const links = Array.from(new Set(await page.evaluate(PAGE_HELPERS.consoleLinks)))
-      ck(`${tag} 导航里至少有 6 条 /console/* 链接`, links.length >= 6, `共 ${links.length} 条`)
+      ck(`${tag} 导航里至少有 7 条 /console/* 链接`, links.length >= 7, `共 ${links.length} 条`)
       for (const href of links) {
         const status = await head(owner, href)
         ck(`  导航链接 ${href} 可达（登录态）`, status >= 200 && status < 400, `status=${status}`)
@@ -611,22 +615,71 @@ const main = async () => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  section('── ② 第 7 屏 Agents：未实现 —— 直接访问必须**不是**一个能打开的屏')
+  section('── ② 第 7 屏 Agents：已实现 —— 可达、入口可点、动作按钮有真实来源')
   // ═══════════════════════════════════════════════════════════
+  //
+  // 这一段取代了 T08 时期的三条断言（"未实现的屏必须 404"）。断言被**替换**而不是删除：
+  // 判据从"未实现的屏要诚实"换成"已实现的屏要真的能打开、按钮要真的有事可做"。
   {
     const status = await head(owner, '/console/agents')
     ck(
-      '未实现的 /console/agents 不是可打开的屏（404）—— 与导航里"不可点"一致',
-      status === 404,
+      '已实现的 /console/agents 可达（不是 404）',
+      status >= 200 && status < 400,
       `status=${status}`,
     )
-    const st = await openZone({ path: '/console/agents' }, { waitH1: false, waitApi: false })
+
+    const st = await openZone({ path: '/console/agents' })
     ck(
-      '直访 /console/agents 渲染 404 兜底页（而不是空白或 500）',
-      st.text.includes(NOT_FOUND_TEXT),
+      '直访 /console/agents 打开的是 Agent 屏（不是 404 兜底页）',
+      !st.text.includes(NOT_FOUND_TEXT),
       `h1=「${st.h1}」`,
     )
-    await shot('zone-agents-404')
+    ck('Agent 屏 h1 = 「智能体」', st.h1 === '智能体', `实际=「${st.h1}」`)
+    await shot('zone-agents')
+
+    const agentsNavIsLink = await page.evaluate(
+      () => !!document.querySelector('nav[aria-label="社群控制台导航"] a[href="/console/agents"]'),
+    )
+    ck('导航里的「智能体」是可点链接（不再是"施工中"的 span）', agentsNavIsLink)
+
+    // ── 造一条**真实**运行，证明动作按钮有数据来源（而不是硬编码的假按钮）──
+    //    该运行为低风险技能（requiresApproval=false）⇒ 状态 PROPOSED/DEGRADED
+    //    ⇒ 服务端下发 execution.available=true ⇒ 屏上应出现「执行」按钮。
+    let runId = null
+    try {
+      const res = await ctx.request.post(`${BASE}/api/v1/agents/runs`, {
+        headers: { 'Idempotency-Key': `ac18-agents-${Date.now()}` },
+        data: {
+          skill: 'COORDINATION_ADVICE',
+          input: { goal: 'AC-18 取证：为两位成员对接合作事宜', allowedCandidateIds: [] },
+        },
+      })
+      const body = await res.json().catch(() => null)
+      runId = body?.data?.run?.id ?? null
+      ck(
+        `能造出一条 Agent 运行（POST /api/v1/agents/runs → ${res.status()}）`,
+        res.status() === 201 && !!runId,
+        runId ? `id=${runId}` : `body=${JSON.stringify(body).slice(0, 200)}`,
+      )
+    } catch (e) {
+      ck('能造出一条 Agent 运行', false, e instanceof Error ? e.message : String(e))
+    }
+
+    if (runId) {
+      const st2 = await openZone({ path: '/console/agents' })
+      ck(
+        '刚造出的运行被真正渲染出来（服务端数据 → 屏）',
+        st2.text.includes('AC-18 取证'),
+        `h1=「${st2.h1}」`,
+      )
+      const btns2 = await page.evaluate(PAGE_HELPERS.buttons)
+      ck(
+        '该运行渲染出「执行」按钮（execution.available 由服务端下发，不是前端自算）',
+        btns2.some((b) => b.visible && (b.text || '').includes('执行')),
+        btns2.filter((b) => b.visible).map((b) => `「${b.text}」`).join(' '),
+      )
+      await shot('zone-agents-with-run')
+    }
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -642,7 +695,7 @@ const main = async () => {
 
   console.log(
     `\n════════ AC-18 结果：${pass} 通过 / ${fail} 失败 ════════\n` +
-      `（六屏可达 + 无空按钮；第 7 屏 Agents 未实现 —— 导航不可点、直访 404）\n`,
+      `（七屏全部可达 + 无空按钮；第 7 屏 Agents 已实现并经"造一条运行 → 渲染 → 动作按钮"取证）\n`,
   )
   process.exitCode = fail === 0 ? 0 : 1
 }
