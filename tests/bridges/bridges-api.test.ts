@@ -297,7 +297,7 @@ describe('T10 · 发起协议 POST /api/v1/bridges', () => {
     expect(created.initiatorOrgId).toBe(ORG_A)
   })
 
-  it('同键同体重放 → 200 + replayed:true，且**不再创建**（幂等键必须真的省下一次写入）', async () => {
+  it('同键同体重放 → 200 + replayed:true，且**不再创建**（幂等优先于"已存在"的 409）', async () => {
     asRole('ADMIN')
     const first = await listCreate.POST(
       req('POST', '/api/v1/bridges', { key: 'k1', body: valid }),
@@ -306,7 +306,17 @@ describe('T10 · 发起协议 POST /api/v1/bridges', () => {
     const requestHash = idemCreate.mock.calls[0][0].data.requestHash
     expect(typeof requestHash).toBe('string')
 
-    // 第二次：幂等记录命中（同 hash）
+    // 🔴 第二次之前，必须把库改到「首次**确实成功了**」之后的样子：一对组织之间已经有那份协议。
+    //    这一步就是本用例的**牙齿** —— `bridgeFindFirst` 对**任何** where 都返回那一行，
+    //    于是 `createBridge` 的"是否已存在"预检查会**真的命中**。
+    //    若有人把该预检查挪回函数开头（即放到幂等查找**之前**），重试会在到达幂等分支前
+    //    就被 409 拦下 ⇒ 本断言立刻变红。
+    //
+    // ⚠️ v1 的写法（不设 `bridgeFindFirst`，让它保持 beforeEach 的"无 id 调用返回 null"）
+    //    是**假绿**：mock 让预检查永不命中，于是它测的是一个**在生产上不可达**的分支 ——
+    //    真实的第二次请求必然"已存在"，永远走不到那里。这正是
+    //    `scripts/qa/verify-ac19-bridge-e2e.mjs` 在真实链路上抓到的缺陷（见 `T10/slice-4.md` §5）。
+    bridgeFindFirst.mockResolvedValue({ ...BRIDGE_ROW, status: 'PENDING', recipientApprovedAt: null })
     idemFindUnique.mockResolvedValue({ requestHash, resourceId: BRIDGE_ID })
     bridgeCreate.mockClear()
 

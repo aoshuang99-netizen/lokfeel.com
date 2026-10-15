@@ -23,6 +23,15 @@
  *   - 🔴 修一处**静默失效**：`GET /api/v1/org` 是 `{success, data}` 信封，首版按裸对象
  *     读 `data.capabilities` → 能力集**恒为空** → 所有租户动作永久禁用。
  *     "看着安全"所以没被发现；现在按信封读。
+ *
+ * T10 收口新增（Community Bridge）：
+ *   - **Consent 区加子面板**（`同意与披露` / `跨社群`），**不新增第八屏** ——
+ *     取值见 T10 plan.md §8.3；AC-18 的七屏口径因此保持不变（`NAV` 一个字没动）。
+ *   - 跨社群是**独立的一层授权**（两个群主各管一个租户，互不隶属），
+ *     **不是** `CONSENT_AUDIENCES` 里多一个受众档位 —— 那会等于给同租户四个受众
+ *     多开一个口子，而跨群恰恰不是同一信任域。详见 `src/lib/bridge/types.ts` 文件头。
+ *   - 三个投影端点：`GET /api/v1/bridges`、`GET /api/v1/bridges/{bridgeId}`、
+ *     `GET /api/v1/bridges/{bridgeId}/discovery`；写操作 approve / revoke / opt-in / opt-out。
  */
 
 import { useCallback, useMemo, useState } from 'react'
@@ -41,6 +50,10 @@ import OutcomeObservatory, {
   ObservatoryInspector,
   useOutcomeObservatoryData,
 } from '@/components/living/observatory/outcome-observatory'
+import BridgePanel, {
+  BridgeInspector,
+  useBridgePanelData,
+} from '@/components/living/bridge/bridge-panel'
 import { useApiGet } from '@/hooks/use-api'
 import type { FieldGraphNode } from '@/lib/living/field'
 import {
@@ -210,6 +223,52 @@ function StatCard({
   )
 }
 
+/**
+ * Consent 区的子面板切换。
+ *
+ * 🔴 两个 tab 都是 `ready:true` 的**本区**视图，不是"未接通的能力" ——
+ *    因此它们**不**进 `NAV`（`NAV` 是跨区导航，进它就会变成第八屏，
+ *    那是 T10 plan.md §8.3 明确不取的方案）。
+ */
+function ConsentSubTabs({
+  value,
+  onChange,
+}: {
+  value: 'gate' | 'bridge'
+  onChange: (next: 'gate' | 'bridge') => void
+}) {
+  const tabs = [
+    { key: 'gate' as const, label: '同意与披露', hint: '同群：我授权了哪些字段、谁看得到' },
+    { key: 'bridge' as const, label: '跨社群', hint: '跨群：两个群主各自划范围、成员逐个加入' },
+  ]
+  return (
+    <div role="tablist" aria-label="Consent 区子面板" className="flex flex-wrap gap-2">
+      {tabs.map((t) => {
+        const active = t.key === value
+        return (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            data-testid={`consent-tab-${t.key}`}
+            title={t.hint}
+            onClick={() => onChange(t.key)}
+            className={[
+              'lf-focus-ring rounded-lf border px-2.5 py-1 text-xs',
+              active
+                ? 'border-lf-signal bg-lf-signal-soft text-lf-signal'
+                : 'border-lf-line text-lf-text-muted hover:text-lf-text',
+            ].join(' ')}
+          >
+            {t.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function LivingWorkspace() {
   const { data: session } = useSession()
   const [activeKey, setActiveKey] = useState('now')
@@ -228,6 +287,13 @@ export default function LivingWorkspace() {
   const [selectedOutcomeId, setSelectedOutcomeId] = useState<string | null>(null)
   /** P2 · Agents：当前选中的运行（详情面板的输入）。 */
   const [selectedAgentRunId, setSelectedAgentRunId] = useState<string | null>(null)
+  /**
+   * T10 · Consent 区的**子面板**切换：`同意与披露`（T05/T03，同群）/ `跨社群`（T10）。
+   * 取子面板而非第八屏的理由见文件头。
+   */
+  const [consentTab, setConsentTab] = useState<'gate' | 'bridge'>('gate')
+  /** T10 · Bridge：当前选中的协议（未选时面板内部取列表第一条）。 */
+  const [bridgeSelection, setBridgeSelection] = useState<string | null>(null)
 
   const notifications = useApiGet<NotificationsRes>('/api/notifications')
   const chats = useApiGet<ChatCountRes>('/api/chats/unread-count')
@@ -251,6 +317,8 @@ export default function LivingWorkspace() {
   const consentData = useConsentGateData(consentIntentId, activeKey === 'consent')
   const observatoryData = useOutcomeObservatoryData(activeKey === 'outcomes')
   const agentData = useAgentBoardData(activeKey === 'agents')
+  // T10：只有**切到跨社群子面板**才发这三个租户域请求（不在这一区就没必要打，非成员还会吃 403）。
+  const bridgeData = useBridgePanelData(bridgeSelection, activeKey === 'consent' && consentTab === 'bridge')
 
   const unreadNotifications = notifications.data?.unreadCount ?? null
   const unreadChats = chats.data?.unreadCount ?? null
@@ -559,7 +627,11 @@ export default function LivingWorkspace() {
   const inspector = (() => {
     if (activeKey === 'field') return <FieldInspector node={fieldSelection} />
     if (activeKey === 'consent')
-      return <ConsentInspector data={consentData} selectedFieldKey={consentFieldKey} />
+      return consentTab === 'bridge' ? (
+        <BridgeInspector data={bridgeData} />
+      ) : (
+        <ConsentInspector data={consentData} selectedFieldKey={consentFieldKey} />
+      )
     if (activeKey === 'outcomes')
       return <ObservatoryInspector data={observatoryData} selectedOutcomeId={selectedOutcomeId} />
     if (activeKey === 'agents')
@@ -731,12 +803,19 @@ export default function LivingWorkspace() {
       )}
 
       {activeKey === 'consent' && (
-        <ConsentGate
-          data={consentData}
-          onSelectIntent={setConsentIntentId}
-          selectedFieldKey={consentFieldKey}
-          onSelectField={setConsentFieldKey}
-        />
+        <div className="space-y-4">
+          <ConsentSubTabs value={consentTab} onChange={setConsentTab} />
+          {consentTab === 'bridge' ? (
+            <BridgePanel data={bridgeData} onSelectBridge={setBridgeSelection} />
+          ) : (
+            <ConsentGate
+              data={consentData}
+              onSelectIntent={setConsentIntentId}
+              selectedFieldKey={consentFieldKey}
+              onSelectField={setConsentFieldKey}
+            />
+          )}
+        </div>
       )}
 
       {activeKey === 'outcomes' && (

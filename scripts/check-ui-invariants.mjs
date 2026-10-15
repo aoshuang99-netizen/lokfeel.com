@@ -76,7 +76,8 @@ const CLIENT_REACHABLE_SCOPES = ['src/components/living/', 'src/lib/living/', 's
 /**
  * R10 黑名单：**服务端模块前缀**。值导入它们 = 把 Prisma/守卫/网络拖进客户端。
  * 用 `=== prefix || startsWith(prefix + '/')` 精确匹配，避免
- * `@/lib/agent`（纯内核，允许）被 `@/lib/agents`（服务层，禁止）的规则误伤。
+ * `@/lib/agent`（纯内核，允许）被 `@/lib/agents`（服务层，禁止）的规则误伤 ——
+ * 同理 `@/lib/bridge`（T10 内核）与 `@/lib/bridges`（T10 服务层）也靠这一点分开。
  */
 const SERVER_MODULE_PREFIXES = [
   '@/lib/connection',
@@ -85,6 +86,11 @@ const SERVER_MODULE_PREFIXES = [
   '@/lib/workflow',
   '@/lib/db',
   '@/lib/tenancy',
+  // T10 Slice 4：跨社群协议的服务层，与 `@/lib/agents` 同一形状（查库 + 能力守卫）。
+  // 🔴 只禁**复数**（服务层）。单数 `@/lib/bridge` 是 T10 的**纯内核**（无 IO、无网络，
+  //    由 `check:bridge-invariants` 的 B2 把守），与 `@/lib/agent` 同一性质 ⇒ 允许值导入
+  //    （展示层要用它的状态/拒绝码文案，那些是纯值）。精确匹配让二者不会互相误伤。
+  '@/lib/bridges',
 ]
 
 /** R10 白名单：允许**值导入**的服务端子模块（唯一：零 import 的字段目录）。 */

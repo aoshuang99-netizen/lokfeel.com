@@ -196,14 +196,28 @@ const CONTROL = `export const ok = { note: '合法文件：不违反任何一条
 const PREFIX = '__mutant-bridge-'
 
 const created = []
-function cleanup() {
-  for (const p of created) {
-    try {
-      if (fs.existsSync(p)) fs.unlinkSync(p)
-    } catch (err) {
-      console.error(`⚠️  临时文件删除失败（请手动删除）：${p} — ${err.message}`)
-    }
+
+/**
+ * 删除一个临时文件。**删除失败不是致命错误**：本机可能启用了删除守卫
+ * （`CODEBUDDY_SAFE_DELETE_BULK_THRESHOLD`），此时 unlinkSync 会抛错。
+ * 把裸 unlinkSync 写进自证正文会让脚本**以 shim 崩溃栈退出** —— 那会把
+ * 「环境限制」伪装成「脚本 bug」，掩盖真正要看的信号。这里退化为
+ * 「警告 + 保留在 created 里」，交给收尾复验兜底报红。
+ */
+function removeNow(p) {
+  try {
+    if (fs.existsSync(p)) fs.unlinkSync(p)
+  } catch (err) {
+    console.error(`⚠️  临时文件删除失败（请手动删除）：${p} — ${err.message}`)
+    return false
   }
+  const i = created.indexOf(p)
+  if (i >= 0) created.splice(i, 1)
+  return true
+}
+
+function cleanup() {
+  for (const p of [...created]) removeNow(p)
 }
 
 function runScript() {
@@ -235,8 +249,7 @@ function selfTest() {
     } else {
       console.log('✅ 负向对照：合法文件未误报且确实被扫描到')
     }
-    fs.unlinkSync(controlPath)
-    created.splice(created.indexOf(controlPath), 1)
+    removeNow(controlPath)
 
     for (const m of MUTANTS) {
       const p = path.join(SCOPE_DIR, `${PREFIX}${m.rule.toLowerCase()}.tsx`)
@@ -250,8 +263,7 @@ function selfTest() {
       if (res.status !== 1) failures.push(`[${m.rule}] 注入违反后 exit=${res.status}（应为 1）`)
       if (!fired) failures.push(`[${m.rule}] 输出未命中 [${m.rule}]`)
       if (scanned && fired && res.status === 1) console.log(`✅ ${m.rule} 变异被捕获（exit=1，命中 [${m.rule}]）`)
-      fs.unlinkSync(p)
-      created.splice(created.indexOf(p), 1)
+      removeNow(p)
     }
   } finally {
     cleanup()

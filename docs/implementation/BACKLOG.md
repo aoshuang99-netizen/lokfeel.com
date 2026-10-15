@@ -29,7 +29,7 @@
 | 7 | 实现 Outcome 与单位成本统计 | **T08** | 08 Outcome Intel | ⬜ |
 | 8 | 完成 Community SaaS Console | **T07** | 全模块的门面 | ⬜ |
 | 9 | 接入 LangGraph 与模型调用网关 | **T09** | 05 Agent Workforce | ⬜ |
-| 10 | 实现 Community Bridge 与跨群权限 | **T10** | 04 Community Bridge | 🟡 内核 + 服务层 + 8 端点已交付；Slice 4（前端 + AC-19 E2E）待做 |
+| 10 | 实现 Community Bridge 与跨群权限 | **T10** | 04 Community Bridge | ✅ 完成（Slice 1–4 全交付，AC-19 E2E **69/69**；**未发版**） |
 | 11 | 接入 A2A / MCP 和开发者 SDK | **T11** | 10 Integrations | ⬜ |
 | 12 | 完成 E2E、安全、负载与回归测试 | **T12** | — | ⬜ |
 
@@ -274,13 +274,17 @@
   - **已完成**：Slice 1 纯内核（三方交集 + 状态机真相表，34 例）、Slice 2 C9 落库 + 服务层 + 能力 + 审计
     （`CommunityBridge` / `BridgeMemberOptIn`；`bridge.read`/`bridge.optin` 归 SELF_SERVICE、
     `bridge.manage` 归 ADMIN+）、Slice 3 八个 HTTP 端点（含超出计划的 `GET /{bridgeId}`，
-    理由见 `T10/slice-3.md` §1）。
-  - **证据**：`npx jest tests/bridge tests/bridges tests/tenancy` → **211 通过 / 0 失败**；
-    全量 `npx jest` → **92 套 / 1893 例通过**；`npx tsc --noEmit` exit 0；
-    `check:bridge-invariants` 基线 exit 0 且 `--self-test` **B1–B5 五条全被捕获**。
-  - **剩余（Slice 4）**：Bridge 面板并入 Consent 区子面板 + `scripts/qa/verify-ac19-bridge-e2e.mjs`
-    三组取证（**正向**：双群主批准 + 双方 opt-in ⇒ 交集字段可见；**反向**：未 opt-in / `PENDING` /
-    收窄后 / revoke 后 四者皆不可见；**越权**：以 A 群成员身份读 B 群私有行 ⇒ 失败）。
+    理由见 `T10/slice-3.md` §1）、**Slice 4 Bridge 面板（Consent 区子面板，NAV 仍 7 项）+ AC-19 E2E 取证**
+    （详见 `T10/slice-4.md`）。
+  - **证据**：`npm run verify:ac19:bridge` → **69 通过 / 0 失败**（真实 Chrome + 三租户隔离库 + 5 个真实登录身份，
+    覆盖正向 / 反向五态 / 越权六条）；`npx jest tests/bridges tests/bridge tests/living/bridge` → **5 套件 / 160 例通过**；
+    `npx tsc --noEmit` exit 0；`check:bridge-invariants` 基线 exit 0 且 `--self-test` **B1–B5 五条全被捕获**；
+    `check:ui-invariants` 47 文件通过、`verify:ui-invariants` **11 条变异全被捕获**（含本轮新增 `r10-prefix-bridges`）；
+    `check:script-decls` 75 脚本 / 0 未声明引用。
+  - 🔴 **E2E 抓出并修掉一个真实功能缺陷**：`POST /api/v1/bridges` 的**幂等重放不可达**
+    （「重复配对」IO 检查早于幂等查找 ⇒ 重试必撞 409，而第一份协议**已建好**）——
+    已把该检查移入 `withIdempotency` 的 create 回调内，并连带加固了那条**假绿**单测。
+    另修一处门禁脚本自证清理对删除守卫不健壮的缺陷（崩栈掩盖信号）。详见 `T10/slice-4.md` §5。
   - 🔴 **C9 迁移批次尚未 apply 到生产**（C0–C8 已 apply）。按用户决策「等 B 做完统一发版」，
     发版前需再跑一次 `npm run connection:migrate` 的 `apply`。
   - ⚠️ **交接 T11**：本切片新增的 8 个端点**未**写入 `contracts/connection.openapi.yaml`

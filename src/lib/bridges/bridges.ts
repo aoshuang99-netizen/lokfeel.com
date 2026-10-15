@@ -484,6 +484,11 @@ function parseExpiresAt(raw: unknown): Date | null {
  *   ② 不能邀请自己（自建协议在语义上是配置错误，且会让 ①环 的"双边"退化成单边）；
  *   ③ 字段键必须全部来自目录（`requireFieldKeys`）；
  *   ④ 一对组织之间**同时只能有一份**协议 —— 已存在则 409（库级 `@@unique` 兜底并发）。
+ *      ⚠️ 这一道刻意落在**幂等 create 回调内部**，而不是函数开头。放在开头会让
+ *      "同一个 Idempotency-Key 重试"在到达幂等查找之前就被 409 拦下 ——
+ *      而重试拿到 409 正是幂等键要防的事（客户端无法区分"上次其实成功了"与"别人先建了"），
+ *      同时使 `replayed: true` 那条分支成为**不可达**代码。放在回调内后：
+ *      重放走幂等命中分支（200 + `replayed:true`），真冲突仍 409。
  */
 export async function createBridge(
   ctx: TenantContext,
@@ -514,19 +519,6 @@ export async function createBridge(
   if (!recipient) {
     throw new ValidationError('recipientOrgId does not reference an active organization', {
       field: 'recipientOrgId',
-    })
-  }
-
-  // ④ 先查一次是"检查"，真正的并发安全由 `@@unique([initiatorOrgId, recipientOrgId])` 兜底
-  //    （查到没冲突、写入时被抢先 → P2002 → 翻成 409）。与 `updateOrganization` 同一手法。
-  const existing = await db.communityBridge.findFirst({
-    where: { initiatorOrgId: ctx.organizationId, recipientOrgId },
-    select: { id: true },
-  })
-  if (existing) {
-    throw new ConflictError('A bridge between these two organizations already exists', {
-      field: 'recipientOrgId',
-      bridgeId: existing.id,
     })
   }
 
@@ -567,6 +559,28 @@ export async function createBridge(
       return row ? toDtoOf(row) : null
     },
     create: async () => {
+      // ④ 一对组织之间**同时只能有一份**协议。
+      //
+      // 🔴 这道检查**必须**待在幂等 create 回调**内部**，不能提到函数开头。
+      //    放在函数开头（历史上就是那样）会让"同一把 Idempotency-Key 重试"在走到幂等查找
+      //    **之前**就被 409 拦下 —— 而重试拿到 409 恰恰是幂等键要防的那件事：
+      //    此时第一份协议**已经建好了**，客户端却无法区分"我上次其实成功了"与"别人先建了"，
+      //    只能人工介入。而 withIdempotency 的 200 + replayed 分支因此成了**死代码**，
+      //    文档承诺的形状在真实链路上永远拿不到（E2E 发现，见 T10/slice-4.md §5）。
+      //    移到回调内之后：重放命中幂等记录 ⇒ 200 + replayed:true；
+      //    "另一把键建同一对组织"仍然落在这里 ⇒ 409，行为不变。
+      //    并发安全始终由库级 `@@unique([initiatorOrgId, recipientOrgId])` 兜底（下面 catch P2002）。
+      const existing = await db.communityBridge.findFirst({
+        where: { initiatorOrgId: ctx.organizationId, recipientOrgId },
+        select: { id: true },
+      })
+      if (existing) {
+        throw new ConflictError('A bridge between these two organizations already exists', {
+          field: 'recipientOrgId',
+          bridgeId: existing.id,
+        })
+      }
+
       let row: BridgeRow
       try {
         row = (await db.communityBridge.create({

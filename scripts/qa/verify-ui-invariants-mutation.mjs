@@ -110,6 +110,15 @@ const MUTANTS = [
     // （`import type` 的合法写法在负向对照里，用来证明"只禁值导入"而不是"禁一切导入"。）
     body: `import { decodeDisclosure } from '@/lib/connection'\nexport const F = decodeDisclosure\n`,
   },
+  {
+    // 🔴 **前缀覆盖**（T10 Slice 4）：上一条只证明"R10 规则生效"，**不能**证明
+    //    `SERVER_MODULE_PREFIXES` 里**新加的那一行**生效 —— 删掉新前缀本文件仍会全绿。
+    //    这是本脚本文件头说的"哨兵只守自己"的第二种形态（第一种是 SCOPES 配错，
+    //    已由 SCOPE_ROOTS 那组覆盖）。所以每加一个服务层前缀，就要配一条变异。
+    rule: 'R10',
+    name: 'r10-prefix-bridges',
+    body: `import { listBridges } from '@/lib/bridges'\nexport const L = listBridges\n`,
+  },
 ]
 
 /**
@@ -187,7 +196,9 @@ try {
 
   // ── 逐条变异 ──
   for (const m of MUTANTS) {
-    const name = `${MUTANT_PREFIX}${m.rule.toLowerCase()}.tsx`
+    // `m.name` 用于**同一规则**需要多条变异的情形（如 R10 的"规则生效"与"前缀覆盖"）。
+    // 不区分文件名时第二条会覆盖第一条，报出的失败也无法定位是哪一条。
+    const name = `${MUTANT_PREFIX}${m.name ?? m.rule.toLowerCase()}.tsx`
     const p = writeTmp(name, m.body)
     created.push(p)
 
@@ -261,6 +272,6 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `\n✅ 变异自证通过：${MUTANTS.length} 条规则（${MUTANTS.map((m) => m.rule).join(' / ')}）全部被证明生效；` +
+  `\n✅ 变异自证通过：${MUTANTS.length} 条变异（${MUTANTS.map((m) => m.name ?? m.rule).join(' / ')}）全部被证明生效；` +
     `${SCOPE_ROOTS.length} 个 scope 目录全部被证明在扫描面内；合法文件未误报；临时文件已清理。`,
 )
