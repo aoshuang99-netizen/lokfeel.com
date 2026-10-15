@@ -57,6 +57,7 @@ export type TenantCapability =
   // ── Agent（T09 / AC-08 / AC-20）──
   | 'agent.run' // 发起一次 Agent 运行（**消耗组织额度**，且 prompt 可能含他人资料 → 取严）
   | 'agent.approve' // 批准高风险产出（= 授权一次**对外可见**的副作用）
+  | 'agent.execute' // 执行一条已放行的运行（= **真正产生副作用**的那一步）
   // ── 审计 ──
   | 'audit.read'
 
@@ -69,7 +70,7 @@ export const TENANT_CAPABILITIES: readonly TenantCapability[] = [
   'outcome.read', 'outcome.report', 'outcome.verify',
   'billing.read', 'billing.manage',
   'workflow.read', 'workflow.manage',
-  'agent.run', 'agent.approve',
+  'agent.run', 'agent.approve', 'agent.execute',
   'audit.read',
 ] as const
 
@@ -101,6 +102,13 @@ const OPERATOR_EXTRA: TenantCapability[] = [
   // 对手方资料（经 `discloseSubject()` 投影后）。这两条都超出"只操作自己的资源"，
   // 故与 `billing.read` 同一取向：**不**放进 SELF_SERVICE，归 OPERATOR+。
   'agent.run',
+  // T09 / Slice 4：**执行**是"把已放行的产出落地"的机械动作 ——
+  // 🔴 它**不**与批准同权（批准是 ADMIN+）。理由：门槛在**批准**那一环，
+  //    若执行也要求 ADMIN，"运营发起 → 管理员批准 → 运营执行"这条正常路径就走不通；
+  //    而"同一个人既能触发又能批准"才是 AC-08 在制度层被绕过的形状 —— 那条已经被
+  //    `agent.approve` 的 ADMIN 门槛切断了（能跑不能批）。
+  //    另外服务层会**再判一次**该能力（纵深防御，见 `agents/executor.ts`）。
+  'agent.execute',
 ]
 
 // ── 管理能力：ADMIN 及以上 ──────────────────────────────────────────

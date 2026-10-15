@@ -77,14 +77,28 @@ describe('T06 · renderNotification（模板与身份声明）', () => {
     expect(r.body).toContain('不会向对方披露')
   })
 
-  it('isNotificationTemplate 只认登记在册的模板（共 5 个）', () => {
-    expect(NOTIFICATION_TEMPLATES).toHaveLength(5)
+  it('isNotificationTemplate 只认登记在册的模板（共 6 个）', () => {
+    expect(NOTIFICATION_TEMPLATES).toHaveLength(6)
     expect(isNotificationTemplate('proposal.pending')).toBe(true)
     expect(isNotificationTemplate('connection.followup')).toBe(true)
     // R9 新增：运营告警模板也必须被登记，否则 alerts.ts 的投递会被当成非法模板
     expect(isNotificationTemplate('operator.attention')).toBe(true)
+    // T09 Slice 4 新增：Agent 执行的内部回执（收件人 = 发起人）
+    expect(isNotificationTemplate('agent.delivery')).toBe(true)
     expect(isNotificationTemplate('proposal.rejected')).toBe(false)
     expect(isNotificationTemplate(42)).toBe(false)
+  })
+
+  it('★ agent.delivery：只说"已交付"，**不**引用任务标题（通知不是披露渠道）', () => {
+    const r = renderNotification({
+      template: 'agent.delivery',
+      organizationName: '静山读书会',
+      missionTitle: '不该出现在通知里的任务标题',
+    })
+    expect(r.body.length).toBeGreaterThan(0)
+    // 身份声明是强制的（AC-09：不得静默冒充真人）
+    expect(r.body).toContain(SENDER_ATTRIBUTION_SUFFIX)
+    expect(r.body).not.toContain('不该出现在通知里的任务标题')
   })
 
   it('★ 运营告警**不**引用任务标题（告警只说"有事"，不说是谁的什么事）', () => {

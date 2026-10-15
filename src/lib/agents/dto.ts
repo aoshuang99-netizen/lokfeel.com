@@ -8,8 +8,10 @@
  *     "未经校验的模型文本"重新变成可渲染内容，AC-08 的 A3 保证当场失效。
  *   - `dedupeKey` / `requestHash` **不进 DTO**：前者是内部幂等键（外发等于鼓励调用方
  *     复用别人的键），后者是请求体指纹（可能反推出请求内容）。
- *   - `execution` 恒为 `available:false` —— 本切片**没有**注册执行器。写死在 DTO 里
- *     而不是留给前端判断，是为了让"能不能执行"只有一个答案，且这个答案是可核对的。
+ *   - `execution`（**能不能执行 / 会发生什么**）由内核的 `planExecution()` 算出，**不在这里**
+ *     写死、也不在这里判断 —— 答案只有一个来源（`src/lib/agent/execution.ts` 的真相表），
+ *     于是新增执行器时改的是内核，而不是散落各处的 `if`。
+ *   - `executionRecord`（**执行实际做了什么**）是只增不改的事件投影；`null` = 还没执行过。
  *
  * ⚠️ Prisma 的 enum 用大写下划线风格（`AgentRiskLevel.HIGH`），而内核的 TS 联合用
  * 小写（`ProviderKind = 'openai' | 'stub' | 'rules'`）。两者**必须**有唯一映射，
@@ -18,9 +20,13 @@
 
 import {
   PROVIDER_KINDS,
-  canExecute,
+  isSkillKey,
+  planExecution,
   type AgentRunStatus,
   type DegradeReason,
+  type ExecutionChannel,
+  type ExecutionKind,
+  type ExecutionRefusalCode,
   type InjectionSignal,
   type ProviderKind,
   type RiskLevel,
@@ -89,6 +95,18 @@ export interface AgentApprovalRow {
   decidedAt: Date
 }
 
+/** 执行记录行（与 prisma/schema/agent.prisma 的 AgentExecution 对齐）。 */
+export interface AgentExecutionRow {
+  id: string
+  kind: string
+  channel: string
+  recipientId: string
+  deliveryId: string | null
+  deliveryStatus: string
+  actorId: string | null
+  executedAt: Date
+}
+
 export interface AgentRunRow {
   id: string
   skill: string
@@ -110,6 +128,14 @@ export interface AgentRunRow {
   updatedAt: Date
   calls?: readonly AgentCallRow[]
   approval?: AgentApprovalRow | null
+  /**
+   * 执行记录（Slice 4 起）。
+   *
+   * ⚠️ 命名注意：**行**上的 `execution` 是 Prisma 关系（"执行发生了吗/怎么发生的"），
+   * 而 **DTO** 上的 `execution` 是**可用性**（"现在能不能执行"）。两者是不同的问题，
+   * DTO 里分别叫 `execution`（可用性）与 `executionRecord`（证据）。
+   */
+  execution?: AgentExecutionRow | null
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -139,11 +165,42 @@ export interface AgentApprovalDto {
   decidedAt: string
 }
 
-/** 「能不能执行」——只有一个答案，且答案永远可核对。 */
+/**
+ * 「能不能执行」——只有一个答案，且答案永远可核对。
+ *
+ * 🔴 与 Slice 2 的区别：那时这里是**写死**的 `available:false`（"本切片没有执行器"）。
+ *    现在它由内核的 `planExecution()` **算出来** —— 于是答案只有一个来源，
+ *    且新增执行器时**不需要**改这里（改的是内核真相表）。
+ */
 export interface AgentExecutionAvailability {
   available: boolean
   /** `available:false` 时**必须**有原因（前端据此禁用按钮，而不是留一个点了必然失败的入口）。 */
   reason: string
+  /** 可判定的原因码（`available:true` 时为 null）—— 前端与测试据此分支，不解析文案。 */
+  code: ExecutionRefusalCode | null
+  /** 执行效果与渠道（`available:true` 时给出，供 UI 说明"点了会发生什么"）。 */
+  kind: ExecutionKind | null
+  channel: ExecutionChannel | null
+}
+
+/**
+ * 执行记录的 DTO（"这条运行真的产生了副作用"的对外形状）。
+ *
+ * ⚠️ 与 `AgentApprovalDto` 同一取向：**只增不改**的事件，因此没有"状态"字段可改。
+ *    `deliveryStatus` 是**投递当时**的结果快照（SENT/CAPTURED），不是可变更的状态机。
+ */
+export interface AgentExecutionDto {
+  id: string
+  kind: ExecutionKind
+  channel: ExecutionChannel
+  /** 收件人（当前恒为发起人 —— 服务端决定，见内核 `ExecutionPlan.recipient`）。 */
+  recipientId: string
+  /** T06 投递归宿的 `NotificationDelivery.id`（软引用）。 */
+  deliveryId: string | null
+  deliveryStatus: string
+  /** 执行人（与发起人分开记）。 */
+  actorId: string | null
+  executedAt: string
 }
 
 export interface AgentRunDto {
@@ -168,7 +225,10 @@ export interface AgentRunDto {
   costMicroCents: number
   calls: AgentCallDto[]
   approval: AgentApprovalDto | null
+  /** 「现在能不能执行」——由内核执行计划算出的唯一答案。 */
   execution: AgentExecutionAvailability
+  /** 「执行实际发生了什么」——`null` = 还没执行过。 */
+  executionRecord: AgentExecutionDto | null
   createdAt: string
   updatedAt: string
 }
@@ -225,24 +285,62 @@ function toApprovalDto(row: AgentApprovalRow | null | undefined): AgentApprovalD
 }
 
 /**
- * 执行可用性。
+ * 执行可用性 —— **完全由内核的执行计划决定**（`planExecution()`）。
  *
- * 🔴 **Slice 2 里永远不可用** —— 没有注册任何执行器。两条分支的措辞刻意不同：
- *   - 状态本身不允许（例如还在待批 / 已被驳回）→ 说明是哪一类**状态**问题；
- *   - 状态允许但**没有执行器** → 说明是**能力尚未接线**。
- * 把这两者混成一句"不可用"，会让"接线后就能用"与"这个状态永远不行"分不清。
+ * 🔴 这里**不写**任何"什么状态可以执行"的判断：那是 `approval.ts`（状态机）与
+ *    `execution.ts`（执行计划）的职责。DTO 只做投影 —— 多一份判断就多一个会分叉的事实来源。
+ *
+ * ⚠️ 三个入参的来源不同，**故意都从行上取**：
+ *   - `status` / `requiresApproval` 是**快照列**；
+ *   - `hasApprovedDecision` 来自**裁决关系**（只增不改的事件表）。
+ *     纵深防御：状态列可以被人工改坏，裁决表不会。
  */
-function executionOf(status: AgentRunStatus, requiresApproval: boolean): AgentExecutionAvailability {
-  if (!canExecute(status, requiresApproval)) {
-    const reason =
-      requiresApproval && status === 'AWAITING_APPROVAL'
-        ? '需要人工批准后才能执行（当前状态：AWAITING_APPROVAL）'
-        : `当前状态（${status}）不允许执行`
-    return { available: false, reason }
+function executionOf(row: AgentRunRow, status: AgentRunStatus): AgentExecutionAvailability {
+  // 技能键来自数据库（TEXT），可能存在"映射表之外的值"（手工改库 / TS↔Prisma 漂移）。
+  // 那种情况下**必须显式不可执行**，而不是套一个默认计划 —— 否则一个脏 skill 会拿到执行器。
+  const skill = isSkillKey(row.skill) ? row.skill : null
+  const decision = skill
+    ? planExecution({
+        skill,
+        status,
+        requiresApproval: row.requiresApproval,
+        hasApprovedDecision: row.approval?.decision === 'APPROVED',
+      })
+    : {
+        executable: false as const,
+        code: 'NOT_REGISTERED' as const,
+        reason: `未知技能 ${row.skill}（数据库值与内核 SKILL_KEYS 不一致）—— 没有注册执行器。`,
+      }
+
+  if (!decision.executable) {
+    return {
+      available: false,
+      reason: decision.reason,
+      code: decision.code,
+      kind: null,
+      channel: null,
+    }
   }
   return {
-    available: false,
-    reason: '本切片未注册执行器 —— 执行属后续任务（需先接 T05 披露出口 / T06 投递出口）',
+    available: true,
+    reason: decision.plan.description,
+    code: null,
+    kind: decision.plan.kind,
+    channel: decision.plan.channel,
+  }
+}
+
+export function toExecutionDto(row: AgentExecutionRow | null | undefined): AgentExecutionDto | null {
+  if (!row) return null
+  return {
+    id: row.id,
+    kind: row.kind as ExecutionKind,
+    channel: row.channel as ExecutionChannel,
+    recipientId: row.recipientId,
+    deliveryId: row.deliveryId,
+    deliveryStatus: row.deliveryStatus,
+    actorId: row.actorId,
+    executedAt: row.executedAt.toISOString(),
   }
 }
 
@@ -267,7 +365,8 @@ export function toAgentRunDto(row: AgentRunRow): AgentRunDto {
     costMicroCents: row.costMicroCents,
     calls: toCallDtos(row.calls ?? []),
     approval: toApprovalDto(row.approval),
-    execution: executionOf(status, row.requiresApproval),
+    execution: executionOf(row, status),
+    executionRecord: toExecutionDto(row.execution),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   }
@@ -302,6 +401,7 @@ export function toAgentRunSummaryDto(row: AgentRunRow, callCount: number): Agent
     costMicroCents: full.costMicroCents,
     approval: full.approval,
     execution: full.execution,
+    executionRecord: full.executionRecord,
     createdAt: full.createdAt,
     updatedAt: full.updatedAt,
     callCount,

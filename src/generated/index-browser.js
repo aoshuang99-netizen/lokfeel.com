@@ -168,6 +168,20 @@ exports.Prisma.AgentApprovalScalarFieldEnum = {
   decidedAt: 'decidedAt'
 };
 
+exports.Prisma.AgentExecutionScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  runId: 'runId',
+  kind: 'kind',
+  channel: 'channel',
+  recipientId: 'recipientId',
+  deliveryId: 'deliveryId',
+  deliveryStatus: 'deliveryStatus',
+  actorId: 'actorId',
+  executedAt: 'executedAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.BillingEventScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -1066,6 +1080,15 @@ exports.AgentApprovalDecision = exports.$Enums.AgentApprovalDecision = {
   REJECTED: 'REJECTED'
 };
 
+exports.AgentExecutionKind = exports.$Enums.AgentExecutionKind = {
+  RECEIPT: 'RECEIPT'
+};
+
+exports.NotificationChannel = exports.$Enums.NotificationChannel = {
+  IN_APP: 'IN_APP',
+  EMAIL: 'EMAIL'
+};
+
 exports.BillingEventType = exports.$Enums.BillingEventType = {
   SUBSCRIPTION_STARTED: 'SUBSCRIPTION_STARTED',
   PLAN_CHANGED: 'PLAN_CHANGED',
@@ -1177,11 +1200,6 @@ exports.WorkflowJobStatus = exports.$Enums.WorkflowJobStatus = {
   DEAD: 'DEAD',
   TAKEN_OVER: 'TAKEN_OVER',
   CANCELLED: 'CANCELLED'
-};
-
-exports.NotificationChannel = exports.$Enums.NotificationChannel = {
-  IN_APP: 'IN_APP',
-  EMAIL: 'EMAIL'
 };
 
 exports.NotificationDeliveryStatus = exports.$Enums.NotificationDeliveryStatus = {
@@ -1521,6 +1539,7 @@ exports.Prisma.ModelName = {
   AgentRun: 'AgentRun',
   AgentCall: 'AgentCall',
   AgentApproval: 'AgentApproval',
+  AgentExecution: 'AgentExecution',
   BillingEvent: 'BillingEvent',
   UsageRecord: 'UsageRecord',
   BotProfile: 'BotProfile',

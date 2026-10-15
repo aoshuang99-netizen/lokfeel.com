@@ -9,8 +9,9 @@
  *   4. **失败也记账** —— 契约拒绝的运行仍有 1 条 `ok:true` 的调用记录（钱确实花了）；
  *   5. **`rawText` 永不进 DTO** —— 库里在、DTO 里没有（双保险）；
  *   6. **审批只经真相表** —— `AWAITING_APPROVAL → APPROVED` 可，`PROPOSED → APPROVED` 不可；
- *      重复裁决 409；`EXECUTED` 无写入点；
- *   7. **`execution.available` 恒 false**（本切片无执行器）。
+ *      重复裁决 409；**裁决本身不写 `EXECUTED`**（执行是独立的一步 —— 见 slice-4）；
+ *   7. **`execution.available` 由内核执行计划算出** —— 不再是恒 false：低风险技能在
+ *      `PROPOSED` 就可执行（`available:true`），高风险技能必须先有真实的裁决行。
  *
  * 用**内存假库**驱动整条服务链路（见 `./_fake-db.ts`），断言库状态而非调用痕迹。
  */
@@ -336,7 +337,7 @@ describe('DTO 投影边界', () => {
     expect(run).not.toHaveProperty('requestHash')
   })
 
-  it('🔴 execution.available 恒为 false（本切片无执行器），且带原因', async () => {
+  it('🔴 execution.available 由**内核执行计划**算出：低风险 PROPOSED 即可执行（不再恒 false）', async () => {
     const { run } = await createAgentRun(ctx(ORG), {
       skill: 'COORDINATION_ADVICE',
       input: adviceInput(['cand_1']),
@@ -344,8 +345,15 @@ describe('DTO 投影边界', () => {
       provider: { kind: 'ready', provider: adviceProvider(validAdvice) },
     })
 
-    expect(run.execution.available).toBe(false)
+    // `COORDINATION_ADVICE` 是低风险技能 ⇒ `PROPOSED → EXECUTED` 是合法边 ⇒ 现在就可执行。
+    expect(run.status).toBe('PROPOSED')
+    expect(run.execution.available).toBe(true)
+    expect(run.execution.code).toBeNull()
+    expect(run.execution.kind).toBe('RECEIPT')
+    expect(run.execution.channel).toBe('IN_APP')
     expect(run.execution.reason.length).toBeGreaterThan(0)
+    // 还没执行过 ⇒ 没有执行记录（执行记录只在执行**之后**出现）。
+    expect(run.executionRecord).toBeNull()
   })
 
   it('注入信号命中 → requiresApproval 被**升级**为 true，且 DTO 标 injectionFlagged', async () => {
@@ -435,10 +443,13 @@ describe('审批状态机', () => {
     expect(fake.approvals).toHaveLength(0)
   })
 
-  it('🔴 任何裁决都**不写 EXECUTED**（本切片无执行器）', async () => {
+  it('🔴 裁决本身**不写 EXECUTED** —— 批准与执行是两步（执行须显式触发）', async () => {
     const run = await awaitingRun()
-    await decideAgentRun(ctx(ORG), run.id, 'APPROVED')
+    const approved = await decideAgentRun(ctx(ORG), run.id, 'APPROVED')
+    // 批准只把状态推到 APPROVED；副作用**没有**发生（库里没有 AgentExecution 行）。
+    expect(approved.status).toBe('APPROVED')
     expect(fake.runs.every((r) => r.status !== 'EXECUTED')).toBe(true)
+    expect(fake.executions).toHaveLength(0)
   })
 })
 

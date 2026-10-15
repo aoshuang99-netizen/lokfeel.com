@@ -17,10 +17,16 @@ import path from 'path'
 
 import {
   AGENT_RUN_STATUSES,
+  EXECUTION_CHANNELS,
+  EXECUTION_KINDS,
   PROVIDER_KINDS,
   RISK_LEVELS,
 } from '@/lib/agent'
-import { PROVIDER_KIND_TO_DB } from '@/lib/agents'
+// 🔴 直接 import 具体模块（**不经 barrel**）：`@/lib/agents` 现在会连带拉进
+//    `executor.ts` → `@/lib/workflow` → … → `next-auth`（纯 ESM），
+//    在 jest 的 CJS 运行时会直接"Test suite failed to run"。
+//    本文件只需要一个映射常量 —— 与 `tests/living/agents/types.test.ts` 同一取向。
+import { PROVIDER_KIND_TO_DB } from '@/lib/agents/dto'
 
 const ROOT = path.resolve(__dirname, '..', '..')
 const read = (rel: string) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
@@ -35,6 +41,19 @@ function enumValues(schema: string, name: string): string[] {
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('//') && !l.startsWith('///'))
     .map((l) => l.split(/\s+/)[0])
+}
+
+/**
+ * 抽出一个 `model` 的声明体（用于列级 / 属性级断言）。
+ *
+ * 🔴 按 **model 名**取块，而不是在整份 schema 上 `toMatch`：像 `@@unique([runId])`
+ *    这种属性在 `AgentApproval` 与 `AgentExecution` 上都存在，全文匹配根本分不清
+ *    是哪张表的保证 —— 那种断言看着很绿，其实什么都没钉住。
+ */
+function modelBlock(schema: string, name: string): string {
+  const m = schema.match(new RegExp(`model\\s+${name}\\s*\\{([\\s\\S]*?)\\n\\}`))
+  if (!m) throw new Error(`schema 里找不到 model ${name}`)
+  return m[1]
 }
 
 describe('T09 · Prisma 枚举 ↔ TS 清单 逐字一致', () => {
@@ -56,6 +75,10 @@ describe('T09 · Prisma 枚举 ↔ TS 清单 逐字一致', () => {
     for (const k of PROVIDER_KINDS) {
       expect(PROVIDER_KIND_TO_DB[k]).toBeDefined()
     }
+  })
+
+  it('AgentExecutionKind ↔ EXECUTION_KINDS（Slice 4：执行效果是闭集，不是自由字符串）', () => {
+    expect(enumValues(agentSchema, 'AgentExecutionKind').sort()).toEqual([...EXECUTION_KINDS].sort())
   })
 
   it('AgentApprovalDecision 只有「批准/驳回」两种终局（没有 EXECUTED）', () => {
@@ -85,24 +108,23 @@ describe('T09 · schema 的方言无关与租户一致性', () => {
     expect(declOnly(agentSchema)).not.toMatch(/@db\./)
   })
 
-  it('三个模型都带 organizationId（每条账都能独立按租户查询）', () => {
-    for (const model of ['AgentRun', 'AgentCall', 'AgentApproval']) {
-      const block = agentSchema.match(new RegExp(`model\\s+${model}\\s*\\{([\\s\\S]*?)\\n\\}`))
-      if (!block) throw new Error(`schema 里找不到 model ${model}`)
-      expect(block[1]).toMatch(/organizationId\s+String/)
+  it('四个模型都带 organizationId（每条账都能独立按租户查询）', () => {
+    for (const model of ['AgentRun', 'AgentCall', 'AgentApproval', 'AgentExecution']) {
+      expect(modelBlock(agentSchema, model)).toMatch(/organizationId\s+String/)
     }
   })
 
-  it('Organization 上有三条反向关系（Prisma 关系完整性要求）', () => {
+  it('Organization 上有四条反向关系（Prisma 关系完整性要求）', () => {
     expect(tenancySchema).toMatch(/agentRuns\s+AgentRun\[\]/)
     expect(tenancySchema).toMatch(/agentCalls\s+AgentCall\[\]/)
     expect(tenancySchema).toMatch(/agentApprovals\s+AgentApproval\[\]/)
+    expect(tenancySchema).toMatch(/agentExecutions\s+AgentExecution\[\]/)
   })
 
   it('软引用（requestedBy / actorId）**不**建 FK —— 用户注销后裁决仍可查', () => {
     // 这两个字段只应是裸 String / String?，绝不能出现 @relation。
-    const runBlock = agentSchema.match(/model\s+AgentRun\s*\{([\s\S]*?)\n\}/)![1]
-    const approvalBlock = agentSchema.match(/model\s+AgentApproval\s*\{([\s\S]*?)\n\}/)![1]
+    const runBlock = modelBlock(agentSchema, 'AgentRun')
+    const approvalBlock = modelBlock(agentSchema, 'AgentApproval')
     expect(runBlock).toMatch(/requestedBy\s+String\b/)
     expect(runBlock).not.toMatch(/requestedBy[\s\S]{0,40}@relation/)
     expect(approvalBlock).toMatch(/actorId\s+String\?/)
@@ -110,7 +132,30 @@ describe('T09 · schema 的方言无关与租户一致性', () => {
   })
 
   it('🔴 AgentError 一致性关键：`AgentApproval.runId` 是唯一索引（不可改判的库级保证）', () => {
-    expect(agentSchema).toMatch(/@@unique\(\[runId\]\)/)
+    expect(modelBlock(agentSchema, 'AgentApproval')).toMatch(/@@unique\(\[runId\]\)/)
+  })
+
+  it('🔴 `AgentExecution.runId` 唯一 —— 一条运行最多一条执行记录（库级幂等）', () => {
+    // 并发下第二条插入撞唯一键 ⇒ 服务层据此**读回胜者**，而不是把重复执行变成 500。
+    expect(modelBlock(agentSchema, 'AgentExecution')).toMatch(/@@unique\(\[runId\]\)/)
+  })
+
+  it('🔴 执行渠道**复用** NotificationChannel（不新造枚举）', () => {
+    // 两个领域（通知投递 / Agent 执行）各造一份"渠道"枚举，就会各自漂移；
+    // 复用 T06 的枚举 ⇒ 渠道的取值域只有一个来源。内核闭集当前只放行 IN_APP。
+    expect(modelBlock(agentSchema, 'AgentExecution')).toMatch(/channel\s+NotificationChannel/)
+    expect([...EXECUTION_CHANNELS].length).toBeGreaterThan(0)
+  })
+
+  it('🔴 `AgentExecution` 的收件人 / 执行人 / 投递引用**都**是软引用（无 FK）', () => {
+    // 用户与投递记录被清理后，"这条运行曾执行给谁、由谁执行"仍须可查。
+    const exec = modelBlock(agentSchema, 'AgentExecution')
+    expect(exec).toMatch(/recipientId\s+String\b/)
+    expect(exec).not.toMatch(/recipientId[\s\S]{0,40}@relation/)
+    expect(exec).toMatch(/actorId\s+String\?/)
+    expect(exec).not.toMatch(/actorId[\s\S]{0,40}@relation/)
+    expect(exec).toMatch(/deliveryId\s+String\?/)
+    expect(exec).not.toMatch(/deliveryId[\s\S]{0,40}@relation/)
   })
 
   it('幂等键唯一约束存在：@@unique([organizationId, dedupeKey])', () => {

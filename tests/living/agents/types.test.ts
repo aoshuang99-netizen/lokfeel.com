@@ -8,7 +8,7 @@
  *    （有 IO 的服务层）。本文件直接 import 具体模块，避免经 barrel 拉进用不到的实现。
  *
  * 本区的诚实纪律（T09 反复强调的三条）在此被钉住：
- *   ① `execution.available` 恒 false（无执行器），原因文案必须原样展示 —— 见 board 测试；
+ *   ① `execution.reason` 必须原样展示；可否执行由服务端执行计划给出（不再恒 false）—— 见 board 测试；
  *   ② `provider` 诚实块："跑了 3 次花 0 分" ≠ "模型免费"，而是"规则式兜底"；
  *   ③ `rawText`（模型原文）不在 DTO 里 ⇒ 本区无从展示，这是设计不是遗漏。
  */
@@ -65,8 +65,10 @@ describe('镜像一 · 运行状态（8 档）', () => {
   })
 
   it('两条最容易被误解的状态必须自带解释（否则用户会以为"批准 = 已经执行了"）', () => {
-    // APPROVED 在本切片**不会**产生副作用 —— 没有执行器
+    // APPROVED 本身**不会**产生副作用 —— 执行是独立的一步（须显式触发）
     expect(LIVING_AGENT_STATUS_HINTS.APPROVED).toContain('不会自动')
+    // EXECUTED 必须说明"谁才可能到达"（低风险可直接执行 / 高风险先批准）
+    expect(LIVING_AGENT_STATUS_HINTS.EXECUTED).toContain('人工批准')
     // REJECTED 不可改判 —— 与服务端 `decideAgentRun` 的 409 语义同源
     expect(LIVING_AGENT_STATUS_HINTS.REJECTED).toContain('不可改判')
     // DEGRADED 必须点明"能力弱于正常路径"

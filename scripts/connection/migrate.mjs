@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * T02–T09 · Connection OS 迁移（批次 C0 – C6）
+ * T02–T09 · Connection OS 迁移（批次 C0 – C7）
  *
  * 用法：
  *   node scripts/connection/migrate.mjs probe                      # 只读：表/列/索引现状
@@ -95,9 +95,18 @@ export const BATCHES = {
     tables: ['AgentRun', 'AgentCall', 'AgentApproval'],
     label: 'T09 · Agent 运行与审批（AgentRun / AgentCall / AgentApproval）',
   },
+  C7: {
+    // C7 只有一个新表，且它**依赖 C6 的 AgentRun**（强 FK）⇒ 必须排在 C6 之后。
+    // 🔴 为什么不是"给 AgentRun 加 executedAt / recipientId 列"：本脚本的批次机制
+    //    只支持 CREATE TABLE/INDEX IF NOT EXISTS，没有 ALTER TABLE 形态（见文件头约束 1）。
+    //    把列加上去会破掉"纯新增"这条迁移纪律 —— 而上线期间破掉它，代价是停机。
+    //    执行是**事件**，独立成表还顺带拿到 @@unique([runId]) 的库级幂等。
+    tables: ['AgentExecution'],
+    label: 'T09 · Agent 执行记录（AgentExecution）',
+  },
 }
 
-export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6']
+export const ALL_BATCHES = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7']
 
 // ══════════════════════════════════════════════════════════════════════
 // 环境加载
@@ -558,7 +567,34 @@ function sqlC6() {
   ]
 }
 
-const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5, C6: sqlC6 }
+function sqlC7() {
+  // DDL 来源：`npx prisma migrate diff --from-schema <T09 Slice 4 前的快照> --to-schema prisma/schema --script`
+  // 后**原样抄录**（见文件头约束 5）。只有一张新表：Organization 与 AgentRun 各一条强 FK。
+  // ⚠️ `recipientId` / `actorId` / `deliveryId` 是**软引用**（无 FK）——
+  //    用户注销 / 投递记录轮转后，"这条运行执行给过谁、由谁执行"仍须可查。
+  return [
+    `CREATE TABLE IF NOT EXISTS "AgentExecution" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "organizationId" TEXT NOT NULL,
+  "runId" TEXT NOT NULL,
+  "kind" TEXT NOT NULL,
+  "channel" TEXT NOT NULL,
+  "recipientId" TEXT NOT NULL,
+  "deliveryId" TEXT,
+  "deliveryStatus" TEXT NOT NULL,
+  "actorId" TEXT,
+  "executedAt" DATETIME NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "AgentExecution_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "AgentExecution_runId_fkey" FOREIGN KEY ("runId") REFERENCES "AgentRun" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "AgentExecution_runId_key" ON "AgentExecution"("runId")`,
+    `CREATE INDEX IF NOT EXISTS "AgentExecution_organizationId_executedAt_idx" ON "AgentExecution"("organizationId", "executedAt")`,
+    `CREATE INDEX IF NOT EXISTS "AgentExecution_organizationId_channel_idx" ON "AgentExecution"("organizationId", "channel")`,
+  ]
+}
+
+const SQL_BY_BATCH = { C0: sqlC0, C1: sqlC1, C2: sqlC2, C3: sqlC3, C4: sqlC4, C5: sqlC5, C6: sqlC6, C7: sqlC7 }
 
 /** 期望存在的索引（verify 断言用）。 */
 const EXPECTED_INDEXES = [
@@ -629,6 +665,11 @@ const EXPECTED_INDEXES = [
   { name: 'AgentApproval_runId_key', table: 'AgentApproval', unique: true },
   { name: 'AgentApproval_organizationId_decidedAt_idx', table: 'AgentApproval', unique: false },
   { name: 'AgentApproval_organizationId_decision_idx', table: 'AgentApproval', unique: false },
+  // ── C7 ──
+  // `runId` 的唯一索引就是"一次运行只执行一次"的**库级**保证（服务层捕唯一键冲突读回胜者）。
+  { name: 'AgentExecution_runId_key', table: 'AgentExecution', unique: true },
+  { name: 'AgentExecution_organizationId_executedAt_idx', table: 'AgentExecution', unique: false },
+  { name: 'AgentExecution_organizationId_channel_idx', table: 'AgentExecution', unique: false },
 ]
 
 /** 期望存在的外键（表 → 引用目标），verify 断言用。 */
@@ -685,6 +726,12 @@ const EXPECTED_FKS = [
   { table: 'AgentCall', target: 'AgentRun' },
   { table: 'AgentApproval', target: 'Organization' },
   { table: 'AgentApproval', target: 'AgentRun' },
+  // ── C7 ──
+  // 只两条强 FK：Organization（租户谓词）+ AgentRun（执行脱离运行没有意义）。
+  // （`recipientId` / `actorId` / `deliveryId` 是软引用，**故意没有 FK** ——
+  //  若在此处加它们的断言，等于把"应该没有外键"这件事写反。）
+  { table: 'AgentExecution', target: 'Organization' },
+  { table: 'AgentExecution', target: 'AgentRun' },
 ]
 
 /** 全部受管表（verify 用）。 */
@@ -1289,6 +1336,47 @@ async function cmdVerify(client) {
     ok('AgentApproval 关键列均为 NOT NULL', false, '表不存在')
   }
 
+  // 4h) T09 · AgentExecution（C7 · AC-08「执行只有一条路径」的落点）
+  const executionCols = await tableColumns(client, 'AgentExecution')
+  if (executionCols) {
+    const sql = (await tableCreateSql(client, 'AgentExecution')) || ''
+    const required = [
+      'organizationId',
+      'runId',
+      'kind',
+      'channel',
+      'recipientId',
+      'deliveryStatus',
+    ].every((c) => new RegExp(`"${c}"\\s+TEXT\\s+NOT\\s+NULL`).test(sql))
+    ok('AgentExecution 关键列均为 NOT NULL', required)
+    // 软引用可空（当前恒有值，但 schema 允许为空是为了"将来系统代执行无 actor"不必改表）
+    const nullable = ['deliveryId', 'actorId'].every((c) =>
+      new RegExp(`"${c}"\\s+TEXT\\b(?!\\s+NOT)`).test(sql)
+    )
+    ok('AgentExecution 软引用列可为空（deliveryId / actorId）', nullable)
+    ok('AgentExecution.executedAt 为 DATETIME NOT NULL（业务时间由我们写入）', /"executedAt"\s+DATETIME\s+NOT\s+NULL/.test(sql))
+    ok(
+      'AgentExecution.runId → AgentRun 外键存在',
+      /CONSTRAINT\s+"AgentExecution_runId_fkey"\s+FOREIGN\s+KEY\s+\("runId"\)\s+REFERENCES\s+"AgentRun"/.test(
+        sql
+      )
+    )
+    // 🔴 **反向断言 × 2**
+    //   ① 三个 id 都是软引用：建了 FK 就等于"注销一个用户会抹掉执行证据"。
+    ok(
+      'AgentExecution 的收件人/执行人/投递引用**无外键**（软引用，注销后仍留痕）',
+      !/FOREIGN KEY\s+\("(recipientId|actorId|deliveryId)"\)/.test(sql)
+    )
+    //   ② **没有 status / state 列**：执行状态只有 `AgentRun.status` 一个落点
+    //      （与 AgentApproval 同一条判据）。多一个落点 = 迟早分叉且没人报错。
+    ok(
+      'AgentExecution **没有** status/state 列（状态只有 AgentRun 一个落点）',
+      !/"status"\s+TEXT/.test(sql) && !/"state"\s+TEXT/.test(sql)
+    )
+  } else {
+    ok('AgentExecution 关键列均为 NOT NULL', false, '表不存在')
+  }
+
   // 5) 孤儿行（跨表完整性）
   const orphanMission = await countRows(
     client,
@@ -1540,15 +1628,38 @@ async function cmdVerify(client) {
     ok('AgentRun 待批态无裁决行', pendingWithApproval === 0, `越界 ${pendingWithApproval}`)
   }
 
-  // 🔴 一致性④：**Slice 2 期间 `EXECUTED` 必须为 0** —— 没有注册任何执行器。
-  //    ⚠️ 这是**阶段断言**：接线执行器（T05 披露出口 / T06 投递出口）之后，
-  //       本断言应被**删除**而不是被绕过。留着它，是为了让"假装执行"无法悄悄发生。
-  const executedRuns = await countRows(client, 'AgentRun', ` WHERE "status" = 'EXECUTED'`)
-  if (executedRuns !== null) {
+  // 🔴 一致性④：**`EXECUTED` 与执行记录双向一致**。
+  //    ⚠️ 本条**取代**了 Slice 2 那条阶段断言（"EXECUTED 必须为 0"）——
+  //       执行器已在 T09 Slice 4 接线，于是"不能执行"应当**改为**"执行必须有记录"，
+  //       而不是被删掉。判据从"某个状态不出现"升级为"两个事实来源必须互相印证"：
+  //         ① `status='EXECUTED'` ⇒ 恰有一条 `AgentExecution`（不能只有状态、没有证据）；
+  //         ② `AgentExecution` 行 ⇒ 所属运行必须是 `EXECUTED`（不能有证据、状态却没变）。
+  //       ⚠️ **空库时两条都恒为 0**（无判别力）—— 非空路径由
+  //          `tests/agents/execution-gated.test.ts` 与隔离库的 `verify:ac18` 取证覆盖。
+  //          写下这句，是为了不让"空库通过"被读成"对账过了"。
+  const executedWithoutRecord = await countRows(
+    client,
+    'AgentRun',
+    ` WHERE "status" = 'EXECUTED' AND "id" NOT IN (SELECT "runId" FROM "AgentExecution")`
+  )
+  if (executedWithoutRecord !== null) {
     ok(
-      'AgentRun 无 EXECUTED 行（Slice 2 未注册执行器）',
-      executedRuns === 0,
-      `EXECUTED ${executedRuns}`
+      'AgentRun EXECUTED ⇒ 必有 AgentExecution 行',
+      executedWithoutRecord === 0,
+      `缺执行记录 ${executedWithoutRecord}`
+    )
+  }
+
+  const recordWithoutExecuted = await countRows(
+    client,
+    'AgentExecution',
+    ` WHERE "runId" NOT IN (SELECT "id" FROM "AgentRun" WHERE "status" = 'EXECUTED')`
+  )
+  if (recordWithoutExecuted !== null) {
+    ok(
+      'AgentExecution 行 ⇒ 所属运行必为 EXECUTED',
+      recordWithoutExecuted === 0,
+      `状态不符 ${recordWithoutExecuted}`
     )
   }
 

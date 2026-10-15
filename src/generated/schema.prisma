@@ -79,6 +79,17 @@ enum AgentApprovalDecision {
   REJECTED
 }
 
+/// 执行效果的种类。**必须与 `src/lib/agent/execution.ts` 的 `EXECUTION_KINDS` 逐字一致**
+/// （有漂移守卫：`tests/agents/schema-drift.test.ts`）。
+///
+/// 🔴 为什么只有 `RECEIPT`：本切片落地的执行效果是**内部回执**（站内信给发起人）。
+///    对外送达（介绍真发给对手方）需要**收件人身份** + T05 的 `discloseSubject()` 出口，
+///    属下一片。把"当前只有哪一种"写成枚举，而不是让 `kind` 变成自由字符串 ——
+///    后者会让"某天悄悄多出一种效果"没有任何东西会报错。
+enum AgentExecutionKind {
+  RECEIPT
+}
+
 /// 一次 Agent 运行（提案的持久形态）。
 ///
 /// 🔴 本表**不含**任何主体档案数据：只有 `subjectLabel` 这类**标签**。
@@ -147,9 +158,10 @@ model AgentRun {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   calls        AgentCall[]
   approval     AgentApproval?
+  execution    AgentExecution?
 
   @@unique([organizationId, dedupeKey])
   @@index([organizationId, status])
@@ -240,12 +252,70 @@ model AgentApproval {
   @@index([organizationId, decision])
 }
 
-// ── 执行不在本切片（Slice 2 的显式非目标）───────────────────────────
-// `AgentRunStatus.EXECUTED` **在 Slice 2 里不可达**：没有任何路由/服务会把它写进去，
-// 因为没有注册任何**执行器**（`EXECUTORS` 为空）。
-// 这不是遗漏，而是刻意的：执行 = 产生对外可见的副作用（发消息 / 披露资料），
-// 那要先有 T05 的披露出口与 T06 的投递出口接线。**宁可不做，也不伪造成功。**
-// 断言见 `tests/agents/execution-unreachable.test.ts`。
+/// 一次**执行**的记录 —— "这条运行真的产生了副作用"的证据（Slice 4）。
+///
+/// 🔴 为什么是**独立表**而不是 `AgentRun` 上的几个列（`executedAt` / `executionRef`）：
+///   1. `scripts/connection/migrate.mjs` 的批次机制**只支持 `CREATE TABLE/INDEX IF NOT EXISTS`**，
+///      没有 `ALTER TABLE` 形态（文件头约束 1：不改动既有表的任何列）。
+///      给既有表加列会把这个"纯新增"的迁移纪律破掉 —— 而上线期间破掉它，代价是停机。
+///   2. **只增不改**：执行是事件。列会被覆写（重试、误改），事件不会 ——
+///      与 `AgentApproval` 同一取向。`@@unique([runId])` 让"一次运行只执行一次"
+///      成为**库级**保证，而不是靠调用方自觉。
+///   3. `AgentRun.executedAt` 这列**刻意不存在**（DDL 反向断言守着）：执行时间属于执行记录。
+///
+/// ⚠️ `recipientId` / `actorId` / `deliveryId` 都是**软引用**（无 FK）：
+///    用户注销后"这条运行执行给过谁、由谁执行"仍须可查（与 `requestedBy` 同一理由）。
+model AgentExecution {
+  id String @id @default(cuid())
+
+  /// 租户谓词。**不可省**（T01 铁律）。
+  organizationId String
+
+  /// 被执行的运行。**强 FK + 唯一**：一条运行最多一条执行记录。
+  runId String
+
+  kind AgentExecutionKind
+
+  /// 实际投递渠道。与 T06 的 `NotificationChannel` 取值域一致（枚举复用，非新造）。
+  channel NotificationChannel
+
+  /// 收件人（**服务端决定**：当前恒为发起人 `AgentRun.requestedBy`）。
+  recipientId String
+
+  /// T06 投递归宿的 `NotificationDelivery.id`（软引用）—— 执行与投递留痕的挂钩点。
+  deliveryId String?
+
+  /// 投递结果状态快照（`SENT` / `CAPTURED` / `FAILED`）。冗余但刻意：
+  /// 投递记录是审计面，"这次执行当时是什么结果"不该依赖对另一张表的实时 JOIN。
+  deliveryStatus String
+
+  /// 执行人（软引用）。与发起人**分开记**：将来若允许他人代为执行，二者会不同。
+  actorId String?
+
+  /// 业务时间（测试可注入），与 `createdAt`（落库时间）分开 —— 同 `AgentCall.at` 的理由。
+  executedAt DateTime
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  run          AgentRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  /// 一次运行只允许**一条**执行记录 ⇒ 库级幂等。并发下第二条插入撞唯一键，
+  /// 服务层据此读回胜者（而不是把"重复执行"变成 500）。
+  @@unique([runId])
+  @@index([organizationId, executedAt])
+  @@index([organizationId, channel])
+}
+
+// ── 执行：Slice 4 已接线（**唯一写入点**是 `src/lib/agents/executor.ts`）────
+// `AgentRunStatus.EXECUTED` 现在可达，但**只有一条路径**能到达它：
+//   服务端重判能力（`agent.execute`）→ 读回裁决行 → `planExecution()` 放行
+//   → 经 T06 的统一投递出口产生副作用并留痕 → 同一个事务里写 `status='EXECUTED'` + 本表的执行行。
+// 🔴 "唯一写入点"由 `tests/agents/execution-gated.test.ts` 的**静态断言**守着
+//    （服务层 + 路由层源码里 `EXECUTED` 字面量只允许出现在 `executor.ts`）。
+// 一致性由 `scripts/connection/migrate.mjs` 的 C7 段断言守着：
+//   ① `status='EXECUTED'` ⇒ 恰有一条 `AgentExecution`；
+//   ② `AgentExecution` 行的 run 必须是 `EXECUTED`。
 
 // ═══════════════════════════════════════════════════════════════
 // BILLING — T08 组织级用量计费（Slice 3）
@@ -3020,9 +3090,10 @@ model Organization {
   // 它们是**软引用**（无 FK）—— 用户注销后"谁批准过什么"仍须可查。
   // `AgentCall` 虽是 `AgentRun` 的子表，但它自己也带 `organizationId` 外键
   // （本仓铁律：每条账都要能独立按租户查询），故这里仍需一条反向关系。
-  agentRuns      AgentRun[]
-  agentCalls     AgentCall[]
-  agentApprovals AgentApproval[]
+  agentRuns       AgentRun[]
+  agentCalls      AgentCall[]
+  agentApprovals  AgentApproval[]
+  agentExecutions AgentExecution[]
 
   @@index([status])
 }

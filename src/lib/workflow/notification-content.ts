@@ -23,6 +23,7 @@ export type NotificationTemplate =
   | 'connection.introduced' // 连接已建立
   | 'connection.followup' // 跟进提示（AC-14 的"跟进"段）
   | 'operator.attention' // 运营告警：有任务需要人工处置（R9）
+  | 'agent.delivery' // T09：Agent 产出已交付（**内部回执**，收件人 = 发起人）
 
 export const NOTIFICATION_TEMPLATES: readonly NotificationTemplate[] = [
   'proposal.pending',
@@ -30,6 +31,7 @@ export const NOTIFICATION_TEMPLATES: readonly NotificationTemplate[] = [
   'connection.introduced',
   'connection.followup',
   'operator.attention',
+  'agent.delivery',
 ] as const
 
 export function isNotificationTemplate(value: unknown): value is NotificationTemplate {
@@ -108,6 +110,25 @@ export function renderNotification(input: RenderInput): RenderedNotification {
           body: [
             `「${org}」想了解你这条连接${mission ? `（任务：${mission}）` : ''}的进展。`,
             '如果已经聊过了，可以在连接页记录结果；如果暂时没有进展，也可以先放一放。',
+          ].join('\n'),
+        }
+      case 'agent.delivery':
+        // T09 Slice 4：Agent 执行的**内部回执**（收件人 = 发起人，不是对手方）。
+        // 🔴 刻意**不引用**目标文本 / 草稿正文 / 结构化产出：
+        //    "执行完成"这件事本身就够用，而把产出正文塞进通知等于让通知渠道
+        //    绕开页面的披露投影 —— 与上面 connection.* 三条同一条纪律
+        //    （通知只是"有事在等你"，披露的唯一出口是页面）。
+        //    实证：通知体不含运行目标与草稿正文，由 executor 的单测断言钉住。
+        return {
+          subject: '你的 Agent 产出已交付',
+          // 🔴 与 `operator.attention` 同一条纪律：**即便传了 `missionTitle` 也不渲染**。
+          //    理由：通知里多一个业务标识就多一个披露面，而这条通知的全部信息量
+          //    就是"有一条产出落地了"。写死比"依赖调用方传 null"更强 ——
+          //    后者在下一个调用方手里就会失效（executor 现在传 null，但那是它的事）。
+          body: [
+            `「${org}」的一条 Agent 产出已完成交付。`,
+            '这条通知只表示"产出已经落地可用"，不包含产出正文。',
+            '产出内容请在 Agent 运行详情里查看 —— 那里会按你的权限渲染。',
           ].join('\n'),
         }
       case 'operator.attention':

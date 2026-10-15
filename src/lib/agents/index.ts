@@ -34,6 +34,14 @@ export {
   type ListAgentRunsResult,
 } from './runs'
 
+// ── 执行器（`EXECUTED` 的**唯一**写入点）──
+export {
+  executeAgentRun,
+  type DeliverFn,
+  type ExecuteAgentRunOptions,
+  type ExecuteAgentRunResult,
+} from './executor'
+
 // ── Provider（真实 HTTP 实现 —— IO 归服务层，内核只留纯判据）──
 export {
   createOpenAIProvider,
@@ -50,11 +58,14 @@ export {
   providerKindToDb,
   toAgentRunDto,
   toAgentRunSummaryDto,
+  toExecutionDto,
   type AgentApprovalDto,
   type AgentApprovalRow,
   type AgentCallDto,
   type AgentCallRow,
   type AgentExecutionAvailability,
+  type AgentExecutionDto,
+  type AgentExecutionRow,
   type AgentRunDto,
   type AgentRunRow,
   type AgentRunSummaryDto,

@@ -429,8 +429,12 @@ describe('④ 审批状态不变：绕不过人工那一环', () => {
     expect(run.status).toBe('AWAITING_APPROVAL')
     expect(run.requiresApproval).toBe(true)
     expect(run.injectionFlagged).toBe(true)
+    // Slice 4 起 `execution.available` 由内核执行计划给出：待批 ⇒ 不可执行，且原因是**状态**。
     expect(run.execution.available).toBe(false)
+    expect(run.execution.code).toBe('STATUS_NOT_EXECUTABLE')
     expect(fake.runs.some((r) => r.status === 'EXECUTED')).toBe(false)
+    // 且确实没有任何副作用落地（执行是显式动作，注入不可能触发它）。
+    expect(fake.executions).toHaveLength(0)
   })
 
   it('🔴 注入不能把运行直接推成 APPROVED：必须有一次真实的裁决调用', async () => {

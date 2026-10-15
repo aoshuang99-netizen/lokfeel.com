@@ -88,6 +88,23 @@ export {
   nextStatuses,
 } from './approval'
 
+// ── 执行计划（"能不能执行 / 效果是什么"的唯一判据；真正的 IO 在服务层） ──
+export {
+  EXECUTION_CHANNELS,
+  EXECUTION_KINDS,
+  EXECUTION_PLANS,
+  EXECUTION_REFUSAL_CODES,
+  agentExecutionDedupeKey,
+  executionPlanOf,
+  planExecution,
+  skillsWithoutExecutionPlan,
+  type ExecutionChannel,
+  type ExecutionDecision,
+  type ExecutionKind,
+  type ExecutionPlan,
+  type ExecutionRefusalCode,
+} from './execution'
+
 // ── Provider（接口 + 纯环境解码；真实 HTTP 实现在服务层 —— 见 A5） ──
 export {
   OPENAI_DEFAULTS,

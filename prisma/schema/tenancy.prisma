@@ -97,6 +97,7 @@ model Organization {
   agentRuns      AgentRun[]
   agentCalls     AgentCall[]
   agentApprovals AgentApproval[]
+  agentExecutions AgentExecution[]
 
   @@index([status])
 }

@@ -76,15 +76,80 @@ export interface FakeIdemRow {
   resourceId: string | null
 }
 
+/** 一行 AgentExecution（Slice 4 的执行记录）。 */
+export interface FakeExecutionRow {
+  id: string
+  organizationId: string
+  runId: string
+  kind: string
+  channel: string
+  recipientId: string
+  deliveryId: string | null
+  deliveryStatus: string
+  actorId: string | null
+  executedAt: Date
+  createdAt: Date
+}
+
+/**
+ * 一行 Notification（站内信收件箱）。投递出口的 IN_APP 分支会真的写它 ——
+ * 假库因此能证明"执行**真的**产生了用户可见的副作用"，而不只是"某函数被调用过"。
+ */
+export interface FakeNotificationRow {
+  id: string
+  userId: string
+  type: string
+  title: string
+  body: string
+  actionUrl?: string
+  data?: string
+}
+
+/** 一行 NotificationDelivery（投递审计面；沙箱/真实投递都落这里）。 */
+export interface FakeDeliveryRow {
+  id: string
+  organizationId: string
+  dedupeKey: string
+  channel: string
+  status: string
+  recipientId: string
+  template: string
+  subject: string | null
+  body: string
+  actionUrl: string | null
+  capturedAt: Date | null
+  provider: string | null
+  providerMessageId: string | null
+  failureReason: string | null
+  sentAt: Date | null
+}
+
 export interface FakeAgentDb {
   runs: FakeRunRow[]
   calls: FakeCallRow[]
   approvals: FakeApprovalRow[]
   idempotency: FakeIdemRow[]
+  /** Slice 4：执行记录。`@@unique([runId])` 由 create 实现。 */
+  executions: FakeExecutionRow[]
+  /** 站内信收件箱（投递出口的 IN_APP 分支写它）。 */
+  notifications: FakeNotificationRow[]
+  /** 投递审计面。`(organizationId, dedupeKey)` 唯一由 upsert 实现。 */
+  deliveries: FakeDeliveryRow[]
+  /** 组织名（通知的身份声明要它）。 */
+  organizationName: string
 }
 
 export function createFakeAgentDb(): FakeAgentDb {
-  return { runs: [], calls: [], approvals: [], idempotency: [] }
+  return {
+    runs: [],
+    calls: [],
+    approvals: [],
+    idempotency: [],
+    executions: [],
+    notifications: [],
+    deliveries: [],
+    organizationName: '测试社群',
+  }
 }
 
 /** 生成稳定的自增 id（避免依赖 cuid，测试里可读即可）。 */
@@ -106,10 +171,48 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
   const nextRunId = makeCounter('run')
   const nextCallId = makeCounter('call')
   const nextApprovalId = makeCounter('approval')
+  const nextExecutionId = makeCounter('exec')
+  const nextNotificationId = makeCounter('notif')
+  const nextDeliveryId = makeCounter('delivery')
+
+  // 🔴 先补齐命名空间与要安装的方法。
+  //
+  // 每个测试文件自己写 `jest.mock('@/lib/db')` 的工厂，只声明它用到的部分
+  // （刻意的"最小 mock"）。Slice 4 让执行器与 T06 投递出口触及 4 个**新**命名空间
+  // （`agentExecution` / `notificationDelivery` / `notification` / `organization`），
+  // 若下面直接硬解引用，会把所有**没走执行路径**的旧测试一起打红 ——
+  // 那是测试脚手架的问题，不是被测行为的问题。
+  // 补空对象后：不碰这些表的测试照旧；一旦真走到那里，报错是
+  // "xxx is not a function"，仍然诚实（不会静默通过）。
+  const NEEDED: ReadonlyArray<readonly [string, readonly string[]]> = [
+    ['agentRun', ['create', 'findFirst', 'findMany', 'update', 'deleteMany']],
+    ['agentCall', ['findMany']],
+    ['agentApproval', ['create']],
+    ['idempotencyRecord', ['findUnique', 'create']],
+    ['membership', ['findFirst']],
+    ['agentExecution', ['create', 'findUnique']],
+    ['notificationDelivery', ['findUnique', 'upsert']],
+    ['notification', ['create']],
+    ['organization', ['findUnique']],
+    ['user', ['findUnique']],
+    ['tenantAuditEvent', ['create']],
+  ]
+  for (const [space, methods] of NEEDED) {
+    const existing = d[space]
+    const ns: Record<string, jest.Mock> =
+      existing && typeof existing === 'object' ? (existing as Record<string, jest.Mock>) : {}
+    d[space] = ns
+    for (const m of methods) if (typeof ns[m] !== 'function') ns[m] = jest.fn()
+  }
+  if (typeof d.$transaction !== 'function') d.$transaction = jest.fn()
 
   const agentRun = d.agentRun as Record<string, jest.Mock>
   const agentCall = d.agentCall as Record<string, jest.Mock>
   const agentApproval = d.agentApproval as Record<string, jest.Mock>
+  const agentExecution = d.agentExecution as Record<string, jest.Mock>
+  const notificationDelivery = d.notificationDelivery as Record<string, jest.Mock>
+  const notification = d.notification as Record<string, jest.Mock>
+  const organization = d.organization as Record<string, jest.Mock>
   const idem = d.idempotencyRecord as Record<string, jest.Mock>
   const tx = d.$transaction as unknown as jest.Mock
 
@@ -118,6 +221,7 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
     ...row,
     calls: state.calls.filter((c) => c.runId === row.id).sort((a, b) => a.seq - b.seq),
     approval: state.approvals.find((a) => a.runId === row.id) ?? null,
+    execution: state.executions.find((e) => e.runId === row.id) ?? null,
     _count: { calls: state.calls.filter((c) => c.runId === row.id).length },
   })
 
@@ -202,6 +306,7 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
       const liveIds = new Set(state.runs.map((r) => r.id))
       state.calls = state.calls.filter((c) => liveIds.has(c.runId))
       state.approvals = state.approvals.filter((a) => liveIds.has(a.runId))
+      state.executions = state.executions.filter((e) => liveIds.has(e.runId))
       const removed = before - state.runs.length
       // 重新赋值 state.runs 会打断外部引用 —— 原地替换。
       return { count: removed }
@@ -265,6 +370,68 @@ export function installFakeAgentDb(db: unknown, state: FakeAgentDb): void {
   // resolveTenant 的成员回查
   const membership = d.membership as Record<string, jest.Mock>
   membership.findFirst.mockResolvedValue({ id: 'ms_1', organizationId: 'org_1', role: 'ADMIN' })
+
+  // ── Slice 4：执行记录（`@@unique([runId])` = "一次运行只执行一次"的库级保证）──
+  agentExecution.create.mockImplementation(
+    async (args: { data: Omit<FakeExecutionRow, 'id' | 'createdAt'> & { createdAt?: Date } }) => {
+      if (state.executions.some((e) => e.runId === args.data.runId)) {
+        throw new Error('Unique constraint failed on the fields: (`runId`)')
+      }
+      const row: FakeExecutionRow = {
+        ...args.data,
+        id: nextExecutionId(),
+        createdAt: args.data.createdAt ?? new Date(),
+      }
+      state.executions.push(row)
+      return row
+    },
+  )
+
+  agentExecution.findUnique.mockImplementation(async (args: { where: { runId: string } }) => {
+    return state.executions.find((e) => e.runId === args.where.runId) ?? null
+  })
+
+  // ── 投递出口（T06）用到的四张表 ──
+  organization.findUnique.mockImplementation(async () => ({ name: state.organizationName }))
+
+  notificationDelivery.findUnique.mockImplementation(
+    async (args: {
+      where: { organizationId_dedupeKey: { organizationId: string; dedupeKey: string } }
+    }) => {
+      const w = args.where.organizationId_dedupeKey
+      return (
+        state.deliveries.find(
+          (r) => r.organizationId === w.organizationId && r.dedupeKey === w.dedupeKey,
+        ) ?? null
+      )
+    },
+  )
+
+  notificationDelivery.upsert.mockImplementation(
+    async (args: {
+      where: { organizationId_dedupeKey: { organizationId: string; dedupeKey: string } }
+      create: Omit<FakeDeliveryRow, 'id'>
+      update: Partial<FakeDeliveryRow>
+    }) => {
+      const w = args.where.organizationId_dedupeKey
+      const found = state.deliveries.find(
+        (r) => r.organizationId === w.organizationId && r.dedupeKey === w.dedupeKey,
+      )
+      if (found) {
+        Object.assign(found, args.update)
+        return found
+      }
+      const row: FakeDeliveryRow = { ...args.create, id: nextDeliveryId() }
+      state.deliveries.push(row)
+      return row
+    },
+  )
+
+  notification.create.mockImplementation(async (args: { data: Omit<FakeNotificationRow, 'id'> }) => {
+    const row: FakeNotificationRow = { ...args.data, id: nextNotificationId() }
+    state.notifications.push(row)
+    return row
+  })
 
   // writeTenantAudit 的落点（旁路，不参与业务结果）
   const audit = d.tenantAuditEvent as Record<string, jest.Mock>

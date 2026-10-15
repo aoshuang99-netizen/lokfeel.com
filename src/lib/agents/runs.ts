@@ -12,11 +12,14 @@
  *      `rawText`（模型原文）落库只为审计，**永不进 DTO**（见 dto.ts）。
  *   2. **限额** —— 从 `AgentCall` 读回**本期**已发生的调用喂给 `runSkill` 做**调用前**
  *      判定（AC-20）。只看本次请求的账 = "每次请求都从 0 开始算额度"，那不是限额。
- *   3. **审批** —— 只经 `approval.ts` 的真相表迁移；**没有任何代码**把 `EXECUTED` 写进去
- *      （本切片未注册执行器）。
+ *   3. **审批** —— 只经 `approval.ts` 的真相表迁移；本层**仍然不写 `EXECUTED`**。
  *
  * 🔴 本层**不执行任何副作用**：审批的产物是"状态变成 APPROVED"，
- *    不是"消息发出去了"。后者要有 T05 的披露出口与 T06 的投递出口。
+ *    不是"消息发出去了" —— 后者在 `executor.ts`（经 T06 的统一投递出口）。
+ *    `EXECUTED` 只有一个写入点，就是那个文件；这条"只有一条路径"由
+ *    `tests/agents/execution-gated.test.ts` 的**静态断言**守着
+ *    （服务层 + 路由层源码里 `EXECUTED` 字面量只允许出现在 `executor.ts`）。
+ *    把执行单独放一个文件，是为了让这条性质可被检查，而不是靠"我记得没在别处写过"。
  */
 
 import { db } from '@/lib/db'
@@ -91,6 +94,18 @@ const APPROVAL_SELECT = {
   deciderRole: true,
   note: true,
   decidedAt: true,
+} as const
+
+/** 执行记录（Slice 4）。同样是"只增不改"的事件，全部字段都可读。 */
+const EXECUTION_SELECT = {
+  id: true,
+  kind: true,
+  channel: true,
+  recipientId: true,
+  deliveryId: true,
+  deliveryStatus: true,
+  actorId: true,
+  executedAt: true,
 } as const
 
 const RUN_SELECT = {
@@ -258,13 +273,23 @@ async function loadLedger(organizationId: string, now: Date): Promise<LedgerSnap
  * 而不是"先按 id 查、再断言 organizationId 相等"：
  * 后者只要有人漏写那次断言，就是一次跨租户读取。
  */
-async function findRunRow(organizationId: string, runId: string): Promise<AgentRunRow | null> {
+/**
+ * ⚠️ **导出**（而不是各模块各写一个查询）：执行器 `executor.ts` 必须看到与读取路径
+ * **逐字相同**的行形状 —— 特别是 `approval`（"有没有一条 APPROVED 裁决"）与
+ * `execution`（是不是已经执行过）。各写一份迟早分叉，而分叉的后果是
+ * "DTO 说能执行、执行器说不给执行"这种最难查的不一致。
+ */
+export async function findRunRow(
+  organizationId: string,
+  runId: string,
+): Promise<AgentRunRow | null> {
   const row = await db.agentRun.findFirst({
     where: { id: runId, organizationId },
     select: {
       ...RUN_SELECT,
       calls: { select: CALL_SELECT, orderBy: { seq: 'asc' } },
       approval: { select: APPROVAL_SELECT },
+      execution: { select: EXECUTION_SELECT },
     },
   })
   return (row as AgentRunRow | null) ?? null
@@ -313,6 +338,8 @@ export async function listAgentRuns(
     select: {
       ...RUN_SELECT,
       approval: { select: APPROVAL_SELECT },
+      // 列表也带执行记录：列表页要用它显示"已执行/未执行"，缺了就只能显示成"从未执行"。
+      execution: { select: EXECUTION_SELECT },
       // 列表要的是"跑了几次"，不是逐次明细 —— 用 `_count` 而不是把 calls 全读进来。
       _count: { select: { calls: true } },
     },
@@ -444,6 +471,9 @@ export async function createAgentRun(
           ...RUN_SELECT,
           calls: { select: CALL_SELECT, orderBy: { seq: 'asc' } },
           approval: { select: APPROVAL_SELECT },
+          // 新建的运行必然没有执行记录 —— 但 select 保持一致，
+          // 否则 DTO 的 `executionRecord` 在这里会是 undefined 而不是 null（形状漂移）。
+          execution: { select: EXECUTION_SELECT },
         },
       }) as AgentRunRow
 
@@ -523,7 +553,8 @@ function requireDecision(raw: unknown): AgentDecision {
  *   ② **必须过真相表**：`assertTransition()` 是唯一判据。`AWAITING_APPROVAL → EXECUTED`
  *      的边不存在，所以这条路**绕不过**人工批准。
  *   ③ **不执行副作用**：本函数把状态写成 `APPROVED` / `REJECTED` 就结束。
- *      `EXECUTED` 没有任何写入点（本切片未注册执行器）。
+ *      `EXECUTED` 的写入点只有 `executor.ts` 一处 —— 在本文件里写它会让
+ *      "执行只有一条路径"这条静态断言变红，而那正是它**该有**的反应。
  */
 export async function decideAgentRun(
   ctx: TenantContext,

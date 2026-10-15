@@ -29,7 +29,7 @@ import {
 // 夹具：形状逐字对齐服务端 `AgentRunSummaryDto` / `AgentUsageDto`
 // ─────────────────────────────────────────────────────────────────────────────
 
-const executionReason = '本切片未注册执行器：批准只做状态迁移，不会产生对外副作用。'
+const executionReason = '该运行已被驳回，不会被交付'
 
 const run = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
   id: 'run-1',

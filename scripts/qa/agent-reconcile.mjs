@@ -19,8 +19,10 @@
  *      漂移必须被**发现**，而不是被容忍。
  *
  *   ── ③ 状态与裁决一致 ──────────────────────────────────────
- *      终态（APPROVED/REJECTED）必有裁决行、待批态必无、状态与 decision 同向、
- *      **无 EXECUTED 行**（本切片未注册执行器）。这是"可审计账本"的定义，与实现无关。
+ *      终态（APPROVED/REJECTED）必有裁决行、待批态必无、状态与 decision 同向。
+ *      Slice 4 起执行器已接线：**不再**断言"无 EXECUTED 行"，改为断言
+ *      `EXECUTED ⇒ 必有 AgentExecution 行` 且反过来也成立（双向一致，
+ *      与 `scripts/connection/migrate.mjs` 的 C7 段同口径）。
  *
  *   ── ④ 限额判定用的额度**就是**响应下发的那份 ──────────────────
  *      用响应里的 `usage.quota` 复算 used/remaining，并核对 `used === totals.microCents`。
@@ -315,11 +317,32 @@ async function fetchRaw(client, org, periodKey) {
     [org, periodKey]
   )
 
-  /** 是否有任何一行被写成 EXECUTED（本切片不该有）。 */
-  const executedRuns = await scalar(
-    `SELECT COUNT(*) AS n FROM "AgentRun" WHERE "organizationId" = ? AND "status" = 'EXECUTED'`,
-    [org]
-  )
+  /**
+   * Slice 4：执行记录 —— 「`EXECUTED` ⇔ 有 `AgentExecution` 行」双向一致的原始读数。
+   *
+   * 🔴 缺表（C7 未应用）时**不能**静默通过：把 `executionsTableReady` 标成 false，
+   *    由断言显式报出。否则一个"还没有执行表"的旧库会让"双向一致"凭空成立
+   *    （两边都是空集 —— 空集一致性没有判别力）。
+   */
+  let executions = []
+  let orphanExecutions = []
+  let executionsTableReady = true
+  try {
+    executions = await q(
+      `SELECT e."id" AS "id", e."runId" AS "runId", e."organizationId" AS "organizationId"
+         FROM "AgentExecution" e WHERE e."organizationId" = ?`,
+      [org]
+    )
+    orphanExecutions = await q(
+      `SELECT e."id" AS "id", e."runId" AS "runId"
+         FROM "AgentExecution" e
+        WHERE e."organizationId" = ?
+          AND NOT EXISTS (SELECT 1 FROM "AgentRun" r WHERE r."id" = e."runId" AND r."organizationId" = e."organizationId")`,
+      [org]
+    )
+  } catch {
+    executionsTableReady = false
+  }
 
   return {
     runs,
@@ -333,7 +356,9 @@ async function fetchRaw(client, org, periodKey) {
     orphanApprovals,
     unknownEnums,
     openaiCallsInPeriod,
-    executedRuns,
+    executions,
+    orphanExecutions,
+    executionsTableReady,
   }
 }
 
@@ -479,18 +504,41 @@ function compareAll(payload, raw, expect) {
     }
     C.ck('1', `run[${run.id}] 状态属于已知集合`, RUN_STATUSES.includes(String(run.status)), `status=${run.status}`)
 
-    // ── ⑤ 诚实：本切片无执行器 ──
+    // ── ⑤ 执行可用性与状态**同源**（Slice 4：执行器已接线 ⇒ 不再断言"恒 false"）──
+    //    只做**可判定的结构一致性**：不重新推导业务规则，只检查 DTO 自身
+    //    （available ⇔ code ⇔ kind/channel ⇔ executionRecord ⇔ status）不自相矛盾。
+    const ex = run?.execution ?? {}
+    const executableStates = ['PROPOSED', 'DEGRADED', 'APPROVED']
     C.ck(
       '1',
-      `🔴 run[${run.id}].execution.available === false（本切片未注册执行器）`,
-      run?.execution?.available === false,
-      JSON.stringify(run.execution)
+      `run[${run.id}] execution.available 是布尔且 reason 非空（无论如何都要说明）`,
+      typeof ex.available === 'boolean' && typeof ex.reason === 'string' && ex.reason.length > 0,
+      JSON.stringify(ex)
     )
     C.ck(
       '1',
-      `run[${run.id}] execution.reason 非空（不可用时必须说明原因）`,
-      typeof run?.execution?.reason === 'string' && run.execution.reason.length > 0,
-      ''
+      `🔴 run[${run.id}] available ⇔ (code === null)（两处不可自相矛盾）`,
+      (ex.available === true) === (ex.code === null)
+    )
+    C.ck(
+      '1',
+      `🔴 run[${run.id}] available=true ⇒ kind/channel 取自闭集；false ⇒ 二者为 null`,
+      ex.available === true
+        ? ex.kind === 'RECEIPT' && ex.channel === 'IN_APP'
+        : ex.kind === null && ex.channel === null,
+      `kind=${ex.kind} channel=${ex.channel}`
+    )
+    C.ck(
+      '1',
+      `🔴 run[${run.id}] available=true ⇒ 状态确实允许执行（${executableStates.join('/')}）`,
+      ex.available !== true || executableStates.includes(String(dbRun.status)),
+      `status=${dbRun.status}`
+    )
+    C.ck(
+      '1',
+      `🔴 run[${run.id}] (status === 'EXECUTED') ⇔ executionRecord 非空`,
+      (String(dbRun.status) === 'EXECUTED') === (run?.executionRecord != null),
+      `status=${dbRun.status} record=${run?.executionRecord ? '有' : 'null'}`
     )
 
     // ── 投影边界：禁用键不得出现 ──
@@ -703,6 +751,7 @@ function compareAll(payload, raw, expect) {
           'calls',
           'approval',
           'execution',
+          'executionRecord',
           'createdAt',
           'updatedAt',
         ])
@@ -729,11 +778,36 @@ function compareAll(payload, raw, expect) {
     honesty?.realCallsEnabled === expect.realCallsEnabled,
     `API=${honesty?.realCallsEnabled} 期望=${expect.realCallsEnabled}（${expect.source}）`
   )
+  // ── 执行记录：双向一致（Slice 4 起执行器已接线）──
+  const executedRunIds = new Set(
+    raw.runs.filter((r) => String(r.status) === 'EXECUTED').map((r) => String(r.id))
+  )
+  const execRunIds = new Set((raw.executions ?? []).map((e) => String(e.runId)))
+  const missingExecRows = [...executedRunIds].filter((id) => !execRunIds.has(id))
+  const staleExecRows = [...execRunIds].filter((id) => !executedRunIds.has(id))
   C.ck(
     '6',
-    '🔴 无任何 EXECUTED 运行（本切片未注册执行器 —— 出现即代表有代码绕过）',
-    raw.executedRuns === 0,
-    `count=${raw.executedRuns}`
+    '🔴 AgentExecution 表存在（C7 迁移已应用 —— 缺表即代表部署不完整）',
+    raw.executionsTableReady === true,
+    raw.executionsTableReady ? `rows=${raw.executions.length}` : '缺表'
+  )
+  C.ck(
+    '6',
+    '🔴 EXECUTED ⇒ 必有 AgentExecution 行（"已执行"不能是空口宣称）',
+    raw.executionsTableReady === true && missingExecRows.length === 0,
+    missingExecRows.join(',')
+  )
+  C.ck(
+    '6',
+    '🔴 AgentExecution 行 ⇒ 所属运行必为 EXECUTED（不许有"执行了但状态没变"的幽灵记录）',
+    raw.executionsTableReady === true && staleExecRows.length === 0,
+    staleExecRows.join(',')
+  )
+  C.ck(
+    '6',
+    '执行记录无悬空运行（软引用完整性）',
+    raw.executionsTableReady === true && (raw.orphanExecutions ?? []).length === 0,
+    (raw.orphanExecutions ?? []).map((r) => String(r.runId)).join(',')
   )
   C.ck(
     '6',
@@ -768,7 +842,7 @@ function mutationProof(cleanPayload, raw, expect) {
     ['call.microCents + 1（逐次归因）', (p) => { p.runs[ri].calls[0].microCents += 1 }],
     ['call.inputTokens + 1（token 与金额不再自洽）', (p) => { p.runs[ri].calls[0].inputTokens += 1 }],
     ['assumptions.price 改价（假设必须承重）', (p) => { p.usage.assumptions.price.inputMicroCentsPerK += 1 }],
-    ['run.execution.available 置 true（伪称可执行）', (p) => { p.runs[ri].execution.available = true }],
+    ['run.execution.available 取反（与 code/kind 不再自洽）', (p) => { p.runs[ri].execution.available = !p.runs[ri].execution.available }],
     ['run 注入禁用键 rawText（投影边界）', (p) => { p.runs[ri].rawText = '模型原文泄漏' }],
     ['usage.provider.realCallsEnabled 取反（诚实块）', (p) => { p.usage.provider.realCallsEnabled = !p.usage.provider.realCallsEnabled }],
     ['call 多下发一个字段（形状契约）', (p) => { p.runs[ri].calls[0].mysteryField = 1 }],

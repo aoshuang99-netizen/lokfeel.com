@@ -10,7 +10,8 @@
  *      就是重复计费 —— 幂等键在这里不是"锦上添花"，是止损。
  *   ② **限额在调用之前判**（服务层 `loadLedger()` → `runSkill({ledger})`）。
  *      不是在事后合计 —— 事后合计只能告诉你"已经超了"。
- *   ③ 产出**不是**可执行动作：`execution.available` 恒为 false（本切片无执行器）。
+ *   ③ 产出**可否执行**由内核的执行计划给出（`execution.available`）——
+ *      本切片只**读**它，不做任何执行动作。执行走 `/runs/[runId]/execute`（`agent.execute`）。
  *
  * ⚠️ 为什么 `agent.run` 与 `agent.approve` 是**两个**能力：见 capabilities.ts 的
  * 注释 —— 分离是为了让"触发者"与"批准者"不是同一个人（制度层的 AC-08 保证）。

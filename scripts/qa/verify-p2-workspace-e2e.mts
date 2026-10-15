@@ -604,7 +604,8 @@ async function main() {
     str(run.status) === 'AWAITING_APPROVAL',
     `${str(run.status)}（providerKind=${str(run.providerKind)}）`,
   )
-  ck('execution.available === false', asRecord(run.execution).available === false)
+  ck('待批 ⇒ execution.available === false', asRecord(run.execution).available === false)
+  ck('未执行 ⇒ executionRecord === null（执行记录只在执行后出现）', run.executionRecord === null)
   ck(
     '待批状态给出的原因是**状态**问题（点名 AWAITING_APPROVAL）',
     str(asRecord(run.execution).reason).includes('AWAITING_APPROVAL'),

@@ -6,7 +6,7 @@
  *    的文件头。门禁 R10 禁止客户端可达代码**值导入** `@/lib/agents`。
  *
  * ⚠️ 本区的诚实纪律（T09 反复强调的三条，UI 必须原样体现）：
- *   ① `execution.available` **恒为 false** —— 本切片未注册执行器。
+ *   ① `execution.available` / `execution.reason` 由服务端执行计划下发，本区**原样透传**。
  *      原因文案**必须原样展示**，否则"点了批准到底会发生什么"就没有答案。
  *   ② `provider` 诚实块：没有凭据时"跑了 3 次花 0 分"不是"模型免费"，
  *      而是"走的是规则式兜底"。这个区别必须显示出来。
@@ -56,9 +56,9 @@ export const LIVING_AGENT_STATUS_LABELS: Record<LivingAgentStatus, string> = {
 export const LIVING_AGENT_STATUS_HINTS: Record<LivingAgentStatus, string> = {
   PROPOSED: '产出已通过结构校验，但尚未执行任何副作用。',
   AWAITING_APPROVAL: '高风险：必须人工批准后才可能执行。',
-  APPROVED: '状态已批准。本切片没有执行器，因此不会自动发生副作用。',
+  APPROVED: '状态已批准。但批准不等于执行：还需一次显式的执行动作，因此不会自动发生副作用。',
   REJECTED: '已被驳回，不可改判 —— 要推翻需重新发起一次运行。',
-  EXECUTED: '已执行副作用（只有经历过批准才可能到达）。',
+  EXECUTED: '副作用已发生。低风险运行可由有权限者直接执行；高风险运行必须先经人工批准。',
   DEGRADED: '走了降级路径（例如规则式兜底）：结果可用，但能力弱于正常路径。',
   BLOCKED_QUOTA: '在发起调用之前就被额度挡下 —— 没有产生真实模型花费。',
   FAILED: '运行失败。失败原因见降级码。',

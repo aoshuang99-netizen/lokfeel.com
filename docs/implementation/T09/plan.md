@@ -82,6 +82,31 @@ T09 卡片与 AC-08 的四条要求，逐条对应到**代码里不存在的代�
   （默认额度 500 分 ≈ 11 万次调用，不注入就无法端到端跑出限额）。
   ⚠️ 判定用的是技能的 `costProfile` **预估**，不是"上次实际花了多少"（差一个数量级，见 §3.2）。
 
+### Slice 4 · 执行器落地（`EXECUTED` **只有一条路径**）—— ✅ 已交付（见 `slice-4.md`）
+
+> 若**先**改状态再投递：投递失败就会留下"状态 EXECUTED、但什么都没发出"的**假成功** ——
+> 而重试会因为状态是终态而被拒（`EXECUTED` **没有出边**），那条产出**永远发不出去**。
+
+- **C7 迁移**（**纯新增**单表）：`AgentExecution`（`@@unique([runId])` + 2 索引 + 2 强 FK）。
+  🔴 执行记录独立成表，是因为批次机制**只支持 `CREATE TABLE/INDEX IF NOT EXISTS`**（无 `ALTER` 形态），
+  且"执行是事件、**只增不改**"。断言 **205 → 219（+14）**。
+- **内核**：`src/lib/agent/execution.ts` —— 执行计划**真相表** + `planExecution()`。
+  与 `approval.ts` 是**串联的两道门**（状态机问"这个状态允许迁移吗"；执行计划问"这个技能注册了执行器吗、效果是什么"），
+  外加一道纵深防御：`requiresApproval` 的技能，库里必须**真的**有一条 `APPROVED` 裁决行
+  （状态是**列**，可被人工改坏；裁决表是只增不改的事件）。
+- **服务层**：`src/lib/agents/executor.ts` —— `EXECUTED` 的**唯一**写入点；
+  经 **T06 统一投递出口** `deliverNotification()` 产生副作用（拿到披露守卫 + 身份声明断言 + 投递幂等 + 留痕）；
+  **先投递、后落库**（顺序论证见 `slice-4.md` §3）。
+- **阶段断言"升级"而非删除**：Slice 2 的"`EXECUTED` 必须为 0"→ **双向一致**
+  （`EXECUTED ⇔ 有 AgentExecution 行`）；"唯一写入点"由**静态断言**守着
+  （服务层 + 路由层源码里 `EXECUTED` 字面量**只允许**出现在 `executor.ts`；写入口计数固定）。
+- **诚实边界**：本切片只做**内部回执**（收件人恒为**发起人**）。
+  对外送达需 target 身份 + T05 的 `discloseSubject()` 出口，属**下一片**。
+- **能力**：`agent.execute` = **OPERATOR+** —— 批准才是 ADMIN+ 的**决策**，执行是**机械动作**；
+  若执行也要 ADMIN，「运营发起 → 管理员批准 → 运营执行」这条正常动线走不通。
+- **连带修正**（同一提交内，避免留下假绿）：两份 QA 脚本 + 6 份既有测试按新口径改写；
+  `EXECUTION_PLANS` 的描述去 markdown 标记（UI 原样渲染）；`agent.delivery` **不**渲染任务标题。
+
 ## 4. 门禁（沿用既有 + 新增）
 
 ```
@@ -115,3 +140,8 @@ npm run check:ui-invariants  # 若 Slice 2/3 触及 living 目录
 - Slice 3 = **纯新增文件**（`provider-openai.ts` + 3 个 QA 脚本 + 3 个测试套件）+
   `provider.ts` 里把一个永远 `unavailable` 的占位换成纯函数 + `runs.ts` 两个**可选**注入点。
   回滚 = 删新增文件 / 恢复占位函数；**无 schema 变更**，不涉及迁移与数据。
+- Slice 4 = **纯新增**（`execution.ts` / `executor.ts` / `execute` 路由 / 2 个测试套件）+
+  `dto.ts` 的 `executionOf()` 改为**转发**内核判据 + `notification-content.ts` 新增一个模板 +
+  **C7 迁移（单表）**。回滚 = 删新增文件 + 把 `executionOf()` 改回返回"不可执行 + 原因" +
+  `rollback --batch=C7`（**只删 `AgentExecution`**，不删 `AgentRun` —— 与 T08 同口径）。
+  🔴 本切片**没有**改动任何既有表的列 ⇒ C0–C6 完全不受影响。
