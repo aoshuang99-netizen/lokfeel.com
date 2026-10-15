@@ -288,5 +288,5 @@ if (!can(ctx.role, 'agent.approve')) {
 
 ## 8. 回填
 
-- 提交：见 `BACKLOG.md` 末行（`[skip netlify]`）；
+- 提交：`c2ae31a`（`[skip netlify]`，17 文件 / +2087 −69；推 main 成功 `2272b77..c2ae31a`，走 `scripts/push-main.sh` 通道① 代理）；
 - `verify:no-release` 实证最新部署仍为 `f6630ea6b`（2026-10-13）⇒ 保持"**可发版未发版**"。
