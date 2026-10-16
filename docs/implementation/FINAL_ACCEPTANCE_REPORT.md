@@ -58,7 +58,8 @@
 | 类型检查 | **`npx tsc --noEmit` exit 0** |
 | CI | `.github/workflows/ci.yml`（GitHub Actions）—— **11 个 job**；三道棘轮见 `CI_GATES.md`，性能 SLO 见 `PERFORMANCE_BASELINE.md` |
 | 最新 CI run（改造前） | `38848356361`（commit `4ceab89`）→ **failure**（Lint ❌ / Dependency audit ❌；其余 5 项 success） |
-| 最新 CI run（改造后） | ✅ **`38863968546`（commit `8016bb4`）→ success** —— 当时 9 个 job 全绿（整轮 2m49s），含**新增**的 Migration（67s）与 E2E（164s），`Build` 在移除 `continue-on-error` 后仍 success；其后 AC-24 再加 `slo-check`（确定性）与 `perf-baseline`（仅手动）两个 job |
+| 最新 CI run（改造后） | ✅ **`38863968546`（commit `8016bb4`）→ success** —— 当时 9 个 job 全绿（整轮 2m49s），含**新增**的 Migration（67s）与 E2E（164s），`Build` 在移除 `continue-on-error` 后仍 success |
+| 最新 CI run（AC-24 后） | ✅ **`38868575737`（commit `7e76bc3`）→ success** —— **11 个 job 全绿**（整轮 **151s**）；新增的 **`Perf SLO 对账` 8s 通过**、**`Perf 基线实跑` 在 push 上 skipped**（仅 `workflow_dispatch`）—— 与「压测是取证不是门禁」的设计**逐条吻合** |
 | 全仓 lint 债 | **1542 problems** / 1019 文件（改造前 1565；净 −23，且已冻结为棘轮基线） |
 | 生产可达依赖高危 | **high 26 / critical 2**（全量含 dev：high 34 / critical 3）—— 已登记，见 `DEPENDENCY_RISK.md` |
 | 性能基线 | 本地构建产物三档并发（1/10/50）· 每档 10s × 3 次取中位数 · **48/48 SLO 断言通过** · 错误率 **0.00%**；宿主 `Intel Core m3-7Y32 @ 1.10GHz`（4 核 / 8GB）—— 见 `PERFORMANCE_BASELINE.md` |
@@ -97,7 +98,7 @@
 | **AC-17** | 工作流恢复 | ✅ **PASS** | T06 故障注入 E2E **8/8**：崩溃/超时/网络失败后**无重复动作**且**可接管** | — |
 | **AC-18** | SaaS UI | ✅ **PASS** | `verify:ac18:console`（真实 Chrome + 隔离库）**84/0**（七屏）；无空按钮**动态负测**（逐个真点） | 第 7 屏 Agents 由 T09 Slice 5 接线；`check:ui-invariants` 扫描面含 `src/app/console` |
 | **AC-23** | CI | ✅ **PASS** | **CI run `38863968546`（`8016bb4`）→ success**：9 个 job 全绿（整轮 **2m49s**），四个关键 job 逐步 `success` —— Lint 棘轮 99s · Dependency 棘轮 70s · **Migration 67s（新增）** · **E2E 164s（新增）**；`Build` 移除 `continue-on-error` 后仍 success。改造前对照 `38848356361`（`4ceab89`）→ failure（Lint ❌ / Dependency audit ❌）。本地另证：三份自证 8+6+5 全绿、`verify` **255/255** | 见 §4.2 与 `CI_GATES.md`。**残留**：生产可达高危 28 条为「已登记 + 棘轮」，**未做批量升级**（`npm audit fix` 实测动 162 包且一条不消）⇒ 升级批次列为后续 P0 |
-| **AC-24** | 性能 | ✅ **PASS** | 本地构建产物三档并发（1/10/50）实测，每档 **10s × 3 次取中位数**（原始值保留）：`npm run check:slo` → **48/48 断言通过**（8 个端点 · 错误率三档全 **0.00%**）· `npm run verify:check:slo` → **6/6 自证** · 限流取证 **阳性对照恰好 10 次 429**（印证 `max=120`），**MCP/A2A 各 200 次零 429 ⇒ 缺口证实** | 见 §4.3 与 `PERFORMANCE_BASELINE.md`。**未测项已如实列出**（生产端到端 RTT / 写路径 / 长连接 / 多租户数据量 / 饱和归因）；本基线**仅可用于同法前后对比**，**不可外推为生产 SLO 达标** |
+| **AC-24** | 性能 | ✅ **PASS** | 本地构建产物三档并发（1/10/50）实测，每档 **10s × 3 次取中位数**（原始值保留）：`npm run check:slo` → **48/48 断言通过**（8 个端点 · 错误率三档全 **0.00%**）· `npm run verify:check:slo` → **6/6 自证** · 限流取证 **阳性对照恰好 10 次 429**（印证 `max=120`），**MCP/A2A 各 200 次零 429 ⇒ 缺口证实** · **CI run `38868575737`（`7e76bc3`）→ success**（11 job 全绿 · 151s），新增 `Perf SLO 对账` **8s 通过**、`Perf 基线实跑` push 上 **skipped** | 见 §4.3 与 `PERFORMANCE_BASELINE.md`。**未测项已如实列出**（生产端到端 RTT / 写路径 / 长连接 / 多租户数据量 / 饱和归因）；本基线**仅可用于同法前后对比**，**不可外推为生产 SLO 达标** |
 | **AC-25** | 付费价值 | ⛔ **BLOCKED** | **无真实试点客户**：无真实支付/续费记录、无工时基线、无完成率 | 依赖外部真实客户，**不可 MOCK 代替** |
 
 ### 3.3 P1（3 条）
@@ -271,7 +272,7 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 | **对账** | `npm run check:slo` → **48/48 断言通过** · 错误率三档全 **0.00%** |
 | **自证** | `npm run verify:check:slo` → **6/6**：篡改 p95 判红 · 篡改错误率判红 · **删档（缺数据）判红** · 基线非法判红 · **阈值放宽必须通过（非恒红对照）** |
 | **T11 交接项** | **MCP/A2A 无独立速率限制 —— 已证实**：阳性对照端点打出**恰好 10 次 429**（印证其 `max=120`），而 MCP/A2A 各 200 次请求 **0 次 429** |
-| **CI 集成** | 新增 **确定性** `slo-check` job（只读冻结 JSON，零抖动、不需 `npm ci`）；实跑压测走 **仅手动** `workflow_dispatch` job |
+| **CI 集成** | 新增 **确定性** `slo-check` job（只读冻结 JSON，零抖动、不需 `npm ci`）；实跑压测走 **仅手动** `workflow_dispatch` job。**CI 实证**：run `38868575737`（`7e76bc3`）→ **success（151s / 11 job 全绿）**，`Perf SLO 对账` **8s 通过**、`Perf 基线实跑` 在 push 上 **skipped** |
 
 **三条如实标注（不虚报）**：
 

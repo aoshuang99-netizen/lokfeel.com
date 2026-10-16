@@ -213,6 +213,25 @@ const redisKey = `ratelimit:${rateKey}`                     // ← 没有路由/
 
 > 只证前者会得到一个永远红的校验器 —— 那比没有校验器更糟。
 
+### 6.1 CI 实证（推送后）
+
+**CI run `38868575737`（commit `7e76bc3`）→ `conclusion: success`**，整轮 **151s**，11 个 job 全绿：
+
+| Job | 结论 | 耗时 | 备注 |
+|---|---|---|---|
+| **Perf SLO 对账（确定性 · AC-24）** | ✅ **success** | **8s** | **本轮新增**；只读冻结 JSON，**不需要 `npm ci`** ⇒ 十几秒、零抖动 |
+| **Perf 基线实跑（手动）** | ⏭ **skipped** | — | **本轮新增**；`if: github.event_name == 'workflow_dispatch'` —— **在 push 上按设计不跑**（这正是「压测是取证不是门禁」的落地证明） |
+| Lint（ESLint · 棘轮） | ✅ success | 102s | 1542 零新增 |
+| Dependency audit（生产可达 · 棘轮） | ✅ success | 46s | |
+| Migration（libSQL 文件库 · 全批次） | ✅ success | 44s | |
+| E2E（构建产物 · 浏览器冒烟） | ✅ success | 146s | |
+| Typecheck / Test / Build / Secret scan | ✅ success | 83s / 73s / 128s / 11s | |
+| DCO sign-off | ⏭ skipped | — | 仅 PR 触发，预期 |
+
+> 两个新增 job 的**行为与设计完全一致**：确定性的那个**跑了且 8 秒过**；
+> 抖动敏感的那个**在 push 上根本不跑**。这比「写了文档说它会跳过」强 ——
+> 它是**运行记录**。
+
 ---
 
 ## 7. 复跑命令
@@ -245,3 +264,4 @@ node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 --n=200 \
 | 日期 | 变更 |
 |---|---|
 | 2026-10-16 | **AC-24 首次执行**：定义 SLO（`slo.json`，两档三层共 9 条规则）；新建零依赖压测器 `load-baseline.mjs`（含 `--repeats` 中位数聚合与原始值保留）与限流取证器 `rate-limit-probe.mjs`；实测本地构建产物三档并发，留存基线 `perf-baseline.json`（48/48 断言通过）；证实 MCP/A2A **无速率限制**（带阳性对照，对照端点恰好 10 次 429）；顺带发现并登记限流器**共用 per-IP 桶**缺陷（代码级，运行期未实测）；CI 新增确定性 `slo-check` job 与仅手动的 `perf-baseline` job。 |
+| 2026-10-16 | **CI 实证回填**：CI run `38868575737`（`7e76bc3`）→ **success**（整轮 151s，11 job 全绿）。新增的 `Perf SLO 对账` **8s 通过**、`Perf 基线实跑` 在 push 上 **skipped** —— 与 §6 的设计一致。`verify:no-release:surface` 仍成立（5 条 404 + 3/3 正向对照）。 |
