@@ -1,0 +1,2739 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-16T07:25:21.167Z",
+  "kind": "local-build",
+  "note": "本地构建产物（next start）实测。生产为跨境 Netlify 共享 serverless，延迟含跨网络 RTT，本基线**不含**该部分，故不可直接外推为生产 SLO 达标证据。",
+  "base": "http://127.0.0.1:3000",
+  "config": {
+    "levels": [
+      1,
+      10,
+      50
+    ],
+    "durationSec": 10,
+    "warmupSec": 3,
+    "timeoutMs": 15000,
+    "repeats": 3,
+    "aggregation": "median-of-repeats（原始值保留在 levels[].repeats）"
+  },
+  "env": {
+    "node": "v22.22.2",
+    "platform": "darwin 22.6.0",
+    "cpuModel": "Intel(R) Core(TM) m3-7Y32 CPU @ 1.10GHz",
+    "cpuCount": 4,
+    "totalMemGB": 8,
+    "commit": "55de62107775f53aab9e66ca0e10ee73c41bc42a"
+  },
+  "health": {
+    "before": {
+      "reachable": true,
+      "status": 200,
+      "healthStatus": "healthy",
+      "dbLatency": 0,
+      "redisBackend": "memory"
+    },
+    "after": {
+      "reachable": true,
+      "status": 200,
+      "healthStatus": "healthy",
+      "dbLatency": 0,
+      "redisBackend": "memory"
+    }
+  },
+  "levels": [
+    {
+      "concurrency": 1,
+      "durationSec": 10,
+      "repeatCount": 3,
+      "totals": {
+        "requests": 841,
+        "unexpected": 0,
+        "failed": 0,
+        "errorRate": 0,
+        "rps": 84.09
+      },
+      "targets": [
+        {
+          "name": "health",
+          "note": "DB 往返（user.count）+ Redis 状态",
+          "expect": [
+            200
+          ],
+          "count": 106,
+          "ok": 106,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 10.6,
+          "statuses": {
+            "200": 337
+          },
+          "latencyMs": {
+            "min": 4.33,
+            "p50": 6.33,
+            "p90": 15.92,
+            "p95": 20.01,
+            "p99": 27.89,
+            "max": 44.54,
+            "mean": 8.5
+          },
+          "p95Spread": {
+            "min": 13.52,
+            "max": 20.32
+          }
+        },
+        {
+          "name": "home",
+          "note": "SSR 首页（可能重定向到登录）",
+          "expect": [
+            200,
+            307,
+            308
+          ],
+          "count": 105,
+          "ok": 105,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 10.5,
+          "statuses": {
+            "200": 336
+          },
+          "latencyMs": {
+            "min": 5.32,
+            "p50": 8.54,
+            "p90": 19.27,
+            "p95": 24.82,
+            "p99": 36.15,
+            "max": 62.36,
+            "mean": 11.33
+          },
+          "p95Spread": {
+            "min": 16.51,
+            "max": 28.25
+          }
+        },
+        {
+          "name": "login",
+          "note": "SSR 登录页",
+          "expect": [
+            200
+          ],
+          "count": 105,
+          "ok": 105,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 10.5,
+          "statuses": {
+            "200": 336
+          },
+          "latencyMs": {
+            "min": 16.39,
+            "p50": 24.34,
+            "p90": 47.65,
+            "p95": 65.04,
+            "p99": 78.34,
+            "max": 151.99,
+            "mean": 30.99
+          },
+          "p95Spread": {
+            "min": 51.28,
+            "max": 71.63
+          }
+        },
+        {
+          "name": "org-anon",
+          "note": "REST 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 105,
+          "ok": 105,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 10.5,
+          "statuses": {
+            "401": 334
+          },
+          "latencyMs": {
+            "min": 4.46,
+            "p50": 6.28,
+            "p90": 13.57,
+            "p95": 16.44,
+            "p99": 23.48,
+            "max": 29.78,
+            "mean": 8.2
+          },
+          "p95Spread": {
+            "min": 14.79,
+            "max": 22.81
+          }
+        },
+        {
+          "name": "members-anon",
+          "note": "REST 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 105,
+          "ok": 105,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 10.5,
+          "statuses": {
+            "401": 334
+          },
+          "latencyMs": {
+            "min": 4.2,
+            "p50": 5.92,
+            "p90": 13.05,
+            "p95": 17.03,
+            "p99": 23.76,
+            "max": 27.61,
+            "mean": 7.68
+          },
+          "p95Spread": {
+            "min": 14.49,
+            "max": 17.33
+          }
+        },
+        {
+          "name": "mcp-discover",
+          "note": "MCP 发现面（公开、**无速率限制**）",
+          "expect": [
+            200
+          ],
+          "count": 105,
+          "ok": 105,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 10.5,
+          "statuses": {
+            "200": 334
+          },
+          "latencyMs": {
+            "min": 4.01,
+            "p50": 5.98,
+            "p90": 11.12,
+            "p95": 13.97,
+            "p99": 17.84,
+            "max": 36.19,
+            "mean": 7.41
+          },
+          "p95Spread": {
+            "min": 9.76,
+            "max": 18.48
+          }
+        },
+        {
+          "name": "mcp-call-anon",
+          "note": "MCP 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 105,
+          "ok": 105,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 10.5,
+          "statuses": {
+            "401": 334
+          },
+          "latencyMs": {
+            "min": 4.74,
+            "p50": 7.16,
+            "p90": 15.19,
+            "p95": 19.92,
+            "p99": 32.77,
+            "max": 33.7,
+            "mean": 9.24
+          },
+          "p95Spread": {
+            "min": 18.78,
+            "max": 28.37
+          }
+        },
+        {
+          "name": "a2a-anon",
+          "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 105,
+          "ok": 105,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 10.5,
+          "statuses": {
+            "401": 334
+          },
+          "latencyMs": {
+            "min": 4.79,
+            "p50": 7.23,
+            "p90": 13.69,
+            "p95": 17.06,
+            "p99": 29.96,
+            "max": 33.47,
+            "mean": 8.94
+          },
+          "p95Spread": {
+            "min": 15.05,
+            "max": 23.16
+          }
+        }
+      ],
+      "repeats": [
+        {
+          "concurrency": 1,
+          "durationSec": 10,
+          "wallSec": 10.02,
+          "totals": {
+            "requests": 835,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 83.31
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.48,
+              "statuses": {
+                "200": 105
+              },
+              "latencyMs": {
+                "min": 4.33,
+                "p50": 6.5,
+                "p90": 16.09,
+                "p95": 20.32,
+                "p99": 28.91,
+                "max": 99.71,
+                "mean": 9.16
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.48,
+              "statuses": {
+                "200": 105
+              },
+              "latencyMs": {
+                "min": 5.43,
+                "p50": 8.54,
+                "p90": 19.5,
+                "p95": 28.25,
+                "p99": 36.15,
+                "max": 68.04,
+                "mean": 11.43
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.48,
+              "statuses": {
+                "200": 105
+              },
+              "latencyMs": {
+                "min": 17.28,
+                "p50": 24.34,
+                "p90": 47.65,
+                "p95": 65.04,
+                "p99": 130.19,
+                "max": 164.13,
+                "mean": 32.05
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 104,
+              "ok": 104,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.38,
+              "statuses": {
+                "401": 104
+              },
+              "latencyMs": {
+                "min": 4.46,
+                "p50": 6.37,
+                "p90": 13.57,
+                "p95": 22.81,
+                "p99": 27.12,
+                "max": 49.98,
+                "mean": 8.49
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 104,
+              "ok": 104,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.38,
+              "statuses": {
+                "401": 104
+              },
+              "latencyMs": {
+                "min": 4.68,
+                "p50": 6.9,
+                "p90": 13.56,
+                "p95": 17.33,
+                "p99": 26.96,
+                "max": 85.07,
+                "mean": 9.06
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 104,
+              "ok": 104,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.38,
+              "statuses": {
+                "200": 104
+              },
+              "latencyMs": {
+                "min": 4.2,
+                "p50": 6.16,
+                "p90": 11.12,
+                "p95": 13.97,
+                "p99": 17.84,
+                "max": 40.26,
+                "mean": 7.41
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 104,
+              "ok": 104,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.38,
+              "statuses": {
+                "401": 104
+              },
+              "latencyMs": {
+                "min": 4.82,
+                "p50": 7.54,
+                "p90": 15.19,
+                "p95": 18.78,
+                "p99": 25.75,
+                "max": 31.61,
+                "mean": 9.24
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 104,
+              "ok": 104,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.38,
+              "statuses": {
+                "401": 104
+              },
+              "latencyMs": {
+                "min": 4.83,
+                "p50": 7.23,
+                "p90": 13.69,
+                "p95": 17.06,
+                "p99": 38.05,
+                "max": 49.85,
+                "mean": 8.94
+              }
+            }
+          ]
+        },
+        {
+          "concurrency": 1,
+          "durationSec": 10,
+          "wallSec": 10,
+          "totals": {
+            "requests": 841,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 84.09
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 106,
+              "ok": 106,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.6,
+              "statuses": {
+                "200": 106
+              },
+              "latencyMs": {
+                "min": 4.34,
+                "p50": 6.33,
+                "p90": 15.92,
+                "p95": 20.01,
+                "p99": 27.89,
+                "max": 44.54,
+                "mean": 8.5
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.5,
+              "statuses": {
+                "200": 105
+              },
+              "latencyMs": {
+                "min": 5.32,
+                "p50": 9.16,
+                "p90": 19.27,
+                "p95": 24.82,
+                "p99": 33.65,
+                "max": 38.21,
+                "mean": 11.33
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.5,
+              "statuses": {
+                "200": 105
+              },
+              "latencyMs": {
+                "min": 16.39,
+                "p50": 25.58,
+                "p90": 49.08,
+                "p95": 71.63,
+                "p99": 78.34,
+                "max": 84.62,
+                "mean": 30.99
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.5,
+              "statuses": {
+                "401": 105
+              },
+              "latencyMs": {
+                "min": 4.61,
+                "p50": 6.28,
+                "p90": 14.64,
+                "p95": 16.44,
+                "p99": 23.48,
+                "max": 29.78,
+                "mean": 8.2
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.5,
+              "statuses": {
+                "401": 105
+              },
+              "latencyMs": {
+                "min": 4.2,
+                "p50": 5.91,
+                "p90": 13.05,
+                "p95": 17.03,
+                "p99": 23.76,
+                "max": 24.97,
+                "mean": 7.68
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.5,
+              "statuses": {
+                "200": 105
+              },
+              "latencyMs": {
+                "min": 4.01,
+                "p50": 5.98,
+                "p90": 15.69,
+                "p95": 18.48,
+                "p99": 33.5,
+                "max": 36.19,
+                "mean": 8.25
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.5,
+              "statuses": {
+                "401": 105
+              },
+              "latencyMs": {
+                "min": 4.74,
+                "p50": 7.16,
+                "p90": 21.66,
+                "p95": 28.37,
+                "p99": 36.63,
+                "max": 48.94,
+                "mean": 10.61
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 105,
+              "ok": 105,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 10.5,
+              "statuses": {
+                "401": 105
+              },
+              "latencyMs": {
+                "min": 4.79,
+                "p50": 7.43,
+                "p90": 16.48,
+                "p95": 23.16,
+                "p99": 29.96,
+                "max": 33.47,
+                "mean": 9.54
+              }
+            }
+          ]
+        },
+        {
+          "concurrency": 1,
+          "durationSec": 10,
+          "wallSec": 10.01,
+          "totals": {
+            "requests": 1003,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 100.2
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 126,
+              "ok": 126,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.59,
+              "statuses": {
+                "200": 126
+              },
+              "latencyMs": {
+                "min": 4.1,
+                "p50": 5.81,
+                "p90": 10.42,
+                "p95": 13.52,
+                "p99": 16.79,
+                "max": 23.68,
+                "mean": 6.63
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 126,
+              "ok": 126,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.59,
+              "statuses": {
+                "200": 126
+              },
+              "latencyMs": {
+                "min": 4.98,
+                "p50": 7.26,
+                "p90": 13.26,
+                "p95": 16.51,
+                "p99": 45.11,
+                "max": 62.36,
+                "mean": 9.16
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 126,
+              "ok": 126,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.59,
+              "statuses": {
+                "200": 126
+              },
+              "latencyMs": {
+                "min": 15.57,
+                "p50": 22.36,
+                "p90": 45.05,
+                "p95": 51.28,
+                "p99": 62.81,
+                "max": 151.99,
+                "mean": 27.56
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.49,
+              "statuses": {
+                "401": 125
+              },
+              "latencyMs": {
+                "min": 4.14,
+                "p50": 5.96,
+                "p90": 10.16,
+                "p95": 14.79,
+                "p99": 17.67,
+                "max": 20.53,
+                "mean": 6.89
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.49,
+              "statuses": {
+                "401": 125
+              },
+              "latencyMs": {
+                "min": 3.99,
+                "p50": 5.92,
+                "p90": 9.52,
+                "p95": 14.49,
+                "p99": 17.38,
+                "max": 27.61,
+                "mean": 6.89
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.49,
+              "statuses": {
+                "200": 125
+              },
+              "latencyMs": {
+                "min": 3.66,
+                "p50": 5.61,
+                "p90": 8.25,
+                "p95": 9.76,
+                "p99": 15.53,
+                "max": 18.25,
+                "mean": 6.16
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.49,
+              "statuses": {
+                "401": 125
+              },
+              "latencyMs": {
+                "min": 4.37,
+                "p50": 6.93,
+                "p90": 15.07,
+                "p95": 19.92,
+                "p99": 32.77,
+                "max": 33.7,
+                "mean": 8.76
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.49,
+              "statuses": {
+                "401": 125
+              },
+              "latencyMs": {
+                "min": 4.58,
+                "p50": 6.61,
+                "p90": 11.14,
+                "p95": 15.05,
+                "p99": 23.27,
+                "max": 25.47,
+                "mean": 7.6
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concurrency": 10,
+      "durationSec": 10,
+      "repeatCount": 3,
+      "totals": {
+        "requests": 1103,
+        "unexpected": 0,
+        "failed": 0,
+        "errorRate": 0,
+        "rps": 109.47
+      },
+      "targets": [
+        {
+          "name": "health",
+          "note": "DB 往返（user.count）+ Redis 状态",
+          "expect": [
+            200
+          ],
+          "count": 138,
+          "ok": 138,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 13.71,
+          "statuses": {
+            "200": 427
+          },
+          "latencyMs": {
+            "min": 5.4,
+            "p50": 24.05,
+            "p90": 51.67,
+            "p95": 63.07,
+            "p99": 80.87,
+            "max": 100.69,
+            "mean": 29.9
+          },
+          "p95Spread": {
+            "min": 52.51,
+            "max": 69.18
+          }
+        },
+        {
+          "name": "home",
+          "note": "SSR 首页（可能重定向到登录）",
+          "expect": [
+            200,
+            307,
+            308
+          ],
+          "count": 138,
+          "ok": 138,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 13.71,
+          "statuses": {
+            "200": 427
+          },
+          "latencyMs": {
+            "min": 32.69,
+            "p50": 71.24,
+            "p90": 128.08,
+            "p95": 174.13,
+            "p99": 188.19,
+            "max": 219.83,
+            "mean": 84.26
+          },
+          "p95Spread": {
+            "min": 129.37,
+            "max": 180.92
+          }
+        },
+        {
+          "name": "login",
+          "note": "SSR 登录页",
+          "expect": [
+            200
+          ],
+          "count": 138,
+          "ok": 138,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 13.71,
+          "statuses": {
+            "200": 427
+          },
+          "latencyMs": {
+            "min": 69.88,
+            "p50": 333.82,
+            "p90": 468.76,
+            "p95": 498.92,
+            "p99": 538.71,
+            "max": 571.38,
+            "mean": 348.98
+          },
+          "p95Spread": {
+            "min": 452.86,
+            "max": 510.06
+          }
+        },
+        {
+          "name": "org-anon",
+          "note": "REST 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 138,
+          "ok": 138,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 13.71,
+          "statuses": {
+            "401": 426
+          },
+          "latencyMs": {
+            "min": 14.93,
+            "p50": 47.43,
+            "p90": 88.82,
+            "p95": 113.2,
+            "p99": 143.26,
+            "max": 168.95,
+            "mean": 54.51
+          },
+          "p95Spread": {
+            "min": 100.23,
+            "max": 114.2
+          }
+        },
+        {
+          "name": "members-anon",
+          "note": "REST 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 138,
+          "ok": 138,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 13.71,
+          "statuses": {
+            "401": 426
+          },
+          "latencyMs": {
+            "min": 21.19,
+            "p50": 48.61,
+            "p90": 90.74,
+            "p95": 104.74,
+            "p99": 145.95,
+            "max": 173.53,
+            "mean": 57.59
+          },
+          "p95Spread": {
+            "min": 102.7,
+            "max": 121.33
+          }
+        },
+        {
+          "name": "mcp-discover",
+          "note": "MCP 发现面（公开、**无速率限制**）",
+          "expect": [
+            200
+          ],
+          "count": 138,
+          "ok": 138,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 13.71,
+          "statuses": {
+            "200": 426
+          },
+          "latencyMs": {
+            "min": 9.79,
+            "p50": 33.72,
+            "p90": 67.3,
+            "p95": 91.94,
+            "p99": 119.42,
+            "max": 128.77,
+            "mean": 40.89
+          },
+          "p95Spread": {
+            "min": 72.04,
+            "max": 93.11
+          }
+        },
+        {
+          "name": "mcp-call-anon",
+          "note": "MCP 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 138,
+          "ok": 138,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 13.66,
+          "statuses": {
+            "401": 425
+          },
+          "latencyMs": {
+            "min": 15.32,
+            "p50": 48.24,
+            "p90": 89.22,
+            "p95": 123.79,
+            "p99": 151.02,
+            "max": 160.66,
+            "mean": 57.11
+          },
+          "p95Spread": {
+            "min": 91.09,
+            "max": 129.37
+          }
+        },
+        {
+          "name": "a2a-anon",
+          "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 137,
+          "ok": 137,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 13.61,
+          "statuses": {
+            "401": 424
+          },
+          "latencyMs": {
+            "min": 16.85,
+            "p50": 40.98,
+            "p90": 84.61,
+            "p95": 111.29,
+            "p99": 157.21,
+            "max": 185.1,
+            "mean": 49.91
+          },
+          "p95Spread": {
+            "min": 91.59,
+            "max": 131.44
+          }
+        }
+      ],
+      "repeats": [
+        {
+          "concurrency": 10,
+          "durationSec": 10,
+          "wallSec": 10.1,
+          "totals": {
+            "requests": 1103,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 109.18
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.66,
+              "statuses": {
+                "200": 138
+              },
+              "latencyMs": {
+                "min": 6.82,
+                "p50": 26.2,
+                "p90": 55.47,
+                "p95": 63.07,
+                "p99": 80.87,
+                "max": 100.69,
+                "mean": 30.98
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.66,
+              "statuses": {
+                "200": 138
+              },
+              "latencyMs": {
+                "min": 32.69,
+                "p50": 74.72,
+                "p90": 128.08,
+                "p95": 174.13,
+                "p99": 188.19,
+                "max": 219.83,
+                "mean": 84.26
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.66,
+              "statuses": {
+                "200": 138
+              },
+              "latencyMs": {
+                "min": 132.09,
+                "p50": 340.44,
+                "p90": 468.76,
+                "p95": 510.06,
+                "p99": 538.71,
+                "max": 561.86,
+                "mean": 353.63
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.66,
+              "statuses": {
+                "401": 138
+              },
+              "latencyMs": {
+                "min": 14.93,
+                "p50": 48.34,
+                "p90": 88.82,
+                "p95": 113.2,
+                "p99": 143.26,
+                "max": 168.95,
+                "mean": 54.51
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.66,
+              "statuses": {
+                "401": 138
+              },
+              "latencyMs": {
+                "min": 20.82,
+                "p50": 52.5,
+                "p90": 95.73,
+                "p95": 104.74,
+                "p99": 145.95,
+                "max": 171.43,
+                "mean": 58.35
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.66,
+              "statuses": {
+                "200": 138
+              },
+              "latencyMs": {
+                "min": 5.73,
+                "p50": 35.23,
+                "p90": 67.3,
+                "p95": 93.11,
+                "p99": 119.42,
+                "max": 128.77,
+                "mean": 40.89
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.66,
+              "statuses": {
+                "401": 138
+              },
+              "latencyMs": {
+                "min": 16.15,
+                "p50": 49.89,
+                "p90": 89.22,
+                "p95": 123.79,
+                "p99": 151.02,
+                "max": 160.66,
+                "mean": 57.11
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 137,
+              "ok": 137,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.56,
+              "statuses": {
+                "401": 137
+              },
+              "latencyMs": {
+                "min": 10.46,
+                "p50": 42.06,
+                "p90": 84.61,
+                "p95": 111.29,
+                "p99": 155.96,
+                "max": 185.1,
+                "mean": 49.91
+              }
+            }
+          ]
+        },
+        {
+          "concurrency": 10,
+          "durationSec": 10,
+          "wallSec": 10.07,
+          "totals": {
+            "requests": 1102,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 109.47
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.71,
+              "statuses": {
+                "200": 138
+              },
+              "latencyMs": {
+                "min": 5.4,
+                "p50": 24.05,
+                "p90": 51.67,
+                "p95": 69.18,
+                "p99": 102.5,
+                "max": 199.64,
+                "mean": 29.9
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.71,
+              "statuses": {
+                "200": 138
+              },
+              "latencyMs": {
+                "min": 40.81,
+                "p50": 71.24,
+                "p90": 141.67,
+                "p95": 180.92,
+                "p99": 233.29,
+                "max": 292.62,
+                "mean": 85.85
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.71,
+              "statuses": {
+                "200": 138
+              },
+              "latencyMs": {
+                "min": 69.88,
+                "p50": 333.82,
+                "p90": 469.96,
+                "p95": 498.92,
+                "p99": 605.61,
+                "max": 612.55,
+                "mean": 348.98
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.71,
+              "statuses": {
+                "401": 138
+              },
+              "latencyMs": {
+                "min": 21.31,
+                "p50": 47.43,
+                "p90": 91.52,
+                "p95": 114.2,
+                "p99": 175.52,
+                "max": 176.47,
+                "mean": 56.65
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.71,
+              "statuses": {
+                "401": 138
+              },
+              "latencyMs": {
+                "min": 22.72,
+                "p50": 48.61,
+                "p90": 90.74,
+                "p95": 121.33,
+                "p99": 167.68,
+                "max": 173.58,
+                "mean": 57.59
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 138,
+              "ok": 138,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.71,
+              "statuses": {
+                "200": 138
+              },
+              "latencyMs": {
+                "min": 10.43,
+                "p50": 33.72,
+                "p90": 70.03,
+                "p95": 91.94,
+                "p99": 161.31,
+                "max": 163.86,
+                "mean": 42.12
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 137,
+              "ok": 137,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.61,
+              "statuses": {
+                "401": 137
+              },
+              "latencyMs": {
+                "min": 15.32,
+                "p50": 48.24,
+                "p90": 102.41,
+                "p95": 129.37,
+                "p99": 179.1,
+                "max": 184.59,
+                "mean": 57.48
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 137,
+              "ok": 137,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 13.61,
+              "statuses": {
+                "401": 137
+              },
+              "latencyMs": {
+                "min": 16.85,
+                "p50": 40.98,
+                "p90": 85.97,
+                "p95": 131.44,
+                "p99": 176.95,
+                "max": 229.56,
+                "mean": 49.93
+              }
+            }
+          ]
+        },
+        {
+          "concurrency": 10,
+          "durationSec": 10,
+          "wallSec": 10.05,
+          "totals": {
+            "requests": 1203,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 119.69
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 151,
+              "ok": 151,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 15.02,
+              "statuses": {
+                "200": 151
+              },
+              "latencyMs": {
+                "min": 4.56,
+                "p50": 22.35,
+                "p90": 43.71,
+                "p95": 52.51,
+                "p99": 77.08,
+                "max": 80.42,
+                "mean": 25.99
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 151,
+              "ok": 151,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 15.02,
+              "statuses": {
+                "200": 151
+              },
+              "latencyMs": {
+                "min": 30.3,
+                "p50": 67.69,
+                "p90": 114.21,
+                "p95": 129.37,
+                "p99": 179.63,
+                "max": 207.62,
+                "mean": 77.25
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 151,
+              "ok": 151,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 15.02,
+              "statuses": {
+                "200": 151
+              },
+              "latencyMs": {
+                "min": 52.47,
+                "p50": 313.46,
+                "p90": 428.07,
+                "p95": 452.86,
+                "p99": 507.43,
+                "max": 571.38,
+                "mean": 323.87
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 150,
+              "ok": 150,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.92,
+              "statuses": {
+                "401": 150
+              },
+              "latencyMs": {
+                "min": 12.44,
+                "p50": 43.67,
+                "p90": 85.08,
+                "p95": 100.23,
+                "p99": 117.8,
+                "max": 166.35,
+                "mean": 50.83
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 150,
+              "ok": 150,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.92,
+              "statuses": {
+                "401": 150
+              },
+              "latencyMs": {
+                "min": 21.19,
+                "p50": 48.18,
+                "p90": 82.35,
+                "p95": 102.7,
+                "p99": 127.15,
+                "max": 173.53,
+                "mean": 54.6
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 150,
+              "ok": 150,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.92,
+              "statuses": {
+                "200": 150
+              },
+              "latencyMs": {
+                "min": 9.79,
+                "p50": 31.86,
+                "p90": 56.78,
+                "p95": 72.04,
+                "p99": 106.96,
+                "max": 119.62,
+                "mean": 36.79
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 150,
+              "ok": 150,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.92,
+              "statuses": {
+                "401": 150
+              },
+              "latencyMs": {
+                "min": 13.67,
+                "p50": 45.61,
+                "p90": 78.96,
+                "p95": 91.09,
+                "p99": 130.06,
+                "max": 134.25,
+                "mean": 50.97
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 150,
+              "ok": 150,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.92,
+              "statuses": {
+                "401": 150
+              },
+              "latencyMs": {
+                "min": 17.16,
+                "p50": 40.24,
+                "p90": 77.71,
+                "p95": 91.59,
+                "p99": 157.21,
+                "max": 169.01,
+                "mean": 45.53
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concurrency": 50,
+      "durationSec": 10,
+      "repeatCount": 3,
+      "totals": {
+        "requests": 1032,
+        "unexpected": 0,
+        "failed": 0,
+        "errorRate": 0,
+        "rps": 99.49
+      },
+      "targets": [
+        {
+          "name": "health",
+          "note": "DB 往返（user.count）+ Redis 状态",
+          "expect": [
+            200
+          ],
+          "count": 129,
+          "ok": 129,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 12.44,
+          "statuses": {
+            "200": 406
+          },
+          "latencyMs": {
+            "min": 24.81,
+            "p50": 164.72,
+            "p90": 311.99,
+            "p95": 370.88,
+            "p99": 546.65,
+            "max": 548.29,
+            "mean": 190.41
+          },
+          "p95Spread": {
+            "min": 263.61,
+            "max": 414.31
+          }
+        },
+        {
+          "name": "home",
+          "note": "SSR 首页（可能重定向到登录）",
+          "expect": [
+            200,
+            307,
+            308
+          ],
+          "count": 129,
+          "ok": 129,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 12.44,
+          "statuses": {
+            "200": 406
+          },
+          "latencyMs": {
+            "min": 154.63,
+            "p50": 375.01,
+            "p90": 655.29,
+            "p95": 690.48,
+            "p99": 826.15,
+            "max": 830.45,
+            "mean": 410.63
+          },
+          "p95Spread": {
+            "min": 646.82,
+            "max": 765.11
+          }
+        },
+        {
+          "name": "login",
+          "note": "SSR 登录页",
+          "expect": [
+            200
+          ],
+          "count": 129,
+          "ok": 129,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 12.44,
+          "statuses": {
+            "200": 406
+          },
+          "latencyMs": {
+            "min": 382.82,
+            "p50": 1881.17,
+            "p90": 2529.62,
+            "p95": 2569.79,
+            "p99": 2626.29,
+            "max": 2825.12,
+            "mean": 1799.65
+          },
+          "p95Spread": {
+            "min": 1995.62,
+            "max": 2757.45
+          }
+        },
+        {
+          "name": "org-anon",
+          "note": "REST 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 129,
+          "ok": 129,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 12.44,
+          "statuses": {
+            "401": 406
+          },
+          "latencyMs": {
+            "min": 64.67,
+            "p50": 249.05,
+            "p90": 425.16,
+            "p95": 465.14,
+            "p99": 741.43,
+            "max": 763.64,
+            "mean": 266.16
+          },
+          "p95Spread": {
+            "min": 462.1,
+            "max": 574.99
+          }
+        },
+        {
+          "name": "members-anon",
+          "note": "REST 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 129,
+          "ok": 129,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 12.44,
+          "statuses": {
+            "401": 406
+          },
+          "latencyMs": {
+            "min": 63.17,
+            "p50": 248.36,
+            "p90": 459.22,
+            "p95": 497.51,
+            "p99": 747.15,
+            "max": 862.12,
+            "mean": 303.19
+          },
+          "p95Spread": {
+            "min": 480.23,
+            "max": 573.57
+          }
+        },
+        {
+          "name": "mcp-discover",
+          "note": "MCP 发现面（公开、**无速率限制**）",
+          "expect": [
+            200
+          ],
+          "count": 129,
+          "ok": 129,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 12.44,
+          "statuses": {
+            "200": 406
+          },
+          "latencyMs": {
+            "min": 24.4,
+            "p50": 171.31,
+            "p90": 314.43,
+            "p95": 415.22,
+            "p99": 538.28,
+            "max": 580.25,
+            "mean": 203.09
+          },
+          "p95Spread": {
+            "min": 270.56,
+            "max": 485.92
+          }
+        },
+        {
+          "name": "mcp-call-anon",
+          "note": "MCP 授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 129,
+          "ok": 129,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 12.44,
+          "statuses": {
+            "401": 405
+          },
+          "latencyMs": {
+            "min": 58.87,
+            "p50": 259.75,
+            "p90": 455.91,
+            "p95": 570.75,
+            "p99": 714.78,
+            "max": 746,
+            "mean": 313.09
+          },
+          "p95Spread": {
+            "min": 415.4,
+            "max": 723
+          }
+        },
+        {
+          "name": "a2a-anon",
+          "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+          "expect": [
+            401
+          ],
+          "count": 129,
+          "ok": 129,
+          "unexpected": 0,
+          "failed": 0,
+          "errorRate": 0,
+          "rps": 12.44,
+          "statuses": {
+            "401": 405
+          },
+          "latencyMs": {
+            "min": 73.3,
+            "p50": 256.15,
+            "p90": 463.51,
+            "p95": 523.83,
+            "p99": 697.11,
+            "max": 745.26,
+            "mean": 309.4
+          },
+          "p95Spread": {
+            "min": 429.68,
+            "max": 567.15
+          }
+        }
+      ],
+      "repeats": [
+        {
+          "concurrency": 50,
+          "durationSec": 10,
+          "wallSec": 10.37,
+          "totals": {
+            "requests": 1032,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 99.49
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 129,
+              "ok": 129,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.44,
+              "statuses": {
+                "200": 129
+              },
+              "latencyMs": {
+                "min": 21.53,
+                "p50": 164.72,
+                "p90": 311.99,
+                "p95": 370.88,
+                "p99": 1054.18,
+                "max": 1481.44,
+                "mean": 194.98
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 129,
+              "ok": 129,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.44,
+              "statuses": {
+                "200": 129
+              },
+              "latencyMs": {
+                "min": 107.28,
+                "p50": 374.4,
+                "p90": 655.29,
+                "p95": 690.48,
+                "p99": 1285.5,
+                "max": 1715.03,
+                "mean": 410.63
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 129,
+              "ok": 129,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.44,
+              "statuses": {
+                "200": 129
+              },
+              "latencyMs": {
+                "min": 382.82,
+                "p50": 1881.17,
+                "p90": 2529.62,
+                "p95": 2569.79,
+                "p99": 2626.29,
+                "max": 5667.17,
+                "mean": 1799.65
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 129,
+              "ok": 129,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.44,
+              "statuses": {
+                "401": 129
+              },
+              "latencyMs": {
+                "min": 42.92,
+                "p50": 249.05,
+                "p90": 425.16,
+                "p95": 462.1,
+                "p99": 907.49,
+                "max": 1356.09,
+                "mean": 266.16
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 129,
+              "ok": 129,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.44,
+              "statuses": {
+                "401": 129
+              },
+              "latencyMs": {
+                "min": 24.85,
+                "p50": 245.96,
+                "p90": 459.22,
+                "p95": 497.51,
+                "p99": 1423.02,
+                "max": 3691,
+                "mean": 305.93
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 129,
+              "ok": 129,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.44,
+              "statuses": {
+                "200": 129
+              },
+              "latencyMs": {
+                "min": 12.25,
+                "p50": 171.31,
+                "p90": 314.43,
+                "p95": 485.92,
+                "p99": 2990.09,
+                "max": 3740.88,
+                "mean": 281.49
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 129,
+              "ok": 129,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.44,
+              "statuses": {
+                "401": 129
+              },
+              "latencyMs": {
+                "min": 39.91,
+                "p50": 259.75,
+                "p90": 455.91,
+                "p95": 723,
+                "p99": 3221.3,
+                "max": 3581.74,
+                "mean": 370.2
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 129,
+              "ok": 129,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 12.44,
+              "statuses": {
+                "401": 129
+              },
+              "latencyMs": {
+                "min": 51.83,
+                "p50": 256.15,
+                "p90": 463.51,
+                "p95": 523.83,
+                "p99": 2945.2,
+                "max": 3392.44,
+                "mean": 350.24
+              }
+            }
+          ]
+        },
+        {
+          "concurrency": 50,
+          "durationSec": 10,
+          "wallSec": 10.29,
+          "totals": {
+            "requests": 1214,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 117.96
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 152,
+              "ok": 152,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.77,
+              "statuses": {
+                "200": 152
+              },
+              "latencyMs": {
+                "min": 24.81,
+                "p50": 157.02,
+                "p90": 240.27,
+                "p95": 263.61,
+                "p99": 342.69,
+                "max": 364.16,
+                "mean": 159.53
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 152,
+              "ok": 152,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.77,
+              "statuses": {
+                "200": 152
+              },
+              "latencyMs": {
+                "min": 183.07,
+                "p50": 375.01,
+                "p90": 520.59,
+                "p95": 646.82,
+                "p99": 695.63,
+                "max": 695.77,
+                "mean": 385.48
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 152,
+              "ok": 152,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.77,
+              "statuses": {
+                "200": 152
+              },
+              "latencyMs": {
+                "min": 313.15,
+                "p50": 1687.39,
+                "p90": 1956.25,
+                "p95": 1995.62,
+                "p99": 2203.66,
+                "max": 2354.85,
+                "mean": 1622.91
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 152,
+              "ok": 152,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.77,
+              "statuses": {
+                "401": 152
+              },
+              "latencyMs": {
+                "min": 71.43,
+                "p50": 248.42,
+                "p90": 386.64,
+                "p95": 465.14,
+                "p99": 547.07,
+                "max": 623.57,
+                "mean": 251
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 152,
+              "ok": 152,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.77,
+              "statuses": {
+                "401": 152
+              },
+              "latencyMs": {
+                "min": 68.94,
+                "p50": 248.36,
+                "p90": 393.86,
+                "p95": 480.23,
+                "p99": 535.75,
+                "max": 547.54,
+                "mean": 249.12
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 152,
+              "ok": 152,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.77,
+              "statuses": {
+                "200": 152
+              },
+              "latencyMs": {
+                "min": 24.4,
+                "p50": 158.29,
+                "p90": 241.62,
+                "p95": 270.56,
+                "p99": 419.7,
+                "max": 428.09,
+                "mean": 160.22
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 151,
+              "ok": 151,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.67,
+              "statuses": {
+                "401": 151
+              },
+              "latencyMs": {
+                "min": 67.02,
+                "p50": 253.67,
+                "p90": 366.77,
+                "p95": 415.4,
+                "p99": 559.15,
+                "max": 560.26,
+                "mean": 253.25
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 151,
+              "ok": 151,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 14.67,
+              "statuses": {
+                "401": 151
+              },
+              "latencyMs": {
+                "min": 73.3,
+                "p50": 252.72,
+                "p90": 391.36,
+                "p95": 429.68,
+                "p99": 560.92,
+                "max": 561.09,
+                "mean": 256.32
+              }
+            }
+          ]
+        },
+        {
+          "concurrency": 50,
+          "durationSec": 10,
+          "wallSec": 10.49,
+          "totals": {
+            "requests": 1000,
+            "unexpected": 0,
+            "failed": 0,
+            "errorRate": 0,
+            "rps": 95.31
+          },
+          "targets": [
+            {
+              "name": "health",
+              "note": "DB 往返（user.count）+ Redis 状态",
+              "expect": [
+                200
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 11.91,
+              "statuses": {
+                "200": 125
+              },
+              "latencyMs": {
+                "min": 31.65,
+                "p50": 167.43,
+                "p90": 326.37,
+                "p95": 414.31,
+                "p99": 546.65,
+                "max": 548.29,
+                "mean": 190.41
+              }
+            },
+            {
+              "name": "home",
+              "note": "SSR 首页（可能重定向到登录）",
+              "expect": [
+                200,
+                307,
+                308
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 11.91,
+              "statuses": {
+                "200": 125
+              },
+              "latencyMs": {
+                "min": 154.63,
+                "p50": 485.55,
+                "p90": 757.02,
+                "p95": 765.11,
+                "p99": 826.15,
+                "max": 830.45,
+                "mean": 490.87
+              }
+            },
+            {
+              "name": "login",
+              "note": "SSR 登录页",
+              "expect": [
+                200
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 11.91,
+              "statuses": {
+                "200": 125
+              },
+              "latencyMs": {
+                "min": 526.05,
+                "p50": 2076.89,
+                "p90": 2580.36,
+                "p95": 2757.45,
+                "p99": 2817.64,
+                "max": 2825.12,
+                "mean": 2044.6
+              }
+            },
+            {
+              "name": "org-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 11.91,
+              "statuses": {
+                "401": 125
+              },
+              "latencyMs": {
+                "min": 64.67,
+                "p50": 277.01,
+                "p90": 520.59,
+                "p95": 574.99,
+                "p99": 741.43,
+                "max": 763.64,
+                "mean": 300.36
+              }
+            },
+            {
+              "name": "members-anon",
+              "note": "REST 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 11.91,
+              "statuses": {
+                "401": 125
+              },
+              "latencyMs": {
+                "min": 63.17,
+                "p50": 278.32,
+                "p90": 521.85,
+                "p95": 573.57,
+                "p99": 747.15,
+                "max": 862.12,
+                "mean": 303.19
+              }
+            },
+            {
+              "name": "mcp-discover",
+              "note": "MCP 发现面（公开、**无速率限制**）",
+              "expect": [
+                200
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 11.91,
+              "statuses": {
+                "200": 125
+              },
+              "latencyMs": {
+                "min": 28.41,
+                "p50": 187.97,
+                "p90": 346.33,
+                "p95": 415.22,
+                "p99": 538.28,
+                "max": 580.25,
+                "mean": 203.09
+              }
+            },
+            {
+              "name": "mcp-call-anon",
+              "note": "MCP 授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 11.91,
+              "statuses": {
+                "401": 125
+              },
+              "latencyMs": {
+                "min": 58.87,
+                "p50": 301.83,
+                "p90": 545.98,
+                "p95": 570.75,
+                "p99": 714.78,
+                "max": 746,
+                "mean": 313.09
+              }
+            },
+            {
+              "name": "a2a-anon",
+              "note": "A2A（**无速率限制**）授权面：匿名必须 401",
+              "expect": [
+                401
+              ],
+              "count": 125,
+              "ok": 125,
+              "unexpected": 0,
+              "failed": 0,
+              "errorRate": 0,
+              "rps": 11.91,
+              "statuses": {
+                "401": 125
+              },
+              "latencyMs": {
+                "min": 80.16,
+                "p50": 292.77,
+                "p90": 544.86,
+                "p95": 567.15,
+                "p99": 697.11,
+                "max": 745.26,
+                "mean": 309.4
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

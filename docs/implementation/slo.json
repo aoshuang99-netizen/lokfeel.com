@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "baselineFile": "docs/implementation/perf-baseline.json",
+  "measuredOn": "local-build",
+  "scope": {
+    "what": "本地构建产物（next start，绑 127.0.0.1）",
+    "whatNot": "生产（跨境 Netlify 共享 serverless）。生产延迟额外含跨网络 RTT 与平台冷启，本 SLO 不覆盖该部分。",
+    "why": "本 SLO 约束的是「本仓代码 + 数据访问」的成本。把跨境网络波动塞进 SLO 会让阈值失去意义，也会让噪音变成「假红」。"
+  },
+  "method": [
+    "阈值按 UX 可接受度**先行**确定（绝对毫秒数），再跑实测验证是否达标。",
+    "**不按实测值反推阈值** —— 按实测反推会让 SLO 永远达标，那是自欺，等价于没有 SLO。",
+    "延迟口径：fetch 发起 → 响应体读完（含传输与反序列化）。",
+    "负载越高排队越久是物理必然，故 SLO 按并发档位分档表达「该档位下的上界」，而不是要求延迟不随负载变化。"
+  ],
+  "tiers": {
+    "A": {
+      "desc": "交互式 API —— 健康检查 / 授权拒绝（401）/ MCP 发现与调用 / A2A",
+      "targets": ["health", "org-anon", "members-anon", "mcp-discover", "mcp-call-anon", "a2a-anon"],
+      "rationale": "这类端点是人或 Agent 的同步等待路径，业界经验阈值：≤100ms 感觉即时，≤300ms 仍可接受。"
+    },
+    "B": {
+      "desc": "SSR 页面 —— 首页与登录页",
+      "targets": ["home", "login"],
+      "rationale": "首屏渲染含 RSC 组装与 HTML 传输，用户可接受窗口明显宽于 API；1.2s 内首屏在宽带下体感为「正常」。"
+    }
+  },
+  "rules": [
+    {
+      "id": "tierA-p95-c1",
+      "targets": ["health", "org-anon", "members-anon", "mcp-discover", "mcp-call-anon", "a2a-anon"],
+      "level": 1,
+      "metric": "p95",
+      "max": 150,
+      "rationale": "无并发争用，应接近最优；150ms 上界意味着单请求链路本身没有阻塞点。"
+    },
+    {
+      "id": "tierA-p95-c10",
+      "targets": ["health", "org-anon", "members-anon", "mcp-discover", "mcp-call-anon", "a2a-anon"],
+      "level": 10,
+      "metric": "p95",
+      "max": 300,
+      "rationale": "10 并发下 p95 仍应在「可接受」窗口内（300ms）。"
+    },
+    {
+      "id": "tierA-p95-c50",
+      "targets": ["health", "org-anon", "members-anon", "mcp-discover", "mcp-call-anon", "a2a-anon"],
+      "level": 50,
+      "metric": "p95",
+      "max": 900,
+      "rationale": "5× 负载下容忍度放宽到 900ms；超过说明存在单一串行点（如连接池），需要显式处置。"
+    },
+    {
+      "id": "tierB-p95-c1",
+      "targets": ["home", "login"],
+      "level": 1,
+      "metric": "p95",
+      "max": 800,
+      "rationale": "SSR 冷路径的体感上界。"
+    },
+    {
+      "id": "tierB-p95-c10",
+      "targets": ["home", "login"],
+      "level": 10,
+      "metric": "p95",
+      "max": 1200,
+      "rationale": "并发渲染下仍应保持 1.2s 内。"
+    },
+    {
+      "id": "tierB-p95-c50",
+      "targets": ["home", "login"],
+      "level": 50,
+      "metric": "p95",
+      "max": 3000,
+      "rationale": "高并发下 3s 是可容忍上限；再高就是「页面打不开」。"
+    },
+    {
+      "id": "error-rate-c1",
+      "target": "*",
+      "level": 1,
+      "metric": "errorRate",
+      "max": 0.005,
+      "rationale": "单并发不该有任何错误。"
+    },
+    {
+      "id": "error-rate-c10",
+      "target": "*",
+      "level": 10,
+      "metric": "errorRate",
+      "max": 0.01,
+      "rationale": "1% 是「不构成用户可见故障」的分界。"
+    },
+    {
+      "id": "error-rate-c50",
+      "target": "*",
+      "level": 50,
+      "metric": "errorRate",
+      "max": 0.03,
+      "rationale": "高并发下偶发连接排队/重置属可接受，但不得超过 3%。"
+    }
+  ],
+  "notCovered": [
+    "生产环境端到端延迟（跨网络 RTT、Netlify 冷启、Turso 远端查询）—— 未测。",
+    "真实业务写路径（创建 Mission / 提交意图 / 发起提案）的吞吐 —— 本基线只打只读与被拒路径，避免压测污染数据。",
+    "长连接与实时通道（Pusher / WebRTC 信令）在并发下的稳定性 —— 未测。",
+    "多租户隔离下的性能差异（不同 organizationId 的数据量差异）—— 未测。"
+  ]
+}

@@ -17,12 +17,12 @@
 | 维度 | 结果 |
 |---|---|
 | **BLOCKER（10 条）** | ✅ **10 PASS / 0 FAIL** —— AC-10 已于 2026-10-16 闭合 |
-| **P0（11 条）** | 9 PASS / 1 FAIL / 1 BLOCKED —— 🔴 **AC-24 未压测 · AC-25 无试点** |
+| **P0（11 条）** | 10 PASS / 0 FAIL / 1 BLOCKED —— ✅ **工程项已清空**；仅余 **AC-25**（外部依赖） |
 | **P1（3 条）** | 3 PASS（AC-21 为沙箱口径，真实扣款 BLOCKED） |
 | **P2（1 条）** | 1 PASS |
-| **合计（25 条）** | **23 PASS / 1 FAIL / 1 BLOCKED** |
+| **合计（25 条）** | **24 PASS / 0 FAIL / 1 BLOCKED** |
 
-### 🟡 上线判定：**BLOCKER 已清空，P0 仅余 AC-24（性能基线）—— 待其闭合后即可发版**
+### ✅ 上线判定：**BLOCKER 已清空 · P0 工程项已清空 —— 唯一剩余项 AC-25 属外部依赖，非工程问题**
 
 按 `ACCEPTANCE_MATRIX.md` 的上线判定"**所有 BLOCKER 必须 PASS**"：
 - **AC-10（BLOCKER）已转 PASS**（2026-10-16）—— 「导出」「删除请求」「缓存清理」三支全部落地并端到端取证：
@@ -33,9 +33,13 @@
   lint / 依赖审计 / schema 漂移**只拦新增**；新增 Migration 与 E2E 两个 job；
   `build` 与 `dependency-audit` 的 `continue-on-error` 均移除。
   ⇒ **CI 的红重新等于「你引入了问题」**，且**未走例外审批**。详见 §4.2。
+- **AC-24（性能基线）已转 PASS**（2026-10-16）—— SLO 已定义（两档 × 三层共 9 条规则）· 本地构建产物
+  三档并发实测留档（每档 10s × 3 次取中位数，**保留每次原始值**）· `check:slo` **48/48 通过** ·
+  校验器自证 **6/6**（含「判红有牙齿」与「非恒红」两个方向）· T11 交接的「MCP/A2A 无速率限制」
+  **带阳性对照证实**。⇒ **工程项清空**，且**未走例外审批**。详见 §4.3。
 
-**剩余阻断（P0，非 BLOCKER）**：
-1. **AC-24 性能**：无 SLO、无压测基线（§4.3）。
+**剩余阻断（非工程问题）**：
+1. **AC-25 付费价值**：无真实试点客户，**不可 MOCK 代替**（外部依赖，见 §4.4）。
 
 > **核心业务闭环（AC-01 ~ AC-22）实现与取证质量高**：22 条 AC 均以**真实 HTTP / 真实浏览器 / 真实隔离库**取证，
 > 且多数带**变异自证**（证明断言有牙齿）。AC-10 是本轮从"无人认领"追到闭合的一条 BLOCKER。
@@ -52,11 +56,12 @@
 | 宿主 | Netlify 免费计划（`lokfeel`，site_id `c46478e9-…`）+ Cloudflare DNS |
 | 全量单测 | **98 套 / 2030 例通过**（`npx jest`，2026-10-16 复跑） |
 | 类型检查 | **`npx tsc --noEmit` exit 0** |
-| CI | `.github/workflows/ci.yml`（GitHub Actions）—— 9 个 job；三道棘轮见 `CI_GATES.md` |
+| CI | `.github/workflows/ci.yml`（GitHub Actions）—— **11 个 job**；三道棘轮见 `CI_GATES.md`，性能 SLO 见 `PERFORMANCE_BASELINE.md` |
 | 最新 CI run（改造前） | `38848356361`（commit `4ceab89`）→ **failure**（Lint ❌ / Dependency audit ❌；其余 5 项 success） |
-| 最新 CI run（改造后） | ✅ **`38863968546`（commit `8016bb4`）→ success** —— 9 个 job 全绿（整轮 2m49s），含**新增**的 Migration（67s）与 E2E（164s），`Build` 在移除 `continue-on-error` 后仍 success |
+| 最新 CI run（改造后） | ✅ **`38863968546`（commit `8016bb4`）→ success** —— 当时 9 个 job 全绿（整轮 2m49s），含**新增**的 Migration（67s）与 E2E（164s），`Build` 在移除 `continue-on-error` 后仍 success；其后 AC-24 再加 `slo-check`（确定性）与 `perf-baseline`（仅手动）两个 job |
 | 全仓 lint 债 | **1542 problems** / 1019 文件（改造前 1565；净 −23，且已冻结为棘轮基线） |
 | 生产可达依赖高危 | **high 26 / critical 2**（全量含 dev：high 34 / critical 3）—— 已登记，见 `DEPENDENCY_RISK.md` |
+| 性能基线 | 本地构建产物三档并发（1/10/50）· 每档 10s × 3 次取中位数 · **48/48 SLO 断言通过** · 错误率 **0.00%**；宿主 `Intel Core m3-7Y32 @ 1.10GHz`（4 核 / 8GB）—— 见 `PERFORMANCE_BASELINE.md` |
 
 ---
 
@@ -92,7 +97,7 @@
 | **AC-17** | 工作流恢复 | ✅ **PASS** | T06 故障注入 E2E **8/8**：崩溃/超时/网络失败后**无重复动作**且**可接管** | — |
 | **AC-18** | SaaS UI | ✅ **PASS** | `verify:ac18:console`（真实 Chrome + 隔离库）**84/0**（七屏）；无空按钮**动态负测**（逐个真点） | 第 7 屏 Agents 由 T09 Slice 5 接线；`check:ui-invariants` 扫描面含 `src/app/console` |
 | **AC-23** | CI | ✅ **PASS** | **CI run `38863968546`（`8016bb4`）→ success**：9 个 job 全绿（整轮 **2m49s**），四个关键 job 逐步 `success` —— Lint 棘轮 99s · Dependency 棘轮 70s · **Migration 67s（新增）** · **E2E 164s（新增）**；`Build` 移除 `continue-on-error` 后仍 success。改造前对照 `38848356361`（`4ceab89`）→ failure（Lint ❌ / Dependency audit ❌）。本地另证：三份自证 8+6+5 全绿、`verify` **255/255** | 见 §4.2 与 `CI_GATES.md`。**残留**：生产可达高危 28 条为「已登记 + 棘轮」，**未做批量升级**（`npm audit fix` 实测动 162 包且一条不消）⇒ 升级批次列为后续 P0 |
-| **AC-24** | 性能 | ❌ **FAIL** | **未执行** —— 无 SLO 定义、无压测脚本（`scripts/` 无 perf/load 件） | 生产真实量级参考：`User` 12922 / `Profile` 11887 行（T06 快照）；**不得虚报未测指标** |
+| **AC-24** | 性能 | ✅ **PASS** | 本地构建产物三档并发（1/10/50）实测，每档 **10s × 3 次取中位数**（原始值保留）：`npm run check:slo` → **48/48 断言通过**（8 个端点 · 错误率三档全 **0.00%**）· `npm run verify:check:slo` → **6/6 自证** · 限流取证 **阳性对照恰好 10 次 429**（印证 `max=120`），**MCP/A2A 各 200 次零 429 ⇒ 缺口证实** | 见 §4.3 与 `PERFORMANCE_BASELINE.md`。**未测项已如实列出**（生产端到端 RTT / 写路径 / 长连接 / 多租户数据量 / 饱和归因）；本基线**仅可用于同法前后对比**，**不可外推为生产 SLO 达标** |
 | **AC-25** | 付费价值 | ⛔ **BLOCKED** | **无真实试点客户**：无真实支付/续费记录、无工时基线、无完成率 | 依赖外部真实客户，**不可 MOCK 代替** |
 
 ### 3.3 P1（3 条）
@@ -107,7 +112,7 @@
 
 | ID | 场景 | 判定 | 证据 | 备注 |
 |---|---|---|---|---|
-| **AC-22** | A2A / MCP | ✅ **PASS** | `verify:ac22:open-sdk` **57/0**：发现面（匿名）· 协作（授权，断言真实数据）· 越权（401 / `isError`·`failed`·403 / 跨租户 403）· 协议健壮（-32700/-32600/-32601/-32602）· **实跑 4 个示例脚本（exit 0）** | MCP / A2A 端点**暂无独立速率限制** ⇒ 应在 AC-24 负载项里被看见 |
+| **AC-22** | A2A / MCP | ✅ **PASS** | `verify:ac22:open-sdk` **57/0**：发现面（匿名）· 协作（授权，断言真实数据）· 越权（401 / `isError`·`failed`·403 / 跨租户 403）· 协议健壮（-32700/-32600/-32601/-32602）· **实跑 4 个示例脚本（exit 0）** | MCP / A2A 端点**无独立速率限制** —— 已于 AC-24 **实测证实**（阳性对照下各 200 次零 429），见 §4.3 与 `PERFORMANCE_BASELINE.md §5` |
 
 ---
 
@@ -254,10 +259,36 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 `next` 与两个 critical（`proxy-addr` / `websocket-driver`）列为**第一优先**，
 豁免 `reviewBy=2026-11-15`，**到期由门禁自动判红**。
 
-### 4.3 🔴 AC-24（P0）—— 性能
+### 4.3 ✅ AC-24（P0）—— 性能基线
 
-**完全未执行**：无 SLO 定义、无压测脚本、无负载报告。生产真实量级已知（`User` 12922 / `Profile` 11887），但**未做任何压测**。
-按 AC 原文"**不得虚报未测指标**"⇒ 如实记 **FAIL**。T11 遗留的「MCP/A2A 端点无速率限制」应纳入此项评估。
+**已执行并留档。** 完整方法、未测项与取证见 `docs/implementation/PERFORMANCE_BASELINE.md`；此处只留判定要点。
+
+| 项 | 结果 |
+|---|---|
+| **SLO 定义** | `docs/implementation/slo.json` —— 两档（交互式 API / SSR 页面）× 三层（c=1/10/50）共 **9 条规则**；阈值**按 UX 可接受度先行确定**，**未按实测反推** |
+| **实测对象** | 本仓生产构建产物（`next start` 绑 `127.0.0.1`）· 隔离库 `file:./perf-baseline.db` · **不打生产** |
+| **方法** | 8 个端点（健康检查 / 3 个 SSR-REST / MCP 发现与调用 / A2A）· 每档 10s × **3 次取中位数**，**保留每次原始值**与 `p95Spread` |
+| **对账** | `npm run check:slo` → **48/48 断言通过** · 错误率三档全 **0.00%** |
+| **自证** | `npm run verify:check:slo` → **6/6**：篡改 p95 判红 · 篡改错误率判红 · **删档（缺数据）判红** · 基线非法判红 · **阈值放宽必须通过（非恒红对照）** |
+| **T11 交接项** | **MCP/A2A 无独立速率限制 —— 已证实**：阳性对照端点打出**恰好 10 次 429**（印证其 `max=120`），而 MCP/A2A 各 200 次请求 **0 次 429** |
+| **CI 集成** | 新增 **确定性** `slo-check` job（只读冻结 JSON，零抖动、不需 `npm ci`）；实跑压测走 **仅手动** `workflow_dispatch` job |
+
+**三条如实标注（不虚报）**：
+
+1. **基线不等于生产性能。** 生产端到端延迟（跨境 RTT / Netlify 冷启 / Turso 远端查询）**未测**。
+   本基线**仅可用于同一方法的前后对比**，**不可**外推为生产 SLA 达标证据。
+2. **宿主极弱。** `Intel Core m3-7Y32 @ 1.10GHz`（4 核 / 8GB / 无风扇超低压 U），且压测生成器与服务器**同机**争 CPU
+   ⇒ 数字是**悲观下界**；~100 rps 的饱和点**无法归因**（服务端 or 生成器，未测）。
+3. **单次测量不可靠 —— 已由方法修正。** 首轮**单次**运行 `login@50` p95 = 3044ms（超 3s 阈值）；
+   三次原始值 1995 / 2569 / 2757（中位数 2570，通过）⇒ 那个 3044ms 是**离群值**。
+   **若直接拿单次数字判 PASS/FAIL，就会在噪声上下结论** —— 这正是引入「多次取中位数 + 保留原始值」的原因。
+
+**顺带发现的既有缺陷（已登记，本轮不修）**：`src/lib/rate-limit.ts` 的取键是
+`options.key ? options.key(request) : ip`，而本仓**三处调用都没传 `key`** ⇒
+`previewLimit`（120/5min）与 `callSignalLimiter`（300/1min）**共用同一个 `ratelimit:<ip>` 桶**，
+且**窗口长短由最先创建该条目的请求决定**。定性为**跨功能干扰**（非安全绕过）。
+**诚实边界**：运行期复现需「同一 IP 上同时使用两个功能的**已登录会话**」，本次**未做运行期实证**（仅代码级）。
+处置见 `BACKLOG.md`（P1，含修复要点）。
 
 ### 4.4 ⛔ AC-25（P0）—— 付费价值
 
@@ -288,11 +319,10 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 
 | AC | 级别 | 状态 | 明确影响 | 例外建议 |
 |---|---|---|---|---|
-| AC-24 | P0 | FAIL | **性能未知**，无 SLO；高并发下可能超时 | 可例外，**条件**：上线前补一轮基线压测并定 SLO |
 | AC-25 | P0 | BLOCKED | 商业模式未验证 | 可例外（**外部依赖**，非工程问题） |
 
-✅ **AC-10（BLOCKER，2026-10-16）与 AC-23（P0，2026-10-16）均已闭合，无需例外审批。**
-例外面仅剩 P0 的 **AC-24 / AC-25**。
+✅ **AC-10（BLOCKER，2026-10-16）· AC-23（P0，2026-10-16）· AC-24（P0，2026-10-16）均已闭合，均未走例外审批。**
+**例外面仅剩 AC-25（外部依赖）。**
 
 ---
 
@@ -303,8 +333,10 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 | **隔离为应用级非 DB 级** | 🟡 中 | libSQL 无 RLS，跨租户隔离全靠应用层 | M6 迁 PG + RLS |
 | **发布窗口期 `request.url` = 部署专用域名** | 🟡 中 | 推 `main` 后约 20 分钟内函数拿到 `<deploy-id>--<site>.netlify.app` → 丢 cookie | 已修：一律经 `src/lib/http/public-origin.ts`；发版后立即复验（窗口期会自愈） |
 | **支付/邮件生产不可用** | 🟡 中 | 缺凭据 | 接凭据后零代码改动即可启用 |
-| **MCP/A2A 无速率限制** | 🟡 中 | 公开发现面无独立限流 | 纳入 AC-24 负载评估 |
-| **CI lint/dep-audit 红** | 🟡 中 | 回归护栏不完整 | 见 §4.2 闭合路径 |
+| **MCP/A2A 无速率限制** | 🟡 中 | 公开发现面无独立限流 —— **AC-24 已实测证实**（阳性对照下各 200 次零 429） | 已登记 `BACKLOG.md`；修复=为两个端点显式接线限流器 |
+| **限流器三处调用共用 per-IP 桶** | 🟡 中 | `previewLimit` 与 `callSignalLimiter` 共享 `ratelimit:<ip>`，窗口由先建条目者决定 ⇒ 跨功能干扰（**代码级结论，运行期未实测**） | 已登记 `BACKLOG.md`（P1）；修复=每个限流器显式传 `key` |
+| **生产性能未实测** | 🟡 中 | AC-24 基线为本地弱机（m3-7Y32）；生产跨境延迟 / 写路径 / 长连接**未测** | `PERFORMANCE_BASELINE.md §4` 已列全未测项；发版后可补生产侧观测 |
+| **CI lint/dep-audit 红** | 🟢 低 | 回归护栏不完整 | **已闭合**（AC-23，见 §4.2） |
 | **`ProposalDecision` 非追加式** | 🟢 低 | 审计可被覆盖（R7） | AC-10 合规评审一并处理 |
 
 ---
@@ -366,6 +398,16 @@ node scripts/qa/agent-reconcile.mjs                  # → 217/0
 # 幂等 / 生命周期
 npm run verify:ac19:bridge                        # 幂等重放不产生第二条
 npm run verify:no-release --commit=<SHA>          # → 未见该提交部署记录 ⇒ 保持"可发版未发版"
+
+# 性能（AC-24）—— 详见 PERFORMANCE_BASELINE.md §7
+bash scripts/perf/prepare-env.sh                  # 隔离库 + 生产构建（含三重安全闸）
+DATABASE_URL="file:./perf-baseline.db" npm run start &
+node scripts/perf/load-baseline.mjs --base=http://127.0.0.1:3000 \
+     --levels=1,10,50 --duration=10 --warmup=3 --repeats=3   # → 8 端点 × 3 档
+npm run check:slo                                 # → 48/48 断言
+npm run verify:check:slo                          # → 6/6 自证
+node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 --n=200
+                                                  # → 对照 429=10（阳性）；MCP/A2A 429=0（缺口）
 ```
 
 ---
@@ -377,6 +419,7 @@ npm run verify:no-release --commit=<SHA>          # → 未见该提交部署记
 | 2026-10-15 | 首次生成：AC-01~25 逐条判定。**21 PASS / 3 FAIL / 1 BLOCKED**；上线判定 **不建议上线**（AC-10 BLOCKER 未闭合）。Ci run `38757446188` 实证 CI 红（lint + dependency-audit）。 |
 | 2026-10-16 | **AC-10（BLOCKER）闭合**：新增导出 / 删除请求 / **缓存失效**三支（`account.ts` · `cache-keys.ts` · `export.ts` · `erasure.ts` · `/api/v1/me/{export,erasure}`），E2E `verify:ac10:lifecycle` **68/0**，单测扩至 **31 例**（全量 **98 套 / 2030 例**）。判定更新为 **22 PASS / 2 FAIL / 1 BLOCKED**，**BLOCKER 已清空、未走例外审批**；剩余阻断为 P0 的 AC-23 / AC-24。同时**订正** `LIFECYCLE.md` 中"本仓无独立缓存层"的事实错误。 |
 | 2026-10-16 | **AC-23（P0）闭合 · CI 门禁可信化**：三次「不降标准」的历史债治理落地为**三道棘轮**（lint 1542 / 生产依赖 28 条 / schema 漂移 11 张表），全部「冻结存量 + 只拦新增」；CI 新增 **Migration**（免凭据，`verify` 255/255）与 **E2E**（构建产物浏览器冒烟）两个 job；`build` 与 `dependency-audit` 的 `continue-on-error` **两处移除**。判定更新为 **23 PASS / 1 FAIL / 1 BLOCKED**，**未走例外审批**。过程中发现并登记三处真风险（迁移目录非建库路径 · 11 表 `organizationId` 未建模 · 迁移脚本 `.env` 覆盖环境变量）。**残留如实标注**：28 条生产高危仅「登记 + 棘轮」，未做批量升级。新增 `CI_GATES.md` / `DEPENDENCY_RISK.md`。 |
+| 2026-10-16 | **AC-24（P0）闭合 · 性能基线与 SLO**：`slo.json` 定义两档 × 三层共 9 条规则（阈值按 UX 先行确定，**未按实测反推**）；零依赖压测器 `load-baseline.mjs`（**多次取中位数 + 保留原始值与 `p95Spread`**）实测本地构建产物三档并发，`check:slo` **48/48 通过**、错误率 **0.00%**；校验器自证 **6/6**（含「判红有牙齿」与「非恒红」双向）；**证实** T11 交接的 MCP/A2A 无速率限制（阳性对照端点恰好 **10 次 429**，印证其 `max=120`）；顺带发现并登记**限流器共用 per-IP 桶**缺陷（代码级，运行期未实测）。**方法学修正**：首轮单次运行的 `login@50` 3044ms 经三次重复证实为**离群值**（1995/2569/2757，中位数 2570 通过）⇒ 单次测量不可用于判 PASS/FAIL。CI 新增**确定性** `slo-check` job（零抖动）与**仅手动**的 `perf-baseline` job（压测是取证不是门禁）。判定更新为 **24 PASS / 0 FAIL / 1 BLOCKED**，**未走例外审批**；例外面仅剩 AC-25（外部依赖）。新增 `PERFORMANCE_BASELINE.md`。 |
 
 ---
 

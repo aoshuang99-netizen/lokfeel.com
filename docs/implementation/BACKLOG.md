@@ -752,6 +752,74 @@ C2/C3 已在 `233669e` 应用到生产）。
 
 ---
 
+## 7ter. AC-24 · 性能基线（2026-10-16 闭合）
+
+**改造前**：**完全未执行** —— 无 SLO 定义、无压测脚本（`scripts/` 无 perf/load 件）、无负载报告。
+按 AC 原文「**不得虚报未测指标**」如实记 FAIL。
+
+**四条设计取舍**（都不是随手定的）：
+
+| 决策 | 取值 | 理由 |
+|---|---|---|
+| 打哪里 | **本地构建产物**，非生产 | 生产是跨境 Netlify 共享 serverless：测出来的是网络抖动，不是本仓代码成本；且对生产开并发**本身就是攻击** |
+| 依赖 | **零新增**（Node 22 自带 `fetch`） | 本仓正被依赖高危困扰（28 条生产可达），不为压测再引一条供应链风险 |
+| 打什么 | 只打**读**与**被拒（401）**路径 | 压测若写库，就把「性能」与「数据污染」耦在一起 |
+| 延迟口径 | `fetch` → **响应体读完** | 不读完就计时会漏掉传输与反序列化成本 |
+
+**落地**：
+
+- `docs/implementation/slo.json` —— SLO 定义：**两档**（交互式 API / SSR 页面）× **三层**（c=1/10/50）共 **9 条规则** + 3 条错误率规则。
+- `scripts/perf/load-baseline.mjs` —— 零依赖压测器，8 个端点 × 3 档并发；
+  **`--repeats=N` 取中位数**，且**每次原始值保留在 `levels[].repeats`**、附 `p95Spread`。
+- `scripts/perf/slo-check.mjs` —— SLO ↔ 基线对账 + **自证 6/6**（双向：判红有牙齿 / 非恒红）。
+- `scripts/perf/rate-limit-probe.mjs` —— 限流缺口取证，**强制阳性对照**（见下）。
+- `scripts/perf/prepare-env.sh` —— 隔离环境准备，**三重安全闸**（显式 `--url` + 必须 `file:` + 进程 env 驱动）。
+- CI 新增 **`slo-check`**（**确定性**，只读冻结 JSON，不需 `npm ci`，十几秒）与 **`perf-baseline`**（**仅 `workflow_dispatch`**）。
+
+**过程与实证**：
+
+- **安全实证（三重，决定性的是第三条）**：① 隔离库 `M1/M2` 报告**全 0 行**；② 实测 `@next/env` 的 `loadEnvConfig` **不覆盖**已存在的进程变量；③ **另起实例指向不存在的库路径 → `/api/health` 返回 503 + `no such table: main.User`** ⇒ 应用确实服从传入的 `DATABASE_URL`，**不可能**在偷偷访问生产。
+- **实测基线**：`health` p95 = 20 / 63 / 371 ms（c=1/10/50）· `login` = 65 / 499 / 2570 ms ·
+  错误率**三档全 0.00%** · 吞吐 c=1→10 由 84 升到 109 rps，**c=50 反而降到 99**（已饱和）。
+- **对账**：`npm run check:slo` → **48/48 断言通过**；`npm run verify:check:slo` → **6/6**。
+- **T11 交接项已证实**：限流取证 —— **对照端点打出恰好 10 次 429**（130 次请求，前 120 通过、后 10 被拦，
+  与它配置的 `max: 120` **完全吻合**）；而 **MCP 发现面 200 次 → 0 次 429**、**A2A 200 次 → 0 次 429**。
+  ⇒ 「无速率限制」不是形容词，是**带阳性对照的实测结论**。
+
+**🔴 本轮最重要的方法论修正**：
+
+首轮**单次**运行时 `login@50` 的 p95 是 **3044ms**，**超过 3s 阈值**（看起来像 SLO 失败）。
+改用「**3 次取中位数**」后三次原始值为 **1995 / 2569 / 2757 ms**，中位数 **2570ms，通过** ⇒ 那个 3044ms 是**离群值**。
+**若当初直接拿单次数字判 PASS/FAIL，就会在噪声上下结论。** 因此：
+1. 压测器加了 `--repeats`，且**保留每次原始值 + `p95Spread`**（c=50 档各端点 p95 跨度达 **38%~80%**）；
+2. **性能不进 push 门禁** —— 共享 runner 抖动 ⇒ 硬阈值会退化成**随机红灯**，正是 AC-23 反复强调的
+   「**恒红的门禁比没有门禁更危险**」。压测是**取证动作**（`workflow_dispatch`），不是**门禁动作**；
+   进 CI 的只有**确定性**的 SLO↔基线对账。
+
+**🔴 顺带发现的既有缺陷（本轮不修）**：
+
+`src/lib/rate-limit.ts` 的取键是 `options.key ? options.key(request) : ip`，而本仓**三处调用都没传 `key`** ⇒
+`previewLimit`（120/5min，key=IP）与 `callSignalLimiter`（300/1min，key=IP）**共用同一个 `ratelimit:<ip>` 桶**，
+且**窗口长短由最先创建该条目的那次请求决定**：
+- 预览先建条目（5 分钟窗）⇒ 信令的「300 次/分钟」实际变成「**300 次/5 分钟**」= 1 次/秒，**可能影响长通话信令节奏**；
+- 信令先建条目（1 分钟窗）⇒ 预览的「5 分钟」实际只持续 1 分钟，**限流被削弱**。
+
+定性为**跨功能干扰**（非安全绕过）。**诚实边界**：运行期复现需「同一 IP 上同时使用两个功能的**已登录会话**」，
+本次**未做运行期实证**（仅代码级）。
+**不在本轮修**：改取键会改变生产流量的限流语义，应作**独立变更**带自己的测试与生产复验（同 AC-23 不改迁移脚本的理由）。
+
+**🔴 未完成（后续跟办）**：
+
+| # | 动作 | 优先级 |
+|---|---|---|
+| 1 | MCP / A2A 显式接线限流器（公开发现面无独立限流） | P1 |
+| 2 | 每个限流器显式传 `key`（如 `` key: (req) => `missions-preview:${clientIp(req)}` ``），消除共桶 | P1 |
+| 3 | 发版后补**生产侧**观测（跨境 RTT / 冷启 / Turso 远端查询）—— 本基线**不可**外推为生产 SLA | P2 |
+| 4 | 压测生成器与服务器分离（消除共机 CPU 争用，让 c=50 档的饱和度可归因） | P2 |
+| 5 | `login` SSR 路径是本轮最重端点（c=1→50 放大 40 倍）—— 值得单独剖析（**不属 AC-24 修复范围**） | P3 |
+
+---
+
 ## 8. 已交付任务的验证口径（可复跑）
 
 | 任务 | 类型检查 | 单测 | 门禁 | E2E |
@@ -766,6 +834,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T06+ · AC-10 生命周期清理 | `tsc` | `tests/lifecycle` **13** | ESLint 0/0 | **自证夹具**：`seed-lifecycle-e2e.mjs` + `lifecycle-sweep.mjs`（dry-run 命中 1/2/1 = 期望；apply 后复跑 0；`PENDING` 与未读项存活） |
 | **T12 · AC-10 账号级闭合**（导出 / 删除 / 缓存） | `tsc --noEmit` **exit 0**（复跑） | `tests/lifecycle` **31**（13 → 31）；全量 **98 套 / 2030 例** | 新增文件 ESLint **0/0**；4 个既有文件（auth / discover / settings / matches·react）**零新增** —— 21 errors / 10 warnings 与 HEAD **逐文件完全一致**（`git show HEAD:<f> \| npx eslint --stdin --stdin-filename <f>` 对照） | **`verify:ac10:lifecycle` 68/0**（真 dev server + 真隔离库 + 真会话 + 直连库回读）：① 无会话三面 **401**；② 导出 —— **前置非空 7 条**（否则"不含 X"在空集上恒真）+ 凭据/内部备注不在场 5 条 + 未覆盖声明；③ 删除计划 —— **跑完库零改动**（email/deletedAt/tokenVersion 全等）；④ 执行删除 —— **逐表库状态**（User/Profile/SocialIntent/MissionParticipation/BridgeMemberOptIn/AgentRun/Notification）+ **缓存回执**（4 个本人键 + `who-liked-me:` 全局前缀）+ 保留项仍在 + **对照账号零波及** + 原邮箱**不可再登录** |
 | **AC-23 · CI 门禁（三道棘轮）** | — | `verify:lint:ratchet` **8/8** · `verify:check:deps` **6/6** · `verify:check:migration-drift` **5/5** | `lint:gate` **1542 / 零新增 / exit 0**（全仓 1565 → 1542）· `check:deps` **exit 0**（生产 26 high + 2 critical，28 条全登记）· `check:migration-drift` **exit 0** | **CI migration job 全链复现**：`db push → rollback → apply → 幂等复跑 → verify(**255/255**) → 漂移棘轮 exit 0`；**E2E job** 5 条运行期判据（`/api/health` 真连库 · 匿名 401 · 登录页水合 · 未知路径 404 · `/` 200）；**三份自证各含一条「防假门禁」对照**（总数守恒位移 / 严重度升级 / 新增漂移） |
+| **AC-24 · 性能基线 + SLO** | — | `verify:check:slo` **6/6**（双向自证：篡改 p95 判红 · 篡改错误率判红 · **删档判红** · 基线非法判红 · **阈值放宽必须通过**）/ 压测器与取证器均为零依赖 `.mjs`，`check:script-decls` **0 未声明引用** | 新增脚本 ESLint **0/0**（含 `no-unused-vars` 逐条清理）；CI 新增**确定性** `slo-check` job（不需 `npm ci`）+ **仅手动** `perf-baseline` job | **`check:slo` 48/48 断言**（8 端点 × 3 档 + 错误率）· 错误率三档全 **0.00%** · 本地构建产物实测（每档 10s × **3 次取中位数**，**保留原始值**）· **限流取证**：对照端点**恰好 10 次 429**（印证 `max=120`），**MCP/A2A 各 200 次零 429** ⇒ 缺口证实 |
 | T07 · Console Slice 1 | `tsc` 0 错误 | — | ESLint 0/0 · `check:script-decls` 57 通过 | 生产复验（当时 **19/19**；该脚本已在 Slice 3 扩展为覆盖 Slice 1–3，见下）；AC-18 **未认领** |
 | T07 · Console Slice 2 | `tsc` 0 错误 | `tests/tenancy` **87**（49 → 87）· 全量 **984**（50 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/members`：API 层测试断言 `MEMBER 403 · OPERATOR 200 · 非法值忽略 · 500 不泄漏内部信息`；AC-18 **仍未认领**（四屏未做） |
 | T07 · Console Slice 3 | `tsc` 0 错误 | `tests/connection` **373 → 408**（16 → 18 套）· `tests/tenancy` **87 → 120**（5 → 7 套）· 全量 **984 → 1052**（50 → 54 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/connections/pipeline`（`workflow.read`）+ `GET/PATCH /api/v1/org`；负向断言防 `withTenant(some)` 降级、`ADMIN` 也不可改组织档案；AC-18 **仍未认领**（Agents 等 T09 / Outcomes 等 T08） |
@@ -802,4 +871,4 @@ C2/C3 已在 `233669e` 应用到生产）。
 
 ---
 *本文件由 T00/T01 交付后盘点生成；每个任务收尾时回填提交 SHA 与 AC 结论。*
-*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 Slice 2**（`3e6b342`，Consent Gate / Outcome Observatory / Agent 区 + 门禁 R10 + 契约 1.2）—— **未发版**，`verify:no-release --commit=3e6b342` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 端到端取证（HTTP 层）**（`6df1881`，`verify:p2:e2e` **130 通过 / 0 失败** + 服务端用户可见文案去 markdown + 假模型端点）—— **未发版**，`verify:no-release --commit=6df1881` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**T09 Slice 4**（`c127d18`，Agent 执行器落地 —— `EXECUTED` 只有一条路径 + C7 `AgentExecution`）—— **未发版**，`verify:no-release --commit=c127d18` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 5**（`c2ae31a`，组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证）—— **未发版**，`verify:no-release --commit=c2ae31a` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 6**（`56f0369`，对外送达 + 生产侧连通性入口 + 对账端到端实跑）—— **未发版**，`verify:no-release --commit=56f0369` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T10 Slice 4**（`47e1dac`，Community Bridge 前端面板 + AC-19 E2E 69/69）与 **T11 Slice 1–5**（`8419f50`，Open SDK：契约 34 路径/42 操作 + MCP + A2A + SDK 示例 + AC-22 E2E 57/57）—— 均**未发版**，`verify:no-release` 实证最新部署仍为 `f6630ea6b` · 2026-10-15；**T12 Release E2E** —— `FINAL_ACCEPTANCE_REPORT.md` 生成（21 PASS / 3 FAIL / 1 BLOCKED；**不建议上线**，AC-10 BLOCKER 未闭合）· 2026-10-15；**AC-10 账号级闭合**（导出 `GET /api/v1/me/export` + 删除 `GET`/`POST /api/v1/me/erasure` 两段式 + **缓存失效第 ⑧ 步** + `src/lib/cache-keys.ts` 单一来源）—— 单测 13 → **31** 例（全量 **98 套 / 2030 例**）、`verify:ac10:lifecycle` **68/0** ⇒ **BLOCKER 清空**（22 PASS / 2 FAIL / 1 BLOCKED）；**未发版**，`verify:no-release --commit=<SHA>` 实证 · 2026-10-16；**AC-23 CI 门禁可信化闭合**（三道棘轮：lint 1542 / 生产依赖 28 条 / schema 漂移 11 张表；CI 新增 Migration + E2E 两 job；`continue-on-error` 两处移除；发现并登记三处真风险）⇒ **23 PASS / 1 FAIL / 1 BLOCKED**；新增 `CI_GATES.md` / `DEPENDENCY_RISK.md`；**CI 首次全绿**（run `38863968546` / `8016bb4` → success，9 job · 2m49s，含新增 Migration + E2E）；**未发版**，`verify:no-release:surface` 实证（5 条 404 + 3/3 正向对照）· 2026-10-16*
+*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 Slice 2**（`3e6b342`，Consent Gate / Outcome Observatory / Agent 区 + 门禁 R10 + 契约 1.2）—— **未发版**，`verify:no-release --commit=3e6b342` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 端到端取证（HTTP 层）**（`6df1881`，`verify:p2:e2e` **130 通过 / 0 失败** + 服务端用户可见文案去 markdown + 假模型端点）—— **未发版**，`verify:no-release --commit=6df1881` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**T09 Slice 4**（`c127d18`，Agent 执行器落地 —— `EXECUTED` 只有一条路径 + C7 `AgentExecution`）—— **未发版**，`verify:no-release --commit=c127d18` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 5**（`c2ae31a`，组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证）—— **未发版**，`verify:no-release --commit=c2ae31a` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 6**（`56f0369`，对外送达 + 生产侧连通性入口 + 对账端到端实跑）—— **未发版**，`verify:no-release --commit=56f0369` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T10 Slice 4**（`47e1dac`，Community Bridge 前端面板 + AC-19 E2E 69/69）与 **T11 Slice 1–5**（`8419f50`，Open SDK：契约 34 路径/42 操作 + MCP + A2A + SDK 示例 + AC-22 E2E 57/57）—— 均**未发版**，`verify:no-release` 实证最新部署仍为 `f6630ea6b` · 2026-10-15；**T12 Release E2E** —— `FINAL_ACCEPTANCE_REPORT.md` 生成（21 PASS / 3 FAIL / 1 BLOCKED；**不建议上线**，AC-10 BLOCKER 未闭合）· 2026-10-15；**AC-10 账号级闭合**（导出 `GET /api/v1/me/export` + 删除 `GET`/`POST /api/v1/me/erasure` 两段式 + **缓存失效第 ⑧ 步** + `src/lib/cache-keys.ts` 单一来源）—— 单测 13 → **31** 例（全量 **98 套 / 2030 例**）、`verify:ac10:lifecycle` **68/0** ⇒ **BLOCKER 清空**（22 PASS / 2 FAIL / 1 BLOCKED）；**未发版**，`verify:no-release --commit=<SHA>` 实证 · 2026-10-16；**AC-23 CI 门禁可信化闭合**（三道棘轮：lint 1542 / 生产依赖 28 条 / schema 漂移 11 张表；CI 新增 Migration + E2E 两 job；`continue-on-error` 两处移除；发现并登记三处真风险）⇒ **23 PASS / 1 FAIL / 1 BLOCKED**；新增 `CI_GATES.md` / `DEPENDENCY_RISK.md`；**CI 首次全绿**（run `38863968546` / `8016bb4` → success，9 job · 2m49s，含新增 Migration + E2E）；**未发版**，`verify:no-release:surface` 实证（5 条 404 + 3/3 正向对照）· 2026-10-16；**AC-24 性能基线闭合**（`slo.json` 两档三层 9 条规则 + 零依赖压测器 `load-baseline.mjs`（**每档 3 次取中位数、保留原始值**）+ SLO 对账 `check:slo` **48/48** + 自证 `verify:check:slo` **6/6** + 限流取证器 `rate-limit-probe.mjs`：对照端点**恰好 10 次 429**、MCP/A2A 各 200 次**零 429** ⇒ 缺口证实；顺带发现限流器**共用 per-IP 桶**缺陷并登记；CI 新增**确定性** `slo-check` 与**仅手动** `perf-baseline` 两 job）⇒ **24 PASS / 0 FAIL / 1 BLOCKED**（例外面仅剩 AC-25 外部依赖）；新增 `PERFORMANCE_BASELINE.md`；**未发版**，`verify:no-release:surface` 实证 · 2026-10-16*

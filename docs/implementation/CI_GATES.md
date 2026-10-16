@@ -61,7 +61,7 @@ AC-23 要解决的不是「把红变绿」，而是**让红重新等于「你引
 
 ---
 
-## 3. CI job 地图（改造后）
+## 3. CI job 地图
 
 | # | Job | 触发 | 是否阻断 | 说明 |
 |---|---|---|---|---|
@@ -69,11 +69,13 @@ AC-23 要解决的不是「把红变绿」，而是**让红重新等于「你引
 | 2 | Lint (ESLint · 棘轮) | push / PR | ✅ | 全仓产出报告 + 棘轮比对 |
 | 3 | Test (Jest) | push / PR | ✅ | 未改动 |
 | 4 | Build (next build) | push / PR | ✅ | **`continue-on-error` 已移除** |
-| 5 | Migration（libSQL 文件库） | push / PR | ✅ | **新增**，免凭据 |
-| 6 | E2E（构建产物 · 浏览器冒烟） | push / PR | ✅ | **新增** |
+| 5 | Migration（libSQL 文件库） | push / PR | ✅ | **AC-23 新增**，免凭据 |
+| 6 | E2E（构建产物 · 浏览器冒烟） | push / PR | ✅ | **AC-23 新增** |
 | 7 | Secret scan (gitleaks) | push / PR | ✅ | 未改动 |
 | 8 | Dependency audit（生产可达 · 棘轮） | push / PR | ✅ | **`continue-on-error` 已移除** |
 | 9 | DCO sign-off check | 仅 PR | ✅ | 未改动 |
+| 10 | Perf SLO 对账（确定性） | push / PR | ✅ | **AC-24 新增**；只读冻结 JSON，**不跑压测**（见 §3.4） |
+| 11 | Perf 基线实跑 | **仅 `workflow_dispatch`** | — | **AC-24 新增**；产出基线 artifact，**刻意不做 push 门禁**（见 §3.4） |
 
 ### 3.1 `continue-on-error` 的两处移除，各有实证
 
@@ -81,6 +83,30 @@ AC-23 要解决的不是「把红变绿」，而是**让红重新等于「你引
   即构建在占位凭证下**本就通过**。`continue-on-error` 只是历史遗留的免责声明。
 - **Dependency audit**：不是「已经绿了所以敢移除」，而是**改成棘轮后它有了真实判据**
   （新增 / 未登记 / 到期 → 判红）。详见 §5。
+
+### 3.4 性能为什么**不做** push 门禁（AC-24）
+
+同一条教训的第三次应用（前两次见 §2 与 §5）：
+
+> **恒红的门禁比没有门禁更危险。** 它把「红」这个信号本身贬值。
+
+实测证据：同一份代码、同一台机器，`login@50` 的 p95 三次重复为 **1995 / 2569 / 2757 ms**
+（跨度 38%），而 `mcp-discover@50` 三次为 **270 ~ 486 ms**（跨度 **80%**）。
+在共享 runner 上把延迟挂成硬阈值 ⇒ **随机变红** ⇒ 立刻退化成下一个「被所有人学会忽略的 job」。
+
+于是拆成两件事：
+
+| 做什么 | 进哪里 | 为什么 |
+|---|---|---|
+| **SLO ↔ 基线 对账** | **push / PR 的 `slo-check` job** | **确定性**：只读 `slo.json` 与 `perf-baseline.json`。谁把两者改成互相矛盾、或删掉基线，立刻判红。纯 Node 标准库，**不需要 `npm ci`** ⇒ 十几秒、零抖动 |
+| **实跑压测** | **仅手动 `perf-baseline` job** | 压测是**取证动作**，不是门禁动作：产出基线 JSON 作为 artifact，人工复核后再提交更新 |
+
+`slo-check` 的自证（`npm run verify:check:slo`）**双向**，缺一不可：
+篡改 p95 / 篡改错误率 / **删除整档数据** / 基线非法 → 四种都**判红**；
+**阈值放宽到无穷 → 必须通过**（证明它不是「恒红」，否则它自己就是那个被忽略的 job）。
+
+阈值口径见 `PERFORMANCE_BASELINE.md` §3.3；**阈值按 UX 可接受度先行确定，未按实测反推**
+（按实测反推会让 SLO 永远达标，等价于没有 SLO）。
 
 ### 3.2 新增的 Migration job 到底在测什么
 
@@ -292,6 +318,10 @@ npm run verify:check:migration-drift
 npm run lint:baseline
 npm run check:deps:baseline
 DATABASE_URL="file:/tmp/x.db" npm run check:migration-drift:baseline
+
+# 性能 SLO（AC-24）—— 确定性对账 + 自证；实跑压测见 PERFORMANCE_BASELINE.md §7
+npm run check:slo
+npm run verify:check:slo
 ```
 
 ---
@@ -301,3 +331,4 @@ DATABASE_URL="file:/tmp/x.db" npm run check:migration-drift:baseline
 | 日期 | 变更 |
 |---|---|
 | 2026-10-16 | 首版。三道棘轮落地；CI 新增 Migration / E2E 两个 job；移除 `build` 与 `dependency-audit` 的 `continue-on-error`；发现并登记「迁移目录非建库路径」「11 表 `organizationId` 未建模」「迁移脚本 `.env` 覆盖环境变量」三项风险 |
+| 2026-10-16 | **AC-24 追加**：job 地图 9 → 11 —— 新增 **`slo-check`**（确定性 SLO↔基线对账，push/PR 阻断）与 **`perf-baseline`**（**仅 `workflow_dispatch`**）。新增 §3.4 说明「性能为什么不做 push 门禁」（实测同档位 p95 跨度 38%~80% ⇒ 硬阈值会退化成随机红灯）。详见 `PERFORMANCE_BASELINE.md` |

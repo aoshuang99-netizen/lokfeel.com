@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-16T07:25:42.391Z",
+  "base": "http://127.0.0.1:3000",
+  "control": {
+    "target": "/api/v1/public/missions/probe-token-00000000000000000000000000000000",
+    "requests": 130,
+    "rateLimited": 10,
+    "statuses": {
+      "404": 120,
+      "429": 10
+    },
+    "interpretation": "阳性对照：有 429 ⇒ 探针可信；无 429 ⇒ 取证不合格"
+  },
+  "results": [
+    {
+      "key": "control-missions-preview",
+      "role": "对照（已知有限流：120 / 5min / IP）",
+      "path": "/api/v1/public/missions/probe-token-00000000000000000000000000000000",
+      "method": "GET",
+      "requests": 130,
+      "statuses": {
+        "404": 120,
+        "429": 10
+      },
+      "rateLimited": 10,
+      "failed": 0,
+      "wallMs": 1238
+    },
+    {
+      "key": "mcp-discovery",
+      "role": "缺口候选（MCP 发现面，无需会话）",
+      "path": "/api/mcp",
+      "method": "POST",
+      "requests": 200,
+      "statuses": {
+        "200": 200
+      },
+      "rateLimited": 0,
+      "failed": 0,
+      "wallMs": 1513
+    },
+    {
+      "key": "a2a-tasks",
+      "role": "缺口候选（A2A 任务端点）",
+      "path": "/api/v1/a2a/tasks",
+      "method": "POST",
+      "requests": 200,
+      "statuses": {
+        "401": 200
+      },
+      "rateLimited": 0,
+      "failed": 0,
+      "wallMs": 1574
+    }
+  ]
+}

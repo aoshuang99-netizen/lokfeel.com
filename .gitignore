@@ -96,3 +96,11 @@ cloudflare-env.d.ts
 #   · __mutant-*               —— 变异体（源码树内，UI 门禁 R0 也会主动报错）
 tsconfig.drift-probe.json
 __mutant-*
+
+# 性能基线的隔离库（AC-24，`scripts/perf/prepare-env.sh` 创建）：
+# 与上面同一条教训 —— 它是**可丢弃的本地库**，不是交付物。
+# 基线数据本身是 `docs/implementation/perf-baseline.json`（那个**要**提交）。
+perf-baseline.db
+perf-baseline.db-journal
+perf-baseline.db-wal
+perf-baseline.db-shm

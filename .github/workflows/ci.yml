@@ -410,3 +410,102 @@ jobs:
             exit 1
           fi
           echo "所有提交均已正确签署 DCO"
+
+  # ─────────────────────────────────────────────────────────────
+  # 10. 性能 SLO 对账 —— **确定性**门禁（AC-24）
+  #
+  #     为什么这里**只读冻结文件**、不跑压测：
+  #       同一份代码在共享 runner 上的实测延迟抖动极大（邻居负载、CPU 配额、
+  #       网络）。给延迟挂硬阈值，结果就是随机变红 —— 那正是 AC-23 里
+  #       反复强调的「**恒红的门禁比没有门禁更危险**」，它会把「红」这个
+  #       信号本身贬值。
+  #       但「SLO 定义与**已留存基线**是否自洽」是**确定性**的：谁把 slo.json
+  #       改成与基线矛盾、或删掉基线文件，这里立刻判红。零抖动、零成本。
+  #
+  #     实跑压测走 `workflow_dispatch`（见下一个 job），产出的基线由人工
+  #     复核后再提交 —— 压测是**取证动作**，不是**门禁动作**。
+  # ─────────────────────────────────────────────────────────────
+  slo-check:
+    name: Perf SLO 对账（确定性 · AC-24）
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+      # 纯 node 标准库，不需要 npm ci —— 所以这个 job 只要十几秒
+      - name: 校验器自证（判红有牙齿 + 非恒红）
+        run: node scripts/perf/slo-check.mjs --self-test
+      - name: SLO 与留存基线对账
+        run: node scripts/perf/slo-check.mjs
+
+  # ─────────────────────────────────────────────────────────────
+  # 11. 性能基线实跑 —— **仅手动触发**（AC-24）
+  #
+  #     为什么不是 push/PR 门禁：见上一个 job 的说明。压测在共享 runner 上
+  #     的数字**可比性有限**，把它当门槛只会制造随机红灯；把它当**取证**，
+  #     人工复核后更新 `docs/implementation/perf-baseline.json` 才有价值。
+  #
+  #     本 job：隔离库 → 生产构建 → next start → 压测 → SLO 对账，
+  #     产物（基线 JSON + 服务端日志）作为 artifact 留存 30 天。
+  # ─────────────────────────────────────────────────────────────
+  perf-baseline:
+    name: Perf 基线实跑（手动）
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 40
+    env:
+      DATABASE_URL: file:./perf-baseline.db
+      TURSO_AUTH_TOKEN: ''
+      DATABASE_AUTH_TOKEN: ''
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+
+      - name: 准备隔离库 + 生产构建
+        run: bash scripts/perf/prepare-env.sh
+
+      - name: 启动构建产物
+        run: |
+          DATABASE_URL="file:./perf-baseline.db" npm run start > "$RUNNER_TEMP/next-start.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/next-start.pid"
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://127.0.0.1:3000/api/health; then
+              echo "服务已就绪（${i}s）"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::next start 启动超时（60s）"
+          tail -100 "$RUNNER_TEMP/next-start.log"
+          exit 1
+
+      - name: 压测（写入基线）
+        run: |
+          node scripts/perf/load-baseline.mjs \
+            --base=http://127.0.0.1:3000 \
+            --levels=1,10,50 --duration=10 --warmup=3 \
+            --out="$RUNNER_TEMP/perf-baseline.json"
+
+      - name: SLO 对账（对着本次实测）
+        run: node scripts/perf/slo-check.mjs --baseline="$RUNNER_TEMP/perf-baseline.json"
+
+      - name: 失败时打印服务端日志
+        if: failure()
+        run: tail -200 "$RUNNER_TEMP/next-start.log" || true
+
+      - name: 上传基线
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: perf-baseline
+          path: |
+            ${{ runner.temp }}/perf-baseline.json
+            ${{ runner.temp }}/next-start.log
+          if-no-files-found: ignore
+          retention-days: 30
