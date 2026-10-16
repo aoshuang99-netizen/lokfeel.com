@@ -264,4 +264,4 @@ node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 --n=200 \
 | 日期 | 变更 |
 |---|---|
 | 2026-10-16 | **AC-24 首次执行**：定义 SLO（`slo.json`，两档三层共 9 条规则）；新建零依赖压测器 `load-baseline.mjs`（含 `--repeats` 中位数聚合与原始值保留）与限流取证器 `rate-limit-probe.mjs`；实测本地构建产物三档并发，留存基线 `perf-baseline.json`（48/48 断言通过）；证实 MCP/A2A **无速率限制**（带阳性对照，对照端点恰好 10 次 429）；顺带发现并登记限流器**共用 per-IP 桶**缺陷（代码级，运行期未实测）；CI 新增确定性 `slo-check` job 与仅手动的 `perf-baseline` job。 |
-| 2026-10-16 | **CI 实证回填**：CI run `38868575737`（`7e76bc3`）→ **success**（整轮 151s，11 job 全绿）。新增的 `Perf SLO 对账` **8s 通过**、`Perf 基线实跑` 在 push 上 **skipped** —— 与 §6 的设计一致。`verify:no-release:surface` 仍成立（5 条 404 + 3/3 正向对照）。 |
+| 2026-10-16 | **CI 实证回填**：CI run `38868575737`（`7e76bc3`）→ **success**（整轮 151s，11 job 全绿）。新增的 `Perf SLO 对账` **8s 通过**、`Perf 基线实跑` 在 push 上 **skipped** —— 与 §6 的设计一致。`verify:no-release:surface` 仍成立（5 条 404 + 3/3 正向对照）。<br>（后注：该命令已随后续发版被 `verify:released:surface` 取代 —— 原探针断言"仍未发版"，发版后失效；见 `RELEASE_T09-T12.md`。） |

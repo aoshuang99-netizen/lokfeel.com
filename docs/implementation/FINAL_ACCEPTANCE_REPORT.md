@@ -4,11 +4,16 @@
 > **铁律**：**所有 BLOCKER 必须 PASS 才建议上线**；缺真实凭据的流程只能 `MOCKED` / `BLOCKED`，**不得以 mock 冒充生产验收**。
 > **本报告不虚报任何未实测指标** —— 凡未执行、未接通者，一律如实标注。
 
-- **生成时间**：2026-10-15（CST）
-- **HEAD（代码基线）**：`8419f500972d2aa84206fbb799c8222da6a0b532`（T11 Open SDK，已推 `origin/main`）
-- **生产部署版本**：`f6630ea6b`（T08 Slice 3 发布，2026-10-13）
-- **发版状态**：**可发版 · 未发版**（`[skip netlify]` 生效，`verify:no-release --commit=8419f5009` → exit 0）
-- **迁移状态**：C0–C8 已应用到生产 Turso；**C9（`CommunityBridge` / `BridgeMemberOptIn`）尚未 apply**
+- **生成时间**：2026-10-15（CST）｜**最近更新**：2026-10-16（发版复验）
+- **HEAD（代码基线）**：`2d5385d`（发版提交；含 T09+T10+T11+T12 / AC-10/23/24 共 34 个提交）
+- **生产部署版本**：`2d5385d`（2026-10-16 发布；上一版 `f6630ea6b` @ 2026-10-13）
+- **发版状态**：✅ **已发版并复验生效** —— `verify:released:surface` **6/6 达期望 + 2/2 正向对照**；
+  `verify-public-origin` **13/0**；`db-snapshot diff` 证明对既有数据**零影响**。详见 `RELEASE_T09-T12.md`
+- **迁移状态**：✅ **C0–C9 已全部应用到生产 Turso** —— `connection:migrate verify` **255/255**
+  （C9 `CommunityBridge` / `BridgeMemberOptIn` 已就位，本次发版**无需再 apply**）
+- **A1（生产侧出口连通性）**：⚠️ **分层结论** —— 匿名层 ✅ 已验（401 + JSON 信封）；
+  **网络层 / 凭据层 ⛔ BLOCKED**（生产 `qa.*` 账号 0 行 + `Membership` 0 ⇒ 取不到会话）。
+  **不得据此宣称"生产出口已验"**，详见 `RELEASE_T09-T12.md` §4
 
 ---
 
@@ -23,6 +28,20 @@
 | **合计（25 条）** | **24 PASS / 0 FAIL / 1 BLOCKED** |
 
 ### ✅ 上线判定：**BLOCKER 已清空 · P0 工程项已清空 —— 唯一剩余项 AC-25 属外部依赖，非工程问题**
+
+### 🚀 发版落实（2026-10-16 17:10 · 提交 `2d5385d`）
+
+**已发版，且发版后有实证**（不是"推上去了"，是"生效了"）：
+
+| 复验项 | 命令 | 结果 |
+|---|---|---|
+| 生效断言 | `npm run verify:released:surface` | ✅ **6/6 达期望**（bridges/agents.runs/me.export/me.erasure → 401；`/api/mcp` → 405；agent-card → 200）+ **2/2 正向对照** |
+| 对外跳转域名 | `verify-public-origin.mjs` | ✅ **13/0**（含 Google `redirect_uri` 落在公开域名；泄漏扫描 **0 处**） |
+| 数据零影响 | `db-snapshot diff before after` | ✅ 65→65 表 · 无增删 · 既有表行数**全部未变** |
+| 发版前 schema | `connection:migrate verify` | ✅ **255/255**（C0–C9 全部就位 ⇒ 本次无需 apply） |
+
+> ⚠️ **A1 未闭合**：生产 `qa.*` 账号 **0 行** + `Membership` **0** ⇒ 诊断端点只验到"匿名层"（401）。
+> 网络层/凭据层 ⛔ **BLOCKED**。**"生产出口连通性已验"这句话当前不成立**，详见 `RELEASE_T09-T12.md` §4。
 
 按 `ACCEPTANCE_MATRIX.md` 的上线判定"**所有 BLOCKER 必须 PASS**"：
 - **AC-10（BLOCKER）已转 PASS**（2026-10-16）—— 「导出」「删除请求」「缓存清理」三支全部落地并端到端取证：
@@ -421,6 +440,10 @@ node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 --n=200
 | 2026-10-16 | **AC-10（BLOCKER）闭合**：新增导出 / 删除请求 / **缓存失效**三支（`account.ts` · `cache-keys.ts` · `export.ts` · `erasure.ts` · `/api/v1/me/{export,erasure}`），E2E `verify:ac10:lifecycle` **68/0**，单测扩至 **31 例**（全量 **98 套 / 2030 例**）。判定更新为 **22 PASS / 2 FAIL / 1 BLOCKED**，**BLOCKER 已清空、未走例外审批**；剩余阻断为 P0 的 AC-23 / AC-24。同时**订正** `LIFECYCLE.md` 中"本仓无独立缓存层"的事实错误。 |
 | 2026-10-16 | **AC-23（P0）闭合 · CI 门禁可信化**：三次「不降标准」的历史债治理落地为**三道棘轮**（lint 1542 / 生产依赖 28 条 / schema 漂移 11 张表），全部「冻结存量 + 只拦新增」；CI 新增 **Migration**（免凭据，`verify` 255/255）与 **E2E**（构建产物浏览器冒烟）两个 job；`build` 与 `dependency-audit` 的 `continue-on-error` **两处移除**。判定更新为 **23 PASS / 1 FAIL / 1 BLOCKED**，**未走例外审批**。过程中发现并登记三处真风险（迁移目录非建库路径 · 11 表 `organizationId` 未建模 · 迁移脚本 `.env` 覆盖环境变量）。**残留如实标注**：28 条生产高危仅「登记 + 棘轮」，未做批量升级。新增 `CI_GATES.md` / `DEPENDENCY_RISK.md`。 |
 | 2026-10-16 | **AC-24（P0）闭合 · 性能基线与 SLO**：`slo.json` 定义两档 × 三层共 9 条规则（阈值按 UX 先行确定，**未按实测反推**）；零依赖压测器 `load-baseline.mjs`（**多次取中位数 + 保留原始值与 `p95Spread`**）实测本地构建产物三档并发，`check:slo` **48/48 通过**、错误率 **0.00%**；校验器自证 **6/6**（含「判红有牙齿」与「非恒红」双向）；**证实** T11 交接的 MCP/A2A 无速率限制（阳性对照端点恰好 **10 次 429**，印证其 `max=120`）；顺带发现并登记**限流器共用 per-IP 桶**缺陷（代码级，运行期未实测）。**方法学修正**：首轮单次运行的 `login@50` 3044ms 经三次重复证实为**离群值**（1995/2569/2757，中位数 2570 通过）⇒ 单次测量不可用于判 PASS/FAIL。CI 新增**确定性** `slo-check` job（零抖动）与**仅手动**的 `perf-baseline` job（压测是取证不是门禁）。判定更新为 **24 PASS / 0 FAIL / 1 BLOCKED**，**未走例外审批**；例外面仅剩 AC-25（外部依赖）。新增 `PERFORMANCE_BASELINE.md`。 |
+
+---
+
+| 2026-10-16 | **🚀 发版 + 停用「未发版」状态**：提交 `2d5385d`（34 提交 / T09+T10+T11+T12 + AC-10/23/24）**已发布生产并复验生效**。发版前四项前提实测（C0–C9 全部就位 `verify` **255/255** · 纯新增 schema · 未发版成立 5 条 404 + 3/3 对照 · CI 12 项全绿）；发版后三项复验（`verify:released:surface` **6/6 + 2/2 对照** · `verify-public-origin` **13/0** · `db-snapshot diff` **零数据影响**）。**A1 判定为分层结论**：匿名层 ✅ 已验，网络层/凭据层 ⛔ **BLOCKED**（生产 `qa.*` 账号 **0 行** + `Membership` **0**）—— **不得宣称"生产出口已验"**。新增 `RELEASE_T09-T12.md`；探针语义反转（`verify:released:surface` 取代已删除的 `verify-no-release-surface`，避免"清空清单"变成恒绿假门禁）。 |
 
 ---
 
