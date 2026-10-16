@@ -28,7 +28,7 @@ interface Campaign {
 }
 
 // 内存中的活动配置
-let campaigns: Campaign[] = [
+const campaigns: Campaign[] = [
   {
     id: "1",
     code: "WELCOME50",

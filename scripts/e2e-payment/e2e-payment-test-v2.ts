@@ -60,7 +60,7 @@ async function testDataIntegrity() {
       },
     });
 
-    let orphans: string[] = [];
+    const orphans: string[] = [];
     let missingProfile = 0, missingSub = 0, missingPayment = 0, missingNotif = 0;
 
     for (const user of paidUsers) {
@@ -140,7 +140,7 @@ async function testAmountAccuracy() {
     });
 
     let correctAmounts = 0;
-    let incorrectDetails: string[] = [];
+    const incorrectDetails: string[] = [];
 
     for (const p of payments) {
       const isMonthly = p.description?.includes('Monthly');

@@ -120,7 +120,7 @@ async function main() {
 
   const startTime = Date.now();
   let updated = 0;
-  let skipped = 0;
+  const skipped = 0;
   let failed = 0;
   const errors: string[] = [];
   const sharp = (await import('sharp')).default;

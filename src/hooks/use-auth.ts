@@ -84,7 +84,6 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseAuthRetu
   
   // Wrap onUnauthenticated in useCallback to prevent unnecessary re-renders
   // Note: onUnauthenticated is intentionally NOT in deps to prevent recreation
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleUnauthenticated = useCallback(() => {
     if (onUnauthenticated) {
       onUnauthenticated()

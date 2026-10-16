@@ -189,7 +189,7 @@ async function processBotUser(
     let avatarUrl: string;
     let style: string;
     let ethnicity: string;
-    let existingAvatar = user.profile.avatar;
+    const existingAvatar = user.profile.avatar;
 
     if (isMale && !existingAvatar?.includes('randomuser')) {
       // 男性：使用 RandomUser.me 的真实头像

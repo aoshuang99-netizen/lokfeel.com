@@ -694,6 +694,54 @@ C2/C3 已在 `233669e` 应用到生产）。
 
 ---
 
+## 7bis. AC-23 · CI 门禁可信化（2026-10-16 闭合）
+
+**改造前**（CI run `38848356361`）：`Lint ❌ · Dependency audit ❌`，其余 5 项 ✅。
+两个 job 长期恒红 ⇒ 被忽略 ⇒ 真回归被存量噪音淹没。
+
+**为什么是「三道棘轮」而不是「清零」或「收敛扫描面」**（都有实测依据）：
+
+| 方案 | 否决理由（实测） |
+|---|---|
+| 收敛 lint 扫描面 | 1565 条债里 **1176 条（75%）就在 `src/`** ⇒ 排除 `src/` = 门禁失效。真正该排除的只有构建产物（5 条），已排除 |
+| 降级规则 severity | 那是削弱，不是收敛 |
+| 清零 lint 存量 | 1565 条里 79% 集中在 3 条规则，且 `no-unused-vars`/`no-explicit-any` **不可自动修复** —— 跨 398 个文件的人工重构，风险远大于收益 |
+| `npm audit fix` 一把梭 | 实测动 **162 个包**（含 `undici 7→8`、`deepmerge-ts 7→8` 主版本跃迁），且 **high/critical 一条都没消掉** |
+
+**落地**：
+
+- `scripts/ci/lint-ratchet.mjs` —— 逐文件×逐规则冻结 `lint-baseline.json`；
+  全仓 **1565 → 1542**（−15 `prefer-const` 自动修 · −3 失效 `eslint-disable` · −5 构建产物排除 · 新脚本自身清零），
+  其余冻结。**规则强度零下降**。
+- `scripts/ci/dependency-ratchet.mjs` —— **只管生产可达**（`--omit=dev`，28 条）；
+  新增 / 严重度升级 / 缺书面理由 / **豁免到期** ⇒ 四种情况判红。dev 侧降为非阻断报告。
+  逐条登记见 `DEPENDENCY_RISK.md`。
+- `scripts/ci/migration-drift-ratchet.mjs` —— 冻结 11 张表的已知漂移（`reviewBy=2026-12-15`）。
+- CI 新增 **Migration**（免凭据 libSQL 文件库，`verify` **255/255**）与 **E2E**（`next start` 构建产物浏览器冒烟）两个 job。
+- 移除 `build` / `dependency-audit` 两处 `continue-on-error`。
+
+**过程中发现的三处真风险**（均记入 `CI_GATES.md`）：
+
+1. `prisma migrate deploy` 在 sqlite 上**从零建库必然失败**（首个迁移是 PG 专有 SQL；
+   `initial_migration.sql` 是空文件）⇒ **迁移目录从来不是本项目的建库路径**；
+2. T01 的 M1 批次给 **11 张核心表**加了 `organizationId`，而 `prisma/schema` 未建模（有意的取舍，
+   但后果未记录）⇒ `prisma db push` 会**删掉这 11 列**（租户归属数据丢失）；
+3. 迁移脚本**优先读 `.env` 文件**、覆盖进程环境变量 ⇒
+   裸跑 `DATABASE_URL=file:x node scripts/connection/migrate.mjs apply --yes` 会**打到生产库**。
+   CI 已加安全断言；脚本行为改动记入本节。
+
+**🔴 未完成（后续 P0 跟办）**：
+
+| # | 动作 | 优先级 |
+|---|---|---|
+| 1 | 依赖升级批次：`next` 16.3.6 → 16.4.2 优先；其次 `proxy-addr` / `websocket-driver`（**critical**） | P0 |
+| 2 | 升级后整轮回归：`tsc` + jest 全量 + `next build` + `verify:*` 全套 + e2e 冒烟 | P0 |
+| 3 | 把 `organizationId` 补进 `core.prisma`（或明确写死「不走 Prisma 访问」） | P1 |
+| 4 | 迁移脚本改为**进程环境变量优先**（12-factor 语义），消除误打生产的地雷 | P1 |
+| 5 | 迁移目录与 `db push` 的脱节：要么补齐 sqlite 版基线迁移，要么明确废弃该目录 | P2 |
+
+---
+
 ## 8. 已交付任务的验证口径（可复跑）
 
 | 任务 | 类型检查 | 单测 | 门禁 | E2E |
@@ -707,6 +755,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T06+ · 死信主动告警（R9） | `tsc` | `tests/workflow/alerts.test.ts` **11** | ESLint 0/0 | 防回路断言：告警**不产生 WorkflowJob** |
 | T06+ · AC-10 生命周期清理 | `tsc` | `tests/lifecycle` **13** | ESLint 0/0 | **自证夹具**：`seed-lifecycle-e2e.mjs` + `lifecycle-sweep.mjs`（dry-run 命中 1/2/1 = 期望；apply 后复跑 0；`PENDING` 与未读项存活） |
 | **T12 · AC-10 账号级闭合**（导出 / 删除 / 缓存） | `tsc --noEmit` **exit 0**（复跑） | `tests/lifecycle` **31**（13 → 31）；全量 **98 套 / 2030 例** | 新增文件 ESLint **0/0**；4 个既有文件（auth / discover / settings / matches·react）**零新增** —— 21 errors / 10 warnings 与 HEAD **逐文件完全一致**（`git show HEAD:<f> \| npx eslint --stdin --stdin-filename <f>` 对照） | **`verify:ac10:lifecycle` 68/0**（真 dev server + 真隔离库 + 真会话 + 直连库回读）：① 无会话三面 **401**；② 导出 —— **前置非空 7 条**（否则"不含 X"在空集上恒真）+ 凭据/内部备注不在场 5 条 + 未覆盖声明；③ 删除计划 —— **跑完库零改动**（email/deletedAt/tokenVersion 全等）；④ 执行删除 —— **逐表库状态**（User/Profile/SocialIntent/MissionParticipation/BridgeMemberOptIn/AgentRun/Notification）+ **缓存回执**（4 个本人键 + `who-liked-me:` 全局前缀）+ 保留项仍在 + **对照账号零波及** + 原邮箱**不可再登录** |
+| **AC-23 · CI 门禁（三道棘轮）** | — | `verify:lint:ratchet` **8/8** · `verify:check:deps` **6/6** · `verify:check:migration-drift` **5/5** | `lint:gate` **1542 / 零新增 / exit 0**（全仓 1565 → 1542）· `check:deps` **exit 0**（生产 26 high + 2 critical，28 条全登记）· `check:migration-drift` **exit 0** | **CI migration job 全链复现**：`db push → rollback → apply → 幂等复跑 → verify(**255/255**) → 漂移棘轮 exit 0`；**E2E job** 5 条运行期判据（`/api/health` 真连库 · 匿名 401 · 登录页水合 · 未知路径 404 · `/` 200）；**三份自证各含一条「防假门禁」对照**（总数守恒位移 / 严重度升级 / 新增漂移） |
 | T07 · Console Slice 1 | `tsc` 0 错误 | — | ESLint 0/0 · `check:script-decls` 57 通过 | 生产复验（当时 **19/19**；该脚本已在 Slice 3 扩展为覆盖 Slice 1–3，见下）；AC-18 **未认领** |
 | T07 · Console Slice 2 | `tsc` 0 错误 | `tests/tenancy` **87**（49 → 87）· 全量 **984**（50 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/members`：API 层测试断言 `MEMBER 403 · OPERATOR 200 · 非法值忽略 · 500 不泄漏内部信息`；AC-18 **仍未认领**（四屏未做） |
 | T07 · Console Slice 3 | `tsc` 0 错误 | `tests/connection` **373 → 408**（16 → 18 套）· `tests/tenancy` **87 → 120**（5 → 7 套）· 全量 **984 → 1052**（50 → 54 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/connections/pipeline`（`workflow.read`）+ `GET/PATCH /api/v1/org`；负向断言防 `withTenant(some)` 降级、`ADMIN` 也不可改组织档案；AC-18 **仍未认领**（Agents 等 T09 / Outcomes 等 T08） |
@@ -743,4 +792,4 @@ C2/C3 已在 `233669e` 应用到生产）。
 
 ---
 *本文件由 T00/T01 交付后盘点生成；每个任务收尾时回填提交 SHA 与 AC 结论。*
-*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 Slice 2**（`3e6b342`，Consent Gate / Outcome Observatory / Agent 区 + 门禁 R10 + 契约 1.2）—— **未发版**，`verify:no-release --commit=3e6b342` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 端到端取证（HTTP 层）**（`6df1881`，`verify:p2:e2e` **130 通过 / 0 失败** + 服务端用户可见文案去 markdown + 假模型端点）—— **未发版**，`verify:no-release --commit=6df1881` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**T09 Slice 4**（`c127d18`，Agent 执行器落地 —— `EXECUTED` 只有一条路径 + C7 `AgentExecution`）—— **未发版**，`verify:no-release --commit=c127d18` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 5**（`c2ae31a`，组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证）—— **未发版**，`verify:no-release --commit=c2ae31a` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 6**（`56f0369`，对外送达 + 生产侧连通性入口 + 对账端到端实跑）—— **未发版**，`verify:no-release --commit=56f0369` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T10 Slice 4**（`47e1dac`，Community Bridge 前端面板 + AC-19 E2E 69/69）与 **T11 Slice 1–5**（`8419f50`，Open SDK：契约 34 路径/42 操作 + MCP + A2A + SDK 示例 + AC-22 E2E 57/57）—— 均**未发版**，`verify:no-release` 实证最新部署仍为 `f6630ea6b` · 2026-10-15；**T12 Release E2E** —— `FINAL_ACCEPTANCE_REPORT.md` 生成（21 PASS / 3 FAIL / 1 BLOCKED；**不建议上线**，AC-10 BLOCKER 未闭合）· 2026-10-15；**AC-10 账号级闭合**（导出 `GET /api/v1/me/export` + 删除 `GET`/`POST /api/v1/me/erasure` 两段式 + **缓存失效第 ⑧ 步** + `src/lib/cache-keys.ts` 单一来源）—— 单测 13 → **31** 例（全量 **98 套 / 2030 例**）、`verify:ac10:lifecycle` **68/0** ⇒ **BLOCKER 清空**（22 PASS / 2 FAIL / 1 BLOCKED）；**未发版**，`verify:no-release --commit=<SHA>` 实证 · 2026-10-16*
+*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 Slice 2**（`3e6b342`，Consent Gate / Outcome Observatory / Agent 区 + 门禁 R10 + 契约 1.2）—— **未发版**，`verify:no-release --commit=3e6b342` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 端到端取证（HTTP 层）**（`6df1881`，`verify:p2:e2e` **130 通过 / 0 失败** + 服务端用户可见文案去 markdown + 假模型端点）—— **未发版**，`verify:no-release --commit=6df1881` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**T09 Slice 4**（`c127d18`，Agent 执行器落地 —— `EXECUTED` 只有一条路径 + C7 `AgentExecution`）—— **未发版**，`verify:no-release --commit=c127d18` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 5**（`c2ae31a`，组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证）—— **未发版**，`verify:no-release --commit=c2ae31a` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 6**（`56f0369`，对外送达 + 生产侧连通性入口 + 对账端到端实跑）—— **未发版**，`verify:no-release --commit=56f0369` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T10 Slice 4**（`47e1dac`，Community Bridge 前端面板 + AC-19 E2E 69/69）与 **T11 Slice 1–5**（`8419f50`，Open SDK：契约 34 路径/42 操作 + MCP + A2A + SDK 示例 + AC-22 E2E 57/57）—— 均**未发版**，`verify:no-release` 实证最新部署仍为 `f6630ea6b` · 2026-10-15；**T12 Release E2E** —— `FINAL_ACCEPTANCE_REPORT.md` 生成（21 PASS / 3 FAIL / 1 BLOCKED；**不建议上线**，AC-10 BLOCKER 未闭合）· 2026-10-15；**AC-10 账号级闭合**（导出 `GET /api/v1/me/export` + 删除 `GET`/`POST /api/v1/me/erasure` 两段式 + **缓存失效第 ⑧ 步** + `src/lib/cache-keys.ts` 单一来源）—— 单测 13 → **31** 例（全量 **98 套 / 2030 例**）、`verify:ac10:lifecycle` **68/0** ⇒ **BLOCKER 清空**（22 PASS / 2 FAIL / 1 BLOCKED）；**未发版**，`verify:no-release --commit=<SHA>` 实证 · 2026-10-16；**AC-23 CI 门禁可信化闭合**（三道棘轮：lint 1542 / 生产依赖 28 条 / schema 漂移 11 张表；CI 新增 Migration + E2E 两 job；`continue-on-error` 两处移除；发现并登记三处真风险）⇒ **23 PASS / 1 FAIL / 1 BLOCKED**；新增 `CI_GATES.md` / `DEPENDENCY_RISK.md`；**未发版**，`verify:no-release` 实证 · 2026-10-16*

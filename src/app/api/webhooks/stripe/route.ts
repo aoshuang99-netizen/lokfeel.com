@@ -175,7 +175,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   // Detect plan from price ID
   const priceId = subscription.items.data[0]?.price.id;
-  let detectedPlan = userSubscription.plan;
+  const detectedPlan = userSubscription.plan;
   // Could map priceId to plan type here if needed
 
   await db.subscription.update({

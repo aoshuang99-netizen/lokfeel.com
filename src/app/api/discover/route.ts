@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     // (either direction), users the current user already reacted to (other
     // participant of any match with a MatchReaction by the current user), and
     // the current user themselves (via `id: { not: userId }`).
-    let whereClause: any = {
+    const whereClause: any = {
       id: { not: userId }, // exclude self
       isBot: { not: true }, // BUG-01 FIX: 兼容 SQLite Boolean (false + null)
       profile: {

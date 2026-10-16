@@ -252,7 +252,7 @@ async function generateRecommendations(
   });
   
   // 过滤
-  let filtered = scoredCandidates.filter(c => {
+  const filtered = scoredCandidates.filter(c => {
     // 类型过滤
     if (type === 'bots' && !c.user.isBot) return false;
     if (type === 'new' && (c.user.isBot || !c.isNew)) return false;

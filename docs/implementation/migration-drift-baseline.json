@@ -1,0 +1,65 @@
+{
+  "$comment": "schema 漂移冻结快照（AC-23）。`known` 由 --update 生成；`cause` / `reviewBy` 由人维护。成因已查明：T01 的 M1 批次给 TENANT_SCOPED_TABLES 的 11 张表加了可空 organizationId，而 prisma/schema 刻意未建模 —— 见 scripts/ci/migration-drift-ratchet.mjs 文件头。",
+  "generatedAt": "2026-10-16T06:36:24.231Z",
+  "prismaVersion": "7.10.0",
+  "toolCommand": "npx prisma migrate diff --from-config-datasource --to-schema prisma/schema",
+  "known": {
+    "* Redefined table Block": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "Block"
+    },
+    "* Redefined table ConsentGrant": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "ConsentGrant"
+    },
+    "* Redefined table ConsentRequest": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "ConsentRequest"
+    },
+    "* Redefined table Conversation": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "Conversation"
+    },
+    "* Redefined table IMMessage": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "IMMessage"
+    },
+    "* Redefined table Match": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "Match"
+    },
+    "* Redefined table Notification": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "Notification"
+    },
+    "* Redefined table Payment": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "Payment"
+    },
+    "* Redefined table PowerBoardRule": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "PowerBoardRule"
+    },
+    "* Redefined table Subscription": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "Subscription"
+    },
+    "* Redefined table UserReport": {
+      "mark": "*",
+      "kind": "Redefined table",
+      "target": "UserReport"
+    }
+  },
+  "cause": "T01 的 M1 批次（scripts/tenancy/migrate.mjs · TENANT_SCOPED_TABLES）给 11 张业务表加了可空 `organizationId` 列 + 索引，而 prisma/schema/*.prisma 刻意未建模这些列（tenancy.prisma 文件头：本文件全部为新增模型，不改动既有模型）。两侧各自都符合各自的设计约束，差集就是这 11 张表。**后果**：① `prisma db push` 会删掉这 11 列，租户归属数据丢失（已在 CI 中用「禁止 db push 打远程库」的安全断言规避）；② Prisma Client 读不到 organizationId，这 11 张表上的租户过滤只能走原生 SQL。处置方向见 docs/implementation/CI_GATES.md §4。",
+  "reviewBy": "2026-12-15"
+}

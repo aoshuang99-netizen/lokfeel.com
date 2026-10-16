@@ -3,7 +3,6 @@ import path from "path";
 import { createSoftDeleteExtension } from "./prisma-soft-delete";
 
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 

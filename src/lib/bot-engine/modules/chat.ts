@@ -177,7 +177,7 @@ function selectResponseType(
       { item: 'compliment' as const, weight: 10 },
     ];
 
-    let totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
+    const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
     let r = random() * totalWeight;
     for (const w of weights) {
       r -= w.weight;
@@ -198,7 +198,7 @@ function selectResponseType(
       { item: 'response' as const, weight: 20 },
       { item: 'closing' as const, weight: 10 },
     ];
-    let totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
+    const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
     let r = random() * totalWeight;
     for (const w of weights) {
       r -= w.weight;

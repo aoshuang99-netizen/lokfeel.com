@@ -106,7 +106,6 @@ export async function POST(
     // 动态导入OpenAI (可选依赖)
     let openai: any;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const OpenAI = require('openai');
       openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,

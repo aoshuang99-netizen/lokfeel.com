@@ -418,7 +418,7 @@ export class WebSocketManager {
    * Get connection stats (for monitoring)
    */
   getStats(): { totalConnections: number; authenticatedUsers: number; activeSubscriptions: number } {
-    let authedUsers = 0;
+    const authedUsers = 0;
     let activeSubs = 0;
     const seenUsers = new Set<string>();
 

@@ -661,7 +661,7 @@ function OnboardingV3Page() {
     console.log("[Onboarding] Starting handleComplete...");
 
     try {
-      let finalAvatarUrl = data.avatarUrl;
+      const finalAvatarUrl = data.avatarUrl;
 
       // Build profile data with proper field mappings
       const payload: Record<string, any> = {

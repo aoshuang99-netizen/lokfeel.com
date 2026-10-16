@@ -283,7 +283,7 @@ async function main() {
     // Import users in batches
     console.log('📥 Starting import...\n');
     let totalImported = 0;
-    let totalSkipped = 0;
+    const totalSkipped = 0;
 
     for (let i = 0; i < allUsers.length; i += CONFIG.BATCH_SIZE) {
       const batch = allUsers.slice(i, i + CONFIG.BATCH_SIZE);

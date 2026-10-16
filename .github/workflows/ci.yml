@@ -49,12 +49,27 @@ jobs:
         run: npx tsc --noEmit
 
   # ─────────────────────────────────────────────────────────────
-  # 2. Lint
+  # 2. Lint —— **棘轮**门禁（AC-23）
+  #
+  #    背景：本任务曾经直接跑 `npm run lint`（= 裸 `eslint`，扫全仓）。全仓有
+  #    ~1.5k 条**历史存量**债（三条规则占 79%），于是这个 job 长期恒红。
+  #    恒红 = 没有门禁：真回归会被存量噪音淹掉，久而久之所有人学会忽略它。
+  #
+  #    现在改成两步：
+  #      ① 全仓跑一次 eslint，产出 JSON 报告（**不**据此判红）；
+  #      ② `scripts/ci/lint-ratchet.mjs` 拿报告与冻结基线
+  #         （docs/implementation/lint-baseline.json）逐文件×逐规则比对 ——
+  #         **只有新增才判红**。
+  #
+  #    规则强度一点没降：基线之外的一切照旧是 error。红 = 你引入的。
+  #    为什么是「逐文件×逐规则」而不是「比总数」：只比总数时
+  #    「新加 3 条 any、顺手删 3 条旧的」会被判过 —— 那是可被无意（也可被
+  #    有意）绕过的假门禁。基线自证里专门有一条测这个（`verify:lint:ratchet`）。
   # ─────────────────────────────────────────────────────────────
   lint:
-    name: Lint (ESLint)
+    name: Lint (ESLint · 棘轮)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -63,7 +78,30 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npx prisma generate
-      - run: npm run lint
+
+      - name: 全仓 ESLint（产出报告，不据此判红）
+        run: |
+          set +e
+          npx eslint . -f json > "$RUNNER_TEMP/eslint.json"
+          CODE=$?
+          # 退出码 1 = 命中存量债（预期）；>1 = eslint 自身/配置故障，必须失败
+          if [ "$CODE" -gt 1 ]; then
+            echo "::error::eslint 自身失败（退出码 $CODE）"
+            exit 1
+          fi
+          echo "eslint 退出码 $CODE（1 = 命中存量债，属预期）"
+
+      - name: 棘轮门禁（只拦新增债）
+        run: node scripts/ci/lint-ratchet.mjs --report="$RUNNER_TEMP/eslint.json"
+
+      - name: 上传 lint 报告
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: eslint-report
+          path: ${{ runner.temp }}/eslint.json
+          if-no-files-found: ignore
+          retention-days: 7
 
   # ─────────────────────────────────────────────────────────────
   # 3. 单元 / 集成测试
@@ -93,15 +131,17 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────
   # 4. 生产构建
-  #    注：CI 中不注入真实密钥。若此任务因缺少密钥而失败，
-  #    说明构建期对密钥存在硬依赖，应当修正（构建期不应需要真实凭证）。
-  #    TODO(发布前)：确认构建在占位环境下可通过后，移除 continue-on-error。
+  #
+  #    `continue-on-error` 已于 2026-10-16（AC-23）**移除**。
+  #    依据：CI run 38848356361 中 `Build (next build)` job 结论为
+  #    **success**（步骤级全绿），即构建在占位凭证下本就通过 ——
+  #    `continue-on-error` 只是历史遗留的免责声明，不是现实。
+  #    构建期对真实密钥存在硬依赖的话，这里应当失败并暴露出来。
   # ─────────────────────────────────────────────────────────────
   build:
     name: Build (next build)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -113,7 +153,170 @@ jobs:
       - run: npm run build
 
   # ─────────────────────────────────────────────────────────────
-  # 5. 密钥扫描 —— 检出即失败（P1-8）
+  # 5. 迁移（AC-23 新增）—— **免任何凭据**
+  #
+  #    CI 原先完全不校验迁移。用 throwaway 的 libSQL 文件库把
+  #    「基线 schema → T01 租户批次 → T02–T10 连接批次」整条链跑通，
+  #    再复跑一次证明幂等，最后对账 + schema 漂移检查。
+  #
+  #    这一步的价值：迁移脚本是**手写的 .mjs**（不是 prisma migrate 全部托管），
+  #    它们此前只在生产库上被执行过 —— 也就是说「从零能不能建起来」
+  #    从来没人验证过。这里补上。
+  #
+  #    DATABASE_URL 指向 `file:./ci-migrate.db`（provider 本就是 sqlite），
+  #    不接触任何远程库、不需要 TURSO_AUTH_TOKEN。
+  # ─────────────────────────────────────────────────────────────
+  migration:
+    name: Migration（libSQL 文件库 · 全批次）
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: file:./ci-migrate.db
+      TURSO_AUTH_TOKEN: ''
+      DATABASE_AUTH_TOKEN: ''
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+
+      # 🔴 安全断言：本 job 的迁移脚本**会优先读 .env / .env.local**
+      #    （见 scripts/connection/migrate.mjs 的 resolveConnection：`args.url || env.DATABASE_URL || process.env.DATABASE_URL`）。
+      #    也就是说，如果仓库里意外有了 .env，或者 DATABASE_URL 被改成了远程库，
+      #    下面的 `apply --yes` 就会**对着生产库执行 DDL**。
+      #    这里把它钉死：必须是 file: 本地库，且工作区不得存在 .env* 文件。
+      - name: 安全断言（必须是本地文件库，且无 .env 干扰）
+        run: |
+          case "${DATABASE_URL}" in
+            file:*) echo "✅ 本地文件库：${DATABASE_URL}" ;;
+            *) echo "::error::迁移 job 必须跑在一次性文件库上，当前 DATABASE_URL=${DATABASE_URL}"; exit 1 ;;
+          esac
+          for f in .env .env.local; do
+            if [ -f "$f" ]; then
+              echo "::error::工作区存在 $f —— 迁移脚本会优先读它，可能指向远程库。已中止。"
+              exit 1
+            fi
+          done
+          echo "✅ 工作区无 .env / .env.local"
+
+      - name: 基线 schema（prisma db push）
+        # ⚠️ 为什么不是 `prisma migrate deploy`：
+        #    实测在一次性 libSQL 文件库上**从零建库直接失败**（P3018 / near "DO"），
+        #    因为 prisma/migrations/20250413130000_... 是 PostgreSQL 专有 SQL
+        #    （DO $$ / CREATE TYPE ... AS ENUM / pg_type / information_schema），
+        #    而 datasource provider 是 sqlite；且 initial_migration.sql 是空文件。
+        #    也就是说「迁移目录」从来不是本项目的建库路径 —— 生产库是 db push 建的。
+        #    这里对齐现实。`--accept-data-loss` 只作用于这个一次性库。
+        run: npx prisma db push --accept-data-loss
+
+      - name: 回落到 T01 之前的基线（卸掉批次表）
+        # 先把批次表 drop 掉，再重建 —— 否则 `CREATE TABLE IF NOT EXISTS`
+        # 会让 apply 退化成空操作，这一环就白跑了。
+        run: |
+          node scripts/tenancy/migrate.mjs rollback --batch=ALL --yes
+          node scripts/connection/migrate.mjs rollback --batch=ALL --yes
+
+      - name: T01 租户批次（M0–M2）—— 重建
+        run: node scripts/tenancy/migrate.mjs apply --batch=ALL --yes
+
+      - name: T02–T10 连接批次（C0–C9）—— 重建
+        run: node scripts/connection/migrate.mjs apply --batch=ALL --yes
+
+      - name: 幂等复跑（重复 apply 必须是空操作）
+        run: |
+          node scripts/tenancy/migrate.mjs apply --batch=ALL --yes
+          node scripts/connection/migrate.mjs apply --batch=ALL --yes
+
+      - name: 对账断言（回读真实表结构）
+        run: |
+          node scripts/tenancy/migrate.mjs verify
+          node scripts/connection/migrate.mjs verify
+
+      - name: schema 漂移棘轮（已知漂移冻结，新增漂移判红）
+        run: node scripts/ci/migration-drift-ratchet.mjs
+
+  # ─────────────────────────────────────────────────────────────
+  # 6. 端到端冒烟（AC-23 新增）—— 构建产物真启动
+  #
+  #    ⚠️ 为什么**不**直接跑 `npm run test:e2e`：
+  #    `playwright.config.ts` 的 `baseURL` 默认是**生产站**
+  #    （https://app.lokfeel.com），且 `tests/e2e/**` 依赖真实测试账号。
+  #    拿它当 CI 门禁 = 每次 PR 都去打生产库，既不可重复也不安全。
+  #
+  #    这里跑的是 `playwright.ci.config.ts` + `tests/e2e-ci/**`：
+  #    对**本地构建产物**（`next start`）做真实浏览器冒烟 ——
+  #    验证「构建能过」之后应用**真的能起来、真的能路由、守卫真的生效**。
+  #    这正是 jest（纯 Node）覆盖不到、而 T12 教训里最易漏的一层。
+  # ─────────────────────────────────────────────────────────────
+  e2e:
+    name: E2E（构建产物 · 浏览器冒烟）
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      DATABASE_URL: file:./ci-e2e.db
+      TURSO_AUTH_TOKEN: ''
+      DATABASE_AUTH_TOKEN: ''
+      # 冒烟阶段不需要任何外部服务；缺失时应用走降级路径（G-4 已验证）
+      E2E_BASE_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+
+      - name: 准备本地库（基线 schema + 全部自定义批次）
+        run: |
+          npx prisma db push --accept-data-loss
+          node scripts/tenancy/migrate.mjs apply --batch=ALL --yes
+          node scripts/connection/migrate.mjs apply --batch=ALL --yes
+
+      - name: 生产构建
+        run: npm run build
+
+      - name: 启动构建产物
+        run: |
+          npm run start > "$RUNNER_TEMP/next-start.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/next-start.pid"
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://127.0.0.1:3000/api/health; then
+              echo "服务已就绪（${i}s）"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::next start 启动超时（60s）"
+          tail -100 "$RUNNER_TEMP/next-start.log"
+          exit 1
+
+      - name: 安装 Playwright 浏览器
+        run: npx playwright install --with-deps chromium
+
+      - name: 浏览器冒烟
+        run: npx playwright test --config=playwright.ci.config.ts
+
+      - name: 失败时打印服务端日志
+        if: failure()
+        run: tail -200 "$RUNNER_TEMP/next-start.log" || true
+
+      - name: 上传 Playwright 报告
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-ci-report
+          path: |
+            test-results/ci/
+            ${{ runner.temp }}/next-start.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────────────────
+  # 7. 密钥扫描 —— 检出即失败（P1-8）
   # ─────────────────────────────────────────────────────────────
   secret-scan:
     name: Secret scan (gitleaks)
@@ -131,13 +334,25 @@ jobs:
           # 组织仓库需要：GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
   # ─────────────────────────────────────────────────────────────
-  # 6. 依赖漏洞审计 —— 高危漏洞阻断
+  # 8. 依赖审计 —— **棘轮**门禁（AC-23）
+  #
+  #    `continue-on-error` 已于 2026-10-16 移除。实测 `npm audit --audit-level=high`
+  #    有 34 high / 3 critical，其中**生产可达**（--omit=dev）26 high / 2 critical。
+  #    一把梭 `npm audit fix` 实测会动 162 个包、含 `undici 7→8` 这类主版本跃迁，
+  #    而且**一条高危都没消掉** —— 直接清是不可能的。
+  #
+  #    所以这里做两件事：
+  #      ① **生产可达**高危走棘轮门禁（`scripts/ci/dependency-ratchet.mjs`）：
+  #         基线之外的**新**高危判红；每条被接受的高危**必须有书面豁免**
+  #         （reason / disposition / reviewBy），且**复核期限到期判红** ——
+  #         不允许「永久豁免」；严重度升级也判红。
+  #      ② 全量（含 devDependencies）只打印、**不阻断**：jest / ts-jest /
+  #         eslint-config-next 这些不上生产运行时的噪音不该淹掉真正的生产漏洞。
   # ─────────────────────────────────────────────────────────────
   dependency-audit:
-    name: Dependency audit (npm audit)
+    name: Dependency audit（生产可达 · 棘轮）
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    continue-on-error: true # TODO(发布前)：清零后改为 false
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -145,11 +360,27 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
       - run: npm ci --ignore-scripts
-      - name: Audit high & critical
-        run: npm audit --audit-level=high
+
+      - name: 生产依赖审计（产出报告）
+        run: |
+          set +e
+          npm audit --omit=dev --json > "$RUNNER_TEMP/audit-prod.json"
+          echo "npm audit(prod) 退出码 $?（1 = 有漏洞，属预期）"
+
+      - name: 棘轮门禁（新增 / 未登记豁免 / 豁免到期 → 判红）
+        run: node scripts/ci/dependency-ratchet.mjs --report="$RUNNER_TEMP/audit-prod.json" --full
+
+      - name: 上传审计报告
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-audit-report
+          path: ${{ runner.temp }}/audit-prod.json
+          if-no-files-found: ignore
+          retention-days: 7
 
   # ─────────────────────────────────────────────────────────────
-  # 7. DCO 签署校验 —— 与 CONTRIBUTING.md 第 5 节对应
+  # 9. DCO 签署校验 —— 与 CONTRIBUTING.md 第 5 节对应
   # ─────────────────────────────────────────────────────────────
   dco:
     name: DCO sign-off check

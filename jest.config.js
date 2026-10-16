@@ -12,7 +12,9 @@ module.exports = {
   // `tests/e2e/**` 是 **Playwright** 用例，由 `npm run test:e2e` 驱动，
   // 不能混进 jest：既跑不通，又会让 `npx jest` 的失败数虚高、
   // 掩盖真正需要关注的失败。
-  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/e2e/'],
+  // `tests/e2e-ci/**`（AC-23 新增）同理 —— 它是 `playwright.ci.config.ts`
+  // 驱动的 CI 冒烟，必须一并排除，否则 jest 会去 require @playwright/test 并炸掉。
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/e2e/', '<rootDir>/tests/e2e-ci/'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

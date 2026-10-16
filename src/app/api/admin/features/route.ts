@@ -17,7 +17,7 @@ export interface Feature {
 }
 
 // 内存中的功能配置（生产环境应存储在数据库）
-let features: Feature[] = [
+const features: Feature[] = [
   { id: "1", code: "MATCHING_ENABLED", name: "匹配功能", description: "启用/禁用用户匹配功能", enabled: true, category: "core", lastModified: new Date().toISOString() },
   { id: "2", code: "CHAT_ENABLED", name: "聊天功能", description: "启用/禁用即时聊天功能", enabled: true, category: "core", lastModified: new Date().toISOString() },
   { id: "3", code: "PREMIUM_SUBSCRIPTION", name: "高级订阅", description: "启用/禁用高级订阅功能", enabled: true, category: "monetization", lastModified: new Date().toISOString() },
