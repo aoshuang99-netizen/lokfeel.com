@@ -5,6 +5,7 @@ import { hashPassword } from '@/lib/auth'
 import { jsonArr, toJson } from '@/lib/json-helpers'
 import { AVAILABLE_TAGS } from '@/constants'
 import { cache } from '@/lib/cache'
+import { CACHE_KEYS } from '@/lib/cache-keys'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ export async function GET() {
     }
 
     const data = await cache.get(
-      `settings:${user.id}`,
+      CACHE_KEYS.settings(user.id),
       async () => {
         const [fullUser, profile] = await Promise.all([
           db.user.findUnique({
@@ -239,7 +240,7 @@ export async function PUT(request: NextRequest) {
         where: { id: user.id },
         data: { tokenVersion: { increment: 1 } },
       })
-      await cache.invalidate(`auth:user:${user.id}`)
+      await cache.invalidate(CACHE_KEYS.authUser(user.id))
     }
 
     // Update profile if any profile fields provided
@@ -280,8 +281,8 @@ export async function PUT(request: NextRequest) {
 
     // Invalidate cache for this user
     await Promise.all([
-      cache.invalidate(`settings:${user.id}`),
-      cache.invalidate(`discover:profile:${user.id}`),
+      cache.invalidate(CACHE_KEYS.settings(user.id)),
+      cache.invalidate(CACHE_KEYS.discoverProfile(user.id)),
     ])
 
     return NextResponse.json({
@@ -354,10 +355,10 @@ export async function DELETE(request: NextRequest) {
     // NOTE: discover keys are `discover:profile:<id>` and `discover:exclude:<id>`
     // (see redisCache usage in /api/discover), so a bare `discover:<id>` prefix
     // matches nothing. Invalidate the real prefixes.
-    await cache.invalidateByPrefix(`settings:${user.id}`);
-    await cache.invalidateByPrefix(`discover:profile:${user.id}`);
-    await cache.invalidateByPrefix(`discover:exclude:${user.id}`);
-    await cache.invalidateByPrefix(`who-liked-me:${user.id}`);
+    await cache.invalidateByPrefix(CACHE_KEYS.settings(user.id));
+    await cache.invalidateByPrefix(CACHE_KEYS.discoverProfile(user.id));
+    await cache.invalidateByPrefix(CACHE_KEYS.discoverExclude(user.id));
+    await cache.invalidateByPrefix(CACHE_KEYS.whoLikedMe(user.id));
 
     return NextResponse.json({
       success: true,

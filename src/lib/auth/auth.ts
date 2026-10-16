@@ -3,6 +3,7 @@ import NextAuth from 'next-auth'
 import { authConfig } from './config'
 import { db } from '@/lib/db'
 import { redisCache } from '@/lib/redis-cache'
+import { CACHE_KEYS } from '@/lib/cache-keys'
 import { redirect } from 'next/navigation'
 import { UserRole } from "@/generated/client"
 import { UnauthorizedError, ForbiddenError } from '@/lib/errors'
@@ -53,7 +54,7 @@ export async function requireAuth() {
   // read-through and only runs fn() on a miss — concurrent misses just do
   // duplicate reads, never return incorrect data.
   const user = await redisCache.get(
-    `auth:user:${userId}`,
+    CACHE_KEYS.authUser(userId),
     () =>
       db.user.findUnique({
         where: { id: userId },

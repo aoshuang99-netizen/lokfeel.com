@@ -118,6 +118,7 @@
     "verify:p2:render": "node scripts/qa/verify-p2-render-e2e.mjs",
     "verify:ac18:console": "node scripts/qa/verify-ac18-console-e2e.mjs",
     "verify:ac19:bridge": "node scripts/qa/verify-ac19-bridge-e2e.mjs",
+    "verify:ac10:lifecycle": "node scripts/qa/verify-ac10-lifecycle.mjs",
     "verify:ac22:open-sdk": "node scripts/qa/verify-ac22-open-sdk.mjs",
     "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs"
   },

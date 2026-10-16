@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
 import { redisCache } from "@/lib/redis-cache";
+import { CACHE_KEYS } from "@/lib/cache-keys";
 import { NextRequest, NextResponse } from "next/server";
 import { getTargetGenders } from "@/lib/gender-utils";
 
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     // ✅ OPTIMIZATION (T04.1): Increase cache TTL from 60s to 120s
     // Cache current user profile (120s TTL — profiles change rarely)
     const profile = await redisCache.get(
-      `discover:profile:${userId}`,
+      CACHE_KEYS.discoverProfile(userId),
       async () => {
         const user = await prisma.user.findUnique({
           where: { id: userId },

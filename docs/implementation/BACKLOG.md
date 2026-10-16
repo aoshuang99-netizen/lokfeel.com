@@ -7,8 +7,8 @@
 > |---|---|
 > | 真实仓库基线 | `f6630ea`（`main`，**已推送 GitHub + 已发布 Netlify 生产**，部署 `6acde3962c8778501cd81f27` ready @ 2026-10-13T07:55:42Z；本批生产复验 **T08 新增 5 路由上线受保护 · 窗口期 13/13 · T07 48/48 · T06 25/25 · T04 19/19**） |
 > | 上一发布基线 | `95da9f1`（T07 `/console` 回跳修复补发）—— 再往前 `564802a`（T07 Slice 2 + Slice 3）、`0414186`（T07 Slice 1 + T06+）、`233669e`（T05 + T06）、`0c95b89`（T04）；T05/T06 曾长期带跳过标记未发版，已于 `233669e` 补齐 |
-> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**、**T06 Workflow Execution**、**T06+ 死信告警 / AC-10 生命周期**、**T07 Console Slice 1 / Slice 2 / Slice 3**（以上**均已上线**）；**T08 Outcome/Billing Slice 1–3**（`f6630ea`，已上线）、**T08 Slice 4 · T09 Slice 1–6 · T10 Slice 1–4 · T11 Slice 1–5 · T12 报告**（**未发版**） |
-> | 剩余 | **无**（T05–T12 全部交付）；未闭合项 = **AC-10 导出/删除两支（BLOCKER）** + AC-23/24/25（见 `FINAL_ACCEPTANCE_REPORT.md`） |
+> | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**、**T06 Workflow Execution**、**T06+ 死信告警 / AC-10 生命周期**、**T07 Console Slice 1 / Slice 2 / Slice 3**（以上**均已上线**）；**T08 Outcome/Billing Slice 1–3**（`f6630ea`，已上线）、**T08 Slice 4 · T09 Slice 1–6 · T10 Slice 1–4 · T11 Slice 1–5 · T12 报告 · AC-10 账号级闭合（导出/删除/缓存）**（**未发版**） |
+> | 剩余 | **无**（T05–T12 全部交付）；未闭合项 = **AC-23 / AC-24**（P0）+ AC-25（BLOCKED）—— ✅ **AC-10（BLOCKER）已于 2026-10-16 闭合**（见 `FINAL_ACCEPTANCE_REPORT.md`） |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
 > | 规划背景 | 《LokFeel SaaS 核心功能架构与开源技术集成方案 V1.0》：10 大模块 / 6 个自研引擎 / P0–P3 / 12 项 Codex 实施清单 |
 
@@ -345,18 +345,17 @@
 
 > **交付记录**（报告 `docs/implementation/FINAL_ACCEPTANCE_REPORT.md` · 2026-10-15）
 >
-> **判定汇总：21 PASS / 3 FAIL / 1 BLOCKED**（25 条 AC）。
-> - **BLOCKER（10）**：AC-01 ~ AC-09 **PASS**；🔴 **AC-10 FAIL**（「导出」与「删除请求」两支未实现，见 `LIFECYCLE.md` §5）。
+> **判定汇总（2026-10-16 更新）：22 PASS / 2 FAIL / 1 BLOCKED**（25 条 AC）。
+> - **BLOCKER（10）**：AC-01 ~ AC-10 **全部 PASS** —— ✅ **AC-10 已闭合**（2026-10-16 补齐「导出」「删除请求」「缓存失效」三支；`verify:ac10:lifecycle` **68/0**；单测 13 → **31** 例）。
 > - **P0（11）**：AC-11 ~ AC-18 **PASS**；🔴 **AC-23 FAIL**（CI run `38757446188`：Lint + Dependency audit 红；且缺 e2e/migration 环节）、**AC-24 FAIL**（未压测、无 SLO）、**AC-25 BLOCKED**（无真实试点客户）。
 > - **P1（3）**：AC-19 / AC-20 / AC-21 **PASS**（AC-21 为沙箱口径，真实扣款 `BLOCKED`）。
 > - **P2（1）**：AC-22 **PASS**。
 >
-> 🔴 **上线判定：不建议上线** —— 存在未闭合的 BLOCKER（AC-10），按铁律**不可用例外审批豁免**。
-> 闭合路径（工作量小）：① 补 org/user 级数据导出入口；② 补 `User` 硬删级联核对（含 T06 软引用）；③ 复核「缓存/索引清理」支（M6 后）。
-> P0 三项（AC-23/24/25）可走例外审批（详见报告 §5）。
+> 🟡 **上线判定：BLOCKER 已清空** —— AC-10 **未走例外审批**即转 PASS。**剩余阻断仅 P0 两项**：AC-23（CI）、AC-24（性能）；
+> AC-25 属外部依赖（无试点客户），可走例外。
 >
-> **证据基线**：HEAD `8419f50`（未发版；生产仍 `f6630ea6b`）· `npx jest` 97 套 / 2014 例 · `tsc --noEmit` exit 0 ·
-> AC-18 `84/0` · AC-19 `69/0` · AC-22 `57/0` · `verify:p2:e2e` `130/0`。
+> **证据基线**：HEAD 见文末回填行（未发版；生产仍 `f6630ea6b`）· `npx jest` **98 套 / 2030 例** · `tsc --noEmit` exit 0 ·
+> AC-10 `68/0` · AC-18 `84/0` · AC-19 `69/0` · AC-22 `57/0` · `verify:p2:e2e` `130/0`。
 > **发版前待办**：C9 迁移 apply + 生产侧 OpenAI 连通性实跑（`verify:agent:connectivity:server`）。
 
 ---
@@ -668,8 +667,12 @@
 > 证据 730 天 / 僵死 PENDING 7 天 / 已读站内信 60 天）。
 > 🔴 清理作业**默认不随 cron 自动跑**（删除不可逆，需运营方显式开启；开启方式见
 > `LIFECYCLE.md` §4.4，当前生产命中 0）。
-> ❌ **「导出」与「删除请求」仍未实现** → **AC-10 仍未闭合**，T12 前必须补齐，否则仍会卡在
-> 「BLOCKER 无主」。另见 §5-① 的完整交代。
+> ✅ **2026-10-16 三支补齐 → AC-10 闭合**：「导出」（`GET /api/v1/me/export`）·「删除请求」
+> （`GET`/`POST /api/v1/me/erasure`，两段式：只读计划 → `?apply=1` 执行）·
+> 「**缓存失效**」（`executeErasure()` **第 ⑧ 步** + `src/lib/cache-keys.ts` 单一来源）。
+> 取证 `verify:ac10:lifecycle` **68/0**；单测 13 → **31** 例。索引一支记 **N/A**（本仓无独立搜索/向量索引，**已核实**）。
+> 🔴 本轮最有价值的发现：`who-liked-me:<viewerId>` 缓存的值里是**别人的**档案快照 ——
+> **「删了库」不等于「删干净了」**（最多 90 秒且无任何报错）。另见 §5-① 的完整交代。
 
 **2026-10-12 · T07 开工（Slice 1）**：新增组织态 IA `/console/*`
 （`docs/implementation/T07/plan.md`）—— 骨架 + 无组织说明页 + Dashboard（消费
@@ -703,6 +706,7 @@ C2/C3 已在 `233669e` 应用到生产）。
 | T06+ · 邮件通道就绪度 | — | — | `npm run verify:email:channel`（凭据分类 + **契约漂移检查**） | 真实外发仍 **BLOCKED**（无 `RESEND_API_KEY`） |
 | T06+ · 死信主动告警（R9） | `tsc` | `tests/workflow/alerts.test.ts` **11** | ESLint 0/0 | 防回路断言：告警**不产生 WorkflowJob** |
 | T06+ · AC-10 生命周期清理 | `tsc` | `tests/lifecycle` **13** | ESLint 0/0 | **自证夹具**：`seed-lifecycle-e2e.mjs` + `lifecycle-sweep.mjs`（dry-run 命中 1/2/1 = 期望；apply 后复跑 0；`PENDING` 与未读项存活） |
+| **T12 · AC-10 账号级闭合**（导出 / 删除 / 缓存） | `tsc --noEmit` **exit 0**（复跑） | `tests/lifecycle` **31**（13 → 31）；全量 **98 套 / 2030 例** | 新增文件 ESLint **0/0**；4 个既有文件（auth / discover / settings / matches·react）**零新增** —— 21 errors / 10 warnings 与 HEAD **逐文件完全一致**（`git show HEAD:<f> \| npx eslint --stdin --stdin-filename <f>` 对照） | **`verify:ac10:lifecycle` 68/0**（真 dev server + 真隔离库 + 真会话 + 直连库回读）：① 无会话三面 **401**；② 导出 —— **前置非空 7 条**（否则"不含 X"在空集上恒真）+ 凭据/内部备注不在场 5 条 + 未覆盖声明；③ 删除计划 —— **跑完库零改动**（email/deletedAt/tokenVersion 全等）；④ 执行删除 —— **逐表库状态**（User/Profile/SocialIntent/MissionParticipation/BridgeMemberOptIn/AgentRun/Notification）+ **缓存回执**（4 个本人键 + `who-liked-me:` 全局前缀）+ 保留项仍在 + **对照账号零波及** + 原邮箱**不可再登录** |
 | T07 · Console Slice 1 | `tsc` 0 错误 | — | ESLint 0/0 · `check:script-decls` 57 通过 | 生产复验（当时 **19/19**；该脚本已在 Slice 3 扩展为覆盖 Slice 1–3，见下）；AC-18 **未认领** |
 | T07 · Console Slice 2 | `tsc` 0 错误 | `tests/tenancy` **87**（49 → 87）· 全量 **984**（50 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/members`：API 层测试断言 `MEMBER 403 · OPERATOR 200 · 非法值忽略 · 500 不泄漏内部信息`；AC-18 **仍未认领**（四屏未做） |
 | T07 · Console Slice 3 | `tsc` 0 错误 | `tests/connection` **373 → 408**（16 → 18 套）· `tests/tenancy` **87 → 120**（5 → 7 套）· 全量 **984 → 1052**（50 → 54 套） | ESLint 0/0（含目录级） | **新增** `GET /api/v1/connections/pipeline`（`workflow.read`）+ `GET/PATCH /api/v1/org`；负向断言防 `withTenant(some)` 降级、`ADMIN` 也不可改组织档案；AC-18 **仍未认领**（Agents 等 T09 / Outcomes 等 T08） |
@@ -739,4 +743,4 @@ C2/C3 已在 `233669e` 应用到生产）。
 
 ---
 *本文件由 T00/T01 交付后盘点生成；每个任务收尾时回填提交 SHA 与 AC 结论。*
-*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 Slice 2**（`3e6b342`，Consent Gate / Outcome Observatory / Agent 区 + 门禁 R10 + 契约 1.2）—— **未发版**，`verify:no-release --commit=3e6b342` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 端到端取证（HTTP 层）**（`6df1881`，`verify:p2:e2e` **130 通过 / 0 失败** + 服务端用户可见文案去 markdown + 假模型端点）—— **未发版**，`verify:no-release --commit=6df1881` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**T09 Slice 4**（`c127d18`，Agent 执行器落地 —— `EXECUTED` 只有一条路径 + C7 `AgentExecution`）—— **未发版**，`verify:no-release --commit=c127d18` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 5**（`c2ae31a`，组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证）—— **未发版**，`verify:no-release --commit=c2ae31a` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 6**（`56f0369`，对外送达 + 生产侧连通性入口 + 对账端到端实跑）—— **未发版**，`verify:no-release --commit=56f0369` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T10 Slice 4**（`47e1dac`，Community Bridge 前端面板 + AC-19 E2E 69/69）与 **T11 Slice 1–5**（`8419f50`，Open SDK：契约 34 路径/42 操作 + MCP + A2A + SDK 示例 + AC-22 E2E 57/57）—— 均**未发版**，`verify:no-release` 实证最新部署仍为 `f6630ea6b` · 2026-10-15；**T12 Release E2E** —— `FINAL_ACCEPTANCE_REPORT.md` 生成（21 PASS / 3 FAIL / 1 BLOCKED；**不建议上线**，AC-10 BLOCKER 未闭合）· 2026-10-15*
+*最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 Slice 2**（`3e6b342`，Consent Gate / Outcome Observatory / Agent 区 + 门禁 R10 + 契约 1.2）—— **未发版**，`verify:no-release --commit=3e6b342` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 端到端取证（HTTP 层）**（`6df1881`，`verify:p2:e2e` **130 通过 / 0 失败** + 服务端用户可见文案去 markdown + 假模型端点）—— **未发版**，`verify:no-release --commit=6df1881` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**T09 Slice 4**（`c127d18`，Agent 执行器落地 —— `EXECUTED` 只有一条路径 + C7 `AgentExecution`）—— **未发版**，`verify:no-release --commit=c127d18` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 5**（`c2ae31a`，组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证）—— **未发版**，`verify:no-release --commit=c2ae31a` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 6**（`56f0369`，对外送达 + 生产侧连通性入口 + 对账端到端实跑）—— **未发版**，`verify:no-release --commit=56f0369` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T10 Slice 4**（`47e1dac`，Community Bridge 前端面板 + AC-19 E2E 69/69）与 **T11 Slice 1–5**（`8419f50`，Open SDK：契约 34 路径/42 操作 + MCP + A2A + SDK 示例 + AC-22 E2E 57/57）—— 均**未发版**，`verify:no-release` 实证最新部署仍为 `f6630ea6b` · 2026-10-15；**T12 Release E2E** —— `FINAL_ACCEPTANCE_REPORT.md` 生成（21 PASS / 3 FAIL / 1 BLOCKED；**不建议上线**，AC-10 BLOCKER 未闭合）· 2026-10-15；**AC-10 账号级闭合**（导出 `GET /api/v1/me/export` + 删除 `GET`/`POST /api/v1/me/erasure` 两段式 + **缓存失效第 ⑧ 步** + `src/lib/cache-keys.ts` 单一来源）—— 单测 13 → **31** 例（全量 **98 套 / 2030 例**）、`verify:ac10:lifecycle` **68/0** ⇒ **BLOCKER 清空**（22 PASS / 2 FAIL / 1 BLOCKED）；**未发版**，`verify:no-release --commit=<SHA>` 实证 · 2026-10-16*

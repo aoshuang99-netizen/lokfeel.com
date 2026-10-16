@@ -16,27 +16,26 @@
 
 | 维度 | 结果 |
 |---|---|
-| **BLOCKER（10 条）** | **9 PASS / 1 FAIL** —— 🔴 **AC-10 数据生命周期未闭合** |
+| **BLOCKER（10 条）** | ✅ **10 PASS / 0 FAIL** —— AC-10 已于 2026-10-16 闭合 |
 | **P0（11 条）** | 8 PASS / 2 FAIL / 1 BLOCKED —— 🔴 **AC-23 CI 红 · AC-24 未压测 · AC-25 无试点** |
 | **P1（3 条）** | 3 PASS（AC-21 为沙箱口径，真实扣款 BLOCKED） |
 | **P2（1 条）** | 1 PASS |
-| **合计（25 条）** | **21 PASS / 3 FAIL / 1 BLOCKED** |
+| **合计（25 条）** | **22 PASS / 2 FAIL / 1 BLOCKED** |
 
-### 🔴 上线判定：**不建议上线**（存在未闭合的 BLOCKER）
+### 🟡 上线判定：**BLOCKER 已清空 —— 待 P0 两项闭合后即可发版**
 
 按 `ACCEPTANCE_MATRIX.md` 的上线判定"**所有 BLOCKER 必须 PASS**"：
-- **AC-10（BLOCKER）判定 FAIL** —— 「导出」与「删除请求（被遗忘权）」两支**未实现**（`docs/implementation/LIFECYCLE.md` §5 明载）。
-  ⇒ **这是硬阻断，不可用例外审批豁免。**
+- **AC-10（BLOCKER）已转 PASS**（2026-10-16）—— 「导出」「删除请求」「缓存清理」三支全部落地并端到端取证：
+  `npm run verify:ac10:lifecycle` → **68 PASS / 0 FAIL**（真 dev server + 真隔离库 + 真会话 + **逐表库状态断言**）；
+  单测 `tests/lifecycle` 由 **13 例扩到 31 例**（新增账号政策 + 缓存键单一来源）。
+  ⇒ **硬阻断已解除**，且**未走例外审批**。详见 §4.1。
 
-**闭合路径（明确可实现，工作量小）**：
-1. 补 **org/user 级数据导出入口**（格式定义 + 权限校验）；
-2. 补 **`User` 硬删级联核对**（含 T06 新表的软引用 `WorkflowJob.proposalId` / `NotificationDelivery.recipientId`）；
-3. 复核「缓存/索引清理」支（M6 迁 PG+pgvector 后**必须重新评估**）。
+**剩余阻断（均为 P0，非 BLOCKER）**：
+1. **AC-23 CI**：lint job 的扫描面与 dependency-audit 仍需处理（§4.2）；
+2. **AC-24 性能**：无 SLO、无压测基线（§4.3）。
 
-闭合后 AC-10 可转 PASS；届时若 P0 三项（AC-23/24/25）走完例外审批，即可发版。
-
-> **核心业务闭环（AC-01 ~ AC-09、AC-11 ~ AC-22）实现与取证质量高**：21 条 AC 均以**真实 HTTP / 真实浏览器 / 真实隔离库**取证，
-> 且多数带**变异自证**（证明断言有牙齿）。AC-10 属**合规治理**性质的独立缺口，不影响 Connection OS 主链路的正确性。
+> **核心业务闭环（AC-01 ~ AC-22）实现与取证质量高**：22 条 AC 均以**真实 HTTP / 真实浏览器 / 真实隔离库**取证，
+> 且多数带**变异自证**（证明断言有牙齿）。AC-10 是本轮从"无人认领"追到闭合的一条 BLOCKER。
 
 ---
 
@@ -48,7 +47,7 @@
 | 技术栈 | Next.js 16.3.6（App Router + Turbopack）· React 19.3 · Prisma 7.10（libSQL/Turso）· NextAuth v5 |
 | 数据库 | Turso（libSQL）；隔离库用于 E2E（`file:/tmp/*.db`） |
 | 宿主 | Netlify 免费计划（`lokfeel`，site_id `c46478e9-…`）+ Cloudflare DNS |
-| 全量单测 | **97 套 / 2014 例通过**（`npx jest`） |
+| 全量单测 | **98 套 / 2030 例通过**（`npx jest`，2026-10-16 复跑） |
 | 类型检查 | **`npx tsc --noEmit` exit 0** |
 | CI | `.github/workflows/ci.yml`（GitHub Actions） |
 | 最新 CI run | `38757446188`（commit `8419f5009`）→ **failure**（详见 AC-23） |
@@ -72,7 +71,7 @@
 | **AC-07** | 幂等 | ✅ **PASS** | T02（加入幂等名额 1/5）；T06（outbox 重试无重复）；T10（**修掉** `POST /api/v1/bridges` 幂等重放不可达缺陷）；T11（A2A **无状态 task.id 每次不同**） | 幂等记录与主体**同批清理**（T09 教训） |
 | **AC-08** | Agent 安全 | ✅ **PASS** | T09 对抗夹具 **26 例**：闭合标签逃逸 **6 种写法**（含零宽）+ 注入语料 8 条 + 权限/披露/审批三组"**行为不变**"，**每条配负向对照** | 注入只**告警**、**不作放行判据**；审批绕过是**结构性**的（`AWAITING_APPROVAL → EXECUTED` 边不存在） |
 | **AC-09** | 消息合规 | ✅ **PASS** | T06 统一投递出口（站内信 + 邮件沙箱）；`tests/workflow` **169 例** + 故障注入 E2E；禁静默冒充真人 | 🔴 **真实邮件外发 `BLOCKED`**（无 `RESEND_API_KEY`，用户明确排除）—— AC-09 口径为"仅官方授权渠道"，渠道机制已 PASS |
-| **AC-10** | 数据生命周期 | ❌ **FAIL** | `docs/implementation/LIFECYCLE.md` §5：任务清理 ✅ / 缓存索引 🟡 部分 / **导出 ❌ 未实现** / **删除请求 ❌ 未实现** | 🔴 **BLOCKER 未 PASS ⇒ 硬阻断上线**。`tests/lifecycle` 13 例只覆盖"任务清理"支 |
+| **AC-10** | 数据生命周期 | ✅ **PASS** | `verify:ac10:lifecycle` **68/0**（真 dev server + 真隔离库 + 真会话）：导出（凭据剔除 + 未覆盖声明）· 删除计划（**跑完库零改动**）· 执行删除（**逐表库状态**）· **缓存失效回执** · 对照账号零波及 · 原邮箱不可再登录；`tests/lifecycle` **31 例**；`docs/implementation/LIFECYCLE.md` §4.5 | 索引一支记 **N/A**（本仓无独立搜索/向量索引，**已核实**）⇒ M6 迁 PG+pgvector 后重评。`ProposalDecision` 追加式改造**不属本 AC 判据**，仍开放 |
 
 ### 3.2 P0（11 条）—— 未通过须记录例外审批及明确影响
 
@@ -108,17 +107,40 @@
 
 ## 4. 未闭合项详述
 
-### 4.1 🔴 AC-10（BLOCKER）—— 数据生命周期
+### 4.1 ✅ AC-10（BLOCKER）—— 数据生命周期（**已于 2026-10-16 闭合**）
 
-| 支 | 状态 | 缺口 |
+| 支 | 状态 | 证据 |
 |---|---|---|
-| 任务清理 | ✅ 已实现 | `WorkflowJob` 终态 + 投递 + 站内信（`tests/lifecycle` 13 例 + 自证夹具） |
-| 缓存/索引清理 | 🟡 部分 | 目前**无独立缓存层与向量索引**（T04 结构化过滤，无 embedding 索引）⇒ M6 迁 PG+pgvector **必须重新评估** |
-| **导出**（数据可携带） | ❌ **未实现** | 需 org/user 级导出入口 + 格式定义 + 权限校验 |
-| **删除请求**（被遗忘权） | ❌ **未实现** | 需 `User` 硬删的**级联核对**（含软引用 `WorkflowJob.proposalId` / `NotificationDelivery.recipientId`，无 FK） |
-| `ProposalDecision` 追加式改造 | ❌ 未实现 | T05/R7：当前是"当前表态"而非不可抵赖流水 |
+| 任务清理 | ✅ | `WorkflowJob` 终态 + 投递 + 站内信（`policy.ts` / `sweep.ts` / cron 端点 + 自证夹具） |
+| **缓存清理** | ✅ **本轮闭合** | `executeErasure()` **第 ⑧ 步** + `src/lib/cache-keys.ts` 单一来源 + E2E 缓存回执断言。**同时订正了原文的事实错误**：原写"本仓无独立缓存层" —— 实际 `src/lib/cache.ts` 就是 `redis-cache.ts` 的**别名**，服务端有 4 处用户维度缓存 |
+| **索引清理** | **N/A** | 本仓**无**独立搜索/向量索引（Discover 走结构化 SQL 过滤，无 embedding）⇒ 当前**无可失效对象**。这是**核实后的结论**，M6 迁 PG + pgvector 后**必须重评** |
+| **导出**（数据可携带） | ✅ **本轮闭合** | `GET /api/v1/me/export` + `lifecycle/export.ts` + `account.ts`：只导自己（`userId` 来自会话，**无** `?userId=`）· 剔除凭据与内部运营备注 · **显式声明未覆盖面** |
+| **删除请求**（被遗忘权） | ✅ **本轮闭合** | `GET`/`POST /api/v1/me/erasure`（**两段式**：只读计划 → `?apply=1` 才执行）+ `lifecycle/erasure.ts`：匿化 + 状态收窄（**非裸删**）· 非空列用中性哨兵 · 先关闸门再清正文 |
 
-> 已核实：`NotificationDelivery` **不落 PII**（不存邮箱、不存 rationale 全文）⇒ 删人不清此表不构成 PII 残留，但**审计留存期**仍需合规评审定案。
+**🔴 关键设计：为什么是"匿化 + 状态收窄"而不是"硬删"**
+
+① `User.deletedAt` 全仓**无任何业务查询在读**（已核实）⇒ 只置软删标记**等于没删**，用户照样被召回；
+② `Profile.profileStatus` 才是各查询面的**实际闸门**（发现/匹配/候选均以 `APPROVED` 为条件），
+   置 `DEACTIVATED` + `isApproved=false` 后**无需改动任何查询**；
+③ 硬删会打断**对方**的记录（`ConnectionProposal` / `Outcome`）并抹掉审计（`AuditLog` / `TenantAuditEvent`）。
+⇒ 保留**不可识别的最小骨架**（行在、id 在、PII 已清），既满足"不可识别"，又不破坏引用完整性与审计链。
+
+**🔴 本轮最有价值的发现：缓存支不是"部分完成"，而是真缺口**
+
+`who-liked-me:<viewerId>` 缓存的值里是**别人的**
+`displayName / avatar / age / city / gender / relationshipGoal`。
+⇒ 库已匿化而缓存未失效时，被销号者会在**别人的**"谁喜欢过我"列表里继续以原昵称出现 ——
+最多 90 秒（TTL 60s + jitter 30s），而且**没有任何报错**。
+所以缓存失效被做成执行的**组成部分**（第 ⑧ 步），而不是收尾的"顺手一清"：
+本人键按精确键失效，`who-liked-me:` 按前缀**全局**失效（它的键属于他人，按被销号者 id **找不到**）。
+
+⚠️ **仍存在的边界（已在 `LIFECYCLE.md` §4.5 声明，不当作已解决）**：
+内存降级路径只能清**本进程**（生产用 Upstash，跨实例生效）；
+`/api/who-liked-me` 另设 `Cache-Control: private, max-age=60, stale-while-revalidate=120`，
+**浏览器**侧仍可能残留约 3 分钟，服务端无失效手段，靠 TTL 收敛。
+
+> `NotificationDelivery` **不落 PII**（不存邮箱、不存 rationale 全文）⇒ 删人不清此表不构成 PII 残留，但**审计留存期**仍需合规评审定案。
+> `ProposalDecision` 追加式改造（T05/R7 已记）**不属本 AC 判据**，仍开放。
 
 ### 4.2 🔴 AC-23（P0）—— CI
 
@@ -176,7 +198,7 @@ CI run `38757446188`（commit `8419f5009`）job 明细：
 | AC-24 | P0 | FAIL | **性能未知**，无 SLO；高并发下可能超时 | 可例外，**条件**：上线前补一轮基线压测并定 SLO |
 | AC-25 | P0 | BLOCKED | 商业模式未验证 | 可例外（**外部依赖**，非工程问题） |
 
-🔴 **AC-10（BLOCKER）不可豁免** —— 必须先闭合「导出」与「删除请求」两支。
+✅ **AC-10（BLOCKER）已闭合，无需例外审批**（2026-10-16）。例外面仅剩 P0 的 AC-23 / AC-24 / AC-25。
 
 ---
 
@@ -222,7 +244,7 @@ npm run turn:rollback
 ```bash
 # 类型 + 单测
 npx tsc --noEmit                                  # → exit 0
-npx jest                                          # → 97 套 / 2014 例
+npx jest                                          # → 98 套 / 2030 例
 
 # 静态门禁
 npm run check:openapi-contract                    # → 5 项全绿（42 操作 / 31 候选能力）
@@ -236,6 +258,7 @@ npm run verify:agent-invariants                   # → A1–A5 全捕获
 npm run verify:ui-invariants                      # → 11 条变异全捕获
 
 # 端到端取证（真实 HTTP / 真实浏览器 / 隔离库）
+npm run verify:ac10:lifecycle                     # → 68/0（导出 / 删除计划 / 执行删除 / 缓存回执）
 npm run verify:ac18:console                       # → 84/0（七屏）
 npm run verify:ac19:bridge                        # → 69/0
 npm run verify:ac22:open-sdk                      # → 57/0（含实跑 4 个示例）
@@ -258,6 +281,7 @@ npm run verify:no-release --commit=<SHA>          # → 未见该提交部署记
 | 日期 | 变更 |
 |---|---|
 | 2026-10-15 | 首次生成：AC-01~25 逐条判定。**21 PASS / 3 FAIL / 1 BLOCKED**；上线判定 **不建议上线**（AC-10 BLOCKER 未闭合）。Ci run `38757446188` 实证 CI 红（lint + dependency-audit）。 |
+| 2026-10-16 | **AC-10（BLOCKER）闭合**：新增导出 / 删除请求 / **缓存失效**三支（`account.ts` · `cache-keys.ts` · `export.ts` · `erasure.ts` · `/api/v1/me/{export,erasure}`），E2E `verify:ac10:lifecycle` **68/0**，单测扩至 **31 例**（全量 **98 套 / 2030 例**）。判定更新为 **22 PASS / 2 FAIL / 1 BLOCKED**，**BLOCKER 已清空、未走例外审批**；剩余阻断为 P0 的 AC-23 / AC-24。同时**订正** `LIFECYCLE.md` 中"本仓无独立缓存层"的事实错误。 |
 
 ---
 

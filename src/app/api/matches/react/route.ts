@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { db as prisma } from "@/lib/db";
 import { cache } from "@/lib/cache";
+import { CACHE_KEYS } from "@/lib/cache-keys";
 import { createConversation } from "@/lib/im/queries";
 
 export const dynamic = "force-dynamic";
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     // 如果已经REJECTED，不允许再操作
     if (existingMatch?.status === "REJECTED") {
       // Still invalidate discover cache for this user
-      await cache.invalidate(`discover:exclude:${userId}`);
+      await cache.invalidate(CACHE_KEYS.discoverExclude(userId));
       return NextResponse.json({
         success: true,
         isMatch: false,
@@ -133,8 +134,8 @@ export async function POST(req: NextRequest) {
 
       // Invalidate both users' discover caches
       await Promise.all([
-        cache.invalidate(`discover:exclude:${userId}`),
-        cache.invalidate(`discover:exclude:${targetUserId}`),
+        cache.invalidate(CACHE_KEYS.discoverExclude(userId)),
+        cache.invalidate(CACHE_KEYS.discoverExclude(targetUserId)),
       ]);
 
       return NextResponse.json({
@@ -230,10 +231,10 @@ export async function POST(req: NextRequest) {
 
         // Invalidate both users' caches after a match
         await Promise.all([
-          cache.invalidate(`discover:exclude:${userId}`),
-          cache.invalidate(`discover:exclude:${targetUserId}`),
-          cache.invalidate(`who-liked-me:${userId}`),
-          cache.invalidate(`who-liked-me:${targetUserId}`),
+          cache.invalidate(CACHE_KEYS.discoverExclude(userId)),
+          cache.invalidate(CACHE_KEYS.discoverExclude(targetUserId)),
+          cache.invalidate(CACHE_KEYS.whoLikedMe(userId)),
+          cache.invalidate(CACHE_KEYS.whoLikedMe(targetUserId)),
         ]);
 
         return NextResponse.json({
@@ -274,8 +275,8 @@ export async function POST(req: NextRequest) {
 
     // Invalidate sender's discover cache + receiver's who-liked-me cache
     await Promise.all([
-      cache.invalidate(`discover:exclude:${userId}`),
-      cache.invalidate(`who-liked-me:${targetUserId}`),
+      cache.invalidate(CACHE_KEYS.discoverExclude(userId)),
+      cache.invalidate(CACHE_KEYS.whoLikedMe(targetUserId)),
     ]);
 
     return NextResponse.json({

@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth'
 import { handleApiError } from '@/lib/api-handler'
 import { db } from '@/lib/db'
 import { cache } from '@/lib/cache'
+import { CACHE_KEYS } from '@/lib/cache-keys'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,7 @@ export async function GET() {
     const { user } = await requireAuth()
 
     const result = await cache.get(
-      `who-liked-me:${user.id}`,
+      CACHE_KEYS.whoLikedMe(user.id),
       async () => {
         const matches = await db.match.findMany({
           where: {

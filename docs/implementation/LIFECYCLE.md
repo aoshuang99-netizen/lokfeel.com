@@ -1,7 +1,8 @@
 # AC-10 · 数据生命周期（导出 / 删除 / 缓存与索引与任务清理）
 
-> **状态**：🟡 **部分认领**。本文件把"**任务清理 + 通知保留期**"这一支做成可执行、可断言的东西；
-> **导出**与**删除请求**两支**仍未闭合**（见 §5）。**不要把本文件的存在当作 AC-10 已闭合。**
+> **状态**：✅ **四支已闭合**（任务清理 / 缓存 / 导出 / 删除请求），逐条证据见 §5 与 §4.5。
+> **索引**一支记 `N/A`：本仓不存在独立搜索或向量索引（Discover 走结构化 SQL 过滤，无 embedding），
+> 故"索引清理"当前**无可失效对象** —— 这是**核实后的结论**，不是"忘了做"。M6 迁 PG + pgvector 后**必须重评**。
 >
 > AC-10 原文（主指令验收矩阵）：`BLOCKER | 数据生命周期 | 导出、删除、缓存/索引/任务清理按政策生效 | 数据治理测试`
 
@@ -113,7 +114,71 @@ DATABASE_URL=file:/tmp/lifecycle-e2e.db node scripts/qa/lifecycle-sweep.mjs --ap
 ### 4.3 单测
 
 ```bash
-npx jest tests/lifecycle        # 13 用例：政策窗口 + 三条不变式
+npx jest tests/lifecycle        # 政策窗口 + 三条不变式 + 账号政策 + 缓存键单一来源
+```
+
+### 4.5 账号级：导出 / 删除 / 缓存（AC-10 的后三支）
+
+与 §1 的清理支同一套分层（**政策是纯函数，IO 只在服务层**）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 政策（纯函数，零 IO） | `src/lib/lifecycle/account.ts` | 导出脱敏清单 · `ERASURE_ACTIONS` 动作清单 · 销号补丁 |
+| 缓存键（纯函数，零依赖） | `src/lib/cache-keys.ts` | 用户维度缓存键的**单一来源**（写入侧与删除侧引用同一份） |
+| 服务（IO） | `src/lib/lifecycle/export.ts` / `erasure.ts` | 导出聚合 · 删除计划与执行 |
+| 接口 | `GET /api/v1/me/export` · `GET`/`POST /api/v1/me/erasure` | **仅需登录**；**不接受** `?userId=` |
+
+#### 口径（每条都是"为什么不是另一种做法"）
+
+- **导出只有自己**：`userId` 来自服务端会话。写成 `?userId=` 就把"猜 id 读别人数据"变成一条可尝试的路径 ——
+  而这条路径正是 AC-01（多租户隔离）/ AC-02（未授权访问）要堵死的。
+- **导出不经过 `discloseSubject()`**：披露投影管的是"给别人看什么"，导出是**自己看自己**，方向相反；
+  共用出口反而会把"对自己也要脱敏"混进来。唯一剔除的是**凭据**
+  （`password` / `tokenVersion` / `botConfig` —— 落到用户手里就不再是口令）与**内部运营备注**（`adminNotes`）。
+- **导出显式声明未覆盖面**（`meta.uncovered`）：IM / 匹配史 / 计费流水属别的域。
+  宁可声明，也不给一份"看起来完整"的导出物。
+- **删除 = 匿化 + 状态收窄，不是裸删**。三条理由：
+  ① `User.deletedAt` 全仓**无任何业务查询在读**（只置软删标记等于没删）；
+  ② `Profile.profileStatus` 才是各查询面的**实际闸门**（发现/匹配/候选都以 `APPROVED` 为条件），
+     置 `DEACTIVATED` + `isApproved=false` 后**无需改动任何查询**；
+  ③ 硬删会打断**对方**的记录（`ConnectionProposal` / `Outcome`）并抹掉审计（`AuditLog` / `TenantAuditEvent`）。
+- **非空列用中性哨兵**：`age→0`、`gender→PREFER_NOT_TO_SAY`、`sexuality→''`、`relationshipGoal→NOT_SURE`。
+  这些列不允许 null，留原值等于留下一份粗粒度画像（年龄 + 性别 + 性取向是准标识符组合）。
+- **执行顺序：先关闸门（DEACTIVATED）再清正文**。失败方向落在"更不可见"一侧；
+  反过来会留下"PII 已清、但仍被召回"的窗口。
+- **两段式**：`planErasure()` 只读（可任意次调用）→ `executeErasure()` 需显式 `?apply=1`。
+  删除不可逆，默认档位必须是"只看不动"。
+
+#### 🔴 缓存：AC-10 点名的那一支（原判 🟡，核实后是**真缺口**）
+
+原 §5 记的是"目前无独立缓存层与向量索引" —— **前半句是事实错误**：
+`src/lib/cache.ts` 只是 `src/lib/redis-cache.ts` 的**别名**，服务端有 4 处用户维度缓存：
+`auth:user:` / `settings:` / `discover:profile:` / `who-liked-me:`。
+其中 `who-liked-me:<viewerId>` 缓存的是**别人的**
+`displayName / avatar / age / city / gender / relationshipGoal`
+（见 `src/app/api/who-liked-me/route.ts`）。
+
+⇒ **"删了库"不等于"删干净了"**：库已匿化而缓存未失效时，被销号者会在**别人的**"谁喜欢过我"
+列表里继续以原昵称出现 —— 最多 90 秒（TTL 60s + jitter 30s），而且**没有任何报错**。
+所以缓存失效是 `executeErasure()` 的**第 ⑧ 步**，不是收尾的"顺手一清"：
+
+- **本人键**：按精确键失效（`auth:user:` / `settings:` / `discover:profile:` / `discover:exclude:`）；
+- **`who-liked-me:`**：按前缀**全局**失效 —— 它的键属于他人，按被销号者的 id **找不到**。
+  销号是低频事件，全局失效换来的是"确实清干净"。
+
+键定义集中在 `src/lib/cache-keys.ts`，写入侧（`auth.ts` · `discover` · `settings` · `who-liked-me` · `matches/react`）
+一律引用 `CACHE_KEYS`；并有单测断言"**全仓不得再出现裸键模板串**"（漂移防线）。
+
+⚠️ **仍存在的边界（诚实声明，不当作已解决）**：
+- 内存降级路径只能清**本进程**的映射；生产用 Upstash（本仓已配），`DEL` / `SCAN` 跨实例生效。
+- `/api/who-liked-me` 还设了 `Cache-Control: private, max-age=60, stale-while-revalidate=120`，
+  即**浏览器**里也可能残留约 3 分钟；服务端无失效手段，只能靠 TTL 收敛。
+
+#### 取证（可复跑）
+
+```bash
+npx jest tests/lifecycle              # 政策 + 不变式 + 账号政策 + 缓存键单一来源
+npm run verify:ac10:lifecycle         # 真 dev server + 真隔离库 + 真会话 + 逐表库状态断言
 ```
 
 ### 4.4 cron 端点（**就绪，默认不自动跑**）
@@ -136,18 +201,24 @@ Authorization: Bearer $CRON_SECRET
 
 ---
 
-## 5. ❌ 仍开放（不要因为上面打了勾就当作 AC-10 已闭合）
+## 5. 四支状态（已闭合，逐条可复跑）
 
-| 支 | 状态 | 说明 |
+| 支 | 状态 | 证据 |
 |---|---|---|
-| **任务清理** | ✅ 本文件 | `WorkflowJob` 终态 + 投递 + 站内信 |
-| **缓存/索引清理** | 🟡 部分 | 目前无独立缓存层与向量索引（T04 用结构化过滤，没有 embedding 索引）；M6 迁 PG+pgvector 后**必须重新评估**这一支 |
-| **导出**（数据可携带） | ❌ 未实现 | 需 org/user 级导出入口 + 格式定义 + 权限校验 |
-| **删除请求**（被遗忘权） | ❌ 未实现 | 需 `User` 硬删的级联核对（含 T06 新表的**软引用**：`WorkflowJob.proposalId` / `NotificationDelivery.recipientId` 无 FK，删人不自动清理） |
-| `ProposalDecision` 追加式改造 | ❌ 未实现 | T05/R7 已记：当前是"当前表态"而非不可抵赖流水 |
+| **任务清理** | ✅ | §4.1–4.4：`policy.ts` / `sweep.ts` / cron 端点 / 自证夹具 / 单测 |
+| **缓存清理** | ✅ | §4.5：`executeErasure()` 第 ⑧ 步 + `cache-keys.ts` 单一来源 + E2E 的缓存回执断言 |
+| **索引清理** | **N/A** | 本仓**无**独立搜索/向量索引（已核实：Discover 走结构化 SQL 过滤，无 embedding）⇒ 当前无可失效对象。M6 迁 PG + pgvector 后**必须重评** |
+| **导出**（数据可携带） | ✅ | §4.5：`GET /api/v1/me/export` + `export.ts` + `account.ts` |
+| **删除请求**（被遗忘权） | ✅ | §4.5：`GET`/`POST /api/v1/me/erasure`（两段式）+ `erasure.ts` + `account.ts` |
 
-> 已核实一点：`NotificationDelivery` **不落 PII**（不存邮箱地址、不存 rationale 全文），
-> 因此"删除请求"即使不清这张表，也不构成 PII 残留 —— 但**审计痕迹的留存期**仍需在一次合规评审里定下来。
+### 明确**不在**本支范围（不要读成"已覆盖"）
+
+| 项 | 说明 |
+|---|---|
+| IM 会话 / 消息、匹配史、计费流水 | 属 B2C / 计费域；导出物里以 `meta.uncovered` **显式声明** |
+| `ProposalDecision` 追加式改造 | T05/R7 已记：当前是"当前表态"而非不可抵赖流水 |
+| `WorkflowJob.proposalId` / `NotificationDelivery.recipientId` 的**软引用** | 无 FK，删人**不**自动清理。已核实两表**不落 PII**（不存邮箱、不存 rationale 全文）⇒ 不构成 PII 残留；但其**留存期**仍需在一次合规评审里定下来 |
+| 浏览器端 HTTP 缓存（`/api/who-liked-me`） | 见 §4.5 末的边界声明，服务端无失效手段，靠 TTL 收敛 |
 
 ---
 
@@ -156,3 +227,4 @@ Authorization: Bearer $CRON_SECRET
 | 日期 | 变更 |
 |---|---|
 | 2026-10-12 | 首次认领「任务清理 + 通知保留期」支：`policy.ts` / `sweep.ts` / cron 端点 / CLI / 自证夹具 / 13 单测。导出与删除请求仍开放。 |
+| 2026-10-16 | 闭合后三支：新增账号级政策 `account.ts`、缓存键单一来源 `cache-keys.ts`、服务层 `export.ts`/`erasure.ts`、接口 `/api/v1/me/export` 与 `/api/v1/me/erasure`（两段式）；`executeErasure()` 新增**第 ⑧ 步缓存失效**；写入侧统一改引 `CACHE_KEYS`；补单测与 E2E（`verify:ac10:lifecycle`）。同时**订正**原 §5 中"本仓无独立缓存层"的**事实错误**。 |
