@@ -47,7 +47,8 @@ function mask(s) {
 
 function appendEnvKeys(pairs) {
   let text = fs.readFileSync(ENV_FILE, 'utf8')
-  for (const [k, v] of Object.entries(pairs)) {
+  // 只判存在 → 只取键名（解构 [k, v] 会让 v 成 unused-vars，lint 棘轮判红过一次）
+  for (const k of Object.keys(pairs)) {
     if (new RegExp(`^${k}=`, 'm').test(text)) fail(`.env.local 已存在 ${k}，拒绝覆盖（请手工处理）`)
   }
   if (!text.endsWith('\n')) text += '\n'
