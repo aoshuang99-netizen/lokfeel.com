@@ -54,7 +54,7 @@
 | 类型检查 | **`npx tsc --noEmit` exit 0** |
 | CI | `.github/workflows/ci.yml`（GitHub Actions）—— 9 个 job；三道棘轮见 `CI_GATES.md` |
 | 最新 CI run（改造前） | `38848356361`（commit `4ceab89`）→ **failure**（Lint ❌ / Dependency audit ❌；其余 5 项 success） |
-| 最新 CI run（改造后） | 见 §4.2 —— 棘轮全部本地实证通过，CI 侧待推送后复验 |
+| 最新 CI run（改造后） | ✅ **`38863968546`（commit `8016bb4`）→ success** —— 9 个 job 全绿（整轮 2m49s），含**新增**的 Migration（67s）与 E2E（164s），`Build` 在移除 `continue-on-error` 后仍 success |
 | 全仓 lint 债 | **1542 problems** / 1019 文件（改造前 1565；净 −23，且已冻结为棘轮基线） |
 | 生产可达依赖高危 | **high 26 / critical 2**（全量含 dev：high 34 / critical 3）—— 已登记，见 `DEPENDENCY_RISK.md` |
 
@@ -91,7 +91,7 @@
 | **AC-16** | 商业指标 | ✅ **PASS** | T08 Slice 2：`outcome-reconcile.mjs` 原始表 SQL 独立复算 **14/0**（全租户 + 任务内）；**变异自证 4 处** + 2 条负向 `exit 1` | 口径：无时间窗口 / 快照式漏斗 / 假设随响应下发 |
 | **AC-17** | 工作流恢复 | ✅ **PASS** | T06 故障注入 E2E **8/8**：崩溃/超时/网络失败后**无重复动作**且**可接管** | — |
 | **AC-18** | SaaS UI | ✅ **PASS** | `verify:ac18:console`（真实 Chrome + 隔离库）**84/0**（七屏）；无空按钮**动态负测**（逐个真点） | 第 7 屏 Agents 由 T09 Slice 5 接线；`check:ui-invariants` 扫描面含 `src/app/console` |
-| **AC-23** | CI | ✅ **PASS** | CI run `38848356361`（`4ceab89`）改造前：**Lint ❌ · Dependency audit ❌**，其余 5 项 ✅。改造后**三道棘轮**本地全部实证通过：`lint:gate` **1542 problems / 零新增 / exit 0**、`check:deps` **exit 0**、`check:migration-drift` **exit 0**；三份自证 8+6+5 全绿；Migration job 全链复现（`verify` **255/255**）；CI 新增 Migration 与 E2E 两 job，`continue-on-error` 两处移除 | 见 §4.2 与 `CI_GATES.md`。**残留**：生产可达高危 28 条为「已登记 + 棘轮」，**未做批量升级**（`npm audit fix` 实测动 162 包且一条不消）⇒ 升级批次列为后续 P0 |
+| **AC-23** | CI | ✅ **PASS** | **CI run `38863968546`（`8016bb4`）→ success**：9 个 job 全绿（整轮 **2m49s**），四个关键 job 逐步 `success` —— Lint 棘轮 99s · Dependency 棘轮 70s · **Migration 67s（新增）** · **E2E 164s（新增）**；`Build` 移除 `continue-on-error` 后仍 success。改造前对照 `38848356361`（`4ceab89`）→ failure（Lint ❌ / Dependency audit ❌）。本地另证：三份自证 8+6+5 全绿、`verify` **255/255** | 见 §4.2 与 `CI_GATES.md`。**残留**：生产可达高危 28 条为「已登记 + 棘轮」，**未做批量升级**（`npm audit fix` 实测动 162 包且一条不消）⇒ 升级批次列为后续 P0 |
 | **AC-24** | 性能 | ❌ **FAIL** | **未执行** —— 无 SLO 定义、无压测脚本（`scripts/` 无 perf/load 件） | 生产真实量级参考：`User` 12922 / `Profile` 11887 行（T06 快照）；**不得虚报未测指标** |
 | **AC-25** | 付费价值 | ⛔ **BLOCKED** | **无真实试点客户**：无真实支付/续费记录、无工时基线、无完成率 | 依赖外部真实客户，**不可 MOCK 代替** |
 
@@ -223,7 +223,28 @@ npm run verify:lint:ratchet           → 8/8（含「总数守恒但发生位�
 npm run verify:check:deps             → 6/6（含「严重度升级：判红」「豁免过期：判红」）
 npm run verify:check:migration-drift  → 5/5
 CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exit 0
+门禁链（10 项）                        → 全绿
+改动路径 ESLint                        → 新增文件 0/0；既有文件 76 处均为存量债（门禁已证零新增）
 ```
+
+#### CI 实证（推送后）
+
+**CI run `38863968546`（`8016bb4`）→ `conclusion: success`**，整轮 2m49s，9 个 job 全绿：
+
+| Job | 结论 | 耗时 | 备注 |
+|---|---|---|---|
+| Typecheck (tsc --noEmit) | ✅ success | — | |
+| **Lint (ESLint · 棘轮)** | ✅ **success** | 99s | 改造前 ❌ |
+| Test (Jest) | ✅ success | — | 2030 例 |
+| **Build (next build)** | ✅ **success** | — | **已去掉 `continue-on-error`** |
+| **Migration（libSQL 文件库）** | ✅ **success** | 67s | **新增**；8 个步骤全绿（含安全断言 + 漂移棘轮） |
+| **E2E（构建产物 · 浏览器冒烟）** | ✅ **success** | 164s | **新增**；build → start → Playwright 冒烟全绿 |
+| Secret scan (gitleaks) | ✅ success | — | |
+| **Dependency audit（棘轮）** | ✅ **success** | 70s | 改造前 ❌（且带 `continue-on-error`） |
+| DCO sign-off | skipped | — | 仅 PR 触发，预期 |
+
+> 对照：改造前 `38848356361`（`4ceab89`）→ **failure**（Lint ❌ / Dependency audit ❌）。
+> 本次是**首次** CI 全绿，且**没有降低任何标准**。
 
 #### ⚠️ 如实标注的残留
 
