@@ -101,6 +101,7 @@
     "verify:released:surface": "node scripts/qa/verify-released-surface.mjs",
     "verify:release:wait": "bash scripts/perf/wait-release.sh",
     "qa:probe:login": "node scripts/qa/probe-qa-login.mjs",
+    "qa:grant-org": "node scripts/qa/grant-qa-org.mjs",
     "turn:setup": "node scripts/setup-cloudflare-turn.mjs",
     "turn:setup:dry": "node scripts/setup-cloudflare-turn.mjs --dry-run",
     "turn:rollback": "node scripts/setup-cloudflare-turn.mjs --rollback",

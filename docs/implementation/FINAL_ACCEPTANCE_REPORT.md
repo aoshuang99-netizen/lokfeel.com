@@ -11,9 +11,11 @@
   `verify-public-origin` **13/0**；`db-snapshot diff` 证明对既有数据**零影响**。详见 `RELEASE_T09-T12.md`
 - **迁移状态**：✅ **C0–C9 已全部应用到生产 Turso** —— `connection:migrate verify` **255/255**
   （C9 `CommunityBridge` / `BridgeMemberOptIn` 已就位，本次发版**无需再 apply**）
-- **A1（生产侧出口连通性）**：⚠️ **分层结论** —— 匿名层 ✅ 已验（401 + JSON 信封）；
-  **网络层 / 凭据层 ⛔ BLOCKED**（生产 `qa.*` 账号 0 行 + `Membership` 0 ⇒ 取不到会话）。
-  **不得据此宣称"生产出口已验"**，详见 `RELEASE_T09-T12.md` §4
+- **A1（生产侧出口连通性）**：✅ **已实跑闭合**（`verify:agent:connectivity:server` **22/0**）——
+  匿名层 401 ✅ · **网络层 PASS**（285ms 到达外部端点）· 身份层 INFO · 凭据层 FAIL（端点回 **400**）。
+  生产的 `OPENAI_BASE_URL` 指向 **Netlify AI Gateway**（`/.netlify/ai`），探针只打不计费的 `/models` ⇒
+  **400 是端点对「请求」的答复，不是对「凭据」的答复**。**"能否成功出稿"本轮未验**（需计费调用）。
+  详见 `RELEASE_T09-T12.md` §4
 
 ---
 
@@ -39,9 +41,12 @@
 | 对外跳转域名 | `verify-public-origin.mjs` | ✅ **13/0**（含 Google `redirect_uri` 落在公开域名；泄漏扫描 **0 处**） |
 | 数据零影响 | `db-snapshot diff before after` | ✅ 65→65 表 · 无增删 · 既有表行数**全部未变** |
 | 发版前 schema | `connection:migrate verify` | ✅ **255/255**（C0–C9 全部就位 ⇒ 本次无需 apply） |
+| **A1 生产出口连通性** | `verify:agent:connectivity:server` | ✅ **22/0** —— 真实登录 200 + 会话 · 诊断端点 200 · **网络层 PASS**（285ms 到达外部端点） |
 
-> ⚠️ **A1 未闭合**：生产 `qa.*` 账号 **0 行** + `Membership` **0** ⇒ 诊断端点只验到"匿名层"（401）。
-> 网络层/凭据层 ⛔ **BLOCKED**。**"生产出口连通性已验"这句话当前不成立**，详见 `RELEASE_T09-T12.md` §4。
+> ✅ **A1 已闭合**（分层读数）：匿名层 401 ✅ · **网络层 PASS** ✅ · 身份层 INFO · 凭据层 FAIL（端点回 **400**）。
+> 生产的 `OPENAI_BASE_URL` 指向 **Netlify AI Gateway**（`/.netlify/ai`），探针只打不计费的 `/models` ⇒
+> **400 是端点对"请求"的答复，不是对"凭据"的答复**（凭据被拒会回 401）。
+> **"Agent 在生产能否成功出稿"本轮未验**（需一次计费调用）。详见 `RELEASE_T09-T12.md` §4。
 
 按 `ACCEPTANCE_MATRIX.md` 的上线判定"**所有 BLOCKER 必须 PASS**"：
 - **AC-10（BLOCKER）已转 PASS**（2026-10-16）—— 「导出」「删除请求」「缓存清理」三支全部落地并端到端取证：
@@ -443,7 +448,7 @@ node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 --n=200
 
 ---
 
-| 2026-10-16 | **🚀 发版 + 停用「未发版」状态**：提交 `2d5385d`（34 提交 / T09+T10+T11+T12 + AC-10/23/24）**已发布生产并复验生效**。发版前四项前提实测（C0–C9 全部就位 `verify` **255/255** · 纯新增 schema · 未发版成立 5 条 404 + 3/3 对照 · CI 12 项全绿）；发版后三项复验（`verify:released:surface` **6/6 + 2/2 对照** · `verify-public-origin` **13/0** · `db-snapshot diff` **零数据影响**）。**A1 判定为分层结论**：匿名层 ✅ 已验，网络层/凭据层 ⛔ **BLOCKED**（生产 `qa.*` 账号 **0 行** + `Membership` **0**）—— **不得宣称"生产出口已验"**。新增 `RELEASE_T09-T12.md`；探针语义反转（`verify:released:surface` 取代已删除的 `verify-no-release-surface`，避免"清空清单"变成恒绿假门禁）。 |
+| 2026-10-16 | **🚀 发版 + 停用「未发版」状态**：提交 `2d5385d`（34 提交 / T09+T10+T11+T12 + AC-10/23/24）**已发布生产并复验生效**。发版前四项前提实测（C0–C9 全部就位 `verify` **255/255** · 纯新增 schema · 未发版成立 5 条 404 + 3/3 对照 · CI 12 项全绿）；发版后三项复验（`verify:released:surface` **6/6 + 2/2 对照** · `verify-public-origin` **13/0** · `db-snapshot diff` **零数据影响**）。**A1 闭合**（先发现生产 `qa.*` 账号 **0 行** + `Membership` **0** ⇒ 经授权重建账号 + 建成员关系后复跑 **22/0**：真实登录 200 · 诊断端点 200 · 网络层 **PASS** 285ms；**顺带拿到生产事实**：`OPENAI_BASE_URL` 指向 **Netlify AI Gateway**，探针打的 `/models` 回 400 ⇒ 凭据层 FAIL **但 ≠ 凭据无效**）。新增 `RELEASE_T09-T12.md`；探针语义反转（`verify:released:surface` 取代已删除的 `verify-no-release-surface`，避免"清空清单"变成恒绿假门禁）。 |
 
 ---
 

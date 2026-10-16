@@ -88,42 +88,99 @@ agent-card 是公开发现面，应 200。**若用"非 404 即通过"一把尺�
 
 ---
 
-## 4. A1（生产侧出口连通性）—— **部分闭合，如实记**
+## 4. A1（生产侧出口连通性）—— ✅ 已实跑闭合（分层读数）
 
-`npm run verify:agent:connectivity:server` 在生产实跑结果：
+### 4.1 前置：生产原本**没有任何账号能进组织**
+
+首轮实跑时卡在登录：
 
 ```
 [1] 匿名访问      ✅ 401 + JSON 信封   ⇒ 路由已上线、能力闸门生效
 [2] 真实登录      ❌ POST /api/auth/login → 401 Invalid email or password
     ⏭️  SKIP 带会话复验诊断端点（登录未拿到 cookie）
-结果：2 通过 / 2 失败 / 1 跳过
 ```
 
-**根因定位（不是密码问题）**：用项目自带的 `qa:probe:login` 诊断（本地 bcrypt 直验库中哈希）：
+**根因不是密码过期** —— 用项目自带的定性器（本地 bcrypt 直验库中哈希）：
 
 ```
+npm run qa:probe:login
 ── qa.male@lokfeel.com   ❌ 库中不存在该账号 → 需要在生产重建
 ── qa.female@lokfeel.com ❌ 库中不存在该账号 → 需要在生产重建
 ```
 
-独立复核（只读 SQL）：`SELECT ... FROM User WHERE email LIKE 'qa.%'` → **0 行**；
-生产 `Membership` 总数 **0**；非 bot 的人工账号 **0**。
+独立只读 SQL 复核：`User` 中 `qa.*` = **0 行**；`Membership` = **0**；非 bot 人工账号 = **0**。
+⇒ 诊断端点**取不到会话**，与代码无关。
 
-### 结论
+### 4.2 为闭合 A1 所做的**生产写入**（已获显式授权）
 
-| 层 | 状态 | 依据 |
+| 步骤 | 工具 | 结果 |
 |---|---|---|
-| 匿名层（路由已部署 + 能力闸门） | ✅ **已验** | 401 + JSON 信封 |
-| 网络层 / 凭据层（生产出口真实结论） | ⛔ **BLOCKED** | 生产无 QA 账号 ⇒ 无法取得会话 ⇒ 诊断端点拒绝进入 |
+| ① 重建 2 个 QA 账号 | `node scripts/qa/create-qa-accounts.mjs`（既有） | `qa.male` = `129868c6-…` / `qa.female` = `b032732b-…`，`isBot=0`、APPROVED/step9 |
+| ② 加入组织 | **`node scripts/qa/grant-qa-org.mjs --apply`（本轮回填新增）** | 2 条 `Membership`：`org_default` + `OPERATOR` / `ACTIVE` |
 
-**为什么这不是"脚本坏了"**：脚本对 403/无 cookie 明确定义为 **SKIP 而非 FAIL**
-（"本环境缺前提"≠"端点坏了"）。**缺前提 ≠ 破坏**，也 **≠ 通过**。
+**为什么 role 取 OPERATOR 而不是 ADMIN**：`agent.execute` 属 OPERATOR 及以上，而 `agent.approve` 是
+**ADMIN** 门槛 —— AC-08 的制度设计正是「**能跑不能批**」。把 QA 账号直接提成 ADMIN 会**抹掉这条分离**，
+让后续校验分不清"设计如此"与"配错了"。
 
-**要闭合 A1 的剩余两步**（两者都属于**生产数据写入**，需显式授权）：
-1. 在生产重建 QA 账号（`qa.male` / `qa.female`）；
-2. 给该账号在 `org_default` 建 `Membership`，角色 ≥ `OPERATOR`（诊断端点要求 `agent.execute`）。
+**为什么新增脚本而不是一次 SQL**：建号脚本（`create-qa-accounts.mjs`）只建 `User` + `Profile`、**不建
+`Membership`**，而租户域端点要求成员关系 ⇒ 这个缺口会**反复出现**。新脚本默认 dry-run、幂等、
+支持 `--revoke`，与本仓「默认只读」的惯例一致。
 
-⚠️ 在此之前，**任何"生产出口连通性已验"的说法都不成立**（T09 Slice 5/6 的口径：无凭据 ⇒ `BLOCKED`，**不得报绿**）。
+### 4.3 复验读数（`npm run verify:agent:connectivity:server`）
+
+```
+结果：22 通过 / 0 失败 / 0 跳过
+[2] POST /api/auth/login → 200 ✅（下发了会话 cookie）
+[3] GET  /api/v1/agents/diagnostics/connectivity → 200 ✅
+[4] 报告五段齐备 ✅（endpoint / network / identity / credentials / probe）
+[5] summary 与客户端重算一致（服务端=FAIL 重算=FAIL）✅ · 响应体无 sk- 密钥 ✅
+[8] 无部署专用域名泄漏 ✅
+
+关键读数：
+  endpoint   : https://app.lokfeel.com/.netlify/ai   [env]   probe=…/.netlify/ai/models
+  network    : PASS   HTTP 400   285ms     ← 出口**能到**该端点
+  identity   : INFO   （host 非 openai.com —— 错误体形状由该端点自定，刻意不判死）
+  credentials: FAIL   keyPresent=true len=366   ← HTTP 400，非预期状态
+  summary    : FAIL —— 见各层 detail
+```
+
+> ⚠️ **22/0 的含义要读准**：脚本断言的是**报告的形状与诚实性**（五段齐备、summary 与重算一致、
+> 不泄漏 key、单调性成立），**不是**"连通性 PASS"。所以 22/0 = **这份报告可信**，
+> 结论要看报告内容本身。
+
+### 4.4 A1 的准确结论（分层，不合并说）
+
+| 层 | 结论 | 依据 |
+|---|---|---|
+| 匿名层 | ✅ 已验 | 401 + JSON 信封（路由已部署、能力闸门生效） |
+| **网络层** | ✅ **PASS** | 生产函数**成功到达**外部端点 —— 往返 **285ms** 并收到 HTTP 响应 |
+| 身份层 | ℹ️ INFO | host 不是 `openai.com`（见 §4.5），错误体形状由端点自定 |
+| 凭据层 | ⚠️ **FAIL** | 端点回 **400**（非 401/403） |
+
+⇒ **A1 的核心问题「生产出口能不能出去」已由端点实证：能。**（这是本项要回答的问题。）
+⇒ 但**不得**由此外推为"OpenAI 凭据可用" —— 400 是端点对**请求**的答复，不是对**凭据**的答复
+（凭据被拒会回 401）。
+
+### 4.5 🔴 顺带拿到的生产事实：出口指向 **Netlify AI Gateway**
+
+```
+endpoint.baseUrl = https://app.lokfeel.com/.netlify/ai     source = env
+credentials.keyLength = 366
+```
+
+即生产的 `OPENAI_BASE_URL` 指向 **Netlify 的 AI 网关**（`/.netlify/ai`，免费计划会自动注入该组变量），
+而非 `https://api.openai.com/v1`。外部不带凭据直打同一 URL → **401**；而生产函数带着凭据打 → **400**。
+
+**最可能的解释**：网关只代理 `POST /chat/completions` 之类的推理路径，**不实现 `GET /models`** ——
+而诊断探针刻意只打 `/models`（**不计费**，见 T09 Slice 5 设计）。⇒ 这是**探针假设与端点形状不匹配**，
+不是"出口被墙"。
+
+**处置（本轮不修，需拍板）**：
+- 若要验"凭据被真实推理端点接受"，必须打**计费**路径 ⇒ 属成本决策；
+- 若要改用直连 OpenAI，需改生产 `OPENAI_BASE_URL` + 配真实 key ⇒ 也属成本决策；
+- 也可以维持现状（网关免费额度）—— 那 A1 的结论就停在"网络层 PASS"。
+
+**结论不上推**：本条**只是记录端点形状**；"Agent 在生产能否成功出稿"**本轮未验**（需一次真实计费调用）。
 
 ---
 
@@ -131,12 +188,14 @@ agent-card 是公开发现面，应 200。**若用"非 404 即通过"一把尺�
 
 | 项 | 状态 | 原因 |
 |---|---|---|
-| **A1 网络层/凭据层** | ⛔ BLOCKED | 生产无 QA 账号 + `Membership=0`（见 §4） |
+| **A1 出口连通性** | ✅ **已闭合** | 生产实跑 **22/0**：真实登录 200 + 会话、诊断端点 200、**网络层 PASS**（285ms 到达外部端点）。见 §4 |
+| **凭据被推理端点接受** | ⏳ 未验 | 端点回 **400**（诊断探针只打不计费的 `/models`）。要验必须打**计费**路径 ⇒ 成本决策，见 §4.5 |
 | AC-25 付费价值 | ⛔ BLOCKED | 无真实试点客户（外部依赖，不可 MOCK） |
 | AC-21 真实扣款/退款 | ⛔ BLOCKED | 缺 Creem 凭据（沙箱部分 PASS） |
 | 28 条生产可达高危依赖 | 🟡 已登记 + 棘轮 | 未做批量升级（见 `DEPENDENCY_RISK.md`） |
 | `organizationId` 未建模（11 表） | 🟡 已知漂移 | 已冻结进棘轮（见 `CI_GATES.md` §4bis） |
 | 限流器共用 per-IP 桶 | 🟡 已登记 | 代码级结论，未做运行期实证（见 `PERFORMANCE_BASELINE.md`） |
+| **QA 账号 + Membership 留在生产** | 🟡 待收尾 | 验证已完成；如需清理走 `cleanup-qa-accounts.mjs --apply`（`Membership` 随 `User` 级联删除） |
 
 ---
 
@@ -159,9 +218,15 @@ npm run verify:released:surface                 # 6 条路由生效断言
 node scripts/qa/verify-public-origin.mjs        # 对外跳转公开域名
 node scripts/qa/db-snapshot.mjs after && node scripts/qa/db-snapshot.mjs diff before after
 
-# A1（当前会被 BLOCKED）
-npm run verify:agent:connectivity:server
-npm run qa:probe:login                          # 先分清"密码过期"还是"账号不存在"
+# A1（生产侧出口连通性）—— 前置：QA 账号必须在生产存在且属于组织
+npm run qa:probe:login                          # ① 先分清"密码过期"还是"账号不存在"
+node scripts/qa/create-qa-accounts.mjs          # ② 缺账号时重建（写生产，需授权）
+node scripts/qa/grant-qa-org.mjs                # ③ 只盘点（dry-run）
+node scripts/qa/grant-qa-org.mjs --apply        #    建/更新 Membership（role 默认 OPERATOR）
+npm run verify:agent:connectivity:server        # ④ 实跑：匿名层 / 网络层 / 身份层 / 凭据层
+
+# 收尾（如需清理生产 QA 痕迹）
+node scripts/qa/cleanup-qa-accounts.mjs --apply # 删 User（Membership 随外键 CASCADE 消失）
 ```
 
 ---
@@ -170,4 +235,5 @@ npm run qa:probe:login                          # 先分清"密码过期"还是"
 
 | 日期 | 变更 |
 |---|---|
-| 2026-10-16 | 首版。发版 `2d5385d`（34 提交 / T09+T10+T11+T12 / AC-10/23/24）；发版前 4 项前提实测；发版后 3 项复验（生效断言 6/6 · public-origin 13/0 · DB 零变化）；**A1 判定为分层结论：匿名层已验、网络/凭据层 BLOCKED（生产无 QA 账号）**。新增 `verify:released:surface` / `verify:release:wait`；删除已失效的 `verify-no-release-surface.mjs`。 |
+| 2026-10-16 | 首版。发版 `2d5385d`（34 提交 / T09+T10+T11+T12 / AC-10/23/24）；发版前 4 项前提实测；发版后 3 项复验（生效断言 6/6 · public-origin 13/0 · DB 零变化）。新增 `verify:released:surface` / `verify:release:wait`；删除已失效的 `verify-no-release-surface.mjs`。 |
+| 2026-10-16 | **A1 闭合**（发版后同日）：首轮实跑发现生产 `qa.*` 账号 **0 行** + `Membership` **0** ⇒ 登录 401；经授权重建 2 个 QA 账号 + 建 `org_default` 成员关系（**新增 `grant-qa-org.mjs`**，role=OPERATOR 而非 ADMIN —— 保住 AC-08「能跑不能批」的分离），复跑得 **22/0**：网络层 **PASS**（285ms 到达外部端点）。🔴 **顺带拿到生产事实**：`OPENAI_BASE_URL` 指向 **Netlify AI Gateway**（`/.netlify/ai`），探针打的 `/models` 回 400 ⇒ **凭据层 FAIL 但≠凭据无效**（400 是端点对请求的答复，凭据被拒会回 401）。**"Agent 生产能否出稿"本轮未验**（需计费调用）。 |
