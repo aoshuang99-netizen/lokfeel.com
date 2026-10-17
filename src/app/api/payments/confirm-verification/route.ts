@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, serverError, badRequest } from "@/lib/api-response";
 import { handleApiError } from "@/lib/api-handler";
+import { STRIPE_API_VERSION } from "@/lib/stripe/config";
 import Stripe from "stripe";
 
 // ═══ POST /api/payments/confirm-verification ═══════════════════
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2026-08-26.dahlia",
+      apiVersion: STRIPE_API_VERSION,
     });
 
     // Verify SetupIntent succeeded

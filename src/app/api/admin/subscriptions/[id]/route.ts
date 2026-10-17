@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withPermission } from "@/lib/with-permission";
 import { prisma } from "@/lib/prisma";
+import { STRIPE_API_VERSION } from "@/lib/stripe/config";
 import Stripe from "stripe";
 
 // Initialize Stripe only if secret key is available
 const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION })
   : null;
 
 // GET /api/admin/subscriptions/[id] - Get subscription details

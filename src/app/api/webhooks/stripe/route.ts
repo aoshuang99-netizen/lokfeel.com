@@ -4,10 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import Stripe from "stripe";
 import { isFemaleGender } from "@/lib/gender-utils";
+import { STRIPE_API_VERSION } from "@/lib/stripe/config";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-    apiVersion: "2026-08-26.dahlia",
+    apiVersion: STRIPE_API_VERSION,
   });
 }
 

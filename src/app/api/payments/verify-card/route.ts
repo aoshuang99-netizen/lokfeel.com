@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, serverError, badRequest } from "@/lib/api-response";
 import { handleApiError } from "@/lib/api-handler";
+import { STRIPE_API_VERSION } from "@/lib/stripe/config";
 import Stripe from "stripe";
 
 // ═══ POST /api/payments/verify-card ═════════════════════════════
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2026-08-26.dahlia",
+      apiVersion: STRIPE_API_VERSION,
     });
 
     // Get or create Stripe customer
@@ -66,7 +67,9 @@ export async function POST(request: NextRequest) {
     // Create SetupIntent — verifies card without charge
     const setupIntent = await stripe.setupIntents.create({
       customer: stripeCustomerId,
-      payment_method_types: ["card"],
+      // stripe 23 移除了 SetupIntentCreateParams.payment_method_types，
+      // 等价替代是 allowed_payment_method_types（同为「允许列表」语义）。
+      allowed_payment_method_types: ["card"],
       usage: "off_session", // Allow future charges if they upgrade
       metadata: {
         userId: user.id,
