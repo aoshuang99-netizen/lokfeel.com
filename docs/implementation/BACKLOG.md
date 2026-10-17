@@ -996,12 +996,48 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
    我们自己只用 `src/lib/email.ts` 的 `createTransport`/`sendMail`，不走它的 provider。
 3. 剩余 6 条 moderate/low（`qs` / `uuid` / `gaxios` / `@hono/node-server` / `body-parser` / `@babel/core`）。
 4. 未升 `firebase` 12→13（major）与 `next-auth` 正式版（上游未发布）。
-5. **Dependabot 有两个开放 PR 需单独评审**（不是本批次遗留，但会与本批的 overrides 打架）：
+5. **Dependabot 批次**：~~#27 已并入~~（见 §7septies）；**#24 仍待评审**：
    - **#27** `bump the minor-and-patch group`（11 项，只改 `package.json` + 锁）——
-     base 仍是 `5fc3bf6`，与本次 16 条 overrides 存在潜在 `EOVERRIDE` / 版本回退冲突，
-     **合并前必须重算锁文件，并复查 `check:deps` 仍为「0 新增」、`verify:check:deps` 仍 8/8**；
-   - **#24** `stripe` 22.6.2 → 23.0.0（**major**，支付栈，需专门回归）。
-   两者均**未开 auto-merge**，main 不会被自动污染。
+     **已于 2026-10-17 以 `cherry-pick -x 4e91c48` + 重算锁的方式并入**，
+     16 条 overrides 全部仍生效、审计仍 `high 0 / critical 0`；Dependabot 已自动关闭该 PR（`closed` / 未 merge）。
+   - **#24** `stripe` 22.6.2 → 23.0.0（**major**，支付栈，需专门回归）—— 仍开放，未开 auto-merge。
+
+---
+
+## 7septies. 并入 Dependabot #27（11 项 minor/patch）
+
+**为什么用 cherry-pick 而不是点 Merge**：PR #27 的 base 停在 `5fc3bf6`，而 main 已前进到
+`05f8e8f`（两次文档提交）。直接合并会造出不必要的 merge commit；`cherry-pick -x 4e91c48`
+只取那一个提交（`package.json` + 锁），并保留 `-x` 溯源行与原作者，PR 侧由 Dependabot 自行关闭。
+
+### 11 项更新与风险分级
+
+| 包 | 变更 | 何时生效 | 风险 |
+|---|---|---|---|
+| `@sentry/nextjs` | ^11.0.0 → **^11.7.0** | 生产运行时（instrumentation） | 唯一进产物的一项 ⇒ 靠 CI 的 next build + 生产 health |
+| `@swc/core` | ^1.16.2 → **^1.16.18** | jest transform | 靠 CI 的 Jest job |
+| `playwright` / `@playwright/test` | ^1.63.0 → **^1.64.0** | E2E | CI 的 E2E job 会 `playwright install --with-deps chromium`，浏览器自动匹配 |
+| `@opennextjs/cloudflare` | 1.20.6 → **1.20.11** | 仅 `cf:*` 脚本 | 本项目部署在 Netlify，CI/Netlify 均不调用 |
+| `wrangler` | ^4.141.0 → **4.151.0** | 仅 `cf-typegen` | 同上 |
+| `openai` · `dotenv` · `supertest` · `@types/ws` · `@types/node` | 各自 minor/patch | 工具链/测试 | 无运行时暴露面 |
+
+### 验证（合并后重跑，不是复用合并前结论）
+
+| 项 | 结果 |
+|---|---|
+| 重算锁 | `npm install --package-lock-only --ignore-scripts` ⇒ **up to date in 2m**（32+/54−，仅元数据与去重，无版本漂移） |
+| **16 条 overrides 复检** | **全部仍生效且单份等于钉版** —— `ws 8.22.0` · `nodemailer 10.1.2` · `proxy-addr 2.0.8` · `websocket-driver 0.7.5` · `protobufjs 7.6.5` · `fast-uri 3.1.8` · `form-data 4.0.6` · `hono 4.13.13` · `ip-address 10.7.4` · `socket.io-parser 4.2.7` · `source-map-js 1.2.2` · `browserslist 4.29.3` · `engine.io 6.6.11` · `@grpc/grpc-js 1.14.6` · `@fastify/busboy 3.2.3` · `@modelcontextprotocol/sdk 1.32.1`。**无 `EOVERRIDE`、无回退** |
+| 审计 | `high 0 / critical 0`，moderate 4 / low 2 —— 与并入前**逐项一致**；`prod 608 → 632`（Sentry 11.7 新增依赖）、`total 1660` |
+| 门禁 | `check:deps` **0 新增 / exit 0** · `verify:check:deps` **8/8** |
+| CI | run `39025021586`（`7d42f25`）→ **11 job：9 success + 2 skipped / 0 失败**（含 Build / Jest / E2E / Typecheck / Lint 棘轮 / Dep audit） |
+| 发版 | Netlify deploy `6ad34dc8b568` ← `7d42f25`，`state=ready` |
+| 生产复验 | `/api/health` **200 ×2**（5.51s / 1.36s，`redis.backend=upstash`）· `verify:released:surface` **6/6 + 对照 2/2** · `verify-public-origin` **13/0** · 限流：MCP `429×10`（11.0s）/ A2A `429×10`（9.8s） |
+
+### 副作用（已核实，不处理）
+
+`dotenv` 在锁里出现 3 份：根 `18.0.7` + `@sentry/bundler-plugins` 与 `c12` 各自嵌套 `17.4.2`。
+两条嵌套都在**构建期工具链**里（前者要求 `^17.4.2`、后者 `^17.3.1`），不进 Next 产物，
+且 dotenv 无已知高危 ⇒ 不为它新增 override（避免把「临时钉版」越堆越多）。
 
 ---
 

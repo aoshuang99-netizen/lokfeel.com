@@ -197,6 +197,7 @@ firebase   @firebase/firestore   @firebase/firestore-compat
 |---|---|
 | 2026-10-16 | 首版。28 条生产可达高危全部登记（18 + 1 + 3 + 1 + 5 五组）；配套棘轮门禁上线；`next` 16.4.2 升级列为第一优先跟办 |
 | 2026-10-17 | **28 条清零**：同大版本升级 6 项 + 定向 overrides 16 条；`frozen`/`exemptions` 置空；自证从 6 条扩到 8 条并修掉「快照为空即静默跳过」的假绿（§7）。同日 CI 全绿（`5fc3bf6`）→ 发版 `6ad3405dbb50` → 生产复验通过 |
+| 2026-10-17 | **并入 Dependabot #27**（11 项 minor/patch，`cherry-pick -x` + 重算锁）：16 条 overrides 全部仍生效、审计 `high 0 / critical 0` 未变；CI `39025021586` 全绿 → 发版 `6ad34dc8b568` → 生产复验 6/6 + 13/0 + 限流 429×10。记录见 `BACKLOG.md` §7septies |
 
 ---
 
@@ -259,6 +260,7 @@ node scripts/ci/dependency-ratchet.mjs --report=/tmp/audit-after.json           
 | 项 | 结果 |
 |---|---|
 | 锁文件审计 | `high 0 / critical 0`；`prod 608`、`total 1749` 依赖被真实计入（**不是空跑**） |
+| 并入 Dependabot #27 后 | 同上口径重跑：`high 0 / critical 0`，moderate 4 / low 2 **逐项未变**；`prod 632`（+24，来自 `@sentry/nextjs@11.7.0` 的新依赖）、`total 1660` |
 | 逐包核对锁文件 | 每条高危包在 `package-lock.json` 中**只剩一个版本**且在修复区间外 |
 | `check:deps` 门禁 | 通过：`冻结基线 0 条`、`无新增生产高危`、`exit 0` |
 | `verify:check:deps` 自证 | **8/8**，含新增的合成基线四连与前置断言 |

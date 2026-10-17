@@ -87,6 +87,8 @@
 | 最新 CI run（依赖升级后） | ✅ **`39021438953`（commit `5fc3bf6`）→ success** —— **11 job：9 success + 2 skipped / 0 失败**；Build 2m22s · Jest 1m20s · Typecheck 1m33s · E2E 2m27s · Migration 1m07s · Dependency audit 1m05s · Lint 棘轮 1m19s |
 | 依赖升级后的发版 | Netlify deploy `6ad3405dbb509383d7f55ecf` ← `5fc3bf6`，`state=ready`；生产 `/api/health` **200 ×2**（`redis.backend=upstash`、`degraded:false`） |
 | 发版后生产复验 | `verify:released:surface` **6/6 + 对照 2/2** · `verify-public-origin` **13 通过 / 0 失败**（0 处部署域名泄漏）· 限流并发探针：MCP `200×120 + 429×10`、A2A `401×120 + 429×10`，`RateLimit-Backend: upstash` |
+| 最新 CI run（并入 Dependabot #27 后） | ✅ **`39025021586`（commit `7d42f25`）→ success** —— 11 job：9 success + 2 skipped / 0 失败（`@sentry/nextjs` 11.7 / `@swc/core` 1.16.18 / `playwright` 1.64 全部通过 Build · Jest · E2E） |
+| 并入 #27 后的发版与复验 | Netlify deploy `6ad34dc8b568` ← `7d42f25`，`state=ready`；`/api/health` **200 ×2** · 发版面 **6/6 + 2/2** · `verify-public-origin` **13/0** · 限流 MCP/A2A 各 `429×10` |
 | 全仓 lint 债 | **1542 problems** / 1019 文件（改造前 1565；净 −23，且已冻结为棘轮基线） |
 | 生产可达依赖高危 | **high 0 / critical 0**（2026-10-17 升级批次前为 high 26 / critical 2）—— 见 `DEPENDENCY_RISK.md` §7 |
 | 性能基线 | 本地构建产物三档并发（1/10/50）· 每档 10s × 3 次取中位数 · **48/48 SLO 断言通过** · 错误率 **0.00%**；宿主 `Intel Core m3-7Y32 @ 1.10GHz`（4 核 / 8GB）—— 见 `PERFORMANCE_BASELINE.md` |
@@ -339,7 +341,7 @@ overrides 16 条」，**没有**采用 `npm audit fix --force` 的 162 包主版
 | **生产 qa 账号缺失** | ✅ 已重建 | 根因 = **生产库 `qa.*` 0 行 + `Membership` 0**（`qa:probe:login` 定性为「库中不存在」，**不是密码过期**）⇒ 端点回业务 401 `Invalid email or password`，**不是代码回归**。经授权 `create-qa-accounts.mjs` 重建 2 账号 + 新增 `grant-qa-org.mjs` 建成员关系（角色 **OPERATOR**，**非 ADMIN** —— 保住 AC-08「能跑不能批」）。⚠️ 生产写入已于 **2026-10-17 清理完毕**：`cleanup-qa-accounts.mjs --apply` 删 2 个 User，级联 Profile ×2 / Subscription ×1 / Membership ×2；前后计数精确对账（`qa.*` 残留 0）。**副作用**：`org_default` 现无成员 ⇒ 再次跑生产侧授权复验前需重建账号 |
 | **TURN 中继** | ✅ 已激活 | 生产 `source=cloudflare-realtime`，回滚 `npm run turn:rollback`；国内用户连境外 CF 节点 |
 | **AC-24 涉及的 e2e 环节** | ✅ 已纳入 | CI 新增 e2e job（构建产物浏览器冒烟）。原 `tests/e2e/**` 仍打生产站，**不**入 CI |
-| **生产依赖高危 28 条** | ✅ 已清零 | 2026-10-17 依赖升级批次：`high 26 + critical 2` → **`0 / 0`**（余 2 low + 4 moderate）。同大版本升级 6 项 + 定向 overrides 16 条；`frozen`/`exemptions` 置空。见 `DEPENDENCY_RISK.md` §7、`BACKLOG.md` §7sexies |
+| **生产依赖高危 28 条** | ✅ 已清零 | 2026-10-17 依赖升级批次：`high 26 + critical 2` → **`0 / 0`**（余 2 low + 4 moderate）。同大版本升级 6 项 + 定向 overrides 16 条；`frozen`/`exemptions` 置空。随后并入 Dependabot #27（11 项 minor/patch）并重跑门禁，审计仍 `0 / 0`、16 条 overrides 全部仍生效。见 `DEPENDENCY_RISK.md` §7、`BACKLOG.md` §7sexies / §7septies |
 | **11 表 `organizationId` 未建模** | 🟡 | `prisma db push` 会删这 11 列（租户归属丢失）。CI 已加安全断言；`reviewBy=2026-12-15` |
 | **迁移目录非建库路径** | 🟡 | `prisma migrate deploy` 在 sqlite 上从零建库必失败（首个迁移为 PG 专有 SQL）；`initial_migration.sql` 是空文件 |
 | **迁移脚本 `.env` 覆盖环境变量** | 🟡 | `.env` 优先级高于进程环境变量 ⇒ 裸跑 `apply` 会打到生产库。CI 已加断言；脚本行为改动记入 BACKLOG |
