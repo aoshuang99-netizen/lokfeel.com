@@ -84,6 +84,9 @@
 | 最新 CI run（改造前） | `38848356361`（commit `4ceab89`）→ **failure**（Lint ❌ / Dependency audit ❌；其余 5 项 success） |
 | 最新 CI run（改造后） | ✅ **`38863968546`（commit `8016bb4`）→ success** —— 当时 9 个 job 全绿（整轮 2m49s），含**新增**的 Migration（67s）与 E2E（164s），`Build` 在移除 `continue-on-error` 后仍 success |
 | 最新 CI run（AC-24 后） | ✅ **`38868575737`（commit `7e76bc3`）→ success** —— **11 个 job 全绿**（整轮 **151s**）；新增的 **`Perf SLO 对账` 8s 通过**、**`Perf 基线实跑` 在 push 上 skipped**（仅 `workflow_dispatch`）—— 与「压测是取证不是门禁」的设计**逐条吻合** |
+| 最新 CI run（依赖升级后） | ✅ **`39021438953`（commit `5fc3bf6`）→ success** —— **11 job：9 success + 2 skipped / 0 失败**；Build 2m22s · Jest 1m20s · Typecheck 1m33s · E2E 2m27s · Migration 1m07s · Dependency audit 1m05s · Lint 棘轮 1m19s |
+| 依赖升级后的发版 | Netlify deploy `6ad3405dbb509383d7f55ecf` ← `5fc3bf6`，`state=ready`；生产 `/api/health` **200 ×2**（`redis.backend=upstash`、`degraded:false`） |
+| 发版后生产复验 | `verify:released:surface` **6/6 + 对照 2/2** · `verify-public-origin` **13 通过 / 0 失败**（0 处部署域名泄漏）· 限流并发探针：MCP `200×120 + 429×10`、A2A `401×120 + 429×10`，`RateLimit-Backend: upstash` |
 | 全仓 lint 债 | **1542 problems** / 1019 文件（改造前 1565；净 −23，且已冻结为棘轮基线） |
 | 生产可达依赖高危 | **high 0 / critical 0**（2026-10-17 升级批次前为 high 26 / critical 2）—— 见 `DEPENDENCY_RISK.md` §7 |
 | 性能基线 | 本地构建产物三档并发（1/10/50）· 每档 10s × 3 次取中位数 · **48/48 SLO 断言通过** · 错误率 **0.00%**；宿主 `Intel Core m3-7Y32 @ 1.10GHz`（4 核 / 8GB）—— 见 `PERFORMANCE_BASELINE.md` |

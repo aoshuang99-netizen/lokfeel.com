@@ -976,10 +976,17 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
 | `check:deps` | 通过：基线 0 条、无新增、exit 0 |
 | `verify:check:deps` | **8/8** |
 | 全量回归 | **由 CI 承担**：tsc · lint 棘轮 · jest · **next build** · migration · e2e · dependency audit |
+| CI 实测 | run [`39021438953`]（`5fc3bf6`）**11 job：9 success + 2 skipped / 0 失败** —— Build 2m22s · Jest 1m20s · Typecheck 1m33s · E2E 2m27s · Migration 1m07s · Dependency audit 1m05s · Lint 棘轮 1m19s 全部 success |
+| 发版 | Netlify deploy `6ad3405dbb509383d7f55ecf` ← `5fc3bf6`，`state=ready` |
+| 生产健康 | `/api/health` **200 ×2**（4.24s / 1.56s），`redis.backend=upstash`、`degraded:false`、`degradeCount:0` |
+| 发版面 | `verify:released:surface` **6/6 + 对照 2/2**，exit 0 |
+| 公开域名 | `verify-public-origin` **13 通过 / 0 失败**，0 处部署专用域名泄漏 |
+| 限流回归 | 升级后复跑并发探针：对照 `404×117 + 429×10` · **MCP `200×120 + 429×10`（9.9s）** · **A2A `401×120 + 429×10`（9.7s）**；响应头 `RateLimit-Limit:120` / `Remaining:0` / `Retry-After:7` / **`Backend:upstash`** |
 
 **如实记录的环境限制**：本地 `npm install` 无法完成 —— 沙箱拒绝 unlink `node_modules`、
 单条命令约 20 分钟被 broker 掐断、机器 load 常驻 45。因此本地只做到「锁文件级验证」，
-**不拿半装的树冒充绿色**，全量判定交给 CI。
+**不拿半装的树冒充绿色**，全量判定交给 CI。同理，本批次所有「运行时正确性」结论的
+依据都是 **CI 的 next build + jest + e2e** 与**生产实测**，不是本地跑出来的。
 
 ### 残留
 

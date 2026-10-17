@@ -196,7 +196,7 @@ firebase   @firebase/firestore   @firebase/firestore-compat
 | 日期 | 变更 |
 |---|---|
 | 2026-10-16 | 首版。28 条生产可达高危全部登记（18 + 1 + 3 + 1 + 5 五组）；配套棘轮门禁上线；`next` 16.4.2 升级列为第一优先跟办 |
-| 2026-10-17 | **28 条清零**：同大版本升级 6 项 + 定向 overrides 16 条；`frozen`/`exemptions` 置空；自证从 6 条扩到 8 条并修掉「快照为空即静默跳过」的假绿（§7） |
+| 2026-10-17 | **28 条清零**：同大版本升级 6 项 + 定向 overrides 16 条；`frozen`/`exemptions` 置空；自证从 6 条扩到 8 条并修掉「快照为空即静默跳过」的假绿（§7）。同日 CI 全绿（`5fc3bf6`）→ 发版 `6ad3405dbb50` → 生产复验通过 |
 
 ---
 
@@ -264,6 +264,14 @@ node scripts/ci/dependency-ratchet.mjs --report=/tmp/audit-after.json           
 | `verify:check:deps` 自证 | **8/8**，含新增的合成基线四连与前置断言 |
 | 变异验证 | 合成基线置空 ⇒ 3 条判红、`exit 1`（证明新断言非空跑） |
 | **全量回归** | **由 CI 承担**：Typecheck(tsc) · Lint 棘轮 · Jest · **Build(next build)** · Migration · E2E(Playwright 冒烟) · Dependency audit。⚠️ 本地 `npm install` 受环境限制无法完成（见下），故本地不产出「已全量回归」的结论 |
+| **CI 实测** | run `39021438953`（`5fc3bf6`）→ **11 job：9 success + 2 skipped / 0 失败**。Build 2m22s · Jest 1m20s · Typecheck 1m33s · E2E 2m27s · Migration 1m07s · Dependency audit 1m05s · Lint 棘轮 1m19s |
+| **发版** | Netlify deploy `6ad3405dbb509383d7f55ecf` ← `5fc3bf6`，`state=ready` |
+| **生产健康** | `/api/health` 200 ×2（4.24s / 1.56s），`redis.backend=upstash`、`degraded:false`、`degradeCount:0` |
+| **发版后复验** | `verify:released:surface` 6/6 + 对照 2/2（exit 0）· `verify-public-origin` **13 通过 / 0 失败**（0 处部署域名泄漏）· 限流并发探针 MCP `200×120 + 429×10`、A2A `401×120 + 429×10`，`RateLimit-Backend: upstash` |
+
+> 为什么还要跑一遍限流探针：`next` 16.3.6 → 16.4.2 与 `proxy-addr`/`ws` 的 override 都可能影响
+> 中间件取 IP 与连接行为，而限流正是**按 IP 计数**的。升级后实测 429 仍在第 121 次触发、
+> 桶仍互相独立、`Backend` 仍为 `upstash` ⇒ 这条依赖升级没有把上一轮的限流修复打回去。
 
 **本地安装为什么没跑完（如实记录）**：三条限制叠加 ——
 ① 沙箱策略**拒绝删除** `node_modules` 内的既有路径（npm reify 必须删旧），
