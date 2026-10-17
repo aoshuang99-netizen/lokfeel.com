@@ -1,3 +1,5 @@
+import type Stripe from "stripe";
+
 /**
  * Stripe API 版本 —— 单点定义。
  *
@@ -11,7 +13,16 @@
  *
  * 因此：**所有** Stripe 客户端都必须显式传入本常量，禁止裸 `new Stripe(key)`。
  *
+ * 关于下面这行断言：
+ *   SDK 把 `StripeConfig.apiVersion` 声明为 `LatestApiVersion`——**只接受当前包内置的
+ *   最新版本字面量**（23.0.0 里就是 `"2026-09-30.endive"`），所以钉一个旧版本必然过不了
+ *   类型检查。官方 JSDoc 对此的说明是「可以传入其他版本，并在此处抑制类型检查」。
+ *   这里用一次显式断言而不是 `@ts-expect-error`：后者在将来 SDK 放宽类型时会变成
+ *   「未使用的抑制指令」而报错，与我们「停在 dahlia」的意图无关。
+ *
  * 迁移到 `2026-09-30.endive` 是一次独立的、需要真实 Stripe 环境验证的变更
  * （支付/退款/订阅/Webhook 全链路），不与依赖升级混在一起做。
  */
-export const STRIPE_API_VERSION = "2026-08-26.dahlia" as const;
+type PinnedApiVersion = NonNullable<Stripe.StripeConfig["apiVersion"]>;
+
+export const STRIPE_API_VERSION = "2026-08-26.dahlia" as unknown as PinnedApiVersion;
