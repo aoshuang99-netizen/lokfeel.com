@@ -17,15 +17,32 @@
  *   若对照一次 429 都没出现 ⇒ 本次取证**不合格**，脚本判失败并明确说「无法结论」，
  *   而不是含糊地报「没有限流」。
  *
- * ── 顺带暴露的既有缺陷 ──────────────────────────────────────────────
- *   `src/lib/rate-limit.ts` 的取键是 `options.key ? options.key(request) : ip`，
- *   而本仓三处调用**都没传 `key`** ⇒ 三个互不相关的功能**共用同一个 per-IP 桶**
- *   （`ratelimit:<ip>`），且**窗口长短由最先创建该条目的那次请求决定**。
- *   这是**代码级**结论；运行期复现需要「同一 IP 同时使用两个功能的已登录会话」，
- *   本次未实测 —— 报告中如实标注为「未实测」，见 PERFORMANCE_BASELINE.md §5。
+ * ── 状态：缺口已修（2026-10-17）⇒ 本脚本转为**回归判据** ──────────────
+ *   修复内容：① `src/lib/rate-limit.ts` 的桶键改为 `ratelimit:<name>:<rateKey>`，
+ *   `name` **必填**且同名不同额度在注册期抛错（原先三处调用共用一个 per-IP 桶，
+ *   窗口长短由先建条目者决定）；② `/api/mcp` 与 `/api/v1/a2a/tasks` 各接一个
+ *   120 次/分钟/IP 的独立桶（原先**完全没有限流**）。
+ *
+ *   因此现在的判定**反过来了**：打到超过额度却**看不到 429** 才是问题（限流被摘掉）。
+ *   需要对旧构建复现历史结论时用 `--expect=gap`。
+ *
+ *   历史记录（2026-10-16 实测，修复前）：对照端点 130 次恰好 10 次 429；
+ *   MCP / A2A 各 200 次**零 429** —— 那时这条缺口是被**证实**过的，不是形容词。
+ *   取证快照见 `docs/implementation/perf-rate-limit.json`（保留为修复前状态）。
+ *
+ * ── 阳性对照（否则结论无意义）──────────────────────────────────────
+ *   如果我只是「打 200 次 MCP，没看到 429，所以没有限流」—— 这个推理有洞：
+ *   万一是**我的探针看不出来 429**（比如服务根本没起、或全部返回 503）呢？
+ *   所以先打一个**已知有限流**的端点做对照：
+ *       `GET /api/v1/public/missions/<token>`
+ *       其限流为「每 IP 每 5 分钟 120 次」，且**在任何其它工作之前**执行
+ *       （见该 route 的注释：「限流在**任何**工作之前，否则攻击者可无限探测形状」）。
+ *   若对照出现了 429 ⇒ 探针**有能力**看见 429 ⇒ 后续的判定才有说服力。
+ *   若对照一次 429 都没出现 ⇒ 本次取证**不合格**，脚本判失败并明确说「无法结论」。
  *
  * 用法：
  *   node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 [--n=200] [--out=<json>]
+ *   node scripts/perf/rate-limit-probe.mjs --expect=gap     # 对修复前的构建复现历史结论
  */
 
 const args = {}
@@ -54,7 +71,7 @@ const targets = [
   },
   {
     key: 'mcp-discovery',
-    role: '缺口候选（MCP 发现面，无需会话）',
+    role: '回归判据（MCP 限流：120 / 1min / IP，桶 mcp:rpc）',
     method: 'POST',
     path: '/api/mcp',
     headers: { 'content-type': 'application/json' },
@@ -63,7 +80,7 @@ const targets = [
   },
   {
     key: 'a2a-tasks',
-    role: '缺口候选（A2A 任务端点）',
+    role: '回归判据（A2A 限流：120 / 1min / IP，桶 a2a:task）',
     method: 'POST',
     path: '/api/v1/a2a/tasks',
     headers: { 'content-type': 'application/json' },
@@ -132,12 +149,26 @@ async function main() {
     console.log('')
     console.log(`   MCP 发现面：${mcp.requests} 次请求，429 = ${mcp.rateLimited}`)
     console.log(`   A2A 任务面：${a2a.requests} 次请求，429 = ${a2a.rateLimited}`)
-    if (mcp.rateLimited === 0 && a2a.rateLimited === 0) {
-      console.log('\n   ⇒ **缺口确认**：两者在同等请求量下**零限流**，与对照端点形成明确反差。')
+
+    const expectGap = args.expect === 'gap'
+    const bothLimited = mcp.rateLimited > 0 && a2a.rateLimited > 0
+
+    if (expectGap) {
+      // 对**修复前**的构建复现历史结论
+      if (mcp.rateLimited === 0 && a2a.rateLimited === 0) {
+        console.log('\n   ⇒ **缺口确认**（--expect=gap）：两者在同等请求量下**零限流**，与对照端点形成明确反差。')
+      } else {
+        console.log('\n   ⇒ 与 --expect=gap 不符：已观察到 429，该构建看起来已包含限流修复。')
+        process.exitCode = 1
+      }
+    } else if (bothLimited) {
+      console.log('\n   ⇒ ✅ 限流已生效（2026-10-17 修复）：两者在超过额度后均返回 429，')
+      console.log('      且与对照端点**各自独立**计数（对照刷了 130 次也没有把 MCP/A2A 提前打满）。')
     } else {
-      console.log('\n   ⇒ 观察到限流已生效（429 > 0）—— 缺口可能已被修复，请复核文档。')
+      console.log('\n   🔴 **回归**：修复后 MCP / A2A 必须出现 429，实测至少一方为 0。')
+      console.log('      可能原因：限流器未接线、被摘掉、或桶键又退回共用（检查 rate-limit.ts 的 name）。')
+      process.exitCode = 1
     }
-    process.exitCode = 0
   }
 
   const doc = {

@@ -23,7 +23,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { isShareTokenShaped, joinMission, parseJoin } from '@/lib/connection'
 
 /** 加入限流：每用户每 5 分钟 30 次。 */
-const joinLimit = rateLimit({ windowMs: 5 * 60 * 1000, max: 30 })
+const joinLimit = rateLimit({ name: 'public:mission-join', windowMs: 5 * 60 * 1000, max: 30 })
 
 function noStore<T extends NextResponse>(res: T): T {
   res.headers.set('Cache-Control', 'no-store')
@@ -41,13 +41,10 @@ export async function POST(
     const { token = '' } = (await context.params) ?? {}
 
     // ② 限流（按用户，而非 IP —— 已登录账号可换 IP 绕过 IP 限流）。
-    //    这里构造一个最小的 Request 只为复用 `rateLimit` 的取键约定
-    //    （它默认取 `x-forwarded-for` 的第一段），避免另起一套计数实现。
-    const verdict = await joinLimit(
-      new Request('http://internal/join', {
-        headers: { 'x-forwarded-for': `u:${user.id}` },
-      })
-    )
+    //    取键用显式的 `keyOverride`：早先是伪造一个带 `x-forwarded-for: u:<id>`
+    //    的假 Request 去复用「默认取 IP」的约定 —— 能用，但把「这是谁」的语义
+    //    藏在请求头里，读代码的人无法从调用点看出按什么计数。
+    const verdict = await joinLimit(req, `u:${user.id}`)
     if (!verdict.success) {
       const res = rateLimited('Too many join attempts. Please try again later.')
       res.headers.set(

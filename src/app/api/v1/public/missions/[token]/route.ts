@@ -19,15 +19,10 @@ import { rateLimit } from '@/lib/rate-limit'
 import { getSharePageData, isShareTokenShaped } from '@/lib/connection'
 
 /** 预览限流：每 IP 每 5 分钟 120 次（正常访客远达不到；爬虫会被挡住）。 */
-const previewLimit = rateLimit({ windowMs: 5 * 60 * 1000, max: 120 })
+const previewLimit = rateLimit({ name: 'public:mission-preview', windowMs: 5 * 60 * 1000, max: 120 })
 
-function clientIp(req: NextRequest): string {
-  return (
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'unknown'
-  )
-}
+// 取 IP 的实现已收敛到 `@/lib/rate-limit` 的 `clientIpOf()`（单测覆盖）。
+// 本文件此前自带一份 `clientIp()` 但从未被调用（2026-10-17 清理）。
 
 function noStore<T extends NextResponse>(res: T): T {
   res.headers.set('Cache-Control', 'no-store')

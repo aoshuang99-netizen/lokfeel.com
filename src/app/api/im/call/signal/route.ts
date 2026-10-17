@@ -39,7 +39,7 @@ export const dynamic = 'force-dynamic';
  * 限流：ICE 候选在一次通话里可能连发几十条，故额度按「每分钟 300 次」给，
  * 只用于拦住脚本化滥用，不干扰正常通话。
  */
-const callSignalLimiter = rateLimit({ windowMs: 60_000, max: 300 });
+const callSignalLimiter = rateLimit({ name: 'im:call-signal', windowMs: 60_000, max: 300 });
 
 /** 找到两人之间的会话（`Conversation` 对 userAId/userBId 有唯一约束且顺序固定）。 */
 async function findConversationBetween(a: string, b: string) {

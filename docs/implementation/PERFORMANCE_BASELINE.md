@@ -141,9 +141,16 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3199/api/health   # �
 
 ---
 
-## 5. T11 交接项：MCP / A2A 的速率限制缺口 —— **已证实**
+## 5. T11 交接项：MCP / A2A 的速率限制缺口 —— **已证实 → 已修复**
 
-### 5.1 结论：**无速率限制，且带阳性对照**
+> **状态（2026-10-17）**：本节是**修复前**的取证与定性，**保留原样作为证据**，不要按现状阅读。
+> 修复内容见 `BACKLOG.md` §7quinquies：① 桶键改 `ratelimit:<name>:<rateKey>`、`name` 必填且同名不同额度注册期抛错；
+> ② `/api/mcp` 与 `/api/v1/a2a/tasks` 各接 120 次/分钟/IP 的独立桶。
+> `scripts/perf/rate-limit-probe.mjs` 的判定已**反转**：现在「打到超额度却看不到 429」才判失败；
+> 需要对旧构建复现本节结论时加 `--expect=gap`。
+> `perf-rate-limit.json` 是修复前的快照，**故意不重新生成**（否则历史证据被覆盖）。
+
+### 5.1 结论：**无速率限制，且带阳性对照**（修复前）
 
 取证脚本 `scripts/perf/rate-limit-probe.mjs`（`docs/implementation/perf-rate-limit.json`）：
 
@@ -160,7 +167,7 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3199/api/health   # �
 脚本把这条纪律写死为**硬判据**：若对照端点一次 429 都没出现，脚本**判失败并声明「本次取证不合格，不能结论」**，
 而不是含糊地报一句「没有限流」。
 
-### 5.2 🔴 顺带发现的**新缺陷**：三个限流器**共用一个 per-IP 桶**
+### 5.2 🔴 顺带发现的**新缺陷**：三个限流器**共用一个 per-IP 桶**（已修，见 §5 顶部状态）
 
 在核对「谁有限流、谁没有」时，读到了 `src/lib/rate-limit.ts` 的取键逻辑：
 
@@ -265,3 +272,4 @@ node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 --n=200 \
 |---|---|
 | 2026-10-16 | **AC-24 首次执行**：定义 SLO（`slo.json`，两档三层共 9 条规则）；新建零依赖压测器 `load-baseline.mjs`（含 `--repeats` 中位数聚合与原始值保留）与限流取证器 `rate-limit-probe.mjs`；实测本地构建产物三档并发，留存基线 `perf-baseline.json`（48/48 断言通过）；证实 MCP/A2A **无速率限制**（带阳性对照，对照端点恰好 10 次 429）；顺带发现并登记限流器**共用 per-IP 桶**缺陷（代码级，运行期未实测）；CI 新增确定性 `slo-check` job 与仅手动的 `perf-baseline` job。 |
 | 2026-10-16 | **CI 实证回填**：CI run `38868575737`（`7e76bc3`）→ **success**（整轮 151s，11 job 全绿）。新增的 `Perf SLO 对账` **8s 通过**、`Perf 基线实跑` 在 push 上 **skipped** —— 与 §6 的设计一致。`verify:no-release:surface` 仍成立（5 条 404 + 3/3 正向对照）。<br>（后注：该命令已随后续发版被 `verify:released:surface` 取代 —— 原探针断言"仍未发版"，发版后失效；见 `RELEASE_T09-T12.md`。） |
+| 2026-10-17 | **§5 两项缺口已修**（见 `BACKLOG.md` §7quinquies）：① 桶键改 `ratelimit:<name>:<rateKey>`，`name` 必填 + 同名不同额度注册期抛错；② `/api/mcp`、`/api/v1/a2a/tasks` 各接 120 次/分钟/IP 独立桶。③ 顺带修掉内存回落路径 `incr` 不认过期 ⇒ **键被永久封禁**（由「窗口重置」单测抓出，真实 Upstash 无此问题）。`rate-limit-probe.mjs` 判定**反转**为回归判据（超额度却无 429 才判失败），`--expect=gap` 可对旧构建复现历史结论。**§5.1 / §5.2 与 `perf-rate-limit.json` 保留为修复前证据，不重新生成。** |

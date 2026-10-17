@@ -31,6 +31,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveTenant, type TenantContext } from '@/lib/tenancy'
 import { can } from '@/lib/tenancy/capabilities'
 import { ApiError } from '@/lib/errors'
+import { rateLimit, retryAfterSeconds } from '@/lib/rate-limit'
 import { INTEROP_TOOL_NAMES, publicToolList, toolByName } from '@/lib/interop/tools'
 
 const PROTOCOL_VERSION = '2025-06-18'
@@ -57,6 +58,22 @@ function toolContent(id: JsonRpcId, text: string, isError: boolean) {
 // ── 路由 ───────────────────────────────────────────────────────────
 export const dynamic = 'force-dynamic'
 
+/**
+ * 限流（2026-10-17 补）。
+ *
+ * 早先本端点**完全没有限流** —— AC-24 用阳性对照实测过：对照端点（120/5min）
+ * 在 130 次请求下恰好出现 10 次 429，而 MCP 打 200 次是**零 429**。
+ * 这是**公开可达**的机器接口（`initialize` / `tools/list` 不需会话），
+ * 没有限流就等于把「发现面」敞开给脚本刷。
+ *
+ * 额度 120 次/分钟/IP = 2 req/s 持续速率。本项目工具都是短请求、一次任务
+ * 通常几个来回，正常的 Agent 交互远达不到；对批量集成则明显偏低 ——
+ * 这是**有意的**：真需要更高配额时应当显式调高并留下依据，而不是默认敞开。
+ *
+ * 桶名独立（`mcp:rpc`），不会与预览 / 信令 / A2A 互相吃额度。
+ */
+const mcpLimit = rateLimit({ name: 'mcp:rpc', windowMs: 60_000, max: 120 })
+
 /** Streamable HTTP 的 GET 用于 SSE 流；本项目工具都是短请求，不做流式。 */
 export async function GET() {
   return NextResponse.json(
@@ -66,6 +83,16 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // 限流在**解析 JSON 之前**：否则垃圾请求体仍会消耗 JSON 解析与日志开销。
+  // 429 用 JSON-RPC 错误信封（`id: null`，此时还没解析出 id）而不是裸文本 ——
+  // MCP 客户端按协议解析响应，形状不对会被当成传输故障而不是"被限流"。
+  const verdict = await mcpLimit(req)
+  if (!verdict.success) {
+    const res = rpcError(null, -32000, 'Too many requests: 请降低调用频率后重试', 429)
+    res.headers.set('Retry-After', String(retryAfterSeconds(verdict)))
+    return res
+  }
+
   let payload: unknown
   try {
     payload = await req.json()

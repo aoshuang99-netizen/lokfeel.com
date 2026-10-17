@@ -360,9 +360,17 @@ function createInMemoryFallback(): Redis {
       return count;
     },
     incr: async (key: string) => {
-      const current = parseInt(store.get(key)?.value || '0', 10);
+      // 🔴 与真实 Redis 对齐：**过期键视为不存在**（INCR 一个已过期的键应从 1 开始）。
+      // 早先这里直接 `store.get(key)?.value`，过期条目仍留在 Map 里 ⇒ 计数在旧值上继续累加，
+      // 而随后 `ttl()` 因 `isExpired` 返回 -2（"键不存在"）⇒ 调用方按"新建"处理、
+      // 重新 expire，于是计数永远超过上限：**该键被永久封禁**（要重启进程才恢复）。
+      // 受影响者不止限流：`api/auth/forgot-password` 用同一个模式计数。
+      // 用真实 Upstash 时无此问题（过期即删），所以这是一条**只在内存回落模式下**才现形的缺陷。
+      if (isExpired(key)) store.delete(key);
+      const entry = store.get(key);
+      const current = parseInt(entry?.value || '0', 10);
       const next = (Number.isNaN(current) ? 0 : current) + 1;
-      store.set(key, { value: String(next), expiresAt: store.get(key)?.expiresAt });
+      store.set(key, { value: String(next), expiresAt: entry?.expiresAt });
       return next;
     },
     expire: async (key: string, seconds: number) => {

@@ -328,7 +328,7 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 | **支付生产不可用** | ⛔ | 缺 `CREEM_API_KEY` / `WEBHOOK_SECRET` / 两个 `PRODUCT_ID`（用户明确排除） |
 | **真实邮件外发** | ⛔ | 缺 `RESEND_API_KEY`（接上即 `CAPTURED → SENT`，零代码改动） |
 | **Upstash Redis 环境变量** | ✅ 已补配 | #51 闭合（2026-10-16）：`qa:upstash:provision` 建库取凭据 → `qa:upstash:configure` 写 Netlify env 并**回读核对** → 部署 `6ad2201d899a`；生产 `GET /api/health` → `redis:{"backend":"upstash","configured":true,"degraded":false}`（2026-10-17 复验仍成立）；`check:redis` **17/17**（首个双后端验证）。⚠️ 免费档 **10k 命令/天** |
-| **生产 qa 账号缺失** | ✅ 已重建 | 根因 = **生产库 `qa.*` 0 行 + `Membership` 0**（`qa:probe:login` 定性为「库中不存在」，**不是密码过期**）⇒ 端点回业务 401 `Invalid email or password`，**不是代码回归**。经授权 `create-qa-accounts.mjs` 重建 2 账号 + 新增 `grant-qa-org.mjs` 建成员关系（角色 **OPERATOR**，**非 ADMIN** —— 保住 AC-08「能跑不能批」）。⚠️ 本轮**写入生产数据**：User +2 / Profile ×2 / Subscription ×1 / Membership +2；清理 `cleanup-qa-accounts.mjs --apply` |
+| **生产 qa 账号缺失** | ✅ 已重建 | 根因 = **生产库 `qa.*` 0 行 + `Membership` 0**（`qa:probe:login` 定性为「库中不存在」，**不是密码过期**）⇒ 端点回业务 401 `Invalid email or password`，**不是代码回归**。经授权 `create-qa-accounts.mjs` 重建 2 账号 + 新增 `grant-qa-org.mjs` 建成员关系（角色 **OPERATOR**，**非 ADMIN** —— 保住 AC-08「能跑不能批」）。⚠️ 生产写入已于 **2026-10-17 清理完毕**：`cleanup-qa-accounts.mjs --apply` 删 2 个 User，级联 Profile ×2 / Subscription ×1 / Membership ×2；前后计数精确对账（`qa.*` 残留 0）。**副作用**：`org_default` 现无成员 ⇒ 再次跑生产侧授权复验前需重建账号 |
 | **TURN 中继** | ✅ 已激活 | 生产 `source=cloudflare-realtime`，回滚 `npm run turn:rollback`；国内用户连境外 CF 节点 |
 | **AC-24 涉及的 e2e 环节** | ✅ 已纳入 | CI 新增 e2e job（构建产物浏览器冒烟）。原 `tests/e2e/**` 仍打生产站，**不**入 CI |
 | **生产依赖高危 28 条** | 🟡 | 已登记 + 棘轮阻断，**未升级**。升级批次见 `DEPENDENCY_RISK.md` §5 |
@@ -358,8 +358,8 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 | **隔离为应用级非 DB 级** | 🟡 中 | libSQL 无 RLS，跨租户隔离全靠应用层 | M6 迁 PG + RLS |
 | **发布窗口期 `request.url` = 部署专用域名** | 🟡 中 | 推 `main` 后约 20 分钟内函数拿到 `<deploy-id>--<site>.netlify.app` → 丢 cookie | 已修：一律经 `src/lib/http/public-origin.ts`；发版后立即复验（窗口期会自愈） |
 | **支付/邮件生产不可用** | 🟡 中 | 缺凭据 | 接凭据后零代码改动即可启用 |
-| **MCP/A2A 无速率限制** | 🟡 中 | 公开发现面无独立限流 —— **AC-24 已实测证实**（阳性对照下各 200 次零 429） | 已登记 `BACKLOG.md`；修复=为两个端点显式接线限流器 |
-| **限流器三处调用共用 per-IP 桶** | 🟡 中 | `previewLimit` 与 `callSignalLimiter` 共享 `ratelimit:<ip>`，窗口由先建条目者决定 ⇒ 跨功能干扰（**代码级结论，运行期未实测**） | 已登记 `BACKLOG.md`（P1）；修复=每个限流器显式传 `key` |
+| **MCP/A2A 无速率限制** | ✅ 已修 | 公开发现面原先无独立限流 —— **AC-24 已实测证实**（阳性对照下各 200 次零 429） | **2026-10-17 修复**：各接 120 次/分钟/IP 的独立桶（`mcp:rpc` / `a2a:task`），429 按各自协议信封返回（JSON-RPC `-32000` / `RESOURCE_EXHAUSTED`）+ `Retry-After`；见 `BACKLOG.md` §7quinquies |
+| **限流器三处调用共用 per-IP 桶** | ✅ 已修 | `previewLimit` 与 `callSignalLimiter` 共享 `ratelimit:<ip>`，窗口由先建条目者决定 ⇒ 跨功能干扰（**代码级结论，运行期未实测**） | **2026-10-17 修复**：桶键改 `ratelimit:<name>:<rateKey>`，`name` 必填、同名不同额度**注册期抛错**；另修内存回落路径 `incr` 不认过期导致**永久封禁**的缺陷（由「窗口重置」单测抓出） |
 | **生产性能未实测** | 🟡 中 | AC-24 基线为本地弱机（m3-7Y32）；生产跨境延迟 / 写路径 / 长连接**未测** | `PERFORMANCE_BASELINE.md §4` 已列全未测项；发版后可补生产侧观测 |
 | **CI lint/dep-audit 红** | 🟢 低 | 回归护栏不完整 | **已闭合**（AC-23，见 §4.2） |
 | **`ProposalDecision` 非追加式** | 🟢 低 | 审计可被覆盖（R7） | AC-10 合规评审一并处理 |

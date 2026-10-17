@@ -806,7 +806,7 @@ C2/C3 已在 `233669e` 应用到生产）。
    「**恒红的门禁比没有门禁更危险**」。压测是**取证动作**（`workflow_dispatch`），不是**门禁动作**；
    进 CI 的只有**确定性**的 SLO↔基线对账。
 
-**🔴 顺带发现的既有缺陷（本轮不修）**：
+**🔴 顺带发现的既有缺陷（2026-10-17 已修，见 §7quinquies）**：
 
 `src/lib/rate-limit.ts` 的取键是 `options.key ? options.key(request) : ip`，而本仓**三处调用都没传 `key`** ⇒
 `previewLimit`（120/5min，key=IP）与 `callSignalLimiter`（300/1min，key=IP）**共用同一个 `ratelimit:<ip>` 桶**，
@@ -815,15 +815,16 @@ C2/C3 已在 `233669e` 应用到生产）。
 - 信令先建条目（1 分钟窗）⇒ 预览的「5 分钟」实际只持续 1 分钟，**限流被削弱**。
 
 定性为**跨功能干扰**（非安全绕过）。**诚实边界**：运行期复现需「同一 IP 上同时使用两个功能的**已登录会话**」，
-本次**未做运行期实证**（仅代码级）。
-**不在本轮修**：改取键会改变生产流量的限流语义，应作**独立变更**带自己的测试与生产复验（同 AC-23 不改迁移脚本的理由）。
+本轮（AC-24 当时）**未做运行期实证**（仅代码级）。
+**当初判断"不在本轮修"的理由**：改取键会改变生产流量的限流语义，应作**独立变更**带自己的测试与生产复验
+（同 AC-23 不改迁移脚本的理由）—— 该独立变更已于 **2026-10-17** 落地，见 §7quinquies。
 
 **🔴 未完成（后续跟办）**：
 
-| # | 动作 | 优先级 |
-|---|---|---|
-| 1 | MCP / A2A 显式接线限流器（公开发现面无独立限流） | P1 |
-| 2 | 每个限流器显式传 `key`（如 `` key: (req) => `missions-preview:${clientIp(req)}` ``），消除共桶 | P1 |
+| # | 动作 | 优先级 | 状态 |
+|---|---|---|---|
+| 1 | MCP / A2A 显式接线限流器（公开发现面无独立限流） | P1 | ✅ **已修 2026-10-17**（各 120/min/IP，独立桶 `mcp:rpc` / `a2a:task`） |
+| 2 | 每个限流器显式传 `key`（如 `` key: (req) => `missions-preview:${clientIp(req)}` ``），消除共桶 | P1 | ✅ **已修 2026-10-17**（改为 `name` 必填 ⇒ 键 `ratelimit:<name>:<key>`；join 改用 `keyOverride` 按 userId） |
 | 3 | 发版后补**生产侧**观测（跨境 RTT / 冷启 / Turso 远端查询）—— 本基线**不可**外推为生产 SLA | P2 |
 | 4 | 压测生成器与服务器分离（消除共机 CPU 争用，让 c=50 档的饱和度可归因） | P2 |
 | 5 | `login` SSR 路径是本轮最重端点（c=1→50 放大 40 倍）—— 值得单独剖析（**不属 AC-24 修复范围**） | P3 |
@@ -859,7 +860,64 @@ C2/C3 已在 `233669e` 应用到生产）。
 **前置修复（已授权，写入了生产数据）**：生产原本 `qa.*` 账号 **0 行** + `Membership` **0** ⇒ 登录 401
 （`qa:probe:login` 定性为「**库中不存在**」，**不是密码过期**）。经授权用 `create-qa-accounts.mjs` 重建 +
 新增 `grant-qa-org.mjs` 建成员关系，角色取 **OPERATOR**（**不是 ADMIN**）—— 保住 AC-08「**能跑不能批**」的职责分离。
-清理可选：`node scripts/qa/cleanup-qa-accounts.mjs --apply`（已知写入：User +2 / Profile ×2 / Subscription ×1 / Membership +2）。
+清理：✅ **已于 2026-10-17 执行**（`cleanup-qa-accounts.mjs --apply`）—— 删除 2 个 QA User，级联清掉 Profile ×2 / Subscription ×1 / Membership ×2；
+删除前后逐表计数**精确对账**（User 12924→12922、Profile 11889→11887、Subscription 2226→2225、Membership 2→0、`qa.*` 残留 0）；
+备份两份（`.qa-cleanup-backup-*.json` 脚本自带 + `.qa-refs-backup-*.json` 补导 CASCADE 子表，后者已加入 `.gitignore`）。
+⚠️ **副作用**：`Membership` 归零 ⇒ `org_default` 目前**没有成员**；再要跑生产侧授权类复验（`verify:agent:connectivity:server`）需先重建账号 + `grant-qa-org.mjs`。
+
+---
+
+## 7quinquies. 限流桶隔离 + MCP/A2A 接线（2026-10-17）
+
+### 为什么是现在做，而不是"顺手改一下"
+
+缺陷本身早就在代码里（AC-24 时已定性），但它**在部署形态下不致命**：Next 把每条 route 打成独立 chunk，
+各有一份进程内 `Map`，看起来"各算各的"。**#51 把生产 Redis 换成 Upstash 之后，桶是跨进程共享的** ——
+同一 IP 打开一次分享预览，就会把信令 / 加入的额度一起吃掉。缺陷从"理论"变成"线上"，
+所以它是 #51 的**必修后续**，而不是可选项。
+
+### 改了什么
+
+| 项 | 改前 | 改后 |
+|---|---|---|
+| 桶键 | `ratelimit:<ip>`（三个限流器共用） | `ratelimit:<name>:<rateKey>` |
+| `name` | 无此参数 | **必填**，`^[a-z0-9][a-z0-9:_-]{0,63}$` |
+| 同名不同额度 | 无法表达（静默共用桶） | **注册期抛错**（把配置漂移变成启动期失败） |
+| 取键 | 只能 `key` 或伪造 `x-forwarded-for` | 新增 `keyOverride` 第二参数；join 改按 `u:<userId>` |
+| TTL | 仅 `current === 1` 时 expire ⇒ 那次失败则键**永不过期** | `ttl < 0` 即补 expire（覆盖"新建"与"TTL 丢失"） |
+| `/api/mcp` | **零限流** | `mcp:rpc` · 120 次/分钟/IP |
+| `/api/v1/a2a/tasks` | **零限流** | `a2a:task` · 120 次/分钟/IP |
+
+429 的两处形状**各自跟随本层协议**，不是裸文本：MCP 回 JSON-RPC `error.code = -32000`（`id: null`，此时尚未解析出 id），
+A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`，且**限流发生在解析请求体之前**
+（否则垃圾请求体仍会消耗解析与日志开销）。
+
+### 顺带修掉的第二个缺陷（内存回落路径，**由单测抓出**）
+
+`createInMemoryFallback().incr` 不检查过期：过期条目仍留在 Map 里 ⇒ 计数在旧值上继续累加，
+而紧接着 `ttl()` 因 `isExpired` 返回 **-2（"键不存在"）** ⇒ 调用方按"新建"处理、重新 expire ⇒
+`current` 永远大于上限 ⇒ **该键被永久封禁**（要重启进程才恢复）。
+
+用真实 Upstash 时不会出现（过期即删），所以它**只在内存回落模式下**现形 —— 而内存回落正是
+"Redis 挂了"时的兜底路径：**故障时把用户永久锁死，比限流失效更糟**。同一模式还被
+`api/auth/forgot-password` 使用（一并受益）。
+
+发现方式值得记一笔：**不是读代码看出来的**，是「窗口到期后额度应重置」这条用例红的 —— 那条用例
+先断言同一 IP 打满会 403，再推进 1.1s，要求重新放行。缺陷在第二步暴露。
+
+### 验证
+
+| 项 | 结果 |
+|---|---|
+| `npx jest tests/rate-limit.test.ts tests/mcp/mcp-route.test.ts tests/a2a/a2a-tasks.test.ts` | **3 套 / 51 例全绿** —— 含 10 例纯单元（桶隔离回归、同名冲突、参数校验、keyOverride、**窗口重置**、`retryAfterSeconds`、**后端必须是 memory** 的前置断言）+ 4 例路由级（第 121 次 429 的信封形状与 `Retry-After`、**垃圾请求体同样被限流而不是先 400**） |
+| 前置防呆 | 单测显式断言 `getRedisBackend() === 'memory'`：若 CI / 本机 shell 注入了 Upstash 变量，它会**先红**，而不是偷偷去生产库上计数（免费档 10k 命令/天） |
+| `tsc --noEmit` | exit 0 |
+| `scripts/perf/rate-limit-probe.mjs` | 判定**反转**：现在「超额度却看不到 429」判失败；对旧构建复现历史结论用 `--expect=gap` |
+
+**残留（如实列出）**：
+1. 额度是**全局静态值**（120/min/IP），没有按租户/套餐区分 —— 真实批量集成需要更高配额时只能改代码；若将来要做，应放进计划表而不是散在路由里。
+2. 限流仍按 **IP**（MCP/A2A 匿名发现面没有 userId 可取）；同一 NAT 后的多个真实用户共享一个桶。
+3. 桶名唯一性只在**单进程内**校验（`registeredBuckets`）。多进程部署下不同构建版本短暂共存时，旧版本仍用旧键，属于发布窗口期的正常过渡。
 
 ---
 

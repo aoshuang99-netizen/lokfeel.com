@@ -360,3 +360,58 @@ describe('MCP · tools/call 授权', () => {
     expect(JSON.parse(content[0].text)).toEqual([{ id: 'o-1' }])
   })
 })
+
+/**
+ * 限流（2026-10-17 补）。
+ *
+ * 这里**故意用独立 IP**：桶是 `mcp:rpc:<ip>`，若复用默认 'anonymous'，
+ * 本组把额度打满后，同文件后续用例会全部 429 —— 那是最容易被误读成
+ * "路由坏了"的假失败。
+ */
+describe('限流：120 次/分钟/IP', () => {
+  const IP = '198.51.100.201'
+
+  function limitedRpc() {
+    return POST(
+      new NextRequest('http://localhost:3000/api/mcp', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': IP },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+      }),
+    )
+  }
+
+  it('第 121 次被拒：429 + JSON-RPC 错误信封 + Retry-After', async () => {
+    let res = await limitedRpc()
+    for (let i = 1; i < 120; i++) res = await limitedRpc()
+    expect(res.status).toBe(200) // 第 120 次仍在额度内
+
+    const blocked = await limitedRpc()
+    expect(blocked.status).toBe(429)
+
+    // 形状必须仍是 JSON-RPC —— 裸文本会被客户端当成传输故障，而不是"被限流"
+    const body = JSON.parse(await blocked.text()) as {
+      jsonrpc: string
+      id: null
+      error: { code: number; message: string }
+      result?: unknown
+    }
+    expect(body.jsonrpc).toBe('2.0')
+    expect(body.id).toBeNull()
+    expect(body.error.code).toBe(-32000)
+    expect(body.result).toBeUndefined()
+    expect(Number(blocked.headers.get('retry-after'))).toBeGreaterThanOrEqual(1)
+  })
+
+  it('429 发生在解析请求体之前（垃圾请求体同样被限流，不会先 400）', async () => {
+    const res = await POST(
+      new NextRequest('http://localhost:3000/api/mcp', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': IP },
+        body: 'not-json',
+      }),
+    )
+    expect(res.status).toBe(429)
+  })
+})
+

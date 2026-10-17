@@ -158,3 +158,41 @@ describe('A2A · 执行', () => {
     expect(mockedResolve).toHaveBeenCalledWith({ organizationId: 'org-7' })
   })
 })
+
+/**
+ * 限流（2026-10-17 补）。用独立 IP，避免把同文件其它用例的桶打满。
+ * 桶名 `a2a:task` 与 MCP 的 `mcp:rpc` 分开 —— 一边被刷不该连坐另一边。
+ */
+describe('限流：120 次/分钟/IP', () => {
+  const IP = '198.51.100.202'
+
+  function limitedTask(body: string) {
+    return POST(
+      new NextRequest('http://localhost:3000/api/v1/a2a/tasks', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': IP },
+        body,
+      }),
+    )
+  }
+
+  it('第 121 次被拒：429 + 本层错误信封 + Retry-After', async () => {
+    const payload = JSON.stringify({ skillId: 'list_bridges', input: {} })
+    let res = await limitedTask(payload)
+    for (let i = 1; i < 120; i++) res = await limitedTask(payload)
+    expect(res.status).toBe(200)
+
+    const blocked = await limitedTask(payload)
+    expect(blocked.status).toBe(429)
+    const body = JSON.parse(await blocked.text()) as { error: { code: string; message: string } }
+    expect(body.error.code).toBe('RESOURCE_EXHAUSTED')
+    expect(body.task).toBeUndefined()
+    expect(Number(blocked.headers.get('retry-after'))).toBeGreaterThanOrEqual(1)
+  })
+
+  it('429 发生在解析请求体之前（垃圾请求体同样被限流，不会先 400）', async () => {
+    const res = await limitedTask('not-json')
+    expect(res.status).toBe(429)
+  })
+})
+

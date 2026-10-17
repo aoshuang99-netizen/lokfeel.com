@@ -29,9 +29,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveTenant } from '@/lib/tenancy'
 import { can } from '@/lib/tenancy/capabilities'
 import { ApiError } from '@/lib/errors'
+import { rateLimit, retryAfterSeconds } from '@/lib/rate-limit'
 import { INTEROP_TOOL_NAMES, toolByName } from '@/lib/interop/tools'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * 限流（2026-10-17 补）。与 MCP 同因同额度：本端点也是**公开可达**的机器接口，
+ * 早先零限流（AC-24 阳性对照实测：200 次请求零 429）。
+ * 桶名独立（`a2a:task`）—— 与 MCP 分开计数，否则一边被刷会连坐另一边。
+ */
+const a2aLimit = rateLimit({ name: 'a2a:task', windowMs: 60_000, max: 120 })
 
 type ArtifactPart = { type: 'data'; data: unknown } | { type: 'text'; text: string }
 
@@ -56,6 +64,14 @@ function fail(status: number, code: string, message: string) {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // 限流先于解析：见 MCP 路由同样的理由（429 用本层的错误信封）。
+  const verdict = await a2aLimit(req)
+  if (!verdict.success) {
+    const res = fail(429, 'RESOURCE_EXHAUSTED', 'Too many requests：请降低调用频率后重试')
+    res.headers.set('Retry-After', String(retryAfterSeconds(verdict)))
+    return res
+  }
+
   let body: unknown
   try {
     body = await req.json()
