@@ -938,6 +938,60 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
 
 ---
 
+## 7sexies. 依赖升级批次 · 生产高危清零（2026-10-17）
+
+**结论：生产可达 `26 high + 2 critical` → `0 / 0`**（余 2 low + 4 moderate，均不阻断）。
+完整施工记录见 `docs/implementation/DEPENDENCY_RISK.md` §7。
+
+### 为什么做
+
+`DEPENDENCY_RISK.md` §5 把「依赖升级批次」列为 **P0 第一优先** —— 它是 28 条生产高危的
+唯一真正出路；棘轮门禁只能「不让它变多」，不能「让它变少」。AC-23 收口后这是最后一项
+工程侧欠账。
+
+### 做了什么
+
+| 类别 | 内容 |
+|---|---|
+| 直接升级 6 项 | `next` 16.3.6→**16.4.2**（`eslint-config-next` 同步）· `sharp` →0.35.5 · `prisma` 族 →7.10.1 · `nodemailer` ^7→**^10.1.2** · `ws` →^8.22.0 · 移除 `@types/nodemailer`（v10 自带类型） |
+| 定向 overrides 16 条 | `proxy-addr`(critical) `websocket-driver`(critical) `@modelcontextprotocol/sdk` `@fastify/busboy` `@grpc/grpc-js` `protobufjs` `browserslist` `engine.io` `socket.io-parser` `ws` `fast-uri` `form-data` `hono` `ip-address` `source-map-js` `nodemailer` —— **全部同大版本**，不跨 major |
+| 连带效应 | `prisma@7.10.1` 自带 `deepmerge-ts@8.0.2` + `mysql2@3.24.4`；`next@16.4.2` 刷新 `postcss@8.5.23` |
+
+### 顺手修掉的一个假绿（值得单独记）
+
+依赖清零后，`verify:check:deps` 自证里的 ③–⑥ 四条被 `if (names.length > 0)` **静默跳过** ——
+`frozen` 空了，自证仍打印「全部通过」，实际只跑 2 条。这正是「空集上恒真」。
+
+- **修法**：③–⑥ 改用**合成基线**（`__selftest_pkg__` + 配套豁免），与真实快照解耦；
+  并新增前置断言「合成基线非空」。
+- **变异验证**：把合成基线置空 ⇒ `合成基线非空` / `缺豁免登记` / `豁免过期` **三条判红、exit 1**。
+- 自证条数 6 → **8**。
+
+### 验证
+
+| 项 | 结果 |
+|---|---|
+| 锁文件审计 | `npm audit --omit=dev --package-lock-only` ⇒ **high 0 / critical 0**；`prod 608`、`total 1749` 计入（非空跑） |
+| 逐包核对 | 每条高危包在 `package-lock.json` 里**只剩一个版本**且在修复区间外（`ws` 曾有 5 份、其中 2 份 8.18.3） |
+| `check:deps` | 通过：基线 0 条、无新增、exit 0 |
+| `verify:check:deps` | **8/8** |
+| 全量回归 | **由 CI 承担**：tsc · lint 棘轮 · jest · **next build** · migration · e2e · dependency audit |
+
+**如实记录的环境限制**：本地 `npm install` 无法完成 —— 沙箱拒绝 unlink `node_modules`、
+单条命令约 20 分钟被 broker 掐断、机器 load 常驻 45。因此本地只做到「锁文件级验证」，
+**不拿半装的树冒充绿色**，全量判定交给 CI。
+
+### 残留
+
+1. **16 条 overrides 是临时钉版**：父包追平后必须逐条删除，否则会长期压住上游版本。
+2. `next-auth@5.0.0-beta.32` 的 `peerOptional nodemailer` 仍写 `^7.0.7 || ^8.0.5`，
+   与实际 `10.1.2` 不符（npm 仅 warn）。**启用 next-auth 自带 Email provider 前必须复核** ——
+   我们自己只用 `src/lib/email.ts` 的 `createTransport`/`sendMail`，不走它的 provider。
+3. 剩余 6 条 moderate/low（`qs` / `uuid` / `gaxios` / `@hono/node-server` / `body-parser` / `@babel/core`）。
+4. 未升 `firebase` 12→13（major）与 `next-auth` 正式版（上游未发布）。
+
+---
+
 ## 8. 已交付任务的验证口径（可复跑）
 
 | 任务 | 类型检查 | 单测 | 门禁 | E2E |

@@ -235,40 +235,46 @@ function selfTest(baselineDoc) {
   withNew.set('__totally_new_pkg__', { severity: 'high', advisories: [] })
   const d1 = diffAgainstBaseline(baselineDoc, withNew, today)
   check('新高危包：判红', d1.added.includes('__totally_new_pkg__'))
+  check('基线外新增恰好 1 条（不多报也不漏报）', d1.added.length === 1, `新增 ${d1.added.length}`)
+
+  // ③–⑥ 必须用**合成基线**：真实快照清零后若靠 `names.length > 0` 守卫跳过，
+  //     自证会假绿 —— 「严重度升级 / 缺豁免 / 豁免过期」在空集上全都恒不成立。
+  //     2026-10-17 依赖清零时就是这样被发现的。
+  const SYNTH = '__selftest_pkg__'
+  const synthFrozen = {
+    [SYNTH]: { severity: 'high', range: '<1.0.0', direct: true, advisories: [], introducedVia: [] },
+  }
+  const synthDoc = {
+    frozen: synthFrozen,
+    exemptions: { [SYNTH]: { reason: '自证用合成条目', disposition: 'accept', reviewBy: '2999-12-31' } },
+  }
+  const synthBase = new Map(Object.entries(synthFrozen))
+  check('合成基线非空（前置）', synthBase.size === 1 && Boolean(synthDoc.exemptions[SYNTH]))
 
   // ③ 严重度升级（high → critical）→ 判红
-  if (names.length > 0) {
-    const up = new Map(base)
-    const n0 = names[0]
-    up.set(n0, { ...frozen[n0], severity: 'critical' })
-    const d2 = diffAgainstBaseline(baselineDoc, up, today)
-    check('严重度升级：判红', d2.worsened.some((w) => w.name === n0), n0)
+  const up = new Map(synthBase)
+  up.set(SYNTH, { ...synthFrozen[SYNTH], severity: 'critical' })
+  const d2 = diffAgainstBaseline(synthDoc, up, today)
+  check('严重度升级：判红', d2.worsened.some((w) => w.name === SYNTH), SYNTH)
 
-    // ④ 摘掉豁免理由 → 判红（防止「冻结了但没写理由」）
-    const docNoEx = { ...baselineDoc, exemptions: { ...(baselineDoc.exemptions || {}) } }
-    delete docNoEx.exemptions[n0]
-    const d3 = diffAgainstBaseline(docNoEx, base, today)
-    check('缺豁免登记：判红', d3.unregistered.includes(n0), n0)
+  // ④ 摘掉豁免理由 → 判红（防止「冻结了但没写理由」）
+  const docNoEx = { ...synthDoc, exemptions: {} }
+  const d3 = diffAgainstBaseline(docNoEx, synthBase, today)
+  check('缺豁免登记：判红', d3.unregistered.includes(SYNTH), SYNTH)
 
-    // ⑤ 豁免过期 → 判红
-    const docExpired = {
-      ...baselineDoc,
-      exemptions: {
-        ...(baselineDoc.exemptions || {}),
-        [n0]: { ...(baselineDoc.exemptions || {})[n0], reviewBy: '2000-01-01' },
-      },
-    }
-    const d4 = diffAgainstBaseline(docExpired, base, today)
-    check('豁免过期：判红', d4.expired.some((e) => e.name === n0), n0)
+  // ⑤ 豁免过期 → 判红
+  const docExpired = {
+    ...synthDoc,
+    exemptions: { [SYNTH]: { ...synthDoc.exemptions[SYNTH], reviewBy: '2000-01-01' } },
   }
+  const d4 = diffAgainstBaseline(docExpired, synthBase, today)
+  check('豁免过期：判红', d4.expired.some((e) => e.name === SYNTH), SYNTH)
 
   // ⑥ 条目消失 → 记为已解决（不判红）
-  if (names.length > 0) {
-    const less = new Map(base)
-    less.delete(names[0])
-    const d5 = diffAgainstBaseline(baselineDoc, less, today)
-    check('条目消失：0 新增且记为已解决', d5.added.length === 0 && d5.resolved.includes(names[0]))
-  }
+  const less = new Map(synthBase)
+  less.delete(SYNTH)
+  const d5 = diffAgainstBaseline(synthDoc, less, today)
+  check('条目消失：0 新增且记为已解决', d5.added.length === 0 && d5.resolved.includes(SYNTH))
 
   console.log(
     `\n自证结果：${failures.length === 0 ? '✅ 全部通过' : '🔴 ' + failures.length + ' 项失败'}`

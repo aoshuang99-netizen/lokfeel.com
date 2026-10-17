@@ -85,7 +85,7 @@
 | 最新 CI run（改造后） | ✅ **`38863968546`（commit `8016bb4`）→ success** —— 当时 9 个 job 全绿（整轮 2m49s），含**新增**的 Migration（67s）与 E2E（164s），`Build` 在移除 `continue-on-error` 后仍 success |
 | 最新 CI run（AC-24 后） | ✅ **`38868575737`（commit `7e76bc3`）→ success** —— **11 个 job 全绿**（整轮 **151s**）；新增的 **`Perf SLO 对账` 8s 通过**、**`Perf 基线实跑` 在 push 上 skipped**（仅 `workflow_dispatch`）—— 与「压测是取证不是门禁」的设计**逐条吻合** |
 | 全仓 lint 债 | **1542 problems** / 1019 文件（改造前 1565；净 −23，且已冻结为棘轮基线） |
-| 生产可达依赖高危 | **high 26 / critical 2**（全量含 dev：high 34 / critical 3）—— 已登记，见 `DEPENDENCY_RISK.md` |
+| 生产可达依赖高危 | **high 0 / critical 0**（2026-10-17 升级批次前为 high 26 / critical 2）—— 见 `DEPENDENCY_RISK.md` §7 |
 | 性能基线 | 本地构建产物三档并发（1/10/50）· 每档 10s × 3 次取中位数 · **48/48 SLO 断言通过** · 错误率 **0.00%**；宿主 `Intel Core m3-7Y32 @ 1.10GHz`（4 核 / 8GB）—— 见 `PERFORMANCE_BASELINE.md` |
 
 ---
@@ -247,10 +247,10 @@
 
 ```
 npm run lint:gate                     → 1542 problems / 零新增 / exit 0
-npm run check:deps                    → 28 条冻结 / 全部豁免在有效期 / exit 0
+npm run check:deps                    → 0 条冻结（2026-10-17 清零）/ 无新增 / exit 0
 npm run check:migration-drift         → 11 条冻结 / 零新增 / exit 0（用链路产物，非基线自证）
 npm run verify:lint:ratchet           → 8/8（含「总数守恒但发生位移：仍判红」）
-npm run verify:check:deps             → 6/6（含「严重度升级：判红」「豁免过期：判红」）
+npm run verify:check:deps             → 8/8（含「严重度升级：判红」「豁免过期：判红」；2026-10-17 由 6 条扩到 8 条）
 npm run verify:check:migration-drift  → 5/5
 CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exit 0
 门禁链（10 项）                        → 全绿
@@ -276,13 +276,18 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 > 对照：改造前 `38848356361`（`4ceab89`）→ **failure**（Lint ❌ / Dependency audit ❌）。
 > 本次是**首次** CI 全绿，且**没有降低任何标准**。
 
-#### ⚠️ 如实标注的残留
+#### ✅ 残留项已于 2026-10-17 办结
 
-**依赖侧是「门禁化 + 登记」，不是「已修复」。** 28 条生产可达高危**一条都没有升级**。
-唯一出路是独立的依赖升级批次（`undici`/`deepmerge-ts` 级别的主版本跃迁 +
-`next` 16.3.6 → 16.4.2），必须在发版冻结期之外做整轮回归。
-`next` 与两个 critical（`proxy-addr` / `websocket-driver`）列为**第一优先**，
-豁免 `reviewBy=2026-11-15`，**到期由门禁自动判红**。
+**依赖侧原为「门禁化 + 登记」，现已升级为「已修复」。** 2026-10-17 的依赖升级批次把
+28 条生产可达高危降到 **0**（`high 0 / critical 0`），做法是「同大版本升级 6 项 + 定向
+overrides 16 条」，**没有**采用 `npm audit fix --force` 的 162 包主版本跃迁路线。
+`next` 16.3.6 → **16.4.2**、两个 critical（`proxy-addr` / `websocket-driver`）均已修复。
+完整施工记录与取证见 `DEPENDENCY_RISK.md` §7、`BACKLOG.md` §7sexies。
+
+仍如实保留的两点：
+1. 16 条 overrides 是**临时钉版**，父包追平后须逐条删除；
+2. `next-auth@beta.32` 的 `peerOptional nodemailer` 声明仍停留在 `^7 || ^8`，
+   与实际 `10.1.2` 不符（npm 仅 warn）—— 启用 next-auth 自带 Email provider 前须复核。
 
 ### 4.3 ✅ AC-24（P0）—— 性能基线
 
@@ -331,7 +336,7 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 | **生产 qa 账号缺失** | ✅ 已重建 | 根因 = **生产库 `qa.*` 0 行 + `Membership` 0**（`qa:probe:login` 定性为「库中不存在」，**不是密码过期**）⇒ 端点回业务 401 `Invalid email or password`，**不是代码回归**。经授权 `create-qa-accounts.mjs` 重建 2 账号 + 新增 `grant-qa-org.mjs` 建成员关系（角色 **OPERATOR**，**非 ADMIN** —— 保住 AC-08「能跑不能批」）。⚠️ 生产写入已于 **2026-10-17 清理完毕**：`cleanup-qa-accounts.mjs --apply` 删 2 个 User，级联 Profile ×2 / Subscription ×1 / Membership ×2；前后计数精确对账（`qa.*` 残留 0）。**副作用**：`org_default` 现无成员 ⇒ 再次跑生产侧授权复验前需重建账号 |
 | **TURN 中继** | ✅ 已激活 | 生产 `source=cloudflare-realtime`，回滚 `npm run turn:rollback`；国内用户连境外 CF 节点 |
 | **AC-24 涉及的 e2e 环节** | ✅ 已纳入 | CI 新增 e2e job（构建产物浏览器冒烟）。原 `tests/e2e/**` 仍打生产站，**不**入 CI |
-| **生产依赖高危 28 条** | 🟡 | 已登记 + 棘轮阻断，**未升级**。升级批次见 `DEPENDENCY_RISK.md` §5 |
+| **生产依赖高危 28 条** | ✅ 已清零 | 2026-10-17 依赖升级批次：`high 26 + critical 2` → **`0 / 0`**（余 2 low + 4 moderate）。同大版本升级 6 项 + 定向 overrides 16 条；`frozen`/`exemptions` 置空。见 `DEPENDENCY_RISK.md` §7、`BACKLOG.md` §7sexies |
 | **11 表 `organizationId` 未建模** | 🟡 | `prisma db push` 会删这 11 列（租户归属丢失）。CI 已加安全断言；`reviewBy=2026-12-15` |
 | **迁移目录非建库路径** | 🟡 | `prisma migrate deploy` 在 sqlite 上从零建库必失败（首个迁移为 PG 专有 SQL）；`initial_migration.sql` 是空文件 |
 | **迁移脚本 `.env` 覆盖环境变量** | 🟡 | `.env` 优先级高于进程环境变量 ⇒ 裸跑 `apply` 会打到生产库。CI 已加断言；脚本行为改动记入 BACKLOG |
