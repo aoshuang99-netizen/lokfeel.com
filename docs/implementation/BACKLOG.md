@@ -913,7 +913,7 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
 | 前置防呆 | 单测显式断言 `getRedisBackend() === 'memory'`：若 CI / 本机 shell 注入了 Upstash 变量，它会**先红**，而不是偷偷去生产库上计数（免费档 10k 命令/天） |
 | `tsc --noEmit` | exit 0 |
 | `scripts/perf/rate-limit-probe.mjs` | 判定**反转**：现在「超额度却看不到 429」判失败；对旧构建复现历史结论用 `--expect=gap` |
-| **生产实证**（部署 `6ad3036cfb4c` / `6ad307fdf48e`） | 并发探针（`--concurrency=20`）→ `docs/implementation/perf-rate-limit-after-fix.json`：对照 `404×120 + 429×10` · **MCP `200×120 + 429×10`（9.8s）** · **A2A `401×120 + 429×10`（9.6s）** —— 三个目标各自独立打满，`exit 0` |
+| **生产实证**（部署 `6ad3036cfb4c` / `6ad307fdf48e` / `6ad30a850e26`） | 并发探针（`--concurrency=20`）→ `docs/implementation/perf-rate-limit-after-fix.json`：对照 `404×120 + 429×10` · **MCP `200×120 + 429×10`（9.8s）** · **A2A `401×120 + 429×10`（9.6s）** —— 三个目标各自独立打满，`exit 0`。响应头实测 `RateLimit-Limit: 120` · `Remaining` 119→118 递减 · **`RateLimit-Backend: upstash`** ⇒ 计数落在共享 Redis（不是单实例内存） |
 
 **🔴 本轮踩到并修掉的一个假结论（值得单独记）**：
 
