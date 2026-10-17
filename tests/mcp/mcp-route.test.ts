@@ -431,6 +431,9 @@ describe('额度回显：RateLimit-* 三件套', () => {
     expect(first.headers.get('ratelimit-limit')).toBe('120')
     expect(first.headers.get('ratelimit-remaining')).toBe('119')
     expect(Number(first.headers.get('ratelimit-reset'))).toBeGreaterThanOrEqual(1)
+    // 测试环境没有 Upstash 凭据 ⇒ 计数只在进程内有效，必须如实回显 `memory`
+    // （生产上若是 memory，就说明限流在多实例下被放大了 N 倍）
+    expect(first.headers.get('ratelimit-backend')).toBe('memory')
 
     const second = await rpc()
     expect(second.headers.get('ratelimit-remaining')).toBe('118')

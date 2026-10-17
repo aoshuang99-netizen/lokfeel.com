@@ -24,7 +24,7 @@
  * @module lib/rate-limit
  */
 
-import { getRedis, markRedisUnavailable } from '@/lib/im/redis'
+import { getRedis, getRedisBackend, markRedisUnavailable } from '@/lib/im/redis'
 
 type RateLimitEntry = {
   count: number;
@@ -37,6 +37,14 @@ export type RateLimitVerdict = {
   resetAt: number;
   /** 本桶的额度上限（便于响应头回显与排障）。 */
   limit: number;
+  /**
+   * 这次计数实际落在哪个后端。
+   *
+   * 必须是**可观测**的：内存计数是「按实例」的，多实例下等于把额度放大 N 倍
+   * （2026-10-17 生产实测就是这种情况：`Remaining` 上下跳动而非单调递减）。
+   * 没有这个字段，这种降级在响应里完全看不出来。
+   */
+  backend: 'upstash' | 'memory';
 };
 
 export type RateLimitOptions = {
@@ -96,6 +104,9 @@ export function applyRateLimitHeaders(
     'RateLimit-Reset',
     String(Math.max(0, Math.ceil((verdict.resetAt - Date.now()) / 1000)))
   );
+  // 非标准但关键：`memory` 表示这次计数只在**本实例**内有效（多实例下额度被放大 N 倍）。
+  // 把它放进响应头，是为了让"限流悄悄退化"在运维侧一眼可见，而不必去读代码或日志。
+  response.headers.set('RateLimit-Backend', verdict.backend);
 }
 
 export function rateLimit(options: RateLimitOptions): RateLimiter {
@@ -128,6 +139,9 @@ export function rateLimit(options: RateLimitOptions): RateLimiter {
     const rateKey = keyOverride ?? (options.key ? options.key(request) : clientIpOf(request))
     const redisKey = redisKeyOf(rateKey)
     const windowSeconds = Math.ceil(windowMs / 1000)
+    // 先取后端类型再取客户端：`getRedisBackend()` 会看熔断窗口，
+    // 而 `getRedis()` 在熔断时直接返回内存实现 —— 两者必须一致地报出来。
+    const backend = getRedisBackend()
 
     // Try Redis first
     try {
@@ -143,9 +157,9 @@ export function rateLimit(options: RateLimitOptions): RateLimiter {
       }
       const resetAt = Date.now() + ttl * 1000
       if (current > max) {
-        return { success: false, remaining: 0, resetAt, limit: max }
+        return { success: false, remaining: 0, resetAt, limit: max, backend }
       }
-      return { success: true, remaining: Math.max(0, max - current), resetAt, limit: max }
+      return { success: true, remaining: Math.max(0, max - current), resetAt, limit: max, backend }
     } catch {
       // Redis 不可用 — fall back to in-memory
       // 🔴 但**必须留痕**：早先这里完全静默，于是「限流悄悄退化成单实例内存计数」
@@ -160,14 +174,14 @@ export function rateLimit(options: RateLimitOptions): RateLimiter {
 
     if (entry && entry.resetAt > now) {
       if (entry.count >= max) {
-        return { success: false, remaining: 0, resetAt: entry.resetAt, limit: max };
+        return { success: false, remaining: 0, resetAt: entry.resetAt, limit: max, backend: 'memory' };
       }
       entry.count++;
-      return { success: true, remaining: max - entry.count, resetAt: entry.resetAt, limit: max };
+      return { success: true, remaining: max - entry.count, resetAt: entry.resetAt, limit: max, backend: 'memory' };
     }
 
     const resetAt = now + windowMs
     rateLimitStore.set(redisKey, { count: 1, resetAt });
-    return { success: true, remaining: max - 1, resetAt, limit: max };
+    return { success: true, remaining: max - 1, resetAt, limit: max, backend: 'memory' };
   };
 }

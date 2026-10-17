@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T05:22:55.140Z",
+  "generatedAt": "2026-10-17T05:40:32.795Z",
   "base": "https://app.lokfeel.com",
+  "concurrency": 20,
   "control": {
     "target": "/api/v1/public/missions/probe-token-00000000000000000000000000000000",
     "requests": 130,
@@ -25,7 +26,9 @@
       },
       "rateLimited": 10,
       "failed": 0,
-      "wallMs": 134956
+      "windowMs": 300000,
+      "wallMs": 13650,
+      "withinWindow": true
     },
     {
       "key": "mcp-discovery",
@@ -34,11 +37,14 @@
       "method": "POST",
       "requests": 130,
       "statuses": {
-        "200": 130
+        "200": 120,
+        "429": 10
       },
-      "rateLimited": 0,
+      "rateLimited": 10,
       "failed": 0,
-      "wallMs": 175272
+      "windowMs": 60000,
+      "wallMs": 9756,
+      "withinWindow": true
     },
     {
       "key": "a2a-tasks",
@@ -47,11 +53,14 @@
       "method": "POST",
       "requests": 130,
       "statuses": {
-        "401": 130
+        "401": 120,
+        "429": 10
       },
-      "rateLimited": 0,
+      "rateLimited": 10,
       "failed": 0,
-      "wallMs": 152404
+      "windowMs": 60000,
+      "wallMs": 9631,
+      "withinWindow": true
     }
   ]
 }

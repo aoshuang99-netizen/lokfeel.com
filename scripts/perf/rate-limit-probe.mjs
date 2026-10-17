@@ -41,7 +41,7 @@
  *   若对照一次 429 都没出现 ⇒ 本次取证**不合格**，脚本判失败并明确说「无法结论」。
  *
  * 用法：
- *   node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 [--n=200] [--out=<json>]
+ *   node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 [--n=200] [--concurrency=20] [--out=<json>]
  *   node scripts/perf/rate-limit-probe.mjs --expect=gap     # 对修复前的构建复现历史结论
  */
 
@@ -56,6 +56,16 @@ const BASE = (args.base || 'http://127.0.0.1:3000').replace(/\/+$/, '')
 const N = Number(args.n || 200)
 const OUT = args.out || ''
 const TIMEOUT_MS = 15000
+/**
+ * 并发度（2026-10-17 增）。
+ *
+ * 🔴 这是本脚本**最容易产生假结论**的地方：限流是「窗口内计数」，探针必须把
+ * 一次突发**打进同一个窗口**才有意义。最初这里是串行 for 循环 —— 对生产打 130 次
+ * 花了 160s，而 MCP 窗口只有 60s ⇒ 每个窗口只装到约 50 次 ⇒ 永远打不满 ⇒
+ * 脚本报「零 429 ⇒ 回归」。**实际限流是好的，是探针太慢。**
+ * 所以现在：并发突发 + 显式校验「本轮耗时 < 窗口」，否则判"取证不合格"而不是"回归"。
+ */
+const CONCURRENCY = Number(args.concurrency || 20)
 
 const CONTROL_N = 130 // > 对照端点的上限 120，必须能触发 429
 
@@ -68,6 +78,7 @@ const targets = [
     body: null,
     headers: {},
     n: CONTROL_N,
+    windowMs: 5 * 60 * 1000,
   },
   {
     key: 'mcp-discovery',
@@ -77,6 +88,7 @@ const targets = [
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
     n: N,
+    windowMs: 60_000,
   },
   {
     key: 'a2a-tasks',
@@ -86,6 +98,7 @@ const targets = [
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ skillId: 'list_bridges', input: {} }),
     n: N,
+    windowMs: 60_000,
   },
 ]
 
@@ -93,23 +106,31 @@ async function burst(t) {
   const statuses = {}
   let failed = 0
   let rl = 0
+  let issued = 0
   const t0 = Date.now()
-  for (let i = 0; i < t.n; i++) {
-    try {
-      const res = await fetch(BASE + t.path, {
-        method: t.method,
-        headers: t.headers,
-        body: t.body,
-        redirect: 'manual',
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      })
-      await res.arrayBuffer()
-      statuses[res.status] = (statuses[res.status] || 0) + 1
-      if (res.status === 429) rl++
-    } catch {
-      failed++
+
+  async function worker() {
+    for (;;) {
+      const i = ++issued
+      if (i > t.n) return
+      try {
+        const res = await fetch(BASE + t.path, {
+          method: t.method,
+          headers: t.headers,
+          body: t.body,
+          redirect: 'manual',
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+        })
+        await res.arrayBuffer()
+        statuses[res.status] = (statuses[res.status] || 0) + 1
+        if (res.status === 429) rl++
+      } catch {
+        failed++
+      }
     }
   }
+
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, t.n) }, worker))
   return { ...t, requests: t.n, statuses, rateLimited: rl, failed, wallMs: Date.now() - t0 }
 }
 
@@ -147,8 +168,25 @@ async function main() {
   } else {
     console.log(`✅ 阳性对照成立：对照端点出现 ${control.rateLimited} 次 429 —— 探针**能**看见限流。`)
     console.log('')
-    console.log(`   MCP 发现面：${mcp.requests} 次请求，429 = ${mcp.rateLimited}`)
-    console.log(`   A2A 任务面：${a2a.requests} 次请求，429 = ${a2a.rateLimited}`)
+    console.log(`   MCP 发现面：${mcp.requests} 次请求，429 = ${mcp.rateLimited}，耗时 ${(mcp.wallMs / 1000).toFixed(1)}s`)
+    console.log(`   A2A 任务面：${a2a.requests} 次请求，429 = ${a2a.rateLimited}，耗时 ${(a2a.wallMs / 1000).toFixed(1)}s`)
+
+    // 🔴 自重校验：突发必须整段落在**同一个窗口**里，否则窗口中途过期重置，
+    // "零 429"只是探针节奏的产物。2026-10-17 就是踩在这里（130 次串行花 160s，
+    // MCP 窗口只有 60s）—— 那次脚本报的"回归"是**假结论**。
+    const tooSlow = results.filter((r) => r.windowMs && r.wallMs >= r.windowMs)
+    if (tooSlow.length > 0) {
+      for (const r of tooSlow) {
+        console.log(
+          `\n   ⚠️ ${r.key}：耗时 ${(r.wallMs / 1000).toFixed(1)}s ≥ 窗口 ${r.windowMs / 1000}s`
+        )
+      }
+      console.log('\n   🔴 **本次取证不合格**（注意：这**不是**"限流缺失"的结论）')
+      console.log('      上面这些目标没能在单个窗口内打满，窗口会中途重置 ⇒ 零 429 无意义。')
+      console.log('      对策：提高 `--concurrency`（默认 20），或降低 `--n`（但必须 > 额度）。')
+      process.exitCode = 1
+      return
+    }
 
     const expectGap = args.expect === 'gap'
     const bothLimited = mcp.rateLimited > 0 && a2a.rateLimited > 0
@@ -167,6 +205,7 @@ async function main() {
     } else {
       console.log('\n   🔴 **回归**：修复后 MCP / A2A 必须出现 429，实测至少一方为 0。')
       console.log('      可能原因：限流器未接线、被摘掉、或桶键又退回共用（检查 rate-limit.ts 的 name）。')
+      console.log('      另请先看 `RateLimit-Backend` 响应头：`memory` 表示计数只在单实例内有效。')
       process.exitCode = 1
     }
   }
@@ -175,6 +214,7 @@ async function main() {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     base: BASE,
+    concurrency: CONCURRENCY,
     control: {
       target: control.path,
       requests: control.requests,
@@ -191,7 +231,10 @@ async function main() {
       statuses: r.statuses,
       rateLimited: r.rateLimited,
       failed: r.failed,
+      windowMs: r.windowMs,
       wallMs: r.wallMs,
+      // 突发耗时必须 < 窗口，否则本次结果无效（窗口中途重置 ⇒ 天然打不满）
+      withinWindow: r.windowMs ? r.wallMs < r.windowMs : null,
     })),
   }
 
