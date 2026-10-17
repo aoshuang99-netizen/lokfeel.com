@@ -24,7 +24,7 @@
  * @module lib/rate-limit
  */
 
-import { getRedis } from '@/lib/im/redis'
+import { getRedis, markRedisUnavailable } from '@/lib/im/redis'
 
 type RateLimitEntry = {
   count: number;
@@ -35,6 +35,8 @@ export type RateLimitVerdict = {
   success: boolean;
   remaining: number;
   resetAt: number;
+  /** 本桶的额度上限（便于响应头回显与排障）。 */
+  limit: number;
 };
 
 export type RateLimitOptions = {
@@ -75,6 +77,25 @@ export function clientIpOf(request: Request): string {
 /** 429 响应该带多少秒 `Retry-After`（至少 1，避免 0 被客户端理解成"立刻重试"）。 */
 export function retryAfterSeconds(verdict: RateLimitVerdict): number {
   return Math.max(1, Math.ceil((verdict.resetAt - Date.now()) / 1000));
+}
+
+/**
+ * 把额度状态写进响应头（IETF `RateLimit-*` 草案的三件套）。
+ *
+ * 为什么要有：① 客户端可以据此**主动退避**，而不是撞到 429 才知道；
+ * ② 排障时"额度到底在不在动"一眼可见 —— `RateLimit-Remaining` 不递减，
+ * 就说明计数没落到共享后端（这正是 2026-10-17 上线后排查用到的证据）。
+ */
+export function applyRateLimitHeaders(
+  response: { headers: Headers },
+  verdict: RateLimitVerdict
+): void {
+  response.headers.set('RateLimit-Limit', String(verdict.limit));
+  response.headers.set('RateLimit-Remaining', String(Math.max(0, verdict.remaining)));
+  response.headers.set(
+    'RateLimit-Reset',
+    String(Math.max(0, Math.ceil((verdict.resetAt - Date.now()) / 1000)))
+  );
 }
 
 export function rateLimit(options: RateLimitOptions): RateLimiter {
@@ -122,11 +143,16 @@ export function rateLimit(options: RateLimitOptions): RateLimiter {
       }
       const resetAt = Date.now() + ttl * 1000
       if (current > max) {
-        return { success: false, remaining: 0, resetAt }
+        return { success: false, remaining: 0, resetAt, limit: max }
       }
-      return { success: true, remaining: Math.max(0, max - current), resetAt }
+      return { success: true, remaining: Math.max(0, max - current), resetAt, limit: max }
     } catch {
-      // Redis unavailable — fall back to in-memory
+      // Redis 不可用 — fall back to in-memory
+      // 🔴 但**必须留痕**：早先这里完全静默，于是「限流悄悄退化成单实例内存计数」
+      // 在 `/api/health` 上也看不出来。2026-10-17 生产上正是这样：MCP 打 130 次
+      // 零 429，而 health 仍报 `backend=upstash / degraded=false` —— 排障时缺的就是这条线索。
+      // 走既有熔断器（同时累加 degradeCount、写 degradedReason）。
+      markRedisUnavailable(`rate-limit:${name}`)
     }
 
     const now = Date.now();
@@ -134,14 +160,14 @@ export function rateLimit(options: RateLimitOptions): RateLimiter {
 
     if (entry && entry.resetAt > now) {
       if (entry.count >= max) {
-        return { success: false, remaining: 0, resetAt: entry.resetAt };
+        return { success: false, remaining: 0, resetAt: entry.resetAt, limit: max };
       }
       entry.count++;
-      return { success: true, remaining: max - entry.count, resetAt: entry.resetAt };
+      return { success: true, remaining: max - entry.count, resetAt: entry.resetAt, limit: max };
     }
 
     const resetAt = now + windowMs
     rateLimitStore.set(redisKey, { count: 1, resetAt });
-    return { success: true, remaining: max - 1, resetAt };
+    return { success: true, remaining: max - 1, resetAt, limit: max };
   };
 }

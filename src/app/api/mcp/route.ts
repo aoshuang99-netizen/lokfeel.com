@@ -31,7 +31,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveTenant, type TenantContext } from '@/lib/tenancy'
 import { can } from '@/lib/tenancy/capabilities'
 import { ApiError } from '@/lib/errors'
-import { rateLimit, retryAfterSeconds } from '@/lib/rate-limit'
+import { rateLimit, retryAfterSeconds, applyRateLimitHeaders } from '@/lib/rate-limit'
 import { INTEROP_TOOL_NAMES, publicToolList, toolByName } from '@/lib/interop/tools'
 
 const PROTOCOL_VERSION = '2025-06-18'
@@ -90,9 +90,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!verdict.success) {
     const res = rpcError(null, -32000, 'Too many requests: 请降低调用频率后重试', 429)
     res.headers.set('Retry-After', String(retryAfterSeconds(verdict)))
+    applyRateLimitHeaders(res, verdict)
     return res
   }
+  // 成功路径也回显额度（`RateLimit-*`），让客户端能主动退避而不是撞上 429 才知道
+  const res = await handleRpc(req)
+  applyRateLimitHeaders(res, verdict)
+  return res
+}
 
+async function handleRpc(req: NextRequest): Promise<NextResponse> {
   let payload: unknown
   try {
     payload = await req.json()

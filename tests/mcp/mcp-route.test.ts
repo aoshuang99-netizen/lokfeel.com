@@ -415,3 +415,25 @@ describe('限流：120 次/分钟/IP', () => {
   })
 })
 
+describe('额度回显：RateLimit-* 三件套', () => {
+  const IP = '198.51.100.203'
+  const rpc = () =>
+    POST(
+      new NextRequest('http://localhost:3000/api/mcp', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': IP },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+      }),
+    )
+
+  it('每个响应都带 Limit/Remaining/Reset，且 Remaining 逐次递减', async () => {
+    const first = await rpc()
+    expect(first.headers.get('ratelimit-limit')).toBe('120')
+    expect(first.headers.get('ratelimit-remaining')).toBe('119')
+    expect(Number(first.headers.get('ratelimit-reset'))).toBeGreaterThanOrEqual(1)
+
+    const second = await rpc()
+    expect(second.headers.get('ratelimit-remaining')).toBe('118')
+  })
+})
+

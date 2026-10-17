@@ -29,7 +29,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveTenant } from '@/lib/tenancy'
 import { can } from '@/lib/tenancy/capabilities'
 import { ApiError } from '@/lib/errors'
-import { rateLimit, retryAfterSeconds } from '@/lib/rate-limit'
+import { rateLimit, retryAfterSeconds, applyRateLimitHeaders } from '@/lib/rate-limit'
 import { INTEROP_TOOL_NAMES, toolByName } from '@/lib/interop/tools'
 
 export const dynamic = 'force-dynamic'
@@ -69,9 +69,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!verdict.success) {
     const res = fail(429, 'RESOURCE_EXHAUSTED', 'Too many requests：请降低调用频率后重试')
     res.headers.set('Retry-After', String(retryAfterSeconds(verdict)))
+    applyRateLimitHeaders(res, verdict)
     return res
   }
+  const res = await handleTask(req)
+  applyRateLimitHeaders(res, verdict)
+  return res
+}
 
+async function handleTask(req: NextRequest): Promise<NextResponse> {
   let body: unknown
   try {
     body = await req.json()

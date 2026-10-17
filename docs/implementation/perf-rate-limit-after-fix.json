@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T05:22:55.140Z",
+  "base": "https://app.lokfeel.com",
+  "control": {
+    "target": "/api/v1/public/missions/probe-token-00000000000000000000000000000000",
+    "requests": 130,
+    "rateLimited": 10,
+    "statuses": {
+      "404": 120,
+      "429": 10
+    },
+    "interpretation": "阳性对照：有 429 ⇒ 探针可信；无 429 ⇒ 取证不合格"
+  },
+  "results": [
+    {
+      "key": "control-missions-preview",
+      "role": "对照（已知有限流：120 / 5min / IP）",
+      "path": "/api/v1/public/missions/probe-token-00000000000000000000000000000000",
+      "method": "GET",
+      "requests": 130,
+      "statuses": {
+        "404": 120,
+        "429": 10
+      },
+      "rateLimited": 10,
+      "failed": 0,
+      "wallMs": 134956
+    },
+    {
+      "key": "mcp-discovery",
+      "role": "回归判据（MCP 限流：120 / 1min / IP，桶 mcp:rpc）",
+      "path": "/api/mcp",
+      "method": "POST",
+      "requests": 130,
+      "statuses": {
+        "200": 130
+      },
+      "rateLimited": 0,
+      "failed": 0,
+      "wallMs": 175272
+    },
+    {
+      "key": "a2a-tasks",
+      "role": "回归判据（A2A 限流：120 / 1min / IP，桶 a2a:task）",
+      "path": "/api/v1/a2a/tasks",
+      "method": "POST",
+      "requests": 130,
+      "statuses": {
+        "401": 130
+      },
+      "rateLimited": 0,
+      "failed": 0,
+      "wallMs": 152404
+    }
+  ]
+}
