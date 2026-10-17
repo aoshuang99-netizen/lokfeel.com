@@ -88,6 +88,7 @@
 | 依赖升级后的发版 | Netlify deploy `6ad3405dbb509383d7f55ecf` ← `5fc3bf6`，`state=ready`；生产 `/api/health` **200 ×2**（`redis.backend=upstash`、`degraded:false`） |
 | 发版后生产复验 | `verify:released:surface` **6/6 + 对照 2/2** · `verify-public-origin` **13 通过 / 0 失败**（0 处部署域名泄漏）· 限流并发探针：MCP `200×120 + 429×10`、A2A `401×120 + 429×10`，`RateLimit-Backend: upstash` |
 | 最新 CI run（并入 Dependabot #27 后） | ✅ **`39025021586`（commit `7d42f25`）→ success** —— 11 job：9 success + 2 skipped / 0 失败（`@sentry/nextjs` 11.7 / `@swc/core` 1.16.18 / `playwright` 1.64 全部通过 Build · Jest · E2E） |
+| 最新 CI run（并入 Dependabot #24 · Stripe 23 后） | 第一轮 `39039731608`（`05c345d`）→ **3 红**：`Typecheck` / `Build` / `E2E`，同一根因（`apiVersion` 只接受最新版本字面量 `2026-09-30.endive`）。修好后 `39040981328`（`2e2f131`）→ ✅ **11 job：9 success + 2 skipped / 0 失败**；发版 `6ad38653be0d` ready。详见 `BACKLOG.md` §7octies |
 | 并入 #27 后的发版与复验 | Netlify deploy `6ad34dc8b568` ← `7d42f25`，`state=ready`；`/api/health` **200 ×2** · 发版面 **6/6 + 2/2** · `verify-public-origin` **13/0** · 限流 MCP/A2A 各 `429×10` |
 | 全仓 lint 债 | **1542 problems** / 1019 文件（改造前 1565；净 −23，且已冻结为棘轮基线） |
 | 生产可达依赖高危 | **high 0 / critical 0**（2026-10-17 升级批次前为 high 26 / critical 2）—— 见 `DEPENDENCY_RISK.md` §7 |

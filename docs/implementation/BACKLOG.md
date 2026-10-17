@@ -996,11 +996,12 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
    我们自己只用 `src/lib/email.ts` 的 `createTransport`/`sendMail`，不走它的 provider。
 3. 剩余 6 条 moderate/low（`qs` / `uuid` / `gaxios` / `@hono/node-server` / `body-parser` / `@babel/core`）。
 4. 未升 `firebase` 12→13（major）与 `next-auth` 正式版（上游未发布）。
-5. **Dependabot 批次**：~~#27 已并入~~（见 §7septies）；**#24 仍待评审**：
-   - **#27** `bump the minor-and-patch group`（11 项，只改 `package.json` + 锁）——
-     **已于 2026-10-17 以 `cherry-pick -x 4e91c48` + 重算锁的方式并入**，
-     16 条 overrides 全部仍生效、审计仍 `high 0 / critical 0`；Dependabot 已自动关闭该 PR（`closed` / 未 merge）。
-   - **#24** `stripe` 22.6.2 → 23.0.0（**major**，支付栈，需专门回归）—— 仍开放，未开 auto-merge。
+5. **Dependabot 批次**：**#27 与 #24 均已并入**（见 §7septies / §7octies），当前无开放 PR。
+   - **#27** `bump the minor-and-patch group`（11 项）—— 2026-10-17 以 `cherry-pick -x 4e91c48` + 重算锁并入，
+     16 条 overrides 全部仍生效、审计仍 `high 0 / critical 0`；Dependabot 已自动关闭该 PR。
+   - **#24** `stripe` 22.6.2 → **23.0.0**（major）—— 2026-10-17 并入，5 处客户端显式钉回 `dahlia`；
+     **遗留一项**：两条退款路由在启用 Stripe 后会因 `latest_invoice` 未 expand + `payment_intent` 已移除而恒 400，
+     详见 §7octies「遗留」。
 
 ---
 
@@ -1038,6 +1039,87 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
 `dotenv` 在锁里出现 3 份：根 `18.0.7` + `@sentry/bundler-plugins` 与 `c12` 各自嵌套 `17.4.2`。
 两条嵌套都在**构建期工具链**里（前者要求 `^17.4.2`、后者 `^17.3.1`），不进 Next 产物，
 且 dotenv 无已知高危 ⇒ 不为它新增 override（避免把「临时钉版」越堆越多）。
+
+---
+
+## 7octies. 并入 Dependabot #24 · Stripe 23.0.0（major）
+
+**结论：已并入，CI 全绿，已发版并生产复验。** 与 #27 不同，这是 major；而 23.0.0 最危险的一条
+不是任何具名 API 变更，而是**把 SDK 内置默认 API 版本从 `2026-08-26.dahlia` 切到 `2026-09-30.endive`**。
+
+### 破坏性变更逐条比对
+
+| 23.0.0 变更 | 本仓库命中? | 处理 |
+|---|---|---|
+| 默认 API 版本 `dahlia → endive` | **命中**：`admin/subscriptions/[id]` 与 `.../refund` 是裸 `new Stripe(key)` | 新增 `src/lib/stripe/config.ts` 单点常量，**5 处客户端全部显式钉回 dahlia** |
+| 移除 `SetupIntentCreateParams.payment_method_types` | **命中**：`verify-card` 传了 `["card"]` | 改 `allowed_payment_method_types`（同为「允许列表」语义，dahlia 已支持） |
+| `StripeConfig.apiVersion` 收窄为 `LatestApiVersion` 单字面量 | **命中**：钉 dahlia 直接 `TS2322` | 官方 JSDoc 允许「传其他版本 + 在此处抑制类型检查」⇒ 单点一次显式断言（见下） |
+| 移除 `Stripe.const` / `ErrorType` / `constructEventWithoutVerification` | 未使用 | — |
+| `V2List` 去掉 V1 字段 · V2 address 参数细分 | 未使用 | — |
+| 下线 Node 18（最低 20） | `.nvmrc` = **22**，Netlify 同为 22 | — |
+| `verifyHeader` 默认启用时间容差 | 只用 `constructEvent(payload, sig, secret)`，本就走默认容差 | 行为不变 |
+| `Charge…card.mandate` / `billing_cycle_anchor` 类型变化 | 未使用 | — |
+
+### 为什么第一轮 CI 会红（真实根因，不是猜）
+
+`apiVersion?: LatestApiVersion`，而 23.0.0 的 `LatestApiVersion` 就是 `"2026-09-30.endive"` **一个**字面量。
+v22 下我们写的 `"2026-08-26.dahlia"` 恰好等于当时的最新版本，所以一直编译通过；升级后同一行必然 `TS2322`。
+
+用最小工程（`/tmp/tsprobe`：`stripe@23.0.0` + `typescript@5.9`，与仓库同款 `strict`/`bundler`）逐条复现并验证修复：
+
+```
+repro-old.ts(3,37):   error TS2322: Type '"2026-08-26.dahlia"' is not assignable to type '"2026-09-30.endive"'.
+repro-param.ts(5,52): error TS2561: Object literal may only specify known properties,
+                      but 'payment_method_types' does not exist in type 'SetupIntentCreateParams'.
+修复后（常量 + allowed_payment_method_types + 完整 customers/setupIntents 调用面）：TSC_EXIT=0
+```
+
+`Typecheck` / `Build` / `E2E` 三个 job 同时红，是**同一个根因**（Next 构建会跑类型检查，E2E 依赖构建产物）。
+
+### 验证
+
+| 项 | 结果 |
+|---|---|
+| 重算锁 | `stripe 23.0.0` 单份；锁 diff **12 行**（无传递依赖漂移）；`total 1661` |
+| **16 条 overrides 复检** | **16/16 仍生效且单份等于钉版**，无 `EOVERRIDE` |
+| 审计 | `high 0 / critical 0` · moderate 4 / low 2 —— 与升级前**逐项一致**；`prod 632` |
+| 门禁 | `check:deps` **exit 0** · `verify:check:deps` **8/8** |
+| CI 第一轮 | `39039731608`（`05c345d`）→ Typecheck / Build / E2E **红**（根因见上），其余 8 项绿 |
+| CI 第二轮 | `39040981328`（`2e2f131`）→ **11 job：9 success + 2 skipped / 0 失败** |
+| 发版 | `6ad38236a533` ← `05c345d` **error**（类型错误，符合预期）；`6ad38653be0d` ← `2e2f131` **ready** |
+| 生产健康 | `/api/health` **200 ×2**（4.49s / 1.63s），`redis.backend=upstash`、`degraded:false` |
+| **Stripe 路由加载性** | `POST /api/webhooks/stripe` → **400** `Missing stripe-signature header`（不是 500 ⇒ 模块加载与初始化正常）；`POST /api/payments/verify-card` → **401** |
+| 发版面 | `verify:released:surface` **6/6 + 对照 2/2** |
+| 公开域名 | `verify-public-origin` **13 通过 / 0 失败** |
+| 限流 | 并发探针：MCP `429×10`（10.5s）· A2A `429×10`（11.4s），exit 0 |
+
+> 生产**没有配置** `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`（Netlify 40 个环境变量中 `STRIPE_*` 为空），
+> 所以本次升级的**运行时风险实际为 0**：所有 Stripe 链路在第一道守卫就返回 503/500。
+> 但类型与构建风险是真实的，这也是本轮唯一红的来源。
+
+### 遗留（本轮发现，**未修**）：退款链路一旦启用 Stripe 就会 400
+
+两条 admin 路由（`[id]/route.ts` 的 POST 与 `[id]/refund/route.ts` 的 POST，逻辑重复）都有：
+
+```ts
+const latestInvoice = stripeSubscription.latest_invoice as any;   // ← 未 expand，实际是字符串 ID
+if (!latestInvoice || !latestInvoice.payment_intent) return 400 "No payment found to refund";
+```
+
+- `Subscription.latest_invoice` 类型为 `string | Invoice | null`，**不传 `expand` 就是字符串**；
+  在字符串上取 `.payment_intent` 恒为 `undefined` ⇒ 永远命中 400。
+- 即便 expand 也不够：**从 dahlia 起 `Invoice.payment_intent` 已从类型中移除**（v22 的 `Invoices.d.ts`
+  即已 ABSENT），只剩 `invoice.payments: ApiList<InvoicePayment>`，其中 `payment.payment_intent`。
+- 这是**既有缺陷，与本次升级无关**（v22 下同样不成立）；因为生产没配 Stripe 密钥，它目前是潜伏状态。
+
+修法（需真实 Stripe test mode 验证，故不在本轮夹带）：
+`retrieve(id, { expand: ["latest_invoice.payments"] })` → 取
+`invoice.payments.data[].payment.payment_intent`。建议与「两条退款路由去重」一起做。
+
+### 未做（刻意）
+
+**没有把 API 版本升到 `2026-09-30.endive`。** 那会是支付/退款/订阅/Webhook 全链路的语义变更，
+必须用真实 Stripe 环境回归；与依赖升级混在一起做，等于把两件事的风险叠成一件事。
 
 ---
 
