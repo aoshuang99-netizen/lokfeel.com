@@ -8,7 +8,7 @@
 > | 真实仓库基线 | `f6630ea`（`main`，**已推送 GitHub + 已发布 Netlify 生产**，部署 `6acde3962c8778501cd81f27` ready @ 2026-10-13T07:55:42Z；本批生产复验 **T08 新增 5 路由上线受保护 · 窗口期 13/13 · T07 48/48 · T06 25/25 · T04 19/19**） |
 > | 上一发布基线 | `95da9f1`（T07 `/console` 回跳修复补发）—— 再往前 `564802a`（T07 Slice 2 + Slice 3）、`0414186`（T07 Slice 1 + T06+）、`233669e`（T05 + T06）、`0c95b89`（T04）；T05/T06 曾长期带跳过标记未发版，已于 `233669e` 补齐 |
 > | 已交付 | **T00 审计**（`3faf1e9`）、**T01 多租户底座**（`c5828ba`）、**T02 Mission Link**（`49ee97d`）、**T03 Intent / Member**（`877878e`）、**T04 Reciprocal Match**（`e3bc161` + `b4125eb`）、**T05 Consent & Trust**、**T06 Workflow Execution**、**T06+ 死信告警 / AC-10 生命周期**、**T07 Console Slice 1 / Slice 2 / Slice 3**（以上**均已上线**）；**T08 Outcome/Billing Slice 1–3**（`f6630ea`，已上线）、**T08 Slice 4 · T09 Slice 1–6 · T10 Slice 1–4 · T11 Slice 1–5 · T12 报告 · AC-10 账号级闭合（导出/删除/缓存）**（**未发版**） |
-> | 剩余 | **无**（T05–T12 全部交付）；未闭合项 = **AC-23 / AC-24**（P0）+ AC-25（BLOCKED）—— ✅ **AC-10（BLOCKER）已于 2026-10-16 闭合**（见 `FINAL_ACCEPTANCE_REPORT.md`） |
+> | 剩余 | **无**（T05–T12 全部交付）。**验收口径：24 PASS / 0 FAIL / 1 BLOCKED**（25 条 AC）—— ✅ **AC-10（BLOCKER）· AC-23 · AC-24 均已于 2026-10-16 闭合**；未闭合仅 **AC-25**（BLOCKED，外部依赖：无真实付费试点客户，非工程问题）。T09–T12 已发版（`2d5385d`，见 `RELEASE_T09-T12.md`）；生产 Redis 已切 **Upstash**（#51，见 `§7quater`） |
 > | 规范来源 | `lokfeel_workbuddy_v1/`：`WORKBUDDY_MASTER_PROMPT.md`（主指令）、`tasks/T02–T12`、`docs/ACCEPTANCE_MATRIX.md`（AC-01~25）、`contracts/schema.sql`、`contracts/connection.openapi.yaml` |
 > | 规划背景 | 《LokFeel SaaS 核心功能架构与开源技术集成方案 V1.0》：10 大模块 / 6 个自研引擎 / P0–P3 / 12 项 Codex 实施清单 |
 
@@ -345,18 +345,22 @@
 
 > **交付记录**（报告 `docs/implementation/FINAL_ACCEPTANCE_REPORT.md` · 2026-10-15）
 >
-> **判定汇总（2026-10-16 更新）：22 PASS / 2 FAIL / 1 BLOCKED**（25 条 AC）。
+> **判定汇总（2026-10-17 终稿）：24 PASS / 0 FAIL / 1 BLOCKED**（25 条 AC）。
 > - **BLOCKER（10）**：AC-01 ~ AC-10 **全部 PASS** —— ✅ **AC-10 已闭合**（2026-10-16 补齐「导出」「删除请求」「缓存失效」三支；`verify:ac10:lifecycle` **68/0**；单测 13 → **31** 例）。
-> - **P0（11）**：AC-11 ~ AC-18 **PASS**；🔴 **AC-23 FAIL**（CI run `38757446188`：Lint + Dependency audit 红；且缺 e2e/migration 环节）、**AC-24 FAIL**（未压测、无 SLO）、**AC-25 BLOCKED**（无真实试点客户）。
+> - **P0（11）**：AC-11 ~ AC-18 **PASS**；✅ **AC-23 已转 PASS**（三道棘轮，2026-10-16 闭合，见 `§7bis`）、✅ **AC-24 已转 PASS**
+>   （SLO 两档 × 三档共 9 条规则 + 48/48 断言，见 `§7ter`）、⛔ **AC-25 BLOCKED**（无真实试点客户，外部依赖）。
+>   *（历史对照：改造前 CI run `38757446188` 为 Lint + Dependency audit 红且缺 e2e/migration 环节；AC-24 当时未压测、无 SLO —— 两条已在同日闭合。）*
 > - **P1（3）**：AC-19 / AC-20 / AC-21 **PASS**（AC-21 为沙箱口径，真实扣款 `BLOCKED`）。
 > - **P2（1）**：AC-22 **PASS**。
 >
-> 🟡 **上线判定：BLOCKER 已清空** —— AC-10 **未走例外审批**即转 PASS。**剩余阻断仅 P0 两项**：AC-23（CI）、AC-24（性能）；
-> AC-25 属外部依赖（无试点客户），可走例外。
+> 🟢 **上线判定：BLOCKER 已清空 · P0 工程项已清空** —— AC-10 / AC-23 / AC-24 **均未走例外审批**即转 PASS。
+> **唯一剩余 = AC-25**（外部依赖，无试点客户），可走例外，**不是工程问题**。
 >
-> **证据基线**：HEAD 见文末回填行（未发版；生产仍 `f6630ea6b`）· `npx jest` **98 套 / 2030 例** · `tsc --noEmit` exit 0 ·
-> AC-10 `68/0` · AC-18 `84/0` · AC-19 `69/0` · AC-22 `57/0` · `verify:p2:e2e` `130/0`。
-> **发版前待办**：C9 迁移 apply + 生产侧 OpenAI 连通性实跑（`verify:agent:connectivity:server`）。
+> **证据基线**：✅ **T09–T12 已发版**（发布提交 `2d5385d`，2026-10-16；生产复验 6/6 + 2/2 对照、窗口期 13/0）·
+> `npx jest` **98 套 / 2030 例** · `tsc --noEmit` exit 0 · AC-10 `68/0` · AC-18 `84/0` · AC-19 `69/0` · AC-22 `57/0` ·
+> `verify:p2:e2e` `130/0` · CI run `38910612568`（`dead1ac`）**11 job：9 success + 2 skipped / 0 失败**。
+> ✅ **发版前待办两项均已办结**：C9 迁移 apply（`connection:migrate verify` **255/255**）+ 生产侧 OpenAI 连通性实跑
+> （`verify:agent:connectivity:server` **22/0**，见 `§7quater` 前置说明）。
 
 ---
 
@@ -823,6 +827,39 @@ C2/C3 已在 `233669e` 应用到生产）。
 | 3 | 发版后补**生产侧**观测（跨境 RTT / 冷启 / Turso 远端查询）—— 本基线**不可**外推为生产 SLA | P2 |
 | 4 | 压测生成器与服务器分离（消除共机 CPU 争用，让 c=50 档的饱和度可归因） | P2 |
 | 5 | `login` SSR 路径是本轮最重端点（c=1→50 放大 40 倍）—— 值得单独剖析（**不属 AC-24 修复范围**） | P3 |
+
+---
+
+## 7quater. 生产侧运维补配（2026-10-16/17 闭合）
+
+### #51 · 生产 Redis 切 Upstash
+
+| 项 | 值 |
+|---|---|
+| 工具 | `npm run qa:upstash:provision`（Management API 建库 → 取 REST 凭据 → **PING 通过才落盘**）· `npm run qa:upstash:configure`（PING → 写 Netlify env → **回读核对** → 触发构建）；两者默认 dry-run |
+| 提交 | `9a1ea7e`（工具）+ `dead1ac`（lint 棘轮 1543 → 1542） |
+| 生产证据 | 部署 `6ad2201d899a`（1m46s ready）；`GET /api/health` → `redis:{"backend":"upstash","configured":true,"degraded":false}`（2026-10-17 复验仍成立） |
+| 校验 | `npm run check:redis` **17/17** —— 首次「双后端」验证：Upstash 可用 **且** 回落路径仍成立 |
+
+**踩坑（已修，勿重犯）**：① Upstash 的 `endpoint` 字段**已含** `.upstash.io` ⇒ 再补一次后缀会得到
+`xxx.upstash.io.upstash.io`（被 **PING 闸**兜住，未流向生产）；② PING 判定必须认 JSON 信封 `{"result":"PONG"}`，
+只判裸文本会漏；③ Netlify env API 的 body 是**数组** `[{key,values:[{value,context}]}]`（POST 400 `_json missing` 即为此），
+免费计划**不能指定 `scopes`**（403）。
+
+**遗留边界**：Redis 免费档 **10k 命令/天**；限流/缓存仍共用 per-IP 桶（见 §7ter「既有缺陷」，**代码级未修**）。
+
+### A1 · 生产出口连通性（`verify:agent:connectivity:server` **22/0**）
+
+分层结论：匿名层 401 ✅ · **网络层 PASS**（285ms 到达外部端点）· 身份层 INFO · 凭据层 FAIL（端点回 **400**）。
+
+🔴 **生产 `OPENAI_BASE_URL` 指向 Netlify AI Gateway**（`https://app.lokfeel.com/.netlify/ai`，`source=env`），
+**不是** `api.openai.com/v1`。探针只打**不计费**的 `/models` ⇒ 400 是「对**请求**的答复」而非「对**凭据**的答复」
+（凭据被拒应回 401）。⇒ **「Agent 生产能否成功出稿」本轮未验**（需一次计费调用），**不得**据此宣称线上出稿可用。
+
+**前置修复（已授权，写入了生产数据）**：生产原本 `qa.*` 账号 **0 行** + `Membership` **0** ⇒ 登录 401
+（`qa:probe:login` 定性为「**库中不存在**」，**不是密码过期**）。经授权用 `create-qa-accounts.mjs` 重建 +
+新增 `grant-qa-org.mjs` 建成员关系，角色取 **OPERATOR**（**不是 ADMIN**）—— 保住 AC-08「**能跑不能批**」的职责分离。
+清理可选：`node scripts/qa/cleanup-qa-accounts.mjs --apply`（已知写入：User +2 / Profile ×2 / Subscription ×1 / Membership +2）。
 
 ---
 

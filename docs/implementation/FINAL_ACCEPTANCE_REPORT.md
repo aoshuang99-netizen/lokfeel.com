@@ -323,12 +323,12 @@ CI migration job 全链复现              → verify 255/255 + 漂移棘轮 exi
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| **C9 迁移未 apply** | 🟡 | `CommunityBridge` / `BridgeMemberOptIn` 未上生产 ⇒ **发版前需 `connection:migrate apply --batch=C9`** |
-| **生产侧 OpenAI 连通性** | 🟡 | `GET /api/v1/agents/diagnostics/connectivity` 已交付，但**尚未在生产跑过** ⇒ 发版后须实跑 `verify:agent:connectivity:server` |
+| **C9 迁移未 apply** | ✅ 已办结 | `CommunityBridge` / `BridgeMemberOptIn` 已随发版前进生产：`connection:migrate apply --batch=C9` → `verify` **255/255**；发版 `2d5385d` 后 `db-snapshot diff` 65→65 表、既有表行数**全未变** |
+| **生产侧 OpenAI 连通性** | ✅ 已实跑 | `verify:agent:connectivity:server` **22/0**（2026-10-16）。分层：匿名 401 / **网络 PASS（285ms）** / 身份 INFO / **凭据层 FAIL（端点回 400）**。🔴 生产 `OPENAI_BASE_URL` 指向 **Netlify AI Gateway**（`<origin>/.netlify/ai`，`source=env`）；探针只打不计费的 `/models` ⇒ 400 是「对**请求**的答复」而非「对**凭据**的答复」⇒ **「Agent 生产能否成功出稿」仍未验**（需一次计费调用），不得据此宣称线上出稿可用 |
 | **支付生产不可用** | ⛔ | 缺 `CREEM_API_KEY` / `WEBHOOK_SECRET` / 两个 `PRODUCT_ID`（用户明确排除） |
 | **真实邮件外发** | ⛔ | 缺 `RESEND_API_KEY`（接上即 `CAPTURED → SENT`，零代码改动） |
-| **Upstash Redis 环境变量** | 🟡 | 生产未补配（task #51 待办） |
-| **生产 qa 账号缺失** | 🟡 | `verify-login-realpath` 12 项失败属既有取证盲区；修复 = 重跑 `create-qa-accounts.mjs`（需授权） |
+| **Upstash Redis 环境变量** | ✅ 已补配 | #51 闭合（2026-10-16）：`qa:upstash:provision` 建库取凭据 → `qa:upstash:configure` 写 Netlify env 并**回读核对** → 部署 `6ad2201d899a`；生产 `GET /api/health` → `redis:{"backend":"upstash","configured":true,"degraded":false}`（2026-10-17 复验仍成立）；`check:redis` **17/17**（首个双后端验证）。⚠️ 免费档 **10k 命令/天** |
+| **生产 qa 账号缺失** | ✅ 已重建 | 根因 = **生产库 `qa.*` 0 行 + `Membership` 0**（`qa:probe:login` 定性为「库中不存在」，**不是密码过期**）⇒ 端点回业务 401 `Invalid email or password`，**不是代码回归**。经授权 `create-qa-accounts.mjs` 重建 2 账号 + 新增 `grant-qa-org.mjs` 建成员关系（角色 **OPERATOR**，**非 ADMIN** —— 保住 AC-08「能跑不能批」）。⚠️ 本轮**写入生产数据**：User +2 / Profile ×2 / Subscription ×1 / Membership +2；清理 `cleanup-qa-accounts.mjs --apply` |
 | **TURN 中继** | ✅ 已激活 | 生产 `source=cloudflare-realtime`，回滚 `npm run turn:rollback`；国内用户连境外 CF 节点 |
 | **AC-24 涉及的 e2e 环节** | ✅ 已纳入 | CI 新增 e2e job（构建产物浏览器冒烟）。原 `tests/e2e/**` 仍打生产站，**不**入 CI |
 | **生产依赖高危 28 条** | 🟡 | 已登记 + 棘轮阻断，**未升级**。升级批次见 `DEPENDENCY_RISK.md` §5 |
