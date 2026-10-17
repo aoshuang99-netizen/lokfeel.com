@@ -996,6 +996,12 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
    我们自己只用 `src/lib/email.ts` 的 `createTransport`/`sendMail`，不走它的 provider。
 3. 剩余 6 条 moderate/low（`qs` / `uuid` / `gaxios` / `@hono/node-server` / `body-parser` / `@babel/core`）。
 4. 未升 `firebase` 12→13（major）与 `next-auth` 正式版（上游未发布）。
+5. **Dependabot 有两个开放 PR 需单独评审**（不是本批次遗留，但会与本批的 overrides 打架）：
+   - **#27** `bump the minor-and-patch group`（11 项，只改 `package.json` + 锁）——
+     base 仍是 `5fc3bf6`，与本次 16 条 overrides 存在潜在 `EOVERRIDE` / 版本回退冲突，
+     **合并前必须重算锁文件，并复查 `check:deps` 仍为「0 新增」、`verify:check:deps` 仍 8/8**；
+   - **#24** `stripe` 22.6.2 → 23.0.0（**major**，支付栈，需专门回归）。
+   两者均**未开 auto-merge**，main 不会被自动污染。
 
 ---
 
