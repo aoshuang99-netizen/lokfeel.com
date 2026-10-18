@@ -185,8 +185,65 @@ function summarize(out) {
   // 真正数一遍通过的断言（对勾）。比从文案里抠 a/b 稳：文案格式会变，对勾不会。
   // 对勾 + 记录项（`·` 前缀，例如「级联删除轮次」）：两者都是脚本自己算进结论里的检查项。
   const checkmarks = (out.match(/✅/g) || []).length + (out.match(/^\s+·\s+/gm) || []).length
-  return { conclusion: conclusion.replace('结论：', '').trim(), counts, checkmarks, failedLabels, blocked }
+  // 自报数优先：脚本自己知道跑了多少条，数输出行只是近似
+  // （SLO 每规则只打前 6 条明细 ⇒ 数行会系统性少数；发版面把 6+2 也数不齐）。
+  const declared = declaredAssertions(out)
+  return { conclusion: conclusion.replace('结论：', '').trim(), counts, checkmarks, declared, failedLabels, blocked }
 }
+
+/**
+ * 抽「脚本自报的断言数」，按可信度从高到低：
+ *   1. `ASSERTIONS=<n>`  —— 约定行，脚本自己数的，最可信
+ *   2. `<n>/<m> …通过`    —— 结论句式（取分子最大的一处，避免把 2/2 对照组当总数）
+ * 都没有就返回 null，让调用方退回 checkmarks 近似并标注。
+ */
+function declaredAssertions(out) {
+  const tag = out.match(/^ASSERTIONS=(\d+)$/m)
+  if (tag) return Number(tag[1])
+  const pairs = [...out.matchAll(/(\d+)\s*\/\s*(\d+)\s*(?:全部)?通过/g)]
+  if (pairs.length) return Math.max(...pairs.map((m) => Number(m[1])))
+  return null
+}
+
+/**
+ * 自证（`--self-test`）：汇总口径本身也必须能被判错。
+ *
+ * 起因：这行汇总以前是「数输出里的对勾」，于是 SLO 一步算成 52（实际 48）、发版面算成 9
+ * （实际 6+2=8），总数报 150 而文档写 107 —— **一个看起来很精确的估数**。
+ * 这里对抽取逻辑做正反对照，并验证「缺自报时必须退回近似且标注」，避免下次改动把它
+ * 悄悄变成恒亮装饰。
+ */
+function selfTest() {
+  const cases = []
+  const eq = (label, actual, expected) => cases.push({ label, ok: Object.is(actual, expected), actual, expected })
+
+  // ① 有 ASSERTIONS= 约定行时，必须压倒文案里的 a/b（文案可能只覆盖部分子集）
+  eq('自报行优先于文案 a/b', summarize('ASSERTIONS=7\n✅ 99/99 通过').declared, 7)
+  // ② 没有自报行时退回 `N/M 通过`（6 个子脚本走这条）
+  eq('无自报行时回退 a/b', summarize('✅ 18/18 通过').declared, 18)
+  // ③ 一个脚本打多组 a/b 时取**最大分子**（否则会把 2/2 对照组当总数）
+  eq('多组 a/b 取最大分子', summarize('· 正向对照 2/2 通过\n✅ 28/28 全部通过').declared, 28)
+  // ④ 两个信号都没有 → null，调用方必须标「按输出行近似」
+  eq('无任何信号判为未知', summarize('✅ 随便打点什么').declared, null)
+  // ⑤ 变异对照：把 ① 的约定行删掉，结果必须变 —— 证明那一行真的在起作用
+  const mutated = summarize('ASSERTIONS=7\n✅ 99/99 通过'.replace('ASSERTIONS=7\n', '')).declared
+  eq('变异（删掉自报行）后结果翻转', mutated, 99)
+  // ⑥ 失败/不可信信号不能漏：⛔ 必须判 blocked，❌ 必须带出标签
+  eq('⛔ 判为不可信', summarize('⛔ 前置不可用').blocked, true)
+  eq('❌ 带出失败标签', summarize('  ❌ 会话未建立').failedLabels[0], '会话未建立')
+
+  const bad = cases.filter((c) => !c.ok)
+  console.log('\n══════ 自证（上线预检汇总口径）══════')
+  for (const c of cases) {
+    console.log(`${c.ok ? '✅' : '🔴'} ${c.label}${c.ok ? '' : `  —— 实际 ${JSON.stringify(c.actual)}，期望 ${JSON.stringify(c.expected)}`}`)
+  }
+  console.log(`\n${bad.length === 0 ? '✅' : '🔴'} ${cases.length - bad.length}/${cases.length} 通过`)
+  console.log(`ASSERTIONS=${cases.length}`)
+  return bad.length === 0 ? 0 : 1
+}
+
+// 自证模式：只跑汇总口径的对照，不碰网络（<1s，可进 CI）
+if (argv.includes('--self-test')) process.exit(selfTest())
 
 ;(async () => {
   console.log('')
@@ -217,6 +274,7 @@ function summarize(out) {
       detail: s.conclusion || (status === 'pass' ? 'ok' : '见输出'),
       counts: s.counts,
       checkmarks: s.checkmarks,
+      declared: s.declared,
       failed: s.failedLabels,
     })
     const icon = status === 'pass' ? c('32', '✅') : status === 'blocked' ? c('33', '⛔') : c('31', '❌')
@@ -231,13 +289,22 @@ function summarize(out) {
   const fail = results.filter((r) => r.status === 'fail').length
   const blocked = results.filter((r) => r.status === 'blocked').length
   const skip = results.filter((r) => r.status === 'skip').length
-  const totalAssertions = results.reduce((n, r) => n + (r.checkmarks || 0), 0)
+  // 断言总数：能用脚本自报的（declared）就用自报，否则退回「数对勾」近似。
+  // 两个口径混用时必须显式标注 —— 否则汇总数看起来精确、实际是估的（正是"假精确"）。
+  const counted = results.filter((r) => r.status !== 'skip')
+  const totalAssertions = counted.reduce((n, r) => n + (r.declared ?? r.checkmarks ?? 0), 0)
+  const approxSteps = counted.filter((r) => r.declared == null).map((r) => r.id)
 
   console.log('')
   console.log('┌──────────────────────────────────────────────────────────────────────────────┐')
   console.log('│ 汇总                                                                         │')
   console.log('└──────────────────────────────────────────────────────────────────────────────┘')
   console.log(`  ${c('32', `通过 ${pass}`)}  ${fail ? c('31', `失败 ${fail}`) : '失败 0'}  ${blocked ? c('33', `不可信 ${blocked}`) : '不可信 0'}  跳过 ${skip}   · 断言合计 ${totalAssertions}`)
+  if (approxSteps.length) {
+    console.log(c('90', `  （其中 ${approxSteps.join('/')} 未自报断言数，按输出行近似计）`))
+  } else {
+    console.log(c('90', '  （每步均由脚本自报断言数，非估算）'))
+  }
   if (fail || blocked) {
     console.log('')
     for (const r of results.filter((x) => x.status !== 'pass' && x.status !== 'skip')) {
@@ -278,7 +345,11 @@ function summarize(out) {
     fs.mkdirSync(path.dirname(p), { recursive: true })
     fs.writeFileSync(
       p,
-      JSON.stringify({ at: new Date().toISOString(), offline: OFFLINE, exitCode, pass, fail, blocked, skip, totalAssertions, results }, null, 2),
+      JSON.stringify(
+        { at: new Date().toISOString(), offline: OFFLINE, exitCode, pass, fail, blocked, skip, totalAssertions, approxSteps, results },
+        null,
+        2,
+      ),
     )
     console.log(`报告已写入 ${path.relative(ROOT, p)}`)
   }

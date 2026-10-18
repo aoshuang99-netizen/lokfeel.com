@@ -105,6 +105,7 @@
     "verify:prod:session": "node scripts/qa/verify-prod-session.mjs",
     "verify:email:delivery": "node scripts/qa/verify-email-delivery.mjs",
     "check:launch": "node scripts/qa/launch-check.mjs",
+    "verify:check:launch": "node scripts/qa/launch-check.mjs --self-test",
     "verify:no-release": "node scripts/qa/verify-no-release.mjs",
     "verify:released:surface": "node scripts/qa/verify-released-surface.mjs",
     "verify:release:wait": "bash scripts/perf/wait-release.sh",

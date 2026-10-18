@@ -22,10 +22,16 @@
 | 真实邮件送达（delivered + bounced 双证） | ✅ 5/5 |
 | Google OAuth 配置（含畸变对照） | ✅ 7/7 |
 | 生产登录→会话→ICE/TURN（自建自删） | ✅ 28/28（`source=cloudflare-realtime`，3 条 TURN） |
-| 对外跳转域名 | ✅ 13/0 |
-| 发版生效面 | ✅ 6/6 + 2/2 对照 |
-| 依赖安全 / 漂移 / SLO | ✅ 3/3 |
-| **合计** | **10 步全绿 · 107 条断言 · 退出码 0** |
+| 对外跳转域名 | ✅ 13/13 |
+| 发版生效面 | ✅ 8/8（6 路由 + 2 正向对照） |
+| 依赖安全 / 漂移 / SLO | ✅ 1 + 7 + 48 |
+| **合计** | **10 步全绿 · 147 条断言 · 退出码 0** |
+
+> **这个 147 不是数出来的，是各步自报的。** 之前的汇总靠着数输出里的对勾，于是
+> SLO 一步被算成 52（它自报 48 —— 每规则只打前 6 条明细），发版面算成 9（实际 6+2=8），
+> 总数报 150 而文档写 107。现在口径是「脚本自报优先，缺自报才退回近似**并显式标注**」，
+> 由 `npm run verify:check:launch`（7 条对照，含变异）与 CI job `launch-check-selftest` 钉住。
+
 
 
 ## 1. 除支付外，已完成什么
@@ -153,9 +159,10 @@ curl -s -o /dev/null -w '%{http_code}\n' https://app.lokfeel.com/api/payments/cr
 npm run check:launch                 # 10 项（在线 7 + 离线 3）
 npm run check:launch -- --offline    # 只跑离线（无凭据环境）
 npm run check:launch -- --json=reports/launch.json --verbose
+npm run verify:check:launch          # 只验「断言计数口径」本身（不联网，<1s，CI 也在跑）
 ```
 
-| # | 步骤 id | 验什么 | 断言 |
+| # | 步骤 id | 验什么 | 断言（自报） |
 |---|---|---|---|
 | 1 | `payment` | 7 个支付入口的「未接入」契约（503 + 稳定码，绝不 500） | 18 |
 | 2 | `cache` | Upstash 写入/删除契约（真实往返 + 旧写法变异对照） | 12 |
@@ -163,13 +170,20 @@ npm run check:launch -- --json=reports/launch.json --verbose
 | 4 | `oauth` | Google 授权端点配置 + 畸变 client_id 对照 | 7 |
 | 5 | `session` | 注册→登录→会话→受保护端点→ICE/TURN→删号复验 | 28 |
 | 6 | `origin` | 对外跳转不含部署专用域名 | 13 |
-| 7 | `surface` | 发版生效面（新路由已可达） | 6 |
-| 8 | `deps` | 生产可达依赖 high/critical = 0 | — |
-| 9 | `drift` | schema ↔ 生产库逐列比对（`db push` 会删的列全部列出） | — |
-| 10 | `slo` | 性能 SLO 规则 | — |
+| 7 | `surface` | 发版生效面（6 条新路由 + 2 条正向对照） | 8 |
+| 8 | `deps` | 生产可达依赖 high/critical = 0（一条棘轮判定） | 1 |
+| 9 | `drift` | schema ↔ 生产库逐列比对（`db push` 会删的列全部列出） | 7 |
+| 10 | `slo` | 性能 SLO 规则 | 48 |
+| | | **合计** | **147** |
 
 退出码：`0` 全绿 · `1` 有失败 · `2` 有步骤无法取证（前置不可用）。
 脚本还会检测「断言数少于预期」并提示 —— 防止某个步骤被提前短路却仍显示绿色。
+
+**断言数怎么来的**：子脚本在收尾打一行 `ASSERTIONS=<n>`（已在 `origin` / `surface` / `slo` /
+`deps` 补齐，其余 6 个用其结论句 `N/M 通过`），编排器优先采信它；两样都没有才退回数输出行，
+并在汇总里点名「按输出行近似计」。口径自身由 `npm run verify:check:launch` 自证 ——
+7 条对照，其中一条是**变异**（删掉 `ASSERTIONS=` 行后结果必须翻转），CI 里也是独立 job。
+
 
 ---
 
@@ -225,5 +239,6 @@ npm run check:launch -- --json=reports/launch.json --verbose
 
 | 日期 | 变更 |
 |---|---|
-| 2026-10-18（晚） | **全部人工项自动化**：新增 `verify:prod:session`（28）、`verify:redis:contract`（12）、`verify:email:delivery`（5）、`verify-oauth-authorize`（7）、`verify-schema-drift`（直连比对），并编排为 `npm run check:launch`（10 步 / 107 断言）。**同期修掉生产 P0**：Upstash SET 参数形态错误导致登录用户第二个鉴权请求起全线 401、DEL 用错方法导致失效空转（见 BACKLOG §7terdecies）。 |
+| 2026-10-18（晚） | **全部人工项自动化**：新增 `verify:prod:session`（28）、`verify:redis:contract`（12）、`verify:email:delivery`（5）、`verify-oauth-authorize`（7）、`verify-schema-drift`（直连比对），并编排为 `npm run check:launch`（10 步 / 147 断言）。**同期修掉生产 P0**：Upstash SET 参数形态错误导致登录用户第二个鉴权请求起全线 401、DEL 用错方法导致失效空转（见 BACKLOG §7terdecies）。 |
+| 2026-10-18（晚·补） | **汇总口径纠偏**：断言合计原先是「数输出里的对勾」，SLO 一步多算 4 条、发版面少算 1 条，总数 150（文档写 107）—— 一个看起来很精确的估数。改为「脚本自报优先（`ASSERTIONS=` / `N/M 通过`），缺自报退回近似并标注」，四个脚本补齐自报行；新增 `verify:check:launch`（7 条对照 + 变异）与 CI job `launch-check-selftest`。重跑全量：**10/10 步 · 147 条自报断言 · exit 0**。 |
 | 2026-10-18 | 首次生成。新增 `src/lib/payments/availability.ts`（单一判定）+ `not-configured.ts`（503 统一出口），7 个入口收敛同一语义；`CREEM_ENV` 误配 fail-closed；`/api/health` 暴露 `payments` 接入进度；新增单测、`verify:payment:channel`、`verify:payment:off` 与 CI 门禁。 |

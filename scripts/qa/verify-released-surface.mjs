@@ -153,6 +153,8 @@ async function main() {
     console.log(`⚠️ 另有 ${unknown.length} 条无响应、未纳入判定（见上）。`)
   }
   console.log('   注：本结论基于**公开 HTTP 面**（验的是实际生效的代码面）。')
+  // 机器可读的自报断言数：编排器（launch-check）优先采信它，而不是数输出行。
+  console.log(`ASSERTIONS=${RELEASED.length + controlsOk}`)
 }
 
 main().catch((err) => {

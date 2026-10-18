@@ -424,4 +424,6 @@ if (blocking > 0) {
 }
 
 console.log('\n✅ 依赖棘轮通过：无新增生产高危，全部豁免在有效期内。')
+// 机器可读的自报断言数：本步是「一条棘轮判定」（新增+升级+无豁免+到期 四类合判），记 1。
+console.log('ASSERTIONS=1')
 process.exit(0)

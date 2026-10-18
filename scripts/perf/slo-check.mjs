@@ -182,6 +182,9 @@ function report(result) {
     `\n${result.failures.length === 0 ? '✅ 全部通过' : `🔴 ${result.failures.length} 条越界`}` +
       `（共 ${result.results.length} 条断言）`,
   )
+  // 机器可读的自报断言数：编排器（launch-check）优先采信它，而不是数输出行
+  // （这里每个规则只打印前 6 条明细，数对勾会系统性少数）。
+  console.log(`ASSERTIONS=${result.results.length}`)
   return result.failures.length === 0 ? 0 : 1
 }
 

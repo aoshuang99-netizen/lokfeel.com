@@ -108,4 +108,6 @@ for (const l of leaks) console.log(`    ⚠️  ${l.path} → ${l.location}`)
 ck('无部署专用域名泄漏', leaks.length === 0)
 
 console.log(`\n════════ 结果：${pass} 通过 / ${fail} 失败 ════════`)
+// 机器可读的自报断言数：编排器（launch-check）优先采信它，而不是数输出行。
+console.log(`ASSERTIONS=${pass + fail}`)
 process.exit(fail === 0 ? 0 : 1)

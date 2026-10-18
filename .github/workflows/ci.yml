@@ -468,6 +468,30 @@ jobs:
         run: node scripts/perf/slo-check.mjs
 
   # ─────────────────────────────────────────────────────────────
+  # 10bis. 上线预检编排器的**汇总口径**自证
+  #
+  #     为什么单独设门禁：`npm run check:launch` 的「断言合计」是这个仓库对外
+  #     唯一的量化证据。它曾经是「数输出里的对勾」——于是 SLO 一步被算成 52
+  #     （脚本自报 48）、发版面算成 9（实际 6+2=8），总数报 150 而文档写 107：
+  #     **一个看起来很精确的估数**。现在改成「脚本自报优先，缺失退回近似并标注」，
+  #     本 job 就是钉住这条口径：自报行必须压倒文案、缺自报必须判未知、
+  #     删掉自报行结果必须翻转（变异对照）。
+  #
+  #     纯 node 标准库、不联网、不需要任何 secret，约 2 秒。
+  # ─────────────────────────────────────────────────────────────
+  launch-check-selftest:
+    name: 上线预检汇总口径自证
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+      - name: 汇总口径自证（自报优先 + 变异对照）
+        run: node scripts/qa/launch-check.mjs --self-test
+
+  # ─────────────────────────────────────────────────────────────
   # 11. 性能基线实跑 —— **仅手动触发**（AC-24）
   #
   #     为什么不是 push/PR 门禁：见上一个 job 的说明。压测在共享 runner 上
