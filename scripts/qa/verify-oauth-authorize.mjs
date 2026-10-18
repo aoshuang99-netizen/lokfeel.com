@@ -56,6 +56,10 @@ const ERROR_MARKERS = [
  * 错误码藏在 base64 里（如 `Cg5pbnZhbGlkX2NsaWVudB…` → `invalid_client`），
  * 所以只扫 body/URL 文本会**漏判**。这里按 base64 解出来再比。
  */
+function sanitize(s, n = 80) {
+  return String(s).replace(/[^\x20-\x7E\u4e00-\u9fa5]/g, ' ').slice(0, n).trim()
+}
+
 function authErrorOf(location) {
   if (!location || !/\/signin\/oauth\/error/.test(location)) return null
   try {
@@ -198,13 +202,16 @@ async function main() {
     })
     return
   }
-  const authErr = authErrorOf(googleRes.location)
-  const hit = authErr ? ERROR_MARKERS.filter((m) => authErr.includes(m)) : []
+  // 两条通路都要看：
+  //   ① 302 到 /signin/oauth/error?authError=<base64>（Google 现行做法）
+  //   ② 直接回 4xx 错误页，正文里带错误码（更老的形态 / 未来变化）
+  const bodyHit = ERROR_MARKERS.find((m) => googleRes.text.includes(m))
+  const authErr = authErrorOf(googleRes.location) || (googleRes.status >= 400 && bodyHit ? bodyHit : null)
 
   ck(
     'Google：authorize 端点没报配置错误（未被 redirect_uri_mismatch / invalid_client 拒绝）',
     !authErr,
-    authErr ? `authError=${authErr.slice(0, 80)}` : `HTTP ${googleRes.status}`,
+    authErr ? `authError=${sanitize(authErr)}` : `HTTP ${googleRes.status}`,
   )
   ck(
     'Google：返回的是登录/同意流程（200/302 且不是 /signin/oauth/error）',
@@ -226,7 +233,7 @@ async function main() {
     ck(
       '反向对照：畸形 client_id 被判 invalid_client（说明这个探针有判别力）',
       bogusRejected,
-      bogusErr ? `authError=${bogusErr.slice(0, 60)}` : `HTTP ${bogusRes?.status} ${bogusRes?.location?.slice(0, 60) || ''}`,
+      bogusErr ? `authError=${sanitize(bogusErr, 60)}` : `HTTP ${bogusRes?.status}`,
     )
   }
 }

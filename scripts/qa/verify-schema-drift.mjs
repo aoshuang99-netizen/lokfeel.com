@@ -25,7 +25,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { createTurso, loadEnv } from './lib/turso-http.mjs'
+import { createTurso } from './lib/turso-http.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '../..')
 const argv = process.argv.slice(2)
@@ -71,7 +71,7 @@ function parseSchema() {
           if (!t || t.startsWith('//') || t.startsWith('///') || t.startsWith('@@')) continue
           const fm = t.match(/^(\w+)\s+([A-Za-z_][\w.]*)(\[\])?(\?)?/)
           if (!fm) continue
-          const [, fieldName, typeName, list] = fm
+          const [, fieldName, , list] = fm
           // 列表（关系数组）不是列；枚举**是**列（SQLite 存 TEXT），不能跳过。
           // 关系字段（类型是另一个 model）稍后统一过滤 —— 见下方二次过滤。
           if (list) continue

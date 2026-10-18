@@ -38,7 +38,7 @@
  */
 import crypto from 'node:crypto'
 import fs from 'node:fs'
-import { createTurso, foreignKeysTo, deleteUserCascade, loadEnv } from './lib/turso-http.mjs'
+import { createTurso, foreignKeysTo, deleteUserCascade } from './lib/turso-http.mjs'
 
 // ─── 参数 ──────────────────────────────────────────────────────────────
 const argv = process.argv.slice(2)
