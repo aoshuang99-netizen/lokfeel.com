@@ -6,13 +6,14 @@
 >
 > 判据不是这句话，是下面三条可复跑的命令（§4）。
 
-- **代码基线**：`17fa159`（本文件所在提交）
+- **代码基线**：`0b7b4a2`（本文件所在提交）
 - **生产**：`https://app.lokfeel.com`（Netlify `lokfeel` / site `c46478e9-7ac8-4bcf-9052-7638b04fef83` + Cloudflare DNS）
-- **生产部署**：`6ad496cc45dad08b37f9d444` ← `17fa159`，`state=ready`（75s）
+- **生产部署**：`6ad4998f173f834f3dd30480` ← `0b7b4a2`，`state=ready`（66s）—— **生产产物 = main**。
+  （之后的提交若只改文档/测试，会带 `[skip netlify]`，不再重建产物。）
 - **环境变量**：生产共 **40** 个；支付相关 **0** 个（这是唯一缺口，见 §2）
 - **支付状态**：`payments.configured=false`，`missing=[CREEM_API_KEY, CREEM_WEBHOOK_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET]`
 
-### 本次发版的生产实证（2026-10-18）
+### 本次发版的生产实证（2026-10-18 · 部署 `6ad4998f…` ← `0b7b4a2`）
 
 | 复验项 | 命令 | 结果 |
 |---|---|---|
@@ -21,7 +22,7 @@
 | 发版生效面 | `npm run verify:released:surface` | ✅ **6/6 达期望 + 2/2 正向对照** |
 | 对外跳转域名 | `node scripts/qa/verify-public-origin.mjs` | ✅ **13 通过 / 0 失败**（0 处部署域名泄漏） |
 | 缓存 / 限流后端 | `/api/health` | ✅ `redis.backend=upstash, degraded=false` |
-| CI | run `39117380891` ← `18fef38` | ✅ **9 success + 2 skipped / 0 失败**（含新增的 `payment-off 契约` 步骤） |
+| CI | run `39117618185` ← `0b7b4a2` | ✅ **9 success + 2 skipped / 0 失败**（含新增的 `payment-off 契约` 步骤） |
 
 ---
 
