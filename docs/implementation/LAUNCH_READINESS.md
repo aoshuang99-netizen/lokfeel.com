@@ -6,10 +6,21 @@
 >
 > 判据不是这句话，是下面三条可复跑的命令（§4）。
 
-- **代码基线**：`main`（本文件所在提交）
+- **代码基线**：`17fa159`（本文件所在提交）
 - **生产**：`https://app.lokfeel.com`（Netlify `lokfeel` / site `c46478e9-7ac8-4bcf-9052-7638b04fef83` + Cloudflare DNS）
+- **生产部署**：`6ad496cc45dad08b37f9d444` ← `17fa159`，`state=ready`（75s）
 - **环境变量**：生产共 **40** 个；支付相关 **0** 个（这是唯一缺口，见 §2）
 - **支付状态**：`payments.configured=false`，`missing=[CREEM_API_KEY, CREEM_WEBHOOK_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET]`
+
+### 本次发版的生产实证（2026-10-18）
+
+| 复验项 | 命令 | 结果 |
+|---|---|---|
+| 支付缺口可观测 | `curl /api/health` | ✅ 200 healthy · `payments.configured=false` · 4 个缺失变量名精确列出 · `malformed=[]` |
+| payment-off 契约 | `node scripts/qa/verify-payment-off.mjs --base=https://app.lokfeel.com` | ✅ **18/18 通过**（products 503、两个 webhook 503、checkout/refund 401、**零 500**、无凭据片段） |
+| 发版生效面 | `npm run verify:released:surface` | ✅ **6/6 达期望 + 2/2 正向对照** |
+| 对外跳转域名 | `node scripts/qa/verify-public-origin.mjs` | ✅ **13 通过 / 0 失败**（0 处部署域名泄漏） |
+| 缓存 / 限流后端 | `/api/health` | ✅ `redis.backend=upstash, degraded=false` |
 
 ---
 
@@ -19,7 +30,7 @@
 |---|---|---|
 | 业务闭环 AC-01~AC-24 | ✅ 24 PASS / 0 FAIL（AC-25 为外部依赖） | `docs/implementation/FINAL_ACCEPTANCE_REPORT.md` §3 |
 | 多租户隔离 | ✅ 应用级（libSQL 无 RLS） | `tests/tenancy` 120 例 · `verify:ac19:bridge` 越权六条 |
-| 认证 / OAuth | ✅ 生产可用 | 登录 realpath · `verify-open-redirect-e2e` · 生产匿名 API 一律 401 |
+| 认证 / OAuth | ✅ 跳转与守卫已验；**真实登录建议人工点一次** | `verify-public-origin` 13/0（Google `redirect_uri` 落在公开域名）· 生产匿名 API 一律 401 · ⚠️ 生产 QA 账号已于 2026-10-17 清理，最后一次**真实登录**取证为 2026-10-16（`verify:agent:connectivity:server` 22/0） |
 | 数据库 | ✅ Turso，C0–C9 全部就位 | `npm run connection:migrate -- verify` → 255/255 · 65 张表 |
 | 缓存 / 限流 | ✅ Upstash | `/api/health` → `redis.backend=upstash, degraded=false` · `check:redis` 17/17 |
 | 邮件通道 | 🟡 生产已配 `RESEND_API_KEY`（变量存在），**未做真实外发冒烟** | `scripts/qa/verify-email-channel.mjs --send you@…` 可当场补证 |
@@ -103,6 +114,18 @@ curl -s -o /dev/null -w '%{http_code}\n' https://app.lokfeel.com/api/payments/cr
 
 > 第 4 条是**反向对照**：如果接完凭据后 `verify:payment:off` 还是绿的，说明配置没生效，
 > 或守卫被绕过 —— 那才是更危险的情形。
+
+---
+
+## 4bis. 上线前建议人工点一遍的三件事
+
+工程能自动验的都验了；下面三件**必须由人来点**（自动化会打到真实用户或真实收款）：
+
+| # | 动作 | 为什么自动化替代不了 |
+|---|---|---|
+| 1 | 用一个真实 Google 账号从 `/login` 走完登录 → 进 `/dashboard` | 生产 QA 账号已清理（避免在生产库留测试凭据）；OAuth 授权页的人工同意无法脚本化 |
+| 2 | 在订阅页点一次「Upgrade」（**接支付后**） | 会创建真实收款会话；应人工确认金额/币种/文案与 `src/config/plans.ts` 一致 |
+| 3 | 收一封真实邮件（`verify:email:channel --send you@…`） | 投递结果取决于 Resend 域名验证状态，只有收件箱能证明 |
 
 ---
 
