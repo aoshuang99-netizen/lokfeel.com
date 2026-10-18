@@ -1126,7 +1126,7 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400 "No payment foun
 
 ## 7novies. 修复退款链路潜伏缺陷（`§7octies` 遗留项）
 
-**结论：已修，逻辑层已被 55 条断言覆盖；两条 admin 退款路由去重为一份实现。**
+**结论：已修并上线（`417f835`，部署 `6ad4501738ddf71339c07ef4`）；45 例单测本地真跑 + CI jest 双复核；两条 admin 退款路由去重为一份实现。**
 **仍未做**：真实 Stripe test mode 的端到端退款（生产无 `STRIPE_*` 凭据），故本项不改变任何 AC 状态。
 
 ### 缺陷回顾
@@ -1177,7 +1177,8 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 | 变异验证（证明用例非恒真） | 把 `refunds.create` 的金额改成固定 1 分 ⇒ **36 passed / 2 failed**；恢复后 **38 / 0** |
 | 依赖门禁 | `check:deps` **exit 0** |
 | CI 第一轮（`39097779698`） | Jest / Typecheck / Build / E2E / 审计 / 迁移 **全绿**；**Lint 红** —— 棘轮逐文件逐规则，`refund-route.ts` 的 `context: any` 属新增债。已去掉显式标注（类型由 `withPermission` 的 `HandlerFunction` 推出）。顺带把棘轮明细写进 job summary：job 日志 REST 端点要写权限，summary 公开可读 |
-| 生产 | 未配 `STRIPE_*` ⇒ 退款路由仍返回 500 `Stripe not configured`，行为与升级前一致；发版后复验健康面与 Stripe 路由加载性 |
+| CI 第二轮（`39098488462`） | **9 success + 2 skipped**：Typecheck / Lint / Test (Jest) / Build / E2E / Migration / 审计 / 密钥扫描 / Perf 对账全绿 |
+| 生产（部署 `6ad4501738ddf71339c07ef4` ← `417f835`） | `/api/health` **200** healthy；首页 **200**；`POST /api/webhooks/stripe` **400** `Missing stripe-signature header`（路由已加载）；`POST .../refund` **401**、`GET .../[id]` **401**（鉴权门在，非 404/405）；`verify-public-origin` **13 通过 / 0 失败**。注：`GET .../[id]` 首次命中 502 属冷启动，连测 3 次均 401 |
 
 > **环境限制（如实记录）**：本轮本地仍装不出 `jest` —— 沙箱的 `npm install` 在 `/tmp` 被拒
 > （`CODEBUDDY_BROKER_DENY`：改名 `node_modules/.bin/*` 被拦），仓库侧 `node_modules` 只有 33 个包。
