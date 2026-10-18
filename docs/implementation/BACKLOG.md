@@ -1000,8 +1000,8 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
    - **#27** `bump the minor-and-patch group`（11 项）—— 2026-10-17 以 `cherry-pick -x 4e91c48` + 重算锁并入，
      16 条 overrides 全部仍生效、审计仍 `high 0 / critical 0`；Dependabot 已自动关闭该 PR。
    - **#24** `stripe` 22.6.2 → **23.0.0**（major）—— 2026-10-17 并入，5 处客户端显式钉回 `dahlia`；
-     **遗留一项**：两条退款路由在启用 Stripe 后会因 `latest_invoice` 未 expand + `payment_intent` 已移除而恒 400，
-     详见 §7octies「遗留」。
+     **遗留一项（已于 2026-10-18 修复，见 §7novies）**：两条退款路由在启用 Stripe 后会因
+     `latest_invoice` 未 expand + `payment_intent` 已移除而恒 400。
 
 ---
 
@@ -1097,7 +1097,7 @@ repro-param.ts(5,52): error TS2561: Object literal may only specify known proper
 > 所以本次升级的**运行时风险实际为 0**：所有 Stripe 链路在第一道守卫就返回 503/500。
 > 但类型与构建风险是真实的，这也是本轮唯一红的来源。
 
-### 遗留（本轮发现，**未修**）：退款链路一旦启用 Stripe 就会 400
+### 遗留（本轮发现，**已于 2026-10-18 修复**，见 §7novies）：退款链路一旦启用 Stripe 就会 400
 
 两条 admin 路由（`[id]/route.ts` 的 POST 与 `[id]/refund/route.ts` 的 POST，逻辑重复）都有：
 
@@ -1112,14 +1112,78 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400 "No payment foun
   即已 ABSENT），只剩 `invoice.payments: ApiList<InvoicePayment>`，其中 `payment.payment_intent`。
 - 这是**既有缺陷，与本次升级无关**（v22 下同样不成立）；因为生产没配 Stripe 密钥，它目前是潜伏状态。
 
-修法（需真实 Stripe test mode 验证，故不在本轮夹带）：
-`retrieve(id, { expand: ["latest_invoice.payments"] })` → 取
-`invoice.payments.data[].payment.payment_intent`。建议与「两条退款路由去重」一起做。
+修法（2026-10-18 已按此落地，见 §7novies）：
+`retrieve(id, { expand: ["latest_invoice"] })` → 取
+`invoice.payments.data[].payment.payment_intent`（缺失时回落 `invoicePayments.list`）。
+两条退款路由已去重为同一实现。
 
 ### 未做（刻意）
 
 **没有把 API 版本升到 `2026-09-30.endive`。** 那会是支付/退款/订阅/Webhook 全链路的语义变更，
 必须用真实 Stripe 环境回归；与依赖升级混在一起做，等于把两件事的风险叠成一件事。
+
+---
+
+## 7novies. 修复退款链路潜伏缺陷（`§7octies` 遗留项）
+
+**结论：已修，逻辑层已被 55 条断言覆盖；两条 admin 退款路由去重为一份实现。**
+**仍未做**：真实 Stripe test mode 的端到端退款（生产无 `STRIPE_*` 凭据），故本项不改变任何 AC 状态。
+
+### 缺陷回顾
+
+两条路由（`/api/admin/subscriptions/[id]` 与 `.../[id]/refund` 的 POST）各自复制了一份：
+
+```ts
+const latestInvoice = stripeSubscription.latest_invoice as any;      // 未 expand ⇒ 字符串
+if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 undefined
+```
+
+两个独立原因叠加：`Subscription.latest_invoice` 默认只给 **ID 字符串**；而 `Invoice.payment_intent`
+自 `dahlia` 起已从 API 中**移除**，收款信息搬到了 `invoice.payments[]`（`InvoicePayment`）的
+`payment.payment_intent` / `payment.charge`。`as any` 把这两点都盖住了 —— 类型检查看不出，
+线上只要配上密钥就恒 400。
+
+同一根因还命中 Webhook 的两处记账（`invoice.paid` / `invoice.payment_failed`）：
+`stripePaymentIntentId` 永远写成 `undefined`，`Payment` 行因此无法回溯到 Stripe。**本轮一并修掉**。
+
+### 改动
+
+| 文件 | 作用 |
+|---|---|
+| `src/lib/stripe/invoice-payment.ts`（新） | **唯一**的收款标的解析器：`invoice.payments` 优先、`invoicePayments.list({ expand: ["data.payment.payment_intent"] })` 回落；`canceled` 跳过、默认收款单优先 |
+| `src/lib/stripe/refund.ts`（新） | `executeSubscriptionRefund`：可退余额 = `amount_paid` − 有效退款之和；全额/部分、金额与 `reason` 校验、幂等键、`fullyRefunded` |
+| `src/lib/stripe/refund-route.ts`（新） | 路由层实现：`withPermission("payment.refund", { dangerous: true })` + 读库 + 调上面两者 + 写库 + HTTP 映射 |
+| `.../[id]/route.ts`、`.../[id]/refund/route.ts` | 两个 POST 各收敛成 `export const POST = createSubscriptionRefundHandler();`（-212 行） |
+| `src/lib/stripe/invoice-payment-record.ts`（新） | Webhook 记账：解析 PI → 按 PI 查重 → 命中 `update` / 未命中 `create`，解析失败**降级记账**而不是让 webhook 5xx |
+| `tests/billing/stripe-refund.test.ts`（新） | 退款决策 **38 例** |
+| `tests/billing/stripe-invoice-payment.test.ts`（新） | 记账幂等 7 例 |
+
+### 四个刻意的取舍
+
+1. **`refunds.list` 而不是 `Invoice.amount_remaining`** —— 后者是「本发票还欠多少」，
+   与「已退多少」是两件事；混用会把部分退款算成未支付。已退金额取有效退款（排除 `failed` / `canceled`）之和。
+2. **`type=partial` 但没给金额 ⇒ 400**，不静默升级成全额。参数缺失不该放大成不可撤销的全额退款。
+3. **只有 `fullyRefunded` 才把订阅置 `CANCELLED`**（原实现只要退款成功就取消）。
+   部分退款后用户仍应付费享有服务，这是行为变更，已写进代码注释。
+4. **幂等键 = `admin-refund:<标的>:<已退余额>:<本次金额>`** —— admin 双击/超时重试不会退两次；
+   等余额变了再退同额（合法的第二次部分退款）会得到不同的键。
+
+### 验证
+
+| 项 | 结果 |
+|---|---|
+| 类型（新模块 + 测试，stripe@23 真实类型） | 探针工程 `tsc --strict` **exit 0**；真实 `Stripe` 客户端可直接赋给 `StripeRefundPort` / `InvoicePaymentPort`（有专门用例钉住） |
+| 逻辑（本地真实执行） | 两个测试文件编译到 CJS 后**真跑 45 例全过**（退款 38 + 记账 7）：dahlia 路径 / 未 expand / 回落 list / 金额换算 / 超额 / 非法金额 / 已退干净 / `charge` 兜底 / `reason` / 幂等键 / 状态迁移 / 记账查重 / 降级 |
+| 变异验证（证明用例非恒真） | 把 `refunds.create` 的金额改成固定 1 分 ⇒ **36 passed / 2 failed**；恢复后 **38 / 0** |
+| 依赖门禁 | `check:deps` **exit 0** |
+| CI（tsc · lint 棘轮 · jest · next build · migration · e2e · dep audit） | 见本轮提交后的 CI 记录（下方补） |
+| 生产 | 未配 `STRIPE_*` ⇒ 退款路由仍返回 500 `Stripe not configured`，行为与升级前一致；发版后复验健康面与 Stripe 路由加载性 |
+
+> **环境限制（如实记录）**：本轮本地仍装不出 `jest` —— 沙箱的 `npm install` 在 `/tmp` 被拒
+> （`CODEBUDDY_BROKER_DENY`：改名 `node_modules/.bin/*` 被拦），仓库侧 `node_modules` 只有 33 个包。
+> 折中做法：`tsc` 把**同一份测试代码**编译成 CJS，用一个自写的 jest 兼容层（`describe`/`it.each`/
+> `expect` 全部匹配器/`jest.fn`）执行，45 例真跑；再用**变异**证明断言不是恒真。
+> 这仍不等于 jest 结论（`ts-jest` 诊断、`setupFilesAfterEach` 等未覆盖），CI 的 jest job 才是最终判据。
 
 ---
 

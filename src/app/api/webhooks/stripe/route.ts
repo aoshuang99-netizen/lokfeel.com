@@ -5,6 +5,10 @@ import { db } from "@/lib/db";
 import Stripe from "stripe";
 import { isFemaleGender } from "@/lib/gender-utils";
 import { STRIPE_API_VERSION } from "@/lib/stripe/config";
+import {
+  recordInvoicePayment,
+  type PaymentRecordPort,
+} from "@/lib/stripe/invoice-payment-record";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -249,16 +253,16 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 
   if (!userSubscription) return;
 
-  await db.payment.create({
-    data: {
+  await recordInvoicePayment(
+    { stripe: getStripe(), payments: db.payment as unknown as PaymentRecordPort },
+    {
       userId: userSubscription.userId,
-      stripePaymentIntentId: (invoice as any).payment_intent as string || undefined,
+      invoice,
       amount: (invoice.amount_paid || 0) / 100,
-      currency: invoice.currency || "usd",
       status: "SUCCEEDED",
       description: `LokFee! ${userSubscription.plan} renewal`,
-    },
-  });
+    }
+  );
 
   console.log(`[Webhook] Renewal payment recorded for user ${userSubscription.userId}`);
 }
@@ -278,16 +282,16 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     data: { status: "PAST_DUE" },
   });
 
-  await db.payment.create({
-    data: {
+  await recordInvoicePayment(
+    { stripe: getStripe(), payments: db.payment as unknown as PaymentRecordPort },
+    {
       userId: userSubscription.userId,
-      stripePaymentIntentId: (invoice as any).payment_intent as string || undefined,
+      invoice,
       amount: (invoice.amount_due || 0) / 100,
-      currency: invoice.currency || "usd",
       status: "FAILED",
       description: `LokFee! ${userSubscription.plan} payment failed`,
-    },
-  });
+    }
+  );
 
   await db.notification.create({
     data: {
