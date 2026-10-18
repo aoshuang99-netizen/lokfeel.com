@@ -21,6 +21,7 @@
 | 发版生效面 | `npm run verify:released:surface` | ✅ **6/6 达期望 + 2/2 正向对照** |
 | 对外跳转域名 | `node scripts/qa/verify-public-origin.mjs` | ✅ **13 通过 / 0 失败**（0 处部署域名泄漏） |
 | 缓存 / 限流后端 | `/api/health` | ✅ `redis.backend=upstash, degraded=false` |
+| CI | run `39117380891` ← `18fef38` | ✅ **9 success + 2 skipped / 0 失败**（含新增的 `payment-off 契约` 步骤） |
 
 ---
 

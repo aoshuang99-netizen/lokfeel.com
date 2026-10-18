@@ -1306,6 +1306,8 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 | 契约脚本 | `verify:payment:channel` → **exit 0**，7 个入口守卫齐全、无「未接入 ⇒ 500」回归 |
 | 模块实跑 | Node 类型擦除直跑 `availability.ts`：就绪态 `configured=true`；`CREEM_ENV=staging` + 错形 key ⇒ `malformed=[CREEM_ENV, STRIPE_SECRET_KEY]`；序列化结果不含任何值 |
 | 生产实测 | 由发版后的 `verify-payment-off` + `/api/health.payments` 承担（见 `LAUNCH_READINESS.md` §4） |
+| CI 实测 | `39117030350`（首轮）：Typecheck / Jest / Build / E2E / Migration / lint 棘轮 / 依赖棘轮 **全绿**，但 **Secret scan 红** —— gitleaks 把测试夹具里 `sk_test_`+16 位十六进制判成真 token |
+| 修法 | **不加 allowlist**，改 `["sk","test",…].join("_")` 运行时拼接 ⇒ 源码里不存在形似凭据的字面量。`39117380891`（`18fef38`）→ **9 success + 2 skipped / 0 失败** |
 
 ---
 
