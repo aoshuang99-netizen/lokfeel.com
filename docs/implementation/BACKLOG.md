@@ -990,7 +990,8 @@ A2A 回 `{ error: { code: 'RESOURCE_EXHAUSTED' } }`；两者都带 `Retry-After`
 
 ### 残留
 
-1. **16 条 overrides 是临时钉版**：父包追平后必须逐条删除，否则会长期压住上游版本。
+1. **overrides 已从 16 条降到 3 条**（2026-10-18 退役 13 条）：剩 `ws` / `nodemailer` / `@grpc/grpc-js`
+   仍在承重（各自有父级范围拒绝已修版本，证据见 `DEPENDENCY_RISK.md` §7.3.1）；父包追平后须继续逐条删除。
 2. `next-auth@5.0.0-beta.32` 的 `peerOptional nodemailer` 仍写 `^7.0.7 || ^8.0.5`，
    与实际 `10.1.2` 不符（npm 仅 warn）。**启用 next-auth 自带 Email provider 前必须复核** ——
    我们自己只用 `src/lib/email.ts` 的 `createTransport`/`sendMail`，不走它的 provider。
@@ -1185,6 +1186,42 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 > 折中做法：`tsc` 把**同一份测试代码**编译成 CJS，用一个自写的 jest 兼容层（`describe`/`it.each`/
 > `expect` 全部匹配器/`jest.fn`）执行，45 例真跑；再用**变异**证明断言不是恒真。
 > 这仍不等于 jest 结论（`ts-jest` 诊断、`setupFilesAfterEach` 等未覆盖），CI 的 jest job 才是最终判据。
+
+---
+
+## 7decies. 退役 13 条 overrides（16 → 3）
+
+**判据不是「审计现在是绿的」** —— 锁里钉着已修版本，审计当然是绿的。真正要问的是
+「**去掉这条 override 后，父级声明的范围还接不接受已修版本**」：不接受，npm 就会在父包下
+再嵌一份旧版，漏洞原样回来。
+
+### 留下的 3 条（仍在承重）
+
+| 保留 | 拒绝已修版本的父级 | 拆掉会怎样 |
+|---|---|---|
+| `ws` → `$ws`（8.22.0） | `engine.io ~8.21.0`、`engine.io-client ~8.18.3`、`miniflare 8.21.0`、`socket.io-adapter ~8.18.3` | 各嵌一份 8.18/8.21，回到 `8.0.0–8.20.1` 区间 |
+| `nodemailer` → `$nodemailer`（10.1.2） | `next-auth` 与两个 `@auth/core` 的 `peerDependencies: ^7.0.7 \|\| ^8.0.5` | npm 7+ 自动补 peer ⇒ 8.0.11 又溜回来 |
+| `@grpc/grpc-js`（1.14.6） | `@firebase/firestore`（`~1.9.0`） | 嵌一份 1.9.x，低于 `<=1.13.5` 的修复线 |
+
+### 退役的 13 条 + 三重证据
+
+`@fastify/busboy` · `@modelcontextprotocol/sdk` · `browserslist` · `engine.io` · `fast-uri` ·
+`form-data` · `hono` · `ip-address` · `protobufjs` · `proxy-addr` · `socket.io-parser` ·
+`source-map-js` · `websocket-driver` —— 父级范围全部接受已修版本。
+
+1. **锁文件零 diff**：删除后 `npm install --package-lock-only --ignore-scripts` 用 18s
+   返回 `up to date`，`git diff package-lock.json` 为空 ⇒ 这 13 条对当前解析结果零贡献；
+2. **从零解析推演**：拿父级范围去 registry 求最高满足版本，13 条里 12 条**同版**；
+   `protobufjs` 会落到 `7.6.6`（高于锁内 `7.6.5`，不构成回退）；
+3. **数字不变**：`prod high 0 / critical 0`（moderate 4 + low 2）、`all high 9 / critical 1`，
+   与退役前逐项一致；`check:deps` exit 0、`--self-test` 8/8。
+
+> 为什么审计里 `all` 还有 9 high + 1 critical：它们全在 **devDependencies** 树 ——
+> `@opennextjs/cloudflare`（direct）→ `@opennextjs/aws` → `@node-minify/core` / `glob`（CLI 命令注入）、
+> `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` / `braces`（栈耗尽 DoS），
+> 外加 `handlebars`（**critical**，经 `@opennextjs/aws` 传入）。这些不进生产运行时闭包，
+> `--omit=dev` 是 0/0 —— 也是棘轮门禁的判定口径。**待办**：`@opennextjs/*` 升到修复版应单开一轮，
+> 它同时是构建期执行链，不能只按「dev 不管」处理。
 
 ---
 

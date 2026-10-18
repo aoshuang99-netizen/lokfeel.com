@@ -216,21 +216,8 @@
     "wrangler": "^4.141.0"
   },
   "overrides": {
-    "@fastify/busboy": "3.2.3",
     "@grpc/grpc-js": "1.14.6",
-    "@modelcontextprotocol/sdk": "1.32.1",
-    "browserslist": "4.29.3",
-    "engine.io": "6.6.11",
-    "fast-uri": "3.1.8",
-    "form-data": "4.0.6",
-    "hono": "4.13.13",
-    "ip-address": "10.7.4",
     "nodemailer": "$nodemailer",
-    "protobufjs": "7.6.5",
-    "proxy-addr": "2.0.8",
-    "socket.io-parser": "4.2.7",
-    "source-map-js": "1.2.2",
-    "websocket-driver": "0.7.5",
     "ws": "$ws"
   }
 }

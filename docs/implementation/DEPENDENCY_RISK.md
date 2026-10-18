@@ -199,6 +199,7 @@ firebase   @firebase/firestore   @firebase/firestore-compat
 | 2026-10-17 | **28 条清零**：同大版本升级 6 项 + 定向 overrides 16 条；`frozen`/`exemptions` 置空；自证从 6 条扩到 8 条并修掉「快照为空即静默跳过」的假绿（§7）。同日 CI 全绿（`5fc3bf6`）→ 发版 `6ad3405dbb50` → 生产复验通过 |
 | 2026-10-17 | **并入 Dependabot #27**（11 项 minor/patch，`cherry-pick -x` + 重算锁）：16 条 overrides 全部仍生效、审计 `high 0 / critical 0` 未变；CI `39025021586` 全绿 → 发版 `6ad34dc8b568` → 生产复验 6/6 + 13/0 + 限流 429×10。记录见 `BACKLOG.md` §7septies |
 | 2026-10-17 | **并入 Dependabot #24 · `stripe` 22.6.2 → 23.0.0（major）**：默认 API 版本被 SDK 从 `dahlia` 切到 `endive` ⇒ 新增单点常量把 5 处客户端显式钉回 `dahlia`；`payment_method_types` 被移除 ⇒ 改 `allowed_payment_method_types`。审计仍 `high 0 / critical 0`、16 条 overrides 仍生效；CI `39040981328` 全绿 → 发版 `6ad38653be0d`。记录见 `BACKLOG.md` §7octies |
+| 2026-10-18 | **退役 13 条 overrides（16 → 3）**：判据是「父级范围是否仍拒绝已修版本」，不是「审计现在绿」。剩 `ws` / `nodemailer` / `@grpc/grpc-js` 三条承重（拒绝者见 §7.3.1）。锁文件零 diff、审计数字逐项不变、`check:deps` 与自证全过。记录见 `BACKLOG.md` §7novies 之后 |
 
 ---
 
@@ -233,9 +234,12 @@ node scripts/ci/dependency-ratchet.mjs --report=/tmp/audit-after.json           
 | `ws` | `^8.21.3` → **`^8.22.0`** | `ws` | advisory 区间 `8.0.0–8.20.1` |
 | `@types/nodemailer` | **移除** | — | nodemailer 10 自带类型（`types: ./dist/cjs/nodemailer.d.ts`），留着会与包内声明重复 |
 
-### 7.3 定向 overrides（16 条）
+### 7.3 定向 overrides（原 16 条；2026-10-18 退役 13 条，余 3 条）
 
 父包不跟版时，只能钉住传递依赖。**全部选同大版本的补丁/小版本**，不跨 major：
+
+> **2026-10-18 更新**：逐条做过「父级范围是否仍拒绝已修版本」的取证后，13 条退役
+> （父级范围本来就接受已修版本 ⇒ 不再承重），仅剩 3 条仍在承重，见 §7.3.1。
 
 | 包 | 钉住 | 修掉的 advisory 区间 | 谁引进来的 |
 |---|---|---|---|
@@ -255,6 +259,31 @@ node scripts/ci/dependency-ratchet.mjs --report=/tmp/audit-after.json           
 | `ip-address` | `10.7.4` | `<=10.7.0` | `express-rate-limit` |
 | `source-map-js` | `1.2.2` | `1.0.0–1.2.1` | `next → postcss` |
 | `nodemailer`（全树） | `$nodemailer`（= `^10.1.2`） | `<=10.0.5` | `@auth/core` 的 peer 会在 `@auth/prisma-adapter` 下**另装一份 8.0.11** |
+
+### 7.3.1 退役判定（2026-10-18）
+
+**判据不是「审计现在是绿的」**（锁里钉着已修版本，审计当然是绿的），而是
+「**去掉这条 override 后，父级声明的范围还接不接受已修版本**」。用锁文件里的
+`dependencies`/`peerDependencies` 范围 + npm 自带 semver 逐条求值：
+
+| 保留的 3 条 | 谁在拒绝已修版本 | 拆掉会怎样 |
+|---|---|---|
+| `ws` → `$ws`（8.22.0） | `engine.io ~8.21.0`、`engine.io-client ~8.18.3`、`miniflare 8.21.0`、`socket.io-adapter ~8.18.3` | 各自嵌一份 8.18/8.21 ⇒ 回到 advisory 区间 |
+| `nodemailer` → `$nodemailer`（10.1.2） | `next-auth` 与两个 `@auth/core` 的 `peerDependencies: ^7.0.7 \|\| ^8.0.5` | npm 7+ 会自动补装 peer ⇒ 8.x 又溜回来 |
+| `@grpc/grpc-js`（1.14.6） | `@firebase/firestore`（`~1.9.0`） | 嵌一份 1.9.x ⇒ 低于 `<=1.13.5` 的修复线 |
+
+退役的 13 条，父级范围**全部**接受已修版本：`@fastify/busboy` · `@modelcontextprotocol/sdk` ·
+`browserslist` · `engine.io` · `fast-uri` · `form-data` · `hono` · `ip-address` ·
+`protobufjs` · `proxy-addr` · `socket.io-parser` · `source-map-js` · `websocket-driver`。
+
+**三重证据**：
+
+1. 删除后 `npm install --package-lock-only` **只改了 package.json，锁文件零 diff**（18s，`up to date`）
+   —— 说明这 13 条对当前解析结果没有任何贡献；
+2. 从零解析推演（拿父级范围去 registry 求最高满足版本）：13 条里 12 条**同版**，
+   `protobufjs` 会落到 `7.6.6`（比锁内 `7.6.5` 更高，不构成回退）；
+3. 审计逐项不变：`prod high 0 / critical 0`（moderate 4 + low 2）、`all high 9 / critical 1`，
+   与退役前完全一致；`check:deps` exit 0、`--self-test` 8/8 全过。
 
 ### 7.4 验证
 

@@ -291,7 +291,8 @@ overrides 16 条」，**没有**采用 `npm audit fix --force` 的 162 包主版
 完整施工记录与取证见 `DEPENDENCY_RISK.md` §7、`BACKLOG.md` §7sexies。
 
 仍如实保留的两点：
-1. 16 条 overrides 是**临时钉版**，父包追平后须逐条删除；
+1. overrides 已从 16 条降到 **3 条**（2026-10-18 退役 13 条）；剩 `ws` / `nodemailer` / `@grpc/grpc-js`
+   仍在承重，父包追平后须继续逐条删除；
 2. `next-auth@beta.32` 的 `peerOptional nodemailer` 声明仍停留在 `^7 || ^8`，
    与实际 `10.1.2` 不符（npm 仅 warn）—— 启用 next-auth 自带 Email provider 前须复核。
 
