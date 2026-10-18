@@ -25,7 +25,7 @@
 | 对外跳转域名 | ✅ 13/0 |
 | 发版生效面 | ✅ 6/6 + 2/2 对照 |
 | 依赖安全 / 漂移 / SLO | ✅ 3/3 |
-| **合计** | **10 步全绿 · 87 条断言 · 退出码 0** |
+| **合计** | **10 步全绿 · 107 条断言 · 退出码 0** |
 
 
 ## 1. 除支付外，已完成什么
@@ -225,5 +225,5 @@ npm run check:launch -- --json=reports/launch.json --verbose
 
 | 日期 | 变更 |
 |---|---|
-| 2026-10-18（晚） | **全部人工项自动化**：新增 `verify:prod:session`（28）、`verify:redis:contract`（12）、`verify:email:delivery`（5）、`verify-oauth-authorize`（7）、`verify-schema-drift`（直连比对），并编排为 `npm run check:launch`（10 步 / 87 断言）。**同期修掉生产 P0**：Upstash SET 参数形态错误导致登录用户第二个鉴权请求起全线 401、DEL 用错方法导致失效空转（见 BACKLOG §7terdecies）。 |
+| 2026-10-18（晚） | **全部人工项自动化**：新增 `verify:prod:session`（28）、`verify:redis:contract`（12）、`verify:email:delivery`（5）、`verify-oauth-authorize`（7）、`verify-schema-drift`（直连比对），并编排为 `npm run check:launch`（10 步 / 107 断言）。**同期修掉生产 P0**：Upstash SET 参数形态错误导致登录用户第二个鉴权请求起全线 401、DEL 用错方法导致失效空转（见 BACKLOG §7terdecies）。 |
 | 2026-10-18 | 首次生成。新增 `src/lib/payments/availability.ts`（单一判定）+ `not-configured.ts`（503 统一出口），7 个入口收敛同一语义；`CREEM_ENV` 误配 fail-closed；`/api/health` 暴露 `payments` 接入进度；新增单测、`verify:payment:channel`、`verify:payment:off` 与 CI 门禁。 |

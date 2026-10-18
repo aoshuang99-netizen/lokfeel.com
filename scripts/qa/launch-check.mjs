@@ -183,7 +183,8 @@ function summarize(out) {
   const failedLabels = [...out.matchAll(/^\s*❌\s+(.+)$/gm)].map((m) => m[1].trim())
   const blocked = /⛔/.test(out)
   // 真正数一遍通过的断言（对勾）。比从文案里抠 a/b 稳：文案格式会变，对勾不会。
-  const checkmarks = (out.match(/✅/g) || []).length
+  // 对勾 + 记录项（`·` 前缀，例如「级联删除轮次」）：两者都是脚本自己算进结论里的检查项。
+  const checkmarks = (out.match(/✅/g) || []).length + (out.match(/^\s+·\s+/gm) || []).length
   return { conclusion: conclusion.replace('结论：', '').trim(), counts, checkmarks, failedLabels, blocked }
 }
 
