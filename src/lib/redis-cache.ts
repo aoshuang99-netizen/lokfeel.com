@@ -165,9 +165,69 @@ async function redisReq<T>(
   }
 }
 
+/**
+ * 构造 SET 命令（**纯函数**，便于单测把形状钉死）。
+ *
+ * 🔴 这是一个踩过的坑：Upstash REST 的 `/set/{key}` 端点，body 就是**值本身**。
+ * 曾经把 `["<json>", "EX", 75]` 当作 body POST 到 `/set/{key}`，结果 Upstash 把
+ * 整个数组当字符串存下来，并且**完全忽略 EX** —— 值变成 `["{\"id\":…}","EX",75]`，
+ * TTL 变成 -1（永不过期）。读到它的调用方 `JSON.parse` 之后拿到数组，
+ * `user.tokenVersion` 自然是 undefined，`requireAuth()` 于是对**每一次缓存命中**
+ * 都抛 "Session expired"，登录用户从第二个请求开始全线 401。
+ *
+ * 正确的多参数写法是走**命令数组**：`POST /`，body = `["SET", key, value, "EX", ttl]`。
+ */
+export function buildSetCommand(
+  key: string,
+  value: unknown,
+  ttlSeconds: number
+): { path: string; body: string[] } {
+  return {
+    path: "/",
+    // `?? "null"`：JSON.stringify(undefined) 会返回 undefined，避免出现空参数
+    body: ["SET", key, JSON.stringify(value) ?? "null", "EX", String(Math.max(1, Math.floor(ttlSeconds)))],
+  }
+}
+
+/**
+ * 兼容修复：识别并解开**旧写法**留下的坏值（`["{…}","EX",75]` 字符串）。
+ *
+ * WHY 不能只修写入端：坏值写入时没带 TTL，**永不过期**。只改写入逻辑的话，
+ * 这些键会一直躺在库里毒害读取方。解包比批量清理更稳（不依赖谁先谁后、也不
+ * 依赖运维记得跑清理），清理脚本仍然提供，二者叠加。
+ */
+export function unwrapLegacySetPayload(raw: unknown): unknown {
+  if (typeof raw !== "string") return raw
+  const trimmed = raw.trim()
+  if (!trimmed.startsWith("[")) return raw
+  try {
+    const arr = JSON.parse(trimmed)
+    if (
+      Array.isArray(arr) &&
+      arr.length === 3 &&
+      typeof arr[0] === "string" &&
+      String(arr[1]).toUpperCase() === "EX"
+    ) {
+      try {
+        return JSON.parse(arr[0])
+      } catch {
+        return arr[0]
+      }
+    }
+  } catch {
+    // 不是 JSON，原样返回
+  }
+  return raw
+}
+
 async function redisGet<T>(key: string): Promise<T | null> {
   const raw = await redisReq<string>(`/get/${encodeURIComponent(key)}`, "GET");
   if (raw === null) return null;
+
+  // 先尝试修复旧写法留下的坏值（见 unwrapLegacySetPayload 的说明）
+  const healed = unwrapLegacySetPayload(raw);
+  if (healed !== raw) return healed as T;
+
   try {
     return JSON.parse(raw) as T;
   } catch {
@@ -179,19 +239,19 @@ async function redisSet(key: string, value: unknown, ttl: number): Promise<boole
   // ✅ OPTIMIZATION: Apply jitter to TTL to prevent cache avalanche
   const ttlWithJitter = withJitter(ttl);
 
-  // Upstash REST: POST /set/key  body: ["json_value", "EX", ttl_seconds]
-  const result = await redisReq<string>(
-    `/set/${encodeURIComponent(key)}`,
-    "POST",
-    [JSON.stringify(value), "EX", Math.max(1, ttlWithJitter)]
-  );
+  // 命令数组形式（POST /），参数才不会被当成值的一部分 —— 见 buildSetCommand 注释
+  const { path, body } = buildSetCommand(key, value, ttlWithJitter);
+  const result = await redisReq<string>(path, "POST", body);
   return result === "OK";
 }
 
 async function redisDel(key: string): Promise<boolean> {
+  // 🔴 Upstash REST 的 /del/{key} **只接受 POST**：用 DELETE 方法会拿到 405，
+  // 而 redisReq 对非 2xx 静默返回 null ⇒ 失效逻辑永远"成功"却什么都没删。
+  // 这曾让 invalidate() 长期空转（改设置/销号后的缓存不失效）。
   const result = await redisReq<number>(
     `/del/${encodeURIComponent(key)}`,
-    "DELETE"
+    "POST"
   );
   return result === 1;
 }
