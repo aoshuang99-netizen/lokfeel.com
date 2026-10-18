@@ -6,25 +6,27 @@
 >
 > 判据不是这句话，是下面三条可复跑的命令（§4）。
 
-- **代码基线**：`0b7b4a2`（= 生产产物）；本文件之后只有文档提交，不重建产物
+- **代码基线**：`f8ec1ec`（= 生产产物；含 Redis 缓存写入修复）
 - **生产**：`https://app.lokfeel.com`（Netlify `lokfeel` / site `c46478e9-7ac8-4bcf-9052-7638b04fef83` + Cloudflare DNS）
-- **生产部署**：`6ad4998f173f834f3dd30480` ← `0b7b4a2`，`state=ready`（66s）—— **生产产物 = main**。
-  （之后的提交若只改文档/测试，会带 `[skip netlify]`，不再重建产物。）
+- **生产部署**：`6ad4a0cfb568` ← `f8ec1ec`，`state=ready` —— **生产产物 = main**。
+  （之后的提交若只改文档/脚本/测试，会带 `[skip netlify]`，不再重建产物。）
 - **环境变量**：生产共 **40** 个；支付相关 **0** 个（这是唯一缺口，见 §2）
 - **支付状态**：`payments.configured=false`，`missing=[CREEM_API_KEY, CREEM_WEBHOOK_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET]`
 
-### 本次发版的生产实证（2026-10-18 · 部署 `6ad4998f…` ← `0b7b4a2`）
+### 最近一次全量预检（2026-10-18 · `npm run check:launch`）
 
-| 复验项 | 命令 | 结果 |
-|---|---|---|
-| 支付缺口可观测 | `curl /api/health` | ✅ 200 healthy · `payments.configured=false` · 4 个缺失变量名精确列出 · `malformed=[]` |
-| payment-off 契约 | `node scripts/qa/verify-payment-off.mjs --base=https://app.lokfeel.com` | ✅ **18/18 通过**（products 503、两个 webhook 503、checkout/refund 401、**零 500**、无凭据片段） |
-| 发版生效面 | `npm run verify:released:surface` | ✅ **6/6 达期望 + 2/2 正向对照** |
-| 对外跳转域名 | `node scripts/qa/verify-public-origin.mjs` | ✅ **13 通过 / 0 失败**（0 处部署域名泄漏） |
-| 缓存 / 限流后端 | `/api/health` | ✅ `redis.backend=upstash, degraded=false` |
-| CI | run `39117618185` ← `0b7b4a2` | ✅ **9 success + 2 skipped / 0 失败**（含新增的 `payment-off 契约` 步骤） |
+| 步骤 | 结果 |
+|---|---|
+| 支付未接入契约 | ✅ 18/18 |
+| Upstash 写入契约（含变异对照） | ✅ 12/12 |
+| 真实邮件送达（delivered + bounced 双证） | ✅ 5/5 |
+| Google OAuth 配置（含畸变对照） | ✅ 7/7 |
+| 生产登录→会话→ICE/TURN（自建自删） | ✅ 28/28（`source=cloudflare-realtime`，3 条 TURN） |
+| 对外跳转域名 | ✅ 13/0 |
+| 发版生效面 | ✅ 6/6 + 2/2 对照 |
+| 依赖安全 / 漂移 / SLO | ✅ 3/3 |
+| **合计** | **10 步全绿 · 87 条断言 · 退出码 0** |
 
----
 
 ## 1. 除支付外，已完成什么
 
@@ -32,11 +34,11 @@
 |---|---|---|
 | 业务闭环 AC-01~AC-24 | ✅ 24 PASS / 0 FAIL（AC-25 为外部依赖） | `docs/implementation/FINAL_ACCEPTANCE_REPORT.md` §3 |
 | 多租户隔离 | ✅ 应用级（libSQL 无 RLS） | `tests/tenancy` 120 例 · `verify:ac19:bridge` 越权六条 |
-| 认证 / OAuth | ✅ 跳转与守卫已验；**真实登录建议人工点一次** | `verify-public-origin` 13/0（Google `redirect_uri` 落在公开域名）· 生产匿名 API 一律 401 · ⚠️ 生产 QA 账号已于 2026-10-17 清理，最后一次**真实登录**取证为 2026-10-16（`verify:agent:connectivity:server` 22/0） |
+| 认证 / OAuth | ✅ **真实登录链路已自动化取证**（生产注册→登录→会话→受保护端点→删号复验 28/28） | `npm run verify:prod:session` → **28/28**（每次跑完 `User` 计数回到基线：12922→12922）· `node scripts/qa/verify-oauth-authorize.mjs` → **7/7**（Google 未报 `redirect_uri_mismatch`/`invalid_client`）· 生产匿名 API 一律 401 |
 | 数据库 | ✅ Turso，C0–C9 全部就位 | `npm run connection:migrate -- verify` → 255/255 · 65 张表 |
-| 缓存 / 限流 | ✅ Upstash | `/api/health` → `redis.backend=upstash, degraded=false` · `check:redis` 17/17 |
-| 邮件通道 | 🟡 生产已配 `RESEND_API_KEY`（变量存在），**未做真实外发冒烟** | `scripts/qa/verify-email-channel.mjs --send you@…` 可当场补证 |
-| 实时音视频（TURN） | 🟡 配置已验，**生产 ICE 需一次登录取数** | `npm run verify:ice`（四来源齐备 + 优先级 `static → cloudflare-realtime → cloudflare → stun-only`）· 生产 `/api/rtc/ice-servers` 需登录（当前 401）· 回滚 `npm run turn:rollback` |
+| 缓存 / 限流 | ✅ Upstash（**写入/删除契约已真实往返验证**） | `/api/health` → `redis.backend=upstash, degraded=false` · `npm run verify:redis:contract` → 12/12（含旧写法变异对照） |
+| 邮件通道 | ✅ **真实送达已取证**（Resend `last_event=delivered`，并配 `bounced` 变异对照） | `npm run verify:email:delivery` → 5/5 |
+| 实时音视频（TURN） | ✅ **生产 ICE 已取数**：`source=cloudflare-realtime`，3 条 TURN 且带凭据 | `npm run verify:ice`（四来源齐备 + 优先级 `static → cloudflare-realtime → cloudflare → stun-only`）· 生产实测：匿名 **401**（有意）→ 登录后 **200**，`source=cloudflare-realtime`，3 条 `turns:` 且带凭据 · 回滚 `npm run turn:rollback` |
 | 即时通讯 | ✅ Pusher + Upstash | `verify:pusher` · `tests/im-call-signaling` |
 | 数据生命周期 | ✅ 导出 / 删除计划 / 执行删除 / 缓存失效 | `npm run verify:ac10:lifecycle` → 68/0 |
 | 性能基线 | ✅ SLO 9 条规则 · 48/48 断言 | `npm run check:slo` · `PERFORMANCE_BASELINE.md` |
@@ -119,16 +121,55 @@ curl -s -o /dev/null -w '%{http_code}\n' https://app.lokfeel.com/api/payments/cr
 
 ---
 
-## 4bis. 上线前建议人工点一遍的四件事
+## 4bis. 上线前的人工项：已全部自动化（剩 1 步无法脚本化）
 
-工程能自动验的都验了；下面四件**必须由人来点**（自动化会打到真实用户或真实收款）：
+> 2026-10-18 更新：原「必须人工点一遍的四件事」已用四个可复跑脚本替代。
+> 唯一残留的是 **Google 同意页上点一下「继续」** —— 那一步需要真人身份，
+> 但它**之前**的所有配置错误（client_id 错、redirect_uri 未登记、scope 未开）
+> 都由 `verify-oauth:authorize` 直接问 Google 拿答案。
 
-| # | 动作 | 为什么自动化替代不了 |
-|---|---|---|
-| 1 | 用一个真实 Google 账号从 `/login` 走完登录 → 进 `/dashboard` | 生产 QA 账号已清理（避免在生产库留测试凭据）；OAuth 授权页的人工同意无法脚本化 |
-| 2 | 在订阅页点一次「Upgrade」（**接支付后**） | 会创建真实收款会话；应人工确认金额/币种/文案与 `src/config/plans.ts` 一致 |
-| 3 | 收一封真实邮件（`verify:email:channel --send you@…`） | 投递结果取决于 Resend 域名验证状态，只有收件箱能证明 |
-| 4 | 登录后打开一次通话页，确认 ICE 拿到 TURN（不是 `stun-only`） | `/api/rtc/ice-servers` 需会话；`stun-only` 只能在对称 NAT 下暴露问题 |
+| # | 原人工项 | 现在的自动化 | 命令 | 结果 |
+|---|---|---|---|---|
+| 1 | 真实 Google 账号走完登录 → 进 dashboard | ① 用**生产注册接口**自建 QA 账号 → 取验证码 → 建号 → 密码登录 → 验会话 → 打受保护端点 → **删号并复验计数归零**；② 直接拿生产 client_id 请求 Google authorize，解码 `authError` | `npm run verify:prod:session`<br>`node scripts/qa/verify-oauth-authorize.mjs` | ✅ 28/28 · ✅ 7/7 |
+| 2 | 收一封真实邮件 | Resend 真发到 `delivered@resend.dev`，轮询 `GET /emails/{id}` 的 `last_event`；同时发一封到 `bounced@resend.dev` 作**变异对照** | `npm run verify:email:delivery` | ✅ 5/5（delivered + bounced 双证） |
+| 3 | 点一次 Upgrade | **支付凭据未接入，按约定不做**；未接入时的行为由 503 契约守住 | `npm run verify:payment:off` | ✅ 18/18 |
+| 4 | 登录后确认 ICE 不是 `stun-only` | 同一会话直接打 `/api/rtc/ice-servers`，断言 source≠stun-only、含 `turns:`、带凭据、不泄密钥 | `npm run verify:prod:session` | ✅ `source=cloudflare-realtime`，3 条 TURN |
+
+**仍然需要人做的**：打开 `/login` → 点「Continue with Google」→ 在 Google 页面上点同意。
+这不是工程遗漏，而是 OAuth 的设计前提（人机确认无法被脚本合法代办）。
+
+### 为什么这些脚本"跑完不留痕"
+
+- `verify:prod:session` 在 `finally` 里删号：按 `pragma foreign_key_list` 实测的 **39 条外键**
+  逐表清理，再断言 `User` 总数回到基线（实测 `12922 → 12922`）。中途失败也会尽量清理。
+- `verify:email:delivery` 只发信，不创建任何业务数据。
+- `verify:redis:cache` 的探针键带随机后缀，跑完即删。
+
+---
+
+## 4ter. 一条命令跑完全部可自动化门禁
+
+```bash
+npm run check:launch                 # 10 项（在线 7 + 离线 3）
+npm run check:launch -- --offline    # 只跑离线（无凭据环境）
+npm run check:launch -- --json=reports/launch.json --verbose
+```
+
+| # | 步骤 id | 验什么 | 断言 |
+|---|---|---|---|
+| 1 | `payment` | 7 个支付入口的「未接入」契约（503 + 稳定码，绝不 500） | 18 |
+| 2 | `cache` | Upstash 写入/删除契约（真实往返 + 旧写法变异对照） | 12 |
+| 3 | `email` | 真实邮件送达 + 退信对照 | 5 |
+| 4 | `oauth` | Google 授权端点配置 + 畸变 client_id 对照 | 7 |
+| 5 | `session` | 注册→登录→会话→受保护端点→ICE/TURN→删号复验 | 28 |
+| 6 | `origin` | 对外跳转不含部署专用域名 | 13 |
+| 7 | `surface` | 发版生效面（新路由已可达） | 6 |
+| 8 | `deps` | 生产可达依赖 high/critical = 0 | — |
+| 9 | `drift` | schema ↔ 生产库逐列比对（`db push` 会删的列全部列出） | — |
+| 10 | `slo` | 性能 SLO 规则 | — |
+
+退出码：`0` 全绿 · `1` 有失败 · `2` 有步骤无法取证（前置不可用）。
+脚本还会检测「断言数少于预期」并提示 —— 防止某个步骤被提前短路却仍显示绿色。
 
 ---
 
@@ -184,4 +225,5 @@ curl -s -o /dev/null -w '%{http_code}\n' https://app.lokfeel.com/api/payments/cr
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-18（晚） | **全部人工项自动化**：新增 `verify:prod:session`（28）、`verify:redis:contract`（12）、`verify:email:delivery`（5）、`verify-oauth-authorize`（7）、`verify-schema-drift`（直连比对），并编排为 `npm run check:launch`（10 步 / 87 断言）。**同期修掉生产 P0**：Upstash SET 参数形态错误导致登录用户第二个鉴权请求起全线 401、DEL 用错方法导致失效空转（见 BACKLOG §7terdecies）。 |
 | 2026-10-18 | 首次生成。新增 `src/lib/payments/availability.ts`（单一判定）+ `not-configured.ts`（503 统一出口），7 个入口收敛同一语义；`CREEM_ENV` 误配 fail-closed；`/api/health` 暴露 `payments` 接入进度；新增单测、`verify:payment:channel`、`verify:payment:off` 与 CI 门禁。 |

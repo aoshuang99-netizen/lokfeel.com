@@ -106,3 +106,4 @@ perf-baseline.db
 perf-baseline.db-journal
 perf-baseline.db-wal
 perf-baseline.db-shm
+/reports/

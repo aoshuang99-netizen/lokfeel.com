@@ -1363,3 +1363,53 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 ---
 *本文件由 T00/T01 交付后盘点生成；每个任务收尾时回填提交 SHA 与 AC 结论。*
 *最近回填：T02（`49ee97d`）、T03（`877878e`）、T04（`e3bc161` + `b4125eb`）、T05、T06 · 2026-10-12；T09 Slice 1（纯内核）· T09 Slice 2（持久化 + HTTP + 审批）· T09 Slice 3（真实 Provider + 对账 + 对抗/预算夹具）—— 三者均**未发版** · 2026-10-13；**前端 P1 收口**（`e44a099`，真实数据装配 + Mission 接线）—— **未发版**，已用 `verify:no-release` 实证 `[skip netlify]` 生效（最新部署仍为 `f6630ea6b`）· 2026-10-13；**前端 P2 Slice 1**（`4c8ff2b`，Field → 2.5D 关系网络 + 门禁 R8/R9）—— **未发版**，`verify:no-release --commit=4c8ff2b` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 Slice 2**（`3e6b342`，Consent Gate / Outcome Observatory / Agent 区 + 门禁 R10 + 契约 1.2）—— **未发版**，`verify:no-release --commit=3e6b342` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**前端 P2 端到端取证（HTTP 层）**（`6df1881`，`verify:p2:e2e` **130 通过 / 0 失败** + 服务端用户可见文案去 markdown + 假模型端点）—— **未发版**，`verify:no-release --commit=6df1881` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-14；**T09 Slice 4**（`c127d18`，Agent 执行器落地 —— `EXECUTED` 只有一条路径 + C7 `AgentExecution`）—— **未发版**，`verify:no-release --commit=c127d18` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 5**（`c2ae31a`，组织级额度接线 + 第 7 屏 Agents + 真实端点连通性取证）—— **未发版**，`verify:no-release --commit=c2ae31a` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T09 Slice 6**（`56f0369`，对外送达 + 生产侧连通性入口 + 对账端到端实跑）—— **未发版**，`verify:no-release --commit=56f0369` **exit 0** 实证最新部署仍为 `f6630ea6b`（无该提交的部署记录）· 2026-10-15；**T10 Slice 4**（`47e1dac`，Community Bridge 前端面板 + AC-19 E2E 69/69）与 **T11 Slice 1–5**（`8419f50`，Open SDK：契约 34 路径/42 操作 + MCP + A2A + SDK 示例 + AC-22 E2E 57/57）—— 均**未发版**，`verify:no-release` 实证最新部署仍为 `f6630ea6b` · 2026-10-15；**T12 Release E2E** —— `FINAL_ACCEPTANCE_REPORT.md` 生成（21 PASS / 3 FAIL / 1 BLOCKED；**不建议上线**，AC-10 BLOCKER 未闭合）· 2026-10-15；**AC-10 账号级闭合**（导出 `GET /api/v1/me/export` + 删除 `GET`/`POST /api/v1/me/erasure` 两段式 + **缓存失效第 ⑧ 步** + `src/lib/cache-keys.ts` 单一来源）—— 单测 13 → **31** 例（全量 **98 套 / 2030 例**）、`verify:ac10:lifecycle` **68/0** ⇒ **BLOCKER 清空**（22 PASS / 2 FAIL / 1 BLOCKED）；**未发版**，`verify:no-release --commit=<SHA>` 实证 · 2026-10-16；**AC-23 CI 门禁可信化闭合**（三道棘轮：lint 1542 / 生产依赖 28 条 / schema 漂移 11 张表；CI 新增 Migration + E2E 两 job；`continue-on-error` 两处移除；发现并登记三处真风险）⇒ **23 PASS / 1 FAIL / 1 BLOCKED**；新增 `CI_GATES.md` / `DEPENDENCY_RISK.md`；**CI 首次全绿**（run `38863968546` / `8016bb4` → success，9 job · 2m49s，含新增 Migration + E2E）；**未发版**，`verify:no-release:surface` 实证（5 条 404 + 3/3 正向对照）· 2026-10-16；**AC-24 性能基线闭合**（`slo.json` 两档三层 9 条规则 + 零依赖压测器 `load-baseline.mjs`（**每档 3 次取中位数、保留原始值**）+ SLO 对账 `check:slo` **48/48** + 自证 `verify:check:slo` **6/6** + 限流取证器 `rate-limit-probe.mjs`：对照端点**恰好 10 次 429**、MCP/A2A 各 200 次**零 429** ⇒ 缺口证实；顺带发现限流器**共用 per-IP 桶**缺陷并登记；CI 新增**确定性** `slo-check` 与**仅手动** `perf-baseline` 两 job）⇒ **24 PASS / 0 FAIL / 1 BLOCKED**（例外面仅剩 AC-25 外部依赖）；新增 `PERFORMANCE_BASELINE.md`；**CI 实证** run `38868575737`（`7e76bc3`）→ **success**（11 job 全绿 · 151s，新增 `Perf SLO 对账` 8s 通过 / `Perf 基线实跑` 仅手动故 skipped）；**未发版**，`verify:no-release:surface` 实证 · 2026-10-16；**🚀 已发版**（`2d5385d`，34 提交 / T09+T10+T11+T12 + AC-10/23/24，前版 `f6630ea6b`）—— 发版前 C0–C9 全就位 `verify` **255/255**、未发版 5 条 404 + 3/3 对照；发版后 `verify:released:surface` **6/6 + 2/2 对照** · `verify-public-origin` **13/0** · `db-snapshot diff` **零数据影响**；**A1 已闭合**（先发现生产 `qa.*` 账号 **0 行** + `Membership` **0** ⇒ 登录 401；经授权用 `create-qa-accounts.mjs` 重建 + **新增 `grant-qa-org.mjs`** 建成员关系（role=OPERATOR，保住 AC-08「能跑不能批」）⇒ 复跑 `verify:agent:connectivity:server` **22/0**：真实登录 200 · 诊断端点 200 · **网络层 PASS** 285ms；🔴 **顺带拿到生产事实**：`OPENAI_BASE_URL` 指向 **Netlify AI Gateway**（`/.netlify/ai`），探针打不计费的 `/models` 回 **400** ⇒ 凭据层 FAIL **但 ≠ 凭据无效**（400 是对请求的答复；凭据被拒回 401）；「Agent 生产能否出稿」**未验**，需计费调用）；新增 `RELEASE_T09-T12.md`，探针语义反转（`verify:released:surface` 取代已删除的 `verify-no-release-surface`）· 2026-10-16*
+
+---
+
+## 7terdecies. 🔴 Upstash 缓存写入形态错误 → 登录用户全线 401（2026-10-18 修复并上线）
+
+**症状**：任何登录用户，**第二个**需要 `requireAuth()` 的 API 请求开始，一律
+`401 {"error":"Session expired. Please sign in again."}`。
+
+**根因**（`src/lib/redis-cache.ts`）：`redisSet()` 把 TTL 当成值的一部分发给了 Upstash：
+
+```ts
+// ❌ 旧写法：POST /set/{key}  body = ["<json>", "EX", 75]
+redisReq(`/set/${encodeURIComponent(key)}`, "POST", [JSON.stringify(value), "EX", ttl])
+```
+
+Upstash 的 `/set/{key}` 端点 **body 就是值本身**，不解析额外参数。于是它把整个数组
+当字符串存下来，并且**完全忽略 EX**：
+
+```
+GET auth:user:<id> → ["{\"id\":\"…\",\"tokenVersion\":0}","EX",75]
+TTL                → -1            ← 永不过期
+```
+
+读取方 `JSON.parse` 得到**数组**，`user.tokenVersion` 变成 `undefined`；
+`requireAuth()` 的 `undefined !== 0` 成立 ⇒ 抛 "Session expired"。因为写入时没带 TTL，
+**坏键永不过期**，影响是持续的而不是 60 秒。
+
+**为什么长期没被发现**：页面 SSR 走 `auth()` 而不是 `requireAuth()`，所以页面照常渲染；
+只有客户端轮询的 API 静默 401。加上此前没有真实登录用户在生产上连续操作，
+`auth:user:*` 键在生产只有探针写下的 5 个（实测全部 `ttl=-1`、全部是坏值形态）。
+
+**同源缺陷 2**：`redisDel()` 用 `DELETE /del/{key}`，Upstash 返回 **405**，
+而 `redisReq` 对非 2xx 静默返回 null ⇒ `invalidate()` 长期**空转**
+（改设置/销号后的缓存不失效），且失败不可见。
+
+**修复**
+1. `redisSet()` 改用**命令数组** `POST /` body `["SET", key, value, "EX", ttl]`（`buildSetCommand()`，纯函数可测）；
+2. `redisGet()` 增加 `unwrapLegacySetPayload()`：识别并解开旧写法留下的坏键（坏键不过期，只修写入端不够）；
+3. `redisDel()` 改 `POST`；
+4. 单测 `tests/lib/redis-cache-set.test.ts` 钉形状（含 `tokenVersion: 0` 这种 falsy 字段的往返保真）；
+5. `scripts/qa/verify-redis-cache-contract.mjs` 打**真实 Upstash** 做往返断言 + **变异对照**
+   （旧写法必须读回数组且 `ttl=-1`，证明断言有判别力）+ 删除契约（DELETE=405 / POST=1）。
+
+**验证**：`verify:redis:contract` **12/12** → 强制删除生产 5 个坏键 → 发版
+（`f8ec1ec` → 部署 `6ad4a0cfb568`）→ `verify:prod:session` **28/28**（修复前 23/28，
+ICE 与 notifications 各 401）。
+
+**教训**：**云服务的"返回 OK"不等于"按你的意思存"**。凡是把参数塞进 value 位置的写法，
+都必须有一个**真实往返**断言（写进去 → 读回来 → 逐字段比），单测只能证明"我发的是什么"，
+证明不了"它存成了什么"。
