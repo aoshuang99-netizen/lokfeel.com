@@ -97,6 +97,7 @@
     "lifecycle:sweep": "node scripts/qa/lifecycle-sweep.mjs",
     "lifecycle:sweep:apply": "node scripts/qa/lifecycle-sweep.mjs --apply",
     "qa:db:snapshot": "node scripts/qa/db-snapshot.mjs",
+    "qa:refund:testmode": "node scripts/qa/refund-testmode.mjs",
     "verify:no-release": "node scripts/qa/verify-no-release.mjs",
     "verify:released:surface": "node scripts/qa/verify-released-surface.mjs",
     "verify:release:wait": "bash scripts/perf/wait-release.sh",
