@@ -6,7 +6,7 @@
 >
 > 判据不是这句话，是下面三条可复跑的命令（§4）。
 
-- **代码基线**：`0b7b4a2`（本文件所在提交）
+- **代码基线**：`0b7b4a2`（= 生产产物）；本文件之后只有文档提交，不重建产物
 - **生产**：`https://app.lokfeel.com`（Netlify `lokfeel` / site `c46478e9-7ac8-4bcf-9052-7638b04fef83` + Cloudflare DNS）
 - **生产部署**：`6ad4998f173f834f3dd30480` ← `0b7b4a2`，`state=ready`（66s）—— **生产产物 = main**。
   （之后的提交若只改文档/测试，会带 `[skip netlify]`，不再重建产物。）
@@ -36,7 +36,7 @@
 | 数据库 | ✅ Turso，C0–C9 全部就位 | `npm run connection:migrate -- verify` → 255/255 · 65 张表 |
 | 缓存 / 限流 | ✅ Upstash | `/api/health` → `redis.backend=upstash, degraded=false` · `check:redis` 17/17 |
 | 邮件通道 | 🟡 生产已配 `RESEND_API_KEY`（变量存在），**未做真实外发冒烟** | `scripts/qa/verify-email-channel.mjs --send you@…` 可当场补证 |
-| 实时音视频 | ✅ TURN 已激活（Cloudflare Realtime） | `/api/health` → `source=cloudflare-realtime` · 回滚 `npm run turn:rollback` |
+| 实时音视频（TURN） | 🟡 配置已验，**生产 ICE 需一次登录取数** | `npm run verify:ice`（四来源齐备 + 优先级 `static → cloudflare-realtime → cloudflare → stun-only`）· 生产 `/api/rtc/ice-servers` 需登录（当前 401）· 回滚 `npm run turn:rollback` |
 | 即时通讯 | ✅ Pusher + Upstash | `verify:pusher` · `tests/im-call-signaling` |
 | 数据生命周期 | ✅ 导出 / 删除计划 / 执行删除 / 缓存失效 | `npm run verify:ac10:lifecycle` → 68/0 |
 | 性能基线 | ✅ SLO 9 条规则 · 48/48 断言 | `npm run check:slo` · `PERFORMANCE_BASELINE.md` |
@@ -128,6 +128,7 @@ curl -s -o /dev/null -w '%{http_code}\n' https://app.lokfeel.com/api/payments/cr
 | 1 | 用一个真实 Google 账号从 `/login` 走完登录 → 进 `/dashboard` | 生产 QA 账号已清理（避免在生产库留测试凭据）；OAuth 授权页的人工同意无法脚本化 |
 | 2 | 在订阅页点一次「Upgrade」（**接支付后**） | 会创建真实收款会话；应人工确认金额/币种/文案与 `src/config/plans.ts` 一致 |
 | 3 | 收一封真实邮件（`verify:email:channel --send you@…`） | 投递结果取决于 Resend 域名验证状态，只有收件箱能证明 |
+| 4 | 登录后打开一次通话页，确认 ICE 拿到 TURN（不是 `stun-only`） | `/api/rtc/ice-servers` 需会话；`stun-only` 只能在对称 NAT 下暴露问题 |
 
 ---
 
