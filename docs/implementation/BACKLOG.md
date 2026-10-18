@@ -1180,6 +1180,7 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 | 变异验证（证明用例非恒真） | 把 `refunds.create` 的金额改成固定 1 分 ⇒ **36 passed / 2 failed**；恢复后 **38 / 0** |
 | 端到端（协议层，无需密钥） | `node scripts/qa/refund-e2e.mjs` ⇒ **19 断言全过 / 0 失败**，15 次真实 HTTP 往返：`expand[0]=latest_invoice` 确实发出、`invoice.payments` 内联与回落 `invoicePayments.list` 两条路径、幂等键 `admin-refund:pi:0:1000`、部分退款 `fullyRefunded=false`、退干净翻 `true`、超额在调用 Stripe 前被拦 |
 | 端到端变异验证 | 把退款金额改成固定 1 分 ⇒ **4 项转红**（请求体 amount、重复退款判定、第二次 POST 次数、剩余金额），证明这套端到端不是自证恒真 |
+| CI 常态守卫 | 该端到端已并入 `Test (Jest)` job；CI `39114897302` 中步骤「退款链路协议层端到端」**success**，不是只在上线前跑过一次 |
 | 依赖门禁 | `check:deps` **exit 0** |
 | CI 第一轮（`39097779698`） | Jest / Typecheck / Build / E2E / 审计 / 迁移 **全绿**；**Lint 红** —— 棘轮逐文件逐规则，`refund-route.ts` 的 `context: any` 属新增债。已去掉显式标注（类型由 `withPermission` 的 `HandlerFunction` 推出）。顺带把棘轮明细写进 job summary：job 日志 REST 端点要写权限，summary 公开可读 |
 | CI 第二轮（`39098488462`） | **9 success + 2 skipped**：Typecheck / Lint / Test (Jest) / Build / E2E / Migration / 审计 / 密钥扫描 / Perf 对账全绿 |
@@ -1266,6 +1267,8 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 | 依赖门禁 | `check:deps` **exit 0**；`--self-test` **8/8** |
 | 锁内版本 | `@opennextjs/cloudflare 1.20.12`、`@opennextjs/aws 4.1.11`、`handlebars 4.7.10`、`@node-minify/core/glob 10.5.0`；根 `glob 13.0.6` |
 | 回归 | 由 CI 承担：Typecheck / Lint 棘轮 / Jest / Build / E2E / 审计 / 迁移 |
+| CI 实测 | `39114897302` **9 success + 2 skipped**；`npm ci` 用新锁装通，新增的「退款链路协议层端到端」步骤 **success** |
+| 生产 | 纯 dev/CI 改动，带 `[skip netlify]` ⇒ 部署仍是 `6ad4501738ddf71339c07ef4` ← `417f835`；`/api/health` **200** healthy |
 | 风险登记 | `DEPENDENCY_RISK.md` §7.7（含三条复核条件：`braces` 发修复版 / 插件放宽 `fast-glob` / 开始对用户输入做 glob） |
 
 ---
