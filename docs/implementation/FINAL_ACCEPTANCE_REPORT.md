@@ -64,6 +64,8 @@
 
 **剩余阻断（非工程问题）**：
 1. **AC-25 付费价值**：无真实试点客户，**不可 MOCK 代替**（外部依赖，见 §4.4）。
+2. **支付凭据**：生产未配 4 个支付变量。**工程侧已收口** —— 「未接入」是受测状态（503 + 稳定码 + 健康检查自报缺口），
+   接入是纯配置动作，无迁移、无代码改动。见 `LAUNCH_READINESS.md`。
 
 > **核心业务闭环（AC-01 ~ AC-22）实现与取证质量高**：22 条 AC 均以**真实 HTTP / 真实浏览器 / 真实隔离库**取证，
 > 且多数带**变异自证**（证明断言有牙齿）。AC-10 是本轮从"无人认领"追到闭合的一条 BLOCKER。
@@ -341,7 +343,7 @@ overrides 16 条」，**没有**采用 `npm audit fix --force` 的 162 包主版
 |---|---|---|
 | **C9 迁移未 apply** | ✅ 已办结 | `CommunityBridge` / `BridgeMemberOptIn` 已随发版前进生产：`connection:migrate apply --batch=C9` → `verify` **255/255**；发版 `2d5385d` 后 `db-snapshot diff` 65→65 表、既有表行数**全未变** |
 | **生产侧 OpenAI 连通性** | ✅ 已实跑 | `verify:agent:connectivity:server` **22/0**（2026-10-16）。分层：匿名 401 / **网络 PASS（285ms）** / 身份 INFO / **凭据层 FAIL（端点回 400）**。🔴 生产 `OPENAI_BASE_URL` 指向 **Netlify AI Gateway**（`<origin>/.netlify/ai`，`source=env`）；探针只打不计费的 `/models` ⇒ 400 是「对**请求**的答复」而非「对**凭据**的答复」⇒ **「Agent 生产能否成功出稿」仍未验**（需一次计费调用），不得据此宣称线上出稿可用 |
-| **支付生产不可用** | ⛔ | 缺 `CREEM_API_KEY` / `WEBHOOK_SECRET` / 两个 `PRODUCT_ID`（用户明确排除） |
+| **支付凭据未配** | 🟡 **已工程化收口**（2026-10-18） | 生产 40 个环境变量中**无** `CREEM_API_KEY` / `CREEM_WEBHOOK_SECRET` / `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`（用户明确排除，本轮不接）。**「未接入」已变成受支持、可观测、有门禁的状态**：7 个支付入口统一回 **503 + `PAYMENT_NOT_CONFIGURED`**（不再是 500），`/api/health` 的 `payments.missing` 直接列出缺口变量名（不泄值）；`npm run verify:payment:off` 契约脚本已进 CI 的 e2e job。⇒ **接上 4 个变量即收费，零代码改动**。见 `LAUNCH_READINESS.md` |
 | **真实邮件外发** | ⛔ | 缺 `RESEND_API_KEY`（接上即 `CAPTURED → SENT`，零代码改动） |
 | **Upstash Redis 环境变量** | ✅ 已补配 | #51 闭合（2026-10-16）：`qa:upstash:provision` 建库取凭据 → `qa:upstash:configure` 写 Netlify env 并**回读核对** → 部署 `6ad2201d899a`；生产 `GET /api/health` → `redis:{"backend":"upstash","configured":true,"degraded":false}`（2026-10-17 复验仍成立）；`check:redis` **17/17**（首个双后端验证）。⚠️ 免费档 **10k 命令/天** |
 | **生产 qa 账号缺失** | ✅ 已重建 | 根因 = **生产库 `qa.*` 0 行 + `Membership` 0**（`qa:probe:login` 定性为「库中不存在」，**不是密码过期**）⇒ 端点回业务 401 `Invalid email or password`，**不是代码回归**。经授权 `create-qa-accounts.mjs` 重建 2 账号 + 新增 `grant-qa-org.mjs` 建成员关系（角色 **OPERATOR**，**非 ADMIN** —— 保住 AC-08「能跑不能批」）。⚠️ 生产写入已于 **2026-10-17 清理完毕**：`cleanup-qa-accounts.mjs --apply` 删 2 个 User，级联 Profile ×2 / Subscription ×1 / Membership ×2；前后计数精确对账（`qa.*` 残留 0）。**副作用**：`org_default` 现无成员 ⇒ 再次跑生产侧授权复验前需重建账号 |
@@ -465,6 +467,8 @@ node scripts/perf/rate-limit-probe.mjs --base=http://127.0.0.1:3000 --n=200
 ---
 
 | 2026-10-16 | **🚀 发版 + 停用「未发版」状态**：提交 `2d5385d`（34 提交 / T09+T10+T11+T12 + AC-10/23/24）**已发布生产并复验生效**。发版前四项前提实测（C0–C9 全部就位 `verify` **255/255** · 纯新增 schema · 未发版成立 5 条 404 + 3/3 对照 · CI 12 项全绿）；发版后三项复验（`verify:released:surface` **6/6 + 2/2 对照** · `verify-public-origin` **13/0** · `db-snapshot diff` **零数据影响**）。**A1 闭合**（先发现生产 `qa.*` 账号 **0 行** + `Membership` **0** ⇒ 经授权重建账号 + 建成员关系后复跑 **22/0**：真实登录 200 · 诊断端点 200 · 网络层 **PASS** 285ms；**顺带拿到生产事实**：`OPENAI_BASE_URL` 指向 **Netlify AI Gateway**，探针打的 `/models` 回 400 ⇒ 凭据层 FAIL **但 ≠ 凭据无效**）。新增 `RELEASE_T09-T12.md`；探针语义反转（`verify:released:surface` 取代已删除的 `verify-no-release-surface`，避免"清空清单"变成恒绿假门禁）。 |
+
+| 2026-10-18 | **支付「未接入」状态工程化收口**：新增 `src/lib/payments/availability.ts`（唯一判定）与 `not-configured.ts`（503 统一出口），把 7 个支付入口的「缺配置 ⇒ 500」全部改为 **503 + `PAYMENT_NOT_CONFIGURED`**；`CREEM_ENV` 误配（`staging`/`TEST`）由「静默打生产」改为 **fail-closed 拒绝实例化**；`/api/health` 新增 `payments` 块（只回布尔与变量名，公开端点不泄值）；`verify:payment:off` 契约脚本进 CI e2e job；新增 `LAUNCH_READINESS.md`。判定不变（**24 PASS / 0 FAIL / 1 BLOCKED**），支付一项由「⛔ 不可用」改记为「🟡 凭据未配，接上即生效」。 |
 
 ---
 

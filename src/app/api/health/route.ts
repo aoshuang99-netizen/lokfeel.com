@@ -40,6 +40,7 @@ import { getCacheStats } from "@/lib/redis-cache";
 import { getRedisStatus } from "@/lib/im/redis";
 import { describeBotPolicy } from "@/config/bot-policy";
 import { getFirebaseAdminStatus } from "@/lib/firebase/admin";
+import { describePaymentAvailability } from "@/lib/payments/availability";
 
 /**
  * GET /api/health
@@ -102,6 +103,11 @@ export async function GET(): Promise<NextResponse> {
       // 这里只暴露布尔/数字（不含任何凭证、也不回传错误文本），
       // 于是 sdkLoaded=false 就能一眼看出"函数包里缺包/包加载失败"。
       firebaseAdmin: firebaseStatus,
+      // 支付接入进度：**只回布尔与变量名**，绝不回传任何凭据值（本端点是公开的）。
+      // 用途：把「上线前最后一步」变成一行可查的输出 ——
+      //   configured=false 且 missing=["CREEM_API_KEY", ...] ⇒ 其余已就绪，只差凭据；
+      //   接入后同一字段变 true ⇒ 不需要再靠人肉记忆判断"接完没有"。
+      payments: describePaymentAvailability(),
       // Add version from package.json (optional)
       version: process.env.npm_package_version || "unknown",
     };

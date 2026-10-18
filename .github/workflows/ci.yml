@@ -312,6 +312,15 @@ jobs:
           tail -100 "$RUNNER_TEMP/next-start.log"
           exit 1
 
+      # 🔴 payment-off 契约（2026-10-18）
+      #    「支付未接入」是上线前的合法状态，必须**可运行、可观测**：
+      #    支付入口回 503 + PAYMENT_NOT_CONFIGURED（不是 500），
+      #    /api/health 汇报还差哪几个变量。本 job 本来就没有支付凭据，正好是真实场景。
+      #    防的是两类回归：① 把 503 写回 500（监控会把"未接入"记成故障）；
+      #    ② 删掉守卫（缺配置时直连 SDK，抛异常变 500）。
+      - name: payment-off 契约（未接入支付是受支持状态）
+        run: node scripts/qa/verify-payment-off.mjs --base=http://127.0.0.1:3000
+
       - name: 安装 Playwright 浏览器
         run: npx playwright install --with-deps chromium
 

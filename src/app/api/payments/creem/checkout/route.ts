@@ -12,6 +12,8 @@ import {
   CreemPlan,
 } from "@/lib/creem";
 import { isFemaleGender } from "@/lib/gender-utils";
+import { isPaymentChannelReady } from "@/lib/payments/availability";
+import { paymentNotConfigured } from "@/lib/payments/not-configured";
 
 // ── Checkout Schema ──────────────────────────────
 // 支持两种方式：plan（兼容旧版）或 productId（动态）
@@ -76,13 +78,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 4. Guard: Creem API key configured ─────────────────
-    if (!process.env.CREEM_API_KEY) {
-      console.error("[Creem Checkout] CREEM_API_KEY not configured");
-      return NextResponse.json(
-        { error: "Payment system is not configured. Please try again later." },
-        { status: 503 },
-      );
+    // ── 4. Guard: 支付通道就绪（单一判定来源）───────────────
+    // 未接入时回 503 + PAYMENT_NOT_CONFIGURED；body 仍保留扁平 `error`
+    // 以兼容订阅页现有的 `data.error` 文案分支。
+    if (!isPaymentChannelReady("creem.checkout")) {
+      console.error("[Creem Checkout] creem.checkout channel is not configured");
+      return paymentNotConfigured("creem.checkout", {
+        error: "Payment system is not configured. Please try again later.",
+      });
     }
 
     // ── 5. Resolve productId ──────────────────────────────

@@ -1273,6 +1273,42 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 
 ---
 
+## 7duodecies. 支付「未接入」状态工程化收口（2026-10-18）
+
+**背景**：上线前只剩「填支付凭据」一步。但此前「没接支付」在代码里有三种表现：503（checkout / verify-card）、
+**500**（products / stripe webhook / creem webhook / 退款），以及一处**把 SDK 原始报错直接回给浏览器**。
+后果：监控把「未接入」记成服务端故障；前端把「还没接」显示成「加载失败」；而且没有任何「接完没有」的判据。
+
+**改了什么**
+
+| 项 | 变更 |
+|---|---|
+| 判定来源 | 新增 `src/lib/payments/availability.ts`：5 个通道 × 变量依赖 + 格式校验 + `missing` / `malformed`（**只回变量名**） |
+| HTTP 语义 | 新增 `not-configured.ts`：统一 **503 + `PAYMENT_NOT_CONFIGURED`** + `channel` + `missing`，`Cache-Control: no-store` |
+| 7 个入口 | creem products / creem checkout / creem webhook / stripe webhook / verify-card / confirm-verification / admin 退款，全部改走同一判定 |
+| `CREEM_ENV` | 原 `env === 'test' ? 'test' : 'prod'` ⇒ 非法值**静默打生产**。改为只接受 `production`/`test`，否则**拒绝实例化**（fail-closed） |
+| 退款路由 | Stripe 客户端由「模块求值时实例化」改为「守卫通过后惰性实例化」，不再把 env 固化进闭包 |
+| `/api/health` | 新增 `payments: { configured, charging, channels, missing, malformed }`（公开端点，**不含值**） |
+| 前端 | 订阅页改按**错误码**判「未接入」，不再靠文案正则 |
+| 门禁 | `tests/billing/payment-availability.test.ts`（真值表 + 反向对照 + 不泄值）；`verify:payment:off` 进 CI e2e job；`verify:payment:channel` 做离线凭据分类 + 契约漂移 + 可选只读探测 |
+
+**刻意没做**
+
+- 没把 `CREEM_*_PRODUCT_ID` 列为必填：订阅页走实时产品列表（`{productId}`），旧 `{plan}` 路径才需要它们 ——
+  写进必填集合会让「接好了」被误判成「没接好」。
+- 没在 webhook 未接入时返回 200：那会让 provider 认为投递成功而**永久丢事件**；503 才是正确语义（触发重投）。
+- 没动 Stripe API 版本（仍是 `dahlia`）：换版本需要真实 Stripe 环境全链路回归，与本项无关。
+
+**验证**
+
+| 项 | 结果 |
+|---|---|
+| 契约脚本 | `verify:payment:channel` → **exit 0**，7 个入口守卫齐全、无「未接入 ⇒ 500」回归 |
+| 模块实跑 | Node 类型擦除直跑 `availability.ts`：就绪态 `configured=true`；`CREEM_ENV=staging` + 错形 key ⇒ `malformed=[CREEM_ENV, STRIPE_SECRET_KEY]`；序列化结果不含任何值 |
+| 生产实测 | 由发版后的 `verify-payment-off` + `/api/health.payments` 承担（见 `LAUNCH_READINESS.md` §4） |
+
+---
+
 ## 8. 已交付任务的验证口径（可复跑）
 
 | 任务 | 类型检查 | 单测 | 门禁 | E2E |

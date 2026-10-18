@@ -99,6 +99,8 @@
     "qa:db:snapshot": "node scripts/qa/db-snapshot.mjs",
     "qa:refund:testmode": "node scripts/qa/refund-testmode.mjs",
     "qa:refund:e2e": "node scripts/qa/refund-e2e.mjs",
+    "verify:payment:channel": "node scripts/qa/verify-payment-channel.mjs",
+    "verify:payment:off": "node scripts/qa/verify-payment-off.mjs",
     "verify:no-release": "node scripts/qa/verify-no-release.mjs",
     "verify:released:surface": "node scripts/qa/verify-released-surface.mjs",
     "verify:release:wait": "bash scripts/perf/wait-release.sh",

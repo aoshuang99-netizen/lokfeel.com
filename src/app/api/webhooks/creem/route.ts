@@ -3,6 +3,11 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCreemWebhookSignature, upsertCreemSubscription, createCreemPaymentRecord } from "@/lib/creem";
 import { db } from "@/lib/db";
+import {
+  isPaymentChannelReady,
+  missingForChannel,
+} from "@/lib/payments/availability";
+import { paymentNotConfigured } from "@/lib/payments/not-configured";
 
 // BUG-632: Idempotency — skip processing if a payment record for this Creem
 // object/event id already exists (protects against webhook replay duplicates).
@@ -40,9 +45,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    if (!webhookSecret && !allowMock) {
-      console.error("[Creem Webhook] CREEM_WEBHOOK_SECRET not configured");
-      return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+    if (!isPaymentChannelReady("creem.webhook") && !allowMock) {
+      // 503（不是 500）：这是「尚未接入」，不是「代码坏了」。
+      // 接入后同一请求会走验签分支，因此这个码是**可验证的完成判据**。
+      console.error(
+        `[Creem Webhook] creem.webhook channel is not configured (missing: ${missingForChannel("creem.webhook").join(", ")})`,
+      );
+      return paymentNotConfigured("creem.webhook", {
+        error: "Webhook secret not configured",
+      });
     }
 
     // Read raw body as Buffer for signature verification

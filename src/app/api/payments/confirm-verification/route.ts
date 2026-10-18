@@ -1,10 +1,12 @@
 export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/auth";
 import { success, serverError, badRequest } from "@/lib/api-response";
 import { handleApiError } from "@/lib/api-handler";
 import { STRIPE_API_VERSION } from "@/lib/stripe/config";
+import { isPaymentChannelReady } from "@/lib/payments/availability";
+import { paymentNotConfigured } from "@/lib/payments/not-configured";
 import Stripe from "stripe";
 
 // ═══ POST /api/payments/confirm-verification ═══════════════════
@@ -21,15 +23,15 @@ export async function POST(request: NextRequest) {
       return badRequest("setupIntentId is required");
     }
 
-    // Check Stripe config
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return NextResponse.json(
-        { error: "Payment system is not configured" },
-        { status: 503 }
-      );
+    // Check Stripe config —— 统一走 payment availability（503 + PAYMENT_NOT_CONFIGURED）
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (!isPaymentChannelReady("stripe.card") || !stripeKey) {
+      return paymentNotConfigured("stripe.card", {
+        error: "Payment system is not configured",
+      });
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    const stripe = new Stripe(stripeKey, {
       apiVersion: STRIPE_API_VERSION,
     });
 

@@ -6,6 +6,8 @@ import {
   executeSubscriptionRefund,
   subscriptionUpdateForRefund,
 } from "@/lib/stripe/refund";
+import { isPaymentChannelReady } from "@/lib/payments/availability";
+import { paymentNotConfigured } from "@/lib/payments/not-configured";
 import Stripe from "stripe";
 
 /**
@@ -21,19 +23,21 @@ import Stripe from "stripe";
  * 不传 `type` / `amount` ⇒ 全额退款（退到本发票可退余额为止）。
  */
 export function createSubscriptionRefundHandler() {
-  // 只在配置了密钥时实例化；显式钉住 API 版本（见 src/lib/stripe/config.ts）。
-  const stripe = process.env.STRIPE_SECRET_KEY
-    ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION })
-    : null;
-
   return withPermission("payment.refund", { dangerous: true })(
     // `context` 不写显式 `any`：类型由 `withPermission` 的 HandlerFunction 推出
     // （`{ params?: any }`）。lint 棘轮逐文件逐规则计数，这里多一个 `any` 就是新增债。
     async (request: NextRequest, context) => {
       try {
-        if (!stripe) {
-          return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
+        if (!isPaymentChannelReady("stripe.refund")) {
+          // 503 + 稳定码：与 checkout 一致。500 会把「没接支付」记成服务端故障。
+          return paymentNotConfigured("stripe.refund", { error: "Stripe not configured" });
         }
+
+        // 惰性实例化：放在守卫之后，避免把「模块求值时的 env」固化进闭包
+        // （那会让「补了密钥但实例已起」的进程一直拿到 null）。
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
+          apiVersion: STRIPE_API_VERSION,
+        });
 
         const { id } = await context.params;
 

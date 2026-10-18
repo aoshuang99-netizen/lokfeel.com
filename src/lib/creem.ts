@@ -36,11 +36,21 @@ export function getCreemClient(): InstanceType<typeof Creem> {
   const apiKey = process.env.CREEM_API_KEY;
   if (!apiKey) throw new Error("CREEM_API_KEY is not configured");
 
-  const env = (process.env.CREEM_ENV ?? "production") as "production" | "test";
+  // 🔴 Fail-closed：原写法是 `env === "test" ? "test" : "prod"`，
+  //    于是 `CREEM_ENV=staging` / `TEST` / 手误写错，都会**静默落到生产**去
+  //    创建真实收款会话 —— 接入支付时最危险的失误（以为在沙箱，其实在收钱）。
+  //    这里改为只接受两个字面量，其他一律拒绝实例化。
+  const rawEnv = (process.env.CREEM_ENV ?? "production").trim();
+  if (rawEnv !== "production" && rawEnv !== "test") {
+    throw new Error(
+      `CREEM_ENV must be exactly "production" or "test" (got "${rawEnv}") — refusing to guess a server`,
+    );
+  }
+
   _creemClient = new Creem({
     apiKey,
     // creem SDK v1.13+ 用 server 取代 serverIdx（取值 'prod' | 'test'）
-    server: env === "test" ? "test" : "prod",
+    server: rawEnv === "test" ? "test" : "prod",
   });
 
   return _creemClient;

@@ -52,9 +52,17 @@ export default function SubscriptionPage() {
           setProducts(subs);
         } else {
           // Graceful degradation: never surface raw backend/config errors to users.
+          //
+          // 判据以**错误码**为准（`PAYMENT_NOT_CONFIGURED`），而不是文案正则：
+          // 「支付还没接入」与「支付通道挂了」对用户是两句话，对运维是两件事 ——
+          // 前者是上线前的合法状态，后者要报警。正则只留作旧后端的兜底。
+          const code: string = data.code || "";
           const msg: string = data.error || "";
+          const notConfigured =
+            code === "PAYMENT_NOT_CONFIGURED" ||
+            /CREEM_API_KEY|not configured|payment provider/i.test(msg);
           setError(
-            /CREEM_API_KEY|not configured|payment provider/i.test(msg)
+            notConfigured
               ? "Subscription plans are temporarily unavailable. Please check back soon."
               : "Failed to load plans. Please try again."
           );

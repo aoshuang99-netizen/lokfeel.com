@@ -6,6 +6,11 @@ import Stripe from "stripe";
 import { isFemaleGender } from "@/lib/gender-utils";
 import { STRIPE_API_VERSION } from "@/lib/stripe/config";
 import {
+  isPaymentChannelReady,
+  missingForChannel,
+} from "@/lib/payments/availability";
+import { paymentNotConfigured } from "@/lib/payments/not-configured";
+import {
   recordInvoicePayment,
   type PaymentRecordPort,
 } from "@/lib/stripe/invoice-payment-record";
@@ -16,20 +21,31 @@ function getStripe() {
   });
 }
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
     const signature = request.headers.get("stripe-signature");
 
-    if (!signature) {
-      return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
+    // 🔴 顺序很重要：先判「有没有接入」，再判「请求合不合法」。
+    //    反过来写时，未签名的探测请求会先拿到 400，于是「未接入」这个状态
+    //    在外部**不可观测** —— 也就无法用一条命令证明"最后一步还没做"。
+    //    接入后同一请求会走验签分支（缺签名 ⇒ 400 / 签名错 ⇒ 400），
+    //    所以 503 → 400 的转变本身就是「已接入」的判据。
+    //
+    //    判据用**通道**而不是单个变量：本 handler 在验签之后还会调 Stripe API，
+    //    只有 secret 没有 secretKey 时，验签能过、处理阶段却会失败。
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+    if (!isPaymentChannelReady("stripe.webhook")) {
+      console.error(
+        `[Webhook] stripe.webhook channel is not configured (missing: ${missingForChannel("stripe.webhook").join(", ")})`,
+      );
+      return paymentNotConfigured("stripe.webhook", {
+        error: "Webhook endpoint is not configured",
+      });
     }
 
-    if (!endpointSecret) {
-      console.error("[Webhook] STRIPE_WEBHOOK_SECRET is not configured");
-      return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+    if (!signature) {
+      return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
     }
 
     let event: Stripe.Event;
