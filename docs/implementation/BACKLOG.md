@@ -1128,7 +1128,7 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400 "No payment foun
 ## 7novies. 修复退款链路潜伏缺陷（`§7octies` 遗留项）
 
 **结论：已修并上线（`417f835`，部署 `6ad4501738ddf71339c07ef4`）；45 例单测本地真跑 + CI jest 双复核；两条 admin 退款路由去重为一份实现。**
-**仍未做**：真实 Stripe test mode 的端到端退款（生产无 `STRIPE_*` 凭据），故本项不改变任何 AC 状态。
+**端到端：协议层已自动化跑通（`scripts/qa/refund-e2e.mjs`，真实 SDK + 真实 HTTP + 本地 Stripe 协议服务端，5 场景 19 断言全过，变异后 4 项转红）；唯一未验的是 Stripe 自己的账务/风控 —— 需要 `sk_test_` 密钥，本环境没有，故不改变 AC 状态。**
 
 ### 缺陷回顾
 
@@ -1158,6 +1158,8 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 | `src/lib/stripe/invoice-payment-record.ts`（新） | Webhook 记账：解析 PI → 按 PI 查重 → 命中 `update` / 未命中 `create`，解析失败**降级记账**而不是让 webhook 5xx |
 | `tests/billing/stripe-refund.test.ts`（新） | 退款决策 **38 例** |
 | `tests/billing/stripe-invoice-payment.test.ts`（新） | 记账幂等 7 例 |
+| `scripts/qa/refund-e2e.mjs`（新） | 协议层端到端：真实 SDK + 真实 HTTP + 本地 Stripe 服务端，**无需密钥** |
+| `scripts/qa/stripe-fake-server.mjs`（新） | 本地 Stripe 协议服务端：订阅 / 收款记录 / 退款列表 / 创建退款，支持 `Idempotency-Key` 与超额 400 |
 
 ### 四个刻意的取舍
 
@@ -1176,6 +1178,8 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 | 类型（新模块 + 测试，stripe@23 真实类型） | 探针工程 `tsc --strict` **exit 0**；真实 `Stripe` 客户端可直接赋给 `StripeRefundPort` / `InvoicePaymentPort`（有专门用例钉住） |
 | 逻辑（本地真实执行） | 两个测试文件编译到 CJS 后**真跑 45 例全过**（退款 38 + 记账 7）：dahlia 路径 / 未 expand / 回落 list / 金额换算 / 超额 / 非法金额 / 已退干净 / `charge` 兜底 / `reason` / 幂等键 / 状态迁移 / 记账查重 / 降级 |
 | 变异验证（证明用例非恒真） | 把 `refunds.create` 的金额改成固定 1 分 ⇒ **36 passed / 2 failed**；恢复后 **38 / 0** |
+| 端到端（协议层，无需密钥） | `node scripts/qa/refund-e2e.mjs` ⇒ **19 断言全过 / 0 失败**，15 次真实 HTTP 往返：`expand[0]=latest_invoice` 确实发出、`invoice.payments` 内联与回落 `invoicePayments.list` 两条路径、幂等键 `admin-refund:pi:0:1000`、部分退款 `fullyRefunded=false`、退干净翻 `true`、超额在调用 Stripe 前被拦 |
+| 端到端变异验证 | 把退款金额改成固定 1 分 ⇒ **4 项转红**（请求体 amount、重复退款判定、第二次 POST 次数、剩余金额），证明这套端到端不是自证恒真 |
 | 依赖门禁 | `check:deps` **exit 0** |
 | CI 第一轮（`39097779698`） | Jest / Typecheck / Build / E2E / 审计 / 迁移 **全绿**；**Lint 红** —— 棘轮逐文件逐规则，`refund-route.ts` 的 `context: any` 属新增债。已去掉显式标注（类型由 `withPermission` 的 `HandlerFunction` 推出）。顺带把棘轮明细写进 job summary：job 日志 REST 端点要写权限，summary 公开可读 |
 | CI 第二轮（`39098488462`） | **9 success + 2 skipped**：Typecheck / Lint / Test (Jest) / Build / E2E / Migration / 审计 / 密钥扫描 / Perf 对账全绿 |
@@ -1220,8 +1224,49 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 > `@opennextjs/cloudflare`（direct）→ `@opennextjs/aws` → `@node-minify/core` / `glob`（CLI 命令注入）、
 > `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` / `braces`（栈耗尽 DoS），
 > 外加 `handlebars`（**critical**，经 `@opennextjs/aws` 传入）。这些不进生产运行时闭包，
-> `--omit=dev` 是 0/0 —— 也是棘轮门禁的判定口径。**待办**：`@opennextjs/*` 升到修复版应单开一轮，
-> 它同时是构建期执行链，不能只按「dev 不管」处理。
+> `--omit=dev` 是 0/0 —— 也是棘轮门禁的判定口径。**已由 §7undecies 处理**：能修的修掉
+> （9 high + 1 critical → 5 high + 0 critical），剩下 5 条上游无修复版。
+
+---
+
+## 7undecies. 开发工具链依赖升级（9 high + 1 critical → 5 high + 0 critical）
+
+**结论：有修复版的全部升掉了；剩下 5 条上游明确写「Patched versions: None」，按接受风险登记，
+不为了把数字清零而砍掉 lint 能力。**
+
+### 改了什么
+
+| 项 | 前 | 后 | 说明 |
+|---|---|---|---|
+| `@opennextjs/cloudflare` | `1.20.11` | **`1.20.12`** | 连带 `@opennextjs/aws` 4.1.10 → 4.1.11；peer `next >=16.4.1`、`wrangler ^4.148.0` 均满足（锁内 wrangler 4.151.0） |
+| `handlebars` | `4.7.9` | **`4.7.10`** | `ts-jest ^4.7.9` 范围内，`npm update` 即可；**critical → 0** |
+| `@node-minify/core > glob` | `10.3.3` | **`10.5.0`** | 嵌套 override（§7.3.2）；根 `glob` 保持 13.0.6 不动 |
+
+`@node-minify/core` 9.x 线没有 9.0.3（最新就是 9.0.2），所以只能钉它的子依赖；用**嵌套**写法
+避免把根 `glob` 从 13.0.6 压回 10.x。
+
+### 剩下的 5 条为什么修不了
+
+链：`eslint-config-next@16.4.2 → @next/eslint-plugin-next → fast-glob@3.3.1（精确钉死）→ micromatch@4.0.8 → braces@3.0.3`
+
+- `braces` 最新发布版就是 **3.0.3**；[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) /
+  CVE-2026-93687 写 **Patched versions: None**；
+- `micromatch` 的 advisory 由 `braces` 传导，同样无修复版；`fast-glob` 换 3.3.3 也仍带这两个；
+- npm 的 `fixAvailable: eslint-config-next@14.2.35` 是**降级建议**，Next 16 项目装不回去，不能采信。
+
+**影响面**：栈耗尽 DoS 需要调用方喂 deeply nested pattern；本项目的 glob 模式全部来自仓库内配置，
+不接受用户输入，且只在 `eslint` 阶段执行，不进 Netlify 产物、不进生产运行时。
+
+### 验证
+
+| 项 | 结果 |
+|---|---|
+| 全量审计 | `high 9 → 5`、`critical 1 → 0`、`moderate 25`、`low 2`；剩余 5 条全部是上面那条 eslint 传导链 |
+| 生产审计 | **`high 0 / critical 0`**（moderate 4 + low 2，逐项未变） |
+| 依赖门禁 | `check:deps` **exit 0**；`--self-test` **8/8** |
+| 锁内版本 | `@opennextjs/cloudflare 1.20.12`、`@opennextjs/aws 4.1.11`、`handlebars 4.7.10`、`@node-minify/core/glob 10.5.0`；根 `glob 13.0.6` |
+| 回归 | 由 CI 承担：Typecheck / Lint 棘轮 / Jest / Build / E2E / 审计 / 迁移 |
+| 风险登记 | `DEPENDENCY_RISK.md` §7.7（含三条复核条件：`braces` 发修复版 / 插件放宽 `fast-glob` / 开始对用户输入做 glob） |
 
 ---
 

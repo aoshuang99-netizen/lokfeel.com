@@ -133,6 +133,11 @@ jobs:
       - run: npx prisma generate
       - run: npm test -- --ci --reporters=default
 
+      # 退款链路：真实 Stripe SDK + 真实 HTTP + 本地 Stripe 协议服务端。
+      # 不需要任何密钥，所以能进 CI —— 防止「退款只在发布前手验过一次」。
+      - name: 退款链路协议层端到端
+        run: node scripts/qa/refund-e2e.mjs
+
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v7

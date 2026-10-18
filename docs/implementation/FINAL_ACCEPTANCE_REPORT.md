@@ -290,11 +290,15 @@ overrides 16 条」，**没有**采用 `npm audit fix --force` 的 162 包主版
 `next` 16.3.6 → **16.4.2**、两个 critical（`proxy-addr` / `websocket-driver`）均已修复。
 完整施工记录与取证见 `DEPENDENCY_RISK.md` §7、`BACKLOG.md` §7sexies。
 
-仍如实保留的两点：
-1. overrides 已从 16 条降到 **3 条**（2026-10-18 退役 13 条）；剩 `ws` / `nodemailer` / `@grpc/grpc-js`
-   仍在承重，父包追平后须继续逐条删除；
+仍如实保留的三点：
+1. overrides 已从 16 条降到 **4 条**（2026-10-18 退役 13 条 + 为开发工具链新增 1 条嵌套 override）；
+   剩 `ws` / `nodemailer` / `@grpc/grpc-js` / `@node-minify/core > glob` 仍在承重，父包追平后须继续逐条删除；
 2. `next-auth@beta.32` 的 `peerOptional nodemailer` 声明仍停留在 `^7 || ^8`，
-   与实际 `10.1.2` 不符（npm 仅 warn）—— 启用 next-auth 自带 Email provider 前须复核。
+   与实际 `10.1.2` 不符（npm 仅 warn）—— 启用 next-auth 自带 Email provider 前须复核；
+3. **开发工具链仍有 5 条 high**（`braces` / `micromatch` / `fast-glob` / `@next/eslint-plugin-next` /
+   `eslint-config-next`）：`braces` 最新 3.0.3 即为受影响版本，advisory 写 **Patched versions: None**。
+   同日已把可修的修掉（`critical 1 → 0`、`high 9 → 5`）；剩余部分为 dev-only、输入不受外部控制，
+   按接受风险登记于 `DEPENDENCY_RISK.md` §7.7，生产侧仍 `0 / 0`、不进 Netlify 产物。
 
 ### 4.3 ✅ AC-24（P0）—— 性能基线
 

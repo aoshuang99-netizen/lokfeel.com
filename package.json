@@ -98,6 +98,7 @@
     "lifecycle:sweep:apply": "node scripts/qa/lifecycle-sweep.mjs --apply",
     "qa:db:snapshot": "node scripts/qa/db-snapshot.mjs",
     "qa:refund:testmode": "node scripts/qa/refund-testmode.mjs",
+    "qa:refund:e2e": "node scripts/qa/refund-e2e.mjs",
     "verify:no-release": "node scripts/qa/verify-no-release.mjs",
     "verify:released:surface": "node scripts/qa/verify-released-surface.mjs",
     "verify:release:wait": "bash scripts/perf/wait-release.sh",
@@ -188,7 +189,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "1.20.11",
+    "@opennextjs/cloudflare": "1.20.12",
     "@playwright/test": "^1.64.0",
     "@swc/core": "^1.16.18",
     "@swc/jest": "^0.2.39",
@@ -217,6 +218,9 @@
   },
   "overrides": {
     "@grpc/grpc-js": "1.14.6",
+    "@node-minify/core": {
+      "glob": "10.5.0"
+    },
     "nodemailer": "$nodemailer",
     "ws": "$ws"
   }

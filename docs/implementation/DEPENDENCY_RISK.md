@@ -199,7 +199,8 @@ firebase   @firebase/firestore   @firebase/firestore-compat
 | 2026-10-17 | **28 条清零**：同大版本升级 6 项 + 定向 overrides 16 条；`frozen`/`exemptions` 置空；自证从 6 条扩到 8 条并修掉「快照为空即静默跳过」的假绿（§7）。同日 CI 全绿（`5fc3bf6`）→ 发版 `6ad3405dbb50` → 生产复验通过 |
 | 2026-10-17 | **并入 Dependabot #27**（11 项 minor/patch，`cherry-pick -x` + 重算锁）：16 条 overrides 全部仍生效、审计 `high 0 / critical 0` 未变；CI `39025021586` 全绿 → 发版 `6ad34dc8b568` → 生产复验 6/6 + 13/0 + 限流 429×10。记录见 `BACKLOG.md` §7septies |
 | 2026-10-17 | **并入 Dependabot #24 · `stripe` 22.6.2 → 23.0.0（major）**：默认 API 版本被 SDK 从 `dahlia` 切到 `endive` ⇒ 新增单点常量把 5 处客户端显式钉回 `dahlia`；`payment_method_types` 被移除 ⇒ 改 `allowed_payment_method_types`。审计仍 `high 0 / critical 0`、16 条 overrides 仍生效；CI `39040981328` 全绿 → 发版 `6ad38653be0d`。记录见 `BACKLOG.md` §7octies |
-| 2026-10-18 | **退役 13 条 overrides（16 → 3）**：判据是「父级范围是否仍拒绝已修版本」，不是「审计现在绿」。剩 `ws` / `nodemailer` / `@grpc/grpc-js` 三条承重（拒绝者见 §7.3.1）。锁文件零 diff、审计数字逐项不变、`check:deps` 与自证全过。记录见 `BACKLOG.md` §7novies 之后 |
+| 2026-10-18 | **退役 13 条 overrides（16 → 3）**：判据是「父级范围是否仍拒绝已修版本」，不是「审计现在绿」。剩 `ws` / `nodemailer` / `@grpc/grpc-js` 三条承重（拒绝者见 §7.3.1）。锁文件零 diff、审计数字逐项不变、`check:deps` 与自证全过。记录见 `BACKLOG.md` §7decies |
+| 2026-10-18 | **开发工具链升级**：`@opennextjs/cloudflare` 1.20.11 → 1.20.12（连带 `@opennextjs/aws` 4.1.11）、`handlebars` 4.7.9 → 4.7.10、新增嵌套 override `@node-minify/core > glob 10.5.0`。全量审计 `high 9 → 5`、`critical 1 → 0`；生产侧仍 `0 / 0`。剩余 5 条因 `braces` 无修复版而按接受风险登记（§7.7）。记录见 `BACKLOG.md` §7undecies |
 
 ---
 
@@ -234,12 +235,13 @@ node scripts/ci/dependency-ratchet.mjs --report=/tmp/audit-after.json           
 | `ws` | `^8.21.3` → **`^8.22.0`** | `ws` | advisory 区间 `8.0.0–8.20.1` |
 | `@types/nodemailer` | **移除** | — | nodemailer 10 自带类型（`types: ./dist/cjs/nodemailer.d.ts`），留着会与包内声明重复 |
 
-### 7.3 定向 overrides（原 16 条；2026-10-18 退役 13 条，余 3 条）
+### 7.3 定向 overrides（原 16 条；2026-10-18 退役 13 条，现 4 条）
 
 父包不跟版时，只能钉住传递依赖。**全部选同大版本的补丁/小版本**，不跨 major：
 
 > **2026-10-18 更新**：逐条做过「父级范围是否仍拒绝已修版本」的取证后，13 条退役
-> （父级范围本来就接受已修版本 ⇒ 不再承重），仅剩 3 条仍在承重，见 §7.3.1。
+> （父级范围本来就接受已修版本 ⇒ 不再承重），剩 3 条仍在承重，见 §7.3.1；
+> 同日为开发工具链补了 1 条**嵌套** override（§7.3.2），总数 4。
 
 | 包 | 钉住 | 修掉的 advisory 区间 | 谁引进来的 |
 |---|---|---|---|
@@ -285,6 +287,20 @@ node scripts/ci/dependency-ratchet.mjs --report=/tmp/audit-after.json           
 3. 审计逐项不变：`prod high 0 / critical 0`（moderate 4 + low 2）、`all high 9 / critical 1`，
    与退役前完全一致；`check:deps` exit 0、`--self-test` 8/8 全过。
 
+### 7.3.2 开发工具链的嵌套 override（2026-10-18）
+
+`@node-minify/core@9.0.2` 把 `glob` **精确钉在 10.3.3**（落在 `10.2.0–10.4.5` 的命令注入区间）。
+它的上界是 `@opennextjs/aws → @opennextjs/cloudflare`，而 9.x 线**没有** 9.0.3（最新就是 9.0.2），
+所以只能钉它的子依赖：
+
+```json
+"@node-minify/core": { "glob": "10.5.0" }
+```
+
+用**嵌套**写法而不是顶层 `"glob"`：根 `glob` 是 13.0.6（`@opennextjs/cloudflare` / jest 用），
+顶层钉版会把它压回 10.x，属于用一个降级换一个修复。改完后锁里 `@node-minify/core/glob` 是
+10.5.0、根仍是 13.0.6，`glob` 全树只剩这两条线。
+
 ### 7.4 验证
 
 | 项 | 结果 |
@@ -327,5 +343,24 @@ node scripts/ci/dependency-ratchet.mjs --report=/tmp/audit-after.json           
   已用同大版本 override 解决，不值得为此付一次大版本跃迁的代价。
 - **没有升 next-auth beta → 正式版**：上游未发布（§5 第 3 项）。
 - **没有处理剩余 6 条 moderate/low**：不阻断，且多数要等父包先动。
-- **没有删掉 overrides**：它们是临时钉版手段，父包追平后应逐条删除（§5 第 6 项）。
+- **没有为清零而移除 `eslint-config-next`**：剩下的 5 条 dev high 无修复版，移除它会丢
+  `@next/next/*` 规则 —— 用真实 lint 覆盖换一个不可利用的编号，不划算（§7.7）。
+
+### 7.7 开发工具链残留：5 条 high，上游无修复版
+
+| 包 | 区间 | 状态 |
+|---|---|---|
+| `braces` | `<=3.0.3` | **最新发布版就是 3.0.3**；[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) / CVE-2026-93687 明确写 **Patched versions: None** |
+| `micromatch` | `>=0.2.0` | 由 `braces` 传导，同样无修复版 |
+| `fast-glob` | `*` | `@next/eslint-plugin-next` 把 `fast-glob` **精确钉在 3.3.1**，换 3.3.3 也仍带 `micromatch/braces`，无收益 |
+| `@next/eslint-plugin-next` / `eslint-config-next` | 全版本 | 传导链末端不可修 |
+
+npm 给出的 `fixAvailable: eslint-config-next@14.2.35` 是**降级建议**（Next 16 项目装不回去），
+不能采信 —— 这也是「看 fixAvailable 就自动修」会踩的坑。
+
+**为什么按接受风险处理**：栈耗尽 DoS 需要调用方提供 deeply nested pattern；本项目的 glob 模式
+**全部来自仓库内配置文件**（developer-controlled），不接受用户输入，且只发生在 `eslint` 阶段，
+不进入 Netlify 产物、不进生产运行时（`--omit=dev` 为 0/0）。
+**复核条件**（任一满足即重新评估）：`braces` 发布修复版 / `@next/eslint-plugin-next` 放宽
+`fast-glob` 精确钉版 / 项目开始对用户输入做 glob 匹配。
 
