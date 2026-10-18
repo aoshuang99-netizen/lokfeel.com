@@ -63,18 +63,12 @@ function harness(opts: {
     invoicePayments: { list: list as unknown as InvoicePaymentPort["invoicePayments"]["list"] },
   };
 
-  // 这些 mock 的**入参必须显式声明**：`jest.fn(async () => ({}))` 会推断出空参数元组，
-  // 于是 `mock.calls[0][0]` 在类型层是非法下标（TS2493）—— ts-jest 默认把诊断当错误上报。
-  const findUnique = jest.fn(
-    async (_args: { where: Record<string, unknown> }): Promise<{ id: string } | null> =>
-      opts.existing ?? null
-  );
-  const update = jest.fn(
-    async (_args: { where: { id: string }; data: Record<string, unknown> }) => ({})
-  );
-  const create = jest.fn(
-    async (_args: { data: Record<string, unknown> }) => ({})
-  );
+  // mock 只做行为，不声明入参：`jest.fn` 的泛型签名在 @types/jest 29 / 30 之间不兼容
+  // （29 是 `<Ret, Args>`、30 是 `<Fn>`），写死任一版本都会在另一版本报 TS2743。
+  // 实参一律经 `argOf<T>()` 取（见下），那里集中做一次类型断言。
+  const findUnique = jest.fn(async () => opts.existing ?? null);
+  const update = jest.fn(async () => ({}));
+  const create = jest.fn(async () => ({}));
   const payments = {
     findUnique,
     update,

@@ -1176,7 +1176,7 @@ if (!latestInvoice || !latestInvoice.payment_intent) return 400;     // 恒为 u
 | 逻辑（本地真实执行） | 两个测试文件编译到 CJS 后**真跑 45 例全过**（退款 38 + 记账 7）：dahlia 路径 / 未 expand / 回落 list / 金额换算 / 超额 / 非法金额 / 已退干净 / `charge` 兜底 / `reason` / 幂等键 / 状态迁移 / 记账查重 / 降级 |
 | 变异验证（证明用例非恒真） | 把 `refunds.create` 的金额改成固定 1 分 ⇒ **36 passed / 2 failed**；恢复后 **38 / 0** |
 | 依赖门禁 | `check:deps` **exit 0** |
-| CI（tsc · lint 棘轮 · jest · next build · migration · e2e · dep audit） | 见本轮提交后的 CI 记录（下方补） |
+| CI 第一轮（`39097779698`） | Jest / Typecheck / Build / E2E / 审计 / 迁移 **全绿**；**Lint 红** —— 棘轮逐文件逐规则，`refund-route.ts` 的 `context: any` 属新增债。已去掉显式标注（类型由 `withPermission` 的 `HandlerFunction` 推出）。顺带把棘轮明细写进 job summary：job 日志 REST 端点要写权限，summary 公开可读 |
 | 生产 | 未配 `STRIPE_*` ⇒ 退款路由仍返回 500 `Stripe not configured`，行为与升级前一致；发版后复验健康面与 Stripe 路由加载性 |
 
 > **环境限制（如实记录）**：本轮本地仍装不出 `jest` —— 沙箱的 `npm install` 在 `/tmp` 被拒

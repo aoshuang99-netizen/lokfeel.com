@@ -92,7 +92,20 @@ jobs:
           echo "eslint 退出码 $CODE（1 = 命中存量债，属预期）"
 
       - name: 棘轮门禁（只拦新增债）
-        run: node scripts/ci/lint-ratchet.mjs --report="$RUNNER_TEMP/eslint.json"
+        # 明细同时写进 job summary：job 日志的 REST 端点需要仓库写权限，
+        # 而 summary 是公开可读的 —— 没有管理员令牌时也能定位「新债在哪一行」。
+        run: |
+          set +e
+          node scripts/ci/lint-ratchet.mjs --report="$RUNNER_TEMP/eslint.json" > "$RUNNER_TEMP/ratchet.log" 2>&1
+          CODE=$?
+          cat "$RUNNER_TEMP/ratchet.log"
+          {
+            echo '### lint 棘轮明细（新增债）'
+            echo '```'
+            tail -n 80 "$RUNNER_TEMP/ratchet.log"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $CODE
 
       - name: 上传 lint 报告
         if: always()

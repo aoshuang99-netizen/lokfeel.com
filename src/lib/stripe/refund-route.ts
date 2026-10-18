@@ -27,7 +27,9 @@ export function createSubscriptionRefundHandler() {
     : null;
 
   return withPermission("payment.refund", { dangerous: true })(
-    async (request: NextRequest, context: any) => {
+    // `context` 不写显式 `any`：类型由 `withPermission` 的 HandlerFunction 推出
+    // （`{ params?: any }`）。lint 棘轮逐文件逐规则计数，这里多一个 `any` 就是新增债。
+    async (request: NextRequest, context) => {
       try {
         if (!stripe) {
           return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
