@@ -1,0 +1,17 @@
+
+LokFeel 自托管门禁 · https://app.lokfeel.com · 未给 --origin-ip · 2026-10-19T14:12:16.832Z
+
+✅ S1 边缘在位（cf-ray + server: cloudflare） — PASS：cf-ray=a4d0607d1d…
+⛔ S2 DNS 不指向源站 — BLOCKED：缺 --origin-ip
+⛔ S3 源站 3000 不可直连 — BLOCKED：缺 --origin-ip
+⛔ S4 源站 80/443 不可直连 — BLOCKED：缺 --origin-ip
+✅ S5 未登录访问 /dashboard 跳登录 — PASS：HTTP 307 → /login?callbackUrl=%2Fdashboard
+✅ S6 /api/health 健康且数据库可达 — PASS：HTTP 200 status=healthy dbLatency=1238
+✅ S7 /api/* 不经边缘缓存 — PASS：cf-cache-status=DYNAMIC
+✅ S8 /_next/static 可被缓存 — PASS：/_next/static/media/1b99372b3eaef0c8-s.p.1gsd1jahc5dg_.woff2 HTTP 200 max-age=31536000 cf=HIT
+✅ S9 支付 webhook 不被挑战 — PASS：HTTP 503（期望缺签名 → 4xx/503 业务拒绝）
+✅ S10 Auth cookie 使用 __Host-/__Secure- 前缀 — PASS：已加前缀
+✅ S11 cron 无凭据必须 401 — PASS：HTTP 401
+
+ASSERTIONS=11 → 8 PASS / 0 FAIL / 3 BLOCKED
+（模式：边缘在位；origin=未提供）

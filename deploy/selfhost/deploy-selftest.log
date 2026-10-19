@@ -1,0 +1,13 @@
+✅ A1 正常发布退出码 0
+✅ A2 打印发布成功
+✅ A3 current 指向 .next/standalone
+✅ A4 standalone/server.js 存在
+✅ A5 .next/static 已手拷
+✅ A6 public 已手拷
+✅ A7 ISR 缓存软链到 shared
+✅ A8 写入 REVISION
+✅ B1 健康检查失败退出码非 0
+✅ B2 打印回滚
+✅ B3 current 回到上一 release
+
+ASSERTIONS=11 → 11 PASS / 0 FAIL

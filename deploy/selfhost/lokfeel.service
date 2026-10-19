@@ -1,0 +1,48 @@
+# /etc/systemd/system/lokfeel.service
+# 安装：systemctl daemon-reload && systemctl enable --now lokfeel
+# 日志：journalctl -u lokfeel -f
+# 说明：WorkingDirectory 指向 releases/<ts>/.next/standalone（由部署脚本原子切换软链）
+
+[Unit]
+Description=LokFeel (Next.js standalone)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lokfeel
+Group=lokfeel
+
+# 只监听回环：公网入口由 cloudflared 提供，源站不暴露端口
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=TZ=Asia/Shanghai
+
+# 全部密钥/配置：600，属主 lokfeel，永不入 git
+EnvironmentFile=/etc/lokfeel/env
+
+WorkingDirectory=/srv/lokfeel/current
+ExecStart=/usr/bin/node server.js
+ExecReload=/bin/kill -HUP $MAINPID
+
+Restart=always
+RestartSec=3
+# 内存上限：4G 机器留 ~1.4G 给系统/缓存；2G 机器请改 1024M 并只用 --prebuilt
+MemoryMax=2560M
+# 文件句柄：SSE/WebSocket 长连较多
+LimitNOFILE=65535
+# 优雅退出
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+# ── 加固（若出现权限报错，先注释 ProtectSystem 再排查）──
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/lokfeel/shared
+
+[Install]
+WantedBy=multi-user.target
