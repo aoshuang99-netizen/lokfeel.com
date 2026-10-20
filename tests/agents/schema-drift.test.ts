@@ -31,12 +31,21 @@ import { PROVIDER_KIND_TO_DB } from '@/lib/agents/dto'
 const ROOT = path.resolve(__dirname, '..', '..')
 const read = (rel: string) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
-/** 从 schema 文本里抽出一个 enum 的取值清单。 */
+/**
+ * 从 schema 文本里抽出一个 enum 的取值清单。
+ *
+ * 🔴 注释必须按**两种语法**都剥掉：`//` / `///` 行注释，以及 `/* … *\/` 块注释。
+ *    2026-10-20 的真实事故：有人在枚举里写了 `/** … *\/` 块注释，
+ *    而本函数只过滤 `//` 开头 ⇒ `/**` 被当成一个**枚举值**，
+ *    jest 报「4 个取值 ≠ 5 个」，看起来像 Prisma 漂移，实际是解析器太窄。
+ *    块注释先整段剔除（可跨行），再按行过滤 —— 顺序反了会漏掉跨行的情况。
+ */
 function enumValues(schema: string, name: string): string[] {
   const re = new RegExp(`enum\\s+${name}\\s*\\{([^}]*)\\}`, 'm')
   const m = schema.match(re)
   if (!m) throw new Error(`schema 里找不到 enum ${name} —— 漂移守卫读错了文件？`)
   return m[1]
+    .replace(/\/\*[\s\S]*?\*\//g, '')
     .split('\n')
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('//') && !l.startsWith('///'))

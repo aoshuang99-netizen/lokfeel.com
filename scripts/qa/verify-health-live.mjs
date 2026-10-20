@@ -30,9 +30,6 @@ const SELF_TEST = argv.includes('--self-test')
 const BASE = (arg('base', 'https://app.lokfeel.com') || '').replace(/\/$/, '')
 const SAMPLES = Math.max(2, Number(arg('samples', '3')) || 3)
 
-const rows = []
-const rec = (id, title, status, detail) => rows.push({ id, title, status, detail })
-
 /** 拉一次探活；带随机查询串，避免我们自己命中边缘缓存 */
 async function probe(base, n) {
   const url = `${base}/api/health?gate=${Date.now()}-${n}-${Math.random().toString(36).slice(2, 8)}`

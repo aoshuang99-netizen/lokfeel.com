@@ -255,7 +255,7 @@ async function runGroup(browser, groupKey) {
   return out;
 }
 
-function renderHtml(rows, meta) {
+function renderHtml(rows) {
   const byGroup = {};
   for (const r of rows) (byGroup[r.group] ||= []).push(r);
 
@@ -405,7 +405,7 @@ async function main() {
 
   const manifest = { base: BASE, capturedAt: new Date().toISOString(), total: rows.length, rows };
   await fs.writeFile(path.join(OUT, "manifest.json"), JSON.stringify(manifest, null, 2), "utf8");
-  await fs.writeFile(path.join(OUT, "index.html"), renderHtml(rows, manifest), "utf8");
+  await fs.writeFile(path.join(OUT, "index.html"), renderHtml(rows), "utf8");
 
   console.log(`\n✅ ${rows.length} 页 → ${path.relative(ROOT, path.join(OUT, "index.html"))}`);
   const bad = rows.filter((r) => r.status === 0 || r.status >= 500);
