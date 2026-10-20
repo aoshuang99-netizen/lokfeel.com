@@ -1,6 +1,9 @@
 # LokFeel 自托管：Cloudflare Tunnel + Git 部署
 
-> 2026-10-19 22:00 · 依据：本轮实测 `app.lokfeel.com` / `lokfeel.com` 响应头与 DNS + 仓库现状（`nexus-app/`，main @ `351c9bb`）
+> 2026-10-20 13:30 · 依据：本轮实测 `app.lokfeel.com` / `lokfeel.com` 响应头与 DNS + 仓库现状（`nexus-app/`）
+>
+> **已定决策（D3）**：源站放**香港**，不等 ICP 备案；回源改用 **Cloudflare Tunnel**（出站长连，源站零入站端口）；
+> 代码目录走 **Git**（`aoshuang99-netizen/lokfeel.com@main`）。
 
 ## 〇、先纠正一个前提
 
@@ -42,9 +45,19 @@
 
 ## 三、施工顺序（S0–S7）
 
-### S0 · 服务器
-- 规格：**2C4G + 4G swap**（Turbopack 构建对内存敏感，2G 会 OOM）、40G 盘、Ubuntu 24.04、Node 22 LTS。
-- 位置：香港/新加坡（免备案）；大陆节点需 ICP，1–3 周。
+### S0 · 服务器（已定：香港）
+- 规格：**2C4G + 4G swap**（构建对内存敏感，2G 会 OOM）、40G SSD、Ubuntu 24.04、Node 22 LTS。
+- 位置：**香港**。免 ICP（大陆节点要备案 1–3 周，且 CF 不豁免备案）。
+  香港到大陆/东南亚都在 ~30–60ms 量级，比「CF 边缘在香港、回源跨境到上海」更顺。
+- 初始化一条命令（幂等，`--dry-run` 可先看计划）：
+  ```bash
+  sudo bash deploy/selfhost/bootstrap.sh
+  ```
+  它会做：基础包 → 补 4G swap（<4G 内存时）→ Node 22（NodeSource）→ cloudflared（CF apt 源）
+  → `lokfeel` 系统用户与 `/srv/lokfeel/{releases,shared}` → `/etc/lokfeel/env` 模板（640 root:lokfeel）
+  → **ufw 默认拒绝入站、只放 SSH**（绝不开放 80/443）→ sysctl/logrotate。
+  ⚠️ 如果这台机器上还有别的服务在监听，脚本会**中止并列出端口**（`--allow-other-ports` 才继续）——
+  防的是「一键加固把别人的站打死」。
 - 与现在 Netlify 的关系：**并行跑**，不拆 Netlify，直到 S7 验收通过 48h。
 
 ### S1 · Tunnel + DNS
@@ -89,13 +102,51 @@ npx prisma migrate deploy     # 不要用 db push：对远程 Turso 不可用
 迁移失败 ⇒ **立即中止，不切 current**（脚本里迁移在 swap 之前）。
 
 ### S5 · Cron（Netlify scheduled → systemd timer）
-仓库有 9 条 cron 路由（`/api/cron/bot-tick`、`lifecycle-sweep`、`workflow-tick` …）。Netlify 的 scheduled functions 在自托管后**不存在**，必须补：
+仓库有 10 条 cron 路由。Netlify 侧是**一个**小时级函数 `netlify/functions/cron-runner.ts` 打全部端点。
+
+🔴 **本轮查出的线上缺陷（已取证 + 已修）**：该 runner 原先对**所有**端点统一用 `POST`，
+而 `bot-tick` / `bot-online` / `bot-chat` / `bot-match` / `status` 只导出 **GET**
+⇒ Next 返回 **405**。也就是说**仓库内唯一的调度链路**对它们全部失效；
+若没有另外配 cron-job.org（`scheduler.yml` 默认没开 schedule），这 5 个 cron 就没跑过。
+实测（2026-10-20，`app.lokfeel.com`，不带凭据时应为 401）：
+
+| 端点 | GET | POST |
+|---|---|---|
+| bot-tick | 401 | **405** |
+| bot-online | 401 | **405** |
+| bot-chat | 401 | **405** |
+| bot-match | 401 | **405** |
+| status | 401 | **405** |
+| bot-learning / workflow-tick | 401 | 401 |
+| migrate-avatars | **405** | 401 |
+
+症状不是报错，而是「机器人不动、匹配不推进」——最容易被当成产品问题去查。
+修复：`cron-runner.ts` 改为**逐端点声明方法**；新增源码门禁
+`scripts/ci/verify-cron-methods.mjs`（比对 route 导出方法 vs 调度器调用方法，含 6 条自证）。
+
+自托管后用 systemd timer，按**各端点设计频率**跑（不再被压到小时级）：
 ```bash
-# 路由是 GET，鉴权是 Authorization: Bearer $CRON_SECRET（见 src/app/api/cron/bot-tick/route.ts:53-60）
-systemctl timer 每分钟 → curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/<name>
+sudo bash deploy/selfhost/cron/install-cron.sh
+# 验收：systemctl list-timers 'lokfeel-cron-*' --no-pager
+# 手工：sudo systemctl start lokfeel-cron-bot-tick.service && journalctl -u lokfeel-cron-bot-tick -n 20
 ```
-> ⚠️ 用 POST 调这些路由会得到 **405**，看起来像「路由不存在」，其实是方法不对。验收脚本因此固定用 GET。
-漏了这一步的症状：机器人不动、生命周期不扫、软删除不清理 —— **不会报错，只会「慢慢变安静」**，最难排查。
+
+| job | 频率 | 方法 | 默认 |
+|---|---|---|---|
+| bot-tick | 每分钟 | GET | 启用 |
+| workflow-tick | 每 2 分钟 | GET | 启用 |
+| bot-chat | 每 5 分钟 | GET | 启用 |
+| bot-online | 每 15 分钟 | GET | 启用 |
+| bot-match | 每小时 :07 | GET | 启用 |
+| bot-learning | 每小时 :17 | GET | 启用 |
+| status | 每小时 :27 | GET | 启用 |
+| cleanup-soft-delete | 每天 02:00 **UTC** | GET | 启用 |
+| migrate-avatars | 每天 03:30 UTC | **POST** | 停用（手工） |
+| lifecycle-sweep | 每天 04:10 UTC | GET | **停用**（删除不可逆，需显式开启） |
+
+> 时间语义：分钟/小时级与时区无关；「每天几点」一律写 `UTC` 后缀，跨时区搬家不漂。
+> 应用进程仍设 `TZ=Asia/Shanghai`（香港同为 UTC+8），避免改 SSR 的日期渲染。
+> 漏装 timer 的症状：**不报错，只是慢慢变安静**。
 
 ### S6 · CF 规则（4 条）
 | 规则 | 值 | 理由 |
@@ -159,9 +210,11 @@ node scripts/qa/selfhost-gate.mjs --origin-ip=<服务器公网IP> --expect-origi
 |---|---|---|
 | **仓库** | `github.com/aoshuang99-netizen/lokfeel.com.git` · `main` | ✅ 已知（本地 `nexus-app` 已同步 @ `351c9bb`） |
 | **CF** | Zone 已在你名下（NS 已指向 CF） | ✅ 已知 |
-| **服务器** | **SSH（IP/端口/用户/密钥）+ 香港还是大陆** | ❌ 缺这一项 |
+| **位置** | **香港**（已定，免 ICP） | ✅ 2026-10-20 |
+| **服务器** | **SSH（IP/端口/用户/密钥或密钥文件路径）** | ❌ 只差这一项 |
 
 给到 SSH，我按 S0→S7 一次跑完；在此之前，`deploy/selfhost/` 的脚本只能做到「本地夹具自证」，不会冒充线上通过。
+服务器还没开也可以先做：`bootstrap.sh --dry-run` 的输出就是开机器时要选的规格与服务清单。
 
 ## 八、当前基线（2026-10-19 22:06，Netlify 回源）
 
@@ -178,3 +231,50 @@ node scripts/qa/selfhost-gate.mjs
 **这是「迁移前基线」，不是「自托管通过」。** 切到自有服务器后，S2/S3/S4 必须由 BLOCKED 变 PASS（DNS 不含源站、3000/80/443 从公网不可达），这才是 S7 验收的判据。
 
 `deploy/selfhost/test-deploy.sh`（本地夹具）：**11 PASS / 0 FAIL · exit 0**，覆盖静态资源手拷、ISR 缓存软链、健康检查失败自动回滚。
+
+## 九、香港迁移日 Runbook（T-1 → T+48h）
+
+时间以「切 DNS」为 T0。**Netlify 全程保留**，回滚只需改回一条 CNAME。
+
+| 时点 | 动作 | 判据 / 回滚 |
+|---|---|---|
+| **T-1d** | 开香港 CVM（2C4G/40G/Ubuntu 24.04）；跑 `bootstrap.sh`；把 `/etc/lokfeel/env` 从 Netlify 导全 | `bootstrap.sh --check` 无 "(缺)" |
+| **T-1d** | `cloudflared tunnel create lokfeel`；写 `/etc/cloudflared/config.yml`；`ingress validate` | 校验通过；凭据 600 |
+| **T-1d** | 先**不切 DNS**，用 `cloudflared access` 或临时 hosts 验证源站直连 3000 | 本机 `curl 127.0.0.1:3000/api/health` = healthy |
+| **T-6h** | `deploy.sh --migrate` 落第一版；`install-cron.sh`；CNAME TTL 降到 **60s** | `list-timers` 有 8 个；REVISION 与 git sha 一致 |
+| **T0** | 只改一条 CNAME：`app.lokfeel.com` → `<UUID>.cfargotunnel.com`（橙云） | `curl -I https://app.lokfeel.com` 出现 `x-nf-request-id` **消失** |
+| **T0+5m** | `selfhost-gate.mjs --origin-ip=<IP> --expect-origin-closed` | S2/S3/S4 必须由 BLOCKED 变 **PASS** |
+| **T0+15m** | 真账号登录 / 建任务 / 收一条站内信；`/api/cron/bot-tick` 手工跑一次 | 401→200；`journalctl` 有 `[cron:bot-tick] GET 200` |
+| **T0+1h** | 看 CF 分析：5xx 比例、524、缓存命中；看 `journalctl -u lokfeel -p err` | 5xx < 1%；无 524 |
+| **T+24h** | 复跑全部门禁（见 §十） | 全绿 |
+| **T+48h** | 才考虑停 Netlify 项目（**先别删**，只停自动发布） | 保留 7 天再删 |
+
+**三条一票否决**（出现即回滚）：
+1. `S2/S3/S4` 任一仍 BLOCKED 或 FAIL ⇒ 源站还暴露着，套 CF 是错觉；
+2. 登录态异常（307 循环 / cookie 无 `__Host-`）⇒ `AUTH_URL` 没生效；
+3. `/api/webhooks/*` 返回 403/挑战页 ⇒ 支付回调被 WAF 拦，这比停机更糟（钱收了权益不到账）。
+
+## 十、合规与数据（香港节点特有）
+
+| 项 | 结论 | 动作 |
+|---|---|---|
+| ICP 备案 | **不需要**（香港不属大陆备案辖区） | 无需等待，这是选香港的唯一硬收益 |
+| 大陆用户可访问性 | 不保证稳定（跨境链路受运营商与时段影响） | 上线后用真实大陆网络抽测；必要时上「香港 + 新加坡」双源 |
+| 个人资料 | 香港《个人资料（私隐）条例》(PDPO) 适用于在港业务 | 隐私政策需写明存储地（香港）与跨境处理（Turso/Upstash 区域） |
+| 数据驻留 | libSQL(Turso) / Upstash 的实际区域可能在欧美 | 在隐私政策里如实披露；如客户要求本地化，再迁 |
+| 内容合规 | 交友类内容在港合法，但**年龄门与举报通道**是平台责任 | 现有 `/community-guidelines`、`/safety-tips` 保留并在注册页可达 |
+
+> 这一节是工程提示，不是法律意见；正式上线前建议做一次本地律师复核（费用远低于下架）。
+
+## 十一、门禁总表（本轮新增 3 个）
+
+| 门禁 | 命令 | 当前结果 | 覆盖什么 |
+|---|---|---|---|
+| 回源/边缘 11 条 | `node scripts/qa/selfhost-gate.mjs` | **8 PASS / 0 FAIL / 3 BLOCKED · exit 2** | 迁移前基线；S2–S4 待源站 |
+| 部署脚本 | `bash deploy/selfhost/test-deploy.sh` | **11 PASS / 0 FAIL · exit 0** | 静态资源手拷、ISR 缓存软链、健康检查失败自动回滚 |
+| **cron 方法一致** | `node scripts/ci/verify-cron-methods.mjs` | **9 job / 0 bad · exit 0**（另有 6 条自证） | 防「POST 打 GET 端点」的 405 类静默失效 |
+| **systemd cron 生成** | `bash deploy/selfhost/cron/test-cron.sh` | **17 PASS / 0 FAIL · exit 0** | 频率、方法、UTC 语义、幂等、执行器退出码（78/75/76/69） |
+| **bootstrap 只读自证** | `bash deploy/selfhost/test-bootstrap.sh` | **8 PASS / 0 FAIL · exit 0** | 绝不开 80/443、只放 SSH、不把密钥写进命令行 |
+
+迁移后 T13 的判定口径：**上表全部 exit 0，且 selfhost-gate 的 3 个 BLOCKED 全部转 PASS**。
+有一条不满足就不是「条件通过」，是「没通过」。

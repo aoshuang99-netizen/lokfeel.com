@@ -31,7 +31,15 @@ import {
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const country = getCountryFromHeaders(request.headers)
+  // 取客户端 IP：**优先 CF-Connecting-IP**，其次 XFF。
+  // 为什么顺序重要：Cloudflare 会在 XFF 后**追加**客户端 IP，攻击者自带
+  // `X-Forwarded-For: <白名单IP>` 时，左起第一个值就是伪造值 —— 若 IP 白名单
+  // 排在国别判定之前（见 region-policy.ts 的短路顺序），这会直接变成绕过。
+  // CF-Connecting-IP 由边缘覆写，客户端无法指定。
+  // ⚠️ 前提：源站只接受 CF 回源（Tunnel 或仅放行 CF 段）。否则直连源站时
+  // 该头同样可伪造成立 —— 这一条与「关掉入站入口」是同一个开关，不能只做一半。
   const clientIp =
+    request.headers.get('cf-connecting-ip')?.trim() ||
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||
     ''

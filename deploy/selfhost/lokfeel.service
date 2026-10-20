@@ -18,6 +18,10 @@ Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOSTNAME=127.0.0.1
 Environment=NEXT_TELEMETRY_DISABLED=1
+# 时区：保持 Asia/Shanghai 是为了**不改动 SSR 的日期渲染**（改了会让服务端与
+# 客户端时区不一致，日期类文本可能出现 hydration 警告）。香港同属 UTC+8 且无夏令时，
+# 所以搬到香港不需要改这一行。需要"绝对时刻"的定时任务（如每天 02:00 UTC 的清理）
+# 在 unit 里显式写 UTC 后缀，不依赖这里的时区。
 Environment=TZ=Asia/Shanghai
 
 # 全部密钥/配置：600，属主 lokfeel，永不入 git
