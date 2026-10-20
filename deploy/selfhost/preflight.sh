@@ -65,6 +65,13 @@ else
   fail "bootstrap 安全边界" "$(echo "$out" | grep '^FAIL' | head -2 | tr '\n' ' ')"
 fi
 
+# 5b. Tunnel 安装器自证（prepare 不动 DNS / switch 先备份 / 幂等）
+if out=$(bash deploy/selfhost/test-tunnel.sh 2>&1); then
+  pass "Tunnel 安装器" "$(echo "$out" | tail -1)"
+else
+  fail "Tunnel 安装器" "$(echo "$out" | grep 'FAIL\]' | head -2 | tr '\n' ' ')"
+fi
+
 # 6. 环境变量：导出 + 审计（需要 Netlify token；没有就 BLOCKED，不冒充通过）
 TOKEN="${NETLIFY_AUTH_TOKEN:-${NETLIFY_API_TOKEN:-}}"
 if [[ -z "$TOKEN" ]]; then

@@ -61,12 +61,43 @@
   防的是「一键加固把别人的站打死」。
 - 与现在 Netlify 的关系：**并行跑**，不拆 Netlify，直到 S7 验收通过 48h。
 
-### S1 · Tunnel + DNS
+### S1 · Tunnel + DNS（整条链路只点一次）
+
+**一次点击 = 一个授权按钮。** 其余全部非交互：
+
 ```bash
-cloudflared tunnel login && cloudflared tunnel create lokfeel
-# /etc/cloudflared/config.yml 见 deploy/selfhost/cloudflared.yml
-cloudflared service install && systemctl enable --now cloudflared
+# T-1d：点 1 次（浏览器里 Authorize），建隧道 + 写 config + 装 systemd，不动 DNS
+sudo bash deploy/selfhost/tunnel-once.sh --stage prepare
+
+# 应用跑起来、/api/health = 200 之后，T0 切回源（带旧值备份 + 解析复核）
+sudo bash deploy/selfhost/tunnel-once.sh --stage switch
+
+# 随时只读体检 / 出事拿回滚值
+sudo bash deploy/selfhost/tunnel-once.sh --stage status
+sudo bash deploy/selfhost/tunnel-once.sh --stage rollback
 ```
+
+为什么不让交 API Token：`cert.pem` 只覆盖**这一个账号的隧道操作**，范围比一枚
+`Zone:DNS:Edit + Tunnel:Edit` 的 Token 小得多，也更容易整体吊销。代价是首次要人点一下。
+
+`prepare` 与 `switch` **刻意分成两步**，因为二者的风险完全不同：
+
+| stage | 会不会改线上 | 失败后果 |
+|---|---|---|
+| `prepare` | **不会**（不碰 DNS） | 隧道建了但没流量，删掉即可 |
+| `switch` | **会**（改 CNAME 指向隧道） | 源站没起 = 立刻 502；所以脚本先备份旧值再改 |
+
+三个已经被夹具验证的行为（`deploy/selfhost/test-tunnel.sh`，36 条断言）：
+
+- `prepare` 阶段**绝不调用** `tunnel route`，DNS 一个字节都不动；
+- `switch` 先写 `dns-before-<ts>.txt`（含 `cname=` 旧值与回滚说明）再改；
+- 重跑幂等：已授权不再弹登录，已有同隧道配置**不重写**。
+
+> 🔴 一个真实坑（夹具抓出来的）：`dig +short CNAME` 的返回值**带结尾点**
+> （`<UUID>.cfargotunnel.com.`），而脚本里所有 `== *.cfargotunnel.com` 判定、
+> 以及 CF 面板的输入框都不带点。不归一化就会"DNS 明明生效了却判失败"，
+> 而且看起来像没生效 —— 这种假失败最容易导致误回滚。`current_cname()` 已统一去点。
+
 DNS 只改一条：`app.lokfeel.com` 的 CNAME → `<UUID>.cfargotunnel.com`，**保持橙云**。
 apex `lokfeel.com` 若是营销页，可先不动（它现在也指向 Netlify）。
 
@@ -270,10 +301,10 @@ node scripts/qa/selfhost-gate.mjs
 | 时点 | 动作 | 判据 / 回滚 |
 |---|---|---|
 | **T-1d** | 开香港 CVM（2C4G/40G/Ubuntu 24.04）；跑 `bootstrap.sh`；把 `/etc/lokfeel/env` 从 Netlify 导全 | `bootstrap.sh --check` 无 "(缺)" |
-| **T-1d** | `cloudflared tunnel create lokfeel`；写 `/etc/cloudflared/config.yml`；`ingress validate` | 校验通过；凭据 600 |
+| **T-1d** | `sudo bash deploy/selfhost/tunnel-once.sh --stage prepare`（**点 1 次授权**） | 打印 `ingress 校验通过`；`--stage status` 全 PASS；DNS 未动 |
 | **T-1d** | 先**不切 DNS**，用 `cloudflared access` 或临时 hosts 验证源站直连 3000 | 本机 `curl 127.0.0.1:3000/api/health` = healthy |
 | **T-6h** | `deploy.sh --migrate` 落第一版；`install-cron.sh` | `list-timers` 有 8 个；REVISION 与 git sha 一致 |
-| **T0** | 只改一条 CNAME：`app.lokfeel.com` → `<UUID>.cfargotunnel.com`（橙云） | `curl -I https://app.lokfeel.com` 出现 `x-nf-request-id` **消失** |
+| **T0** | `sudo bash deploy/selfhost/tunnel-once.sh --stage switch`（先备份旧 CNAME 再改） | `curl -I https://app.lokfeel.com` 里 `x-nf-request-id` **消失**；回滚值见 `/etc/cloudflared/dns-before-*.txt` |
 | **T0+5m** | `selfhost-gate.mjs --origin-ip=<IP> --expect-origin-closed` | S2/S3/S4 必须由 BLOCKED 变 **PASS** |
 | **T0+15m** | 真账号登录 / 建任务 / 收一条站内信；`/api/cron/bot-tick` 手工跑一次 | 401→200；`journalctl` 有 `[cron:bot-tick] GET 200` |
 | **T0+1h** | 看 CF 分析：5xx 比例、524、缓存命中；看 `journalctl -u lokfeel -p err` | 5xx < 1%；无 524 |
@@ -306,6 +337,7 @@ node scripts/qa/selfhost-gate.mjs
 | **cron 方法一致** | `node scripts/ci/verify-cron-methods.mjs` | **9 job / 0 bad · exit 0**（另有 6 条自证） | 防「POST 打 GET 端点」的 405 类静默失效 |
 | **systemd cron 生成** | `bash deploy/selfhost/cron/test-cron.sh` | **17 PASS / 0 FAIL · exit 0** | 频率、方法、UTC 语义、幂等、执行器退出码（78/75/76/69） |
 | **bootstrap 只读自证** | `bash deploy/selfhost/test-bootstrap.sh` | **8 PASS / 0 FAIL · exit 0** | 绝不开 80/443、只放 SSH、不把密钥写进命令行 |
+| **Tunnel 安装器** | `bash deploy/selfhost/test-tunnel.sh` | **36 PASS / 0 FAIL · exit 0** | prepare 不动 DNS、switch 先备份、重跑幂等、无 cert 拒绝切换、dry-run 零写 |
 
 迁移后 T13 的判定口径：**上表全部 exit 0，且 selfhost-gate 的 3 个 BLOCKED 全部转 PASS**。
 有一条不满足就不是「条件通过」，是「没通过」。

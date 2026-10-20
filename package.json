@@ -113,6 +113,7 @@
     "verify:check:cron:methods": "node scripts/ci/verify-cron-methods.mjs --self-test",
     "verify:cron:selfhost": "bash deploy/selfhost/cron/test-cron.sh",
     "verify:bootstrap:selfhost": "bash deploy/selfhost/test-bootstrap.sh",
+    "verify:tunnel:selfhost": "bash deploy/selfhost/test-tunnel.sh",
     "selfhost:preflight": "bash deploy/selfhost/preflight.sh",
     "selfhost:preflight:full": "bash deploy/selfhost/preflight.sh --full",
     "env:export": "node scripts/qa/netlify-env-export.mjs",
