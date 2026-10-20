@@ -1,8 +1,18 @@
 # LokFeel 自托管：Cloudflare Tunnel + Git 部署
 
+> ## ⏸ 已冻结（2026-10-20 17:20）—— **当前不执行**
+>
+> 用户明确表示**没有服务器**。经实测，本应用每一层都已是托管服务（Netlify / Turso / Upstash /
+> Pusher / Resend / Firebase / Metered TURN），自托管**没有解决任何现存问题**，且带宽只用了免费额度的
+> **0.24%**（240 MiB / 100 GB）。**结论：不买服务器、不迁移。**
+> 决策与触发条件见 **`HOSTING_DECISION.md`**。
+>
+> 本文因此转为**备用方案**，保留全部脚本（均已自证：bootstrap 8/8、tunnel-once 36/36、deploy 11/11、cron 17/17）。
+> 将来真要搬（例如需要常驻进程），按本文执行即可，不必重新设计。
+
 > 2026-10-20 13:30 · 依据：本轮实测 `app.lokfeel.com` / `lokfeel.com` 响应头与 DNS + 仓库现状（`nexus-app/`）
 >
-> **已定决策（D3）**：源站放**香港**，不等 ICP 备案；回源改用 **Cloudflare Tunnel**（出站长连，源站零入站端口）；
+> **已定决策（D3，已冻结）**：源站放**香港**，不等 ICP 备案；回源改用 **Cloudflare Tunnel**（出站长连，源站零入站端口）；
 > 代码目录走 **Git**（`aoshuang99-netizen/lokfeel.com@main`）。
 
 ## 〇、先纠正一个前提
@@ -26,7 +36,7 @@
 | `X-Content-Type-Options` | `nosniff` | 保持 |
 | `/dashboard` 未登录 | **307 → /login**，`cache-control: private,no-store` | 正确，迁移后应一致 |
 | `/login` | 200，`cache-control: public`（无 s-maxage） | CF 默认不缓存 HTML，但**不要开 Cache Everything** |
-| `/api/health` | 200，`public, max-age=60`；返回 `dbLatency`/`redis.backend`/`botModule`/`firebaseAdmin`/`payments.channels` | 内容偏多，迁移时顺手收敛；自托管后 **`/api/*` 必须 bypass 缓存** |
+| `/api/health` | 200，`no-store`（2026-10-20 起；此前 `max-age=60` 会让数值变陈旧，见 HOSTING_DECISION §六）；返回 `dbLatency`/`redis.backend`/`botModule`/`firebaseAdmin`/`payments.channels` | 内容偏多，迁移时顺手收敛；自托管后 **`/api/*` 必须 bypass 缓存** |
 | **地域策略** | 实测 `/api/geo-check` → `country: CN`、`reason: region-policy-off` | **CN 封禁当前是关闭的**（不是"封着但没生效"）。若目标是封 CN，需显式设 `GEO_BLOCKED_COUNTRIES=CN` 并重新部署；同时必须配 `GEO_IP_WHITELIST`，否则运营者本人也进不来 |
 | 已知坑 | `src/lib/auth/config.ts:32`：`AUTH_URL` 未设时回落 `http://localhost:${port}` | **自托管必设 `AUTH_URL=https://app.lokfeel.com`**，否则 OAuth 回调与 cookie 全错 |
 
@@ -183,7 +193,7 @@ sudo bash deploy/selfhost/cron/install-cron.sh
 ### S6 · CF 规则（4 条）
 | 规则 | 值 | 理由 |
 |---|---|---|
-| Cache Rule | `/api/*` → **Bypass** | `/api/health` 自带 `max-age=60`，Cache Everything 会把健康状态缓存住 |
+| Cache Rule | `/api/*` → **Bypass** | 即便 `/api/health` 已改 `no-store`，Cache Everything 仍可能缓存其它 API 响应；这条规则保持 |
 | Cache Rule | `/_next/static/*` → Edge TTL 1 年 | Next 文件名带 content hash，可永久缓存 |
 | WAF Skip | `/api/webhooks/*`、`/api/cron/*` → Skip 全部托管规则 | 支付回调/定时任务被挑战 = 静默失效 |
 | Config | **保留** Always Use HTTPS；**不要**开 Rocket Loader | Rocket Loader 会打乱 `<script>` 时序，Pusher/Firebase 初始化易炸 |

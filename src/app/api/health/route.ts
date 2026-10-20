@@ -120,8 +120,13 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json(healthData, {
       status: 200,
       headers: {
-        // Cache health check for 60 seconds (matching existing header config)
-        "Cache-Control": "public, max-age=60, stale-while-revalidate=86400",
+        // 🔴 探活端点不能缓存。
+        // 原为 `public, max-age=60, stale-while-revalidate=86400`，实测后果有两个：
+        //   1) 边缘会连续返回同一个 dbLatency（实测三次都是 5615ms、带缓存体检时是 286ms），
+        //      数字看着"很稳"，其实是 60 秒前的快照 ⇒ 性能回归与故障都被掩盖；
+        //   2) 坏发布期间，边缘仍会对监控喊 200 healthy 最长 60 秒。
+        // 探活流量极小，为省这点 CDN 命中而让监控失真不划算。
+        "Cache-Control": "no-store, max-age=0",
         "Content-Type": "application/json",
       },
     });
