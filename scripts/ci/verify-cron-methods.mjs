@@ -25,14 +25,7 @@ const ROOT = process.cwd()
 const RUNNER = 'netlify/functions/cron-runner.ts'
 const ROUTE_DIR = 'src/app/api/cron'
 
-/** 去掉块注释与整行注释；不碰字符串里的 `//`（如 https://） */
-export function stripComments(src) {
-  const noBlock = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
-  return noBlock
-    .split('\n')
-    .map((line) => (/^\s*(\/\/|\*)/.test(line) ? '' : line))
-    .join('\n')
-}
+import { stripComments } from '../lib/strip-comments.mjs'
 
 /** 从 route.ts 取导出方法 */
 export function parseRouteMethods(src) {

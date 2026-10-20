@@ -177,17 +177,42 @@ node scripts/qa/selfhost-gate.mjs --origin-ip=<服务器公网IP> --expect-origi
 | 6 | CF 100s 回源 | 长 AI 请求 524 | 改异步 job 或流式；不要指望调大（Enterprise 才 600s） |
 | 7 | `db push` 对 Turso | 远程库不可用 | 只用 `prisma migrate deploy`，且先 snapshot |
 
-## 五、环境变量：78 个，分三类
+## 五、环境变量：实测 40 个（Netlify）· 代码引用 90 个
+
+数字来源是本轮**真实 API 读取**，不是估算：
+
+```bash
+netlify keys : 40   （GET /api/v1/sites/<id>/env）
+code refs    : 90   （静态扫描 src/ + netlify/ + proxy.ts + next.config.ts）
+```
 
 | 类别 | 数量 | 说明 |
 |---|---|---|
-| **构建期必需**（`NEXT_PUBLIC_*`） | **18** | APP_URL / APP_NAME / FIREBASE×6 / PUSHER×4 / TURN×4 / GTM_ID / SENTRY_DSN |
-| **运行期密钥** | ~35 | DATABASE_URL、AUTH_SECRET、AUTH_URL、NEXTAUTH_URL、CREEM×5、STRIPE×5、SMTP×5、RESEND、FIREBASE 服务端×3、PUSHER_SECRET、TURN 服务端×4、UPLOADTHING×2、CRON_SECRET |
-| **可缺省** | 其余 | BOT_*、GEO_*、CORS_*、SENTRY、GTM —— 缺省即关闭对应能力 |
+| Netlify 实际配置 | **40** | 含 12 个 `NEXT_PUBLIC_*`；`AUTH_SECRET`/`DATABASE_URL`/`TURSO_AUTH_TOKEN` 有分环境取值 |
+| 代码引用 | **90** | 其余多为**能力开关**（缺省即关闭）与调试端点用键 |
+| 自托管必需（缺一即红） | **6** | `AUTH_URL` · `AUTH_SECRET` · `NEXTAUTH_URL` · `DATABASE_URL` · `CRON_SECRET` · `NEXT_PUBLIC_APP_URL`（或 `SITE_URL`） |
 
-对齐方法：导出 Netlify 的 env 键名（只导键名，不导值），与 `.env.example` 做 diff；再跑 `npm run check:launch`。
+**不要手工抄。** 两个脚本已就绪：
 
-## 六、验收门禁（11 条）
+```bash
+# 导出（token 只从环境变量读，绝不进 argv；输出强制 600，拒绝写进仓库）
+NETLIFY_AUTH_TOKEN=xxx node scripts/qa/netlify-env-export.mjs \
+  --site c46478e9-7ac8-4bcf-9052-7638b04fef83 --out /etc/lokfeel/env
+
+# 审计（C1 覆盖性 + C2 必需项；对 Netlify 全量键做交叉核对）
+NETLIFY_AUTH_TOKEN=xxx node scripts/qa/selfhost-env-audit.mjs \
+  --env-file /etc/lokfeel/env --netlify --site c46478e9-7ac8-4bcf-9052-7638b04fef83
+```
+
+**演练结果（2026-10-20，已实跑）**：导出 40/40 键、无空值、mode 600；审计 **0 fail / 0 warn**。
+
+> 一条踩过的弯路：把「代码引用了 `NEXT_PUBLIC_X` 但环境里没有」一律判红，会对生产报出 **7 条假硬伤**。
+> 逐个读源码后发现全部是显式可选：`STUN/TURN` 是 override 模式、`USE_TURN` 用 `=== 'true'`、
+> `USE_PUSHER` 用 `!== 'false'`（缺省即启用）、Sentry/GTM/Stripe 是"不配即关闭"。
+> 所以判红口径改成两条可证伪的（覆盖性 + 必需项），可选键必须**写明依据**才允许进白名单。
+> 静态分析能验"有没有漏"，验不了"这个键该不该有"——后者只能读代码。
+
+## 六、验收门禁（11 条）## 六、验收门禁（11 条）
 
 `scripts/qa/selfhost-gate.mjs`，设计原则与 `paypal_gate` 一致：**缺前置就 BLOCKED，不写 PASS**。
 
@@ -237,12 +262,17 @@ node scripts/qa/selfhost-gate.mjs
 
 时间以「切 DNS」为 T0。**Netlify 全程保留**，回滚只需改回一条 CNAME。
 
+> **关于 TTL**：`app.lokfeel.com` 现在是**橙云代理**记录，CF 对代理记录强制 `Auto` TTL（约 300s），
+> **面板上不能改成 60s**。好消息是这不影响切换速度——改 CNAME 只改变 CF 边缘的回源指向，
+> 客户端仍然解析到同一批 anycast IP，因此**边缘侧近乎立即生效**，只有已缓存的解析结果会残留 ≤5min。
+> 所以「提前降 TTL」这一步可以省掉，别在面板里找一个不存在的开关。
+
 | 时点 | 动作 | 判据 / 回滚 |
 |---|---|---|
 | **T-1d** | 开香港 CVM（2C4G/40G/Ubuntu 24.04）；跑 `bootstrap.sh`；把 `/etc/lokfeel/env` 从 Netlify 导全 | `bootstrap.sh --check` 无 "(缺)" |
 | **T-1d** | `cloudflared tunnel create lokfeel`；写 `/etc/cloudflared/config.yml`；`ingress validate` | 校验通过；凭据 600 |
 | **T-1d** | 先**不切 DNS**，用 `cloudflared access` 或临时 hosts 验证源站直连 3000 | 本机 `curl 127.0.0.1:3000/api/health` = healthy |
-| **T-6h** | `deploy.sh --migrate` 落第一版；`install-cron.sh`；CNAME TTL 降到 **60s** | `list-timers` 有 8 个；REVISION 与 git sha 一致 |
+| **T-6h** | `deploy.sh --migrate` 落第一版；`install-cron.sh` | `list-timers` 有 8 个；REVISION 与 git sha 一致 |
 | **T0** | 只改一条 CNAME：`app.lokfeel.com` → `<UUID>.cfargotunnel.com`（橙云） | `curl -I https://app.lokfeel.com` 出现 `x-nf-request-id` **消失** |
 | **T0+5m** | `selfhost-gate.mjs --origin-ip=<IP> --expect-origin-closed` | S2/S3/S4 必须由 BLOCKED 变 **PASS** |
 | **T0+15m** | 真账号登录 / 建任务 / 收一条站内信；`/api/cron/bot-tick` 手工跑一次 | 401→200；`journalctl` 有 `[cron:bot-tick] GET 200` |

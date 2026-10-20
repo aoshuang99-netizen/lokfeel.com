@@ -516,6 +516,10 @@ jobs:
         run: bash deploy/selfhost/cron/test-cron.sh
       - name: bootstrap 只读自证（绝不开 80/443）
         run: bash deploy/selfhost/test-bootstrap.sh
+      - name: 环境导出器自证（值不落日志）
+        run: node scripts/qa/netlify-env-export.mjs --self-test
+      - name: 环境审计器自证（C1 覆盖 / C2 必需项）
+        run: node scripts/qa/selfhost-env-audit.mjs --self-test
 
   # ─────────────────────────────────────────────────────────────
   # 11. 性能基线实跑 —— **仅手动触发**（AC-24）
