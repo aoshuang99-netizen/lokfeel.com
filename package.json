@@ -110,6 +110,8 @@
     "verify:check:selfhost": "node scripts/qa/selfhost-gate.mjs --self-test",
     "verify:deploy:selfhost": "bash deploy/selfhost/test-deploy.sh",
     "verify:cron:methods": "node scripts/ci/verify-cron-methods.mjs",
+    "verify:health:live": "node scripts/qa/verify-health-live.mjs",
+    "verify:check:health:live": "node scripts/qa/verify-health-live.mjs --self-test",
     "verify:check:cron:methods": "node scripts/ci/verify-cron-methods.mjs --self-test",
     "verify:cron:selfhost": "bash deploy/selfhost/cron/test-cron.sh",
     "verify:bootstrap:selfhost": "bash deploy/selfhost/test-bootstrap.sh",

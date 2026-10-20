@@ -73,10 +73,35 @@
 判据留着：**只有在真的搬了之后**，S2/S3/S4 才有意义（DNS 不含源站、3000/80/443 从公网不可达）。
 在那之前它们必须保持 BLOCKED —— 不允许为了让报表变绿而把它们改成 PASS。
 
-## 六、这一轮顺带修的一个真问题
+## 六、这一轮顺带修的一个真问题：探活在撒谎
 
-`/api/health` 原本返回 `Cache-Control: public, max-age=60, stale-while-revalidate=86400`，后果是：
-连续三次读取 `dbLatency` 得到**完全相同的 5615ms**，带缓存体检时却是 286ms —— 不是"数据库很稳"，
-而是**看到的是 60 秒前的快照**。同时坏发布期间边缘仍会对监控喊 200 healthy 最长 60 秒。
+**症状**：连续三次读 `/api/health` 得到**完全相同**的 `dbLatency=5615ms`；
+带缓存体检时却是 286ms。不是数据库很稳，是**看到的是 60 秒前的快照**。
+更糟的是坏发布期间，边缘仍会对监控喊 200 healthy。
 
-已改为 `no-store`。探活流量极小，为省这点 CDN 命中让监控失真不划算。
+**根因是两层，缺一不可**（第一版只改了第二层，等于没改）：
+
+| 层 | 位置 | 原值 |
+|---|---|---|
+| ① 边缘怎么存 | `next.config.ts` → `headers()` | `public, max-age=60` + `Surrogate-Control: public, max-age=60` |
+| ② 函数返回什么 | `src/app/api/health/route.ts` | 同上的 `Cache-Control` |
+
+🔴 **`next.config.ts` 的 `headers()` 优先级高于 route handler 自己写的头** ——
+所以在 ② 里改成 `no-store` 完全无效，线上仍是 `max-age=60`（实测响应头一字未变）。
+
+**修法**：① 改 `no-store, max-age=0` 并删掉 `Surrogate-Control`；② 同步改，另补
+`export const dynamic = 'force-dynamic'`（仓库其它 300+ 路由都有，属遗漏）。
+
+**验证**（`scripts/qa/verify-health-live.mjs`，5 条线上断言 + 7 条自证含变异）：
+
+```
+✅ H1 200 · ✅ H2 no-store,max-age=0 · ✅ H3 无 Surrogate-Control
+✅ H4 3/3 个不同 timestamp · ✅ H5 latencies=[1198,31,13]
+RESULT: PASS · 5 PASS / 0 FAIL
+```
+
+顺带纠正一个此前的误判：真实 DB 延迟是 **13–31ms（预热）/ ~1.2s（冷启）**，
+`5615ms` 是缓存出来的数字，不能用它判断数据库性能。
+
+> 教训：**改响应头无效时，先查 `next.config headers()` → middleware/`proxy.ts` → 边缘规则**这三层，
+> 再怀疑自己改的那一处。头是分层写的，最后一层不一定是你以为的那层。
