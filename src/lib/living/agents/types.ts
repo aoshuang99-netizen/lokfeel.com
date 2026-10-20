@@ -106,11 +106,12 @@ export const LIVING_AGENT_DEGRADE_LABELS: Record<LivingAgentDegradeReason, strin
   NO_DEGRADE_PATH: '没有可用的降级路径',
 }
 
-export const LIVING_AGENT_PROVIDER_KINDS = ['openai', 'stub', 'rules'] as const
+export const LIVING_AGENT_PROVIDER_KINDS = ['openai', 'workbuddy', 'stub', 'rules'] as const
 export type LivingAgentProvider = (typeof LIVING_AGENT_PROVIDER_KINDS)[number]
 
 export const LIVING_AGENT_PROVIDER_LABELS: Record<LivingAgentProvider, string> = {
   openai: 'OpenAI（真实调用）',
+  workbuddy: 'WorkBuddy 云端算力（真实调用）',
   stub: 'Stub（仅测试）',
   rules: '规则式兜底（没有调用模型）',
 }

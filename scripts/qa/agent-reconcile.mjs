@@ -108,7 +108,7 @@ const RUN_STATUSES = [
   'BLOCKED_QUOTA',
   'FAILED',
 ]
-const PROVIDER_KINDS_DB = ['OPENAI', 'STUB', 'RULES']
+const PROVIDER_KINDS_DB = ['OPENAI', 'WORKBUDDY', 'STUB', 'RULES']
 const APPROVAL_DECISIONS = ['APPROVED', 'REJECTED']
 const RISK_LEVELS = ['LOW', 'MEDIUM', 'HIGH']
 /** 终态（必须已裁决）——与 `approval.ts` 的 TERMINAL_STATUSES 同口径。 */

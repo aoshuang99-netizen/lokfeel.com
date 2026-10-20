@@ -7,6 +7,7 @@
  *    本文件在**复数**目录（服务层）—— 那里允许 IO，也因此**不**受 A1/A2/A5 约束。
  *    判据（认哪个环境变量 / 默认模型 / 超时上限）仍在内核的
  *    `resolveProviderConfig()`：**一处实现**，本文件只负责"怎么打"。
+ *    Provider 的**选择顺序**在 `provider-runtime.ts`（云端算力优先，OpenAI 次之）。
  *
  * 🔴 本文件的全部行为都服从一条规矩：**不能把"打不通"说成"打过了"**。
  *    · 缺凭据 → 调用方拿到 `unavailable`（`resolveRuntimeProvider`），走规则式降级；
@@ -26,13 +27,10 @@
 
 import {
   OPENAI_DEFAULTS,
-  resolveProviderConfig,
   type DegradeReason,
   type ModelProvider,
   type ModelRequest,
   type ModelResult,
-  type OpenAIConfig,
-  type ProviderResolution,
 } from '@/lib/agent'
 
 /** 单次模型调用允许的响应体上限（字符）。超出即拒绝 —— 防止一次意外响应把内存打满。 */
@@ -201,43 +199,7 @@ export function createOpenAIProvider(opts: OpenAIProviderOptions): ModelProvider
 }
 
 /**
- * 按环境解析出可用的 Provider（**生产路径的唯一入口**）。
- *
- * 判据来自内核的纯函数 `resolveProviderConfig()`；本函数只做"用判据构造实例"这件事。
- * `ok:false` → `unavailable`（**不是**"换成 stub 试试"）。
+ * Provider 选择与诚实块已迁到 `provider-runtime.ts`（那里要同时看云端算力与 OpenAI 两条路）。
+ * 这里只保留 OpenAI 的**单一构造**，避免"两处各写一份优先级"。
  */
-export function resolveRuntimeProvider(
-  env: Record<string, string | undefined>,
-): ProviderResolution {
-  const resolved = resolveProviderConfig(env)
-  if (!resolved.ok) return { kind: 'unavailable', reason: resolved.reason }
-  return { kind: 'ready', provider: createOpenAIProvider({ ...resolved.config }) }
-}
 
-/** 供用量响应使用的**诚实块**：真实调用到底开没开（T08 `gateway` 块同口径）。 */
-export interface ProviderHonesty {
-  provider: 'openai'
-  /** 当前环境**是否**具备发起真实调用的条件。 */
-  realCallsEnabled: boolean
-  reason: string
-}
-
-export function providerHonesty(
-  env: Record<string, string | undefined>,
-  config?: OpenAIConfig,
-): ProviderHonesty {
-  const resolved = resolveProviderConfig(env)
-  if (!resolved.ok) {
-    return {
-      provider: 'openai',
-      realCallsEnabled: false,
-      reason: resolved.reason,
-    }
-  }
-  const cfg = config ?? resolved.config
-  return {
-    provider: 'openai',
-    realCallsEnabled: true,
-    reason: `已配置凭据：模型=${cfg.model}，端点=${cfg.baseUrl}（未在下发里暴露凭据）。`,
-  }
-}

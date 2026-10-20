@@ -52,7 +52,7 @@ export const DEGRADE_REASONS = [
 export type DegradeReason = (typeof DEGRADE_REASONS)[number]
 
 /** 模型提供方种类。`stub` 只用于测试；`rules` 表示**根本没调模型**（规则式兜底）。 */
-export const PROVIDER_KINDS = ['openai', 'stub', 'rules'] as const
+export const PROVIDER_KINDS = ['openai', 'workbuddy', 'stub', 'rules'] as const
 export type ProviderKind = (typeof PROVIDER_KINDS)[number]
 
 /** 注入信号（**仅告警/升级审批用**，见 `guard.ts` 的诚实声明）。 */

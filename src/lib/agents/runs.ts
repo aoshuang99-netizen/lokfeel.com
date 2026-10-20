@@ -68,7 +68,7 @@ import {
   type AgentRunSummaryDto,
   type AgentRunViewer,
 } from './dto'
-import { providerHonesty, resolveRuntimeProvider, type ProviderHonesty } from './provider-openai'
+import { providerHonesty, resolveRuntimeProvider, type ProviderHonesty } from './provider-runtime'
 
 /** 幂等作用域（与 `IdempotencyRecord.scope` 对齐）。 */
 export const AGENT_RUN_SCOPE = 'agent.run'

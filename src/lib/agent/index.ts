@@ -120,15 +120,18 @@ export {
 // ── Provider（接口 + 纯环境解码；真实 HTTP 实现在服务层 —— 见 A5） ──
 export {
   OPENAI_DEFAULTS,
+  WORKBUDDY_DEFAULTS,
   createFailingProvider,
   createStubProvider,
   resolveProviderConfig,
+  resolveWorkBuddyConfig,
   type ModelProvider,
   type ModelRequest,
   type ModelResult,
   type OpenAIConfig,
   type ProviderConfigResolution,
   type ProviderResolution,
+  type WorkBuddyConfig,
 } from './provider'
 
 // ── 编排 ──

@@ -164,7 +164,8 @@
     "verify:ac19:bridge": "node scripts/qa/verify-ac19-bridge-e2e.mjs",
     "verify:ac10:lifecycle": "node scripts/qa/verify-ac10-lifecycle.mjs",
     "verify:ac22:open-sdk": "node scripts/qa/verify-ac22-open-sdk.mjs",
-    "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs"
+    "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs",
+    "verify:llm:live": "node scripts/qa/verify-llm-live.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -209,7 +210,8 @@
     "webrtc-adapter": "^9.0.6",
     "ws": "^8.22.0",
     "zod": "4.3.6",
-    "zustand": "^5.0.15"
+    "zustand": "^5.0.15",
+    "@tencent-ai/workbuddy-cloud-sdk": "0.1.4-dev.ca27990.202610161713"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "1.20.12",

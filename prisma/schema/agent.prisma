@@ -68,6 +68,8 @@ enum AgentRiskLevel {
 ///    才能使"降级率"可复算，而不是只能靠读日志。
 enum AgentProviderKind {
   OPENAI
+  /** WorkBuddy 云端算力（免密钥 · OpenAI 兼容协议 · 只支持流式）。 */
+  WORKBUDDY
   STUB
   RULES
 }

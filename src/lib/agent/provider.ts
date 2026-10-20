@@ -141,3 +141,69 @@ export function resolveProviderConfig(env: Record<string, string | undefined>): 
 
   return { ok: true, config: { apiKey, model, baseUrl, timeoutMs } }
 }
+
+// ═══════════════════════════════════════════════════════════
+// WorkBuddy 云端算力（免密钥 · 只支持流式）
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * WorkBuddy 云端 LLM 的连接参数。
+ *
+ * 与 OpenAI 的差别（都是实测结论，不是约定）：
+ *   · **免密钥**：用应用级 `publishableKey`（`wbpk_…`）而非供应商 key；
+ *   · **只支持 stream:true**：非流式会被服务端直接拒绝，因此 Provider 必须边流边收；
+ *   · `usage` 只在**最后一帧**下发（含 reasoning/credit 明细）。
+ */
+export interface WorkBuddyConfig {
+  /** 数据面基址，已去掉尾部 `/`。 */
+  endpoint: string
+  publishableKey: string
+  model: string
+  timeoutMs: number
+}
+
+/**
+ * 默认值。模型选 `deepseek-v4.1-flash`：实测 1.4s / 90→86 tok 返回严格 JSON
+ * （对比 `auto` 一次抽取要 552 tok，其中 538 是 reasoning，成本与时延都不合适）。
+ */
+export const WORKBUDDY_DEFAULTS = {
+  model: 'deepseek-v4.1-flash',
+  timeoutMs: 25_000,
+  /** 上限：函数平台有执行预算，不允许把超时写成分钟级。 */
+  maxTimeoutMs: 60_000,
+} as const
+
+/**
+ * 从环境解出 WorkBuddy 云端算力配置（**纯函数**，同一 env 必得同一结果）。
+ *
+ * 🔴 两个变量缺一不可：`WORKBUDDY_LLM_ENDPOINT` 定位环境、`WORKBUDDY_LLM_KEY` 做应用级鉴权。
+ *    任一缺失 → `ok:false`，调用方据此走**明示降级**，绝不用假模型冒充真实调用。
+ *    端点必须在服务端 env 里，不进前端产物（浏览器侧另有 Origin 白名单，见 HOSTING 文档）。
+ */
+export function resolveWorkBuddyConfig(
+  env: Record<string, string | undefined>,
+): { ok: true; config: WorkBuddyConfig } | { ok: false; reason: string } {
+  const rawEndpoint = (env.WORKBUDDY_LLM_ENDPOINT ?? '').trim()
+  if (!rawEndpoint) {
+    return { ok: false, reason: '未配置 WORKBUDDY_LLM_ENDPOINT —— 无法定位云端算力端点' }
+  }
+  if (!/^https?:\/\//i.test(rawEndpoint)) {
+    return { ok: false, reason: `WORKBUDDY_LLM_ENDPOINT 必须是 http(s) 地址，得到：${rawEndpoint}` }
+  }
+  const endpoint = rawEndpoint.replace(/\/+$/, '')
+
+  const publishableKey = (env.WORKBUDDY_LLM_KEY ?? '').trim()
+  if (!publishableKey) {
+    return { ok: false, reason: '未配置 WORKBUDDY_LLM_KEY —— 缺少应用级 publishable key' }
+  }
+
+  const model = (env.WORKBUDDY_LLM_MODEL ?? '').trim() || WORKBUDDY_DEFAULTS.model
+
+  const parsedTimeout = Number((env.WORKBUDDY_LLM_TIMEOUT_MS ?? '').trim())
+  const timeoutMs =
+    Number.isFinite(parsedTimeout) && parsedTimeout > 0
+      ? Math.min(Math.floor(parsedTimeout), WORKBUDDY_DEFAULTS.maxTimeoutMs)
+      : WORKBUDDY_DEFAULTS.timeoutMs
+
+  return { ok: true, config: { endpoint, publishableKey, model, timeoutMs } }
+}

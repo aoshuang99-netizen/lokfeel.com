@@ -49,6 +49,7 @@ import type { DeliveryTargetRow } from './delivery-target'
  */
 export const PROVIDER_KIND_TO_DB = {
   openai: 'OPENAI',
+  workbuddy: 'WORKBUDDY',
   stub: 'STUB',
   rules: 'RULES',
 } as const satisfies Record<ProviderKind, string>

@@ -77,11 +77,20 @@ export {
 // ── Provider（真实 HTTP 实现 —— IO 归服务层，内核只留纯判据）──
 export {
   createOpenAIProvider,
+  type OpenAIProviderOptions,
+} from './provider-openai'
+
+export {
+  createWorkBuddyProvider,
+  type WorkBuddyProviderOptions,
+} from './provider-workbuddy'
+
+// 选择顺序与诚实块只有一处实现：云端算力 → OpenAI → 明示降级
+export {
   providerHonesty,
   resolveRuntimeProvider,
-  type OpenAIProviderOptions,
   type ProviderHonesty,
-} from './provider-openai'
+} from './provider-runtime'
 
 // ── DTO 投影（**唯一**的对外形状）──
 export {

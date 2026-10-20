@@ -126,7 +126,7 @@ describe('镜像三 · 降级原因码', () => {
 
 describe('镜像四 · Provider 种类（诚实块的一半）', () => {
   it('逐字钉住且与服务端 PROVIDER_KINDS 同集', () => {
-    expect([...LIVING_AGENT_PROVIDER_KINDS]).toEqual(['openai', 'stub', 'rules'])
+    expect([...LIVING_AGENT_PROVIDER_KINDS]).toEqual(['openai', 'workbuddy', 'stub', 'rules'])
     expect([...LIVING_AGENT_PROVIDER_KINDS]).toEqual([...PROVIDER_KINDS])
   })
 
