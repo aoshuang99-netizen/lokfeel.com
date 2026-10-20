@@ -389,7 +389,8 @@ function CompileDemo() {
         <p className="mt-4 text-[11px] leading-relaxed" style={{ color: FAINT }}>
           Demo rules only. In the product, compilation produces a{" "}
           <span className="font-mono">WorkspaceSpec</span> validated on the server — the canvas never
-          renders model-authored HTML.
+          renders model-authored HTML. Live runs call a real model through WorkBuddy cloud compute
+          (keyless, metered per call).
         </p>
       </div>
     </div>
