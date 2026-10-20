@@ -52,6 +52,20 @@ import { describePaymentAvailability } from "@/lib/payments/availability";
  *     会给出触发来源。自托管单实例部署看到 'memory' 是**预期**行为；
  *     但若是"已配置却降级"，说明 Redis 不可达，限流与在线状态正在弱化。
  */
+/**
+ * 🔴 必须是动态路由。
+ *
+ * 本文件原先没有这一行 —— 而 App Router 对「只导出 GET、且不接收 request 参数」的
+ * route handler 会**默认预渲染**，于是 Next 自己发 `Surrogate-Control: public, max-age=60`，
+ * 把函数返回的 `Cache-Control` 覆盖掉：源站写 no-store 也没用，边缘照样缓存 60 秒。
+ * 实测证据：响应头同时出现 `Surrogate-Control: public, max-age=60` 与
+ * `Cache-Status: "Netlify Durable"; hit`，而连续多次读到的 dbLatency 是同一个数。
+ *
+ * 仓库里其它 300+ 个 API 路由都显式写了 force-dynamic，这里属于遗漏。
+ */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(): Promise<NextResponse> {
   const timestamp = new Date().toISOString();
 
