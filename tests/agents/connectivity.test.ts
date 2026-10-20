@@ -7,6 +7,8 @@
  *   · 不为"多证一点"发第二个请求（探测端点不该变成两次出网）；
  *   · **不泄漏 key**（报告是要给管理员看的，看得到报告 ≠ 看得到密钥）；
  *   · 目标端点本身不合法时**一次出网都不发**（`file://` 不该变成一次本地读取）。
+ *   · 2026-10-20 起同时覆盖**云端算力口径**：探的必须是运行时真正在用的那条路
+ *     （云端算力优先于 OpenAI），且云端要额外核对"目录里有没有配的模型"。
  *
  * `fetch` 全部注入 —— 本文件恒不发生真实网络 IO。
  */
@@ -206,6 +208,153 @@ describe('probeAgentConnectivity —— 三层分开报', () => {
     expect(report.probe.billed).toBe(false)
     expect(report.probe.wrote).toBe(false)
     expect(new Date(report.probe.ranAt).toString()).not.toBe('Invalid Date')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// 云端算力口径（2026-10-20 起生产的真实调用走这条）
+//
+// 为什么这些断言必须存在：诊断若只认 OPENAI_API_KEY，就会出现
+// "运行真的在调云端模型、诊断却说没配置"的自相矛盾。这里钉住的是
+// **探的就是运行时真正在用的那条路**，而不是"另一条也能通"。
+// ═══════════════════════════════════════════════════════════════════
+describe('probeAgentConnectivity —— 云端算力口径', () => {
+  const WB_ENDPOINT = 'https://lokfeel.app.workbuddy.host'
+  // 运行时拼接，源码里不留形似凭据的字面量（gitleaks 会把夹具判成真 key）。
+  const WB_KEY = ['wbpk', 'unit', 'test', 'publishable', 'value', 'for', 'assertions'].join('_')
+  const WB_MODEL = 'deepseek-v4.1-flash'
+  const WB_ENV = { WORKBUDDY_LLM_ENDPOINT: WB_ENDPOINT, WORKBUDDY_LLM_KEY: WB_KEY }
+  const catalog = (models: Array<{ id: string; enabled?: boolean }>) => JSON.stringify(models)
+
+  it('🔴 云端已配置：探 /.cloud/llm/models，用应用级头，**不**出现 Authorization', async () => {
+    const { impl, calls } = stubFetch(async () =>
+      fakeResponse(200, catalog([{ id: 'auto' }, { id: WB_MODEL }])),
+    )
+    const report = await probeAgentConnectivity(WB_ENV, { fetchImpl: impl })
+
+    expect(calls.length).toBe(1)
+    expect(calls[0][0]).toBe(`${WB_ENDPOINT}/.cloud/llm/models`)
+    expect(headersOf(calls)['x-wb-webapp-access-key']).toBe(WB_KEY)
+    expect(headersOf(calls).authorization).toBeUndefined()
+
+    expect(report.endpoint.provider).toBe('workbuddy')
+    expect(report.endpoint.source).toBe('workbuddy')
+    expect(report.endpoint.model).toBe(WB_MODEL)
+    expect(report.credentials.keyVar).toBe('WORKBUDDY_LLM_KEY')
+    expect(report.network.verdict).toBe('PASS')
+    expect(report.identity.verdict).toBe('PASS')
+    expect(report.credentials.verdict).toBe('PASS')
+    expect(summarizeConnectivity(report).verdict).toBe('PASS')
+  })
+
+  it('🔴 目录里没有配的模型 → identity FAIL（端点通了 ≠ model 写对了）', async () => {
+    const { impl } = stubFetch(async () => fakeResponse(200, catalog([{ id: 'auto' }])))
+    const report = await probeAgentConnectivity(WB_ENV, { fetchImpl: impl })
+
+    expect(report.identity.verdict).toBe('FAIL')
+    expect(report.identity.detail).toContain(WB_MODEL)
+    // 凭据确实是对的 —— 失败原因不能甩给 key。
+    expect(report.credentials.verdict).toBe('PASS')
+    expect(summarizeConnectivity(report).verdict).toBe('FAIL')
+  })
+
+  it('模型在目录里但 enabled=false → identity FAIL（停用也是跑不起来）', async () => {
+    const { impl } = stubFetch(async () =>
+      fakeResponse(200, catalog([{ id: WB_MODEL, enabled: false }])),
+    )
+    const report = await probeAgentConnectivity(WB_ENV, { fetchImpl: impl })
+    expect(report.identity.verdict).toBe('FAIL')
+    expect(report.identity.detail).toContain('enabled=false')
+  })
+
+  it('🔴 200 但不是模型目录（门户页/中间人）→ identity FAIL', async () => {
+    const { impl } = stubFetch(async () => fakeResponse(200, '<html>portal</html>', 'text/html'))
+    const report = await probeAgentConnectivity(WB_ENV, { fetchImpl: impl })
+    expect(report.identity.verdict).toBe('FAIL')
+    expect(report.identity.detail).toContain('不是模型目录')
+    expect(summarizeConnectivity(report).verdict).toBe('FAIL')
+  })
+
+  it('🔴 只配了端点没配 key：仍探一次（401 invalid_client），凭据记 BLOCKED 且点名变量', async () => {
+    const { impl, calls } = stubFetch(async () =>
+      fakeResponse(401, JSON.stringify({ error: 'invalid_client', error_description: 'unknown client' })),
+    )
+    const report = await probeAgentConnectivity({ WORKBUDDY_LLM_ENDPOINT: WB_ENDPOINT }, { fetchImpl: impl })
+
+    expect(calls.length).toBe(1)
+    expect(headersOf(calls)['x-wb-webapp-access-key']).toBeUndefined()
+    expect(report.network.verdict).toBe('PASS')
+    expect(report.identity.verdict).toBe('PASS') // 错误体是网关形状
+    expect(report.credentials.verdict).toBe('BLOCKED')
+    expect(report.credentials.keyPresent).toBe(false)
+    expect(report.credentials.detail).toContain('WORKBUDDY_LLM_KEY')
+    expect(summarizeConnectivity(report).verdict).toBe('BLOCKED')
+  })
+
+  it('🔴 403 access_denied → 凭据 FAIL，措辞指向"只接受服务端调用"（不是网络问题）', async () => {
+    const { impl } = stubFetch(async () =>
+      fakeResponse(403, JSON.stringify({ error: 'access_denied', error_description: 'origin not allowed' })),
+    )
+    const report = await probeAgentConnectivity(WB_ENV, { fetchImpl: impl })
+
+    expect(report.network.verdict).toBe('PASS')
+    expect(report.credentials.verdict).toBe('FAIL')
+    expect(report.credentials.detail).toContain('服务端')
+    expect(report.credentials.detail).toContain('403')
+    expect(summarizeConnectivity(report).verdict).toBe('FAIL')
+  })
+
+  it('🔴 云端优先于 OpenAI：两条都配了，也只打云端（否则诊断与运行自相矛盾）', async () => {
+    const { impl, calls } = stubFetch(async () =>
+      fakeResponse(200, catalog([{ id: WB_MODEL }])),
+    )
+    const report = await probeAgentConnectivity(
+      { ...WB_ENV, OPENAI_API_KEY: 'sk-x', OPENAI_BASE_URL: 'https://api.openai.com/v1' },
+      { fetchImpl: impl },
+    )
+
+    expect(calls.length).toBe(1)
+    expect(calls[0][0]).toBe(`${WB_ENDPOINT}/.cloud/llm/models`)
+    expect(report.endpoint.provider).toBe('workbuddy')
+  })
+
+  it('WORKBUDDY_LLM_MODEL 覆盖默认模型（诊断要报**正在用的**那个）', async () => {
+    const { impl, calls } = stubFetch(async () =>
+      fakeResponse(200, catalog([{ id: 'glm-5.3-flash' }])),
+    )
+    const report = await probeAgentConnectivity(
+      { ...WB_ENV, WORKBUDDY_LLM_MODEL: 'glm-5.3-flash' },
+      { fetchImpl: impl },
+    )
+    expect(calls.length).toBe(1)
+    expect(report.endpoint.model).toBe('glm-5.3-flash')
+    expect(report.identity.verdict).toBe('PASS')
+  })
+
+  it('🔴 报告里没有 publishable key 明文（只给长度）', async () => {
+    const { impl } = stubFetch(async () => fakeResponse(200, catalog([{ id: WB_MODEL }])))
+    const report = await probeAgentConnectivity(WB_ENV, { fetchImpl: impl })
+
+    const serialized = JSON.stringify(report)
+    expect(serialized).not.toContain(WB_KEY)
+    expect(serialized).not.toContain('x-wb-webapp-access-key')
+    expect(report.credentials.keyLength).toBe(WB_KEY.length)
+  })
+
+  it('🔴 云端端点不合法（file://）：三层 FAIL 且一次出网都不发，错误指向 WORKBUDDY_LLM_ENDPOINT', async () => {
+    const { impl, calls } = stubFetch(async () => fakeResponse(200, catalog([{ id: WB_MODEL }])))
+    const report = await probeAgentConnectivity(
+      { WORKBUDDY_LLM_ENDPOINT: 'file:///etc/passwd', WORKBUDDY_LLM_KEY: WB_KEY },
+      { fetchImpl: impl },
+    )
+
+    expect(calls.length).toBe(0)
+    expect(report.endpoint.provider).toBe('workbuddy')
+    expect(report.endpoint.probeUrl).toBe('(未解析)')
+    for (const layer of [report.network, report.identity, report.credentials]) {
+      expect(layer.verdict).toBe('FAIL')
+      expect(layer.detail).toContain('WORKBUDDY_LLM_ENDPOINT')
+    }
   })
 })
 

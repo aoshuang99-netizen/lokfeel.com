@@ -131,7 +131,7 @@ T06 立下的纪律不变：通知是"有事在等你"，披露的唯一出口�
 
 ### 4.2 边界（写在路由文件头）
 
-只读 / 不计费（只打 `GET {baseUrl}/models`，不是 `POST /chat/completions`）/ 不落库 /
+只读 / 不计费（只打**列模型**接口，不是 `POST /chat/completions`）/ 不落库 /
 **不泄漏 key**（报告里**只有 key 长度**）/ 要能力 / `no-store`。
 
 ### 4.3 🔴 本片修掉的一处**自相矛盾**（文件头与实现不一致）
@@ -160,7 +160,28 @@ You didn't provide an API key. You need to provide your API key in an Authorizat
 已收敛为一条 `OPENAI_AUTH_ERROR_RE`，并把已知两种措辞都写进注释；
 单测同时加了**反向对照**（一个不是 OpenAI 措辞的 401 必须判可疑），确保这条正则不会宽到失去意义。
 
-### 4.5 可复跑脚本
+### 4.5 2026-10-20：诊断口径切到**云端算力**（与真实调用同源）
+
+真实调用改由 `provider-runtime.ts` 选路（云端算力 → OpenAI），但诊断仍只认 `OPENAI_API_KEY`，
+于是生产出现自相矛盾：**运行真的在调 `deepseek-v4.1-flash`，诊断却报"未配置凭据"**。
+
+修法：`probeAgentConnectivity()` 复用 `resolveWorkBuddyConfig` / `resolveProviderConfig` 两个内核判据，
+选择顺序与运行时**逐字一致**。两个 provider 的探测面不同（下表全部经端点实测）：
+
+| provider | 探测 URL | 鉴权头 | 200 的形状 | 401 | 403 |
+|---|---|---|---|---|---|
+| 云端算力 | `{endpoint}/.cloud/llm/models` | `x-wb-webapp-access-key` | 模型目录数组（34 项，含 `id` / `enabled`） | `{"error":"invalid_client"}` | `{"error":"access_denied"}`（带浏览器 `Origin` 时） |
+| OpenAI | `{baseUrl}/models` | `Authorization: Bearer` | `{"object":"list"}` | OpenAI 措辞（两种，见 §4.4） | — |
+
+身份层对云端多担一件事：**目录里有没有配的那个模型**（`WORKBUDDY_LLM_MODEL`，默认 `deepseek-v4.1-flash`），
+以及它是否被标成 `enabled=false`。端点通了 ≠ model 写对了 —— 后者写错会在真正发 chat 请求时才炸，
+比在诊断里炸贵得多。
+
+报告新增 `endpoint.provider` 与 `credentials.keyVar`，`endpoint.source` 增加 `workbuddy` 取值；
+`verify-agent-connectivity-server.mjs` 增加三条断言：provider 合法、云端 `probeUrl` 以 `/.cloud/llm/models`
+结尾、**诊断 provider 与 `/api/v1/agents/usage` 诚实块一致**（口径不一致即判红）。
+
+### 4.6 可复跑脚本
 
 ```bash
 # 本机（跑脚本的机器）：

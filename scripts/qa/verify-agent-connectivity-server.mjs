@@ -17,9 +17,13 @@
  *   ② 真实登录（自定义端点 `/api/auth/login`，与登录页同路径）后带 cookie 再打 → **200 + JSON**
  *   ③ 报告**五段齐备**：`endpoint` / `network` / `identity` / `credentials` / `probe`
  *      —— 少一段就说明"分层"这件事在生产上塌了一层
+ *   ③b 🔴 `endpoint.provider` 必须存在，且云端算力的 probeUrl 必须是 `/.cloud/llm/models`
+ *      （2026-10-20 起真实调用走云端算力；探错路径会拿到 404，看起来像"端点坏了"）
+ *   ③c 🔴 **诊断口径 == 运行时口径**：与 `/api/v1/agents/usage` 的诚实块比对 provider
+ *      （否则"运行真的在调云端、诊断说没配置"会把人带沟里）
  *   ④ 🔴 **服务端自己算的 summary 与客户端按同一规则重算的一致**
  *      （诊断报告若会自相矛盾，读它的人就无法据此行动）
- *   ⑤ 🔴 **不泄漏密钥**：响应体里不得出现 `sk-` 形态串，也不得出现 `Bearer `
+ *   ⑤ 🔴 **不泄漏密钥**：响应体里不得出现 `sk-` / `wbpk_` 形态串，也不得出现 `Bearer `
  *   ⑥ 🔴 **单调性**：凭据层 PASS ⇒ 网络层 PASS（"凭据被端点接受"蕴含"端点回了我"）
  *   ⑦ 泄漏负测：任何响应不得含部署专用域名 `<deploy-id>--<site>.netlify.app`
  *
@@ -107,6 +111,10 @@ function recomputeSummary(report) {
 
 const LAYERS = ['network', 'identity', 'credentials']
 const VERDICTS = ['PASS', 'FAIL', 'BLOCKED', 'INFO']
+/** 端点来源：`workbuddy` = 云端算力配置（2026-10-20 起的生产主路径）。 */
+const SOURCES = ['workbuddy', 'env', 'kernel-default']
+/** 诊断必须说明探的是哪条真实调用路径。 */
+const PROVIDERS = ['workbuddy', 'openai']
 
 async function main() {
   console.log(`\n════════ T09 生产出口连通性复验 ════════`)
@@ -174,9 +182,21 @@ async function main() {
   ck(
     'endpoint 含 baseUrl / source / probeUrl（能说清"打的是哪个端点、谁定的"）',
     typeof report?.endpoint?.baseUrl === 'string' &&
-      ['env', 'kernel-default'].includes(report?.endpoint?.source) &&
+      SOURCES.includes(report?.endpoint?.source) &&
       typeof report?.endpoint?.probeUrl === 'string',
     `baseUrl=${report?.endpoint?.baseUrl} source=${report?.endpoint?.source}`,
+  )
+  ck(
+    'endpoint.provider ∈ workbuddy/openai（诊断必须说明探的是哪条真实调用路径）',
+    PROVIDERS.includes(report?.endpoint?.provider),
+    `provider=${report?.endpoint?.provider} model=${report?.endpoint?.model}`,
+  )
+  // 云端算力走的是自己的模型目录路径；探错路径会拿到 404，看起来像"端点坏了"。
+  ck(
+    '云端算力：probeUrl 是 /.cloud/llm/models（不是 OpenAI 的 /models）',
+    report?.endpoint?.provider !== 'workbuddy' ||
+      String(report?.endpoint?.probeUrl ?? '').endsWith('/.cloud/llm/models'),
+    `probeUrl=${report?.endpoint?.probeUrl}`,
   )
   for (const l of LAYERS) {
     ck(
@@ -185,6 +205,30 @@ async function main() {
       `${l}.verdict=${report?.[l]?.verdict}`,
     )
   }
+
+  // 🔴 诊断与运行时必须同口径：否则"运行真的在调云端、诊断说没配置"会把人带沟里。
+  console.log('\n[4b] 🔴 诊断口径 == 运行时口径（读同一份诚实块比对）')
+  const usage = await get('/api/v1/agents/usage', { cookie: login.cookie })
+  let honesty = null
+  try {
+    const j = JSON.parse(usage.text)
+    const data = j?.data ?? j
+    honesty = data?.provider ?? data?.honesty ?? null
+  } catch {
+    honesty = null
+  }
+  const runtimeKind = honesty && typeof honesty === 'object' ? honesty.provider : undefined
+  const realCalls = honesty && typeof honesty === 'object' ? honesty.realCallsEnabled : undefined
+  ck('用量接口可读到诚实块', usage.status === 200 && honesty !== null, `status=${usage.status}`)
+  ck(
+    `诊断 provider 与运行时一致（诊断=${report?.endpoint?.provider} 运行时=${runtimeKind}）`,
+    Boolean(runtimeKind) && report?.endpoint?.provider === runtimeKind,
+  )
+  ck(
+    '诚实块 realCallsEnabled=true 时，凭据层不得是 BLOCKED（自相矛盾即不可信）',
+    realCalls !== true || report?.credentials?.verdict !== 'BLOCKED',
+    `realCallsEnabled=${realCalls} credentials=${report?.credentials?.verdict}`,
+  )
 
   console.log('\n[5] 🔴 诚实性：报告不得自相矛盾、不得把前提说成结论')
   ck(
@@ -216,14 +260,18 @@ async function main() {
 
   console.log('\n[6] 🔴 不泄漏密钥')
   const skLike = r.text.match(/sk-[A-Za-z0-9_-]{12,}/g) || []
+  const wbpkLike = r.text.match(/wbpk_[A-Za-z0-9_-]{12,}/g) || []
   ck('响应体无 sk- 形态密钥串', skLike.length === 0, skLike.length ? `命中 ${skLike.length} 处` : '')
+  ck('响应体无 wbpk_ 形态应用凭据', wbpkLike.length === 0, wbpkLike.length ? `命中 ${wbpkLike.length} 处` : '')
   ck('响应体无 Bearer 明文', !/Bearer\s+\S/.test(r.text))
 
   console.log('\n[7] 关键读数（人工判断用）')
+  console.log(`     provider   : ${report?.endpoint?.provider}  model=${report?.endpoint?.model}`)
   console.log(`     endpoint   : ${report?.endpoint?.baseUrl}  [${report?.endpoint?.source}]  probe=${report?.endpoint?.probeUrl}`)
   console.log(`     network    : ${report?.network?.verdict}  HTTP ${report?.network?.status}  ${report?.network?.latencyMs ?? '-'}ms`)
   console.log(`     identity   : ${report?.identity?.verdict}`)
-  console.log(`     credentials: ${report?.credentials?.verdict}  keyPresent=${report?.credentials?.keyPresent} len=${report?.credentials?.keyLength}`)
+  console.log(`     credentials: ${report?.credentials?.verdict}  keyPresent=${report?.credentials?.keyPresent} len=${report?.credentials?.keyLength} var=${report?.credentials?.keyVar}`)
+  console.log(`     runtime    : ${runtimeKind ?? '(未读到)'}  realCallsEnabled=${realCalls}`)
   console.log(`     summary    : ${served} —— ${report?.summary?.message ?? ''}`)
   for (const l of LAYERS) console.log(`     · ${l}: ${report?.[l]?.detail ?? ''}`)
 
