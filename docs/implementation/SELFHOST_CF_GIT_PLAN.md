@@ -27,6 +27,7 @@
 | `/dashboard` 未登录 | **307 → /login**，`cache-control: private,no-store` | 正确，迁移后应一致 |
 | `/login` | 200，`cache-control: public`（无 s-maxage） | CF 默认不缓存 HTML，但**不要开 Cache Everything** |
 | `/api/health` | 200，`public, max-age=60`；返回 `dbLatency`/`redis.backend`/`botModule`/`firebaseAdmin`/`payments.channels` | 内容偏多，迁移时顺手收敛；自托管后 **`/api/*` 必须 bypass 缓存** |
+| **地域策略** | 实测 `/api/geo-check` → `country: CN`、`reason: region-policy-off` | **CN 封禁当前是关闭的**（不是"封着但没生效"）。若目标是封 CN，需显式设 `GEO_BLOCKED_COUNTRIES=CN` 并重新部署；同时必须配 `GEO_IP_WHITELIST`，否则运营者本人也进不来 |
 | 已知坑 | `src/lib/auth/config.ts:32`：`AUTH_URL` 未设时回落 `http://localhost:${port}` | **自托管必设 `AUTH_URL=https://app.lokfeel.com`**，否则 OAuth 回调与 cookie 全错 |
 
 ## 二、目标拓扑
