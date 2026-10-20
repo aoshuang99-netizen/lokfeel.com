@@ -53,15 +53,16 @@ import { describePaymentAvailability } from "@/lib/payments/availability";
  *     但若是"已配置却降级"，说明 Redis 不可达，限流与在线状态正在弱化。
  */
 /**
- * 🔴 必须是动态路由。
+ * 🔴 必须是动态路由（与仓库其它 300+ 个 API 路由保持一致）。
  *
- * 本文件原先没有这一行 —— 而 App Router 对「只导出 GET、且不接收 request 参数」的
- * route handler 会**默认预渲染**，于是 Next 自己发 `Surrogate-Control: public, max-age=60`，
- * 把函数返回的 `Cache-Control` 覆盖掉：源站写 no-store 也没用，边缘照样缓存 60 秒。
- * 实测证据：响应头同时出现 `Surrogate-Control: public, max-age=60` 与
- * `Cache-Status: "Netlify Durable"; hit`，而连续多次读到的 dbLatency 是同一个数。
+ * 说明：缓存问题的**真凶不在这个文件**，而在 `next.config.ts` 的 `headers()`：
+ * 它给 `/api/health` 配了 `Cache-Control: public, max-age=60` 与
+ * `Surrogate-Control: public, max-age=60`，而 **next.config 的 headers 优先级高于
+ * route handler 自己写的头** —— 所以在下面把响应头改成 no-store 是无效的。
+ * （本文件的注释一度误判为「缺 force-dynamic 导致预渲染」，实测加 force-dynamic 后
+ *   头依旧没变，才定位到 next.config。）
  *
- * 仓库里其它 300+ 个 API 路由都显式写了 force-dynamic，这里属于遗漏。
+ * 两处都要正确：next.config 决定边缘怎么存，这里决定函数返回什么。
  */
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

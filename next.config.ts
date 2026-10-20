@@ -247,10 +247,16 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // 🔴 探活端点绝不能缓存。
+        // 这里曾配 `public, max-age=60` + `Surrogate-Control: public, max-age=60`，
+        // 而 **next.config 的 headers() 优先级高于 route handler 自己写的头** ——
+        // 结果是路由里改成 no-store 也无效，边缘照样缓存 60 秒。
+        // 实测症状：连续多次读到的 dbLatency 是同一个数（5615ms），看着像"稳"，
+        // 实际是 60 秒前的快照；坏发布期间还会继续对监控喊 healthy。
+        // 探活流量极小，不值得为省这点 CDN 命中让监控失真。
         source: '/api/health',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=86400' },
-          { key: 'Surrogate-Control', value: 'public, max-age=60' },
+          { key: 'Cache-Control', value: 'no-store, max-age=0' },
         ],
       },
       // Static assets: aggressive caching
