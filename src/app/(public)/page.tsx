@@ -972,7 +972,8 @@ function SurfaceCard({
       style={{
         borderColor: primary ? "rgba(11,14,17,0.2)" : "rgba(11,14,17,0.12)",
         background: primary ? "#ffffff" : "rgba(255,255,255,0.55)",
-        opacity: inView ? 1 : 0,
+        // 未进入视口时给 0.4（不是 0）：打印/全页截图/JS 禁用时内容仍可见，只是不强调
+        opacity: inView ? 1 : 0.4,
         transform: inView ? "none" : "translateY(10px)",
       }}
     >
