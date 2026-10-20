@@ -112,6 +112,7 @@
     "verify:cron:methods": "node scripts/ci/verify-cron-methods.mjs",
     "verify:health:live": "node scripts/qa/verify-health-live.mjs",
     "ui:gallery": "node scripts/qa/ui-gallery.mjs",
+    "verify:landing": "node scripts/qa/verify-landing.mjs",
     "verify:check:health:live": "node scripts/qa/verify-health-live.mjs --self-test",
     "verify:check:cron:methods": "node scripts/ci/verify-cron-methods.mjs --self-test",
     "verify:cron:selfhost": "bash deploy/selfhost/cron/test-cron.sh",
