@@ -37,7 +37,14 @@ const MUST_HAVE = [
   "Compile workspace",
   "WorkspaceSpec",
   "disclosure",
+  // v3：AI 能力 / 3D 关系图 / Playbooks 必须在页面上，缺一块就红
+  "INTENT_EXTRACTION",
+  "Playbooks",
+  "One graph",
 ];
+
+// v3 结构性断言：3D 场景、AI 专区、关系图、案例区必须真的渲染出来（不只是文案）
+const MUST_RENDER_GATES = ["scene3d", "ai", "orbit", "cases"];
 
 const MUST_NOT_HAVE = [
   "swiping",
@@ -89,6 +96,12 @@ async function main() {
   }
   for (const kw of MUST_NOT_HAVE) {
     check(`不得包含「${kw}」`, !hay.includes(kw.toLowerCase()));
+  }
+
+  // 结构性断言：关键区块必须真的在 DOM 里（data-gate 锚点）
+  for (const gate of MUST_RENDER_GATES) {
+    const n = (html.match(new RegExp(`data-gate="${gate}"`, "g")) || []).length;
+    check(`区块「${gate}」已渲染（data-gate）`, n > 0, `count=${n}`);
   }
 
   // 元信息单独取，避免被 body 文本掩盖
