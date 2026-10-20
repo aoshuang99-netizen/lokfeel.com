@@ -1,710 +1,997 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+/**
+ * LANDING PAGE — Connection OS（SaaS AI 生成式平台）
+ *
+ * 定位：用户描述目标 → 平台把目标**编译**为结构化工作空间（WorkspaceSpec）→
+ * 人 + AI Agent 在 Mission / Intent / Consent / Outcome 上协作达成结果。
+ *
+ * 设计语言（与 `/workspace` 同源，不另起一套）：
+ *   · 纸面底 #f7f5f0 + 墨黑字 #0b0e11 + 暖金 signal #b8863f + 发丝线
+ *   · 标题 Sora（font-display），正文 Outfit，系统标注用等宽小字母
+ *   · 深色段（#0b0e11）只用于「同意门禁 / 收尾 CTA」两处，形成节奏而非全站反色
+ *
+ * 诚实约束：
+ *   1. Hero 里的编译演示**明确标注**为浏览器内 demo 规则，不冒充服务端能力；
+ *   2. 不放虚构客户 logo、虚构证言、虚构价格；
+ *   3. 数字（5 个 MCP 工具 / 50 条 REST 端点）取自仓库真实实现。
+ */
+
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import QuickSignupModal from "@/components/auth/quick-signup-modal";
-import Footer from "@/components/layout/footer";
 
-/**
- * LANDING PAGE — Dark Purple + Lime (v5)
- * Exact match to lokfeel.com (nexus-landing)
- * Design: LokFeel v5 "Dark Purple+Lime" system
- */
+/* ─────────────────────────── 1. 品牌常量 ─────────────────────────── */
 
-/* ─── VIDEO BACKGROUND COMPONENT ─────────────────────────────── */
-function VideoBackground() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isSlowConnection, setIsSlowConnection] = useState(false);
+const INK = "#0b0e11";
+const PAPER = "#f7f5f0";
+const SIGNAL = "#b8863f";
+const MUTED = "#5a636b";
+const FAINT = "#8a9298";
+
+/* ─────────────────────────── 2. 编译演示（纯前端规则） ─────────────────────────── */
+
+type Extracted = {
+  horizon: string | null;
+  target: string | null;
+};
+
+/** 从目标描述里抽取「期限」与「数量」——只做演示用的启发式，不做业务判断。 */
+function extractGoal(goal: string): Extracted {
+  const horizonMatch = goal.match(/(\d+)\s*(天|日|周|个月|days?|weeks?|months?)/i);
+  const targetMatch = goal.match(
+    /(\d+)\s*(次|个|位|人|partners?|introductions?|deals?|calls?|co-investors?|design partners?)/i
+  );
+
+  const horizon = horizonMatch
+    ? `${horizonMatch[1]} ${
+        /天|日|days?/i.test(horizonMatch[2])
+          ? "days"
+          : /周|weeks?/i.test(horizonMatch[2])
+            ? "weeks"
+            : "months"
+      }`
+    : null;
+
+  return { horizon, target: targetMatch ? targetMatch[1] : null };
+}
+
+const COMPILE_STEPS = [
+  "parse · extracting goal & constraints",
+  "spec · validating against workspace schema",
+  "assemble · rendering nodes from the allow-list",
+];
+
+const SAMPLE_GOALS = [
+  "Connect our climate-tech founders with 20 qualified manufacturing partners in 30 days",
+  "Introduce 12 vetted design partners to our AI infrastructure team this quarter",
+  "Find 8 co-investors for our Series A within 45 days",
+];
+
+function CompileDemo() {
+  const [goal, setGoal] = useState(SAMPLE_GOALS[0]);
+  const [phase, setPhase] = useState<"idle" | "compiling" | "done">("idle");
+  const [visibleSteps, setVisibleSteps] = useState(0);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    // Detect slow connections — skip video preload
-    const conn = (navigator as any).connection;
-    if (conn) {
-      const effectiveType = conn.effectiveType;
-      setIsSlowConnection(
-        effectiveType === "2g" || effectiveType === "3g" || effectiveType === "4g"
-      );
-    }
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleCanPlay = () => setIsLoaded(true);
-    video.addEventListener("canplay", handleCanPlay);
-    return () => video.removeEventListener("canplay", handleCanPlay);
+    const t = timers.current;
+    return () => t.forEach(clearTimeout);
   }, []);
 
+  const parsed = useMemo(() => extractGoal(goal), [goal]);
+
+  const compile = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setPhase("compiling");
+    setVisibleSteps(0);
+    COMPILE_STEPS.forEach((_, i) => {
+      timers.current.push(setTimeout(() => setVisibleSteps(i + 1), 260 * (i + 1)));
+    });
+    timers.current.push(setTimeout(() => setPhase("done"), 260 * COMPILE_STEPS.length + 320));
+  };
+
+  const reset = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setPhase("idle");
+    setVisibleSteps(0);
+  };
+
   return (
-    <div className="hero-video-container" aria-hidden="true">
-      <video
-        ref={videoRef}
-        autoPlay={!isSlowConnection}
-        muted
-        loop
-        playsInline
-        preload={isSlowConnection ? "none" : "metadata"}
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{
-          filter: "brightness(0.6) contrast(1.1) saturate(0.85)",
-        }}
-      >
-        {/* Mobile: lightweight 720p */}
-        <source
-          src="/videos/background-mobile-720p.mp4"
-          type="video/mp4"
-          media="(max-width: 768px)"
-        />
-        {/* Modern browsers: WebM (smallest) */}
-        <source
-          src="/videos/background-desktop-1080p.webm"
-          type="video/webm"
-        />
-        {/* Fallback: MP4 1080p */}
-        <source
-          src="/videos/background-desktop-1080p.mp4"
-          type="video/mp4"
-        />
-      </video>
-
-      {/* Purple overlay — identical to lokfeel.com */}
+    <div
+      className="rounded-2xl border bg-white shadow-[0_1px_0_rgba(11,14,17,0.04),0_24px_60px_-32px_rgba(11,14,17,0.25)]"
+      style={{ borderColor: "rgba(11,14,17,0.12)" }}
+    >
+      {/* 顶栏：产品内同款上下文条 */}
       <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(76, 29, 149, 0.4) 0%, rgba(109, 40, 217, 0.25) 50%, rgba(0, 0, 0, 0.1) 100%)",
-        }}
-      />
+        className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-5"
+        style={{ borderColor: "rgba(11,14,17,0.08)" }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full" style={{ background: SIGNAL }} aria-hidden />
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: MUTED }}>
+            Mission studio
+          </span>
+        </div>
+        <span className="font-mono text-[10px] tracking-wide" style={{ color: FAINT }}>
+          demo · runs in your browser
+        </span>
+      </div>
 
-      {/* Dark base underneath for instant perceived load */}
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-[#0a0a0a]" />
-      )}
+      <div className="p-4 sm:p-5">
+        <label
+          htmlFor="goal-input"
+          className="font-mono text-[10px] uppercase tracking-[0.18em]"
+          style={{ color: FAINT }}
+        >
+          Describe the outcome
+        </label>
+        <textarea
+          id="goal-input"
+          value={goal}
+          onChange={(e) => {
+            setGoal(e.target.value);
+            reset();
+          }}
+          rows={2}
+          maxLength={180}
+          className="mt-2 w-full resize-none rounded-xl border px-3.5 py-3 text-[15px] leading-relaxed outline-none transition-colors focus-visible:ring-2"
+          style={{
+            borderColor: "rgba(11,14,17,0.14)",
+            background: PAPER,
+            color: INK,
+          }}
+          placeholder="e.g. Connect our founders with 20 manufacturing partners in 30 days"
+        />
 
-      {/* Purple ambient glow — bottom left */}
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#4c1d95]/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            onClick={compile}
+            disabled={phase === "compiling" || goal.trim().length < 8}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-white transition-transform duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ background: INK }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+              <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
+              <circle cx="12" cy="12" r="3.2" />
+            </svg>
+            {phase === "compiling" ? "Compiling…" : phase === "done" ? "Recompile" : "Compile workspace"}
+          </button>
+
+          {SAMPLE_GOALS.slice(1).map((g, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setGoal(g);
+                reset();
+              }}
+              className="cursor-pointer rounded-full border px-3 py-1.5 text-[12px] transition-colors hover:bg-black/[0.03]"
+              style={{ borderColor: "rgba(11,14,17,0.14)", color: MUTED }}
+            >
+              Example {i + 2}
+            </button>
+          ))}
+        </div>
+
+        {/* 编译日志 */}
+        <div className="mt-4 space-y-1.5" aria-live="polite">
+          {COMPILE_STEPS.map((step, i) => (
+            <div
+              key={step}
+              className="flex items-center gap-2 font-mono text-[11px] transition-opacity duration-300"
+              style={{ opacity: visibleSteps > i ? 1 : 0, color: MUTED }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={SIGNAL} strokeWidth="2.4" aria-hidden>
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+              {step}
+            </div>
+          ))}
+        </div>
+
+        {/* 编译结果：三节点画布 */}
+        {phase === "done" && (
+          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
+            <NodeCard
+              label="Goal & criteria"
+              tone="goal"
+              lines={[
+                goal.length > 58 ? `${goal.slice(0, 58)}…` : goal,
+                parsed.horizon ? `Horizon · ${parsed.horizon}` : "Horizon · not stated",
+                parsed.target ? `Success · ${parsed.target} connected` : "Success · needs a number",
+              ]}
+            />
+            <NodeCard
+              label="Candidate pool"
+              tone="candidate"
+              lines={[
+                "Resolved server-side after consent",
+                "Disclosed per field, not per profile",
+                "No silent widening of the pool",
+              ]}
+            />
+            <NodeCard
+              label="Execution"
+              tone="execution"
+              lines={[
+                "Queue · pending approval",
+                "Agents draft, humans approve",
+                "Outcome verified before it counts",
+              ]}
+            />
+          </div>
+        )}
+
+        <p className="mt-4 text-[11px] leading-relaxed" style={{ color: FAINT }}>
+          Demo rules only. In the product, compilation produces a{" "}
+          <span className="font-mono">WorkspaceSpec</span> validated on the server — the canvas never
+          renders model-authored HTML.
+        </p>
+      </div>
     </div>
   );
 }
 
-/* ─── IN-VIEW HOOK ──────────────────────────────────────────── */
-function useInView(threshold = 0.2) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
+function NodeCard({
+  label,
+  lines,
+  tone,
+}: {
+  label: string;
+  lines: string[];
+  tone: "goal" | "candidate" | "execution";
+}) {
+  const accent = tone === "goal" ? SIGNAL : tone === "candidate" ? "#3f8c74" : "rgba(11,14,17,0.55)";
+  return (
+    <div className="rounded-xl border bg-white p-3" style={{ borderColor: "rgba(11,14,17,0.12)" }}>
+      <div className="mb-2 flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent }} aria-hidden />
+        <span className="font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: accent }}>
+          {label}
+        </span>
+      </div>
+      <ul className="space-y-1.5">
+        {lines.map((l, i) => (
+          <li key={i} className="text-[11.5px] leading-snug" style={{ color: i === 0 ? INK : MUTED }}>
+            {l}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
+/* ─────────────────────────── 3. 通用小件 ─────────────────────────── */
+
+function Eyebrow({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
+  return (
+    <p
+      className="font-mono text-[10px] uppercase tracking-[0.22em]"
+      style={{ color: dark ? "rgba(242,241,236,0.45)" : FAINT }}
+    >
+      {children}
+    </p>
+  );
+}
+
+function useInView<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
           setInView(true);
-          obs.disconnect();
+          io.disconnect();
         }
       },
-      { threshold }
+      { rootMargin: "-60px" }
     );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   return { ref, inView };
 }
 
-/* ─── NAVBAR ─────────────────────────────────────────────────── */
-function Navbar({ onSignupClick, onLoginClick }: any) {
+/* ─────────────────────────── 4. 页面 ─────────────────────────── */
+
+export default function LandingPage() {
+  const router = useRouter();
+  const [signupOpen, setSignupOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
+    // 初始就是顶部（scrolled=false），不在 effect 里同步 setState —— 避免 react-hooks/set-state-in-effect
+    const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const openWorkspace = () => router.push("/workspace");
+
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5"
-          : "bg-transparent"
-      }`}
-      aria-label="Main navigation"
-    >
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 no-underline">
-            <span className="font-display text-xl font-bold tracking-tight text-white">
-              LokFeel
+    <div style={{ background: PAPER, color: INK }} className="min-h-screen antialiased">
+      {/* ── NAV ── */}
+      <header
+        className={`fixed inset-x-0 top-0 z-40 transition-all duration-300 ${scrolled ? "backdrop-blur-md" : ""}`}
+        style={{
+          background: scrolled ? "rgba(247,245,240,0.86)" : "transparent",
+          borderBottom: scrolled ? "1px solid rgba(11,14,17,0.08)" : "1px solid transparent",
+        }}
+      >
+        <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 sm:px-6">
+          <Link href="/" className="flex cursor-pointer items-center gap-2.5" aria-label="LokFeel home">
+            <span
+              className="grid h-7 w-7 place-items-center rounded-md font-display text-[13px] font-bold text-white"
+              style={{ background: INK }}
+            >
+              L
+            </span>
+            <span className="font-display text-[15px] font-bold tracking-[-0.01em]">LOKFEEL</span>
+            <span
+              className="ml-1 hidden rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] sm:inline-block"
+              style={{ borderColor: "rgba(11,14,17,0.16)", color: MUTED }}
+            >
+              Connection OS
             </span>
           </Link>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8">
-            <a
-              href="#about"
-              className="text-sm text-white/50 hover:text-white/90 transition-colors no-underline"
-            >
-              About
-            </a>
-            <a
-              href="#how"
-              className="text-sm text-white/50 hover:text-white/90 transition-colors no-underline"
-            >
-              How it works
-            </a>
-          </div>
-
-          {/* Right side — Sign In + Get Started */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onLoginClick}
-              className="hidden sm:inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={onSignupClick}
-              className="hidden sm:block rounded-full px-5 py-2 text-sm font-semibold cursor-pointer border-none text-black bg-[#a3e635] hover:bg-[#bef264] transition-all"
-            >
-              Get Started
-            </button>
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden w-9 h-9 flex items-center justify-center text-white/70 bg-transparent border-none cursor-pointer"
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-menu"
-            >
-              {mobileOpen ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div
-          id="mobile-menu"
-          className="md:hidden absolute top-16 left-0 right-0 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5 p-6"
-          role="dialog"
-          aria-label="Mobile navigation menu"
-        >
-          <div className="flex flex-col gap-4">
-            <a
-              href="#about"
-              onClick={() => setMobileOpen(false)}
-              className="text-lg py-2 text-white/70 hover:text-white transition-colors no-underline"
-            >
-              About
-            </a>
-            <a
-              href="#how"
-              onClick={() => setMobileOpen(false)}
-              className="text-lg py-2 text-white/70 hover:text-white transition-colors no-underline"
-            >
-              How it works
-            </a>
-            <div className="h-px bg-white/10 my-2" />
-            <button
-              onClick={() => {
-                setMobileOpen(false);
-                onLoginClick();
-              }}
-              className="text-lg py-2 text-white/70 hover:text-white transition-colors text-left bg-transparent border-none cursor-pointer"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => {
-                setMobileOpen(false);
-                onSignupClick();
-              }}
-              className="w-full rounded-full py-3 text-base font-semibold cursor-pointer border-none text-black bg-[#a3e635]"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-}
-
-/* ─── HERO SECTION ──────────────────────────────────────────── */
-function HeroSection({ onSignupClick }: any) {
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoaded(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <section
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      style={{ minHeight: "100dvh" }}
-    >
-      {/* Video background is rendered by parent */}
-
-      {/* Content */}
-      <div className="relative z-20 max-w-4xl mx-auto px-6 text-center text-white py-20">
-        <h1
-          className={`font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.1] mb-6 transition-all duration-700 ${
-            loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          AI matches what
-          <br />
-          <span className="text-[#a3e635]">swiping can't</span>
-        </h1>
-
-        <p
-          className={`text-lg sm:text-xl text-white/60 max-w-xl mx-auto mb-8 sm:mb-10 transition-all duration-700 delay-100 ${
-            loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          Our AI engine analyzes personality, values & chemistry. 5 curated matches weekly — each with a reason why.
-        </p>
-
-        {/* CTA Buttons — Lime primary */}
-        <div
-          className={`flex flex-col sm:flex-row gap-4 justify-center items-center transition-all duration-700 delay-200 ${
-            loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          <button
-            onClick={onSignupClick}
-            className="w-full sm:w-auto rounded-full px-8 py-6 text-base font-semibold w-full sm:w-auto flex items-center justify-center gap-2 cursor-pointer border-none text-black bg-[#a3e635] hover:bg-[#bef264] transition-all shadow-lg shadow-[#a3e635]/25"
-            aria-label="Start free registration on LokFeel"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
-            Start Free
-          </button>
-          <a href="#about" className="block w-full sm:w-auto">
-            <button
-              className="rounded-full px-8 py-6 text-base font-medium border border-white/15 text-white/80 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all w-full sm:w-auto cursor-pointer bg-transparent"
-            >
-              Learn More
-            </button>
-          </a>
-        </div>
-
-        {/* 🌸 Ladies Never Pay Banner */}
-        <div
-          className={`mt-6 sm:mt-8 transition-all duration-700 delay-500 ${
-            loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          <button
-            onClick={onSignupClick}
-            className="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all cursor-pointer text-white/70 text-xs sm:text-sm font-medium"
-          >
-            <span className="text-base sm:text-lg">🌸</span>
-            <span>Ladies Never Pay</span>
-            <span className="text-white/30 text-[10px] sm:text-xs hidden sm:inline">
-              — Premium features free for women
-            </span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30 group-hover:text-white/60 transition-all">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 hidden sm:block">
-        <div className="w-6 h-10 rounded-full border-2 border-white/20 flex justify-center pt-2">
-          <div className="w-1 h-2 bg-white/40 rounded-full animate-bounce" />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── ABOUT SECTION ──────────────────────────────────────────── */
-function AboutSection() {
-  const { ref, inView } = useInView();
-
-  return (
-    <section id="about" className="py-24 md:py-32 bg-[#0a0a0a]" ref={ref}>
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Left: Real image */}
-          <div
-            className={`relative transition-all duration-1000 ${
-              inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-12"
-            }`}
-          >
-            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden ring-1 ring-white/5">
-              <img
-                src="/images/about-couple.jpg"
-                alt="Real couple connecting through LokFeel"
-                loading="lazy"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/30 via-transparent to-transparent" />
-            </div>
-            {/* Floating badge */}
-            <div className="absolute -bottom-4 -right-4 bg-[#111111] border border-[#4c1d95]/20 rounded-xl p-4 shadow-xl">
-              <p className="text-3xl font-bold font-display text-[#a3e635]">AI</p>
-              <p className="text-sm text-white/40">Powered matching engine</p>
-            </div>
-          </div>
-
-          {/* Right: Content */}
-          <div className="text-center md:text-left">
-            <h2
-              className={`font-display text-3xl sm:text-4xl md:text-5xl tracking-tight text-white transition-all duration-700 ${
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-            >
-              Swiping is random. AI matching is intentional.
-            </h2>
-            <p
-              className={`text-xl text-white/50 mt-6 transition-all duration-700 delay-100 ${
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-            >
-              LokFeel's AI engine understands who you really are — and finds the people you'll genuinely click with.
-            </p>
-            <div
-              className={`mt-8 transition-all duration-700 delay-200 ${
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-            >
-              <a href="#how">
-                <button
-                  className="rounded-full px-6 py-2.5 text-sm font-medium border border-[#4c1d95]/30 text-[#a78bfa] hover:bg-[#4c1d95]/10 hover:border-[#4c1d95]/50 transition-all cursor-pointer bg-transparent inline-flex items-center gap-2"
-                  aria-label="Learn how LokFeel works"
-                >
-                  See how it works
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </button>
+          <div className="hidden items-center gap-7 md:flex">
+            {[
+              ["Product", "#product"],
+              ["How it compiles", "#compile"],
+              ["Interop", "#interop"],
+              ["Governance", "#governance"],
+            ].map(([label, href]) => (
+              <a
+                key={href}
+                href={href}
+                className="text-[13.5px] transition-colors hover:opacity-60"
+                style={{ color: MUTED }}
+              >
+                {label}
               </a>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="hidden cursor-pointer rounded-full px-3.5 py-2 text-[13.5px] transition-colors hover:bg-black/[0.04] sm:block"
+              style={{ color: MUTED }}
+            >
+              Log in
+            </Link>
+            <button
+              onClick={openWorkspace}
+              className="cursor-pointer rounded-full px-4 py-2 text-[13.5px] font-medium text-white transition-transform duration-200 hover:-translate-y-px"
+              style={{ background: INK }}
+            >
+              Open workspace
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden pb-16 pt-28 sm:pb-20 sm:pt-32">
+        {/* 纸面网格：极淡，给「工作台」以秩序感 */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(11,14,17,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(11,14,17,0.045) 1px, transparent 1px)",
+            backgroundSize: "72px 72px",
+            maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent 78%)",
+            WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent 78%)",
+          }}
+        />
+
+        <div className="relative mx-auto grid max-w-6xl gap-10 px-5 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-14">
+          <div className="lg:pt-6">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: SIGNAL }} aria-hidden />
+              <Eyebrow>AI-native workspace · organisations &amp; agents</Eyebrow>
+            </div>
+
+            <h1
+              className="mt-5 font-display text-[2.6rem] font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-[3.4rem] lg:text-[3.9rem]"
+              style={{ color: INK }}
+            >
+              Describe the outcome.
+              <br />
+              Get a workspace
+              <br />
+              <span style={{ color: SIGNAL }}>that runs it.</span>
+            </h1>
+
+            <p className="mt-6 max-w-xl text-[16.5px] leading-[1.65]" style={{ color: MUTED }}>
+              LokFeel compiles a goal into a structured workspace — missions, consent gates and AI
+              agents — then runs the pipeline with your team. Every number is traceable to an
+              endpoint, every disclosure is explicit, every outcome has to be verified.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <button
+                onClick={openWorkspace}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-3 text-[14.5px] font-medium text-white transition-transform duration-200 hover:-translate-y-px"
+                style={{ background: INK }}
+              >
+                Open your workspace
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setSignupOpen(true)}
+                className="cursor-pointer rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors hover:bg-black/[0.03]"
+                style={{ borderColor: "rgba(11,14,17,0.16)", color: INK }}
+              >
+                Create an account
+              </button>
+            </div>
+
+            {/* 证据行：真实实现数字 */}
+            <dl
+              className="mt-9 grid max-w-lg grid-cols-2 gap-x-6 gap-y-3 border-t pt-5 sm:grid-cols-4"
+              style={{ borderColor: "rgba(11,14,17,0.1)" }}
+            >
+              {[
+                ["5", "MCP tools"],
+                ["50", "REST v1 routes"],
+                ["Per-field", "consent"],
+                ["Tenant", "isolated"],
+              ].map(([v, k]) => (
+                <div key={k}>
+                  <dt className="font-display text-[17px] font-bold leading-tight">{v}</dt>
+                  <dd className="font-mono text-[9.5px] uppercase tracking-[0.14em]" style={{ color: FAINT }}>
+                    {k}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="lg:pt-2">
+            <CompileDemo />
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT COMPILES ── */}
+      <section id="compile" className="mx-auto max-w-6xl px-5 py-16 sm:px-6 sm:py-20">
+        <div className="max-w-2xl">
+          <Eyebrow>How it compiles</Eyebrow>
+          <h2 className="mt-3 font-display text-[1.9rem] font-bold leading-[1.1] tracking-[-0.025em] sm:text-[2.4rem]">
+            A goal is not a to-do list.
+            <br />
+            It is a structure.
+          </h2>
+          <p className="mt-4 text-[15.5px] leading-relaxed" style={{ color: MUTED }}>
+            Four stages, each with a verifiable artefact — so the workspace can be inspected,
+            replayed and audited instead of trusted.
+          </p>
+        </div>
+
+        <ol
+          className="mt-10 grid gap-px overflow-hidden rounded-2xl border sm:grid-cols-2 lg:grid-cols-4"
+          style={{ borderColor: "rgba(11,14,17,0.12)", background: "rgba(11,14,17,0.12)" }}
+        >
+          {[
+            {
+              n: "01",
+              title: "Describe",
+              body: "One sentence in, constraints extracted. No forms, no wizard, no taxonomy to learn.",
+            },
+            {
+              n: "02",
+              title: "Compile",
+              body: "Text becomes a WorkspaceSpec — schema-validated, rendered from a fixed node allow-list.",
+            },
+            {
+              n: "03",
+              title: "Coordinate",
+              body: "Mission → intent → proposal → workflow. Agents draft; humans approve the risky steps.",
+            },
+            {
+              n: "04",
+              title: "Prove",
+              body: "Outcomes are reported, verified and metered. A claim only counts once it is confirmed.",
+            },
+          ].map((s) => (
+            <li key={s.n} className="bg-white p-6">
+              <span className="font-mono text-[10px] tracking-[0.2em]" style={{ color: SIGNAL }}>
+                {s.n}
+              </span>
+              <h3 className="mt-3 font-display text-[17px] font-bold">{s.title}</h3>
+              <p className="mt-2 text-[13.5px] leading-relaxed" style={{ color: MUTED }}>
+                {s.body}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* ── PRODUCT SURFACES ── */}
+      <section id="product" className="mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-20">
+        <Eyebrow>Three surfaces, one graph</Eyebrow>
+        <h2 className="mt-3 max-w-2xl font-display text-[1.9rem] font-bold leading-[1.1] tracking-[-0.025em] sm:text-[2.4rem]">
+          The workspace you work in. The console you run it from. The protocol others connect through.
+        </h2>
+
+        <div className="mt-9 grid gap-4 lg:grid-cols-3">
+          <SurfaceCard
+            tag="Living Workspace"
+            title="Where the work happens"
+            items={[
+              "Now — today's queue, with evidence links",
+              "Studio — describe → compile → canvas",
+              "Field — the relationship graph",
+              "Consent — per-field disclosure gates",
+              "Outcomes — what actually landed",
+              "Agents — runs, approvals, usage",
+            ]}
+            primary
+          />
+          <SurfaceCard
+            tag="Console"
+            title="Where the org runs it"
+            items={[
+              "Queue health & dead letters",
+              "Stalled connections, not just failures",
+              "Missions, members and roles",
+              "Outcome verification",
+              "Delivery counts that never inflate",
+            ]}
+          />
+          <SurfaceCard
+            tag="Interop"
+            title="Where others connect"
+            items={[
+              "MCP — 5 tools over Streamable HTTP",
+              "A2A — agent card & task endpoint",
+              "REST v1 — 50 routes",
+              "OpenAPI contract in the repo",
+              "Runnable SDK examples",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* ── CONSENT (dark) ── */}
+      <section id="governance" style={{ background: INK }} className="py-16 sm:py-20">
+        <div className="mx-auto max-w-6xl px-5 sm:px-6">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+            <div>
+              <Eyebrow dark>Consent by design</Eyebrow>
+              <h2 className="mt-3 font-display text-[1.9rem] font-bold leading-[1.1] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.3rem]">
+                Disclosure is a field-level decision.
+                <span className="block" style={{ color: "rgba(242,241,236,0.5)" }}>
+                  Absence means no.
+                </span>
+              </h2>
+              <p className="mt-4 max-w-md text-[15px] leading-relaxed" style={{ color: "rgba(242,241,236,0.62)" }}>
+                Most platforms ask for a profile. We ask, field by field, who may see it. A missing
+                entry is never treated as permission — it stays private, by default, forever.
+              </p>
+              <ul className="mt-6 space-y-2.5">
+                {[
+                  "No silent widening when a proposal is created",
+                  "Import from profile requires an explicit, timestamped grant",
+                  "Withdrawal takes effect on the next projection, not the next deploy",
+                ].map((t) => (
+                  <li
+                    key={t}
+                    className="flex gap-2.5 text-[13.5px] leading-relaxed"
+                    style={{ color: "rgba(242,241,236,0.72)" }}
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={SIGNAL}
+                      strokeWidth="2.2"
+                      className="mt-1 shrink-0"
+                      aria-hidden
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* 披露表：真实受众档位 */}
+            <div
+              className="overflow-hidden rounded-2xl border"
+              style={{ borderColor: "rgba(242,241,236,0.14)", background: "#171c21" }}
+            >
+              <div
+                className="flex items-center justify-between border-b px-4 py-3"
+                style={{ borderColor: "rgba(242,241,236,0.1)" }}
+              >
+                <span
+                  className="font-mono text-[10px] uppercase tracking-[0.18em]"
+                  style={{ color: "rgba(242,241,236,0.45)" }}
+                >
+                  disclosure map
+                </span>
+                <span className="font-mono text-[10px]" style={{ color: SIGNAL }}>
+                  fail-closed
+                </span>
+              </div>
+              <table className="w-full text-left">
+                <thead>
+                  <tr
+                    className="font-mono text-[9.5px] uppercase tracking-[0.12em]"
+                    style={{ color: "rgba(242,241,236,0.4)" }}
+                  >
+                    <th className="px-4 py-2.5 font-normal">Field</th>
+                    <th className="px-3 py-2.5 font-normal">Self</th>
+                    <th className="px-3 py-2.5 font-normal">Organiser</th>
+                    <th className="px-3 py-2.5 font-normal">Counterparty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Name", true, true, true],
+                    ["Role & focus", true, true, true],
+                    ["Company", true, true, false],
+                    ["Contact channel", true, false, false],
+                    ["Evaluation notes", true, false, false],
+                  ].map((row) => (
+                    <tr
+                      key={String(row[0])}
+                      className="border-t"
+                      style={{ borderColor: "rgba(242,241,236,0.07)" }}
+                    >
+                      <td className="px-4 py-2.5 text-[13px]" style={{ color: "rgba(242,241,236,0.86)" }}>
+                        {row[0] as string}
+                      </td>
+                      {row.slice(1).map((on, i) => (
+                        <td key={i} className="px-3 py-2.5">
+                          {on ? (
+                            <span
+                              className="inline-block h-1.5 w-1.5 rounded-full"
+                              style={{ background: SIGNAL }}
+                              aria-label="visible"
+                            />
+                          ) : (
+                            <span
+                              className="inline-block h-px w-2.5"
+                              style={{ background: "rgba(242,241,236,0.22)" }}
+                              aria-label="hidden"
+                            />
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p
+                className="border-t px-4 py-3 text-[11px] leading-relaxed"
+                style={{ borderColor: "rgba(242,241,236,0.1)", color: "rgba(242,241,236,0.4)" }}
+              >
+                Illustrative map. Values live in each intent&apos;s disclosure table — defaults are
+                never written back on save.
+              </p>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-/* ─── HOW IT WORKS SECTION ──────────────────────────────────── */
-function HowSection() {
-  const { ref, inView } = useInView();
-  const [activeStep, setActiveStep] = useState(0);
-
-  const steps = [
-    {
-      num: "01",
-      title: "Tell the AI who you are",
-      desc: "A 5-minute conversation. Our engine learns your personality, values & patterns.",
-      image: "/images/bg/photo-couple-main.jpg",
-    },
-    {
-      num: "02",
-      title: "Get AI-curated matches",
-      desc: "5 people weekly, selected by our matching engine — with explanations why.",
-      image: "/images/bg/photo-team-1.jpg",
-    },
-    {
-      num: "03",
-      title: "Connect with confidence",
-      desc: "Every match comes with compatibility insights. Skip the guesswork.",
-      image: "/images/bg/photo-team-2.jpg",
-    },
-  ];
-
-  useEffect(() => {
-    if (!inView) return;
-    const interval = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % steps.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [inView, steps.length]);
-
-  return (
-    <section id="how" className="py-24 md:py-32 bg-[#111111]" ref={ref}>
-      <div className="max-w-6xl mx-auto px-6">
-        <p
-          className={`text-sm uppercase tracking-widest text-[#a3e635]/70 mb-6 text-center transition-all duration-700 ${
-            inView ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          How it works
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Left: Steps */}
-          <div className="space-y-6">
-            {steps.map((step, i) => (
-              <div
-                key={i}
-                className={`relative flex gap-6 items-start cursor-pointer p-4 rounded-xl transition-all duration-500 ${
-                  activeStep === i
-                    ? "bg-[#1a1a1a] shadow-lg scale-[1.02] ring-1 ring-[#4c1d95]/20"
-                    : "opacity-50 hover:opacity-80"
-                }`}
-                onClick={() => setActiveStep(i)}
-              >
-                {i < steps.length - 1 && (
-                  <div className="absolute left-[2.25rem] top-16 w-0.5 h-8 bg-gradient-to-b from-[#4c1d95]/20 to-transparent" />
-                )}
-
-                <div className="relative">
-                  <span
-                    className={`text-5xl font-bold font-display transition-all duration-500 ${
-                      activeStep === i ? "text-[#a3e635]" : "text-white/15"
-                    }`}
-                  >
-                    {step.num}
-                  </span>
-                </div>
-
-                <div className="flex-1 pt-2">
-                  <h3
-                    className={`text-xl font-semibold mb-2 transition-colors duration-300 ${
-                      activeStep === i ? "text-white" : "text-white/50"
-                    }`}
-                  >
-                    {step.title}
-                  </h3>
-                  <p
-                    className={`text-white/40 transition-all duration-500 ${
-                      activeStep === i ? "opacity-100" : "opacity-70"
-                    }`}
-                  >
-                    {step.desc}
-                  </p>
-
-                  {activeStep === i && (
-                    <div className="mt-4 h-0.5 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#a3e635] animate-[progress_4s_linear]" />
-                    </div>
-                  )}
-                </div>
-
-                <div
-                  className={`transition-all duration-300 ${
-                    activeStep === i ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
-                  }`}
+      {/* ── INTEROP ── */}
+      <section id="interop" className="mx-auto max-w-6xl px-5 py-16 sm:px-6 sm:py-20">
+        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+          <div>
+            <Eyebrow>Machine-readable</Eyebrow>
+            <h2 className="mt-3 font-display text-[1.9rem] font-bold leading-[1.1] tracking-[-0.025em] sm:text-[2.3rem]">
+              Discovery is public.
+              <br />
+              Collaboration is authorised.
+            </h2>
+            <p className="mt-4 text-[15px] leading-relaxed" style={{ color: MUTED }}>
+              An external agent can see what the server offers before it has any permission.
+              Touching data requires a session, a tenant and a capability — checked per tool, not
+              per route.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {["MCP 2025-06-18", "A2A", "REST v1", "OpenAPI"].map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border px-2.5 py-1 font-mono text-[10px] tracking-wide"
+                  style={{ borderColor: "rgba(11,14,17,0.16)", color: MUTED }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#a3e635]/60">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Right: Real images */}
-          <div
-            className={`relative aspect-[4/3] rounded-2xl overflow-hidden transition-all duration-700 ${
-              inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"
-            }`}
-            style={{
-              transform: inView ? "perspective(1000px) rotateY(-3deg)" : "perspective(1000px) rotateY(0)",
-              boxShadow: "20px 20px 60px rgba(76, 29, 149, 0.15), -5px -5px 20px rgba(0,0,0,0.3)",
-            }}
-          >
-            {steps.map((step, i) => (
-              <div
-                key={i}
-                className={`absolute inset-0 transition-all duration-700 ${
-                  activeStep === i ? "opacity-100 scale-100" : "opacity-0 scale-110"
-                }`}
-              >
-                <img
-                  src={step.image}
-                  alt={`Step ${step.num}: ${step.title}`}
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/60 via-transparent to-transparent" />
-              </div>
-            ))}
-
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {steps.map((step, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveStep(i)}
-                  className={`h-1.5 rounded-full transition-all duration-500 ${
-                    activeStep === i ? "bg-[#a3e635] w-8" : "bg-white/20 w-1.5 hover:bg-white/40"
-                  }`}
-                  aria-label={`Go to step ${step.num}: ${step.title}`}
-                />
+                  {t}
+                </span>
               ))}
             </div>
+          </div>
 
-            <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
-              {String(activeStep + 1).padStart(2, "0")} / {String(steps.length).padStart(2, "0")}
+          <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: "rgba(11,14,17,0.12)" }}>
+            <div
+              className="flex items-center gap-1.5 border-b px-4 py-2.5"
+              style={{ borderColor: "rgba(11,14,17,0.08)" }}
+            >
+              <span className="h-2 w-2 rounded-full" style={{ background: "rgba(11,14,17,0.14)" }} aria-hidden />
+              <span className="h-2 w-2 rounded-full" style={{ background: "rgba(11,14,17,0.14)" }} aria-hidden />
+              <span className="h-2 w-2 rounded-full" style={{ background: "rgba(11,14,17,0.14)" }} aria-hidden />
+              <span className="ml-2 font-mono text-[10px]" style={{ color: FAINT }}>
+                lokfeel-connection-os
+              </span>
+            </div>
+            <pre
+              className="overflow-x-auto px-4 py-4 font-mono text-[11.5px] leading-[1.85]"
+              style={{ color: MUTED }}
+            >
+              {`MCP   initialize · tools/list · tools/call
+      ├ list_missions      ├ list_bridges
+      ├ bridge_discovery   ├ list_outcomes
+      └ report_outcome
+
+A2A   GET  /.well-known/agent-card.json
+      POST /api/v1/a2a/tasks
+
+REST  /api/v1/missions · /intents · /connections
+      /workflow/jobs · /outcomes · /bridges
+      /billing/usage · /org · /members`}
+            </pre>
+            <div
+              className="border-t px-4 py-3 text-[11px]"
+              style={{ borderColor: "rgba(11,14,17,0.08)", color: FAINT }}
+            >
+              Unauthenticated calls return <span className="font-mono" style={{ color: INK }}>401</span>.
+              Insufficient capability fails at the tool level, not the protocol level.
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* ── GOVERNANCE ── */}
+      <section className="mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-20">
+        <div
+          className="grid gap-px overflow-hidden rounded-2xl border sm:grid-cols-3"
+          style={{ borderColor: "rgba(11,14,17,0.12)", background: "rgba(11,14,17,0.12)" }}
+        >
+          {[
+            {
+              t: "Tenant isolation",
+              d: "Every query is scoped by organisation first. The client never supplies the tenant — it is resolved from the session.",
+            },
+            {
+              t: "Audit, not logs",
+              d: "Security events and business actions are recorded separately, with soft references that survive account deletion.",
+            },
+            {
+              t: "Metered, not guessed",
+              d: "Usage is collected, reconciled and billed per event. Captured sandbox deliveries are never counted as sent.",
+            },
+          ].map((c) => (
+            <div key={c.t} className="bg-white p-6">
+              <h3 className="font-display text-[15.5px] font-bold">{c.t}</h3>
+              <p className="mt-2 text-[13.5px] leading-relaxed" style={{ color: MUTED }}>
+                {c.d}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-6">
+        <div className="relative overflow-hidden rounded-3xl px-6 py-12 sm:px-12 sm:py-14" style={{ background: INK }}>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(600px 240px at 85% 10%, rgba(184,134,63,0.22), transparent 70%)",
+            }}
+          />
+          <div className="relative flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-end">
+            <div>
+              <Eyebrow dark>Start with one real goal</Eyebrow>
+              <h2 className="mt-3 max-w-xl font-display text-[1.9rem] font-bold leading-[1.08] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.5rem]">
+                Bring the outcome you are actually chasing.
+              </h2>
+              <p className="mt-3 max-w-md text-[14.5px] leading-relaxed" style={{ color: "rgba(242,241,236,0.6)" }}>
+                Compile it, invite your team, and watch the pipeline run — with every disclosure and
+                every outcome on the record.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={openWorkspace}
+                className="cursor-pointer rounded-full px-5 py-3 text-[14.5px] font-medium text-[#0b0e11] transition-transform duration-200 hover:-translate-y-px"
+                style={{ background: "#f2f1ec" }}
+              >
+                Open workspace
+              </button>
+              <button
+                onClick={() => setSignupOpen(true)}
+                className="cursor-pointer rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors"
+                style={{ borderColor: "rgba(242,241,236,0.22)", color: "#f2f1ec" }}
+              >
+                Create account
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <SiteFooter />
+
+      <QuickSignupModal isOpen={signupOpen} onClose={() => setSignupOpen(false)} />
+    </div>
   );
 }
 
-/* ─── CTA SECTION ────────────────────────────────────────────── */
-function CTASection({ onSignupClick }: any) {
-  const { ref, inView } = useInView();
+/* ─────────────────────────── 5. 浅色页脚（与纸面底同源） ─────────────────────────── */
 
+const FOOTER_COLUMNS: Array<{ title: string; links: Array<[string, string]> }> = [
+  {
+    title: "Product",
+    links: [
+      ["Living Workspace", "/workspace"],
+      ["Console", "/console"],
+      ["Log in", "/login"],
+      ["Create account", "/register"],
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      ["Agent card", "/.well-known/agent-card.json"],
+      ["OpenAPI contract", "https://github.com/aoshuang99-netizen/lokfeel.com/blob/main/contracts/connection.openapi.yaml"],
+      ["MCP server route", "https://github.com/aoshuang99-netizen/lokfeel.com/blob/main/src/app/api/mcp/route.ts"],
+      ["SDK examples", "https://github.com/aoshuang99-netizen/lokfeel.com/tree/main/examples/sdk"],
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      ["About", "/about"],
+      ["Careers", "/careers"],
+      ["Press", "/press"],
+      ["Contact", "/contact"],
+    ],
+  },
+  {
+    title: "Trust & legal",
+    links: [
+      ["Privacy", "/privacy"],
+      ["Terms", "/terms"],
+      ["Cookies", "/cookies"],
+      ["Security", "/security"],
+      ["DMCA", "/dmca"],
+      ["Sub-processors", "/sub-processors"],
+    ],
+  },
+];
+
+function SiteFooter() {
   return (
-    <section className="py-24 md:py-32 bg-[#111111]" ref={ref}>
-      <div className="max-w-2xl mx-auto px-6 text-center">
-        <h2
-          className={`font-display text-3xl sm:text-4xl tracking-tight mb-6 text-white transition-all duration-700 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          Let AI find your match
-        </h2>
-        <p
-          className={`text-white/50 mb-8 transition-all duration-700 delay-100 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          Join the AI matching revolution. Women get premium features free — forever.
-        </p>
+    <footer className="border-t" style={{ borderColor: "rgba(11,14,17,0.1)" }}>
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.2fr_repeat(4,1fr)]">
+          <div>
+            <div className="flex items-center gap-2">
+              <span
+                className="grid h-6 w-6 place-items-center rounded font-display text-[11px] font-bold text-white"
+                style={{ background: INK }}
+              >
+                L
+              </span>
+              <span className="font-display text-[14px] font-bold">LOKFEEL</span>
+            </div>
+            <p className="mt-3 max-w-[220px] text-[12px] leading-relaxed" style={{ color: FAINT }}>
+              Connection OS for AI-native teams. Compile a goal into a workspace that runs it.
+            </p>
+          </div>
 
-        {/* App Download Buttons */}
-        <div
-          className={`flex flex-col sm:flex-row gap-4 justify-center items-center mb-8 transition-all duration-700 delay-200 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          <a
-            href="https://apps.apple.com/app/lokfeel"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Download LokFeel from the App Store (opens in new tab)"
-          >
-            <button className="rounded-xl px-6 h-14 gap-3 border border-white/15 text-white hover:bg-white/5 transition-all flex items-center cursor-pointer bg-transparent">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.6-2.13 2.87-3.69 3.64-1.36.68-2.87 1.13-4.52 1.31-.75.09-1.52.13-2.29.13-1.96 0-3.79-.44-5.33-1.23-1.56-.79-2.91-2.05-3.86-3.64-.95-1.59-1.49-3.57-1.49-5.78 0-1.95.36-3.73 1.01-5.27.66-1.55 1.69-2.86 2.91-3.79 1.22-.93 2.69-1.48 4.28-1.6 1.58-.12 3.16.12 4.61.68 1.46.56 2.77 1.49 3.78 2.71l.01.01c.4.49.74 1.01 1.01 1.56.27.55.49 1.13.64 1.72.16.59.26 1.19.29 1.79.04 1.17-.13 2.34-.51 3.41-.38 1.07-.99 2.01-1.78 2.71z" />
-              </svg>
-              <div className="text-left">
-                <div className="text-[10px] leading-none opacity-50">Download on the</div>
-                <div className="text-sm font-semibold leading-tight">App Store</div>
-              </div>
-            </button>
-          </a>
-          <a
-            href="https://play.google.com/store/apps/details?id=com.lokfeel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Download LokFeel from Google Play (opens in new tab)"
-          >
-            <button className="rounded-xl px-6 h-14 gap-3 border border-white/15 text-white hover:bg-white/5 transition-all flex items-center cursor-pointer bg-transparent">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3.18 23.67c-.35-.19-.63-.57-.76-1.03l-.02-.08L.5 9.14c-.12-.62.12-1.25.6-1.62l.06-.05L10.16.45c.35-.26.82-.35 1.26-.24l.08.03 11.29 5.14c.47.21.81.63.91 1.13l.02.09.97 6.96c.08.6-.1 1.2-.52 1.63l-.06.06-8.04 6.63c-.39.32-.89.49-1.4.49-.38 0-.75-.09-1.09-.26l-.07-.05-4.17-2.75z" />
-              </svg>
-              <div className="text-left">
-                <div className="text-[10px] leading-none opacity-50">Get it on</div>
-                <div className="text-sm font-semibold leading-tight">Google Play</div>
-              </div>
-            </button>
-          </a>
+          {FOOTER_COLUMNS.map((col) => (
+            <div key={col.title}>
+              <h4
+                className="font-mono text-[9.5px] uppercase tracking-[0.16em]"
+                style={{ color: FAINT }}
+              >
+                {col.title}
+              </h4>
+              <ul className="mt-3 space-y-2">
+                {col.links.map(([label, href]) => (
+                  <li key={href}>
+                    {href.startsWith("http") ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[12.5px] transition-colors hover:opacity-60"
+                        style={{ color: MUTED }}
+                      >
+                        {label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={href}
+                        className="text-[12.5px] transition-colors hover:opacity-60"
+                        style={{ color: MUTED }}
+                      >
+                        {label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div
-          className={`transition-all duration-700 delay-300 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className="mt-10 flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between"
+          style={{ borderColor: "rgba(11,14,17,0.08)" }}
         >
-          <button
-            onClick={onSignupClick}
-            className="rounded-full px-8 py-3 text-base font-semibold cursor-pointer border-none text-black bg-[#a3e635] hover:bg-[#bef264] transition-all inline-flex items-center gap-2 shadow-lg shadow-[#a3e635]/25"
-          >
-            Get Started Free
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
+          <p className="font-mono text-[10px]" style={{ color: FAINT }}>
+            © {new Date().getFullYear()} LokFeel · Connection OS
+          </p>
+          <p className="font-mono text-[10px]" style={{ color: FAINT }}>
+            MCP 2025-06-18 · A2A · REST v1 · tenant-isolated
+          </p>
         </div>
       </div>
-    </section>
+    </footer>
   );
 }
 
-/* ─── MAIN LANDING PAGE ─────────────────────────────────────── */
-export default function LandingPage() {
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [signupOpen, setSignupOpen] = useState(false);
-  const router = useRouter();
+/* ─────────────────────────── 5. 产品面卡片 ─────────────────────────── */
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0;
-      setScrollProgress(progress);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
+function SurfaceCard({
+  tag,
+  title,
+  items,
+  primary = false,
+}: {
+  tag: string;
+  title: string;
+  items: string[];
+  primary?: boolean;
+}) {
+  const { ref, inView } = useInView<HTMLDivElement>();
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
-      {/* Skip Navigation — Accessibility */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#a3e635] focus:text-black focus:rounded-lg focus:text-sm focus:font-semibold"
-      >
-        Skip to main content
-      </a>
-
-      {/* Scroll Progress Bar — Lime */}
-      <div
-        className="fixed top-0 left-0 h-0.5 z-[9999] transition-[width] duration-150"
-        style={{
-          width: `${scrollProgress}%`,
-          background: "linear-gradient(90deg, #4c1d95, #a3e635)",
-        }}
-      />
-
-      {/* Video Background */}
-      <VideoBackground />
-
-      {/* Navbar */}
-      <Navbar onSignupClick={() => setSignupOpen(true)} onLoginClick={() => router.push("/login")} />
-
-      {/* Main Content */}
-      <main id="main-content" tabIndex={-1}>
-        <HeroSection onSignupClick={() => setSignupOpen(true)} />
-        <AboutSection />
-        <HowSection />
-        <CTASection onSignupClick={() => setSignupOpen(true)} />
-      </main>
-
-      {/* Footer */}
-      <Footer />
-
-      {/* Modal — unified Sign Up only */}
-      <QuickSignupModal
-        isOpen={signupOpen}
-        onClose={() => setSignupOpen(false)}
-      />
+    <div
+      ref={ref}
+      className="rounded-2xl border p-6 transition-all duration-500"
+      style={{
+        borderColor: primary ? "rgba(11,14,17,0.2)" : "rgba(11,14,17,0.12)",
+        background: primary ? "#ffffff" : "rgba(255,255,255,0.55)",
+        opacity: inView ? 1 : 0,
+        transform: inView ? "none" : "translateY(10px)",
+      }}
+    >
+      <span className="font-mono text-[9.5px] uppercase tracking-[0.18em]" style={{ color: SIGNAL }}>
+        {tag}
+      </span>
+      <h3 className="mt-2 font-display text-[18px] font-bold leading-snug">{title}</h3>
+      <ul className="mt-4 space-y-2">
+        {items.map((t) => (
+          <li key={t} className="flex gap-2 text-[13px] leading-relaxed" style={{ color: MUTED }}>
+            <span
+              className="mt-[7px] h-1 w-1 shrink-0 rounded-full"
+              style={{ background: "rgba(11,14,17,0.3)" }}
+              aria-hidden
+            />
+            {t}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
