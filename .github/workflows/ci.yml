@@ -138,6 +138,8 @@ jobs:
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             tail -c 8000 jest.log >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
+            msg=$(grep -m3 -E "error TS|Cannot find module|Cannot find name|●|FAIL " jest.log | tr "\n" " " | head -c 420)
+            echo "::error title=Jest failure::${msg}"
             exit 1
           fi
 
@@ -186,6 +188,8 @@ jobs:
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             tail -c 6000 build.log >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
+            msg=$(grep -m3 -E "error TS|Failed to compile|Module not found|Cannot find module|Error:" build.log | tr "\n" " " | head -c 420)
+            echo "::error title=Build failure::${msg}"
             exit 1
           fi
 
