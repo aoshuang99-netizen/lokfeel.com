@@ -51,6 +51,7 @@ C 没有一项拿第一，但**没有一项低于 4.0** —— 这正是"双世�
 npm run audit:ux13                                  # → screenshots/before/
 # 改版后
 node scripts/qa/v16-ux-audit.mjs --out=after --report=_audit-after.json
+# after 批次里的 ws-now-desktop.png 已更新到 fd24d6e（双世界 + 真实 0 计数）
 ```
 
 两批截图同为 1440×900 与 390×844，同一账号、同一条采集脚本 —— 差异只来自代码。

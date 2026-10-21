@@ -1,6 +1,6 @@
 # 15 · 最终验收报告（V16 · 2026-10-21）
 
-> 基线 `9ba9075` → 交付 `a336263`（生产 `app.lokfeel.com`，Netlify ready）
+> 基线 `9ba9075` → 交付 `fd24d6e`（生产 `app.lokfeel.com`，Netlify ready）
 > 结论：**5 PASS / 1 FAIL（单项性能指标）/ 2 BLOCKED（外部条件）**
 > 「FAIL」不修饰、不藏；「BLOCKED」写清解除条件。
 
