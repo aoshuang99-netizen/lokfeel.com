@@ -182,12 +182,12 @@ function HeroScene() {
             }}
           >
             <Image
-              src="/showcase/studio.png"
+              src="/showcase/studio.webp"
               alt="LokFeel Mission Studio — a goal compiled into a workspace canvas"
               width={1440}
               height={919}
               priority
-              // 🔴 不走 Next 图片优化器：这张 PNG 只有 228KB，放大到 1440w 再经
+              // 🔴 WebP（65KB，原 PNG 228KB）+ 不走 Next 图片优化器：
               // /_next/image 动态转码，冷启动实测反而把 LCP 拖到 7s。静态文件由
               // Netlify 边缘直出 + 长缓存，是这里最快的路径（`unoptimized` 只是跳过优化器，
               // 仍然受 `priority` 的 preload 待遇）。

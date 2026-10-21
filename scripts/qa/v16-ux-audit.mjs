@@ -29,14 +29,15 @@ import { createRequire } from 'node:module'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '../..')
-const OUT = path.join(ROOT, 'docs/v16/screenshots/before')
-const REPORT = path.join(ROOT, 'docs/v16/_audit-raw.json')
 
 const argv = process.argv.slice(2)
 const argOf = (k, d) => {
   const hit = argv.find((a) => a.startsWith(`--${k}=`))
   return hit ? hit.slice(k.length + 3) : d
 }
+// 输出目录可切：`--out=after` 采改版后的对照图，默认仍是改版前的 before。
+const OUT = path.join(ROOT, 'docs/v16/screenshots/' + argOf('out', 'before'))
+const REPORT = path.join(ROOT, 'docs/v16/' + argOf('report', '_audit-raw.json'))
 const BASE = argOf('base', 'https://app.lokfeel.com').replace(/\/$/, '')
 const DEVICE = argOf('only', 'both')
 
