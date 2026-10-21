@@ -56,6 +56,14 @@
 
 ## 2. 唯一剩余动作：填 4 个环境变量
 
+> **别手工粘。** 完整填写说明（含面板路径、事件清单、症状对照、回滚）见
+> **[`PAYMENT-CREDENTIALS-RUNBOOK.md`](./PAYMENT-CREDENTIALS-RUNBOOK.md)**。
+> 一条命令即可：`npm run payment:apply`（先 `-- --dry-run` 看计划）。
+> 它只需要 **2 把 key**：两个 `whsec_` 由 Stripe/Creem 的建端点接口现造现返回，
+> 脚本拿到后直接写进 Netlify 并触发部署，最后用下面 §4 的判据自己复验。
+> 端点的事件清单与 `api_version` 都从源码读（`route.ts` 的 `case` 与 `stripe/config.ts`），
+> 不靠记忆 —— 手工建端点最容易错的就是这两项，且错了**不会报错**。
+
 | 变量 | 作用 | 缺了会怎样 | 取哪里 |
 |---|---|---|---|
 | `CREEM_API_KEY` | 订阅结算（`/api/payments/creem/checkout`）+ 产品列表 | 订阅页显示「暂时不可用」，无法付费 | Creem Dashboard → API Keys（`creem_…`） |
@@ -94,7 +102,8 @@ npm run verify:payment:channel -- --probe
 npm run qa:refund:testmode -- sub_xxx
 
 # ⑤ 写进生产并重新部署（Netlify）
-#    Site settings → Environment variables → 逐个添加（scope: all）
+#    推荐：npm run payment:apply            ← 自动建 webhook + 写入 + 部署 + 复验
+#    手工：Site settings → Environment variables → 逐个添加（scope: all）
 #    或用 CLI：
 #    netlify env:set CREEM_API_KEY "creem_xxx" --site c46478e9-7ac8-4bcf-9052-7638b04fef83
 #    （4 个变量同理）→ 触发一次部署使新变量生效

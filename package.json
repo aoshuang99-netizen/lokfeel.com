@@ -100,6 +100,8 @@
     "qa:refund:testmode": "node scripts/qa/refund-testmode.mjs",
     "qa:refund:e2e": "node scripts/qa/refund-e2e.mjs",
     "verify:payment:channel": "node scripts/qa/verify-payment-channel.mjs",
+    "payment:apply": "node scripts/qa/payment-credentials-apply.mjs",
+    "verify:payment:apply": "node scripts/qa/payment-credentials-apply.mjs --self-test",
     "verify:payment:off": "node scripts/qa/verify-payment-off.mjs",
     "verify:redis:contract": "node scripts/qa/verify-redis-cache-contract.mjs",
     "verify:prod:session": "node scripts/qa/verify-prod-session.mjs",

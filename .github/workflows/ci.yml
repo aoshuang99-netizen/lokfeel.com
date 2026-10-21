@@ -492,6 +492,26 @@ jobs:
         run: node scripts/qa/launch-check.mjs --self-test
 
   # ─────────────────────────────────────────────────────────────
+  # 10a2. 支付凭据灌注脚本自证
+  #
+  #      本脚本会**真的写生产环境变量、真的建支付 webhook 端点、真的触发部署**，
+  #      所以它自己必须先被钉住：规则是否仍从源码读（而不是悄悄抄了一份）、
+  #      Stripe 端点是否带源码钉的 api_version、读回不一致是否判红、
+  #      test 凭据写生产是否被拦。全部走本地假服务端，不联网、不花钱。
+  # ─────────────────────────────────────────────────────────────
+  payment-apply-selftest:
+    name: 支付凭据灌注自证
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+      - name: 自证（25 条断言，含变异与反向对照）
+        run: node scripts/qa/payment-credentials-apply.mjs --self-test
+
+  # ─────────────────────────────────────────────────────────────
   # 10b. cron 方法一致性 —— 防「POST 打只导出 GET 的端点」这类静默失效
   #
   #      线上实证（2026-10-20）：netlify/functions/cron-runner.ts 曾统一 POST，
