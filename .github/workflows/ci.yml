@@ -131,7 +131,15 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npx prisma generate
-      - run: npm test -- --ci --reporters=default
+      - name: Jest
+        run: |
+          if ! npm test -- --ci --reporters=default > jest.log 2>&1; then
+            echo '## Jest 失败（日志尾部）' >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -c 8000 jest.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
       # 退款链路：真实 Stripe SDK + 真实 HTTP + 本地 Stripe 协议服务端。
       # 不需要任何密钥，所以能进 CI —— 防止「退款只在发布前手验过一次」。
@@ -168,7 +176,18 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npx prisma generate
-      - run: npm run build
+      # V17：失败时把日志尾部写进 step summary。
+      # 私有/受限 token 下 job logs 的 REST 端点需要 admin 权限（实测 403），
+      # 而 check-runs 的 output.summary 是公开可读的 —— 这是唯一稳定的取证通道。
+      - name: Build
+        run: |
+          if ! npm run build > build.log 2>&1; then
+            echo '## Build 失败（日志尾部）' >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -c 6000 build.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
   # ─────────────────────────────────────────────────────────────
   # 5. 迁移（AC-23 新增）—— **免任何凭据**
