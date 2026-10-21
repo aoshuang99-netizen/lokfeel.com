@@ -65,10 +65,15 @@ function subscribeTheme(cb: () => void) {
     themeListeners.delete(cb)
   }
 }
-function readThemeSnapshot(): LivingTheme {
+function readThemeSnapshot(dualDefault = false): LivingTheme {
   if (typeof window === 'undefined') return 'field'
   const saved = window.localStorage.getItem(THEME_KEY)
   if (saved === 'field' || saved === 'paper') return saved
+  // 🔴 双世界模式下默认必须是 Deep Field（深色画布 + 纸面 Inspector）—— 这是设计 C 的
+  //    品牌识别点。跟随系统偏好的兜底只留给**非**双世界页面；否则浅色系统的用户
+  //    第一次打开 /workspace 看到的是全纸面，双世界根本没出现（改版后截图实证）。
+  //    用户点过 Contrast 按钮后写进 localStorage，此后尊重用户选择。
+  if (dualDefault) return 'field'
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'paper' : 'field'
 }
 function writeTheme(next: LivingTheme) {
@@ -93,7 +98,8 @@ export default function LivingShell({
   stageRail,
 }: LivingShellProps) {
   // 服务端快照固定 'field' → 首屏与 SSR 一致，挂载后由 useSyncExternalStore 取真实值，不会 hydration 失配。
-  const theme = useSyncExternalStore(subscribeTheme, readThemeSnapshot, () => 'field' as LivingTheme)
+  const getTheme = useCallback(() => readThemeSnapshot(dualWorld), [dualWorld])
+  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'field' as LivingTheme)
   const [inspectorOpen, setInspectorOpen] = useState(true)
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false)
 

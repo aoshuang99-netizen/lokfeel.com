@@ -303,6 +303,14 @@ export default function LivingWorkspace() {
   const outcomes = useApiGet<ApiEnvelope<{ items: unknown[] }>>('/api/v1/outcomes')
 
   /**
+   * 服务端下发的真实能力集合。
+   * ⚠️ `GET /api/v1/org` 是 `{success, data}` 信封 —— 读错层级会得到一个**恒空**的集合，
+   *    而"全部禁用"看起来与"权限不足"一模一样，因而极难发现。
+   */
+  const orgOverview = org.data?.data ?? null
+  const capabilities = useMemo(() => new Set(orgOverview?.capabilities ?? []), [orgOverview])
+
+  /**
    * P2 剩余三项的真实来源。
    *
    * 三个 hook 内部完成"取数 + 纯函数装配"，并共享同一份结果给主视图与详情面板
@@ -311,9 +319,15 @@ export default function LivingWorkspace() {
    *
    * ⚠️ 三者都是 hook，必须在任何提前 return 之前调用（React 的调用顺序约束）。
    */
-  const consentData = useConsentGateData(consentIntentId, activeKey === 'consent')
-  const observatoryData = useOutcomeObservatoryData(activeKey === 'outcomes')
-  const agentData = useAgentBoardData(activeKey === 'agents')
+    // 🔴 三个租户域数据面**常开**（V16 截图实证）：阶段条在每一屏都要显示四段计数，
+  //  按屏开关会让非对应屏永远显示「未就绪」，轨道形同虚设。
+  //  三个 hook 内部都是"取数+装配一次，主视图与详情共用"，常开只增加首屏 3 个请求，
+  //  却省掉了每次切屏的重复取数。非成员的 403 由 Evidence Lens 如实展示，不额外处理。
+  const consentData = useConsentGateData(consentIntentId, true)
+    const observatoryData = useOutcomeObservatoryData(true)
+    // Agents 端点要求 agent.run（OPERATOR+）：MEMBER 常开会每屏吃一个 403，
+  // 所以这里用**已探测到的能力集**开关，而不是无脑常开。
+  const agentData = useAgentBoardData(capabilities.has('agent.run'))
   // T10：只有**切到跨社群子面板**才发这三个租户域请求（不在这一区就没必要打，非成员还会吃 403）。
   const bridgeData = useBridgePanelData(bridgeSelection, activeKey === 'consent' && consentTab === 'bridge')
 
@@ -324,14 +338,6 @@ export default function LivingWorkspace() {
     () => (notifications.data?.notifications ?? []).slice(0, 6),
     [notifications.data],
   )
-
-  /**
-   * 服务端下发的真实能力集合。
-   * ⚠️ `GET /api/v1/org` 是 `{success, data}` 信封 —— 读错层级会得到一个**恒空**的集合，
-   *    而"全部禁用"看起来与"权限不足"一模一样，因而极难发现。
-   */
-  const orgOverview = org.data?.data ?? null
-  const capabilities = useMemo(() => new Set(orgOverview?.capabilities ?? []), [orgOverview])
 
   // 拆出原始字段（而不是把 hook 返回的整个对象塞进依赖数组）：
   // `useApiGet` 每次渲染都返回**新对象**，直接依赖它会让 useMemo 每次都重算。
