@@ -158,6 +158,8 @@ GET https://app.lokfeel.com/api/health
 
 ## 9. 粘贴指令（复制这一段给模型）
 
+> 纯文本版（无 `>` 引用符，全选即粘）：`docs/implementation/GPT-PASTE-PROMPT.txt`
+
 > 你是资深 SaaS 上线顾问 + 支付架构师。附件是一份产品交接书，包含真实的技术与商业事实，以及 18 项未完成任务。
 >
 > 请按以下要求分析：
