@@ -38,7 +38,7 @@ export {
   type TenantSummary,
 } from './resolve'
 
-export { assertCapability, hasCapability, withTenant } from './guard'
+export { assertCapability, hasCapability, withTenant, withTenantAll, withTenantAny } from './guard'
 
 export {
   writeTenantAudit,

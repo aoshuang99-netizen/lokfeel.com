@@ -97,7 +97,6 @@ export {
   transitionMission,
   hardDeleteMission,
   joinMission,
-  withdrawFromMission,
   countParticipants,
   getSharePageData,
   type MissionDto,

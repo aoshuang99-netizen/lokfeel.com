@@ -512,6 +512,27 @@ jobs:
         run: node scripts/qa/payment-credentials-apply.mjs --self-test
 
   # ─────────────────────────────────────────────────────────────
+  # 10a-2. 租户作用域静态审计（V17 / WB17-01）
+  #
+  #       withTenant 只保证调用者属于某租户，不保证 SQL 带了租户谓词。
+  #       本 job 扫描多租户面上所有对 org 模型的查询，未登记的跨租户风险直接判红。
+  #       先跑自证（含 2 条变异 + 1 条反向对照），再对真实仓库 --strict。
+  # ─────────────────────────────────────────────────────────────
+  tenancy-scoping-gate:
+    name: 租户作用域审计（跨租户风险）
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+      - name: 自证（规则可证伪 + 变异对照）
+        run: node scripts/qa/tenant-scoping-audit.mjs --self-test
+      - name: 对真实仓库严格扫描
+        run: node scripts/qa/tenant-scoping-audit.mjs --strict
+
+  # ─────────────────────────────────────────────────────────────
   # 10b. cron 方法一致性 —— 防「POST 打只导出 GET 的端点」这类静默失效
   #
   #      线上实证（2026-10-20）：netlify/functions/cron-runner.ts 曾统一 POST，

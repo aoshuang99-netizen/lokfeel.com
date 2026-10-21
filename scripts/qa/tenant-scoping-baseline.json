@@ -1,0 +1,42 @@
+[
+  {
+    "file": "src/lib/bridges/optins.ts",
+    "model": "bridgeMemberOptIn",
+    "op": "update",
+    "reason": "复合唯一键 bridgeId_userId；bridgeId 来自 findBridgeRow(org, id)，当事方身份已在上一步校验。退出是收窄动作，不含跨租户放大。",
+    "reviewedAt": "2026-10-21",
+    "reviewer": "WB17-01"
+  },
+  {
+    "file": "src/lib/workflow/runtime.ts",
+    "model": "workflowJob",
+    "op": "updateMany",
+    "reason": "worker 锁回收（status=RUNNING 且 lockedBy=本 worker）。这是调度器的全局视角，天然跨租户；写入的只是锁字段，不触达业务数据，且 lockedBy=自身 id 保证不会改到别人的任务。",
+    "reviewedAt": "2026-10-21",
+    "reviewer": "WB17-01"
+  },
+  {
+    "file": "src/lib/workflow/workflow.ts",
+    "model": "introductionWorkflow",
+    "op": "findUnique",
+    "reason": "按 proposalId 查重（该列全局唯一，Prisma findUnique 无法追加非唯一谓词）。proposalId 由服务端在租户作用域内生成，创建时已写入 organizationId；此处只读主键用于幂等判定。",
+    "reviewedAt": "2026-10-21",
+    "reviewer": "WB17-01"
+  },
+  {
+    "file": "src/lib/billing/service.ts",
+    "model": "usageRecord",
+    "op": "createMany",
+    "reason": "data 变量 rows 的每个元素都显式带 organizationId（同函数第 209 行），扫描器只做了字面量匹配，看不到变量内容。",
+    "reviewedAt": "2026-10-21",
+    "reviewer": "WB17-01"
+  },
+  {
+    "file": "src/lib/billing/service.ts",
+    "model": "usageRecord",
+    "op": "create",
+    "reason": "同上：批量失败后逐行兜底，row 来自同一组带 organizationId 的对象。",
+    "reviewedAt": "2026-10-21",
+    "reviewer": "WB17-01"
+  }
+]
