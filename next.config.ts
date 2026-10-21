@@ -154,6 +154,15 @@ const nextConfig: NextConfig = {
         destination: '/dashboard/explore',
         permanent: true,
       },
+      // ─── 订阅付款页别名 ───
+      // 付款页是 public/pay.html 静态文件（大陆可直连）。/plans 等自然路径此前 404，
+      // 用户真的会这样输入；统一 302 到 canonical（CI 5151513 的 Duplicate identifier 教训：
+      // 本仓 grep 不可靠，改 next.config 前必须用 node 全文搜重名键）。
+      { source: '/plans', destination: '/pay.html', permanent: false },
+      { source: '/pricing', destination: '/pay.html', permanent: false },
+      { source: '/subscribe', destination: '/pay.html', permanent: false },
+      { source: '/membership', destination: '/pay.html', permanent: false },
+      { source: '/pass', destination: '/pay.html', permanent: false },
     ]
   },
 
@@ -174,17 +183,6 @@ const nextConfig: NextConfig = {
 
   // ─── Security ───
   poweredByHeader: false,
-
-  // ─── 订阅付款页别名 ───
-  // 付款页是 public/pay.html 的静态文件（大陆可直连）。/plans、/pricing、/subscribe
-  // 这类更自然的地址此前是 404 —— 用户真的会这样输入。统一 302 到 canonical。
-  async redirects() {
-    return ['/plans', '/pricing', '/subscribe', '/membership', '/pass'].map((source) => ({
-      source,
-      destination: '/pay.html',
-      permanent: false,
-    }));
-  },
 
   // ─── Headers for security + performance ───
   async headers() {
