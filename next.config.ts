@@ -175,6 +175,17 @@ const nextConfig: NextConfig = {
   // ─── Security ───
   poweredByHeader: false,
 
+  // ─── 订阅付款页别名 ───
+  // 付款页是 public/pay.html 的静态文件（大陆可直连）。/plans、/pricing、/subscribe
+  // 这类更自然的地址此前是 404 —— 用户真的会这样输入。统一 302 到 canonical。
+  async redirects() {
+    return ['/plans', '/pricing', '/subscribe', '/membership', '/pass'].map((source) => ({
+      source,
+      destination: '/pay.html',
+      permanent: false,
+    }));
+  },
+
   // ─── Headers for security + performance ───
   async headers() {
     return [
