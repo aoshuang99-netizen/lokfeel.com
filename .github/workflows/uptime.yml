@@ -1,0 +1,79 @@
+name: Uptime probe (production)
+
+# ─────────────────────────────────────────────────────────────────────────
+# V17 · WB17-05 —— 零成本存活告警
+#
+# 失败 = 本 job 红 = GitHub 给仓库 owner 发失败邮件。这是预算 ≈ 0 条件下
+# 唯一不需要新凭据、不需要第三方服务的告警通道。
+#
+# ⚠️ 三条必须知道的限制（详细取舍见 docs/implementation/v17/05_MONITORING_ALERTS.md）：
+#   1. **GitHub 的 schedule 是 best-effort**：高峰期可能延迟 5–15 分钟，
+#      极端情况会跳过某一轮。它适合"分钟级发现"，不适合"秒级 SLA"。
+#   2. **仓库连续 60 天无提交，GitHub 会自动停用定时 workflow**（会发通知）。
+#      每次发版都会有提交，所以实际不会触发；但长期不动的仓库必须记得手动 Run。
+#   3. 邮件是**异步**的。1 人项目没有 on-call，所以真正的兜底是
+#      "用户投诉 + 本 workflow 的红色记录"，不是"有人 5 分钟内被叫醒"。
+# ─────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    # 每 20 分钟。选 20 而不是 5：
+    #   · 一轮约 10–20 秒（含 4 个检查 + 冷启动重试）；
+    #   · 20 分钟粒度对"1 人项目"足够 —— 故障发现延迟的中位数约 10 分钟；
+    #   · 更密只会增加误报噪音，不会让你更快被叫醒（没有 on-call）。
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uptime-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Probe app.lokfeel.com
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      # 先自证"该红时会红"。没有这一步，一个恒绿的探针与"没有探针"等价。
+      - name: 探针自证（12 条：含 9 条变异 + 1 条负数对照）
+        run: node scripts/qa/uptime-probe.mjs --self-test
+
+      - name: 探测生产
+        id: probe
+        env:
+          UPTIME_BASE_URL: ${{ vars.UPTIME_BASE_URL || 'https://app.lokfeel.com' }}
+        run: |
+          set +e
+          node scripts/qa/uptime-probe.mjs --json > uptime.json 2> uptime.err
+          code=$?
+          node scripts/qa/uptime-probe.mjs 2>&1 | tee uptime.txt
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" -ne 0 ]; then
+            summary=$(node -e '
+              const r = JSON.parse(require("fs").readFileSync("uptime.json","utf8"));
+              const bad = r.results.filter(x => !x.passed)
+                .map(x => `${x.name}(HTTP ${x.status}): ${x.problems.join("; ")}`);
+              process.stdout.write(`目标 ${r.base} 不可用 → ${bad.join(" | ")}`.slice(0, 1400));
+            ' 2>/dev/null || echo "探针失败且无法解析 JSON（见 artifact）")
+            echo "::error title=生产不可用::${summary}"
+            exit 1
+          fi
+
+      - name: 上传探测结果
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: uptime-probe
+          path: |
+            uptime.json
+            uptime.txt
+          if-no-files-found: ignore
+          retention-days: 14

@@ -173,7 +173,9 @@
     "verify:turn:candidate": "node scripts/qa/verify-turn-candidate.mjs",
     "verify:turn:prod": "node scripts/qa/verify-turn-prod.mjs",
     "verify:ui-invariants": "node scripts/qa/verify-ui-invariants-mutation.mjs",
-    "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs"
+    "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs",
+    "probe:uptime": "node scripts/qa/uptime-probe.mjs",
+    "verify:uptime": "node scripts/qa/uptime-probe.mjs --self-test"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
