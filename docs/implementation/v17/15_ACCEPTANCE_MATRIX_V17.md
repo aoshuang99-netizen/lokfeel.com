@@ -3,7 +3,7 @@
 **基线**：`f8dd997`（2026-10-21）
 **CI**：`f8dd997` 上 **15 成功 / 2 跳过 / 0 失败**（共 17 项）（跳过的是「DCO sign-off」与「Perf 基线实跑（手动）」）
 **生产**：`dc102cd ready`（本轮全部提交带 `[skip netlify]`，未触发重新部署）
-**文档范围**：`00`–`09` 已产出；`10` **未产出**（见 §4）。每条判定的可复跑命令见 `07_EVIDENCE_LENS.md`（由 `npm run check:evidence` 双向对齐，缺一条即 CI 红）
+**文档范围**：`00`–`10` 全部产出。每条判定的可复跑命令见 `07_EVIDENCE_LENS.md`（由 `npm run check:evidence` 双向对齐，缺一条即 CI 红）
 
 ---
 
@@ -165,6 +165,7 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 | 无真实交易 | PAY-02 / PAY-08 / PAY-10 全部 BLOCKED |
 | 退款窗口冲突未决 | 7 天 vs 14 天同时在线，且缺法律意见 |
 | 大陆支付通道未定 | Gumroad 不可达；备用通道（Creem/Stripe）大陆可用性未验证 |
+| **对外有两套互不相干的价格** | 代码 `plans.ts`：$19.99/月 · $149.99/年（省 37%）；公开 `pay.html`：$12.99/月 · $99.99/年 · $32.99/季。**代码里的价格用户看不到，页面上的价格代码里没有** ⇒「改价」是两个互不同步的动作。已登记 3 条偏差，第 4 个未登记价格会被 `check:pricing` 判红（`10` §1） |
 
 **结论**：**现在收钱会在第一次真实扣款或第一次真实退款时暴露问题**。
 尤其注意 PAY-02/PAY-10 的失效形态：首月扣款成功、次月静默丢失（已修代码，
@@ -184,19 +185,20 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 
 ---
 
-## 4. 未产出的文档（10）
+## 4. 文档产出情况（00–10 全部产出）
 
-按 V17 的 12 个任务包，`07`/`08`/`09` 已产出，`10` **尚未产出**。它们对应的验收条目在本表里的状态：
+V17 的 12 个任务包对应的 11 份文档已全部落盘。**这不等于对应的验收条目都通过了** ——
+下表最后一列是各文档对判定的实际影响：
 
-| 文档 | 主题 | 对应条目 | 状态 |
+| 文档 | 主题 | 对应条目 | 产出后判定有变吗 |
 |---|---|---|---|
-| `07_EVIDENCE_LENS.md` | 证据透镜（每个结论指向可复跑的判据） | 无独立条目；是横切要求 | **已产出**（42 行；双向对齐由 `npm run check:evidence` 强制） |
-| `08_PERF_MOBILE_PAY.md` | LCP + 移动端支付 | UX-08（部分） | **已产出**（3 公开页 × 3 轮真机档位实测；十三屏仍 BLOCKED） |
-| `09_CUSTOMER_PLAYBOOK.md` | 真实客户 playbook | BIZ-04 | **已产出**（9 步 + 5 剧本 + 6 地雷；15 项演练状态里 **0 项真跑过**，BIZ-04 仍 BLOCKED） |
-| `10_PRICING_VALIDATION.md` | 定价验证 | BIZ-01（部分） | 未产出 |
+| `07_EVIDENCE_LENS.md` | 证据透镜 | 横切要求 | 无（但 42 条判定从此可被机器对齐） |
+| `08_PERF_MOBILE_PAY.md` | LCP + 移动端支付 | UX-08（部分） | **无**：UX-08 仍 BLOCKED（十三屏需登录） |
+| `09_CUSTOMER_PLAYBOOK.md` | 真实客户 playbook | BIZ-04 | **无**：BIZ-04 仍 BLOCKED（0 客户） |
+| `10_PRICING_VALIDATION.md` | 定价验证 | BIZ-01（部分） | **无**：BIZ-01 仍 BLOCKED（缺凭据 + 大陆不可达） |
 
-**不假装它们已经做完。** `09` 的产出形式就是"把 15 项没做过逐条摆出来"——
-写一份 playbook 不等于跑通一次客户旅程，`BIZ-04` 一条都没被它解锁。
+**写文档不解锁判定。** 这三份对判定的影响都是 0 —— 它们的价值在于
+把"没验的部分"写成可执行的东西，而不是把"没验"变成"验过"。
 
 ---
 
@@ -270,6 +272,8 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 | `07_EVIDENCE_LENS.md` | 42 行证据透镜 + 11 种假绿形态 + 本轮复跑录 |
 | `08_PERF_MOBILE_PAY.md` | 移动端 4G 首屏实测（LCP/TTFB/CLS/JS）+ 触控目标 + 付款页身份断裂 |
 | `09_CUSTOMER_PLAYBOOK.md` | 9 步客户旅程 + 5 个失败剧本 + 6 个地雷 + 一页话术 + 15 项演练状态 |
+| `10_PRICING_VALIDATION.md` | 两套价格体系对照 + 算术审计 + 敏感性表 + 样本量估算 |
+| `11_FINAL_REPORT.md` | 最终验收报告：12 包交付表 + 9 条硬约束自查 + 8 个真缺陷 + 解除顺序 |
 | `15_ACCEPTANCE_MATRIX_V17.md` | 本文件 |
 
 代码侧新增（均已进 CI）：
@@ -278,6 +282,7 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 - `scripts/qa/uptime-probe.mjs`（+ `probe:uptime` / `verify:uptime` / `uptime.yml`）
 - `scripts/qa/verify-evidence-lens.mjs`（+ `check:evidence` / `verify:check:evidence`）
 - `scripts/perf/measure-vitals.mjs`（+ `perf:vitals` / `verify:perf:vitals`）
+- `scripts/qa/verify-pricing-consistency.mjs`（+ `check:pricing` / `verify:check:pricing`）
 - `scripts/check-ui-invariants.mjs` 新增 **R11**（动效四档 + 系统级降级），
   变异自证 +2 变异 1 负向对照
 - `src/lib/payments/creem-events.ts`（+ 36 条单测）

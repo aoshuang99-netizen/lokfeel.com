@@ -170,6 +170,16 @@ jobs:
       - name: 证据透镜（矩阵 ↔ 透镜 双向对齐）
         run: node scripts/qa/verify-evidence-lens.mjs
 
+      # 定价一致性（WB17-10）：折扣文案算术自洽 + 对外价格必须可溯源到 plans.ts。
+      # 为什么值得进 CI：现在存在**两套互不相干的价格**（代码 $19.99/149.99 vs
+      # 公开页 $12.99/99.99/32.99）。已登记的 3 条照常放行，**新增**第 4 个
+      # 未登记价格则判红 —— 否则"改价漏一处"永远是事后才发现。
+      - name: 定价一致性自证（变异）
+        run: node scripts/qa/verify-pricing-consistency.mjs --self-test
+
+      - name: 定价一致性（算术 + 可溯源）
+        run: node scripts/qa/verify-pricing-consistency.mjs
+
       # 退款链路：真实 Stripe SDK + 真实 HTTP + 本地 Stripe 协议服务端。
       # 不需要任何密钥，所以能进 CI —— 防止「退款只在发布前手验过一次」。
       - name: 退款链路协议层端到端
