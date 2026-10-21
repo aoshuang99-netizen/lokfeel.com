@@ -1,0 +1,688 @@
+{
+  "measuredAt": "2026-10-21T09:07:51.825Z",
+  "profile": "mobile-4g-4xcpu",
+  "runs": 3,
+  "budget": {
+    "lcp": {
+      "good": 2500,
+      "poor": 4000
+    },
+    "cls": {
+      "good": 0.1,
+      "poor": 0.25
+    },
+    "ttfb": {
+      "good": 800,
+      "poor": 1800
+    },
+    "jsKB": {
+      "good": 300,
+      "poor": 600
+    }
+  },
+  "pages": [
+    {
+      "url": "https://app.lokfeel.com/",
+      "verdict": "WARN",
+      "grades": {
+        "lcp": "WARN",
+        "cls": "PASS",
+        "ttfb": "WARN",
+        "jsKB": "PASS"
+      },
+      "lcp": 3388,
+      "cls": 0.0008998346501996466,
+      "ttfb": 1435.4000000059605,
+      "jsKB": 267.3564453125,
+      "transferKB": 433.021484375,
+      "coldStart": {
+        "url": "https://app.lokfeel.com/",
+        "status": 200,
+        "wallMs": 9881,
+        "ttfb": 3895,
+        "domContentLoaded": 6765.799999982119,
+        "loadEvent": 8447,
+        "lcp": 6284,
+        "lcpEl": "H1",
+        "lcpUrl": null,
+        "fcp": 6284,
+        "cls": 0.0008998346501996466,
+        "clsShifts": 1,
+        "transferBytes": 442291,
+        "jsBytes": 273547,
+        "imgBytes": 0,
+        "fontBytes": 58068,
+        "resources": 20,
+        "docHeight": 6467,
+        "viewportWidth": 390,
+        "overflowX": 0,
+        "title": "LokFeel — Connection OS for AI-native teams",
+        "tap": {
+          "total": 18,
+          "violations": 13,
+          "worst": [
+            {
+              "tag": "a",
+              "text": "Log in",
+              "w": 35,
+              "h": 16
+            },
+            {
+              "tag": "a",
+              "text": "Console",
+              "w": 46,
+              "h": 16
+            },
+            {
+              "tag": "a",
+              "text": "Agent card",
+              "w": 64,
+              "h": 16
+            },
+            {
+              "tag": "a",
+              "text": "SDK examples",
+              "w": 83,
+              "h": 16
+            },
+            {
+              "tag": "a",
+              "text": "Create account",
+              "w": 89,
+              "h": 16
+            }
+          ]
+        }
+      },
+      "samples": [
+        {
+          "url": "https://app.lokfeel.com/",
+          "status": 200,
+          "wallMs": 9881,
+          "ttfb": 3895,
+          "domContentLoaded": 6765.799999982119,
+          "loadEvent": 8447,
+          "lcp": 6284,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 6284,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 442291,
+          "jsBytes": 273547,
+          "imgBytes": 0,
+          "fontBytes": 58068,
+          "resources": 20,
+          "docHeight": 6467,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "LokFeel — Connection OS for AI-native teams",
+          "tap": {
+            "total": 18,
+            "violations": 13,
+            "worst": [
+              {
+                "tag": "a",
+                "text": "Log in",
+                "w": 35,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Console",
+                "w": 46,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Agent card",
+                "w": 64,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "SDK examples",
+                "w": 83,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Create account",
+                "w": 89,
+                "h": 16
+              }
+            ]
+          }
+        },
+        {
+          "url": "https://app.lokfeel.com/",
+          "status": 200,
+          "wallMs": 15922,
+          "ttfb": 1380.800000011921,
+          "domContentLoaded": 3461.100000023842,
+          "loadEvent": 5511.800000011921,
+          "lcp": 3388,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 3388,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 447122,
+          "jsBytes": 273773,
+          "imgBytes": 0,
+          "fontBytes": 58068,
+          "resources": 24,
+          "docHeight": 6467,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "LokFeel — Connection OS for AI-native teams",
+          "tap": {
+            "total": 18,
+            "violations": 13,
+            "worst": [
+              {
+                "tag": "a",
+                "text": "Log in",
+                "w": 35,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Console",
+                "w": 46,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Agent card",
+                "w": 64,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "SDK examples",
+                "w": 83,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Create account",
+                "w": 89,
+                "h": 16
+              }
+            ]
+          }
+        },
+        {
+          "url": "https://app.lokfeel.com/",
+          "status": 200,
+          "wallMs": 7102,
+          "ttfb": 1435.4000000059605,
+          "domContentLoaded": 3345,
+          "loadEvent": 5755.200000017881,
+          "lcp": 3008,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 3008,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 443414,
+          "jsBytes": 273773,
+          "imgBytes": 0,
+          "fontBytes": 58068,
+          "resources": 22,
+          "docHeight": 6467,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "LokFeel — Connection OS for AI-native teams",
+          "tap": {
+            "total": 18,
+            "violations": 13,
+            "worst": [
+              {
+                "tag": "a",
+                "text": "Log in",
+                "w": 35,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Console",
+                "w": 46,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Agent card",
+                "w": 64,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "SDK examples",
+                "w": 83,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Create account",
+                "w": 89,
+                "h": 16
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://app.lokfeel.com/pay.html",
+      "verdict": "WARN",
+      "grades": {
+        "lcp": "PASS",
+        "cls": "PASS",
+        "ttfb": "WARN",
+        "jsKB": "PASS"
+      },
+      "lcp": 1884,
+      "cls": 0.0008998346501996466,
+      "ttfb": 1290.199999988079,
+      "jsKB": 10.732421875,
+      "transferKB": 14.44140625,
+      "coldStart": {
+        "url": "https://app.lokfeel.com/pay.html",
+        "status": 200,
+        "wallMs": 6269,
+        "ttfb": 1892.0999999940395,
+        "domContentLoaded": 4154.4000000059605,
+        "loadEvent": 4167.200000017881,
+        "lcp": 2584,
+        "lcpEl": "H1",
+        "lcpUrl": null,
+        "fcp": 2584,
+        "cls": 0.0008998346501996466,
+        "clsShifts": 1,
+        "transferBytes": 14792,
+        "jsBytes": 10994,
+        "imgBytes": 0,
+        "fontBytes": 0,
+        "resources": 3,
+        "docHeight": 2253,
+        "viewportWidth": 390,
+        "overflowX": 0,
+        "title": "Hlua Pass — Choose your plan",
+        "tap": {
+          "total": 6,
+          "violations": 1,
+          "worst": [
+            {
+              "tag": "a",
+              "text": "Apply to yearly →",
+              "w": 117,
+              "h": 17
+            }
+          ]
+        }
+      },
+      "samples": [
+        {
+          "url": "https://app.lokfeel.com/pay.html",
+          "status": 200,
+          "wallMs": 6269,
+          "ttfb": 1892.0999999940395,
+          "domContentLoaded": 4154.4000000059605,
+          "loadEvent": 4167.200000017881,
+          "lcp": 2584,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 2584,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 14792,
+          "jsBytes": 10994,
+          "imgBytes": 0,
+          "fontBytes": 0,
+          "resources": 3,
+          "docHeight": 2253,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "Hlua Pass — Choose your plan",
+          "tap": {
+            "total": 6,
+            "violations": 1,
+            "worst": [
+              {
+                "tag": "a",
+                "text": "Apply to yearly →",
+                "w": 117,
+                "h": 17
+              }
+            ]
+          }
+        },
+        {
+          "url": "https://app.lokfeel.com/pay.html",
+          "status": 200,
+          "wallMs": 4683,
+          "ttfb": 1043.5999999940395,
+          "domContentLoaded": 2645.5,
+          "loadEvent": 2651,
+          "lcp": 1772,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 1772,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 14788,
+          "jsBytes": 10990,
+          "imgBytes": 0,
+          "fontBytes": 0,
+          "resources": 3,
+          "docHeight": 2253,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "Hlua Pass — Choose your plan",
+          "tap": {
+            "total": 6,
+            "violations": 1,
+            "worst": [
+              {
+                "tag": "a",
+                "text": "Apply to yearly →",
+                "w": 117,
+                "h": 17
+              }
+            ]
+          }
+        },
+        {
+          "url": "https://app.lokfeel.com/pay.html",
+          "status": 200,
+          "wallMs": 6994,
+          "ttfb": 1290.199999988079,
+          "domContentLoaded": 4993.5,
+          "loadEvent": 4995.699999988079,
+          "lcp": 1884,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 1884,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 14692,
+          "jsBytes": 10894,
+          "imgBytes": 0,
+          "fontBytes": 0,
+          "resources": 3,
+          "docHeight": 2253,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "Hlua Pass — Choose your plan",
+          "tap": {
+            "total": 6,
+            "violations": 1,
+            "worst": [
+              {
+                "tag": "a",
+                "text": "Apply to yearly →",
+                "w": 117,
+                "h": 17
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://app.lokfeel.com/login",
+      "verdict": "WARN",
+      "grades": {
+        "lcp": "WARN",
+        "cls": "PASS",
+        "ttfb": "WARN",
+        "jsKB": "PASS"
+      },
+      "lcp": 2992,
+      "cls": 0.0008998346501996466,
+      "ttfb": 1482.800000011921,
+      "jsKB": 290.9794921875,
+      "transferKB": 752.8779296875,
+      "coldStart": {
+        "url": "https://app.lokfeel.com/login",
+        "status": 200,
+        "wallMs": 14876,
+        "ttfb": 2055.699999988079,
+        "domContentLoaded": 4103.5999999940395,
+        "loadEvent": 7308.799999982119,
+        "lcp": 3740,
+        "lcpEl": "H1",
+        "lcpUrl": null,
+        "fcp": 3496,
+        "cls": 0.0008998346501996466,
+        "clsShifts": 1,
+        "transferBytes": 770947,
+        "jsBytes": 297963,
+        "imgBytes": 0,
+        "fontBytes": 58068,
+        "resources": 47,
+        "docHeight": 1578,
+        "viewportWidth": 390,
+        "overflowX": 0,
+        "title": "LokFeel — Connection OS for AI-native teams",
+        "tap": {
+          "total": 31,
+          "violations": 26,
+          "worst": [
+            {
+              "tag": "input",
+              "text": "",
+              "w": 16,
+              "h": 16
+            },
+            {
+              "tag": "a",
+              "text": "FAQ",
+              "w": 26,
+              "h": 16
+            },
+            {
+              "tag": "a",
+              "text": "Blog",
+              "w": 26,
+              "h": 16
+            },
+            {
+              "tag": "a",
+              "text": "Press",
+              "w": 31,
+              "h": 16
+            },
+            {
+              "tag": "a",
+              "text": "DMCA",
+              "w": 38,
+              "h": 16
+            }
+          ]
+        }
+      },
+      "samples": [
+        {
+          "url": "https://app.lokfeel.com/login",
+          "status": 200,
+          "wallMs": 14876,
+          "ttfb": 2055.699999988079,
+          "domContentLoaded": 4103.5999999940395,
+          "loadEvent": 7308.799999982119,
+          "lcp": 3740,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 3496,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 770947,
+          "jsBytes": 297963,
+          "imgBytes": 0,
+          "fontBytes": 58068,
+          "resources": 47,
+          "docHeight": 1578,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "LokFeel — Connection OS for AI-native teams",
+          "tap": {
+            "total": 31,
+            "violations": 26,
+            "worst": [
+              {
+                "tag": "input",
+                "text": "",
+                "w": 16,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "FAQ",
+                "w": 26,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Blog",
+                "w": 26,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Press",
+                "w": 31,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "DMCA",
+                "w": 38,
+                "h": 16
+              }
+            ]
+          }
+        },
+        {
+          "url": "https://app.lokfeel.com/login",
+          "status": 200,
+          "wallMs": 12464,
+          "ttfb": 1370.699999988079,
+          "domContentLoaded": 3190.7999999821186,
+          "loadEvent": 7786.699999988079,
+          "lcp": 2992,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 2992,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 472926,
+          "jsBytes": 298062,
+          "imgBytes": 0,
+          "fontBytes": 58068,
+          "resources": 46,
+          "docHeight": 1578,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "LokFeel — Connection OS for AI-native teams",
+          "tap": {
+            "total": 31,
+            "violations": 26,
+            "worst": [
+              {
+                "tag": "input",
+                "text": "",
+                "w": 16,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "FAQ",
+                "w": 26,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Blog",
+                "w": 26,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Press",
+                "w": 31,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "DMCA",
+                "w": 38,
+                "h": 16
+              }
+            ]
+          }
+        },
+        {
+          "url": "https://app.lokfeel.com/login",
+          "status": 200,
+          "wallMs": 12564,
+          "ttfb": 1482.800000011921,
+          "domContentLoaded": 3366.100000023842,
+          "loadEvent": 7400.4000000059605,
+          "lcp": 2708,
+          "lcpEl": "H1",
+          "lcpUrl": null,
+          "fcp": 2708,
+          "cls": 0.0008998346501996466,
+          "clsShifts": 1,
+          "transferBytes": 942283,
+          "jsBytes": 240088,
+          "imgBytes": 0,
+          "fontBytes": 58068,
+          "resources": 45,
+          "docHeight": 1578,
+          "viewportWidth": 390,
+          "overflowX": 0,
+          "title": "LokFeel — Connection OS for AI-native teams",
+          "tap": {
+            "total": 31,
+            "violations": 26,
+            "worst": [
+              {
+                "tag": "input",
+                "text": "",
+                "w": 16,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "FAQ",
+                "w": 26,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Blog",
+                "w": 26,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "Press",
+                "w": 31,
+                "h": 16
+              },
+              {
+                "tag": "a",
+                "text": "DMCA",
+                "w": 38,
+                "h": 16
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

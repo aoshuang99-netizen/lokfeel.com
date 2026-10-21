@@ -3,7 +3,7 @@
 **基线**：`f8dd997`（2026-10-21）
 **CI**：`f8dd997` 上 **15 成功 / 2 跳过 / 0 失败**（共 17 项）（跳过的是「DCO sign-off」与「Perf 基线实跑（手动）」）
 **生产**：`dc102cd ready`（本轮全部提交带 `[skip netlify]`，未触发重新部署）
-**文档范围**：`00`–`07` 已产出；`08`–`10` **未产出**（见 §4）。每条判定的可复跑命令见 `07_EVIDENCE_LENS.md`（由 `npm run check:evidence` 双向对齐，缺一条即 CI 红）
+**文档范围**：`00`–`08` 已产出；`09`–`10` **未产出**（见 §4）。每条判定的可复跑命令见 `07_EVIDENCE_LENS.md`（由 `npm run check:evidence` 双向对齐，缺一条即 CI 红）
 
 ---
 
@@ -94,7 +94,7 @@ V17 原文写「40 项」。按五组编号展开实为 **42 项**（8 + 10 + 12
 | UX-05 | 文本对比度达 WCAG AA | **PASS** | 代码 | 5 板块 × 15 组全达标 |
 | UX-06 | 双世界切换不产生死色 | **PASS** | 代码 | 令牌作用域，对比度门禁覆盖两个世界 |
 | UX-07 | `prefers-reduced-motion` 降级 | **PASS** | 代码 | R11（新）：四档 `[data-lf-motion='0'/'1'/'3']` 存在且 L3 > L1 > 0、默认档落在 L1 与 L3 之间、`@media (prefers-reduced-motion: reduce)` 至少一处把 `--lf-dur*` 清零；2 条变异（删媒体查询 / 把 L3 调成 L1）均被捕获。⚠️ 浏览器实测（`audit:release`）仍需生产账号 ⇒ 本条的 PASS 只是"机制存在" |
-| UX-08 | 移动端（<1024px）不溢出可操作 | **BLOCKED** | — | 有 Dock 退化与 `min-w-0`，**未在真浏览器验证** |
+| UX-08 | 移动端（<1024px）不溢出可操作 | **BLOCKED** | 生产 | **部分证据**（`08`）：3 个公开页在 390×844 + 4G + 4×CPU 下 `overflowX = 0`（无横向溢出），但触控目标 13/18、26/31 低于 24px；**十三屏需登录 ⇒ 仍未验** |
 | UX-09 | 界面与契约不脱节（枚举漂移） | **PASS** | 代码 | `verify:workspace-drift` 变异自证；本轮已修"从未进 CI" |
 | UX-10 | 不把假数据/示例当真实数据 | **PASS** | 代码 | R5 无假数据标识、R6 agent 节点必须有源 |
 | UX-11 | 空态告诉用户下一步做什么 | **BLOCKED** | — | 有 `emptyText`，未逐屏实测 |
@@ -178,22 +178,23 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 | 无业务指标 | OPS-05 BLOCKED |
 | 回滚未演练 | OPS-08 BLOCKED |
 | 法律主体未定 | BIZ-03 BLOCKED |
-| 冷启动 13 秒 | 首次访问者首屏 13s，需付费升级或预热 |
+| 冷启动 13 秒 | 首次访问者首屏 13s，需付费升级或预热。`08` 实测：移动端 4G 下**首访 LCP 6284ms**、暖机 3388ms（均超 CWV 的 2500ms） |
+| 付款页卖的是另一个产品 | `/pricing` → 307 → `/pay.html`，标题是 "Hlua Pass"，权益写"streaming / H-Points"，全部 CTA 指向 Gumroad —— 收钱这一步产品身份断裂（`08` §5.1） |
 
 ---
 
-## 4. 未产出的文档（08–10）
+## 4. 未产出的文档（09–10）
 
-按 V17 的 12 个任务包，`07` 已产出，以下三份**尚未产出**。它们对应的验收条目在本表里的状态：
+按 V17 的 12 个任务包，`07` 与 `08` 已产出，以下两份**尚未产出**。它们对应的验收条目在本表里的状态：
 
 | 文档 | 主题 | 对应条目 | 状态 |
 |---|---|---|---|
 | `07_EVIDENCE_LENS.md` | 证据透镜（每个结论指向可复跑的判据） | 无独立条目；是横切要求 | **已产出**（42 行；双向对齐由 `npm run check:evidence` 强制） |
-| `08_PERF_MOBILE_PAY.md` | LCP + 移动端支付 | UX-08（部分） | 未产出 |
+| `08_PERF_MOBILE_PAY.md` | LCP + 移动端支付 | UX-08（部分） | **已产出**（3 公开页 × 3 轮真机档位实测；十三屏仍 BLOCKED） |
 | `09_CUSTOMER_PLAYBOOK.md` | 真实客户 playbook | BIZ-04 | 未产出（且 BIZ-04 本身 BLOCKED） |
 | `10_PRICING_VALIDATION.md` | 定价验证 | BIZ-01（部分） | 未产出 |
 
-**不假装它们已经做完。** 本表的 42 项里，凡是依赖这三份文档的条目都已按 BLOCKED 处理，
+**不假装它们已经做完。** 本表的 42 项里，凡是依赖 `09`/`10` 的条目都已按 BLOCKED 处理，
 没有一条被"提前记成 PASS"。
 
 ---
@@ -266,6 +267,7 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 | `05_MONITORING_ALERTS.md` | 存活探针 + 告警通道 + 8 类症状 Runbook |
 | `06_UX_THIRTEEN_SCREENS.md` | 十三屏清单 + UX-01~12 判定 + 两个真 UX 问题 |
 | `07_EVIDENCE_LENS.md` | 42 行证据透镜 + 11 种假绿形态 + 本轮复跑录 |
+| `08_PERF_MOBILE_PAY.md` | 移动端 4G 首屏实测（LCP/TTFB/CLS/JS）+ 触控目标 + 付款页身份断裂 |
 | `15_ACCEPTANCE_MATRIX_V17.md` | 本文件 |
 
 代码侧新增（均已进 CI）：
@@ -273,6 +275,7 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 - `scripts/qa/tenant-scoping-audit.mjs`（+ `audit:tenancy`）
 - `scripts/qa/uptime-probe.mjs`（+ `probe:uptime` / `verify:uptime` / `uptime.yml`）
 - `scripts/qa/verify-evidence-lens.mjs`（+ `check:evidence` / `verify:check:evidence`）
+- `scripts/perf/measure-vitals.mjs`（+ `perf:vitals` / `verify:perf:vitals`）
 - `scripts/check-ui-invariants.mjs` 新增 **R11**（动效四档 + 系统级降级），
   变异自证 +2 变异 1 负向对照
 - `src/lib/payments/creem-events.ts`（+ 36 条单测）

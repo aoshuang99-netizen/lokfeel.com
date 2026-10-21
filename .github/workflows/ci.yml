@@ -377,6 +377,13 @@ jobs:
       - name: 浏览器冒烟
         run: npx playwright test --config=playwright.ci.config.ts
 
+      # 首屏指标采集器自证（WB17-08）。只跑自证，**不测生产**：
+      # 生产指标受跨境链路与共享 runner 抖动影响，塞进 push 门禁会退化成恒红。
+      # 自证本身是离线的（本地起两个页面：一个快、一个服务端延迟 3.6s），
+      # 证明的是「检测器有牙齿且不是恒红」，不是「今天生产多快」。
+      - name: 首屏指标采集器自证（变异）
+        run: node scripts/perf/measure-vitals.mjs --self-test
+
       - name: 失败时打印服务端日志
         if: failure()
         run: tail -200 "$RUNNER_TEMP/next-start.log" || true
