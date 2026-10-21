@@ -79,7 +79,7 @@ export default function ConsoleShell({
     href === '/console' ? pathname === '/console' : pathname.startsWith(href)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div data-lf-console className="min-h-screen bg-background">
       {/* ── 顶部上下文：这是哪个社群 + 唯一的跨态出口 ── */}
       <header className="sticky top-0 z-20 border-b border-card-border bg-background-secondary/95 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">

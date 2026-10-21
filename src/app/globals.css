@@ -1830,6 +1830,19 @@ img {
   color-scheme: light;
 }
 
+/* ── 触控目标：粗指针（手机/平板）下一律 ≥44×44 ──────────────────
+   WCAG 2.2 的 2.5.8 只要求 24×24（AA），44×44 是 AAA（2.5.5），也是 V16 任务书 §14
+   的对齐目标。桌面（pointer: fine）保持紧凑密度，所以这里**只**在窄视口生效：
+   把 44px 强加给鼠标用户会让 13 屏的表格与筛选条全部变胖，属于过度矫正。
+
+   🔴 用 `:where()` 是为了 0 特异性：任何显式写了 h-* 的组件仍然可以自己决定高度。 */
+@media (max-width: 1023px) {
+  [data-lf-theme] :where(button, select, input:not([type=hidden]), textarea, [role=button]):not([data-lf-compact]),
+  [data-lf-console] :where(button, select, input:not([type=hidden])):not([data-lf-compact]) {
+    min-height: 44px;
+  }
+}
+
 /* ── 动效档位：L0 静态 / L1 微动效 / L2 空间（默认）/ L3 沉浸 ── */
 [data-lf-motion='0'] {
   --lf-dur-fast: 0ms;
