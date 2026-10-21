@@ -519,13 +519,15 @@ export async function joinMission(
   }
 }
 
-/** 退出（本人撤销）。幂等：未加入时也返回成功（不制造"失败"噪音）。 */
-export async function withdrawFromMission(userId: string, missionId: string): Promise<void> {
-  await db.missionParticipation.updateMany({
-    where: { missionId, userId, status: 'INTERESTED' },
-    data: { status: 'WITHDRAWN' },
-  })
-}
+/**
+ * ⚠️ V17（WB17-01）删除：原 `withdrawFromMission(userId, missionId)` 是一个**没有租户谓词**
+ * 的写入口（`updateMany({ where: { missionId, userId } })`）。它能跨组织改到自己遗留的
+ * 参与记录，且全仓**零调用点** —— 也就是说它只是一条随时可能被误用的"后门 API"。
+ *
+ * 现在撤回转由已校验 mission 归属的路径处理（见 `withdrawIntentByShareToken` /
+ * mission 路由内的 scoped 更新）。若将来确需此能力，必须签名为
+ * `(userId, missionId, organizationId)` 且 `where` 里带 `organizationId`。
+ */
 
 // ═══════════════════════════════════════════════════════════
 // 公开面（匿名可达）—— 唯一出口

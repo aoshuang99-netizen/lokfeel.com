@@ -626,12 +626,14 @@ export async function getMyIntentByShareToken(
 ): Promise<{ missionId: string; missionOpen: boolean; myIntent: IntentDto | null } | null> {
   const mission = await db.mission.findUnique({
     where: { shareToken },
-    select: { id: true, status: true, expiresAt: true },
+    // V17（WB17-01）：把 organizationId 一起取出来，供下一条查询做租户谓词。
+    // 分享令牌只是"能看见这个 mission"，**不是**"能看见这个租户的任何意图"。
+    select: { id: true, status: true, expiresAt: true, organizationId: true },
   })
   if (!mission || mission.status === 'DRAFT') return null
 
   const row = (await db.socialIntent.findFirst({
-    where: { missionId: mission.id, userId },
+    where: { missionId: mission.id, userId, organizationId: mission.organizationId },
     select: INTENT_SELECT,
   })) as IntentRow | null
 

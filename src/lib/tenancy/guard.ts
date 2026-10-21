@@ -40,17 +40,32 @@ type TenantHandler = (
 ) => Promise<NextResponse> | NextResponse
 
 /**
- * 高阶包装：解析租户 → 校验能力 → 执行 handler。
+ * V17 · 能力集合的合取 / 析取语义。
  *
- * @param capability 单个或「任一满足」的能力集合
+ * 🔴 历史缺陷（WB17-01 修复）：`withTenant` 曾接受数组并按 **`some()`（任一满足）** 判定，
+ * 而函数签名对「一个集合」与「一组备选」不加区分。调用方若写
+ * `withTenant(['mission.read', 'mission.update'])` 本意是「两个都要」，实际却只要
+ * 有 `mission.read` 就放行 —— 这就是「混入弱能力 ⇒ 静默降级」。
  *
- * 失败语义（全部默认拒绝）：
- *   - 匿名 / 游客 / 过期 token → 401
- *   - 无成员关系 / 成员被停用 / 租户被停用 → 403
- *   - 角色能力不足 → 403（并写 `tenant.capability_denied` 审计）
+ * 现在语义必须**写出来**：
+ *   - `withTenant(cap)`      只有一个能力（类型层禁止数组）
+ *   - `withTenantAll([...])` **全部**满足（合取，取严）
+ *   - `withTenantAny([...])` **任一**满足（析取，仅用于"多个入口等价"的场景）
+ *
+ * 实测基线：仓内 57 处调用全部是单能力，零数组调用点，故本次语义收紧不改变任何现网行为。
  */
-export function withTenant(capability: TenantCapability | TenantCapability[]) {
-  const required = Array.isArray(capability) ? capability : [capability]
+type CapabilitySet = readonly TenantCapability[]
+type GuardMode = 'all' | 'any'
+
+function describe(required: CapabilitySet, mode: GuardMode): string {
+  return mode === 'all' ? required.join(' and ') : required.join(' or ')
+}
+
+function makeGuard(mode: GuardMode, required: CapabilitySet) {
+  if (required.length === 0) {
+    // 空集合在 `every()` 下恒真 ⇒ 会变成"无需能力即可访问"。宁可起不来，也不静默放行。
+    throw new TypeError('withTenant*: capability set must not be empty')
+  }
 
   return (handler: TenantHandler) => {
     return async (req: NextRequest, context?: { params?: Promise<unknown> }) => {
@@ -66,10 +81,13 @@ export function withTenant(capability: TenantCapability | TenantCapability[]) {
         return serverError('Internal server error')
       }
 
-      const allowed = required.some((c) => can(tenant.role, c))
+      const allowed =
+        mode === 'all'
+          ? required.every((c) => can(tenant.role, c))
+          : required.some((c) => can(tenant.role, c))
       if (!allowed) {
         console.error(
-          `[tenant] capability denied: ${req.method} ${req.nextUrl.pathname} | org=${tenant.organizationId} | role=${tenant.role} | required=${required.join(',')}`
+          `[tenant] capability denied: ${req.method} ${req.nextUrl.pathname} | org=${tenant.organizationId} | role=${tenant.role} | mode=${mode} | required=${required.join(',')}`
         )
         await writeTenantAudit({
           organizationId: tenant.organizationId,
@@ -77,10 +95,10 @@ export function withTenant(capability: TenantCapability | TenantCapability[]) {
           eventType: 'tenant.capability_denied',
           resourceType: 'api',
           resourceId: `${req.method} ${req.nextUrl.pathname}`,
-          safeMetadata: { role: tenant.role, required },
+          safeMetadata: { role: tenant.role, required, mode },
         }).catch(() => {})
 
-        return forbidden(`Forbidden: missing capability ${required.join(' or ')}`)
+        return forbidden(`Forbidden: missing capability ${describe(required, mode)}`)
       }
 
       try {
@@ -95,4 +113,33 @@ export function withTenant(capability: TenantCapability | TenantCapability[]) {
       }
     }
   }
+}
+
+/**
+ * 单能力守卫。**类型层不接受数组** —— 想要"多个"请显式选 `withTenantAll` 或 `withTenantAny`。
+ *
+ * 失败语义（全部默认拒绝）：
+ *   - 匿名 / 游客 / 过期 token → 401
+ *   - 无成员关系 / 成员被停用 / 租户被停用 → 403
+ *   - 角色能力不足 → 403（并写 `tenant.capability_denied` 审计）
+ */
+export function withTenant(capability: TenantCapability) {
+  const raw: unknown = capability
+  // 运行时兜底：JS 调用方 / `as never` / 误传数组都不得退化成"任一满足"。
+  if (typeof raw !== 'string' || raw.length === 0) {
+    throw new TypeError(
+      'withTenant() accepts exactly one capability; use withTenantAll() or withTenantAny() for multiple'
+    )
+  }
+  return makeGuard('all', [capability])
+}
+
+/** 合取守卫：**全部**能力都具备才放行。用于"读 + 写"这类必须同时成立的入口。 */
+export function withTenantAll(capabilities: CapabilitySet) {
+  return makeGuard('all', capabilities)
+}
+
+/** 析取守卫：**任一**能力具备即放行。仅在多个入口确实等价时使用（例如"本人或管理员"）。 */
+export function withTenantAny(capabilities: CapabilitySet) {
+  return makeGuard('any', capabilities)
 }

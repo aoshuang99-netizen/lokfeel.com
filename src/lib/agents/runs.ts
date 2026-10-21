@@ -733,7 +733,9 @@ export async function decideAgentRun(
       },
     }),
     db.agentRun.update({
-      where: { id: row.id },
+      // V17（WB17-01）：`row` 已由 findRunRow(org, id) 校验过，这里再钉一次租户谓词，
+      // 让"读到的是本租户"与"写的是本租户"在同一条语句里同时成立。
+      where: { id: row.id, organizationId: ctx.organizationId },
       data: { status: decision },
     }),
   ])

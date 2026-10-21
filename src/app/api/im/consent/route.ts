@@ -1,11 +1,13 @@
 /**
  * POST /api/im/consent — Request or respond to consent
  * GET /api/im/consent — Get consent status
+ * DELETE /api/im/consent — Revoke a consent grant you issued (V17 · SEC-07)
  *
  * Endpoints:
  * - POST (request): Request consent from another user
  * - POST (respond): Respond to a consent request
  * - GET: Check consent status between two users
+ * - DELETE: Revoke (only the granter may revoke; idempotent)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -307,5 +309,76 @@ async function handleConsentResponse(
   return NextResponse.json({
     success: true,
     decision,
+  });
+}
+
+/**
+ * V17 · DELETE /api/im/consent —— **撤销**已授出的同意
+ *
+ * 为什么必须补：`isRevoked` 在本仓一直是**只读**字段 —— 所有读取路径都过滤
+ * `isRevoked: false`（`GET` 与 `socket/delivery.ts:getConsentState`），
+ * `AuditAction` 里也预留了 `consent_revoked`，但**没有任何写入者**。
+ * 结果是「用户能看见自己授权过，却永远撤不掉」—— 传出去的授权成了单行道，
+ * 与 AC「同意可撤回」直接冲突（SEC-07）。
+ *
+ * 语义：
+ *   - 只有**授出方本人**能撤销（`granterId = 当前用户`），受让方无权代撤；
+ *   - `targetId` = 被授权人（grantee），`consentType` 缺省 MEDIA；
+ *   - 幂等：无可撤记录时返回 `revoked: 0`，不制造 404 噪音；
+ *   - 撤销后立刻生效：读取路径本来就过滤 `isRevoked`，无需缓存失效逻辑，
+ *     额外把会话缓存改回 `CONSENT_NONE`，避免 UI 残留"已授权"。
+ */
+export async function DELETE(request: NextRequest) {
+  return handleApiError(async () => {
+    const { user } = await requireAuth();
+    const { searchParams } = new URL(request.url);
+    const targetId = searchParams.get('targetId');
+    const consentType = (searchParams.get('consentType') as ConsentRequestType) || 'MEDIA';
+
+    if (!targetId) {
+      return NextResponse.json({ error: 'targetId is required' }, { status: 400 });
+    }
+
+    const grants = await db.consentGrant.findMany({
+      where: {
+        // 🔴 授出方必须是自己 —— 这是"只能撤回自己给出的授权"的唯一落点。
+        granterId: user.id,
+        granteeId: targetId,
+        consentType,
+        isRevoked: false,
+      },
+      select: { id: true, conversationId: true },
+    });
+
+    if (grants.length === 0) {
+      return NextResponse.json({ success: true, revoked: 0 });
+    }
+
+    const now = new Date();
+    await db.consentGrant.updateMany({
+      // 双保险：即便上面的查询被改坏，写侧仍限定 granterId。
+      where: { id: { in: grants.map((g) => g.id) }, granterId: user.id },
+      data: { isRevoked: true, revokedAt: now },
+    });
+
+    const conversationIds = [...new Set(grants.map((g) => g.conversationId))];
+    await db.conversation.updateMany({
+      where: { id: { in: conversationIds } },
+      data: { cachedConsentState: 'CONSENT_NONE' },
+    });
+
+    await auditLogger.record({
+      userId: user.id,
+      conversationId: conversationIds[0],
+      action: 'consent_revoked',
+      targetId,
+      details: { consentType, revokedCount: grants.length },
+    });
+
+    return NextResponse.json({
+      success: true,
+      revoked: grants.length,
+      revokedAt: now.toISOString(),
+    });
   });
 }

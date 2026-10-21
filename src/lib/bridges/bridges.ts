@@ -635,7 +635,16 @@ export async function createBridge(
     // ⚠️ 这里用**硬删除**：建出来又被判定为孤儿的协议**从未生效**（PENDING），
     //    留着它会让"一对组织一份协议"的唯一约束挡住用户重试。
     compensate: async (resourceId) => {
-      await db.communityBridge.deleteMany({ where: { id: resourceId } }).catch(() => {})
+      // V17（WB17-01）纵深防御：即便 resourceId 来自本函数刚建的协议，也带上当事方谓词。
+      // 理由：compensate 是**唯一**的硬删除路径，一旦将来被复用到别处，缺谓词就是跨租户删。
+      await db.communityBridge
+        .deleteMany({
+          where: {
+            id: resourceId,
+            OR: [{ initiatorOrgId: ctx.organizationId }, { recipientOrgId: ctx.organizationId }],
+          },
+        })
+        .catch(() => {})
     },
   })
 
@@ -705,7 +714,12 @@ export async function decideBridge(
 
   const updated = await db.communityBridge.updateMany({
     // 🔴 CAS：只有仍处于"我以为的起始状态"时才允许迁移。
-    where: { id: row.id, status: plan.from },
+    // V17（WB17-01）：同时钉住"我是当事方"，让 CAS 与租户边界在同一条 SQL 里成立。
+    where: {
+      id: row.id,
+      status: plan.from,
+      OR: [{ initiatorOrgId: ctx.organizationId }, { recipientOrgId: ctx.organizationId }],
+    },
     data,
   })
   if (updated.count === 0) {
