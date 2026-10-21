@@ -87,7 +87,7 @@ const DEFAULT_URLS = [
  */
 function collector() {
   const v = { lcp: null, lcpEl: null, lcpUrl: null, cls: 0, clsShifts: 0, fcp: null }
-  // @ts-ignore —— 页面上下文，无类型
+  // 挂在 window 上是刻意为之：Playwright 的 evaluate 与页面共享同一个全局。
   window.__lfVitals = v
   try {
     new PerformanceObserver((list) => {
