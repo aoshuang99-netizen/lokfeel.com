@@ -147,6 +147,16 @@ jobs:
             exit 1
           fi
 
+      # WorkspaceSpec 枚举漂移守卫的**变异自证**（V17 / WB17-06）。
+      # 此前 `verify:workspace-drift` **没有进任何 workflow** —— 也就是说这道门禁
+      # 从来没在 CI 里跑过，坏了也不会有人知道。
+      # ⚠️ 本脚本会就地改写 `src/lib/workspace-spec/schema.ts` 再还原：
+      #    CI 是一次性容器，被打断不会污染仓库；本地运行则可能留下半改状态
+      #    （2026-10-21 实测被 SIGKILL 打断两次，都留下了变异后的源码）。
+      #    脚本已加"落盘快照 + 下轮启动自愈"，但本地仍不建议随手跑。
+      - name: WorkspaceSpec 漂移守卫自证（变异）
+        run: node scripts/qa/verify-workspace-spec-drift.mjs
+
       # 退款链路：真实 Stripe SDK + 真实 HTTP + 本地 Stripe 协议服务端。
       # 不需要任何密钥，所以能进 CI —— 防止「退款只在发布前手验过一次」。
       - name: 退款链路协议层端到端

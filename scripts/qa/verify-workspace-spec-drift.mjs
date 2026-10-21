@@ -44,6 +44,8 @@ const ROOT = path.resolve(__dirname, '../..')
 
 const SCHEMA = path.join(ROOT, 'src/lib/workspace-spec/schema.ts')
 const PROBE_TS_CONFIG = path.join(ROOT, 'tsconfig.drift-probe.json')
+/** 变异期间的原文快照。用于 SIGKILL（不可捕获）后的下一轮自愈。 */
+const BACKUP = path.join(ROOT, '.drift-probe-backup')
 
 const PROBE_CONFIG_SOURCE = `{
   "extends": "./tsconfig.json",
@@ -164,6 +166,21 @@ if (!fs.existsSync(SCHEMA)) {
   console.error(`❌ 找不到 ${SCHEMA}`)
   process.exit(1)
 }
+// 🔴 启动期自愈：SIGKILL **不可捕获**，所以只靠信号处理（下面 197 行那段）堵不住。
+//    实测（2026-10-21）：本脚本被 SIGKILL 打断两次，`schema.ts` 每次都留在变异后的
+//    状态（`COORDINATION_ADVICE` 变成了不存在的 `OUTCOME_NARRATIVE`）。
+//    那时若有人 `git add -A`，坏值会直接进主线并打断类型 —— 比"门禁红"严重得多。
+//    对策：变异期间把原始内容落盘，下一轮启动先自愈。
+if (fs.existsSync(BACKUP)) {
+  const snapshot = fs.readFileSync(BACKUP, 'utf8')
+  fs.writeFileSync(SCHEMA, snapshot)
+  fs.unlinkSync(BACKUP)
+  if (fs.existsSync(PROBE_TS_CONFIG)) fs.unlinkSync(PROBE_TS_CONFIG)
+  console.error(
+    `⚠️ 发现上次中断留下的备份 —— 已把 ${path.basename(SCHEMA)} 还原到运行前状态，并清掉探针配置。`,
+  )
+}
+
 // 残留探测：上次被中断留下的探针配置会让本轮结论不可信。
 if (fs.existsSync(PROBE_TS_CONFIG)) {
   console.error(`❌ 发现残留的 ${path.basename(PROBE_TS_CONFIG)}（上次被中断？）—— 删除它再跑。`)
@@ -203,6 +220,7 @@ function restoreAndExit(signal) {
   try {
     fs.writeFileSync(SCHEMA, original)
     if (fs.existsSync(PROBE_TS_CONFIG)) fs.unlinkSync(PROBE_TS_CONFIG)
+    if (fs.existsSync(BACKUP)) fs.unlinkSync(BACKUP)
     console.error(`\n⚠️ 收到 ${signal} —— 已还原 ${path.basename(SCHEMA)} 并清理探针配置后再退出。`)
   } catch (err) {
     console.error(
@@ -215,6 +233,8 @@ function restoreAndExit(signal) {
 process.on('SIGINT', () => restoreAndExit('SIGINT'))
 process.on('SIGTERM', () => restoreAndExit('SIGTERM'))
 
+// 落盘原文快照：SIGKILL 不可捕获，信号处理救不了；只有磁盘上的备份能让下一轮自愈。
+fs.writeFileSync(BACKUP, original)
 fs.writeFileSync(PROBE_TS_CONFIG, PROBE_CONFIG_SOURCE)
 
 console.log('\n枚举漂移守卫 · 变异自证\n')
@@ -281,6 +301,18 @@ try {
     ck('临时探针配置已清理', !fs.existsSync(PROBE_TS_CONFIG))
   } catch (err) {
     ck('临时探针配置已清理', false, `删除失败：${err?.message}`)
+  }
+
+  // 备份只在"源码确实还原了"之后才删。若还原失败还删备份，就失去了唯一的救命绳。
+  if (fs.existsSync(BACKUP) && fs.readFileSync(SCHEMA, 'utf8') === original) {
+    fs.unlinkSync(BACKUP)
+    ck('原文快照已清理', !fs.existsSync(BACKUP))
+  } else {
+    ck(
+      '原文快照已清理',
+      false,
+      `源码未还原，快照已保留在 ${path.basename(BACKUP)}（下轮启动会自动自愈）`,
+    )
   }
 }
 

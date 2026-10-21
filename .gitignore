@@ -110,3 +110,7 @@ perf-baseline.db-shm
 
 # V17 本地依赖备份（不提交）
 .nm-broken-v17/
+
+# 漂移守卫变异自证的临时文件（被打断时会留下，绝不能进仓库）
+tsconfig.drift-probe.json
+.drift-probe-backup
