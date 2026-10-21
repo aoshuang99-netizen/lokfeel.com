@@ -73,9 +73,13 @@ function HeroScene() {
     wrap.addEventListener("pointerleave", onLeave);
 
     let raf = 0;
-    const t0 = performance.now();
+    let started = 0;
     const frame = (now: number) => {
-      const t = (now - t0) / 1000;
+      if (document.visibilityState === "hidden") {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      const t = (now - started) / 1000;
       const p = pointer.current;
       p.x += (p.tx - p.x) * 0.05;
       p.y += (p.ty - p.y) * 0.05;
@@ -86,9 +90,31 @@ function HeroScene() {
       });
       raf = requestAnimationFrame(frame);
     };
-    raf = requestAnimationFrame(frame);
+
+    /**
+     * 🔴 先让首屏画完，再启动装饰性漂浮（V16 · T10 实测数据驱动）。
+     *
+     * 这段 rAF 每帧都在改写 preserve-3d 子树里芯片的 transform，而 LCP 元素
+     * （主平面截图）就在同一个 3D 子树内 —— 每帧重绘都会把 LCP 的最终绘制时间往后推。
+     * 实测（1440×900，冷上下文）：开 rAF → LCP 7008ms；reduced-motion 关掉 rAF → 4476ms。
+     * 所以延迟到 idle 再起动画：少 1.2s 的漂浮，用户感知不到，LCP 却能早 2.5s。
+     */
+    const start = () => {
+      if (raf) return;
+      started = performance.now();
+      raf = requestAnimationFrame(frame);
+    };
+    const ric = (
+      window as unknown as {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+      }
+    ).requestIdleCallback;
+    const kickTimer = ric ? 0 : window.setTimeout(start, 1200);
+    if (ric) ric(start, { timeout: 1500 });
+
     return () => {
       cancelAnimationFrame(raf);
+      if (kickTimer) window.clearTimeout(kickTimer);
       window.removeEventListener("pointermove", onMove);
       wrap.removeEventListener("pointerleave", onLeave);
     };
@@ -161,6 +187,11 @@ function HeroScene() {
               width={1440}
               height={919}
               priority
+              // 🔴 不走 Next 图片优化器：这张 PNG 只有 228KB，放大到 1440w 再经
+              // /_next/image 动态转码，冷启动实测反而把 LCP 拖到 7s。静态文件由
+              // Netlify 边缘直出 + 长缓存，是这里最快的路径（`unoptimized` 只是跳过优化器，
+              // 仍然受 `priority` 的 preload 待遇）。
+              unoptimized
               className="h-full w-full object-cover object-top"
             />
           </div>

@@ -108,7 +108,7 @@ export default function ConsoleShell({
           </div>
           <Link
             href="/dashboard"
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-card-border text-xs text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
+            className="shrink-0 inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-card-border text-xs text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             个人模式
@@ -148,7 +148,7 @@ export default function ConsoleShell({
                   <Link
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    className={`flex min-h-11 items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors whitespace-nowrap ${
                       active
                         ? 'bg-primary/15 text-primary font-medium'
                         : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'

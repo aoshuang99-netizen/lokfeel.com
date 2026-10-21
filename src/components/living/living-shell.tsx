@@ -129,7 +129,7 @@ export default function LivingShell({
                 ? '切换画布为阅读底色（浅色）'
                 : '切换画布为沉浸底色（深色）'
             }
-            className="lf-focus-ring inline-flex h-9 w-9 items-center justify-center rounded-lf border border-lf-line text-lf-text-muted transition-colors hover:text-lf-text"
+            className="lf-focus-ring inline-flex h-11 w-11 items-center justify-center rounded-lf border border-lf-line text-lf-text-muted transition-colors hover:text-lf-text"
             style={{ transitionDuration: 'var(--lf-dur-fast)' }}
           >
             <Contrast className="h-4 w-4" aria-hidden="true" />
@@ -154,7 +154,7 @@ export default function LivingShell({
             <button
               type="button"
               onClick={() => setMobileInspectorOpen(true)}
-              className="lf-focus-ring inline-flex h-9 items-center rounded-lf border border-lf-line px-2 text-xs text-lf-text-muted lg:hidden"
+              className="lf-focus-ring inline-flex h-11 items-center rounded-lf border border-lf-line px-3 text-xs text-lf-text-muted lg:hidden"
             >
               证据
             </button>
@@ -195,7 +195,7 @@ export default function LivingShell({
                 aria-current={active ? 'page' : undefined}
                 title={item.hint}
                 className={[
-                  'lf-focus-ring flex shrink-0 flex-col items-center gap-1 rounded-lf px-3 py-2 text-center text-[11px] transition-colors lg:w-full lg:px-1',
+                  'lf-focus-ring flex min-h-11 shrink-0 flex-col items-center justify-center gap-1 rounded-lf px-3 py-2 text-center text-[11px] transition-colors lg:w-full lg:px-1',
                   active ? 'bg-lf-signal-soft text-lf-signal' : 'text-lf-text-muted hover:text-lf-text',
                 ].join(' ')}
                 style={{ transitionDuration: 'var(--lf-dur-fast)' }}

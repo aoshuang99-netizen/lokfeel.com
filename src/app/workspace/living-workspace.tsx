@@ -598,7 +598,7 @@ export default function LivingWorkspace() {
           title={canCompile ? '编译为工作区' : `至少输入 ${MIN_GOAL_LENGTH} 个字符`}
           onClick={runCompile}
           className={[
-            'lf-focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lf border px-3 py-1.5 text-xs',
+            'lf-focus-ring inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lf border px-3 py-1.5 text-xs',
             canCompile
               ? 'border-lf-line-strong text-lf-text hover:bg-lf-surface-2'
               : 'cursor-not-allowed border-lf-line text-lf-text-faint',
@@ -727,7 +727,7 @@ export default function LivingWorkspace() {
               <button
                 type="button"
                 onClick={() => document.getElementById('lf-composer')?.focus()}
-                className="lf-focus-ring mt-3 inline-flex items-center gap-1.5 rounded-lf border border-lf-line-strong px-3 py-1.5 text-xs text-lf-text hover:bg-lf-surface-2"
+                className="lf-focus-ring mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-lf border border-lf-line-strong px-3 py-1.5 text-xs text-lf-text hover:bg-lf-surface-2"
               >
                 <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
                 开始输入目标
