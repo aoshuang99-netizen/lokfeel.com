@@ -36,7 +36,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { AlertCircle, Bell, CheckCircle2, Compass, Inbox, Loader2, MessageSquare, Wand2 } from 'lucide-react'
+import { AlertCircle, Bell, CheckCircle2, Compass, Loader2, MessageSquare, Wand2 } from 'lucide-react'
 import LivingShell, { type LivingNavItem } from '@/components/living/living-shell'
 import StageRail from '@/components/living/adaptive/stage-rail'
 import { buildOsStages } from '@/lib/living/adaptive/stages'
@@ -85,10 +85,6 @@ interface NotificationsRes {
 interface ChatCountRes {
   unreadCount: number
   totalChats: number
-}
-interface MatchesRes {
-  matches: Array<{ id: string; matchType?: string | null; createdAt?: string | null }>
-  pagination: { total: number; limit: number; offset: number }
 }
 
 /** `/api/v1/*` 的统一信封（`src/lib/api-response.ts`）。 */
@@ -299,7 +295,6 @@ export default function LivingWorkspace() {
 
   const notifications = useApiGet<NotificationsRes>('/api/notifications')
   const chats = useApiGet<ChatCountRes>('/api/chats/unread-count')
-  const matches = useApiGet<MatchesRes>('/api/matches')
   // 真实能力探测：403 即说明当前账号不是任何 ACTIVE 社群的成员。
   const org = useApiGet<ApiEnvelope<OrgOverview>>('/api/v1/org')
   // P1 收口：三类节点的真实来源。
@@ -324,7 +319,6 @@ export default function LivingWorkspace() {
 
   const unreadNotifications = notifications.data?.unreadCount ?? null
   const unreadChats = chats.data?.unreadCount ?? null
-  const matchTotal = matches.data?.pagination?.total ?? null
 
   const latestNotifications = useMemo(
     () => (notifications.data?.notifications ?? []).slice(0, 6),
@@ -490,9 +484,6 @@ export default function LivingWorkspace() {
             {chats.data?.totalChats ?? '—'}
           </li>
           <li>
-            <code className="text-lf-signal">GET /api/matches</code> → 匹配 {matchTotal ?? '—'}
-          </li>
-          <li>
             <code className="text-lf-signal">GET /api/v1/org</code> → 能力{' '}
             {org.isLoading ? '探测中…' : org.error ? `探测失败（${org.error}）` : `${capabilities.size} 项`}
           </li>
@@ -597,7 +588,7 @@ export default function LivingWorkspace() {
       />
       <div className="flex items-center justify-between gap-2">
         <p className="min-w-0 text-[11px] text-lf-text-faint">
-          编译在本地完成（规则式，纯函数）；只有真正创建 Mission 才需要服务端权限。
+          编译在本地完成；只有真正创建任务时才会写入服务端。
         </p>
         {/* 编译是纯前端动作 → 只要有足够文本就一定可用；不足则**禁用并说明差多少**。 */}
         <button
@@ -684,7 +675,17 @@ export default function LivingWorkspace() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <StatCard label="未读通知" value={unreadNotifications} hint="来自 /api/notifications" icon={Bell} />
             <StatCard label="未读消息" value={unreadChats} hint="来自 /api/chats/unread-count" icon={MessageSquare} />
-            <StatCard label="我的匹配" value={matchTotal} hint="来自 /api/matches" icon={Inbox} />
+            {/*
+              V16 · F-05：这里原来放的是「我的匹配 · /api/matches」—— 那是 B2C 遗留线，
+              对 Connection OS 的用户来说不但没用，还会让人以为这是个交友产品。
+              现在改成「待你介绍」：数字来自双方已同意但还没介绍的提案，是真正需要动手的事。
+            */}
+            <StatCard
+              label="待你介绍"
+              value={stages.find((s) => s.key === 'consent')?.count ?? null}
+              hint="来自 /api/v1/connections/proposals（双方已同意、尚未介绍）"
+              icon={Compass}
+            />
           </div>
 
           <section className="space-y-3">
@@ -714,15 +715,23 @@ export default function LivingWorkspace() {
         <div className="space-y-4">
           <h1 className="text-lg font-semibold">Mission Studio</h1>
           <p className="text-sm text-lf-text-muted">
-            在下方输入目标后点击「编译工作区」：文本会被编译为受约束的 <code className="text-lf-signal">WorkspaceSpec</code>
-            （zod 严格校验），再由<strong className="font-medium text-lf-text">白名单组件</strong>渲染到画布上 ——
-            任何一步都不允许产出 HTML/React 代码。
+            用一句话说清你想推进的事，系统会把它摊成可执行的一步一步：要联系谁、要谁同意、
+            做成什么算完成、结果怎么核验。每一步都会落到真实记录上，不是画给你看的一张图。
           </p>
 
           {compiled === null && (
             <div className="rounded-lf border border-dashed border-lf-line p-6 text-center">
               <Compass className="mx-auto h-6 w-6 text-lf-text-faint" aria-hidden="true" />
-              <p className="mt-2 text-sm text-lf-text-muted">还没有工作区。先在底部输入一个目标。</p>
+              <p className="mt-2 text-sm text-lf-text-muted">还没有工作区。先写下一个目标。</p>
+              {/* V16 · F-08：空态把主操作拉到眼前，而不是让用户自己找底部悬浮框。 */}
+              <button
+                type="button"
+                onClick={() => document.getElementById('lf-composer')?.focus()}
+                className="lf-focus-ring mt-3 inline-flex items-center gap-1.5 rounded-lf border border-lf-line-strong px-3 py-1.5 text-xs text-lf-text hover:bg-lf-surface-2"
+              >
+                <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+                开始输入目标
+              </button>
             </div>
           )}
 

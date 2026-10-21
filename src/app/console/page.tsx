@@ -296,7 +296,7 @@ export default function ConsoleDashboardPage() {
             : `本社群共有 ${missionTotal} 条任务。`}
         </p>
         <p className="text-[11px] text-foreground-subtle mt-1">
-          任务列表、状态过滤与状态迁移（发布 / 暂停 / 恢复 / 关闭）都在「任务」屏。
+          筛选、发布与状态迁移都在「任务」屏。
         </p>
       </section>
     </div>
