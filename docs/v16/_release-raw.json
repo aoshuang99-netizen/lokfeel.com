@@ -1,0 +1,703 @@
+{
+  "base": "https://app.lokfeel.com",
+  "generatedAt": "2026-10-21T03:59:03.314Z",
+  "login": {
+    "status": 200,
+    "success": true
+  },
+  "layout": [
+    {
+      "id": "ws-now",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 15,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-studio",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 16,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-field",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 18,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-consent",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 17,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-outcomes",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 15,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-agents",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 15,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-home",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console",
+      "overflow": 0,
+      "interactive": 8,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-missions",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/missions",
+      "overflow": 0,
+      "interactive": 14,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": [
+        "console: a: Failed to fetch. Read more at https://errors.authjs.dev#autherror\n    at i (https://app.lokfeel.com/_next/static/chunks/10nenu53tp-55.js:2:1591)\n    at async p (https://app.lokfeel.com/_next/static"
+      ]
+    },
+    {
+      "id": "console-connections",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/connections",
+      "overflow": 0,
+      "interactive": 15,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-agents",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/agents",
+      "overflow": 0,
+      "interactive": 13,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": [
+        "console: a: Failed to fetch. Read more at https://errors.authjs.dev#autherror\n    at i (https://app.lokfeel.com/_next/static/chunks/10nenu53tp-55.js:2:1591)\n    at async p (https://app.lokfeel.com/_next/static"
+      ]
+    },
+    {
+      "id": "console-members",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/members",
+      "overflow": 0,
+      "interactive": 16,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": [
+        "console: a: Failed to fetch. Read more at https://errors.authjs.dev#autherror\n    at i (https://app.lokfeel.com/_next/static/chunks/10nenu53tp-55.js:2:1591)\n    at async p (https://app.lokfeel.com/_next/static"
+      ]
+    },
+    {
+      "id": "console-outcomes",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/outcomes",
+      "overflow": 0,
+      "interactive": 12,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": [
+        "console: a: Failed to fetch. Read more at https://errors.authjs.dev#autherror\n    at i (https://app.lokfeel.com/_next/static/chunks/10nenu53tp-55.js:2:1591)\n    at async p (https://app.lokfeel.com/_next/static"
+      ]
+    },
+    {
+      "id": "console-settings",
+      "device": "mobile",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/settings",
+      "overflow": 0,
+      "interactive": 8,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": [
+        "console: a: Failed to fetch. Read more at https://errors.authjs.dev#autherror\n    at i (https://app.lokfeel.com/_next/static/chunks/10nenu53tp-55.js:2:1591)\n    at async p (https://app.lokfeel.com/_next/static"
+      ]
+    },
+    {
+      "id": "ws-now",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 15,
+      "small": [
+        {
+          "tag": "button",
+          "label": "收起证据面板",
+          "w": 36,
+          "h": 36
+        }
+      ],
+      "smallTotal": 1,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": [
+        "console: a: Failed to fetch. Read more at https://errors.authjs.dev#autherror\n    at i (https://app.lokfeel.com/_next/static/chunks/10nenu53tp-55.js:2:1591)\n    at async p (https://app.lokfeel.com/_next/static"
+      ]
+    },
+    {
+      "id": "ws-studio",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 16,
+      "small": [
+        {
+          "tag": "button",
+          "label": "收起证据面板",
+          "w": 36,
+          "h": 36
+        }
+      ],
+      "smallTotal": 1,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-field",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 18,
+      "small": [
+        {
+          "tag": "button",
+          "label": "收起证据面板",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "select",
+          "label": "（没有可用的任务）",
+          "w": 146,
+          "h": 27
+        },
+        {
+          "tag": "button",
+          "label": "网络",
+          "w": 56,
+          "h": 27
+        },
+        {
+          "tag": "button",
+          "label": "列表",
+          "w": 56,
+          "h": 27
+        }
+      ],
+      "smallTotal": 4,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-consent",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 17,
+      "small": [
+        {
+          "tag": "button",
+          "label": "收起证据面板",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "同意与披露",
+          "w": 82,
+          "h": 26
+        },
+        {
+          "tag": "button",
+          "label": "跨社群",
+          "w": 58,
+          "h": 26
+        }
+      ],
+      "smallTotal": 3,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-outcomes",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 15,
+      "small": [
+        {
+          "tag": "button",
+          "label": "收起证据面板",
+          "w": 36,
+          "h": 36
+        }
+      ],
+      "smallTotal": 1,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "ws-agents",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "overflow": 0,
+      "interactive": 15,
+      "small": [
+        {
+          "tag": "button",
+          "label": "收起证据面板",
+          "w": 36,
+          "h": 36
+        }
+      ],
+      "smallTotal": 1,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-home",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console",
+      "overflow": 0,
+      "interactive": 8,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-missions",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/missions",
+      "overflow": 0,
+      "interactive": 14,
+      "small": [
+        {
+          "tag": "button",
+          "label": "刷新",
+          "w": 70,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "全部",
+          "w": 48,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "草稿",
+          "w": 50,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "进行中",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "已暂停",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "已关闭",
+          "w": 62,
+          "h": 30
+        }
+      ],
+      "smallTotal": 6,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": [
+        "console: a: Failed to fetch. Read more at https://errors.authjs.dev#autherror\n    at i (https://app.lokfeel.com/_next/static/chunks/10nenu53tp-55.js:2:1591)\n    at async p (https://app.lokfeel.com/_next/static"
+      ]
+    },
+    {
+      "id": "console-connections",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/connections",
+      "overflow": 0,
+      "interactive": 15,
+      "small": [
+        {
+          "tag": "button",
+          "label": "刷新",
+          "w": 70,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "全部",
+          "w": 48,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "label": "待表态",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "待介绍",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "已介绍",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "已结束",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "只看停滞",
+          "w": 74,
+          "h": 30
+        }
+      ],
+      "smallTotal": 7,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-agents",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/agents",
+      "overflow": 0,
+      "interactive": 13,
+      "small": [
+        {
+          "tag": "button",
+          "label": "刷新",
+          "w": 70,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "全部",
+          "w": 48,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "label": "待批准",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "已批准",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "已执行",
+          "w": 62,
+          "h": 30
+        }
+      ],
+      "smallTotal": 5,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-members",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/members",
+      "overflow": 0,
+      "interactive": 16,
+      "small": [
+        {
+          "tag": "button",
+          "label": "刷新",
+          "w": 70,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "全部",
+          "w": 48,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "label": "所有者",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "管理员",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "运营",
+          "w": 50,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "成员",
+          "w": 50,
+          "h": 30
+        },
+        {
+          "tag": "input",
+          "label": "按姓名或邮箱搜索成员",
+          "w": 208,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "搜索",
+          "w": 64,
+          "h": 30
+        }
+      ],
+      "smallTotal": 8,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-outcomes",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/outcomes",
+      "overflow": 0,
+      "interactive": 12,
+      "small": [
+        {
+          "tag": "button",
+          "label": "刷新",
+          "w": 70,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "全部",
+          "w": 48,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "label": "仅自报",
+          "w": 62,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "label": "已验证",
+          "w": 62,
+          "h": 30
+        }
+      ],
+      "smallTotal": 4,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    },
+    {
+      "id": "console-settings",
+      "device": "desktop",
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/settings",
+      "overflow": 0,
+      "interactive": 8,
+      "small": [],
+      "smallTotal": 0,
+      "sampleDuration": "0s",
+      "hydration": [],
+      "errors": []
+    }
+  ],
+  "perf": [
+    {
+      "id": "landing",
+      "route": "/",
+      "auth": false,
+      "device": "desktop",
+      "lcp": 2672,
+      "lcpElement": "IMG",
+      "cls": 0.00013395061728395063,
+      "ttfb": 5,
+      "dcl": 57,
+      "hydration": []
+    },
+    {
+      "id": "workspace",
+      "route": "/workspace",
+      "auth": true,
+      "device": "desktop",
+      "lcp": 1328,
+      "lcpElement": "P",
+      "cls": 0.00013395061728395063,
+      "ttfb": 564,
+      "dcl": 845,
+      "hydration": []
+    },
+    {
+      "id": "console",
+      "route": "/console",
+      "auth": true,
+      "device": "desktop",
+      "lcp": 1204,
+      "lcpElement": "P",
+      "cls": 0.00013395061728395063,
+      "ttfb": 1096,
+      "dcl": 1157,
+      "hydration": []
+    },
+    {
+      "id": "landing",
+      "route": "/",
+      "auth": false,
+      "device": "mobile",
+      "lcp": 380,
+      "lcpElement": "H1",
+      "cls": 0.0008998346501996466,
+      "ttfb": 6,
+      "dcl": 387,
+      "hydration": []
+    },
+    {
+      "id": "workspace",
+      "route": "/workspace",
+      "auth": true,
+      "device": "mobile",
+      "lcp": 968,
+      "lcpElement": "",
+      "cls": 0.0008998346501996466,
+      "ttfb": 663,
+      "dcl": 874,
+      "hydration": []
+    },
+    {
+      "id": "console",
+      "route": "/console",
+      "auth": true,
+      "device": "mobile",
+      "lcp": 592,
+      "lcpElement": "P",
+      "cls": 0.0008998346501996466,
+      "ttfb": 411,
+      "dcl": 580,
+      "hydration": []
+    }
+  ],
+  "reducedMotion": [
+    {
+      "route": "/",
+      "transition": "0s"
+    },
+    {
+      "route": "/workspace",
+      "transition": "0s"
+    }
+  ]
+}
