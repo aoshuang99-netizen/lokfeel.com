@@ -433,7 +433,14 @@ describe('T10 · 双边审批：ACTIVE 的唯一入口是被邀方批准', () =>
     expect(res.status).toBe(200)
     const cas = bridgeUpdateMany.mock.calls[0][0]
     // CAS 谓词：只允许从 `PENDING` 迁走。
-    expect(cas.where).toEqual({ id: BRIDGE_ID, status: 'PENDING' })
+    // V17（WB17-01）：再加一条"我是当事方"——状态对但不是当事方的行，不得被我改成 ACTIVE。
+    // 用 `toEqual`（精确相等）而非 `objectContaining`：这条断言的职责就是钉住**完整**谓词，
+    // 宽松匹配会让将来"悄悄删掉 OR"的改动照样变绿。
+    expect(cas.where).toEqual({
+      id: BRIDGE_ID,
+      status: 'PENDING',
+      OR: [{ initiatorOrgId: ORG_B }, { recipientOrgId: ORG_B }],
+    })
     expect(cas.data.status).toBe('ACTIVE')
     expect(cas.data.recipientApprovedAt).toBeInstanceOf(Date)
   })
@@ -470,7 +477,12 @@ describe('T10 · 双边审批：ACTIVE 的唯一入口是被邀方批准', () =>
     const res = await revoke.POST(req('POST', `/api/v1/bridges/${BRIDGE_ID}/revoke`), { params: Promise.resolve(P) })
     expect(res.status).toBe(200)
     const cas = bridgeUpdateMany.mock.calls[0][0]
-    expect(cas.where).toEqual({ id: BRIDGE_ID, status: 'ACTIVE' })
+    // 同 approve：CAS 谓词 = 起始状态 + 当事方，缺一不可。
+    expect(cas.where).toEqual({
+      id: BRIDGE_ID,
+      status: 'ACTIVE',
+      OR: [{ initiatorOrgId: ORG_A }, { recipientOrgId: ORG_A }],
+    })
     expect(cas.data.status).toBe('REVOKED')
     expect(cas.data.revokedBy).toBe(ME)
   })

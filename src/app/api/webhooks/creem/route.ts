@@ -1,43 +1,64 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyCreemWebhookSignature, upsertCreemSubscription, createCreemPaymentRecord } from "@/lib/creem";
+import { verifyCreemWebhookSignature } from "@/lib/creem";
 import { db } from "@/lib/db";
 import {
   isPaymentChannelReady,
   missingForChannel,
 } from "@/lib/payments/availability";
 import { paymentNotConfigured } from "@/lib/payments/not-configured";
+import {
+  classifyCreemEvent,
+  creemObjectOf,
+  customerIdOf,
+  idempotencyKeyOf,
+  isMonetaryKind,
+  isStaleDowngrade,
+  periodEndOf,
+  planOf,
+  statusForKind,
+  subscriptionIdOf,
+  transactionIdOf,
+  userIdOf,
+} from "@/lib/payments/creem-events";
 
-// BUG-632: Idempotency — skip processing if a payment record for this Creem
-// object/event id already exists (protects against webhook replay duplicates).
-async function creemPaymentAlreadyProcessed(key: string): Promise<boolean> {
-  if (!key) return false;
-  const existing = await db.payment.findFirst({ where: { stripePaymentIntentId: key } });
-  return !!existing;
+/**
+ * POST /api/webhooks/creem
+ *
+ * 载荷：`{ id, eventType, created_at, object }`（Creem 用 `object`，不是 Stripe 的 `data.object`）
+ * 签名：`creem-signature` = HMAC-SHA256(raw body, webhook secret)
+ *
+ * V17（WB17-02）重写要点：
+ *   1. 只处理**官方目录里真实存在**的事件。原实现里的 `subscription.created` /
+ *      `subscription.cancelled`（英式拼写）/ `payment.succeeded` / `payment.failed`
+ *      都不在目录内，是永远不会触发的死分支，已删除。
+ *   2. 补上 `subscription.paid` —— **续费**走这个事件。原实现完全没处理，
+ *      首月收钱、次月静默丢失。
+ *   3. 幂等键按事件性质选：续费 `creem:tran:<交易id>`、开通 `creem:checkout:<id>`、
+ *      退款 `creem:refund:<id>`。原实现一律用 `object.id`（订阅 id），
+ *      会让第二期续费与首期同键而被判成重复。
+ *   4. 乱序保护：降级类事件若周期早于当前周期，视为陈旧并忽略。
+ */
+
+const SUPPORTED_PLAN_VALUES = new Set([
+  "PREMIUM_MONTHLY",
+  "PREMIUM_YEARLY",
+  "LIFETIME",
+  "FREE",
+  "LADY_FREE",
+]);
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
-
-// ── POST /api/webhooks/creem ────────────────────────────
-//
-// Creem webhook event payload structure (from official docs):
-// {
-//   "id": "evt_xxx",
-//   "eventType": "checkout.completed",
-//   "created_at": 1728734325927,
-//   "object": { ... }   // actual data here (NOT data.object like Stripe)
-// }
-//
-// Signature header: creem-signature (HMAC-SHA256 of raw body)
-//
 
 export async function POST(request: NextRequest) {
   try {
     const webhookSecret = process.env.CREEM_WEBHOOK_SECRET;
     const isMock = request.headers.get("creem-signature") === "mock_signature_for_testing";
 
-    // SECURITY (BUG-625 P0): the "mock" bypass must NEVER be honored in production,
-    // nor when a real webhook secret is configured. In those cases it would let any
-    // attacker forge subscription/payment events with a single static header value.
+    // SECURITY (BUG-625 P0): mock 旁路绝不在生产、或已配置真实密钥时生效。
     const isProd = process.env.NODE_ENV === "production";
     const allowMock = !isProd && !webhookSecret;
     if (isMock && !allowMock) {
@@ -47,7 +68,6 @@ export async function POST(request: NextRequest) {
 
     if (!isPaymentChannelReady("creem.webhook") && !allowMock) {
       // 503（不是 500）：这是「尚未接入」，不是「代码坏了」。
-      // 接入后同一请求会走验签分支，因此这个码是**可验证的完成判据**。
       console.error(
         `[Creem Webhook] creem.webhook channel is not configured (missing: ${missingForChannel("creem.webhook").join(", ")})`,
       );
@@ -56,14 +76,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Read raw body as Buffer for signature verification
-    const rawBody = await request.arrayBuffer();
-    const rawBodyBuffer = Buffer.from(rawBody);
+    const rawBodyBuffer = Buffer.from(await request.arrayBuffer());
     const rawBodyText = rawBodyBuffer.toString("utf8");
-
     const signature = request.headers.get("creem-signature");
 
-    // Mock mode: skip signature verification
     if (isMock) {
       console.log("[Creem Webhook] MOCK mode: skipping signature verification");
     } else {
@@ -71,222 +87,173 @@ export async function POST(request: NextRequest) {
         console.error("[Creem Webhook] Missing creem-signature header");
         return NextResponse.json({ error: "Missing signature" }, { status: 400 });
       }
-
-      const signatureValid = verifyCreemWebhookSignature(rawBodyBuffer, signature, webhookSecret!);
-      if (!signatureValid) {
+      if (!verifyCreemWebhookSignature(rawBodyBuffer, signature, webhookSecret!)) {
         console.error("[Creem Webhook] Signature verification failed");
         return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
       }
     }
 
-    const event = JSON.parse(rawBodyText);
-    const eventType = event.eventType;  // camelCase per Creem docs
-    const eventId = event.id || `${eventType}_${Date.now()}`;
-    const obj = event.object || {};
+    const event = JSON.parse(rawBodyText) as Record<string, unknown>;
+    const eventType = event.eventType;
+    const eventId =
+      typeof event.id === "string" && event.id ? event.id : `${String(eventType)}_${Date.now()}`;
+    const obj = creemObjectOf(event);
+    const kind = classifyCreemEvent(eventType);
 
-    console.log(`[Creem Webhook] Received: ${eventType}`, { eventId });
+    console.log(`[Creem Webhook] Received: ${String(eventType)} → ${kind}`, { eventId });
 
-    // ── Event Routing ─────────────────────────────────────
-
-    switch (eventType) {
-
-      // ── Checkout completed → create/activate subscription ──
-      case "checkout.completed": {
-        const metadata = obj.metadata || {};
-        const userId = metadata.userId;
-        const plan = metadata.plan as "PREMIUM_MONTHLY" | "PREMIUM_YEARLY" | undefined;
-
-        if (!userId || !plan) {
-          console.warn("[Creem Webhook] Missing userId or plan in checkout metadata", { metadata });
-          break;
-        }
-
-        const customerId = obj.customer || obj.customer_id || "";
-        const subscriptionId = obj.subscription || obj.subscription_id || obj.id || "";
-        const amount = obj.amount || 0;
-        const currency = obj.currency || "usd";
-
-        // BUG-632: idempotency — skip if this event was already processed
-        if (await creemPaymentAlreadyProcessed(obj.id || eventId)) {
-          console.log(`[Creem Webhook] Already processed ${eventId}, skipping`);
-          break;
-        }
-
-        // Create payment record
-        try {
-          await createCreemPaymentRecord({
-            userId,
-            creemCheckoutId: obj.id || eventId,
-            amount,
-            currency,
-            status: "SUCCEEDED",
-            description: `Creem checkout: ${plan}`,
-            metadata: { eventId, eventType, obj },
-          });
-          console.log(`[Creem Webhook] Payment record created for user ${userId}`);
-        } catch (err) {
-          console.error("[Creem Webhook] Failed to create payment record:", err);
-        }
-
-        // Upsert subscription
-        try {
-          await upsertCreemSubscription({
-            userId,
-            creemCustomerId: customerId,
-            creemSubscriptionId: subscriptionId,
-            plan,
-            status: "ACTIVE",
-            currentPeriodEnd: undefined,  // Creem may not provide this
-          });
-          console.log(`[Creem Webhook] Subscription activated for user ${userId}, plan: ${plan}`);
-        } catch (err) {
-          console.error("[Creem Webhook] Failed to upsert subscription:", err);
-        }
-
-        break;
-      }
-
-      // ── Subscription events ──────────────────────────────
-      case "subscription.active":
-      case "subscription.created": {
-        const metadata = obj.metadata || {};
-        const userId = metadata.userId;
-        const plan = metadata.plan as "PREMIUM_MONTHLY" | "PREMIUM_YEARLY" | undefined;
-
-        if (!userId || !plan) {
-          console.warn("[Creem Webhook] Missing userId or plan in subscription metadata", { metadata });
-          break;
-        }
-
-        try {
-          await upsertCreemSubscription({
-            userId,
-            creemCustomerId: obj.customer || obj.customer_id || "",
-            creemSubscriptionId: obj.id || "",
-            plan,
-            status: "ACTIVE",
-            currentPeriodEnd: obj.current_period_end ? new Date(obj.current_period_end * 1000) : undefined,
-          });
-          console.log(`[Creem Webhook] Subscription active for user ${userId}`);
-        } catch (err) {
-          console.error("[Creem Webhook] Failed to upsert subscription:", err);
-        }
-        break;
-      }
-
-      case "subscription.cancelled":
-      case "subscription.canceled": {
-        const metadata = obj.metadata || {};
-        const userId = metadata.userId;
-
-        if (!userId) {
-          console.warn("[Creem Webhook] Missing userId in subscription cancellation");
-          break;
-        }
-
-        try {
-          const existing = await db.subscription.findFirst({ where: { userId } });
-          if (existing) {
-            await db.subscription.update({
-              where: { id: existing.id },
-              data: { status: "CANCELLED", cancelledAt: new Date() },
-            });
-            console.log(`[Creem Webhook] Subscription cancelled for user ${userId}`);
-          }
-        } catch (err) {
-          console.error("[Creem Webhook] Failed to cancel subscription:", err);
-        }
-        break;
-      }
-
-      case "subscription.past_due": {
-        const metadata = obj.metadata || {};
-        const userId = metadata.userId;
-
-        if (!userId) break;
-
-        try {
-          const existing = await db.subscription.findFirst({ where: { userId } });
-          if (existing) {
-            await db.subscription.update({
-              where: { id: existing.id },
-              data: { status: "PAST_DUE" },
-            });
-            console.log(`[Creem Webhook] Subscription past due for user ${userId}`);
-          }
-        } catch (err) {
-          console.error("[Creem Webhook] Failed to update subscription:", err);
-        }
-        break;
-      }
-
-      // ── Payment events ───────────────────────────────────
-      case "payment.succeeded": {
-        const metadata = obj.metadata || {};
-        const userId = metadata.userId;
-
-        if (userId) {
-          // BUG-632: idempotency
-          if (await creemPaymentAlreadyProcessed(obj.id || eventId)) {
-            console.log(`[Creem Webhook] Already processed ${eventId}, skipping`);
-            break;
-          }
-          try {
-            await createCreemPaymentRecord({
-              userId,
-              creemCheckoutId: obj.id || eventId,
-              amount: obj.amount || 0,
-              currency: obj.currency || "usd",
-              status: "SUCCEEDED",
-              description: `Creem payment: ${obj.description || eventType}`,
-              metadata: { eventId, eventType, obj },
-            });
-            console.log(`[Creem Webhook] Payment succeeded for user ${userId}`);
-          } catch (err) {
-            console.error("[Creem Webhook] Failed to create payment record:", err);
-          }
-        }
-        break;
-      }
-
-      case "payment.failed": {
-        const metadata = obj.metadata || {};
-        const userId = metadata.userId;
-
-        if (userId) {
-          // BUG-632: idempotency
-          if (await creemPaymentAlreadyProcessed(obj.id || eventId)) {
-            console.log(`[Creem Webhook] Already processed ${eventId}, skipping`);
-            break;
-          }
-          try {
-            await createCreemPaymentRecord({
-              userId,
-              creemCheckoutId: obj.id || eventId,
-              amount: obj.amount || 0,
-              currency: obj.currency || "usd",
-              status: "FAILED",
-              description: `Creem payment failed: ${obj.failure_reason || "unknown"}`,
-              metadata: { eventId, eventType, obj },
-            });
-            console.log(`[Creem Webhook] Payment failed for user ${userId}`);
-          } catch (err) {
-            console.error("[Creem Webhook] Failed to create payment record:", err);
-          }
-        }
-        break;
-      }
-
-      // ── Unhandled events ────────────────────────────────
-      default: {
-        console.log(`[Creem Webhook] Unhandled event type: ${eventType}`);
-        break;
-      }
+    // 不在官方目录里：不返回 4xx（否则 Creem 会按失败重试 5 次），记录后 200。
+    if (kind === "unknown") {
+      console.warn(`[Creem Webhook] Unknown event type (not in Creem catalog): ${String(eventType)}`);
+      return NextResponse.json({ received: true, ignored: "unknown_event" });
     }
 
-    return NextResponse.json({ received: true });
-  } catch (error: any) {
+    // 已知但不影响订阅状态（credits / update / dispute）：明确忽略，不走 default。
+    if (kind === "ignored") {
+      console.log(`[Creem Webhook] Ignored by design: ${String(eventType)}`);
+      return NextResponse.json({ received: true, ignored: eventType });
+    }
+
+    // ── 身份解析：metadata.userId 优先；缺失时按订阅 id 回查本地记录 ──
+    const subId = subscriptionIdOf(obj);
+    let userId = userIdOf(obj);
+    let existing = subId
+      ? await db.subscription.findFirst({ where: { stripeSubscriptionId: subId } })
+      : null;
+
+    if (!userId && existing) userId = existing.userId;
+    if (!userId) {
+      // 没有本地账号可归属：200 丢回执，避免 Creem 无限重试（数据在 Creem 侧仍在）。
+      console.warn("[Creem Webhook] Cannot resolve userId", { eventId, subId });
+      return NextResponse.json({ received: true, ignored: "no_user" });
+    }
+
+    if (!existing) {
+      existing = await db.subscription.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+    }
+
+    // ── 退款：只翻原账单，不改订阅状态（退一期不等于退订） ──
+    if (kind === "refund") {
+      const tran = transactionIdOf(obj);
+      const key = tran ? `creem:tran:${tran}` : null;
+      if (key) {
+        const original = await db.payment.findFirst({ where: { stripePaymentIntentId: key } });
+        if (original) {
+          await db.payment.update({
+            where: { id: original.id },
+            data: {
+              status: "REFUNDED",
+              description: `${original.description ?? "Creem payment"} (refunded)`,
+            },
+          });
+          console.log(`[Creem Webhook] Payment ${original.id} marked REFUNDED`);
+        } else {
+          console.warn("[Creem Webhook] Refund without matching payment", { eventId, key });
+        }
+      }
+      return NextResponse.json({ received: true, kind, refunded: Boolean(tran) });
+    }
+
+    // ── 乱序保护 ──
+    const incomingPeriodEnd = periodEndOf(obj);
+    const currentPeriodEnd = existing?.stripeCurrentPeriodEnd ?? null;
+    if (isStaleDowngrade(kind, incomingPeriodEnd, currentPeriodEnd)) {
+      console.warn(
+        `[Creem Webhook] Stale downgrade ignored: ${kind} periodEnd=${incomingPeriodEnd?.toISOString()} < current=${currentPeriodEnd?.toISOString()}`,
+      );
+      return NextResponse.json({ received: true, ignored: "stale" });
+    }
+
+    // ── 账务：同一笔交易只入账一次 ──
+    const paymentKey = isMonetaryKind(kind) ? idempotencyKeyOf(kind, event, obj) : null;
+    if (paymentKey) {
+      const already = await db.payment.findFirst({
+        where: { stripePaymentIntentId: paymentKey },
+      });
+      if (already) {
+        console.log(`[Creem Webhook] Duplicate ${kind}, payment already recorded: ${paymentKey}`);
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+
+      const rawAmount = typeof obj.amount === "number" ? obj.amount : 0;
+      const currency = typeof obj.currency === "string" ? obj.currency : "usd";
+      await db.payment.create({
+        data: {
+          userId,
+          stripePaymentIntentId: paymentKey,
+          amount: rawAmount / 100, // Creem 用分，Payment.amount 用元
+          currency,
+          status: "SUCCEEDED",
+          description:
+            kind === "renew"
+              ? `Creem renewal: ${String(planOf(obj) ?? existing?.plan ?? "subscription")}`
+              : `Creem checkout: ${String(planOf(obj) ?? existing?.plan ?? "subscription")}`,
+          metadata: JSON.stringify({ eventId, eventType, kind, subId }),
+        },
+      });
+      console.log(
+        `[Creem Webhook] Payment recorded: ${paymentKey} (${rawAmount / 100} ${currency})`,
+      );
+    }
+
+    // ── 状态迁移 ──
+    const nextStatus = statusForKind(kind);
+    if (!nextStatus) {
+      return NextResponse.json({ received: true, kind });
+    }
+
+    const rawPlan = planOf(obj);
+    const plan =
+      rawPlan && SUPPORTED_PLAN_VALUES.has(rawPlan)
+        ? (rawPlan as "FREE" | "LADY_FREE" | "PREMIUM_MONTHLY" | "PREMIUM_YEARLY" | "LIFETIME")
+        : existing?.plan ?? "PREMIUM_MONTHLY";
+
+    const customerId = customerIdOf(obj);
+
+    if (existing) {
+      await db.subscription.update({
+        where: { id: existing.id },
+        data: {
+          plan,
+          status: nextStatus,
+          ...(customerId ? { stripeCustomerId: customerId } : {}),
+          ...(subId ? { stripeSubscriptionId: subId } : {}),
+          // 只前进不后退：迟到事件不得把周期改短
+          ...(incomingPeriodEnd && (!currentPeriodEnd || incomingPeriodEnd > currentPeriodEnd)
+            ? { stripeCurrentPeriodEnd: incomingPeriodEnd, endsAt: incomingPeriodEnd }
+            : {}),
+          ...(kind === "cancel" ? { cancelledAt: new Date() } : {}),
+        },
+      });
+      console.log(`[Creem Webhook] ${kind} → ${nextStatus} for user ${userId}`);
+    } else if (kind === "activate" || kind === "renew") {
+      // 首购但本地还没有订阅记录（例如 checkout 与 webhook 竞态）：补建
+      await db.subscription.create({
+        data: {
+          userId,
+          plan,
+          status: nextStatus,
+          ...(customerId ? { stripeCustomerId: customerId } : {}),
+          ...(subId ? { stripeSubscriptionId: subId } : {}),
+          ...(incomingPeriodEnd
+            ? { stripeCurrentPeriodEnd: incomingPeriodEnd, endsAt: incomingPeriodEnd }
+            : {}),
+        },
+      });
+      console.log(`[Creem Webhook] Subscription created for user ${userId} (${plan})`);
+    } else {
+      console.warn(`[Creem Webhook] ${kind} without local subscription for user ${userId}`);
+    }
+
+    return NextResponse.json({ received: true, kind, status: nextStatus });
+  } catch (error) {
     console.error("[Creem Webhook] Error:", error);
-    return NextResponse.json({ error: `Webhook handler failed: ${error.message}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `Webhook handler failed: ${errorMessage(error)}` },
+      { status: 500 },
+    );
   }
 }

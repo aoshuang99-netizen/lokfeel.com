@@ -107,3 +107,6 @@ perf-baseline.db-journal
 perf-baseline.db-wal
 perf-baseline.db-shm
 /reports/
+
+# V17 本地依赖备份（不提交）
+.nm-broken-v17/
