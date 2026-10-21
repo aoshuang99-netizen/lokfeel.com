@@ -117,7 +117,9 @@ describe('withTenant —— 单能力', () => {
     expect(res.status).toBe(403)
     const row = auditCreate.mock.calls[0][0].data
     expect(row.eventType).toBe('tenant.capability_denied')
-    expect(row.safeMetadata.mode).toBe('all')
+    // ⚠️ `writeTenantAudit` 把 safeMetadata **序列化成 JSON 文本**再落库，
+    //    所以断言的是**持久化后的形态**（合规读者真正看到的东西），而不是调用时的对象。
+    expect(JSON.parse(row.safeMetadata).mode).toBe('all')
   })
 
   it('🔒 传数组给 withTenant → 立刻抛 TypeError（不得退化成"任一满足"）', () => {
@@ -163,7 +165,10 @@ describe('withTenantAny —— 析取', () => {
     asRole('MEMBER')
     const res = await run(withTenantAny(['workflow.read', 'workflow.manage']))
     expect(res.status).toBe(403)
-    const payload = (await res.json()) as { error?: string }
-    expect(payload.error).toContain(' or ')
+    // 信封是 `{ success, data, error: { code, message } }` —— message 在 error 里面，
+    // 不是 `error` 本身（早期断言把它当字符串，于是 toContain 在对象上必失败）。
+    const payload = (await res.json()) as { error?: { code?: string; message?: string } }
+    expect(payload.error?.code).toBe('PERMISSION_DENIED')
+    expect(payload.error?.message).toContain(' or ')
   })
 })

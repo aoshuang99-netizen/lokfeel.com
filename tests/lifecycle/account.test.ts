@@ -221,10 +221,14 @@ describe('AC-10 · 销号状态值不得与 schema 枚举漂移', () => {
     fs.readFileSync(path.join(process.cwd(), rel), 'utf8')
 
   it('清单里点名的状态值必须是 schema 真实存在的（WITHDRAWN，不是 CANCELLED）', () => {
+    // ⚠️ 必须**同时**按 action 过滤：`SocialIntent` 在清单里出现两次
+    //    （`anonymize` 清正文 + `state-change` 收窄状态）。只按 target 筛会捞到 4 条，
+    //    而 anonymize 那条本来就不该带状态值 —— 这条"前置非空"断言正是用来抓这个的。
     const stateRows = ERASURE_ACTIONS.filter(
-      (a) => a.target === 'SocialIntent' || a.target === 'MissionParticipation' || a.target === 'BridgeMemberOptIn'
+      (a) =>
+        a.action === 'state-change' &&
+        ['SocialIntent', 'MissionParticipation', 'BridgeMemberOptIn'].includes(a.target)
     )
-    // 前置非空：少一条这条断言就变成空集恒真
     expect(stateRows.length).toBe(3)
     for (const row of stateRows) {
       expect(row.detail).toContain('WITHDRAWN')
