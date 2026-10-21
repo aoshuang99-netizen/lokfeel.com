@@ -7,18 +7,18 @@ import { db } from "@/lib/db";
 /**
  * POST /api/webhooks/gumroad?secret=<GUMROAD_WEBHOOK_SECRET>
  *
- * Gumroad "ping" webhooks are form-encoded (application/x-www-form-urlencoded)
- * and carry NO signature header. The only authenticator available is a shared
- * secret embedded in the endpoint URL, so:
- *   - the secret is compared in constant time;
- *   - when GUMROAD_ACCESS_TOKEN is configured we additionally re-fetch the sale
- *     from the Gumroad API and refuse anything the API does not confirm;
- *   - unknown products / unknown users return 200 (acknowledged, ignored) so a
- *     misconfigured product does not turn into an infinite retry loop.
+ * Gumroad "ping" webhooks are form-encoded and carry NO signature header, so
+ * the shared secret in the endpoint URL is the only authenticator:
+ *   - compared in constant time;
+ *   - when GUMROAD_ACCESS_TOKEN is set we additionally re-fetch the sale and
+ *     refuse anything the Gumroad API does not confirm.
  *
- * Products mapped here are the Hlua Pass memberships. The legacy
- * SubscriptionPlan enum has no quarterly value, so quarterly maps to
- * PREMIUM_MONTHLY with a 92-day period (documented, not silently dropped).
+ * Three resources are subscribed (sale / cancellation / refund) and each has a
+ * distinct idempotency key, because a refund reuses the original sale_id — a
+ * single key would make the refund look like a duplicate and be swallowed.
+ *
+ * Unknown products / unknown buyers / test sales return 200 (acknowledged,
+ * ignored) so a misconfiguration cannot become an endless retry loop.
  */
 
 const PLAN_BY_PERMALINK: Record<string, { plan: "PREMIUM_MONTHLY" | "PREMIUM_YEARLY"; days: number }> = {
@@ -26,6 +26,8 @@ const PLAN_BY_PERMALINK: Record<string, { plan: "PREMIUM_MONTHLY" | "PREMIUM_YEA
   "hlua-pass-quarterly": { plan: "PREMIUM_MONTHLY", days: 92 },
   "hlua-pass-yearly": { plan: "PREMIUM_YEARLY", days: 365 },
 };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function constantTimeEqual(a: string, b: string): boolean {
   const ha = createHmac("sha256", "gumroad-webhook").update(a).digest();
@@ -44,30 +46,34 @@ function centsToUsd(raw: string): number {
   return Math.round(n) / 100;
 }
 
+type Kind = "sale" | "cancellation" | "refund";
+
 interface GumroadPing {
+  kind: Kind;
   saleId: string;
   email: string;
   permalink: string;
   priceCents: string;
   currency: string;
   subscriptionId: string;
-  cancelled: boolean;
-  refunded: boolean;
   isTest: boolean;
   recurrence: string;
   productName: string;
 }
 
 function parsePing(params: URLSearchParams): GumroadPing {
+  const cancelled = field(params, "cancelled") === "true" || field(params, "cancelled_at") !== "";
+  const refunded = field(params, "refunded") === "true" || field(params, "refund") === "true";
+  const kind: Kind = refunded ? "refund" : cancelled ? "cancellation" : "sale";
+
   return {
+    kind,
     saleId: field(params, "sale_id"),
     email: field(params, "email").toLowerCase(),
     permalink: field(params, "product_permalink") || field(params, "permalink"),
     priceCents: field(params, "price"),
     currency: (field(params, "currency") || "usd").toLowerCase(),
     subscriptionId: field(params, "subscription_id"),
-    cancelled: field(params, "cancelled") === "true",
-    refunded: field(params, "refunded") === "true",
     isTest: field(params, "test") === "true",
     recurrence: field(params, "recurrence"),
     productName: field(params, "product_name"),
@@ -95,6 +101,165 @@ async function verifySaleWithApi(saleId: string): Promise<"confirmed" | "rejecte
   }
 }
 
+async function handleSale(ping: GumroadPing): Promise<NextResponse> {
+  const mapping = PLAN_BY_PERMALINK[ping.permalink];
+  if (!mapping) {
+    console.info("[Gumroad Webhook] unknown product acknowledged (no state change)", {
+      permalink: ping.permalink,
+      product: ping.productName,
+      saleId: ping.saleId,
+    });
+    return NextResponse.json({ ok: true, ignored: "product not mapped" });
+  }
+
+  if (!ping.email) {
+    return NextResponse.json({ ok: true, ignored: "no buyer email" });
+  }
+
+  const user = await db.user.findUnique({ where: { email: ping.email }, select: { id: true } });
+  if (!user) {
+    // Buyer paid with an email that has no LokFeel account: acknowledge and stop.
+    console.info("[Gumroad Webhook] no local account for buyer (no state change)", { email: ping.email });
+    return NextResponse.json({ ok: true, ignored: "no matching user" });
+  }
+
+  // Idempotency: Gumroad retries on non-2xx and may resend duplicates.
+  const idempotencyKey = `gumroad:sale:${ping.saleId}`;
+  const already = await db.payment.findFirst({
+    where: { stripePaymentIntentId: idempotencyKey },
+    select: { id: true },
+  });
+  if (already) {
+    return NextResponse.json({ ok: true, duplicate: true });
+  }
+
+  const now = new Date();
+  const periodEnd = new Date(now.getTime() + mapping.days * DAY_MS);
+
+  const existing = await db.subscription.findFirst({ where: { userId: user.id }, select: { id: true } });
+  if (existing) {
+    await db.subscription.update({
+      where: { id: existing.id },
+      data: {
+        plan: mapping.plan,
+        status: "ACTIVE",
+        stripeCustomerId: ping.email,
+        stripeSubscriptionId: ping.subscriptionId || undefined,
+        stripeCurrentPeriodEnd: periodEnd,
+        cancelledAt: null,
+        endsAt: null,
+      },
+    });
+  } else {
+    await db.subscription.create({
+      data: {
+        userId: user.id,
+        plan: mapping.plan,
+        status: "ACTIVE",
+        stripeCustomerId: ping.email,
+        stripeSubscriptionId: ping.subscriptionId || null,
+        stripeCurrentPeriodEnd: periodEnd,
+      },
+    });
+  }
+
+  await db.payment.create({
+    data: {
+      userId: user.id,
+      stripePaymentIntentId: idempotencyKey,
+      amount: centsToUsd(ping.priceCents),
+      currency: ping.currency,
+      status: "SUCCEEDED",
+      description: `Gumroad · ${ping.productName || ping.permalink}${ping.recurrence ? ` (${ping.recurrence})` : ""}`,
+      metadata: JSON.stringify({
+        provider: "gumroad",
+        saleId: ping.saleId,
+        subscriptionId: ping.subscriptionId,
+        permalink: ping.permalink,
+        recurrence: ping.recurrence,
+      }),
+    },
+  });
+
+  console.info("[Gumroad Webhook] subscription activated", {
+    userId: user.id,
+    plan: mapping.plan,
+    saleId: ping.saleId,
+  });
+
+  return NextResponse.json({ ok: true, plan: mapping.plan, status: "ACTIVE" });
+}
+
+/**
+ * Cancellations may arrive with only a subscription_id (no sale_id, and often
+ * no permalink), so they are resolved against the stored subscription instead
+ * of the product map.
+ */
+async function handleCancellation(ping: GumroadPing): Promise<NextResponse> {
+  if (!ping.subscriptionId && !ping.email) {
+    return NextResponse.json({ ok: true, ignored: "no subscription_id / email" });
+  }
+
+  const now = new Date();
+  const target = ping.subscriptionId
+    ? await db.subscription.findFirst({
+        where: { stripeSubscriptionId: ping.subscriptionId },
+        select: { id: true },
+      })
+    : await db.user
+        .findUnique({ where: { email: ping.email }, select: { id: true } })
+        .then((u: { id: string } | null) =>
+          u
+            ? db.subscription.findFirst({ where: { userId: u.id }, select: { id: true } })
+            : null,
+        );
+
+  if (!target) {
+    return NextResponse.json({ ok: true, ignored: "no matching subscription" });
+  }
+
+  await db.subscription.update({
+    where: { id: target.id },
+    data: { status: "CANCELLED", cancelledAt: now, endsAt: now, stripeCurrentPeriodEnd: now },
+  });
+
+  console.info("[Gumroad Webhook] subscription cancelled", {
+    subscriptionId: ping.subscriptionId,
+    email: ping.email,
+  });
+
+  return NextResponse.json({ ok: true, status: "CANCELLED" });
+}
+
+/**
+ * A refund reuses the original sale_id, so it must NOT share the sale
+ * idempotency key. The original payment row is flipped to REFUNDED; no second
+ * payment row is created. The subscription itself stays as-is: a refunded
+ * cycle is not a cancellation, and Gumroad sends its own cancellation ping.
+ */
+async function handleRefund(ping: GumroadPing): Promise<NextResponse> {
+  if (!ping.saleId) {
+    return NextResponse.json({ ok: true, ignored: "no sale_id" });
+  }
+
+  const original = await db.payment.findFirst({
+    where: { stripePaymentIntentId: `gumroad:sale:${ping.saleId}` },
+    select: { id: true, status: true },
+  });
+  if (!original) {
+    console.info("[Gumroad Webhook] refund for unknown sale (no state change)", { saleId: ping.saleId });
+    return NextResponse.json({ ok: true, ignored: "sale not recorded locally" });
+  }
+  if (original.status === "REFUNDED") {
+    return NextResponse.json({ ok: true, duplicate: true });
+  }
+
+  await db.payment.update({ where: { id: original.id }, data: { status: "REFUNDED" } });
+
+  console.info("[Gumroad Webhook] payment refunded", { saleId: ping.saleId });
+  return NextResponse.json({ ok: true, status: "REFUNDED" });
+}
+
 export async function POST(request: NextRequest) {
   const secret = process.env.GUMROAD_WEBHOOK_SECRET;
   if (!secret) {
@@ -117,26 +282,9 @@ export async function POST(request: NextRequest) {
   const raw = await request.text();
   const ping = parsePing(new URLSearchParams(raw));
 
-  if (!ping.saleId) {
-    // Gumroad "resource=subscription" pings may only carry subscription_id.
-    if (!ping.subscriptionId) {
-      return NextResponse.json({ ok: true, ignored: "no sale_id / subscription_id" });
-    }
-  }
-
   if (ping.isTest) {
     console.info("[Gumroad Webhook] test ping acknowledged (no state change)", { saleId: ping.saleId });
     return NextResponse.json({ ok: true, ignored: "test sale" });
-  }
-
-  const mapping = PLAN_BY_PERMALINK[ping.permalink];
-  if (!mapping) {
-    console.info("[Gumroad Webhook] unknown product acknowledged (no state change)", {
-      permalink: ping.permalink,
-      product: ping.productName,
-      saleId: ping.saleId,
-    });
-    return NextResponse.json({ ok: true, ignored: "product not mapped" });
   }
 
   if (ping.saleId) {
@@ -147,85 +295,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (!ping.email) {
-    return NextResponse.json({ ok: true, ignored: "no buyer email" });
+  switch (ping.kind) {
+    case "refund":
+      return handleRefund(ping);
+    case "cancellation":
+      return handleCancellation(ping);
+    default:
+      return handleSale(ping);
   }
-
-  const user = await db.user.findUnique({ where: { email: ping.email }, select: { id: true } });
-  if (!user) {
-    // Buyer paid with an email that has no LokFeel account: acknowledge and stop.
-    console.info("[Gumroad Webhook] no local account for buyer (no state change)", { email: ping.email });
-    return NextResponse.json({ ok: true, ignored: "no matching user" });
-  }
-
-  // Idempotency: Gumroad retries on non-2xx and may resend duplicates.
-  const idempotencyKey = `gumroad:${ping.saleId || ping.subscriptionId}`;
-  const already = await db.payment.findFirst({
-    where: { stripePaymentIntentId: idempotencyKey },
-    select: { id: true },
-  });
-  if (already) {
-    return NextResponse.json({ ok: true, duplicate: true });
-  }
-
-  const now = new Date();
-  const periodEnd = new Date(now.getTime() + mapping.days * 24 * 60 * 60 * 1000);
-  const status: "ACTIVE" | "CANCELLED" | "EXPIRED" = ping.cancelled
-    ? "CANCELLED"
-    : ping.refunded
-      ? "EXPIRED"
-      : "ACTIVE";
-
-  const existing = await db.subscription.findFirst({ where: { userId: user.id }, select: { id: true } });
-  if (existing) {
-    await db.subscription.update({
-      where: { id: existing.id },
-      data: {
-        plan: mapping.plan,
-        status,
-        stripeCustomerId: ping.email,
-        stripeSubscriptionId: ping.subscriptionId || undefined,
-        stripeCurrentPeriodEnd: status === "ACTIVE" ? periodEnd : now,
-        cancelledAt: status === "CANCELLED" ? now : null,
-      },
-    });
-  } else {
-    await db.subscription.create({
-      data: {
-        userId: user.id,
-        plan: mapping.plan,
-        status,
-        stripeCustomerId: ping.email,
-        stripeSubscriptionId: ping.subscriptionId || null,
-        stripeCurrentPeriodEnd: status === "ACTIVE" ? periodEnd : now,
-      },
-    });
-  }
-
-  await db.payment.create({
-    data: {
-      userId: user.id,
-      stripePaymentIntentId: idempotencyKey,
-      amount: centsToUsd(ping.priceCents),
-      currency: ping.currency,
-      status: ping.refunded ? "REFUNDED" : "SUCCEEDED",
-      description: `Gumroad · ${ping.productName || ping.permalink}${ping.recurrence ? ` (${ping.recurrence})` : ""}`,
-      metadata: JSON.stringify({
-        provider: "gumroad",
-        saleId: ping.saleId,
-        subscriptionId: ping.subscriptionId,
-        permalink: ping.permalink,
-        recurrence: ping.recurrence,
-      }),
-    },
-  });
-
-  console.info("[Gumroad Webhook] subscription synced", {
-    userId: user.id,
-    plan: mapping.plan,
-    status,
-    saleId: ping.saleId,
-  });
-
-  return NextResponse.json({ ok: true, plan: mapping.plan, status });
 }
