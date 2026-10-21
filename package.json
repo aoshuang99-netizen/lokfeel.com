@@ -167,7 +167,9 @@
     "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs",
     "verify:llm:live": "node scripts/qa/verify-llm-live.mjs",
     "verify:brand-scan": "node scripts/qa/verify-brand-scan.mjs",
-    "audit:ux13": "node scripts/qa/v16-ux-audit.mjs"
+    "audit:ux13": "node scripts/qa/v16-ux-audit.mjs",
+    "verify:contrast": "node scripts/qa/contrast-tokens.mjs",
+    "audit:release": "node scripts/qa/v16-release-audit.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

@@ -7,13 +7,17 @@ import { withSentryConfig } from '@sentry/nextjs/config'
 
 const CSP_VALUE = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com",
+  // Cloudflare Web Analytics：站点走 orange-cloud，CF 边缘会**自动注入** beacon
+  // （`static.cloudflareinsights.com/beacon.min.js`）。此前未放行 → 13/13 屏每页一条
+  // CSP 拦截错误（V16 审计 F-01），且真实访问统计一直在丢。这里只放行该 beacon 域，
+  // 不等于放开 `script-src`：仍是白名单，`unsafe-eval` 依然禁止。
+  "script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com",
   "font-src 'self' fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com",
   // Removed 'unsafe-eval' (was a high-risk XSS vector). Added Creem, Firebase
   // and Pusher hosts so realtime auth/messaging/payments work under CSP.
-  "connect-src 'self' https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcm.googleapis.com https://api.creem.io https://www.creem.io https://*.pusher.com wss://*.pusher.com",
+  "connect-src 'self' https://cloudflareinsights.com https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcm.googleapis.com https://api.creem.io https://www.creem.io https://*.pusher.com wss://*.pusher.com",
   "frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com",
   "base-uri 'self'",
   "form-action 'self' https://accounts.google.com https://twitter.com",

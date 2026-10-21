@@ -38,6 +38,8 @@ import { useCallback, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { AlertCircle, Bell, CheckCircle2, Compass, Inbox, Loader2, MessageSquare, Wand2 } from 'lucide-react'
 import LivingShell, { type LivingNavItem } from '@/components/living/living-shell'
+import StageRail from '@/components/living/adaptive/stage-rail'
+import { buildOsStages } from '@/lib/living/adaptive/stages'
 import LivingCanvas from '@/components/living/living-canvas'
 import FieldCanvas from '@/components/living/field/field-canvas'
 import FieldInspector from '@/components/living/field/field-inspector'
@@ -639,12 +641,34 @@ export default function LivingWorkspace() {
     return evidenceInspector
   })()
 
+  /**
+   * 阶段条：把「提案 → 同意 → 执行 → 成果」四个**已接线**的真实端点折成一条轨道。
+   * 纯函数 `buildOsStages` 只做计数与打标，不发请求；读不到的段落显示「—」而不是 0。
+   */
+  const stages = useMemo(
+    () =>
+      buildOsStages({
+        proposals: consentData.board?.rows ?? null,
+        runs: agentData.board?.runs ?? null,
+        outcomes: observatoryData.timeline
+          ? {
+              total: observatoryData.timeline.counts.total,
+              unverified: observatoryData.timeline.counts.unverified,
+            }
+          : null,
+        specReady: compiled?.ok === true,
+      }),
+    [consentData.board, agentData.board, observatoryData.timeline, compiled],
+  )
+
   return (
     <LivingShell
       nav={NAV}
       activeKey={activeKey}
       onNavigate={setActiveKey}
       title="My Workspace"
+      dualWorld
+      stageRail={<StageRail stages={stages} activeView={activeKey} onFocusView={setActiveKey} />}
       contextExtra={
         <span className="hidden items-center gap-1 rounded-lf border border-lf-line px-2 py-1 text-xs text-lf-text-muted sm:inline-flex">
           <Bell className="h-3.5 w-3.5" aria-hidden="true" />

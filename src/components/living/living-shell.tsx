@@ -43,6 +43,15 @@ interface LivingShellProps {
   composer?: ReactNode
   /** 工作区标题（ContextBar 左）。 */
   title: string
+  /**
+   * 双世界模式（设计 C · Adaptive Dual World）：
+   *   左半（Context Bar / 导航 / Canvas）恒为 Deep Field 深色，右半 Inspector 恒为 Living Paper 纸面。
+   *   令牌切换由 `[data-lf-dual] [data-lf-world]` 的 CSS 作用域完成（见 globals.css），
+   *   因此**不需要**给每个组件再包一层主题。
+   */
+  dualWorld?: boolean
+  /** 阶段条（Adaptive 的驱动源，渲染在 Canvas 顶部）。 */
+  stageRail?: ReactNode
 }
 
 const THEME_KEY = 'lf-theme'
@@ -80,6 +89,8 @@ export default function LivingShell({
   inspector,
   composer,
   title,
+  dualWorld = false,
+  stageRail,
 }: LivingShellProps) {
   // 服务端快照固定 'field' → 首屏与 SSR 一致，挂载后由 useSyncExternalStore 取真实值，不会 hydration 失配。
   const theme = useSyncExternalStore(subscribeTheme, readThemeSnapshot, () => 'field' as LivingTheme)
@@ -95,11 +106,15 @@ export default function LivingShell({
   return (
     <div
       data-lf-theme={theme}
+      data-lf-dual={dualWorld ? '1' : undefined}
       data-lf-motion="2"
       className="flex min-h-dvh flex-col bg-lf-bg text-lf-text"
     >
       {/* ── 顶部 Context Bar（56–64px） ── */}
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-lf-line bg-lf-surface px-3 lg:h-16 lg:px-4">
+      <header
+        data-lf-world={dualWorld ? 'canvas' : undefined}
+        className="flex h-14 shrink-0 items-center gap-3 border-b border-lf-line bg-lf-surface px-3 lg:h-16 lg:px-4"
+      >
         <div className="flex min-w-0 items-center gap-2">
           <span className="text-sm font-semibold tracking-tight text-lf-signal">LOKFEEL</span>
           <span className="hidden text-xs text-lf-text-muted sm:inline">/ {title}</span>
@@ -109,7 +124,11 @@ export default function LivingShell({
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label={theme === 'field' ? '切换到明亮模式（Living Paper）' : '切换到深色模式（Deep Field）'}
+            aria-label={
+              theme === 'field'
+                ? '切换画布为阅读底色（浅色）'
+                : '切换画布为沉浸底色（深色）'
+            }
             className="lf-focus-ring inline-flex h-9 w-9 items-center justify-center rounded-lf border border-lf-line text-lf-text-muted transition-colors hover:text-lf-text"
             style={{ transitionDuration: 'var(--lf-dur-fast)' }}
           >
@@ -147,6 +166,7 @@ export default function LivingShell({
         {/* ── 左侧 Dock（桌面 64–80px；<1024px 退化为横向条） ── */}
         <nav
           aria-label="工作区导航"
+          data-lf-world={dualWorld ? 'canvas' : undefined}
           className="flex shrink-0 gap-1 overflow-x-auto border-b border-lf-line bg-lf-surface px-2 py-2 lg:w-20 lg:flex-col lg:overflow-x-visible lg:border-b-0 lg:border-r lg:py-4"
         >
           {nav.map((item) => {
@@ -187,7 +207,17 @@ export default function LivingShell({
         </nav>
 
         {/* ── 中央 Living Canvas ── */}
-        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-3 pb-28 lg:p-5 lg:pb-32">
+        {/*
+          🔴 底部留白按**输入框实际高度 + 安全区**算（V16 审计 F-09）：
+          此前 `pb-28` 只够单行输入，一旦底部草稿/错误提示换行，最后一张卡片就被
+          永远压在输入框底下 —— 移动端根本滚不出来。这里改成 CSS calc + safe-area，
+          iPhone 的 home indicator 也不会再吃掉最后一行。
+        */}
+        <main
+          data-lf-world={dualWorld ? 'canvas' : undefined}
+          className="min-h-0 min-w-0 flex-1 overflow-y-auto p-3 pb-[calc(10.5rem+env(safe-area-inset-bottom))] lg:p-5 lg:pb-32"
+        >
+          {stageRail}
           {children}
         </main>
 
@@ -195,6 +225,7 @@ export default function LivingShell({
         {hasInspector && inspectorOpen && (
           <aside
             aria-label="证据与详情"
+            data-lf-world={dualWorld ? 'inspector' : undefined}
             className="hidden w-[360px] shrink-0 overflow-y-auto border-l border-lf-line bg-lf-surface p-4 lg:block"
           >
             {inspector}
@@ -211,7 +242,10 @@ export default function LivingShell({
             onClick={() => setMobileInspectorOpen(false)}
             className="absolute inset-0 bg-black/50"
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-lf-lg border-t border-lf-line bg-lf-surface p-4">
+          <div
+            data-lf-world={dualWorld ? 'inspector' : undefined}
+            className="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-lf-lg border-t border-lf-line bg-lf-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+          >
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-medium">证据与详情</h2>
               <button
@@ -229,7 +263,7 @@ export default function LivingShell({
 
       {/* ── 底部 Command Composer（浮动） ── */}
       {composer && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-3 lg:px-6 lg:pb-5">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:px-6 lg:pb-5">
           <div className="pointer-events-auto w-full max-w-3xl rounded-lf-lg border border-lf-line-strong bg-lf-surface p-2 shadow-lg">
             {composer}
           </div>

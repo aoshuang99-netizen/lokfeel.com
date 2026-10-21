@@ -88,9 +88,16 @@ export default function ConsoleShell({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-semibold text-foreground truncate font-display">
+              {/*
+                🔴 这里刻意**不是** <h1>（V16 审计 F-04）。
+                组织名在七个屏里都一样，一旦做成 h1，每页就会出现**两个 h1**，
+                而且 DOM 里第一个永远是同一个组织名 —— 屏幕阅读器按 H 键跳标题时
+                七屏无法区分，审计脚本读到的首标题也恒为组织名。
+                组织名是**上下文**，不是页面标题；页面标题由各屏自己声明唯一的 h1。
+              */}
+              <p className="text-sm font-semibold text-foreground truncate font-display">
                 {organizationName}
-              </h1>
+              </p>
               <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/15 text-primary">
                 社群模式
               </span>

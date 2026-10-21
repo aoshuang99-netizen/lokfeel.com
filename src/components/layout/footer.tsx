@@ -28,10 +28,12 @@ const footerSections = {
       { label: "Privacy Policy", href: "/privacy", external: false },
       { label: "Cookie Policy", href: "/cookies", external: false },
       { label: "DMCA", href: "/dmca", external: false },
-      { label: "18 U.S.C. 2257", href: "/18-usc-2257", external: false },
+      // 18 U.S.C. 2257 与 Fan/Creator Agreement 属**成人内容平台**法务模板，
+      // 与 Connection OS 的业务范围无关。两者路由仍保留（已停用 + noindex，
+      // 老链接与外部引用不断链），但**不再从全站页脚导流** ——
+      // 继续挂着等于对外声明我们经营那类业务（V16 · T07 legacy 治理）。
       { label: "Acceptable Use Policy", href: "/terms#use-policy", external: false },
       { label: "Appeals Policy", href: "/content-removal-appeals-policy", external: false },
-      { label: "Fan/Creator Agreement", href: "/fan-creator-agreement", external: false },
     ],
   },
   FOLLOW: {

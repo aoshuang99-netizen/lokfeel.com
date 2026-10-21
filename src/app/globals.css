@@ -1728,7 +1728,7 @@ img {
   /* 文字 */
   --lf-text: #f2f1ec;
   --lf-text-muted: #9ba5ad;
-  --lf-text-faint: #6b747b;
+  --lf-text-faint: #868e93;
 
   /* 品牌强调 / 状态（Warm Signal） */
   --lf-signal: #d7ac78;
@@ -1759,13 +1759,75 @@ img {
 
   --lf-text: #0b0e11;
   --lf-text-muted: #5a636b;
-  --lf-text-faint: #8a9298;
+  --lf-text-faint: #63696d;
 
-  --lf-signal: #b8863f;
+  --lf-signal: #906931;
   --lf-signal-soft: rgba(184, 134, 63, 0.14);
   --lf-success: #3f8c74;
   --lf-warning: #b8862f;
   --lf-danger: #b8564f;
+}
+
+/* ── Adaptive Dual World（设计 C） ──────────────────────────────
+   同一页里两个调色板并存：左侧 Canvas 恒为 Deep Field，右侧 Inspector 恒为 Living Paper。
+   作用域只落在 `[data-lf-dual='1']` 的子树内，未启用双世界的页面零影响。
+
+   🔴 为什么用 CSS 变量作用域而不是给组件传 theme：
+     所有既有组件都通过 `bg-lf-surface / text-lf-text / border-lf-line` 这些工具类取色，
+     工具类读的是 `var(--lf-*)`。只要在区域根上重声明变量，整棵子树自动换肤，
+     不需要改任何子组件 —— 也就不会漏掉某个写了死色的角落。 */
+[data-lf-dual='1'] [data-lf-world='canvas'] {
+  --lf-bg: #0b0e11;
+  --lf-surface: #171c21;
+  --lf-surface-2: #1f262d;
+  --lf-line: rgba(242, 241, 236, 0.1);
+  --lf-line-strong: rgba(242, 241, 236, 0.18);
+  --lf-text: #f2f1ec;
+  --lf-text-muted: #9ba5ad;
+  --lf-text-faint: #868e93;
+  --lf-signal: #d7ac78;
+  --lf-signal-soft: rgba(215, 172, 120, 0.16);
+  --lf-success: #69b49b;
+  --lf-warning: #e5b96b;
+  --lf-danger: #dc8580;
+  color-scheme: dark;
+}
+
+[data-lf-dual='1'] [data-lf-world='inspector'] {
+  --lf-bg: #f7f5f0;
+  --lf-surface: #ffffff;
+  --lf-surface-2: #efebe3;
+  --lf-line: rgba(11, 14, 17, 0.1);
+  --lf-line-strong: rgba(11, 14, 17, 0.18);
+  --lf-text: #0b0e11;
+  --lf-text-muted: #5a636b;
+  --lf-text-faint: #63696d;
+  --lf-signal: #906931;
+  --lf-signal-soft: rgba(184, 134, 63, 0.14);
+  --lf-success: #3f8c74;
+  --lf-warning: #b8862f;
+  --lf-danger: #b8564f;
+  color-scheme: light;
+}
+
+/* 阅读模式：用户切到 paper 时，Canvas 也跟随变浅（双世界 → 单一纸面），
+   Inspector 保持纸面。这样 Contrast 按钮在双世界下仍是一个**有实际效果**的控件。 */
+[data-lf-dual='1'][data-lf-theme='paper'] [data-lf-world='canvas'],
+[data-lf-dual='1'][data-lf-theme='paper'] [data-lf-world='inspector'] {
+  --lf-bg: #f7f5f0;
+  --lf-surface: #ffffff;
+  --lf-surface-2: #efebe3;
+  --lf-line: rgba(11, 14, 17, 0.1);
+  --lf-line-strong: rgba(11, 14, 17, 0.18);
+  --lf-text: #0b0e11;
+  --lf-text-muted: #5a636b;
+  --lf-text-faint: #63696d;
+  --lf-signal: #906931;
+  --lf-signal-soft: rgba(184, 134, 63, 0.14);
+  --lf-success: #3f8c74;
+  --lf-warning: #b8862f;
+  --lf-danger: #b8564f;
+  color-scheme: light;
 }
 
 /* ── 动效档位：L0 静态 / L1 微动效 / L2 空间（默认）/ L3 沉浸 ── */
