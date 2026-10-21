@@ -65,7 +65,7 @@
 | UX-04 | 计数不得把"读不到"显示成 0 | **PASS** | `buildOsStages` 用 `null` → 渲染 `—`；`countHint` 说明口径；有单测 + 变异 |
 | UX-05 | 文本对比度达 WCAG AA | **PASS** | `verify:contrast`：5 板块 × 15 组全达标 |
 | UX-06 | 深色/浅色双世界切换不产生死色 | **PASS（设计层）** | 令牌作用域 `[data-lf-dual][data-lf-world]`，组件不传 theme；对比度门禁覆盖两个世界 |
-| UX-07 | `prefers-reduced-motion` 必须降级 | **PASS（代码级）** | 动效四档 L0–L3 + 全局媒体查询强制 L0 |
+| UX-07 | `prefers-reduced-motion` 必须降级 | **PASS（代码级）** | 动效四档 L0–L3 + 全局媒体查询强制 L0；已固化为门禁 **R11**（`check:ui-invariants`），并由 2 条变异（`no-media` / `flat-tiers`）证明其承重。浏览器实测仍缺 |
 | UX-08 | 移动端（<1024px）不溢出、可操作 | **BLOCKED** | `living-shell` 有 Dock 退化与 `min-w-0`，但**未在真机/真浏览器验证** |
 | UX-09 | 界面元素与实际契约不得脱节（枚举漂移） | **PASS（CI）** | `verify:workspace-drift` 变异自证；本轮已修"从未进 CI"的问题 |
 | UX-10 | 不得渲染假数据 / 示例数据当真实数据 | **PASS** | R5（无假数据标识）、R6（agent 节点必须有源）通过 |

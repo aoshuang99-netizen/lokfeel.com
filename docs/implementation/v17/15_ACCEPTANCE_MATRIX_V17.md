@@ -3,7 +3,7 @@
 **基线**：`f8dd997`（2026-10-21）
 **CI**：`f8dd997` 上 **15 成功 / 2 跳过 / 0 失败**（共 17 项）（跳过的是「DCO sign-off」与「Perf 基线实跑（手动）」）
 **生产**：`dc102cd ready`（本轮全部提交带 `[skip netlify]`，未触发重新部署）
-**文档范围**：`00`–`06` 已产出；`07`–`10` **未产出**（见 §4）
+**文档范围**：`00`–`07` 已产出；`08`–`10` **未产出**（见 §4）。每条判定的可复跑命令见 `07_EVIDENCE_LENS.md`（由 `npm run check:evidence` 双向对齐，缺一条即 CI 红）
 
 ---
 
@@ -93,7 +93,7 @@ V17 原文写「40 项」。按五组编号展开实为 **42 项**（8 + 10 + 12
 | UX-04 | 计数不得把"读不到"显示成 0 | **PASS** | 代码 | `null` → `—`；`countHint` 说明口径；有单测 + 变异 |
 | UX-05 | 文本对比度达 WCAG AA | **PASS** | 代码 | 5 板块 × 15 组全达标 |
 | UX-06 | 双世界切换不产生死色 | **PASS** | 代码 | 令牌作用域，对比度门禁覆盖两个世界 |
-| UX-07 | `prefers-reduced-motion` 降级 | **PASS** | 代码 | 四档动效 + 全局媒体查询强制 L0 |
+| UX-07 | `prefers-reduced-motion` 降级 | **PASS** | 代码 | R11（新）：四档 `[data-lf-motion='0'/'1'/'3']` 存在且 L3 > L1 > 0、默认档落在 L1 与 L3 之间、`@media (prefers-reduced-motion: reduce)` 至少一处把 `--lf-dur*` 清零；2 条变异（删媒体查询 / 把 L3 调成 L1）均被捕获。⚠️ 浏览器实测（`audit:release`）仍需生产账号 ⇒ 本条的 PASS 只是"机制存在" |
 | UX-08 | 移动端（<1024px）不溢出可操作 | **BLOCKED** | — | 有 Dock 退化与 `min-w-0`，**未在真浏览器验证** |
 | UX-09 | 界面与契约不脱节（枚举漂移） | **PASS** | 代码 | `verify:workspace-drift` 变异自证；本轮已修"从未进 CI" |
 | UX-10 | 不把假数据/示例当真实数据 | **PASS** | 代码 | R5 无假数据标识、R6 agent 节点必须有源 |
@@ -182,18 +182,18 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 
 ---
 
-## 4. 未产出的文档（07–10）
+## 4. 未产出的文档（08–10）
 
-按 V17 的 12 个任务包，以下四份**尚未产出**。它们对应的验收条目在本表里的状态：
+按 V17 的 12 个任务包，`07` 已产出，以下三份**尚未产出**。它们对应的验收条目在本表里的状态：
 
 | 文档 | 主题 | 对应条目 | 状态 |
 |---|---|---|---|
-| `07_EVIDENCE_LENS.md` | 证据透镜（每个结论指向可复跑的判据） | 无独立条目；是横切要求 | 未产出 |
+| `07_EVIDENCE_LENS.md` | 证据透镜（每个结论指向可复跑的判据） | 无独立条目；是横切要求 | **已产出**（42 行；双向对齐由 `npm run check:evidence` 强制） |
 | `08_PERF_MOBILE_PAY.md` | LCP + 移动端支付 | UX-08（部分） | 未产出 |
 | `09_CUSTOMER_PLAYBOOK.md` | 真实客户 playbook | BIZ-04 | 未产出（且 BIZ-04 本身 BLOCKED） |
 | `10_PRICING_VALIDATION.md` | 定价验证 | BIZ-01（部分） | 未产出 |
 
-**不假装它们已经做完。** 本表的 42 项里，凡是依赖这四份文档的条目都已按 BLOCKED 处理，
+**不假装它们已经做完。** 本表的 42 项里，凡是依赖这三份文档的条目都已按 BLOCKED 处理，
 没有一条被"提前记成 PASS"。
 
 ---
@@ -265,12 +265,16 @@ V17 要求**分别**判定，禁止只输出"项目已全部完成"。
 | `04_PRIVACY_REFUND_SOP.md` | 导出/删除/退款六段 SOP + 10 家处理者 + 对外话术三档 |
 | `05_MONITORING_ALERTS.md` | 存活探针 + 告警通道 + 8 类症状 Runbook |
 | `06_UX_THIRTEEN_SCREENS.md` | 十三屏清单 + UX-01~12 判定 + 两个真 UX 问题 |
+| `07_EVIDENCE_LENS.md` | 42 行证据透镜 + 11 种假绿形态 + 本轮复跑录 |
 | `15_ACCEPTANCE_MATRIX_V17.md` | 本文件 |
 
 代码侧新增（均已进 CI）：
 
 - `scripts/qa/tenant-scoping-audit.mjs`（+ `audit:tenancy`）
 - `scripts/qa/uptime-probe.mjs`（+ `probe:uptime` / `verify:uptime` / `uptime.yml`）
+- `scripts/qa/verify-evidence-lens.mjs`（+ `check:evidence` / `verify:check:evidence`）
+- `scripts/check-ui-invariants.mjs` 新增 **R11**（动效四档 + 系统级降级），
+  变异自证 +2 变异 1 负向对照
 - `src/lib/payments/creem-events.ts`（+ 36 条单测）
 - `tests/lifecycle/privacy-rights-api.test.ts`（11 条）
 - `tests/tenancy/{capability-semantics,consent-revocation}.test.ts`（16 条）

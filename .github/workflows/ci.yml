@@ -157,6 +157,19 @@ jobs:
       - name: WorkspaceSpec 漂移守卫自证（变异）
         run: node scripts/qa/verify-workspace-spec-drift.mjs
 
+      # 证据透镜（WB17-07）：把 `15_ACCEPTANCE_MATRIX_V17.md` 的 42 条判定
+      # 与 `07_EVIDENCE_LENS.md` 双向对照 ——
+      #   ① 每条 ID 都有透镜行（不许漏、不许凭空多）；
+      #   ② 两份文档判定必须一致（矩阵 PASS / 透镜 BLOCKED 即红）；
+      #   ③ PASS/FAIL 行的命令必须真存在（npm script 在 package.json、脚本在盘上）；
+      #   ④ BLOCKED 行**不许**给命令（"跑了会绿但证明不了这条"就是假绿）。
+      # 先跑自证（12 条变异）再跑真判定：证明检测器本身不是恒绿的摆设。
+      - name: 证据透镜自证（变异）
+        run: node scripts/qa/verify-evidence-lens.mjs --self-test
+
+      - name: 证据透镜（矩阵 ↔ 透镜 双向对齐）
+        run: node scripts/qa/verify-evidence-lens.mjs
+
       # 退款链路：真实 Stripe SDK + 真实 HTTP + 本地 Stripe 协议服务端。
       # 不需要任何密钥，所以能进 CI —— 防止「退款只在发布前手验过一次」。
       - name: 退款链路协议层端到端

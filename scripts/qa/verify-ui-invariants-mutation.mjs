@@ -136,12 +136,12 @@ const CONTROL_BODY = [
   ``,
 ].join('\n')
 
-function runChecker() {
+function runChecker(extraEnv = {}) {
   return spawnSync(process.execPath, [CHECKER], {
     cwd: ROOT,
     encoding: 'utf8',
     // 告诉门禁"这是自证的一部分" → 允许 `__mutant-*` 文件存在（否则 R0 会把它自己判失败）。
-    env: { ...process.env, LF_INVARIANT_SELF_TEST: '1' },
+    env: { ...process.env, LF_INVARIANT_SELF_TEST: '1', ...extraEnv },
   })
 }
 
@@ -255,6 +255,60 @@ try {
     fs.unlinkSync(p)
     created.splice(created.indexOf(p), 1)
   }
+  // ── R11 专项：动效降级（2026-10-21 · WB17-07）──────────────────────────
+  //   R11 的判据对象是 `src/app/globals.css`，**不在** SCOPES 里，所以上面那套
+  //   "在扫描目录里丢一个 __mutant-*.tsx" 的写法用不上。这里改成：
+  //   把 CSS 复制一份到仓库根的 `__mutant-motion-*.css`，用 `LF_MOTION_CSS`
+  //   指过去 —— 真实样式文件**一个字节都不动**（改真文件的老路子在本仓被
+  //   SIGKILL 打断过两次，见 `verify-workspace-spec-drift.mjs` 的事故记录）。
+  const MOTION_SRC = path.join(ROOT, 'src', 'app', 'globals.css')
+  if (!fs.existsSync(MOTION_SRC)) {
+    failures.push('[R11] 找不到 src/app/globals.css —— 无法做动效降级变异')
+  } else {
+    const motionCss = fs.readFileSync(MOTION_SRC, 'utf8')
+
+    const runMotion = (name, body, expectRule) => {
+      const p = path.join(ROOT, `__mutant-motion-${name}.css`)
+      fs.writeFileSync(p, body, 'utf8')
+      created.push(p)
+      const res = runChecker({ LF_MOTION_CSS: path.basename(p) })
+      const output = `${res.stdout}\n${res.stderr}`
+      const fired = output.includes(`[${expectRule}]`)
+      if (res.status === 1 && fired) {
+        console.log(`✅ ${expectRule} 变异被捕获（${name} → exit=1，命中 [${expectRule}]）`)
+      } else {
+        failures.push(
+          `[${expectRule}] 变异未被捕获（${name} → exit=${res.status} · 命中=${fired}）` +
+            ` —— 该规则可能是恒绿的摆设`,
+        )
+      }
+      fs.unlinkSync(p)
+      created.splice(created.indexOf(p), 1)
+    }
+
+    // 负向对照：原样复制必须仍然通过（证明 LF_MOTION_CSS 覆盖本身没把判据弄坏）
+    {
+      const p = path.join(ROOT, '__mutant-motion-control.css')
+      fs.writeFileSync(p, motionCss, 'utf8')
+      created.push(p)
+      const res = runChecker({ LF_MOTION_CSS: path.basename(p) })
+      const output = `${res.stdout}\n${res.stderr}`
+      if (res.status === 0 && !output.includes('[R11]')) {
+        console.log('✅ R11 负向对照：未改动的 CSS 副本仍通过')
+      } else {
+        failures.push(`[R11] 负向对照失败：未改动的副本被判红（exit=${res.status}）`)
+      }
+      fs.unlinkSync(p)
+      created.splice(created.indexOf(p), 1)
+    }
+
+    // 变异 ①：删掉媒体查询声明 ⇒ 系统偏好无法强制降级（A 判据）
+    runMotion('no-media', motionCss.replaceAll('@media (prefers-reduced-motion: reduce)', '@media (min-width: 99999px)'), 'R11')
+
+    // 变异 ②：把 L3 的时长改成与 L1 相同 ⇒ 档位不再单调（C 判据）
+    //   针对性：只证明"改成一样会长红"，即证明"档位单调"这条真的在算。
+    runMotion('flat-tiers', motionCss.replace('--lf-dur: 420ms;', '--lf-dur: 180ms;'), 'R11')
+  }
 } finally {
   cleanup()
   // 收尾复验：临时文件都删干净后，门禁必须重新变绿。
@@ -264,7 +318,6 @@ try {
     failures.push('清理临时文件后门禁仍未通过 —— 可能残留了变异文件')
   }
 }
-
 if (failures.length > 0) {
   console.error(`\n❌ 变异自证未通过（${failures.length} 项）：`)
   for (const f of failures) console.error(`  · ${f}`)
@@ -273,5 +326,6 @@ if (failures.length > 0) {
 
 console.log(
   `\n✅ 变异自证通过：${MUTANTS.length} 条变异（${MUTANTS.map((m) => m.name ?? m.rule).join(' / ')}）全部被证明生效；` +
+    `R11 动效降级 2 条变异 + 1 条负向对照生效；` +
     `${SCOPE_ROOTS.length} 个 scope 目录全部被证明在扫描面内；合法文件未误报；临时文件已清理。`,
 )

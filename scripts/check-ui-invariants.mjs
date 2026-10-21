@@ -339,6 +339,114 @@ function checkFile(rel) {
 
 for (const s of SCOPES) walk(s)
 
+// ─────────────────────────────────────────────────────────────────────
+// R11 · 动效降级：四档令牌（L0–L3）+ 系统级 reduced-motion 强制 L0
+// ─────────────────────────────────────────────────────────────────────
+// 🔴 为什么需要它（2026-10-21 · WB17-07）：
+//   V16 确实写了 `@media (prefers-reduced-motion: reduce) { --lf-dur*: 0ms }`，
+//   但这条**从来没有门禁**。而唯一会实测它的 `audit:release` 需要生产 QA 账号
+//   —— 没账号的环境里，这条等于无人守。于是"UX-07 PASS"只能靠人读 CSS 相信。
+//
+// 判据刻意落在**机制**上（令牌是否被清零、档位是否真的分档），而不是
+// "某个 class 加了 animation:none" —— 后者可以靠一处补丁蒙过去，前者不能。
+//
+// 路径可用 `LF_MOTION_CSS` 覆盖：**只给变异自证用**，CI 永远跑默认路径。
+const MOTION_CSS = process.env.LF_MOTION_CSS || 'src/app/globals.css'
+
+/** 从某个选择器字面量开始，括号配平地取出整段块体（CSS 不能靠正则吞嵌套）。 */
+function cssBlockAfter(css, selector) {
+  const blocks = cssBlocksAfter(css, selector)
+  return blocks.length ? blocks[0] : null
+}
+
+/** 同一选择器可能出现多次（globals.css 里就有两处 reduced-motion），全部取出。 */
+function cssBlocksAfter(css, selector) {
+  const out = []
+  let from = 0
+  while (from < css.length) {
+    const at = css.indexOf(selector, from)
+    if (at < 0) break
+    const open = css.indexOf('{', at)
+    if (open < 0) break
+    let depth = 0
+    let end = -1
+    for (let i = open; i < css.length; i += 1) {
+      if (css[i] === '{') depth += 1
+      else if (css[i] === '}') {
+        depth -= 1
+        if (depth === 0) {
+          end = i
+          break
+        }
+      }
+    }
+    if (end < 0) break
+    out.push(css.slice(open + 1, end))
+    from = end + 1
+  }
+  return out
+}
+
+/** 取块内 `--lf-dur`（不含 -fast/-slow）的毫秒值；没有则 null。 */
+function durMs(block) {
+  const m = /--lf-dur\s*:\s*(\d+(?:\.\d+)?)ms/.exec(block || '')
+  return m ? Number(m[1]) : null
+}
+
+{
+  const abs = path.join(ROOT, MOTION_CSS)
+  if (!fs.existsSync(abs)) {
+    problems.push(`[R11] 找不到动效样式文件 ${MOTION_CSS} —— 降级机制无从验证`)
+  } else {
+    const css = fs.readFileSync(abs, 'utf8')
+
+    // A. 系统级降级：媒体查询块必须存在，且**至少一处**把时长令牌清零
+    //    （globals.css 里有两处 `prefers-reduced-motion` 块：旧的品牌动效块
+    //    只关了 5 个 class，真正承重的是后面清零 `--lf-dur*` 的那处。
+    //     所以判据是"存在清零块"，不是"第一块就清零"。）
+    const mediaSel = '@media (prefers-reduced-motion: reduce)'
+    const mediaBlocks = cssBlocksAfter(css, mediaSel)
+    if (mediaBlocks.length === 0) {
+      problems.push(`[R11] ${MOTION_CSS} 没有 ${mediaSel} 块 —— 系统偏好无法强制降级`)
+    } else if (!mediaBlocks.some((b) => /--lf-dur[\w-]*\s*:\s*(?:0ms|0s|none)/.test(b))) {
+      problems.push(
+        `[R11] ${MOTION_CSS} 有 ${mediaBlocks.length} 处 ${mediaSel} 块，` +
+          `但没有任何一处把 --lf-dur* 清零 —— 声明了媒体查询却没真降级`,
+      )
+    }
+
+    // B. 手动 L0：选择器必须存在且三档时长全 0
+    const l0 = cssBlockAfter(css, "[data-lf-motion='0']")
+    if (l0 === null) {
+      problems.push(`[R11] 缺少 [data-lf-motion='0'] 档 —— 用户手动关动效无处落地`)
+    } else {
+      const zeros = (l0.match(/--lf-dur[\w-]*\s*:\s*0ms/g) || []).length
+      if (zeros < 3) problems.push(`[R11] [data-lf-motion='0'] 只清零了 ${zeros}/3 个时长令牌`)
+    }
+
+    // C. 档位必须真的分档：L3 慢于 L1，且都大于 0（复制粘贴出来的"假档位"会在这里红）
+    const l1 = durMs(cssBlockAfter(css, "[data-lf-motion='1']"))
+    const l3 = durMs(cssBlockAfter(css, "[data-lf-motion='3']"))
+    if (l1 === null || l3 === null) {
+      problems.push(`[R11] 缺少 [data-lf-motion='1'] 或 '3' 的 --lf-dur 声明 —— 档位不完整`)
+    } else if (!(l3 > l1 && l1 > 0)) {
+      problems.push(`[R11] 档位未单调：L1=${l1}ms / L3=${l3}ms（应满足 0 < L1 < L3）`)
+    }
+
+    // D. 默认档必须落在 L1 与 L3 之间 —— 否则 :root 与档位选择器已经脱节，
+    //    没写 data-lf-motion 的界面会拿到一个"谁都不认识"的速度。
+    const defaultMs = durMs(css)
+    if (defaultMs === null) {
+      problems.push(`[R11] ${MOTION_CSS} 里找不到默认 --lf-dur 声明`)
+    } else if (l1 !== null && l3 !== null && !(defaultMs > l1 && defaultMs < l3)) {
+      problems.push(
+        `[R11] 默认档 --lf-dur=${defaultMs}ms 不在 L1(${l1}) 与 L3(${l3}) 之间 —— ` +
+          `默认值已与档位脱节（"没写档位"的界面拿到的是没人定义过的速度）`,
+      )
+    }
+  }
+}
+
 // R0 · 残留变异文件检测
 //   自证脚本被**中断**（沙箱重试 / Ctrl-C / OOM）会留下 `__mutant-*` 文件，
 //   它会被后续扫描当"正常文件"，甚至被 `git add -A` 提交 —— 必须主动报错。
@@ -377,5 +485,5 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `\n✅ UI 不变量全部通过（R1 无伪成功 · R2 无空按钮 · R3 无 3D 依赖 · R4 未就绪有原因 · R5 无假数据标识 · R6 agent 节点有源 · R7 无代码执行面 · R8 画布库作用域收敛 · R9 无 markdown 字面量 · R10 服务端模块仅类型导入）`,
+  `\n✅ UI 不变量全部通过（R1 无伪成功 · R2 无空按钮 · R3 无 3D 依赖 · R4 未就绪有原因 · R5 无假数据标识 · R6 agent 节点有源 · R7 无代码执行面 · R8 画布库作用域收敛 · R9 无 markdown 字面量 · R10 服务端模块仅类型导入 · R11 动效四档且系统级可降级）`,
 )
