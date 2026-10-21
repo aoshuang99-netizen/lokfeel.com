@@ -1,0 +1,887 @@
+{
+  "base": "https://app.lokfeel.com",
+  "account": "admin@lokfeel.com",
+  "at": "2026-10-21T03:17:05.699Z",
+  "results": [
+    {
+      "id": "ws-now",
+      "route": "/workspace",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "title": "Living Workspace | LokFeel",
+      "headings": [
+        "今日工作台",
+        "待处理"
+      ],
+      "textLength": 248,
+      "buttons": [
+        {
+          "text": "证据",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Now",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Studio",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Field",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Consent",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Outcomes",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Agents",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Missions未就绪",
+          "disabled": true,
+          "testId": ""
+        },
+        {
+          "text": "编译工作区",
+          "disabled": true,
+          "testId": ""
+        }
+      ],
+      "links": 0,
+      "inputs": 1,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/ws-now-mobile.png",
+      "textSample": "LOKFEEL 证据 Now Studio Field Consent Outcomes Agents Missions 未就绪 今日工作台 未读通知 0 来自 /api/notifications 未读消息 0 来自 /api/chats/unread-count 我的匹配 0 来自 /api/matches 待处理 没有待处理事项。这是真实结果 —— 本页不会为了填满而生成内容。 描述你的目标 编译在本地完成（规则式，纯函数）；只有真正创建 Mission 才需要服务端权限。 编译工作区"
+    },
+    {
+      "id": "ws-studio",
+      "route": "/workspace",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "title": "Living Workspace | LokFeel",
+      "headings": [
+        "Mission Studio"
+      ],
+      "textLength": 250,
+      "buttons": [
+        {
+          "text": "证据",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Now",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Studio",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Field",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Consent",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Outcomes",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Agents",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Missions未就绪",
+          "disabled": true,
+          "testId": ""
+        },
+        {
+          "text": "编译工作区",
+          "disabled": true,
+          "testId": ""
+        }
+      ],
+      "links": 0,
+      "inputs": 1,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/ws-studio-mobile.png",
+      "textSample": "LOKFEEL 证据 Now Studio Field Consent Outcomes Agents Missions 未就绪 Mission Studio 在下方输入目标后点击「编译工作区」：文本会被编译为受约束的 WorkspaceSpec（zod 严格校验），再由白名单组件渲染到画布上 —— 任何一步都不允许产出 HTML/React 代码。 还没有工作区。先在底部输入一个目标。 描述你的目标 编译在本地完成（规则式，纯函数）；只有真正创建 Mission 才需要服务端权限。 编译工作区"
+    },
+    {
+      "id": "ws-field",
+      "route": "/workspace",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "title": "Living Workspace | LokFeel",
+      "headings": [
+        "连接场",
+        "详情"
+      ],
+      "textLength": 223,
+      "buttons": [
+        {
+          "text": "证据",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Now",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Studio",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Field",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Consent",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Outcomes",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Agents",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Missions未就绪",
+          "disabled": true,
+          "testId": ""
+        },
+        {
+          "text": "网络",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "列表",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "编译工作区",
+          "disabled": true,
+          "testId": ""
+        }
+      ],
+      "links": 0,
+      "inputs": 2,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/ws-field-mobile.png",
+      "textSample": "LOKFEEL 证据 Now Studio Field Consent Outcomes Agents Missions 未就绪 连接场 2.5D 关系网络：半径 = 关系强度（双向命中词元数），越靠近中心越相关 任务 （没有可用的任务） 网络 列表 本社群还没有连接任务。没有任务就没有可匹配的诉求 —— 本页不会为了填满而生成候选。 描述你的目标 编译在本地完成（规则式，纯函数）；只有真正创建 Mission 才需要服务端权限。 编译工作区"
+    },
+    {
+      "id": "ws-consent",
+      "route": "/workspace",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "title": "Living Workspace | LokFeel",
+      "headings": [
+        "Consent Gate · 同意与逐字段披露",
+        "选择一条意图",
+        "逐字段披露投影",
+        "与我相关的连接提案"
+      ],
+      "textLength": 432,
+      "buttons": [
+        {
+          "text": "证据",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Now",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Studio",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Field",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Consent",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Outcomes",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Agents",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Missions未就绪",
+          "disabled": true,
+          "testId": ""
+        },
+        {
+          "text": "同意与披露",
+          "disabled": false,
+          "testId": "consent-tab-gate"
+        },
+        {
+          "text": "跨社群",
+          "disabled": false,
+          "testId": "consent-tab-bridge"
+        },
+        {
+          "text": "编译工作区",
+          "disabled": true,
+          "testId": ""
+        }
+      ],
+      "links": 0,
+      "inputs": 1,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/ws-consent-mobile.png",
+      "textSample": "LOKFEEL 证据 Now Studio Field Consent Outcomes Agents Missions 未就绪 同意与披露 跨社群 Consent Gate · 同意与逐字段披露 这一页回答一个具体问题：我授权出去的字段，到底是谁能看到。 档位是包含式的 —— 越宽的档位覆盖越多受众， 所以同一字段在下面三列里可能同时出现，那不是重复，是语义本身。 选择一条意图 你还没有提交过任何意图。意图需要先在任务里加入，然后提交「我需要什么 / 我能提供什么」。这里不会凭空生成一条。 逐字段披露投影 选定一条意图后显示披露投影。若你还没有意图，需要先加入任务并在任务里提交意图。 与我相关的连接提案 当前没有与你相关的连接提案。这是查询成功后的结论，不是读取失败。 提案说明 · 本次查询成功，当前没有与你相关的连接提案（不是\"读不到\"）。 描述你的目标 编译在本地完成（规则式，纯函数）；只有真正创建 Mission 才需要服务端权限。 编译工作区"
+    },
+    {
+      "id": "ws-outcomes",
+      "route": "/workspace",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "title": "Living Workspace | LokFeel",
+      "headings": [
+        "Outcome Observatory · 成果时间轴与指标",
+        "商业指标（本社群）",
+        "成果时间轴共 0 条 · 已验证 0 · 未验证 0（均取自服务端）"
+      ],
+      "textLength": 765,
+      "buttons": [
+        {
+          "text": "证据",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Now",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Studio",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Field",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Consent",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Outcomes",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Agents",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Missions未就绪",
+          "disabled": true,
+          "testId": ""
+        },
+        {
+          "text": "编译工作区",
+          "disabled": true,
+          "testId": ""
+        }
+      ],
+      "links": 0,
+      "inputs": 1,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/ws-outcomes-mobile.png",
+      "textSample": "LOKFEEL 证据 Now Studio Field Consent Outcomes Agents Missions 未就绪 Outcome Observatory · 成果时间轴与指标 「已验证」与否读的是服务端派生的布尔值 ——自报不算验证成功。 指标区的金额是按响应里那份假设算出来的，假设会一并显示。 商业指标（本社群） 转化漏斗 · 全部（不限任务） 已发起提案 0 提案 → 双方同意 0% 双方已同意 0 同意 → 完成介绍 0% 已完成介绍 0 介绍 → 产生成果 0% 已上报成果 0 成果 → 通过验证 0% 已验证成果 0 其中仍在等表态 0 条（是「已发起提案」的子集，不属于漏斗的一级）。 成本估算 · USD 提案 × 0 USD 0.00 介绍 × 0 USD 0.00 成果 × 0 USD 0.00 核验 × 0 USD 0.00 合计 USD 0.00 人工介入估算 接管 0 · 死信 0 = 需介入 0 次 每次 15 分钟 ⇒ 约 0 小时 口径与假设（这些数字是这么来的） 「已验证」判定用的档位：对手方已确认、外部已核验 每次人工介入按 15 分钟估算 单价假设 · introduction: USD 5.00 单价假设 · outcome: USD 3.00 单价假设 · proposal: USD 0.20 单价假设 · verificati"
+    },
+    {
+      "id": "ws-agents",
+      "route": "/workspace",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "title": "Living Workspace | LokFeel",
+      "headings": [
+        "Agent 运行与审批",
+        "运行记录共 3 条 · 其中 1 条需要关注",
+        "用量与额度"
+      ],
+      "textLength": 1265,
+      "buttons": [
+        {
+          "text": "证据",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Now",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Studio",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Field",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Consent",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Outcomes",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Agents",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "Missions未就绪",
+          "disabled": true,
+          "testId": ""
+        },
+        {
+          "text": "意图抽取",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "批准",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "驳回",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "意图抽取",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "批准",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "驳回",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "意图抽取",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "批准",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "驳回",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "编译工作区",
+          "disabled": true,
+          "testId": ""
+        }
+      ],
+      "links": 0,
+      "inputs": 1,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/ws-agents-mobile.png",
+      "textSample": "LOKFEEL 证据 Now Studio Field Consent Outcomes Agents Missions 未就绪 Agent 运行与审批 这里能看到每一次 Agent 运行的产出、成本与审批状态。批准不等于执行 —— 本次交付没有注册执行器，因此批准只把状态写到「已批准」，不会自动发出任何消息或披露任何资料。 真实模型调用已启用。下方成本是真实调用产生的。 运行记录共 3 条 · 其中 1 条需要关注 意图抽取 已产出方案 低风险 Connect our founders with 20 manufacturing partners in 30 days 产出已通过结构校验，但尚未执行任何副作用。 调用 1 次 · 成本 0.0181 分 · WorkBuddy 云端算力（真实调用） 批准 驳回 服务端会在裁决时重新判定；已有裁决或状态不允许会返回 409 并给出原因。 意图抽取 已产出方案 低风险 Connect our founders with 20 manufacturing partners in 30 days 产出已通过结构校验，但尚未执行任何副作用。 调用 1 次 · 成本 0.0172 分 · WorkBuddy 云端算力（真实调用） 批准 驳回 服务端会在裁决时重新判定；已有裁决或状态不允许会返回 409 并给出原因。 意图抽取 失败 低风险 C"
+    },
+    {
+      "id": "console-home",
+      "route": "/console",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console",
+      "title": "社群控制台 | LokFeel",
+      "headings": [
+        "LokFeel Preview",
+        "社群总览",
+        "需人处置",
+        "停滞的连接",
+        "消息投递",
+        "连接任务"
+      ],
+      "textLength": 369,
+      "buttons": [],
+      "links": 9,
+      "inputs": 0,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/console-home-mobile.png",
+      "textSample": "LokFeel Preview 社群模式 社群经营工作台 · 你所属的社群 1 个 个人模式 总览 任务 成员 连接 智能体 成果 设置 社群总览 连接从提案到介绍的全过程是否顺畅 —— 数据每秒都在变，这里读的是此刻。 在飞任务 0 PENDING + RUNNING，队列里还没做完的 需人处置 0 死信 / 已接管 / 永久失败 停滞连接 0 阶段超时未推进（默认 7 天） 死信 0 自动重试已用尽，等人接管 需人处置 0 当前没有需要人工处置的任务。任务的自动重试与死信晋升都在正常工作。 停滞的连接 0 没有卡住的连接。所有进行中的连接都在预期时间内推进。 消息投递 0 还没有任何投递记录。 连接任务 查看全部 → 本社群共有 0 条任务。 任务列表、状态过滤与状态迁移（发布 / 暂停 / 恢复 / 关闭）都在「任务」屏。"
+    },
+    {
+      "id": "console-missions",
+      "route": "/console/missions",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/missions",
+      "title": "社群控制台 | LokFeel",
+      "headings": [
+        "LokFeel Preview",
+        "连接任务"
+      ],
+      "textLength": 244,
+      "buttons": [
+        {
+          "text": "刷新",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "全部",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "草稿",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "进行中",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "已暂停",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "已关闭",
+          "disabled": false,
+          "testId": ""
+        }
+      ],
+      "links": 8,
+      "inputs": 0,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/console-missions-mobile.png",
+      "textSample": "LokFeel Preview 社群模式 社群经营工作台 · 你所属的社群 1 个 个人模式 总览 任务 成员 连接 智能体 成果 设置 连接任务 社群发起的连接任务 —— 每条任务是一个「大家想一起做成的事」的入口。 刷新 全部 草稿 进行中 已暂停 已关闭 本社群还没有连接任务 任务需要通过 API 创建（POST /api/v1/missions，契约要求 Idempotency-Key）。创建界面在后续切片，这里先不渲染\"新建\"按钮 —— 一个点了没反应的按钮比没有按钮更糟。"
+    },
+    {
+      "id": "console-connections",
+      "route": "/console/connections",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/connections",
+      "title": "社群控制台 | LokFeel",
+      "headings": [
+        "LokFeel Preview",
+        "连接"
+      ],
+      "textLength": 268,
+      "buttons": [
+        {
+          "text": "刷新",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "全部0",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "待表态0",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "待介绍0",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "已介绍0",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "已结束0",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "只看停滞",
+          "disabled": false,
+          "testId": ""
+        }
+      ],
+      "links": 8,
+      "inputs": 0,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/console-connections-mobile.png",
+      "textSample": "LokFeel Preview 社群模式 社群经营工作台 · 你所属的社群 1 个 个人模式 总览 任务 成员 连接 智能体 成果 设置 连接 从提案到介绍的推进情况 —— 谁在等表态、谁等你按下「介绍」、谁卡住了。 刷新 全部0 待表态0 待介绍0 已介绍0 已结束0 只看停滞 本社群还没有连接提案 提案由运营在任务里发起；成员在分享页表态后，双方同意即出现在这里等你介绍。 分组数字基于全部 0 条提案。「停滞」= 阶段超过 7 天未推进。需要人工接管的死信任务列在「总览」屏待办里 （接管/重试的操作界面尚未实现，接口已就绪）。"
+    },
+    {
+      "id": "console-agents",
+      "route": "/console/agents",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/agents",
+      "title": "社群控制台 | LokFeel",
+      "headings": [
+        "LokFeel Preview",
+        "智能体"
+      ],
+      "textLength": 1133,
+      "buttons": [
+        {
+          "text": "刷新",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "全部",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "待批准",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "已批准",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "已执行",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "执行",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "执行",
+          "disabled": false,
+          "testId": ""
+        }
+      ],
+      "links": 8,
+      "inputs": 0,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/console-agents-mobile.png",
+      "textSample": "LokFeel Preview 社群模式 社群经营工作台 · 你所属的社群 1 个 个人模式 总览 任务 成员 连接 智能体 成果 设置 智能体 Agent 产出的是提案，不是既成事实。高风险产出必须经人工批准才可能执行； 批准与执行不是同一个人的权限。 刷新 本期（2026-10）额度 方案 FREE 已用 0.0402 / 500.0000 分 调用次数 3（失败 0） 高成本调用 0 / 20 剩余额度 499.9598 分 真实模型调用 已开启 组织级额度：按有效订阅方案派生 —— 方案 未订阅，每月上限 500.0000 分、高成本调用 20 次。这些数字仍是待定价的占位假设（见 T08/changes.md 假设表），不是已定价格。 已接入 WorkBuddy 云端算力：模型=deepseek-v4.1-flash（免密钥，凭据不下发）。 全部 待批准 已批准 已执行 已提案 意图抽取 风险 低 10/20/2026, 9:23:57 PM Connect our founders with 20 manufacturing partners in 30 days 模型 workbuddy · 调用 1 次 · 花费 0.0181 分 执行 把已确定的结构化产出（WorkspaceSpec）以站内信回执给发起人；不落任何业务数据（落成 Mission 属业务写入，不在本"
+    },
+    {
+      "id": "console-members",
+      "route": "/console/members",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/members",
+      "title": "社群控制台 | LokFeel",
+      "headings": [
+        "LokFeel Preview",
+        "成员"
+      ],
+      "textLength": 294,
+      "buttons": [
+        {
+          "text": "刷新",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "全部",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "所有者",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "管理员",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "运营",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "成员",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "搜索",
+          "disabled": false,
+          "testId": ""
+        }
+      ],
+      "links": 8,
+      "inputs": 1,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/console-members-mobile.png",
+      "textSample": "LokFeel Preview 社群模式 社群经营工作台 · 你所属的社群 1 个 个人模式 总览 任务 成员 连接 智能体 成果 设置 成员 本社群的成员目录 —— 谁在这里、担任什么角色。 刷新 全部 所有者 管理员 运营 成员 搜索 L LokFeel Admin 管理员 admin@lokfeel.com 加入于 10/20/2026 Emma Thompson 管理员 test.female@lokfeel.com New York 加入于 10/20/2026 邀请成员需要 `member.invite`（管理员及以上）—— 邀请流程尚未实现，因此这里没有「邀请」按钮。"
+    },
+    {
+      "id": "console-outcomes",
+      "route": "/console/outcomes",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/outcomes",
+      "title": "社群控制台 | LokFeel",
+      "headings": [
+        "LokFeel Preview",
+        "成果"
+      ],
+      "textLength": 247,
+      "buttons": [
+        {
+          "text": "刷新",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "全部",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "仅自报0",
+          "disabled": false,
+          "testId": ""
+        },
+        {
+          "text": "已验证",
+          "disabled": false,
+          "testId": ""
+        }
+      ],
+      "links": 8,
+      "inputs": 0,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/console-outcomes-mobile.png",
+      "textSample": "LokFeel Preview 社群模式 社群经营工作台 · 你所属的社群 1 个 个人模式 总览 任务 成员 连接 智能体 成果 设置 成果 连接产生了什么 —— 以及它被验证到什么程度。自报不等于验证成功。 刷新 全部 仅自报0 已验证 本社群还没有成果记录 连接被介绍之后，参与方可以在这里上报成果；对手方确认或运营核验后，才算「已验证」。 验证级别三级：仅自报（上报即得，不算验证成功）→ 对手方已确认 → 外部已核验。 级别由验证记录派生，不能由客户端直接设置。本屏只列最近 0 条。"
+    },
+    {
+      "id": "console-settings",
+      "route": "/console/settings",
+      "device": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "finalUrl": "https://app.lokfeel.com/console/settings",
+      "title": "社群控制台 | LokFeel",
+      "headings": [
+        "LokFeel Preview",
+        "设置",
+        "修改社群档案",
+        "转让与删除"
+      ],
+      "textLength": 449,
+      "buttons": [
+        {
+          "text": "刷新",
+          "disabled": false,
+          "testId": ""
+        }
+      ],
+      "links": 8,
+      "inputs": 0,
+      "consoleErrors": [
+        "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com\". Note that 'script-src-elem' was not "
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "expectMatched": true,
+      "shot": "docs/v16/screenshots/before/console-settings-mobile.png",
+      "textSample": "LokFeel Preview 社群模式 社群经营工作台 · 你所属的社群 1 个 个人模式 总览 任务 成员 连接 智能体 成果 设置 设置 本社群的档案与你的权限 —— 这里改的是「社群」这一层，不是你的个人资料。 刷新 社群名称 LokFeel Preview 对外标识（slug） preview 状态 正常 成员数 2 人 创建于 10/20/2026, 7:51:49 PM · 更新于 10/20/2026, 7:51:49 PM · 你在本社群的角色是「管理员」 修改社群档案 只有社群所有者可以修改档案。你的角色是「管理员」，可以查看但不能编辑 —— 需要修改请联系所有者。这里因此不显示编辑表单。 转让与删除 「转让所有权」与「删除社群」需要二次确认、审计与级联处理，尚未实现， 因此这里没有对应按钮 —— 渲染一个点了没反应的按钮比不渲染更糟。 确有需要请直接联系平台运营。 能力已就绪（`org.transfer` / `org.delete`，仅所有者），流程属后续切片。"
+    }
+  ]
+}

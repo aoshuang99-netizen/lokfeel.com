@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 B · Living Paper — LokFeel Connection OS</title>
+<style>
+  :root{
+    --paper:#f6f3ec; --paper-2:#fffdf8; --ink:#14110c; --ink-2:#4a453c; --ink-3:#8b8478;
+    --rule:#ded7c9; --rule-2:#c9c0ae; --gold:#a9762e; --gold-soft:#efe3cd;
+    --green:#3d6b4f; --amber:#a8622a; --red:#8f3b32;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Songti SC","Noto Serif CJK SC",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.72}
+  /* 纸纹 */
+  body:before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:radial-gradient(circle at 20% 30%,rgba(169,118,46,.05),transparent 55%),
+                     radial-gradient(circle at 82% 70%,rgba(61,107,79,.05),transparent 55%);
+  }
+  .app{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 32px 60px}
+
+  header{display:flex;align-items:baseline;gap:16px;padding:26px 0 18px;border-bottom:2px solid var(--ink)}
+  .brand{font-family:var(--serif);font-size:22px;letter-spacing:-.01em}
+  .brand em{font-style:normal;color:var(--gold)}
+  .brand span{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-3);margin-left:10px}
+  .spacer{flex:1}
+  .stamp{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-3);border:1px solid var(--rule-2);padding:4px 10px;border-radius:2px}
+
+  /* 页签 */
+  nav.tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-bottom:30px;overflow-x:auto}
+  .tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+    font:inherit;font-size:13px;color:var(--ink-3);padding:13px 18px 12px;cursor:pointer;white-space:nowrap;
+    display:flex;align-items:baseline;gap:7px;transition:.18s}
+  .tab .k{font-family:var(--mono);font-size:9.5px;color:var(--rule-2)}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+  .tab[aria-selected="true"] .k{color:var(--gold)}
+  .tab.off{opacity:.35;cursor:not-allowed}
+
+  .view{display:none}
+  .view.on{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* 版面：左文右页边 */
+  .spread{display:grid;grid-template-columns:1fr 268px;gap:44px}
+  @media(max-width:900px){.spread{grid-template-columns:1fr;gap:26px}.app{padding:0 18px 44px}}
+
+  h1{font-family:var(--serif);font-size:34px;line-height:1.22;letter-spacing:-.015em;margin:0 0 8px;font-weight:600}
+  h2{font-family:var(--serif);font-size:20px;margin:0 0 6px;font-weight:600;letter-spacing:-.005em}
+  .dek{color:var(--ink-2);font-size:15px;margin:0 0 22px;max-width:52ch}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+  p{margin:9px 0}
+  .muted{color:var(--ink-3)}
+  .small{font-size:12px}
+
+  /* 编号条目（替代卡片） */
+  .ledger{border-top:1px solid var(--rule)}
+  .row{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:start;
+    padding:15px 0;border-bottom:1px solid var(--rule)}
+  .row .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding-top:3px}
+  .row b{font-weight:600;font-size:14px;display:block;margin-bottom:2px}
+  .row p{margin:0;color:var(--ink-2);font-size:12.5px}
+  .row .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);text-align:right;white-space:nowrap;padding-top:3px}
+  .row.blocked{background:linear-gradient(90deg,rgba(143,59,50,.05),transparent)}
+  .row.blocked .meta{color:var(--red)}
+
+  .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+    padding:1px 7px;border:1px solid var(--rule-2);border-radius:2px;color:var(--ink-2);vertical-align:1px}
+  .tag.g{border-color:rgba(61,107,79,.4);color:var(--green)}
+  .tag.a{border-color:rgba(168,98,42,.4);color:var(--amber)}
+  .tag.r{border-color:rgba(143,59,50,.4);color:var(--red)}
+
+  /* 页边栏 */
+  .margin{border-left:1px solid var(--rule);padding-left:22px}
+  .margin h3{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-3);margin:0 0 10px;font-weight:600}
+  .margin .kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dotted var(--rule);
+    font-size:12.5px}
+  .margin .kv span{color:var(--ink-3)}
+  .margin .note{font-size:11.5px;color:var(--ink-3);margin-top:10px;line-height:1.63}
+  .rule{margin:22px 0;border:0;border-top:1px solid var(--rule)}
+
+  /* 编译器 */
+  .compose{background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;padding:22px 24px;
+    box-shadow:0 1px 0 rgba(20,17,12,.03)}
+  .compose label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .compose textarea{width:100%;min-height:96px;border:0;border-bottom:1px solid var(--rule-2);background:transparent;
+    font-family:var(--serif);font-size:17px;line-height:1.6;color:var(--ink);padding:10px 0;resize:vertical;outline:none}
+  .compose textarea:focus{border-bottom-color:var(--gold)}
+  .actions{display:flex;align-items:center;gap:12px;margin-top:16px}
+  .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--paper);
+    font:inherit;font-size:12.5px;font-weight:600;padding:10px 18px;border-radius:2px;cursor:pointer;letter-spacing:.01em}
+  .btn:hover{background:#2b261e}
+  .btn.ghost{background:transparent;color:var(--ink-2);border-color:var(--rule-2);font-weight:500}
+  .btn:disabled{opacity:.4;cursor:default}
+
+  .flow{display:flex;flex-wrap:wrap;gap:0;margin-top:18px;border:1px solid var(--rule);background:var(--paper-2)}
+  .flow div{flex:1 1 150px;padding:12px 14px;border-right:1px solid var(--rule)}
+  .flow div:last-child{border-right:0}
+  .flow .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+  .flow b{display:block;font-size:12.5px;margin:3px 0 2px}
+  .flow p{margin:0;font-size:11px;color:var(--ink-3);line-height:1.5}
+
+  /* 同意：表单感 */
+  .consent{border:1px solid var(--rule);background:var(--paper-2)}
+  .consent .hd{padding:13px 18px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;
+    align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+  .item{padding:16px 18px;border-bottom:1px solid var(--rule);display:grid;grid-template-columns:1fr auto;gap:16px}
+  .item:last-child{border-bottom:0}
+  .item b{font-weight:600;font-size:13.5px}
+  .item p{margin:3px 0 0;font-size:12px;color:var(--ink-3)}
+  .item .why{margin-top:8px;font-size:11.5px;color:var(--ink-2);border-left:2px solid var(--gold-soft);padding-left:10px}
+  .item .ctl{display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:104px}
+  .sbtn{appearance:none;font:inherit;font-size:11.5px;padding:6px 10px;border:1px solid var(--rule-2);
+    background:transparent;color:var(--ink-2);border-radius:2px;cursor:pointer}
+  .sbtn.yes{border-color:rgba(61,107,79,.45);color:var(--green)}
+  .sbtn.no{border-color:rgba(143,59,50,.4);color:var(--red)}
+  .sbtn:disabled{opacity:.55;cursor:default}
+
+  /* 成果：账本 */
+  .book{width:100%;border-collapse:collapse;font-size:12.5px}
+  .book th{text-align:left;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);font-weight:600;padding:0 8px 8px 0;border-bottom:1px solid var(--ink)}
+  .book td{padding:11px 8px 11px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  .book td.k{color:var(--ink-3);font-family:var(--mono);font-size:11px;white-space:nowrap}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* 状态 */
+  .states{display:flex;gap:6px;margin-bottom:18px}
+  .states button{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:4px 9px;border:1px solid var(--rule-2);
+    background:transparent;color:var(--ink-3);cursor:pointer;border-radius:2px;text-transform:uppercase}
+  .states button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .statebox{border:1px dashed var(--rule-2);padding:52px 24px;text-align:center;background:var(--paper-2)}
+  .statebox h3{font-family:var(--serif);font-size:18px;margin:0 0 6px}
+  .statebox p{color:var(--ink-3);margin:4px 0;font-size:12.5px}
+  .loader{width:100%;height:2px;background:var(--rule);overflow:hidden;margin:0 auto 18px;max-width:220px}
+  .loader i{display:block;height:100%;width:40%;background:var(--gold);animation:sweep 1.1s ease-in-out infinite}
+  @keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
+  @media (prefers-reduced-motion: reduce){.view.on{animation:none}.loader i{animation:none;width:100%}}
+  @media(max-width:620px){
+    h1{font-size:26px}.spread{gap:20px}
+    nav.tabs{margin-bottom:20px}
+    .row{grid-template-columns:26px 1fr;gap:10px}
+    .row .meta{grid-column:1/-1;text-align:left;padding-top:4px}
+    .item{grid-template-columns:1fr}
+    .item .ctl{flex-direction:row}
+    .margin{border-left:0;padding-left:0;border-top:1px solid var(--rule);padding-top:16px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><em>Lok</em>Feel<span>Connection OS</span></div>
+    <div class="spacer"></div>
+    <span class="stamp">方案 B · Living Paper</span>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="六个屏">
+    <button class="tab" role="tab" aria-selected="true" data-view="now"><span class="k">01</span>Now</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="studio"><span class="k">02</span>Studio</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="field"><span class="k">03</span>Field</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="consent"><span class="k">04</span>Consent</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="outcomes"><span class="k">05</span>Outcomes</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="agents"><span class="k">06</span>Agents</button>
+    <button class="tab off" disabled><span class="k">07</span>Missions</button>
+  </nav>
+
+  <!-- NOW -->
+  <section class="view on" id="v-now">
+    <div class="spread">
+      <div>
+        <p class="eyebrow">Mission · Q4 企业客户引荐计划</p>
+        <h1>今天需要你决定两件事</h1>
+        <p class="dek">其余环节都在正常运行。Scout 已筛出 14 个候选，Relay 停在你的批准上——这是设计如此，不是故障。</p>
+
+        <div class="states" role="group" aria-label="状态演示">
+          <button data-state="ready" class="on">Ready</button>
+          <button data-state="loading">Loading</button>
+          <button data-state="empty">Empty</button>
+          <button data-state="error">Error</button>
+        </div>
+
+        <div class="ledger" id="readyList">
+          <div class="row">
+            <div class="n">01</div>
+            <div><b>批准「以你的名义发送首封介绍语」</b><p>Relay 已拟好草稿，收件人 northstar 市场负责人。发送一次，可撤回。</p></div>
+            <div class="meta"><span class="tag a">待批</span><br>2 分钟前</div>
+          </div>
+          <div class="row">
+            <div class="n">02</div>
+            <div><b>确认披露字段：职位 + 公司</b><p>Scout 请求在候选方可见范围内显示这两项，有效期 7 天，不含联系方式。</p></div>
+            <div class="meta"><span class="tag a">待批</span><br>18 分钟前</div>
+          </div>
+          <div class="row">
+            <div class="n">03</div>
+            <div><b>双向同意达成 · acme.co</b><p>对方市场负责人接受介绍。下一步由 Relay 起草开场白。</p></div>
+            <div class="meta"><span class="tag g">完成</span><br>昨天 16:02</div>
+          </div>
+          <div class="row blocked">
+            <div class="n">04</div>
+            <div><b>Gate 阻断了一次越权请求</b><p>Agent 试图读取对方手机号，超出工作区授权范围。服务端拒绝，未执行。</p></div>
+            <div class="meta"><span class="tag r">已阻断</span><br>昨天 11:41</div>
+          </div>
+          <div class="row">
+            <div class="n">05</div>
+            <div><b>会面完成 · lumen</b><p>45 分钟。Outcome 记为「持续跟进」，下次触达 10-28。</p></div>
+            <div class="meta"><span class="tag">记录</span><br>10-19</div>
+          </div>
+        </div>
+        <div id="statebox"></div>
+      </div>
+
+      <div class="margin">
+        <h3>工作区</h3>
+        <div class="kv"><span>组织</span><b>northwind</b></div>
+        <div class="kv"><span>状态</span><b>RUNNING</b></div>
+        <div class="kv"><span>节点</span><b class="num">7</b></div>
+        <div class="kv"><span>待批准</span><b class="num" style="color:var(--amber)">2</b></div>
+        <hr class="rule">
+        <h3>预算</h3>
+        <div class="kv"><span>上限</span><b class="num">¥50,000</b></div>
+        <div class="kv"><span>已用</span><b class="num">¥12,400</b></div>
+        <p class="note">数字来自 billing 端点；页面不做估算，也不缓存旧值。</p>
+        <hr class="rule">
+        <h3>授权边界</h3>
+        <p class="note"><strong>允许</strong> 职位、公司、公开案例<br><strong>禁止</strong> 手机号、私人邮箱、住址</p>
+        <p class="note">拒绝任一项不影响其他项；撤销后下一次依赖该授权的动作会被服务端拒绝。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDIO -->
+  <section class="view" id="v-studio">
+    <div class="spread">
+      <div>
+        <p class="eyebrow">Studio · 目标编译器</p>
+        <h1>写下一句你真正想要的结果</h1>
+        <p class="dek">这句话会被编译成结构化的 WorkspaceSpec，而不是一段聊天记录。</p>
+
+        <div class="compose">
+          <label for="goal">Intent</label>
+          <textarea id="goal">帮我在 Q4 找到 5 家愿意做联合营销的企业客户，单笔预算 5 万以内，只接受对方市场负责人主动表达兴趣。</textarea>
+          <div class="actions">
+            <button class="btn" id="compile">编译工作区</button>
+            <button class="btn ghost" disabled>从模板开始</button>
+            <span class="small muted" style="margin-left:auto">strictObject · 未知组件会被拒绝</span>
+          </div>
+        </div>
+
+        <div class="flow" id="trace" aria-live="polite">
+          <div><span class="k">Step 01</span><b>解析意图</b><p>等待编译…</p></div>
+          <div><span class="k">Step 02</span><b>生成 Spec</b><p>—</p></div>
+          <div><span class="k">Step 03</span><b>校验组件</b><p>—</p></div>
+          <div><span class="k">Step 04</span><b>建立 Mission</b><p>—</p></div>
+        </div>
+        <p class="note muted small" id="traceNote">编译失败会保留原文并显示具体的校验错误，不会静默降级成"已完成"。</p>
+      </div>
+
+      <div class="margin">
+        <h3>Spec 摘要</h3>
+        <div class="kv"><span>version</span><b>1.2</b></div>
+        <div class="kv"><span>goal</span><b>5 家客户</b></div>
+        <div class="kv"><span>budget</span><b>≤ ¥50,000</b></div>
+        <div class="kv"><span>agents</span><b>scout·relay·gate</b></div>
+        <div class="kv"><span>consent</span><b>2 项</b></div>
+        <hr class="rule">
+        <h3>为什么不是聊天</h3>
+        <p class="note">聊天结束后没有留下任何可执行的东西；Spec 留下的是字段、边界与验收指标，可以被下一个人接手，也可以被服务端校验。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIELD -->
+  <section class="view" id="v-field">
+    <div class="spread">
+      <div>
+        <p class="eyebrow">Field · 连接场</p>
+        <h1>14 个候选，3 个已双向同意</h1>
+        <p class="dek">排序依据：双方同意度 × 与目标的契合度。未表态的排在后面，不隐藏。</p>
+        <div class="ledger">
+          <div class="row"><div class="n">01</div><div><b>acme.co · 市场负责人</b><p>同城 · 做过 3 次联合活动 · 主动表达兴趣</p></div><div class="meta"><span class="tag g">双向同意</span></div></div>
+          <div class="row"><div class="n">02</div><div><b>northstar · 品牌总监</b><p>行业重合度高 · 预算区间匹配</p></div><div class="meta"><span class="tag g">双向同意</span></div></div>
+          <div class="row"><div class="n">03</div><div><b>lumen · 增长负责人</b><p>已会面一次 · 下一步待定</p></div><div class="meta"><span class="tag g">已会面</span></div></div>
+          <div class="row"><div class="n">04</div><div><b>atlas · 市场经理</b><p>对方已同意 · 等待你批准披露字段</p></div><div class="meta"><span class="tag a">待你批准</span></div></div>
+          <div class="row"><div class="n">05</div><div><b>vega · 商务</b><p>尚未表态 · 已发送一次介绍请求</p></div><div class="meta"><span class="tag">等待</span></div></div>
+          <div class="row"><div class="n">06</div><div><b>orion · 创始人</b><p>未表态 · 距离上次触达 6 天</p></div><div class="meta"><span class="tag">等待</span></div></div>
+        </div>
+        <p class="note muted small" style="margin-top:14px">候选列表是 GET /api/v1/connections/proposals 的真实返回；未表态不等于被过滤，只是排序靠后。</p>
+      </div>
+      <div class="margin">
+        <h3>本轮统计</h3>
+        <div class="kv"><span>候选总数</span><b class="num">128</b></div>
+        <div class="kv"><span>命中</span><b class="num">14</b></div>
+        <div class="kv"><span>双向同意</span><b class="num">3</b></div>
+        <div class="kv"><span>命中率</span><b class="num">10.9%</b></div>
+        <hr class="rule">
+        <p class="note">命中率由 Scout 运行记录反算，不是前端算的。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONSENT -->
+  <section class="view" id="v-consent">
+    <div class="spread">
+      <div>
+        <p class="eyebrow">Consent · 同意与披露</p>
+        <h1>你授权了哪些字段，谁看得到</h1>
+        <p class="dek">每条授权都可单独拒绝、单独撤销。没有"全部同意"这种按钮——那正是事故的来源。</p>
+
+        <div class="consent">
+          <div class="hd"><span>待处理 2 项</span><span>有效期 7 天</span></div>
+          <div class="item">
+            <div>
+              <b>披露职位与公司给候选方</b>
+              <p>请求方：Scout · 受众：与本次 Mission 相关的候选方市场人员</p>
+              <div class="why">为什么需要：对方要知道你是谁，才会判断是否值得一次会面。不含手机号与私人邮箱。</div>
+            </div>
+            <div class="ctl"><button class="sbtn yes">批准</button><button class="sbtn no">拒绝</button></div>
+          </div>
+          <div class="item">
+            <div>
+              <b>以你的名义发送首封介绍语</b>
+              <p>请求方：Relay · 次数：1 · 内容需你先确认</p>
+              <div class="why">发送前会展示完整草稿；发送后可在 24 小时内撤回。</div>
+            </div>
+            <div class="ctl"><button class="sbtn yes">批准</button><button class="sbtn no">拒绝</button></div>
+          </div>
+          <div class="item" style="background:linear-gradient(90deg,rgba(143,59,50,.04),transparent)">
+            <div>
+              <b>读取对方手机号</b>
+              <p>请求方：Gate · <span class="tag r">服务端已阻断</span></p>
+              <div class="why">该字段不在工作区授权范围内。界面不会把它显示成"可开启"的开关。</div>
+            </div>
+            <div class="ctl"><button class="sbtn" disabled>不可授权</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="margin">
+        <h3>已生效</h3>
+        <div class="kv"><span>职位 + 公司</span><b>3 天前</b></div>
+        <div class="kv"><span>会面时间</span><b>5 天前</b></div>
+        <hr class="rule">
+        <h3>撤销后果</h3>
+        <p class="note">撤销后，下一次依赖该字段的动作会被 API 拒绝；已经完成的披露不会被追溯删除。这是刻意的——历史必须可审计。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- OUTCOMES -->
+  <section class="view" id="v-outcomes">
+    <div class="spread">
+      <div>
+        <p class="eyebrow">Outcomes · 成果核算</p>
+        <h1>这个季度实际发生了什么</h1>
+        <p class="dek">三个指标、七条事件。每条都能点到具体的人、动作与时间。</p>
+        <table class="book">
+          <thead><tr><th>时间</th><th>事件</th><th>主体</th><th>证据</th></tr></thead>
+          <tbody>
+            <tr><td class="k">10-21 09:41</td><td>提案已发出</td><td>Relay · 你批准</td><td class="num">doc_9f2</td></tr>
+            <tr><td class="k">10-20 16:02</td><td>双向同意达成</td><td>acme.co</td><td class="num">consent_7a1</td></tr>
+            <tr><td class="k">10-19 11:20</td><td>会面完成 · 45 分钟</td><td>lumen</td><td class="num">outcome_3c8</td></tr>
+            <tr><td class="k">10-18 08:15</td><td>Scout 扫描完成</td><td>128 → 14</td><td class="num">run_128</td></tr>
+            <tr><td class="k">10-17 14:33</td><td>Gate 阻断越权请求</td><td>读取手机号</td><td class="num">deny_5b2</td></tr>
+          </tbody>
+        </table>
+        <div class="flow" style="margin-top:18px">
+          <div><span class="k">会面</span><b class="num">3</b><p>目标 5</p></div>
+          <div><span class="k">提案</span><b class="num">2</b><p>目标 5</p></div>
+          <div><span class="k">签约</span><b class="num">0</b><p>目标 2</p></div>
+        </div>
+      </div>
+      <div class="margin">
+        <h3>口径</h3>
+        <p class="note">「会面」只统计双方确认发生的日程；「提案」只统计已发出的文档；「签约」以合同实体为准。</p>
+        <hr class="rule">
+        <p class="note">这些定义写在 WorkspaceSpec 里，不随报表变化。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENTS -->
+  <section class="view" id="v-agents">
+    <div class="spread">
+      <div>
+        <p class="eyebrow">Agents · 运行与审批</p>
+        <h1>每个 Agent 都能看到它的输入与账</h1>
+        <p class="dek">没有"AI 正在思考"的无限转圈。要么有产物，要么有明确的失败原因。</p>
+        <div class="ledger">
+          <div class="row"><div class="n">128</div><div><b>Scout · COMPLETED</b><p>128 候选 → 14 命中 · 42s · 216 tokens</p></div><div class="meta"><span class="tag g">完成</span></div></div>
+          <div class="row"><div class="n">129</div><div><b>Relay · AWAITING_CONSENT</b><p>草稿已生成，等待「以你的名义发送」批准</p></div><div class="meta"><span class="tag a">待批</span></div></div>
+          <div class="row blocked"><div class="n">127</div><div><b>Gate · BLOCKED</b><p>请求字段不在授权范围 · 服务端拒绝并记审计</p></div><div class="meta"><span class="tag r">阻断</span></div></div>
+          <div class="row"><div class="n">126</div><div><b>Scout · FAILED</b><p>上游搜索端点 503 · 已重试 2 次 · 未产生任何候选</p></div><div class="meta"><span class="tag r">失败</span></div></div>
+        </div>
+      </div>
+      <div class="margin">
+        <h3>约束</h3>
+        <p class="note">Agent 只能提交 Spec 内的 actionId；自由文本不构成指令。运行记录写入审计表，包含 token 与耗时。</p>
+        <hr class="rule">
+        <p class="note">失败不会被渲染成成功，也不会用固定的 setTimeout 伪造进度。</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const tabs = [...document.querySelectorAll('.tab[data-view]')]
+  const views = [...document.querySelectorAll('.view')]
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t === tab)))
+      views.forEach((v) => v.classList.toggle('on', v.id === 'v-' + tab.dataset.view))
+    })
+  })
+
+  // 编译：分步投影（对应 intent → spec → registry → mission）
+  const STEPS = [
+    ['解析意图', 'goal / constraints / 参与方'],
+    ['生成 Spec', 'version 1.2 · 校验通过'],
+    ['校验组件', '6 视图映射 · 无未知组件'],
+    ['建立 Mission', 'mission_ms8k2 · READY'],
+  ]
+  document.getElementById('compile')?.addEventListener('click', async () => {
+    const cells = [...document.querySelectorAll('#trace > div')]
+    document.getElementById('traceNote').textContent = '编译中…'
+    for (let i = 0; i < cells.length; i++) {
+      cells[i].querySelector('p').textContent = '进行中…'
+      await new Promise((r) => setTimeout(r, 420))
+      cells[i].querySelector('p').textContent = STEPS[i][1]
+      cells[i].style.background = 'rgba(169,118,46,.05)'
+    }
+    document.getElementById('traceNote').textContent =
+      '编译完成：Spec 已落库，Mission READY。刷新页面会从端点重新读取，而不是恢复前端缓存。'
+  })
+
+  // 三态演示
+  const box = document.getElementById('statebox')
+  const list = document.getElementById('readyList')
+  const stateBtns = [...document.querySelectorAll('.states button')]
+  const HTML = {
+    loading: '<div class="statebox"><div class="loader"><i></i></div><p>正在读取真实端点…</p></div>',
+    empty: '<div class="statebox"><h3>还没有待你决定的事</h3><p>Scout 正在扫描；有结果后这里会出现第一条。</p><p class="small">空状态来自「返回 0 条」，不是加载失败。</p></div>',
+    error: '<div class="statebox"><h3>读取失败</h3><p>GET /api/v1/missions → 503</p><p class="small">页面不会把失败显示为空，也不会保留上一次的数据。</p></div>',
+  }
+  stateBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      stateBtns.forEach((b) => b.classList.toggle('on', b === btn))
+      const s = btn.dataset.state
+      if (s === 'ready') {
+        box.innerHTML = ''
+        list.style.display = ''
+        return
+      }
+      list.style.display = 'none'
+      box.innerHTML = HTML[s]
+    })
+  })
+</script>
+</body>
+</html>
