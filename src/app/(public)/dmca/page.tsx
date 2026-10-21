@@ -3,8 +3,8 @@ import Link from "next/link";
 import { FileText, AlertTriangle, Mail, Scale, Globe } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "DMCA Policy - LokFee!",
-  description: "Digital Millennium Copyright Act policy for LokFee!.",
+  title: "DMCA Policy - LokFeel",
+  description: "Digital Millennium Copyright Act policy for LokFeel.",
 };
 
 export default function DMCAPage() {
@@ -26,10 +26,10 @@ export default function DMCAPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. DMCA Notice of Alleged Copyright Infringement</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              LokFee! respects the intellectual property rights of others and expects users to do the same. In accordance with the Digital Millennium Copyright Act (DMCA), we will respond to valid takedown notices regarding claimed copyright infringement.
+              LokFeel respects the intellectual property rights of others and expects users to do the same. In accordance with the Digital Millennium Copyright Act (DMCA), we will respond to valid takedown notices regarding claimed copyright infringement.
             </p>
             <p className="text-foreground leading-relaxed">
-              If you believe that content on LokFee! infringes your copyright, please submit a written notification to our Copyright Agent with the following information:
+              If you believe that content on LokFeel infringes your copyright, please submit a written notification to our Copyright Agent with the following information:
             </p>
           </section>
 
@@ -65,7 +65,7 @@ export default function DMCAPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">4. Repeat Infringer Policy</h2>
             <p className="text-foreground leading-relaxed">
-              LokFee! maintains a policy of terminating, in appropriate circumstances, the accounts of users who are repeat infringers. We also may, at our sole discretion, limit access to the Service and/or terminate the accounts of any users who infringe the intellectual property rights of others.
+              LokFeel maintains a policy of terminating, in appropriate circumstances, the accounts of users who are repeat infringers. We also may, at our sole discretion, limit access to the Service and/or terminate the accounts of any users who infringe the intellectual property rights of others.
             </p>
           </section>
 
@@ -85,7 +85,7 @@ export default function DMCAPage() {
               <p><strong>Email:</strong> <a href="mailto:dmca@lokfeel.com" className="text-primary hover:underline">dmca@lokfeel.com</a></p>
               <p><strong>Subject Line:</strong> DMCA Takedown Notice / DMCA Counter-Notification</p>
               <p className="text-foreground-muted text-sm mt-4">
-                LokFee! Inc.<br />
+                LokFeel Inc.<br />
                 Wilmington, Delaware, USA
               </p>
             </div>

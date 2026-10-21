@@ -1,11 +1,204 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { HelpCircle, Users, MessageSquare, CreditCard, Shield, Trash2, Smartphone, Mail } from "lucide-react";
+import type { ReactNode } from "react";
+import {
+  HelpCircle,
+  Compass,
+  ShieldCheck,
+  CreditCard,
+  Trash2,
+  Users,
+  Smartphone,
+  Mail,
+  Plug,
+} from "lucide-react";
+import { BRAND } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: "FAQ - LokFeel",
-  description: "Frequently asked questions about LokFeel - your relationship matching platform.",
+  title: "FAQ",
+  description: `Common questions about ${BRAND.name} — how intent becomes a workspace, how consent is enforced, and what agents can and cannot do.`,
+  openGraph: {
+    title: `FAQ · ${BRAND.name}`,
+    description: BRAND.shortDescription,
+  },
 };
+
+interface FaqItem {
+  icon: typeof HelpCircle;
+  tint: string;
+  question: string;
+  answer: ReactNode;
+}
+
+const items: FaqItem[] = [
+  {
+    icon: Compass,
+    tint: "bg-primary/20 text-primary",
+    question: `What is ${BRAND.name}?`,
+    answer: (
+      <>
+        {BRAND.name} is an {BRAND.category}. You describe an outcome in plain language; the system
+        compiles it into a structured, schema-validated workspace containing the goal, its
+        constraints, the people involved, the boundaries they approve, and the metrics that define
+        success. Work happens inside that workspace — not in a chat thread that disappears.
+      </>
+    ),
+  },
+  {
+    icon: Compass,
+    tint: "bg-secondary/20 text-secondary",
+    question: "What happens when I describe a goal?",
+    answer: (
+      <>
+        A run goes through four stages: <strong>Intent</strong> is captured, a{" "}
+        <strong>workspace spec</strong> is compiled and validated, <strong>consent</strong> gates are
+        applied to fields and actions, and <strong>outcomes</strong> are recorded and reconciled.
+        If a stage cannot be verified, the run does not advance — a failed compilation is shown as
+        failed, never as success.
+      </>
+    ),
+  },
+  {
+    icon: ShieldCheck,
+    tint: "bg-success/20 text-success",
+    question: "What can the AI actually change — and what needs approval?",
+    answer: (
+      <>
+        The model proposes; it does not execute. It can produce a draft spec, suggest candidates and
+        recommend a next step, but every write that touches people or money passes a server-side
+        permission check and, where the spec requires it, an explicit approval. Sensitive actions
+        with no valid consent are rejected by the API, not hidden in the UI.
+      </>
+    ),
+  },
+  {
+    icon: Users,
+    tint: "bg-info/20 text-info",
+    question: `Who is ${BRAND.name} for?`,
+    answer: (
+      <>
+        Teams and communities that coordinate work involving other people: recruiting, partnerships,
+        member introductions, vendor onboarding, internal approvals. If your work currently lives in
+        threads and spreadsheets, and you need to know who approved what, it fits.
+      </>
+    ),
+  },
+  {
+    icon: ShieldCheck,
+    tint: "bg-primary/20 text-primary",
+    question: "How is my organization's data isolated?",
+    answer: (
+      <>
+        Every workspace belongs to an organization, and access is checked on the server for each
+        request through a tenant-scoped data layer. Our database does not provide row-level security,
+        so isolation is enforced in application code and covered by cross-tenant negative tests in
+        CI. We would rather state that plainly than imply a guarantee the storage engine does not
+        make.
+      </>
+    ),
+  },
+  {
+    icon: CreditCard,
+    tint: "bg-warning/20 text-warning",
+    question: `How much does ${BRAND.name} cost?`,
+    answer: (
+      <>
+        There is a free tier for evaluating the platform. Paid plans are listed on the{" "}
+        <Link href="/pricing" className="text-primary hover:underline">
+          pricing page
+        </Link>
+        . Subscription checkout is not yet open to the public — while it is closed, no card is
+        charged and every checkout endpoint returns a configuration error instead of a payment
+        form. See{" "}
+        <Link href="/refunds" className="text-primary hover:underline">
+          refunds
+        </Link>{" "}
+        for the policy that applies once billing is live.
+      </>
+    ),
+  },
+  {
+    icon: Users,
+    tint: "bg-primary/20 text-primary",
+    question: "How do I create an account?",
+    answer: (
+      <>
+        Visit{" "}
+        <Link href="/register" className="text-primary hover:underline">
+          app.lokfeel.com/register
+        </Link>{" "}
+        and sign up with email, Google or GitHub. No credit card is required to create a workspace.
+        You will be asked to name your organization — that organization owns everything you create.
+      </>
+    ),
+  },
+  {
+    icon: Plug,
+    tint: "bg-secondary/20 text-secondary",
+    question: "Can other agents and tools call it?",
+    answer: (
+      <>
+        Yes. {BRAND.name} exposes an MCP server with five tools, an A2A task endpoint, and a
+        published OpenAPI contract, so an external agent can compile a workspace or check an outcome
+        programmatically. The same permission model applies to machine callers — a token does not
+        bypass consent.
+      </>
+    ),
+  },
+  {
+    icon: Smartphone,
+    tint: "bg-secondary/20 text-secondary",
+    question: "Is there a mobile app?",
+    answer: (
+      <>
+        {BRAND.name} is a responsive web application and can be installed as a PWA from your mobile
+        browser. Native iOS and Android clients are not shipped; the web app is the supported client
+        today.
+      </>
+    ),
+  },
+  {
+    icon: Trash2,
+    tint: "bg-danger/20 text-danger",
+    question: "How do I delete my account and data?",
+    answer: (
+      <>
+        Account settings include a delete action. Deletion removes your account and its owned
+        workspace data; export is available before you delete. For requests that need a human, email{" "}
+        <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">
+          support@lokfeel.com
+        </a>
+        . Details are in the{" "}
+        <Link href="/privacy" className="text-primary hover:underline">
+          privacy policy
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    icon: Mail,
+    tint: "bg-primary/20 text-primary",
+    question: "Still have questions?",
+    answer: (
+      <>
+        Write to{" "}
+        <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">
+          support@lokfeel.com
+        </a>{" "}
+        for product questions,{" "}
+        <a href="mailto:billing@lokfeel.com" className="text-primary hover:underline">
+          billing@lokfeel.com
+        </a>{" "}
+        for invoices, or{" "}
+        <a href="mailto:hello@lokfeel.com" className="text-primary hover:underline">
+          hello@lokfeel.com
+        </a>{" "}
+        for anything else.
+      </>
+    ),
+  },
+];
 
 export default function FAQPage() {
   return (
@@ -16,148 +209,25 @@ export default function FAQPage() {
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mx-auto mb-6">
             <HelpCircle className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">Frequently Asked Questions</h1>
-          <p className="text-foreground-muted">Everything you need to know about LokFeel</p>
+          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+            Frequently Asked Questions
+          </h1>
+          <p className="text-foreground-muted">How {BRAND.name} works, and where its limits are</p>
         </div>
 
         {/* Content */}
         <div className="glass-card p-8 lg:p-12 space-y-10">
-          
-          {/* What is LokFeel */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Users className="w-5 h-5 text-primary" />
+          {items.map((item) => (
+            <section key={item.question}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${item.tint}`}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <h2 className="text-xl font-bold text-foreground">{item.question}</h2>
               </div>
-              <h2 className="text-xl font-bold text-foreground">What is LokFeel?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              LokFeel is a relationship matching platform that helps you find meaningful connections based on relationship psychology principles. Unlike traditional dating apps that focus on photos, LokFeel analyzes your relationship blueprint — including attachment style, communication preferences, conflict resolution style, love language, and life priorities — to provide scientifically-backed match recommendations with detailed compatibility explanations.
-            </p>
-          </section>
-
-          {/* How does LokFeel work */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-secondary" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">How does LokFeel work?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              LokFeel works in three simple steps: (1) Complete your Relationship Blueprint by answering questions about your relationship style and preferences. (2) Our algorithm analyzes your responses and identifies compatible matches. (3) Review your matches with detailed compatibility explanations, then connect and start meaningful conversations. Our paid messaging system allows you to engage with matches at your own pace.
-            </p>
-          </section>
-
-          {/* Is LokFeel safe */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-success" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">Is LokFeel safe?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              Absolutely! LokFeel is committed to creating a safe and respectful community. We verify user identities, moderate content, and provide safety tips throughout the app. Our reporting system allows users to flag inappropriate behavior, and we take immediate action on violations. We never share your personal data with third parties without your consent, and all messages are encrypted end-to-end.
-            </p>
-          </section>
-
-          {/* How much does LokFeel cost */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-warning" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">How much does LokFeel cost?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              LokFeel offers a free tier that allows you to create a profile, complete your Relationship Blueprint, and receive match recommendations. Premium subscriptions unlock additional features such as unlimited messaging, advanced filters, read receipts, and priority matching. Visit our <Link href="/pricing" className="text-primary hover:underline">Pricing page</Link> for current plans and pricing.
-            </p>
-          </section>
-
-          {/* How to create an account */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-info/20 flex items-center justify-center">
-                <Users className="w-5 h-5 text-info" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">How do I create a LokFeel account?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              Creating a LokFeel account is free and simple. Visit <Link href="/register" className="text-primary hover:underline">app.lokfeel.com/register</Link> and follow the steps to create your account. You'll need to provide your email address, create a password, and complete your basic profile information. For enhanced security, you can also sign up using Google or GitHub OAuth.
-            </p>
-          </section>
-
-          {/* How to cancel subscription */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-warning" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">How do I cancel my subscription?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              To cancel your LokFeel subscription, log in to your account and navigate to 'Account Settings.' In this section, you'll find an option labeled 'Manage Subscription.' Follow the prompts to cancel your subscription. Your premium features will remain active until the end of the current billing period. For refund requests, please contact <a href="mailto:billing@lokfeel.com" className="text-primary hover:underline">billing@lokfeel.com</a>.
-            </p>
-          </section>
-
-          {/* How to delete account */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-danger/20 flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-danger" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">How do I delete my LokFeel account?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              To delete your LokFeel account, access your account settings after logging in. Within these settings, you'll find an option labeled 'Delete Account.' Follow the prompts to permanently delete your account. Please note that account deletion is irreversible. All your data, including your Relationship Blueprint, matches, and messages, will be permanently deleted within 30 days. For assistance, contact <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">support@lokfeel.com</a>.
-            </p>
-          </section>
-
-          {/* Who can join */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">Who can join LokFeel?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              Anyone who is at least 18 years old can create a free LokFeel account. LokFeel is designed for individuals seeking meaningful relationships, whether dating, friendship, or long-term partnership. We welcome users of all genders, orientations, and backgrounds who are committed to respectful and authentic connections.
-            </p>
-          </section>
-
-          {/* Mobile app */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-                <Smartphone className="w-5 h-5 text-secondary" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">Does LokFeel have a mobile app?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13">
-              Yes! LokFeel is fully responsive and works great on mobile browsers. Our Progressive Web App (PWA) allows you to install LokFeel on your iOS or Android device for an app-like experience. Simply visit <strong>app.lokfeel.com</strong> in your mobile browser and follow the prompt to add LokFeel to your home screen. Native mobile apps for iOS and Android are currently in development.
-            </p>
-          </section>
-
-          {/* Contact support */}
-          <section className="glass border-primary/30">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground">Still have questions?</h2>
-            </div>
-            <p className="text-foreground leading-relaxed ml-13 mb-4">
-              Our support team is here to help! Contact us at:
-            </p>
-            <div className="ml-13 space-y-2 text-foreground">
-              <p><strong>Support:</strong> <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">support@lokfeel.com</a></p>
-              <p><strong>General:</strong> <a href="mailto:hello@lokfeel.com" className="text-primary hover:underline">hello@lokfeel.com</a></p>
-              <p><strong>Billing:</strong> <a href="mailto:billing@lokfeel.com" className="text-primary hover:underline">billing@lokfeel.com</a></p>
-            </div>
-          </section>
-
+              <div className="text-foreground leading-relaxed ml-13 space-y-3">{item.answer}</div>
+            </section>
+          ))}
         </div>
 
         {/* Back Link */}

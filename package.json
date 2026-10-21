@@ -165,7 +165,9 @@
     "verify:ac10:lifecycle": "node scripts/qa/verify-ac10-lifecycle.mjs",
     "verify:ac22:open-sdk": "node scripts/qa/verify-ac22-open-sdk.mjs",
     "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs",
-    "verify:llm:live": "node scripts/qa/verify-llm-live.mjs"
+    "verify:llm:live": "node scripts/qa/verify-llm-live.mjs",
+    "verify:brand-scan": "node scripts/qa/verify-brand-scan.mjs",
+    "audit:ux13": "node scripts/qa/v16-ux-audit.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

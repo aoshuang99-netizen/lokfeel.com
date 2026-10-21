@@ -2,8 +2,9 @@ import { Metadata } from "next";
 import { Users, Shield, AlertTriangle, MessageSquare } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Community Guidelines - LokFee!",
-  description: "LokFee! Community Guidelines - how we keep this space safe and respectful for everyone.",
+  title: "Community Guidelines",
+  description:
+    "How members of a LokFeel workspace are expected to behave — including how to decline, withdraw consent, and report.",
 };
 
 const guidelines = [
@@ -25,7 +26,7 @@ const guidelines = [
   {
     icon: MessageSquare,
     title: "Communicate Clearly",
-    desc: "Say what you mean. Ghosting hurts. If it's not a match, say so kindly.",
+    desc: "Say what you mean, and close what you open. If a collaboration is not moving forward, say so explicitly instead of letting it lapse.",
   },
 ];
 
@@ -51,7 +52,7 @@ export default function CommunityGuidelinesPage() {
             Community <span className="text-gradient">Guidelines</span>
           </h1>
           <p className="text-xl text-foreground-muted max-w-2xl mx-auto">
-            LokFee! is built on respect, honesty, and real human connection. These guidelines help us keep it that way.
+            LokFeel is built on respect, honesty, and real human connection. These guidelines help us keep it that way.
           </p>
         </div>
       </section>
@@ -104,7 +105,7 @@ export default function CommunityGuidelinesPage() {
             If someone violates these guidelines, please report them. Every report is reviewed by our team.
           </p>
           <a
-            href="mailto:safety@lokfee.com"
+            href="mailto:safety@lokfeel.com"
             className="btn-primary text-lg px-8 py-4"
           >
             Report a Problem

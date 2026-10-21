@@ -3,8 +3,14 @@ import Link from "next/link";
 import { Shield, Lock, Eye, Users, Trash2, Mail, Globe, Scale } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - LokFee!",
-  description: "Learn how LokFee! protects your data and privacy while helping you find meaningful connections.",
+  title: "Privacy Policy",
+  description:
+    "How LokFeel collects, uses and safeguards data in an agent-native workspace — including what agents may access and how consent is recorded.",
+  openGraph: {
+    title: "Privacy Policy · LokFeel",
+    description:
+      "Data handling for LokFeel workspaces: workspace specs, consent records, agent execution logs and organization isolation.",
+  },
 };
 
 export default function PrivacyPage() {
@@ -27,10 +33,13 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Introduction</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              LokFee! ("we," "our," or "us") is operated by <strong>LokFee! Inc.</strong>, a company registered in the State of Delaware, USA. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
+              LokFeel ("we," "our," or "us") is operated by <strong>LokFeel Inc.</strong>, a company registered in the State of Delaware, USA. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
             </p>
             <p className="text-foreground leading-relaxed">
-              We&apos;re committed to transparency and giving you control over your data. Dating apps shouldn&apos;t require you to sacrifice your privacy to find meaningful connections.
+              We are committed to transparency and to giving you control over your data. Using an
+              agent-native workspace should not require you to give up either — which is why consent
+              records, agent execution logs and organization boundaries are treated as first-class
+              data objects, described below.
             </p>
           </section>
 
@@ -45,19 +54,19 @@ export default function PrivacyPage() {
             
             <h3 className="text-lg font-semibold text-foreground mb-3">2.1 Information You Provide</h3>
             <ul className="list-disc list-inside text-foreground space-y-2 mb-6 ml-4">
-              <li>Account information (name, email, date of birth)</li>
-              <li>Profile information (photos, bio, relationship preferences)</li>
-              <li>Relationship blueprint responses (attachment style, communication preferences, conflict resolution style, love language)</li>
-              <li>Match preferences and dealbreakers</li>
-              <li>Messages and interactions with other users</li>
-              <li>Payment information (processed securely by Stripe; we never store full card numbers)</li>
+              <li>Account information (name, email, organization membership)</li>
+              <li>Workspace content you author: goals, constraints, briefs and messages</li>
+              <li>Compiled workspace specifications and the approvals attached to them</li>
+              <li>Your consent decisions — which fields and actions you authorized, and when</li>
+              <li>Messages and interactions with other members of your organization</li>
+              <li>Payment information (processed by our payment provider; we never store full card numbers)</li>
             </ul>
 
             <h3 className="text-lg font-semibold text-foreground mb-3">2.2 Information Collected Automatically</h3>
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
               <li>Device information (type, operating system, unique identifiers)</li>
-              <li>Usage data (features used, interactions, session duration)</li>
-              <li>Location data (general, not precise &mdash; for matching purposes only)</li>
+              <li>Usage data (features used, workspace opens, session duration)</li>
+              <li>Agent execution records (which agent ran, on which workspace, with what result)</li>
               <li>Log data (IP address, browser type, referral source)</li>
               <li>Cookies and tracking technologies (see our <Link href="/cookies" className="text-primary hover:underline">Cookie Policy</Link>)</li>
             </ul>
@@ -74,11 +83,11 @@ export default function PrivacyPage() {
             
             <p className="text-foreground leading-relaxed mb-4">We use your information to:</p>
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-              <li>Create and maintain your account</li>
-              <li>Generate personalized match recommendations based on our relationship compatibility algorithm</li>
-              <li>Provide match explanations and compatibility insights</li>
-              <li>Facilitate communication between matched users</li>
-              <li>Improve our matching algorithm through aggregate data analysis</li>
+              <li>Create and maintain your account and organization membership</li>
+              <li>Compile your stated intent into a structured workspace specification</li>
+              <li>Record and enforce the consent decisions attached to that workspace</li>
+              <li>Execute approved actions and attribute each one to an agent or a person</li>
+              <li>Reconcile outcomes against the metrics defined in the workspace</li>
               <li>Send you service-related notifications (with your consent for marketing)</li>
               <li>Prevent fraud, abuse, and security threats</li>
               <li>Comply with legal obligations</li>
@@ -113,8 +122,8 @@ export default function PrivacyPage() {
               We <strong>never sell</strong> your personal data. Here&apos;s who we share your data with:
             </p>
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-              <li><strong>Other Users:</strong> Your profile is shown to potential matches. You control what information is visible through your privacy settings.</li>
-              <li><strong>Service Providers:</strong> Companies that help us operate (Vercel for hosting, Stripe for payments, Neon for database, Google/GitHub for authentication). They are bound by strict data processing agreements and only process data on our instructions.</li>
+              <li><strong>Members of your organization:</strong> Workspace content is visible to people you invite to that organization, subject to the roles you assign. It is not published to other organizations.</li>
+              <li><strong>Service Providers:</strong> Companies that help us operate — Netlify (hosting), Cloudflare (DNS and real-time media relay), Turso (database), Upstash (cache and rate limiting), Resend (transactional email), Stripe and Creem (payments), Google and GitHub (authentication). They process data on our instructions under data processing agreements.</li>
               <li><strong>Legal Requirements:</strong> When required by law, court order, or to protect the safety of our users or the public.</li>
               <li><strong>Business Transfers:</strong> In the event of a merger, acquisition, or asset sale, your data may be transferred to the acquiring entity.</li>
             </ul>
@@ -196,13 +205,13 @@ export default function PrivacyPage() {
 
             <h3 className="text-lg font-semibold text-foreground mb-3">9.1 Categories of Personal Information Collected</h3>
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4 mb-6">
-              <li><strong>Identifiers:</strong> Name, email address, account ID</li>
-              <li><strong>Customer Records:</strong> Profile information, relationship preferences, communication data</li>
-              <li><strong>Protected Classifications:</strong> Age (date of birth), gender (provided voluntarily)</li>
+              <li><strong>Identifiers:</strong> Name, email address, account ID, organization ID</li>
+              <li><strong>Customer Records:</strong> Workspace content, compiled specifications, consent decisions, communication data</li>
+              <li><strong>Protected Classifications:</strong> Age (where legally required for account eligibility)</li>
               <li><strong>Commercial Information:</strong> Subscription tier, payment records</li>
               <li><strong>Internet Activity:</strong> Usage patterns, feature interactions</li>
-              <li><strong>Geolocation:</strong> General location (not precise GPS)</li>
-              <li><strong>Inferences:</strong> Relationship compatibility scores, match recommendations</li>
+              <li><strong>Geolocation:</strong> Approximate region inferred from IP address</li>
+              <li><strong>Inferences:</strong> Draft specifications and recommendations produced by models, together with the fact that they were model-generated</li>
             </ul>
 
             <h3 className="text-lg font-semibold text-foreground mb-3">9.2 Your CCPA Rights</h3>
@@ -282,7 +291,7 @@ export default function PrivacyPage() {
               <p><strong>General Inquiries:</strong> <a href="mailto:hello@lokfeel.com" className="text-primary hover:underline">hello@lokfeel.com</a></p>
               <p><strong>Support:</strong> <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">support@lokfeel.com</a></p>
               <p className="text-foreground-muted text-sm mt-4">
-                LokFee! Inc.<br />
+                LokFeel Inc.<br />
                 Wilmington, Delaware, USA
               </p>
             </div>

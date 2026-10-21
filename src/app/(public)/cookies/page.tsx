@@ -3,8 +3,9 @@ import Link from "next/link";
 import { Cookie, Shield, Eye, Lock, Settings, AlertCircle, Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy - LokFee!",
-  description: "Learn how LokFee! uses cookies and similar technologies to enhance your experience.",
+  title: "Cookie Policy",
+  description:
+    "How LokFeel uses cookies: strictly necessary session cookies, functional preferences, and what we deliberately do not set.",
 };
 
 export default function CookiePolicyPage() {
@@ -26,7 +27,7 @@ export default function CookiePolicyPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Introduction</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              This Cookie Policy explains how LokFee! (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) uses cookies and similar tracking technologies when you visit our website at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
+              This Cookie Policy explains how LokFeel (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) uses cookies and similar tracking technologies when you visit our website at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
             </p>
             <p className="text-foreground leading-relaxed">
               This policy should be read alongside our <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>, which provides more detail on how we handle your personal data.
@@ -87,7 +88,8 @@ export default function CookiePolicyPage() {
 
             <h3 className="text-lg font-semibold text-foreground mb-3">3.3 Functional Cookies</h3>
             <p className="text-foreground leading-relaxed mb-2">
-              These cookies enable enhanced functionality and personalization, such as remembering your matching preferences and dashboard layout.
+              These cookies enable enhanced functionality and personalization, such as remembering
+              your workspace layout, the last mission you opened, and your interface preferences.
             </p>
 
             <h3 className="text-lg font-semibold text-foreground mb-3">3.4 Marketing Cookies (Optional)</h3>

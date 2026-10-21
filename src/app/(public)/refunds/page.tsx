@@ -3,8 +3,8 @@ import Link from "next/link";
 import { RefreshCw, Clock, AlertCircle, Mail, Scale } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Refunds Policy - LokFeel",
-  description: "LokFeel's refund policy for subscriptions and payments.",
+  title: "Refunds Policy",
+  description: "When LokFeel issues refunds for workspace subscriptions, and how to request one.",
 };
 
 export default function RefundsPage() {
@@ -27,7 +27,8 @@ export default function RefundsPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Overview</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              At LokFeel, we strive to provide a high-quality relationship matching service. This Refunds Policy outlines the circumstances under which refunds may be issued for subscriptions, credits, or other paid features purchased through the Service.
+              This Refunds Policy covers paid workspace subscriptions, seats and credits purchased
+              through the Service. It is meant to be read before you pay, not after you complain.
             </p>
             <p className="text-foreground leading-relaxed">
               All refund requests must be submitted to <a href="mailto:billing@lokfeel.com" className="text-primary hover:underline">billing@lokfeel.com</a> with your account email and reason for the refund request.

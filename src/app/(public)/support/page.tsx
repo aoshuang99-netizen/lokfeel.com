@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Mail, Shield, AlertTriangle, Lightbulb, BookOpen } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Support - LokFee!",
-  description: "Get help and support for your LokFee! experience.",
+  title: "Support - LokFeel",
+  description: "Get help and support for your LokFeel experience.",
 };
 
 const supportTopics = [
@@ -29,9 +29,9 @@ const supportTopics = [
 ];
 
 const contactMethods = [
-  { name: "General Support", email: "support@lokfee.com" },
-  { name: "Safety & Abuse", email: "safety@lokfee.com", urgent: true },
-  { name: "Billing", email: "billing@lokfee.com" },
+  { name: "General Support", email: "support@lokfeel.com" },
+  { name: "Safety & Abuse", email: "safety@lokfeel.com", urgent: true },
+  { name: "Billing", email: "billing@lokfeel.com" },
 ];
 
 export default function SupportPage() {

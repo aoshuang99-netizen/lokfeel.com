@@ -1,10 +1,15 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Briefcase, Globe, Users } from "lucide-react";
+import { BRAND } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: "Careers - LokFee!",
-  description: "Join the LokFee! team and help us build the future of meaningful connections.",
+  title: "Careers",
+  description: `Join ${BRAND.name} — we are building an agent-native workspace where intent compiles into structured, permissioned work.`,
+  openGraph: {
+    title: `Careers · ${BRAND.name}`,
+    description: BRAND.shortDescription,
+  },
 };
 
 const openPositions = [
@@ -27,7 +32,7 @@ const openPositions = [
     department: "Community",
   },
   {
-    title: "Data Scientist (Matching Algorithm)",
+    title: "Applied AI Engineer (Intent Compilation)",
     location: "Remote",
     type: "Full-time",
     department: "Engineering",
@@ -50,10 +55,11 @@ export default function CareersPage() {
             <Briefcase className="w-8 h-8 text-blue-400" />
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-            Join the <span className="text-gradient">LokFee!</span> Team
+            Join the <span className="text-gradient">{BRAND.name}</span> Team
           </h1>
           <p className="text-xl text-foreground-muted max-w-2xl mx-auto">
-            We're building technology that helps people find real, lasting connections. Come build with us.
+            We are building the compiler between what people mean and what systems actually do.
+            Come build it with us.
           </p>
         </div>
       </section>
@@ -61,9 +67,12 @@ export default function CareersPage() {
       {/* Mission */}
       <section className="py-16 lg:py-20 bg-background-secondary/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">Why LokFee!?</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">Why {BRAND.name}?</h2>
           <p className="text-foreground-muted leading-relaxed max-w-2xl mx-auto mb-10">
-            Most dating apps are designed to keep you swiping. We're designing LokFee! to help you stop swiping and start connecting. Our team is remote-first, mission-driven, and committed to building something that actually works.
+            Most software asks people to translate their intent into forms. We are removing that
+            step — and taking the responsibility that comes with it: strict schemas, server-side
+            permissions, and an audit trail for every action. Our team is remote-first and
+            small by design, because the hard part is judgment, not headcount.
           </p>
           <div className="grid md:grid-cols-3 gap-6 text-left">
             {benefits.map((benefit, i) => (
@@ -93,7 +102,7 @@ export default function CareersPage() {
                   </div>
                 </div>
                 <Link
-                  href="mailto:careers@lokfee.com?subject=Application"
+                  href="mailto:careers@lokfeel.com?subject=Application"
                   className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap"
                 >
                   Apply
@@ -109,10 +118,11 @@ export default function CareersPage() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">Don't see a fit?</h2>
           <p className="text-foreground-muted mb-8">
-            We're always looking for talented people. Send us your portfolio and let's talk.
+            We are always looking for people who can hold product judgment and engineering rigor at
+            the same time. Send us something you built and why it mattered.
           </p>
           <a
-            href="mailto:careers@lokfee.com"
+            href="mailto:careers@lokfeel.com"
             className="btn-primary text-lg px-8 py-4"
           >
             Contact Us

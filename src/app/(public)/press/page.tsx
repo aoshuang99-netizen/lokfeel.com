@@ -1,39 +1,45 @@
 import { Metadata } from "next";
-import Link from "next/link";
-import { Newspaper, Mic, Award, TrendingUp } from "lucide-react";
+import { Newspaper, Mic, Award, TrendingUp, FileText } from "lucide-react";
+import { BRAND } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: "Press - LokFee!",
-  description: "Latest news, press releases, and media resources for LokFee!.",
+  title: "Press",
+  description: `Press resources and media contacts for ${BRAND.name}, an agent-native workspace that compiles intent into structured, permissioned work.`,
+  openGraph: {
+    title: `Press · ${BRAND.name}`,
+    description: BRAND.shortDescription,
+  },
 };
 
-const pressItems = [
+/**
+ * 事实清单：只写可核实的内容。
+ *
+ * 说明（V16 · T02）：本页此前列了三条"媒体报道"（TechCrunch / Wired / VentureBeat，
+ * 含 500K 会员等数字），这些报道并不存在 —— 属于虚构背书，商业发布前必须清除。
+ * 现在改为产品事实卡 + 明确的"暂无公告"空状态：没有新闻时，诚实地没有。
+ */
+const factSheet = [
   {
-    date: "2026-03",
-    title: "LokFee! Reaches 500K+ Members Worldwide",
-    source: "TechCrunch",
-    type: "Feature",
-    excerpt: "The relationship matching platform hits a major milestone as its science-backed approach gains traction globally.",
+    label: "Category",
+    value: "Agent-Native Connection OS",
   },
   {
-    date: "2026-01",
-    title: "Why Swiping Fails: The Science Behind LokFee!'s Matching",
-    source: "Wired",
-    type: "Feature",
-    excerpt: "A deep dive into how relationship psychology is reshaping online dating.",
+    label: "Core mechanism",
+    value: "Intent → validated workspace spec → missions, consent gates, agents, outcomes",
   },
   {
-    date: "2025-11",
-    title: "LokFee! Launches Global Rollout",
-    source: "VentureBeat",
-    type: "Press Release",
-    excerpt: "Officially expanding beyond North America with localized experiences.",
+    label: "Machine surface",
+    value: "MCP server (5 tools), A2A task API, published OpenAPI contract",
+  },
+  {
+    label: "Data isolation",
+    value: "Organization-scoped, enforced in the application layer (no row-level security in libSQL)",
   },
 ];
 
 const mediaContacts = [
-  { name: "Press Inquiries", email: "press@lokfee.com" },
-  { name: "Partnerships", email: "partners@lokfee.com" },
+  { name: "Press Inquiries", email: "press@lokfeel.com" },
+  { name: "Partnerships", email: "partners@lokfeel.com" },
 ];
 
 export default function PressPage() {
@@ -49,62 +55,80 @@ export default function PressPage() {
             Press & <span className="text-gradient">Media</span>
           </h1>
           <p className="text-xl text-foreground-muted max-w-2xl mx-auto">
-            Latest news, announcements, and stories about how LokFee! is changing the way people connect.
+            {BRAND.subheading}
           </p>
         </div>
       </section>
 
-      {/* Press Releases / Features */}
+      {/* Fact sheet */}
       <section className="py-16 lg:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10">Latest News</h2>
-          <div className="space-y-6">
-            {pressItems.map((item, i) => (
-              <div key={i} className="glass-card p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                  <Mic className="w-6 h-6 text-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">{item.type}</span>
-                    <span className="text-xs text-foreground-subtle">{item.date}</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm text-foreground-muted mb-2">Source: {item.source}</p>
-                  <p className="text-foreground-muted text-sm">{item.excerpt}</p>
-                </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">About {BRAND.name}</h2>
+          <p className="text-foreground-muted mb-8 max-w-2xl">
+            A short, verifiable fact sheet for coverage. Nothing here is a projection.
+          </p>
+          <div className="glass-card divide-y divide-white/5">
+            {factSheet.map((fact) => (
+              <div key={fact.label} className="flex flex-col sm:flex-row gap-2 sm:gap-6 p-5">
+                <span className="text-xs font-semibold uppercase tracking-wider text-blue-400 sm:w-40 flex-shrink-0">
+                  {fact.label}
+                </span>
+                <span className="text-foreground-muted text-sm leading-relaxed">{fact.value}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Media Resources */}
+      {/* News — honest empty state */}
       <section className="py-16 lg:py-20 bg-background-secondary/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10">Latest News</h2>
+          <div className="glass-card p-8 md:p-10 text-center">
+            <FileText className="w-8 h-8 text-foreground-subtle mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              No press releases yet
+            </h3>
+            <p className="text-foreground-muted text-sm max-w-md mx-auto">
+              We publish announcements only when there is something verifiable to announce. For
+              background, use the fact sheet above; for anything else, ask us directly.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Media Resources */}
+      <section className="py-16 lg:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-10">Media Resources</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="glass-card p-6 text-center">
               <Award className="w-8 h-8 text-blue-400 mx-auto mb-3" />
               <h3 className="font-semibold text-foreground mb-1">Brand Assets</h3>
-              <p className="text-sm text-foreground-muted">Logos, screenshots, and brand guidelines for media use.</p>
+              <p className="text-sm text-foreground-muted">
+                Logo and product screenshots — request the current pack by email.
+              </p>
             </div>
             <div className="glass-card p-6 text-center">
               <TrendingUp className="w-8 h-8 text-blue-400 mx-auto mb-3" />
-              <h3 className="font-semibold text-foreground mb-1">Stats & Facts</h3>
-              <p className="text-sm text-foreground-muted">Key numbers and milestones at a glance.</p>
+              <h3 className="font-semibold text-foreground mb-1">Product Facts</h3>
+              <p className="text-sm text-foreground-muted">
+                Architecture, protocol support and data-isolation model, on request.
+              </p>
             </div>
             <div className="glass-card p-6 text-center">
               <Mic className="w-8 h-8 text-blue-400 mx-auto mb-3" />
               <h3 className="font-semibold text-foreground mb-1">Interviews</h3>
-              <p className="text-sm text-foreground-muted">Request an interview with our leadership team.</p>
+              <p className="text-sm text-foreground-muted">
+                Request an interview with the engineering team.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Contact */}
-      <section className="py-16 lg:py-20 text-center">
+      <section className="py-16 lg:py-20 bg-background-secondary/30 text-center">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">Media Contact</h2>
           <p className="text-foreground-muted mb-8">For press inquiries, partnerships, or media assets:</p>
