@@ -73,6 +73,24 @@ export function erasedEmailFor(userId: string): string {
 
 export type ErasureActionKind = 'anonymize' | 'state-change' | 'purge' | 'retain'
 
+/**
+ * 销号后三个状态列的目标值。
+ *
+ * 🔴 为什么要有这个常量：这些值**必须**逐字取自 schema 枚举，不能凭记忆写字符串。
+ * `IntentStatus` 只有 `ACTIVE | WITHDRAWN`，**没有** `CANCELLED` —— 而这份动作清单
+ * 原先写的正是 `CANCELLED`，`erasure.ts` 实现的却是 `WITHDRAWN`。
+ * 于是"单一真相源"成了两份说法，且清单里的那个值在枚举里根本不存在
+ * （照它写代码会直接触发 Prisma 校验错误）。现在两边共用同一个常量。
+ */
+export const ERASED_STATUS = {
+  /** `IntentStatus` */
+  socialIntent: 'WITHDRAWN',
+  /** `MissionParticipationStatus` */
+  missionParticipation: 'WITHDRAWN',
+  /** `BridgeMemberOptInStatus` */
+  bridgeOptIn: 'WITHDRAWN',
+} as const
+
 export interface ErasureAction {
   /** 目标表/对象。 */
   target: string
@@ -119,17 +137,17 @@ export const ERASURE_ACTIONS: readonly ErasureAction[] = [
   {
     target: 'SocialIntent',
     action: 'state-change',
-    detail: 'status → CANCELLED（未结束的意图不得继续参与召回）',
+    detail: `status → ${ERASED_STATUS.socialIntent}（未结束的意图不得继续参与召回）`,
   },
   {
     target: 'MissionParticipation',
     action: 'state-change',
-    detail: 'status → WITHDRAWN（保留行：任务方仍需知道"曾有人参与过"）',
+    detail: `status → ${ERASED_STATUS.missionParticipation}（保留行：任务方仍需知道「曾有人参与过」）`,
   },
   {
     target: 'BridgeMemberOptIn',
     action: 'state-change',
-    detail: 'status → WITHDRAWN + disclosedFieldKeys 清空（跨群披露授权必须立刻收回）',
+    detail: `status → ${ERASED_STATUS.bridgeOptIn} + disclosedFieldKeys 清空（跨群披露授权必须立刻收回）`,
   },
   {
     target: 'AgentRun',

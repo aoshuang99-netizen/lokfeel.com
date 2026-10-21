@@ -138,7 +138,10 @@ jobs:
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             tail -c 8000 jest.log >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
-            msg=$(grep -m3 -E "error TS|Cannot find module|Cannot find name|●|FAIL " jest.log | tr "\n" " " | head -c 420)
+            # 注解只取「能直接定位问题」的行：失败文件、失败用例名、TS 错误码、缺模块。
+            # 早先的模式里带 `●`，它会先命中一堆 console 噪声（`● Console`），
+            # 结果注解变成了 "● Console ● Console ● Console"，等于没给信息。
+            msg=$(grep -m6 -E "^FAIL |✕ |error TS[0-9]+|Cannot find module|ReferenceError:" jest.log | tr "\n" " " | head -c 700)
             echo "::error title=Jest failure::${msg}"
             exit 1
           fi

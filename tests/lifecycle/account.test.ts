@@ -207,3 +207,38 @@ describe('AC-10 · 动作清单必须点名缓存', () => {
     expect(row?.action).toBe('purge')
   })
 })
+
+/**
+ * V17（WB17-04）：状态值的**单一真相源**。
+ *
+ * 起因是一个真实的不一致：动作清单原先写 `SocialIntent.status → CANCELLED`，
+ * 而 `IntentStatus` 枚举只有 `ACTIVE | WITHDRAWN` —— 这个值**不存在**，
+ * 照清单写代码会直接触发 Prisma 校验错误；`erasure.ts` 实际写的是 `WITHDRAWN`。
+ * 清单自称"单一真相源"，却与实现两份说法，这正是最该被门禁钉住的东西。
+ */
+describe('AC-10 · 销号状态值不得与 schema 枚举漂移', () => {
+  const lifecycleSrc = (rel: string) =>
+    fs.readFileSync(path.join(process.cwd(), rel), 'utf8')
+
+  it('清单里点名的状态值必须是 schema 真实存在的（WITHDRAWN，不是 CANCELLED）', () => {
+    const stateRows = ERASURE_ACTIONS.filter(
+      (a) => a.target === 'SocialIntent' || a.target === 'MissionParticipation' || a.target === 'BridgeMemberOptIn'
+    )
+    // 前置非空：少一条这条断言就变成空集恒真
+    expect(stateRows.length).toBe(3)
+    for (const row of stateRows) {
+      expect(row.detail).toContain('WITHDRAWN')
+      expect(row.detail).not.toContain('CANCELLED')
+    }
+  })
+
+  it('🔴 erasure.ts 不得再硬编码状态字面量（否则常量化只是摆设）', () => {
+    const src = lifecycleSrc('src/lib/lifecycle/erasure.ts')
+    // 反例对照：先证明"如果硬编码，这条检测能抓到"
+    const antiPattern = /status:\s*'WITHDRAWN'/
+    expect(antiPattern.test("data: { status: 'WITHDRAWN' }")).toBe(true)
+    expect(antiPattern.test(src)).toBe(false)
+    // 正向：确实用的是共用常量
+    expect((src.match(/ERASED_STATUS\./g) ?? []).length).toBeGreaterThanOrEqual(3)
+  })
+})

@@ -76,7 +76,7 @@ V17 要求"真实交易 → 权益激活 → 可对账"。把它拆成可核对�
 ```bash
 # 1) 把 2 把 key 写进 .env.payment.local（已被 .gitignore 覆盖）
 #    CREEM_API_KEY=creem_xxx
-#    STRIPE_SECRET_KEY=sk_live_xxx
+#    STRIPE_SECRET_KEY=<粘贴面板里的值，不要写进任何文件>
 
 # 2) 只读预演：校验格式 → 探活 → 列出现有端点（不写任何东西）
 export NETLIFY_AUTH_TOKEN=nfp_xxx

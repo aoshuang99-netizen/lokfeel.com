@@ -206,14 +206,39 @@ export function loadStripeApiVersion(root = ROOT) {
 }
 
 /** 读两个 webhook route 的 `case` 分支 —— 这才是「代码真的会处理」的事件集合。 */
-export function extractHandledEvents(sources) {
+export /**
+ * 从 `src/lib/payments/creem-events.ts` 的 `KIND_BY_EVENT` 表里取出
+ * "我们**真的会分支处理**的事件"。
+ *
+ * 🔴 为什么不再扫 route 里的 `case "x":`（V17 / WB17-02 之后的改动）：
+ *    重写后的 webhook 里**没有** `switch (eventType)` 了 —— 事件到行为的映射
+ *    搬进了一张查表（`KIND_BY_EVENT`）。旧提取器于是扫到 **0 条**，
+ *    而"提取到 0 条"**不会报错**：`planEvents` 会算出**空的订阅清单**，
+ *    照着它去配 webhook，端点会被注册成"不订阅任何事件" ⇒ Webhook 静默全停。
+ *    这是最容易过评审的一类故障（全绿，但没有一个事件会到达）。
+ *    夹具必须跟着真相源走。
+ */
+function extractCreemHandledEvents(src) {
+  const out = new Set();
+  for (const m of String(src).matchAll(
+    /^\s*'([a-z_]+(?:\.[a-z_]+)*)'\s*:\s*'(?:activate|renew|trial|cancel|cancel_scheduled|past_due|unpaid|expire|pause|refund|ignored|unknown)',/gm,
+  )) {
+    out.add(m[1]);
+  }
+  return [...out].sort();
+}
+
+function extractHandledEvents(sources) {
   const collect = (src) => {
     const out = new Set();
     for (const m of String(src).matchAll(/case\s+"([a-z_.]+)"\s*:/g)) out.add(m[1]);
     return [...out].sort();
   };
-  return { stripe: collect(sources.stripe), creem: collect(sources.creem) };
+  return { stripe: collect(sources.stripe), creem: extractCreemHandledEvents(sources.creem) };
 }
+
+/** Creem 的真相源文件（事件 → 行为映射表所在处）。 */
+const CREEM_EVENTS_FILE = 'src/lib/payments/creem-events.ts';
 
 export function loadHandledEvents(root = ROOT) {
   const read = (rel) => {
@@ -223,7 +248,7 @@ export function loadHandledEvents(root = ROOT) {
   };
   return extractHandledEvents({
     stripe: read('src/app/api/webhooks/stripe/route.ts'),
-    creem: read('src/app/api/webhooks/creem/route.ts'),
+    creem: read(CREEM_EVENTS_FILE),
   });
 }
 
@@ -1008,17 +1033,46 @@ async function selfTest() {
   check('从源码提取 Stripe API 版本', apiVersion === '2026-08-26.dahlia', String(apiVersion));
 
   // ③ 事件清单同源 + 与平台枚举求交
+  //
+  // ⚠️ 这里刻意分成两段，因为它们证明的是**不同的东西**：
+  //   (a) 真实源码 → 提取结果必须与平台枚举**完全对齐**（死分支已清零）；
+  //   (b) 合成夹具 → 检测能力**仍然有效**。
+  // 早先只有 (a)，且夹具就是带缺陷的真实 route ⇒ 修好缺陷后这条自证会跟着红
+  // （自证依赖"真实缺陷存在"，是本仓反复吃过的一个反模式）。
   const handled = extractHandledEvents({
     stripe: fs.readFileSync(path.join(ROOT, 'src/app/api/webhooks/stripe/route.ts'), 'utf8'),
-    creem: fs.readFileSync(path.join(ROOT, 'src/app/api/webhooks/creem/route.ts'), 'utf8'),
+    creem: fs.readFileSync(path.join(ROOT, CREEM_EVENTS_FILE), 'utf8'),
   });
   const events = planEvents(handled);
   check('Stripe 事件数 = 7（与 route switch 一致）', events.stripe.length === 7, events.stripe.join(','));
+  // 前置非空：0 条会让下面三条断言全部恒真（这正是本案的失效形态）
+  check('Creem 提取到 17 个事件（前置非空，否则后续断言恒真）', events.creem.length === 17, String(events.creem.length));
   check('Creem 订阅里剔除了平台不支持的事件', events.creem.every((e) => CREEM_EVENT_ENUM.has(e)), events.creem.join(','));
   check(
-    'Creem 死分支被识别（subscription.created 不在平台枚举）',
-    events.creemUnsupported.includes('subscription.created'),
+    '真实源码里已无死分支（creemUnsupported 为空）',
+    events.creemUnsupported.length === 0,
     events.creemUnsupported.join(','),
+  );
+
+  // (b) 合成夹具：把死分支塞回一个**假的** KIND_BY_EVENT，验证检测器还活着。
+  const synthetic = planEvents({
+    stripe: [],
+    creem: extractCreemHandledEvents(
+      [
+        'const KIND_BY_EVENT = {',
+        "  'subscription.created': 'activate',",
+        "  'payment.succeeded': 'activate',",
+        "  'subscription.paid': 'renew',",
+        '}',
+      ].join('\n'),
+    ),
+  });
+  check(
+    '合成夹具：死分支仍能被识别（不依赖真实缺陷存在）',
+    synthetic.creemUnsupported.includes('subscription.created') &&
+      synthetic.creemUnsupported.includes('payment.succeeded') &&
+      synthetic.creem.length === 1,
+    `unsupported=${synthetic.creemUnsupported.join(',')} ok=${synthetic.creem.join(',')}`,
   );
 
   // ④ sanitize / mask

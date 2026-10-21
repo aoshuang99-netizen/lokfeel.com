@@ -23,6 +23,7 @@ import { USER_REFERENCING_CACHE_PREFIXES, userScopedCacheKeys } from '@/lib/cach
 import {
   ERASURE_ACTIONS,
   ERASURE_POLICY_VERSION,
+  ERASED_STATUS,
   activeErasureActions,
   erasedEmailFor,
   erasedProfilePatch,
@@ -200,7 +201,7 @@ export async function executeErasure(userId: string, now: Date = new Date()): Pr
       disclosure: null,
       importedFields: null,
       importConsentAt: null,
-      status: 'WITHDRAWN',
+      status: ERASED_STATUS.socialIntent,
       withdrawnAt: now,
     },
   })
@@ -208,13 +209,13 @@ export async function executeErasure(userId: string, now: Date = new Date()): Pr
   // ④ 参与关系：撤回（保留行 —— 任务方仍需知道"曾有人参与过"）
   await db.missionParticipation.updateMany({
     where: { userId },
-    data: { status: 'WITHDRAWN', note: null },
+    data: { status: ERASED_STATUS.missionParticipation, note: null },
   })
 
   // ⑤ 跨群披露授权：立刻收回（AT-19 铁律：无跨群默认共享）
   await db.bridgeMemberOptIn.updateMany({
     where: { userId },
-    data: { status: 'WITHDRAWN', disclosedFieldKeys: '[]', withdrawnAt: now },
+    data: { status: ERASED_STATUS.bridgeOptIn, disclosedFieldKeys: '[]', withdrawnAt: now },
   })
 
   // ⑥ Agent 运行：清空用户原始文本（不可信输入面）
