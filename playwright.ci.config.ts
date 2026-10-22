@@ -21,6 +21,10 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e-ci',
 
+  // 全局登录一次，产出 storageState（见 tests/e2e-ci/global-setup.ts 里"为什么"）。
+  // 作用：认证面 18 条用例不再各登一次 —— 它们要证明的是版面，不是登录能连点 18 次。
+  globalSetup: './tests/e2e-ci/global-setup.ts',
+
   timeout: 60_000,
   expect: { timeout: 15_000 },
 

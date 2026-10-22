@@ -27,10 +27,6 @@
  *   需要 `playwright` 已安装（CI 里在「安装 Playwright 浏览器」之后跑）。
  */
 
-import { createRequire } from 'node:module';
-
-const require = createRequire(import.meta.url);
-
 const args = new Map(
   process.argv.slice(2).map((a) => {
     const m = /^--([^=]+)=(.*)$/.exec(a);
@@ -41,7 +37,7 @@ const args = new Map(
 const BASE = (args.get('base') || process.env.E2E_BASE_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
 const EMAIL = args.get('email') || process.env.E2E_AUTHED_EMAIL || '';
 const PASSWORD = args.get('password') || process.env.E2E_AUTHED_PASSWORD || '';
-const ROUNDS = Number(args.get('rounds') || 6);
+const ROUNDS = Number(args.get('rounds') || 12);
 
 function annotate(level, title, message) {
   // annotation 里的换行与冒号要转义，否则平台会截断
@@ -51,7 +47,9 @@ function annotate(level, title, message) {
 
 let chromium;
 try {
-  ({ chromium } = require('playwright'));
+  // 用动态 import 而不是 require：这是 ESM 脚本，且本仓 lint 把 `require()` 记为新增债
+  // （棘轮逐文件 × 逐规则计数，新增一条就判红 —— 不值得为一个写法把门禁弄红）。
+  ({ chromium } = await import('playwright'));
 } catch {
   annotate('warning', 'browser-trace', 'playwright 未安装 —— 本步跳过（门禁不受影响）');
   process.exit(0);
@@ -64,8 +62,14 @@ if (!EMAIL || !PASSWORD) {
 
 const failures = [];
 
+// 🔴 一个浏览器、多轮独立 context —— 刻意与 Playwright test 的行为一致
+//    （同一 worker 内一个 browser 实例跑完所有用例，每条用例一个新 context）。
+//    上一版是"每轮新起浏览器"，6 轮全过、没复现；差别正在这里：
+//    如果是**进程内状态累积**（连接、缓存、cookie 存储）导致的，
+//    换了浏览器就等于换了个干净世界，当然测不出来。
+const browser = await chromium.launch();
+
 for (let round = 1; round <= ROUNDS; round += 1) {
-  const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
 
@@ -121,8 +125,9 @@ for (let round = 1; round <= ROUNDS; round += 1) {
   }
 
   await ctx.close();
-  await browser.close();
 }
+
+await browser.close();
 
 if (failures.length === 0) {
   console.log(`\n✅ 浏览器登录导航：${ROUNDS} 轮全部成功（这一层是稳的）`);
