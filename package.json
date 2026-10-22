@@ -141,6 +141,8 @@
     "verify:check:cron:methods": "node scripts/ci/verify-cron-methods.mjs --self-test",
     "verify:check:evidence": "node scripts/qa/verify-evidence-lens.mjs --self-test",
     "verify:check:acceptance": "node scripts/qa/gen-acceptance-ledger.mjs --self-test",
+    "v18:isolation": "node scripts/qa/v18-isolation-proof.mjs",
+    "verify:v18:isolation": "node scripts/qa/v18-isolation-proof.mjs --self-test",
     "verify:check:deps": "node scripts/ci/dependency-ratchet.mjs --self-test",
     "verify:check:health:live": "node scripts/qa/verify-health-live.mjs --self-test",
     "verify:check:launch": "node scripts/qa/launch-check.mjs --self-test",

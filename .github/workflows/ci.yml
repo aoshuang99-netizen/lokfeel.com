@@ -345,6 +345,10 @@ jobs:
       DATABASE_AUTH_TOKEN: ''
       # 冒烟阶段不需要任何外部服务；缺失时应用走降级路径（G-4 已验证）
       E2E_BASE_URL: http://127.0.0.1:3000
+      # 🔴 只给本 job 的**一次性会话签名密钥**，与生产 AUTH_SECRET 无关。
+      #    没有它 `/api/auth/login` 无法签发 JWT ⇒ 双组织隔离取证拿不到会话
+      #    ⇒ 所有"越权被拒"会因 401 假绿（脚本会判 BLOCKED，不会判 PASS）。
+      AUTH_SECRET: v18-ci-isolation-only-secret-not-used-in-production-32b
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -387,6 +391,18 @@ jobs:
       - name: payment-off 契约（未接入支付是受支持状态）
         run: node scripts/qa/verify-payment-off.mjs --base=http://127.0.0.1:3000
 
+      # 🔴 V18-01 · 双组织隔离取证（2026-10-22）
+      #    V17 的 SEC-01~08 全是**代码级**证据（读源码确认带了 organizationId 谓词）。
+      #    那证明的是写法，不是行为 —— 谓词写了但后面 OR 放宽、或异常被吞成 200 空数组，
+      #    静态审计都看不出来。本步用两个组织、三条真实会话去打真实端点：
+      #      CTRL 先证明"A 能读自己的"（否则一串 404 会假绿），
+      #      SEC-01 读越权 / SEC-02 写越权（**另查库确认无副作用**）/ SEC-03 列表泄露 /
+      #      SEC-04 对 B 起 Agent 运行 / SEC-05 MCP 工具结果泄露 /
+      #      SEC-06 弱角色缺能力 / SEC-07 选择器越权 + 审计留痕。
+      #    夹具全部 `v18_` 前缀，跑完即删；库必须是本地 file:（脚本自带闸门，拒绝远程库）。
+      - name: 双组织隔离取证（V18-01 · 真实 HTTP + 真实库）
+        run: node scripts/qa/v18-isolation-proof.mjs --base=http://127.0.0.1:3000 --db=ci-e2e.db
+
       - name: 安装 Playwright 浏览器
         run: npx playwright install --with-deps chromium
 
@@ -411,6 +427,7 @@ jobs:
           name: playwright-ci-report
           path: |
             test-results/ci/
+            docs/implementation/v18/test-results/
             ${{ runner.temp }}/next-start.log
           if-no-files-found: ignore
           retention-days: 7
