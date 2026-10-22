@@ -26,11 +26,29 @@ import { VIEWPORTS, assertMobileLayout } from './lib/measure';
 const EMAIL = process.env.E2E_AUTHED_EMAIL ?? '';
 const PASSWORD = process.env.E2E_AUTHED_PASSWORD ?? '';
 
-/** 认证后的核心面：工作台 + 组织控制台 + 任务列表（三处最容易被挤坏的地方） */
+/**
+ * 认证后的核心面（V18-06 第二轮 · 2026-10-22）
+ *
+ * 第一轮只放了 3 个路由（`/workspace`、`/console`、`/console/missions`），
+ * 理由是"三处最容易被挤坏"；但那是在挑样本，不是在覆盖。组织态一共七屏，
+ * 漏掉的四屏里 `members` 有一行多列的成员表、`agents` 有额度与长原因文本、
+ * `settings` 有表单行 —— 恰恰是 390px 最容易横向溢出的形态。
+ * 这里补齐组织态七屏，并加入本轮新做的取消订阅入口所在页
+ * （`/dashboard/subscription`：那是唯一一处新增 UI，必须自己进闸门）。
+ *
+ * ⚠️ `/dashboard/chats*` 刻意不在列表里：它开 WebSocket，稳定判定会退化成超时，
+ *    用一个会超时的用例去证明"版面没问题"，结论是不可信的。
+ */
 const AUTHED_ROUTES: Array<{ path: string; name: string }> = [
   { path: '/workspace', name: 'Living Workspace' },
-  { path: '/console', name: '组织控制台' },
+  { path: '/console', name: '组织总览' },
   { path: '/console/missions', name: '任务列表' },
+  { path: '/console/connections', name: '连接屏' },
+  { path: '/console/agents', name: '智能体屏' },
+  { path: '/console/outcomes', name: '结果屏' },
+  { path: '/console/members', name: '成员屏' },
+  { path: '/console/settings', name: '组织设置' },
+  { path: '/dashboard/subscription', name: '订阅与取消' },
 ];
 
 test.describe('移动端 · 认证面（真实登录）', () => {

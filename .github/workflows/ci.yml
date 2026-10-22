@@ -429,8 +429,53 @@ jobs:
       - name: 造认证面夹具（登录态实测用）
         run: node scripts/qa/seed-authed-e2e-user.mjs --db=ci-e2e.db
 
+      # 🔴 浏览器安装必须有上限（2026-10-22 实测教训）
+      #    `e56331b` 那轮这一步骤从 14:10:06 开始、18 分钟后仍未结束；
+      #    而上一轮跑同一 job 时它只要 21 秒。区别不在代码，在这一步是**纯粹的网络等待**：
+      #      `--with-deps` = 下载 ~170MB 浏览器 + `sudo apt-get` 装系统库，
+      #      两段都没有自身超时 —— 镜像源或 CDN 一断，进程就一直挂着不退。
+      #    只靠 job 级 `timeout-minutes: 35` 兜底太贵：一次网络抖动要烧半小时才见到红，
+      #    而且红出来的是"job 超时"，看不出真正卡在哪一步。
+      #
+      #    这里做三件事，都不改变"测什么"：
+      #      ① 缓存浏览器目录：命中时 `playwright install` 按版本号识别为已装、秒退；
+      #         key 带 package-lock 指纹 ⇒ 升级 playwright 自动失效，不会拿旧浏览器测新代码。
+      #      ② 每次尝试都有 `timeout` 硬上限，挂死会被杀而不是无限等；
+      #         第一次带 `--with-deps`，第二次**去掉 deps**（runner 镜像本身多半已带 chromium 系统库），
+      #         这样第二次尝试不再受 apt 影响。
+      #      ③ 步骤级 timeout 兜底。
+      #    ⚠️ 不做的两件事：不跳过浏览器冒烟、不 `continue-on-error`。
+      #       前者让"没测"伪装成"通过"，后者把红变成静默。
+      - name: 缓存 Playwright 浏览器
+        uses: actions/cache@v4
+        with:
+          # Playwright 在 Linux 的默认安装位置。**不要**改用
+          # `PLAYWRIGHT_BROWSERS_PATH` 指向 workspace：一旦两个步骤的 env 不一致，
+          # 就会出现"缓存了但没命中"，症状和没缓存一样，却多了一层看不见的耦合。
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            pw-${{ runner.os }}-
+
       - name: 安装 Playwright 浏览器
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 22
+        run: |
+          set -uo pipefail
+          attempt=0
+          for args in "--with-deps chromium" "chromium"; do
+            attempt=$((attempt + 1))
+            echo "::group::playwright install ${args}（第 ${attempt} 次）"
+            # 8 分钟硬上限：正常情况 20~60 秒，超过就是网络挂死，杀掉重来
+            if timeout --signal=TERM --kill-after=20s 480 npx playwright install ${args}; then
+              echo "::endgroup::"
+              echo "浏览器就绪（第 ${attempt} 次尝试：${args}）"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning::第 ${attempt} 次安装未在 8 分钟内完成或失败（${args}），继续下一次"
+          done
+          echo "::error::Playwright 浏览器两次安装均失败。这是 runner 侧的下载/apt 问题，不是用例失败 —— 请重跑本 job（不要跳过浏览器冒烟）。"
+          exit 1
 
       - name: 浏览器冒烟
         run: npx playwright test --config=playwright.ci.config.ts

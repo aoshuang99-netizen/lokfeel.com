@@ -28,9 +28,48 @@ export interface Measurement {
   total: number;
 }
 
+/**
+ * 等 DOM「不再变」再量 —— 解决"量到骨架屏"的假绿。
+ *
+ * 背景（2026-10-22）：`/console/*` 与 `/workspace` 是 `'use client'` 组件，
+ * 首屏返回的是骨架 + 侧边栏，真实内容由 `useApiGet` 拉回来后才挂上。
+ * 只等两帧就量，测到的是**骨架**的版面：骨架通常比真实数据更简单，
+ * 于是"没有横向溢出"很容易成立 —— 而真正容易挤坏 390px 的，恰恰是
+ * 真实数据（长组织名、长任务标题、四位数计数、多列表格）。
+ *
+ * 判据不看"网络空闲"（Next 有轮询与流式响应，`networkidle` 可能永远不成立），
+ * 改看**可观测的渲染结果**：可交互元素个数 + 文档高度 + 文档宽度，
+ * 连续两次采样都不变即认为稳定。上限 `maxMs` 到点即开量，
+ * 不让一个一直在动的页面把用例拖死（拖死了会变成超时红，且看不出是版面问题）。
+ */
+export async function waitForStableDom(page: Page, maxMs = 2500): Promise<void> {
+  const snap = async (): Promise<string> =>
+    page.evaluate(() => {
+      const de = document.documentElement;
+      const n = document.querySelectorAll(
+        'a[href], button, [role="button"], input[type="submit"], input[type="button"], summary',
+      ).length;
+      return `${n}|${de.scrollHeight}|${de.scrollWidth}`;
+    });
+
+  const deadline = Date.now() + maxMs;
+  let prev = await snap();
+  let same = 0;
+
+  while (Date.now() < deadline) {
+    await page.waitForTimeout(120);
+    const next = await snap();
+    same = next === prev ? same + 1 : 0;
+    prev = next;
+    // 连续两次采样一致（≈稳定 240ms）就收手；不要求"整个页面彻底不动"
+    if (same >= 2) return;
+  }
+}
+
 /** 在页面里量：横向溢出 + 触控目标。纯读，不改页面。 */
 export async function measure(page: Page): Promise<Measurement> {
-  // 等两帧：字体与首屏布局稳定后再量，避免量到"还没排完"的中间态
+  // 先等 DOM 内容稳定（见 `waitForStableDom` 的说明），再等两帧让字体与布局落定
+  await waitForStableDom(page);
   await page.evaluate(
     () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
   );
