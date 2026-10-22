@@ -34,6 +34,10 @@ export default defineConfig({
   reporter: [
     ['list'],
     ['html', { open: 'never', outputFolder: 'test-results/ci/html' }],
+    // JSON 报告不是给人看的，是给 CI 摘要用的：注解里只有每条的**第一行**错误，
+    // HTML 报告要下载才能看（需要权限），而 `check-runs.output.summary` 公开可读。
+    // 有了它，失败明细可以被写进 step summary，下一轮不必再"等日志权限"。
+    ['json', { outputFile: 'test-results/ci/report.json' }],
     ['./tests/e2e-ci/reporters/gha-annotations.cjs'],
   ],
 

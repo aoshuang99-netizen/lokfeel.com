@@ -284,7 +284,11 @@ export default function ConsoleDashboardPage() {
           <h2 className="text-sm font-semibold text-foreground font-display">连接任务</h2>
           <Link
             href="/console/missions"
-            className="ml-auto inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            // 🔴 触控目标 ≥24×24（WCAG 2.2 AA · 2.5.8）：`text-xs` 的行高只有 16px，
+            //    实测 62×16 —— CI 的 390 屏门禁把它判红了。这不是"测量太严"：
+            //    16px 高的链接在手机上确实按不准。用 min-h-6 + 横向内边距补到 24 以上，
+            //    **不改字号**（改了会破坏这一行的层级），只补可点区域。
+            className="ml-auto inline-flex min-h-6 items-center gap-1 px-1 text-xs text-primary hover:underline"
           >
             查看全部
             <span aria-hidden="true">→</span>

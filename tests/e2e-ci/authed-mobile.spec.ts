@@ -62,6 +62,25 @@ test.describe('移动端 · 认证面（真实登录）', () => {
       '缺少 E2E_AUTHED_PASSWORD —— 同上，由造数脚本写进 $GITHUB_ENV',
     ).not.toBe('');
 
+    // ── 登录失败时的取证（2026-10-22 加） ───────────────────────────────
+    // 上一轮 CI 有 5 条用例在 `waitForURL` 上报 `net:ERR_FAILED`，
+    // 而当时能拿到的只有这一行字：既不知道是哪个地址、也不知道服务端回没回。
+    // `net:ERR_FAILED` 在 Chromium 里是**网络层**的兜底错误码（连接被重置 /
+    // 响应体被中途掐断都归它），和"版面坏了"完全不是一回事 —— 分不清这两者，
+    // 就会把"服务端没答上来"错记成"移动端布局有问题"。
+    // 所以这里只做一件事：把文档级请求的轨迹记下来，失败时一起抛出去。
+    const docTrace: string[] = [];
+    page.on('requestfailed', (req) => {
+      if (req.resourceType() === 'document') {
+        docTrace.push(`✗ requestfailed ${req.url()} :: ${req.failure()?.errorText ?? 'unknown'}`);
+      }
+    });
+    page.on('response', (res) => {
+      if (res.request().resourceType() === 'document') {
+        docTrace.push(`· document ${res.status()} ${res.url()}`);
+      }
+    });
+
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.fill('#login-email', EMAIL);
     await page.fill('#login-password', PASSWORD);
@@ -69,7 +88,25 @@ test.describe('移动端 · 认证面（真实登录）', () => {
 
     // 先证前置：登录真的成功了。拿不到会话时，后面所有页面都会跳回 /login，
     // 那时候的"没有溢出"毫无意义 —— 测的是登录页。
-    await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 30_000 });
+    // `waitUntil: 'domcontentloaded'`：登录成功后是 `window.location.href = …`
+    // 的整页跳转，等 `load` 等于把"所有静态资源都下载完"也当成前置条件，
+    // 会在慢资源上假红；本用例要的只是"已经离开登录页"。
+    try {
+      await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
+        timeout: 30_000,
+        waitUntil: 'domcontentloaded',
+      });
+    } catch (err) {
+      const first = String((err as Error).message || '').split('\n')[0];
+      throw new Error(
+        `登录后没有离开 /login（当前 URL：${page.url()}）：${first}\n` +
+          `文档级请求轨迹（${docTrace.length} 条）：\n` +
+          (docTrace.length > 0
+            ? docTrace.join('\n')
+            : '（浏览器没有报告任何文档级响应 —— 说明请求根本没拿到服务端的响应，' +
+              '此时应看 CI 摘要里的 next-start.log，而不是怀疑页面排版）'),
+      );
+    }
   });
 
   for (const vp of VIEWPORTS) {

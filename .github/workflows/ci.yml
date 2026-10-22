@@ -447,7 +447,7 @@ jobs:
       #    ⚠️ 不做的两件事：不跳过浏览器冒烟、不 `continue-on-error`。
       #       前者让"没测"伪装成"通过"，后者把红变成静默。
       - name: 缓存 Playwright 浏览器
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           # Playwright 在 Linux 的默认安装位置。**不要**改用
           # `PLAYWRIGHT_BROWSERS_PATH` 指向 workspace：一旦两个步骤的 env 不一致，
@@ -491,9 +491,55 @@ jobs:
         if: always()
         run: node scripts/qa/seed-authed-e2e-user.mjs --db=ci-e2e.db --cleanup
 
+      # 🔴 失败时的取证：日志只打 stdout，等于**只有 workstation 上的人能看见**
+      #    （job 日志的 REST 端点要 admin 权限，公开仓库也读不到；而
+      #     `check-runs.output.summary` 是公开可读的）。
+      #    上一轮 5 条用例报 `net:ERR_FAILED`，就是卡在"看不到服务端说了什么"。
+      #    这里把服务端日志里**真正有用的行**写进 step summary，下一轮无需权限即可判断
+      #    「是网络/服务端问题，还是版面问题」。
       - name: 失败时打印服务端日志
         if: failure()
-        run: tail -200 "$RUNNER_TEMP/next-start.log" || true
+        run: |
+          echo "### 服务端日志（next-start · 末尾 200 行里的错误行）" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo '```'
+            grep -iE "error|fail|exception|unhandled|ECONN|EADDR|locked|timeout" "$RUNNER_TEMP/next-start.log" \
+              | tail -60 || echo "（没有匹配到错误行）"
+            echo '```'
+            echo
+            echo "<details><summary>末尾 120 行原文</summary>"
+            echo
+            echo '```'
+            tail -120 "$RUNNER_TEMP/next-start.log" || true
+            echo '```'
+            echo
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+          tail -200 "$RUNNER_TEMP/next-start.log" || true
+
+      # 报告摘要也进 summary：注解里只有第一行错误，HTML 报告要登录才能下载。
+      - name: 把 Playwright 失败明细写进 CI 摘要
+        if: failure()
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "test-results/ci/report.json";
+            if (!fs.existsSync(p)) { console.log("没有 report.json（playwright 可能没跑到用例）"); process.exit(0); }
+            const j = JSON.parse(fs.readFileSync(p, "utf8"));
+            const walk = (s, out) => {
+              for (const sp of s.specs || []) {
+                for (const t of sp.tests || []) {
+                  const bad = (t.results || []).filter(r => r.status !== "passed" && r.status !== "skipped");
+                  if (!bad.length) continue;
+                  out.push("- `" + sp.title + "` → " + bad.map(r => r.status + "(" + (r.error?.message || "").split("\n")[0].slice(0, 220) + ")").join(" / "));
+                }
+              }
+              for (const c of s.suites || []) walk(c, out);
+            };
+            const out = [];
+            for (const s of j.suites || []) walk(s, out);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, "\n### Playwright 失败明细（" + out.length + " 条）\n" + (out.join("\n") || "（无）") + "\n");
+          ' || true
 
       - name: 上传 Playwright 报告
         if: always()
