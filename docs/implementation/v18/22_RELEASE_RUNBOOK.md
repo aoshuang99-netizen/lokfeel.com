@@ -39,7 +39,7 @@
 | 4 | 商业契约不串线 | `npm run check:products` | 5 条规则全过（含 9 条自证） |
 | 5 | 未接入支付仍是"合法状态" | CI `payment-off 契约` | 18/18 |
 | 6 | 双组织隔离是**行为级**证据 | CI `双组织隔离取证` | `CTRL-1/2` + `SEC-01..07` 全 PASS |
-| 7 | 移动端 390/360 无溢出、触控 ≥24px | CI `浏览器冒烟`（`mobile.spec.ts` + `authed-mobile.spec.ts`） | 公开面 12 条 + 认证面 18 条全过 |
+| 7 | 移动端 390/360 无溢出、触控 ≥24px | CI `浏览器冒烟`（三个 spec） | 公开 12 + 认证 18 + `/workspace` 页签 12 = **42 条全过** |
 | 8 | 数据库无待迁移差异 | CI `schema 漂移棘轮`（Migration job） | PASS；本轮 `git diff <生产提交>..HEAD -- prisma/` = **0 行** |
 | 9 | 服务端认证导航通 | CI `认证面导航契约探针`（纯 HTTP，3 轮） | 3 轮全 200 |
 
@@ -59,6 +59,7 @@
 |---|---|---|
 | `tests/e2e-ci/mobile.spec.ts` | CI · e2e job | 2 视口（390×844 / 360×800）× 6 公开路由：横向溢出 ≤1px、触控目标 ≥24×24（WCAG 2.2 AA 2.5.8）。<44px 只作 annotation 报告，不判红 |
 | `tests/e2e-ci/authed-mobile.spec.ts` | CI · e2e job | 同样的判据，但对象是**登录之后**的 9 屏（`/workspace`、`/console` 七屏、`/dashboard/subscription`）× 2 视口 = 18 条 |
+| `tests/e2e-ci/workspace-tabs.spec.ts` | CI · e2e job | `/workspace` 的**六个页签**（Now/Studio/Field/Consent/Outcomes/Agents）× 2 视口 = 12 条。页面级"没溢出"不代表五个非默认屏没溢出；每条先断言点击后 `aria-current="page"` 转移（否则量的是上一屏，绿是假的） |
 | `tests/e2e-ci/global-setup.ts` | CI · e2e job（跑用例之前） | 登录**一次**产出 `storageState`，18 条用例带着它开跑。跑不通⇒整轮失败（最强前置断言）；允许 3 次尝试并逐次打印原因 |
 | `tests/e2e-ci/lib/measure.ts` · `waitForStableDom()` | 上述两组共用 | **量之前先等内容落定**：可交互元素数 + 文档高 + 文档宽 连续两次采样不变才开量（上限 2.5s）。不看 `networkidle` —— Next 有轮询，可能永远不空闲 |
 | `scripts/qa/probe-authed-nav.mjs` | CI · e2e job（装浏览器**之前**） | 用纯 HTTP 走「登录 → /dashboard → /console → /workspace」3 轮，打印每一跳的状态码与 Location。把「服务端这条路通不通」与「浏览器导航是否稳」拆成两个互斥判据 |

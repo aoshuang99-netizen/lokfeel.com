@@ -35,8 +35,8 @@
 |---|---|---|
 | 仓库 | `github.com/aoshuang99-netizen/lokfeel.com`（public） | `git remote -v` |
 | 分支 | `main`（单人开发，无 PR 流程） | `git branch --show-current` |
-| 基线 commit | `774a1d6`（W02 收口提交）· 参考基线 `f62f342` | `git rev-parse HEAD` |
-| CI 现状 | `774a1d6` = **17 项检查：15 成功 / 2 跳过（Perf 手动、DCO）/ 0 失败** | `curl -s "https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/commits/774a1d6/check-runs?per_page=100"` |
+| 基线 commit | `3046f2b`（W02 收口提交）· 参考基线 `f62f342` | `git rev-parse HEAD` |
+| CI 现状 | `3046f2b` = **17 项检查：0 失败**（仅 Perf 手动与 DCO 两项按设计跳过）；E2E 共 **42 条**：公开 12 + 认证 18 + `/workspace` 页签 12 | `curl -s "https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/commits/3046f2b/check-runs?per_page=100"` |
 | 生产实际部署 | **`dc102cd`**（2026-10-21T06:41Z，`state=ready`）—— 比 HEAD 少 **34 个提交 / 93 个文件**，其中 `prisma/` 与迁移脚本差异为 **0 行**（⇒ 这次发布不需要 DB 迁移） | `curl -s -H "Authorization: Bearer $NF_TOKEN" https://api.netlify.com/api/v1/sites/lokfeel.netlify.app/deploys?per_page=5` · `git diff dc102cd..HEAD --stat -- prisma/ \| wc -l` |
 | 本地 vs 远端 | **一致**（`ls-remote` 同 SHA） | `git -c http.proxy=http://127.0.0.1:10808 ls-remote origin refs/heads/main` |
 | 栈 | Next 16.4.2（App Router / Turbopack）· React 19.3 · Prisma 7.10.1（libSQL/Turso）· NextAuth v5 beta | `node -e "const p=require('./package.json');console.log(p.dependencies.next,p.dependencies.react,p.dependencies.prisma)"` |
