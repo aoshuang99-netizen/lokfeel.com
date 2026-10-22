@@ -343,9 +343,12 @@ export default function LoginInnerClient({
             />
             Remember me
           </label>
+          {/* V18-06：触控目标 ≥44px。原本只有文字高度（20px），
+              在 360/390 宽的手机上实测命中率很低（且 <24px 低于 WCAG 2.2 AA）。
+              用 inline-flex + min-h-11 撑到 44，视觉上仍是行内链接。 */}
           <Link
             href="/forgot-password"
-            className="text-sm text-primary hover:text-primary-hover font-medium"
+            className="inline-flex items-center min-h-11 px-1 text-sm text-primary hover:text-primary-hover font-medium"
           >
             Forgot password?
           </Link>
@@ -373,14 +376,14 @@ export default function LoginInnerClient({
         <button
           type="button"
           onClick={handleGuestContinue}
-          className="bg-transparent border-none cursor-pointer text-foreground-subtle hover:text-foreground transition-colors p-0 text-sm"
+          className="inline-flex items-center min-h-11 px-1 bg-transparent border-none cursor-pointer text-foreground-subtle hover:text-foreground transition-colors text-sm"
         >
           Continue as Guest
         </button>
         <span className="text-foreground-faint">·</span>
         <Link
           href="/register"
-          className="text-primary hover:text-primary-hover font-medium transition-colors"
+          className="inline-flex items-center min-h-11 px-1 text-primary hover:text-primary-hover font-medium transition-colors"
         >
           Sign up
         </Link>

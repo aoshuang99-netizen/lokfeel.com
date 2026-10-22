@@ -7,6 +7,7 @@ import { Crown, Check, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ManageSubscription } from "@/components/subscription/manage-subscription";
 
 // ════════════════════════════════════
 // TYPES
@@ -134,6 +135,14 @@ export default function SubscriptionPage() {
           <Badge variant="outline" className="text-sm px-4 py-1">
             Current Plan: <span className="text-primary font-bold ml-1">{currentTier}</span>
           </Badge>
+        </div>
+
+        {/* Manage / cancel（V18-04）。
+            放在这里而不是塞进某一版卡片里：它是"账户操作"，不是"买什么"的一部分。
+            按钮态来自 `GET /api/payments/cancel`，与 POST 共用同一套服务端判定，
+            所以不会出现「亮着但点不动」。 */}
+        <div className="max-w-3xl mx-auto mb-10">
+          <ManageSubscription />
         </div>
 
         {/* Error */}

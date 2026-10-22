@@ -1,9 +1,72 @@
 import type { NextConfig } from 'next'
 import path from 'path'
+import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 // @sentry/nextjs v11 破坏性变更：withSentryConfig 从包根迁移到 "@sentry/nextjs/config"
 // （sentry-javascript #23628 `ref(nextjs)!: Move withSentryConfig to @sentry/nextjs/config`）
 // 根入口不再导出该符号，旧写法会让 tsc 报 TS2305。
 import { withSentryConfig } from '@sentry/nextjs/config'
+
+/**
+ * ─── 构建身份（OPS-11）────────────────────────────────────────────────
+ *
+ * 为什么在 next.config 里算：`/api/health` 的 `version` 一直返回 `"unknown"`，
+ * 因为它读的是 `npm_package_version` —— 那个变量只在**通过 npm 启动**时存在，
+ * 而 Netlify 的运行时直接起 Node。于是"线上跑的是哪个提交"这个问题，
+ * 在生产上**无法从运行时回答**。
+ *
+ * 构建产物里唯一可靠的时刻就是**现在**（构建时）：此刻 `package.json` 一定在，
+ * `.git` 大概率也在，平台还会注入 `COMMIT_REF`（Netlify）/ `GITHUB_SHA`（Actions）。
+ * 把这些值算好、通过 `env` 内联进产物，运行时就是读常量，不依赖任何外部条件。
+ *
+ * 两条纪律：
+ *   · 认不出真正的 sha 就写 `unknown`，**不猜**（`refs/heads/main`、`HEAD` 都被拒）；
+ *   · 构建时间优先取 `SOURCE_DATE_EPOCH`，让同一提交的重复构建可复现。
+ */
+function computeBuildInfo(): Record<string, string> {
+  let version = 'unknown'
+  try {
+    version = String(JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version)
+  } catch {
+    // 读不到就 unknown —— 不编一个版本号出来
+  }
+
+  const shaOf = (raw: string | undefined): string | null => {
+    const v = (raw ?? '').trim()
+    return /^[0-9a-f]{7,40}$/i.test(v) ? v.slice(0, 7).toLowerCase() : null
+  }
+
+  // ① 平台注入（最可靠：就是它触发了这次构建）
+  let commit = shaOf(process.env.COMMIT_REF) ?? shaOf(process.env.GITHUB_SHA)
+  let source: 'env' | 'git' | 'none' = commit ? 'env' : 'none'
+
+  // ② 退回读 .git（自托管 / 本地 docker build）
+  if (!commit) {
+    try {
+      const git = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: __dirname,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      })
+      commit = shaOf(git)
+      if (commit) source = 'git'
+    } catch {
+      // 源码 tarball / 无 git ⇒ 保持 unknown
+    }
+  }
+
+  const epoch = Number(process.env.SOURCE_DATE_EPOCH)
+  const builtAt = Number.isFinite(epoch) && epoch > 0
+    ? new Date(epoch * 1000).toISOString()
+    : new Date().toISOString()
+
+  return {
+    NEXT_PUBLIC_BUILD_VERSION: version,
+    NEXT_PUBLIC_BUILD_COMMIT: commit ?? 'unknown',
+    NEXT_PUBLIC_BUILD_COMMIT_SOURCE: source,
+    NEXT_PUBLIC_BUILD_TIME: builtAt,
+  }
+}
 
 const CSP_VALUE = [
   "default-src 'self'",
@@ -25,6 +88,11 @@ const CSP_VALUE = [
 ].join('; ')
 
 const nextConfig: NextConfig = {
+  // 构建身份（见上方 computeBuildInfo 的注释）：
+  // 这里列出的键会被 Next **内联**进产物，运行时按常量读取。
+  // 都是非敏感信息（版本号 / 提交号 / 构建时间），可以出现在客户端包里。
+  env: computeBuildInfo(),
+
   // ─── 自托管构建产物（P1-1）───
   // Docker 自托管需要 standalone 输出（自包含的 server.js + 精简 node_modules）。
   // 用环境变量门控，避免影响现有云端部署链路（Vercel / Netlify / Cloudflare）。

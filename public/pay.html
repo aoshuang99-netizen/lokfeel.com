@@ -58,6 +58,10 @@
   .price .amount { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; }
   .price .unit { color: var(--muted); font-size: 14px; margin-left: 6px; }
   .equiv { color: var(--muted); font-size: 12.5px; margin-bottom: 6px; min-height: 18px; }
+  /* V18-06：句内链接也要有够大的点按区域。实测 390/360 宽时
+     "Apply to yearly" 只有 117×17px，手指按不准（<24px 低于 WCAG 2.2 AA 的最小尺寸）。
+     inline-block + 纵向 padding 只撑高度，不破坏它与文字的同一行关系。 */
+  .offer a { display: inline-block; padding: 6px 2px; }
   .save { color: var(--green); font-size: 13px; font-weight: 600; margin-bottom: 18px; min-height: 18px; }
   ul.feats { list-style: none; margin-bottom: 26px; flex: 1; }
   ul.feats li {

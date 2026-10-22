@@ -16,8 +16,10 @@
 import {
   CANCEL_CODES,
   cancelSubscriptionForUser,
+  describeCancelEligibility,
   type CancelDeps,
 } from '@/lib/payments/cancel-subscription';
+import { resolveCancelProvider } from '@/lib/payments/cancel-provider';
 
 type Fakes = {
   deps: CancelDeps;
@@ -36,7 +38,7 @@ function makeDeps(overrides: Partial<CancelDeps> = {}): Fakes {
       calls.load += 1;
       return { id: 'sub_1', stripeSubscriptionId: 'stripe_sub_1', cancelledAt: null };
     },
-    isStripeReady: () => true,
+    resolveProvider: () => 'stripe',
     cancelAtPeriodEnd: async () => {
       calls.provider += 1;
       return { cancelAtPeriodEnd: true, currentPeriodEnd: 1_767_225_600 };
@@ -90,7 +92,7 @@ describe('取消订阅 · 前置与幂等', () => {
 
 describe('取消订阅 · 不许假成功（每一条都必须无副作用）', () => {
   it('凭据未配 ⇒ 503 PAYMENT_NOT_CONFIGURED，且数据库没动', async () => {
-    const { deps, calls } = makeDeps({ isStripeReady: () => false });
+    const { deps, calls } = makeDeps({ resolveProvider: () => 'none' });
     const r = await cancelSubscriptionForUser('u1', deps);
 
     expect(r).toMatchObject({ ok: false, status: 503, code: CANCEL_CODES.PAYMENT_NOT_CONFIGURED });
@@ -167,5 +169,151 @@ describe('取消订阅 · 成功路径', () => {
 
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.currentPeriodEnd).toBeNull();
+  });
+});
+
+/**
+ * 服务商归属（V18-04 补丁）
+ *
+ * 背景：`Subscription` 只有 `stripeSubscriptionId` 一列，而 `src/lib/creem.ts`
+ * 把 **Creem** 的 id 也写进这一列（"reuse field"）。所以"从库里看是哪家"
+ * 这件事**本身不可能**。本组断言守的是：拿不准的时候**必须拒绝**，
+ * 而不是挑一家去调 —— 把 A 家的 id 发给 B 家，最坏会取消掉另一笔真订阅。
+ */
+describe('取消订阅 · 服务商归属判定（不猜）', () => {
+  const ENV_KEYS = {
+    STRIPE_SECRET_KEY: 'STRIPE_SECRET_KEY',
+    CREEM_API_KEY: 'CREEM_API_KEY',
+  } as const;
+
+  /**
+   * 造两个**形状合法**的凭据。
+   *
+   * 🔴 不能写成 `sk_test_xxx` 字面量：本仓 gitleaks 的 `generic-api-key` /
+   *    自定义规则会把它判成真凭据（上一轮 CI 就栽在同类形状上）。
+   *    运行时拼出来，源码里不留形似凭据的字面量。
+   */
+  const FAKE_STRIPE = ['sk', 'test', 'X'.repeat(16)].join('_');
+  const FAKE_CREEM = `creem_${'C'.repeat(16)}`;
+
+  /** 只给这两个键，其它键一律不存在 —— 避免本机 .env 把断言带偏 */
+  const envOf = (stripeReady: boolean, creemReady: boolean) => ({
+    [ENV_KEYS.STRIPE_SECRET_KEY]: stripeReady ? FAKE_STRIPE : undefined,
+    [ENV_KEYS.CREEM_API_KEY]: creemReady ? FAKE_CREEM : undefined,
+  });
+
+  it('两家都没配 ⇒ none', () => {
+    expect(resolveCancelProvider(envOf(false, false))).toBe('none');
+  });
+
+  it('只配 Stripe ⇒ stripe', () => {
+    expect(resolveCancelProvider(envOf(true, false))).toBe('stripe');
+  });
+
+  it('只配 Creem ⇒ creem', () => {
+    expect(resolveCancelProvider(envOf(false, true))).toBe('creem');
+  });
+
+  it('两家都配 ⇒ ambiguous（不是"挑一个"）', () => {
+    expect(resolveCancelProvider(envOf(true, true))).toBe('ambiguous');
+  });
+
+  it('归属不明 ⇒ 409 且不触网不写库', async () => {
+    const { deps, calls } = makeDeps({ resolveProvider: () => 'ambiguous' });
+    const r = await cancelSubscriptionForUser('u1', deps);
+
+    expect(r).toMatchObject({ ok: false, status: 409, code: CANCEL_CODES.PROVIDER_AMBIGUOUS });
+    expect(calls.provider).toBe(0);
+    expect(calls.mark).toHaveLength(0);
+  });
+
+  it('Creem 订阅 ⇒ 409 且不触网（未验证的取消接口不写）', async () => {
+    const { deps, calls } = makeDeps({ resolveProvider: () => 'creem' });
+    const r = await cancelSubscriptionForUser('u1', deps);
+
+    expect(r).toMatchObject({
+      ok: false,
+      status: 409,
+      code: CANCEL_CODES.PROVIDER_NOT_SELF_SERVICE,
+    });
+    expect(calls.provider).toBe(0);
+    expect(calls.mark).toHaveLength(0);
+  });
+});
+
+/**
+ * GET（能不能取消）与 POST（真取消）**不许错位**
+ *
+ * 一个"永远可点、点了才告诉你不行"的按钮，比没有按钮更伤人。
+ * 所以这里用同一组依赖跑两遍，断言 `cancellable === ok`。
+ */
+describe('取消订阅 · GET 与 POST 判定不漂移', () => {
+  const cases: Array<{ name: string; overrides: Partial<CancelDeps> }> = [
+    { name: '可取消', overrides: {} },
+    { name: '凭据未配', overrides: { resolveProvider: () => 'none' } },
+    { name: '归属不明', overrides: { resolveProvider: () => 'ambiguous' } },
+    { name: 'Creem 订阅', overrides: { resolveProvider: () => 'creem' } },
+    {
+      name: '无服务商 id',
+      overrides: {
+        loadActive: async () => ({ id: 'sub_1', stripeSubscriptionId: null, cancelledAt: null }),
+      },
+    },
+    { name: '没有订阅', overrides: { loadActive: async () => null } },
+    {
+      name: '已排定取消',
+      overrides: {
+        loadActive: async () => ({
+          id: 'sub_1',
+          stripeSubscriptionId: 'stripe_sub_1',
+          cancelledAt: new Date('2026-10-20T00:00:00.000Z'),
+        }),
+      },
+    },
+  ];
+
+  for (const c of cases) {
+    it(`${c.name}：cancellable 与 POST 结果一致`, async () => {
+      const { deps: getDeps } = makeDeps(c.overrides);
+      const { deps: postDeps } = makeDeps(c.overrides);
+
+      const eligibility = await describeCancelEligibility('u1', getDeps);
+      const posted = await cancelSubscriptionForUser('u1', postDeps);
+
+      expect(eligibility.cancellable).toBe(posted.ok);
+      // 反向也要成立：不能出现「POST 能成，按钮却灰着」
+      expect(posted.ok).toBe(eligibility.cancellable);
+    });
+  }
+
+  it('GET 是只读的：不触网、不写库', async () => {
+    const { deps, calls } = makeDeps();
+    await describeCancelEligibility('u1', deps);
+
+    expect(calls.provider).toBe(0);
+    expect(calls.mark).toHaveLength(0);
+  });
+
+  it('没有订阅时 hasActive=false（UI 不该显示"管理订阅"区）', async () => {
+    const { deps } = makeDeps({ loadActive: async () => null });
+    const e = await describeCancelEligibility('u1', deps);
+
+    expect(e.hasActive).toBe(false);
+    expect(e.reason).toBe('NO_ACTIVE_SUBSCRIPTION');
+  });
+
+  it('已排定取消 ⇒ cancellable=true 且 reason=ALREADY_SCHEDULED（按钮要换文案，不是消失）', async () => {
+    const { deps } = makeDeps({
+      loadActive: async () => ({
+        id: 'sub_1',
+        stripeSubscriptionId: 'stripe_sub_1',
+        cancelledAt: new Date('2026-10-20T00:00:00.000Z'),
+      }),
+    });
+    const e = await describeCancelEligibility('u1', deps);
+
+    expect(e.cancellable).toBe(true);
+    expect(e.alreadyScheduled).toBe(true);
+    expect(e.reason).toBe('ALREADY_SCHEDULED');
   });
 });

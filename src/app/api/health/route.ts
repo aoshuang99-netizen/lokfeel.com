@@ -19,14 +19,19 @@
  *     "misses": 50,
  *     "hitRate": 0.75
  *   },
- *   "version": "1.0.0"
+ *   "version": "0.9.0",
+ *   "commit": "1cf533f",
+ *   "builtAt": "2026-10-22T12:00:00.000Z",
+ *   "commitSource": "env"
  * }
  *
  * Response (unhealthy):
  * {
  *   "status": "unhealthy",
  *   "error": "Database connection failed",
- *   "timestamp": "2025-06-08T12:00:00.000Z"
+ *   "timestamp": "2025-06-08T12:00:00.000Z",
+ *   "version": "0.9.0",
+ *   "commit": "1cf533f"
  * }
  *
  * HTTP Status:
@@ -36,6 +41,7 @@
 
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { readBuildInfo } from "@/lib/build-info";
 import { getCacheStats } from "@/lib/redis-cache";
 import { getRedisStatus } from "@/lib/im/redis";
 import { describeBotPolicy } from "@/config/bot-policy";
@@ -69,6 +75,9 @@ export const revalidate = 0;
 
 export async function GET(): Promise<NextResponse> {
   const timestamp = new Date().toISOString();
+  // 构建身份在**两个分支**都要回（DB 挂了更需要知道是哪一版），所以提到 try 之前算。
+  // 它只读构建期内联的常量，不会抛、不触网、不触库。
+  const buildInfo = readBuildInfo();
 
   try {
     // Test database connection
@@ -123,8 +132,13 @@ export async function GET(): Promise<NextResponse> {
       //   configured=false 且 missing=["CREEM_API_KEY", ...] ⇒ 其余已就绪，只差凭据；
       //   接入后同一字段变 true ⇒ 不需要再靠人肉记忆判断"接完没有"。
       payments: describePaymentAvailability(),
-      // Add version from package.json (optional)
-      version: process.env.npm_package_version || "unknown",
+      // ─── 构建身份（OPS-11）─────────────────────────────────────────
+      // 原实现是 `process.env.npm_package_version`，而那个变量只在**通过 npm 启动**
+      // 时存在；Netlify 直接起 Node ⇒ 生产上永远返回 "unknown"。
+      // 现值由 `next.config.ts` 在**构建时**算好并内联（见 lib/build-info.ts）。
+      // 有了它，"线上跑的是哪个提交 / 这条 bug 是旧代码还是新代码 / 回滚回哪"
+      // 才从"我记得我 push 了"变成可查的事实。
+      ...buildInfo,
     };
 
     // Log health check in development
@@ -163,6 +177,8 @@ export async function GET(): Promise<NextResponse> {
       cache: getCacheStats(),
       redis: getRedisStatus(),
       botModule: describeBotPolicy().summary,
+      // 数据库都挂了的时候，第一句话是"这版是什么"—— 构建身份必须在这里也出现
+      ...buildInfo,
     };
 
     return NextResponse.json(healthData, {

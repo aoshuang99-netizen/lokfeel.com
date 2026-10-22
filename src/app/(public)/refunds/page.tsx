@@ -102,7 +102,17 @@ export default function RefundsPage() {
               <li><strong>Refund:</strong> A request to recover funds already paid. Subject to the eligibility criteria above.</li>
             </ul>
             <p className="text-foreground leading-relaxed mt-4">
-              To cancel your subscription, go to Account Settings → Manage Subscription. For refund requests, contact <a href="mailto:billing@lokfeel.com" className="text-primary hover:underline">billing@lokfeel.com</a>.
+              To cancel a LokFeel membership, open{" "}
+              <a href="/dashboard/subscription#manage-subscription" className="text-primary hover:underline">
+                Subscription → Manage subscription
+              </a>
+              . For refund requests, contact{" "}
+              <a href="mailto:billing@lokfeel.com" className="text-primary hover:underline">billing@lokfeel.com</a>.
+            </p>
+            <p className="text-foreground-muted leading-relaxed mt-3 text-sm">
+              The Hlua Pass sold on this site is billed and managed by Gumroad. Cancel it from the
+              Gumroad receipt email or your Gumroad library — cancelling a LokFeel membership here
+              would not stop that billing.
             </p>
           </section>
 

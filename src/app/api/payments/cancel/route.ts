@@ -1,7 +1,9 @@
 /**
+ * GET  /api/payments/cancel —— 「现在能不能取消、为什么」（只读）
  * POST /api/payments/cancel —— 期末取消当前订阅（V18-04）
  * ═══════════════════════════════════════════════════════════════════════
- * 这个端点存在的唯一理由：`public/pay.html` 写了 "cancel in one click"，
+ * 这个端点存在的唯一理由：站内有两处"随时取消"的承诺
+ * （`/refunds` 指路 `/dashboard/subscription`、`pay.html` 的 Gumroad 取消），
  * 而全仓**没有任何取消入口**。承诺与能力必须对齐 —— 要么撤承诺，要么补能力。
  *
  * 行为契约（详见 `src/lib/payments/cancel-subscription.ts`）：
@@ -12,6 +14,8 @@
  * | 本地有、服务商无 | 409 | NO_REMOTE_SUBSCRIPTION | 否 |
  * | 已排定取消（重复点） | 200 | —（alreadyScheduled: true） | 否 |
  * | 凭据未配 | 503 | PAYMENT_NOT_CONFIGURED | **否** |
+ * | 两家通道都配着（归属不明） | 409 | PROVIDER_AMBIGUOUS | **否** |
+ * | 订阅由 Creem 管理（未实现自助取消） | 409 | PROVIDER_NOT_SELF_SERVICE | **否** |
  * | 服务商报错 / 未确认 | 502 | UPSTREAM_ERROR | **否** |
  * | 成功 | 200 | — | 是（只写 cancelledAt） |
  *
@@ -19,6 +23,10 @@
  *   期末取消意味着**当期仍有权益**，真正的状态变更由 Stripe webhook
  *   （`customer.subscription.updated` / `deleted`）驱动。
  *   在这里直接把 status 打成 CANCELLED，等于用户付了钱当场被断权。
+ *
+ * 🔴 为什么必须有 GET：没有它，前端只能"永远显示一个可点的取消按钮"，
+ *   点下去才知道行不行。GET 与 POST 共用同一套判定（`evaluate`），
+ *   所以按钮状态不可能领先于真实能力。
  *
  * 为什么不复用 admin 的退款路由：
  *   退款是**退钱**（admin 权限、动余额），取消是**停止续费**（用户自助、不动已付的钱）。
@@ -31,10 +39,11 @@ import Stripe from 'stripe';
 import { handleApiError } from '@/lib/api-handler';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { isPaymentChannelReady } from '@/lib/payments/availability';
+import { resolveCancelProvider } from '@/lib/payments/cancel-provider';
 import {
   CANCEL_CODES,
   cancelSubscriptionForUser,
+  describeCancelEligibility,
   type CancelDeps,
 } from '@/lib/payments/cancel-subscription';
 import { paymentNotConfigured } from '@/lib/payments/not-configured';
@@ -59,8 +68,9 @@ const deps: CancelDeps = {
     return sub ?? null;
   },
 
-  // 惰性判定：不要在模块求值时把 env 固化进闭包（补了密钥的进程应立刻生效）
-  isStripeReady: () => isPaymentChannelReady('stripe.card'),
+  // 惰性判定：不要在模块求值时把 env 固化进闭包（补了密钥的进程应立刻生效）。
+  // 拿不准归属时回 'ambiguous'，绝不"挑一个"。
+  resolveProvider: () => resolveCancelProvider(),
 
   cancelAtPeriodEnd: async (stripeSubscriptionId) => {
     // 🔴 禁止裸 `new Stripe(key)`：SDK 主版本会静默更换默认 API 版本
@@ -89,6 +99,21 @@ const deps: CancelDeps = {
     });
   },
 };
+
+/**
+ * GET —— 只读判定，供 `/dashboard/subscription` 的「管理订阅」卡片使用。
+ * 不触网、不写库；未登录一律 401（`requireAuth` 抛出，`handleApiError` 统一成形）。
+ */
+export async function GET() {
+  return handleApiError(async () => {
+    const { user } = await requireAuth();
+    const eligibility = await describeCancelEligibility(user.id, deps);
+    return NextResponse.json(
+      { ok: true, ...eligibility },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+    );
+  });
+}
 
 // ⚠️ `handleApiError` 是**立即执行**的包装（返回 Promise），不是工厂。
 //    写成 `export const POST = handleApiError(...)` 会在**模块求值时**就跑一遍业务逻辑。
