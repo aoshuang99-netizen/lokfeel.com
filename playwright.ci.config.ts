@@ -29,7 +29,13 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 1 : 0,
 
-  reporter: [['list'], ['html', { open: 'never', outputFolder: 'test-results/ci/html' }]],
+  // `gha-annotations` 把每条失败写成 `::error`（公开可读）；
+  // 没有它，E2E 红了只能读到 "exit code 1"，等于黑箱。
+  reporter: [
+    ['list'],
+    ['html', { open: 'never', outputFolder: 'test-results/ci/html' }],
+    ['./tests/e2e-ci/reporters/gha-annotations.cjs'],
+  ],
 
   outputDir: 'test-results/ci/artifacts',
 

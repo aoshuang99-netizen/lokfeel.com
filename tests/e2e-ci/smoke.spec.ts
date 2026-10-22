@@ -84,11 +84,17 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
    * 而那一页卖的是 Hlua Pass（streaming / H-Points）。用户点"定价"，
    * 看到的是另一个产品 —— 而且没有任何页面能让人察觉。
    *
-   * 断言分三层，缺一层就会漏：
+   * 断言分四层，缺一层就会漏：
    *   · 状态码 200 —— 挡住"又跳走了"（307 时 Playwright 会跟随后返回 200，
    *     所以还要看最终 URL，见下）；
    *   · 最终路径是 `/pricing` —— 挡住跟随重定向后"200 但其实是 pay.html"；
-   *   · 正文含 Connection OS、不含 Hlua 的卖点 —— 挡住"页面在但内容是别人的"。
+   *   · 正文含 Connection OS、并显式声明"定价尚未公布"—— 挡住"页面在但内容是别人的"；
+   *   · **没有任何指向 pay.html 的链接、没有任何金额** —— 这才是"不导流、不乱标价"的
+   *     可判定形式。
+   *
+   * 🔴 这里踩过一次：最初写的是 `not.toContain('H-Points')`，而页面底部的
+   * "这里不卖什么"一节**必须**提到 H-Points 才能把边界说清楚 ⇒ 断言与意图相反。
+   * 字面串断言容易变成"禁止解释"，所以改成**结构断言**（链接数 / 金额正则）。
    */
   test('⑥ 定价页是 Connection OS 自己的页面（不是 Hlua 的结账页）', async ({ page }) => {
     const res = await page.goto('/pricing', { waitUntil: 'domcontentloaded' });
@@ -101,7 +107,13 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
 
     const html = await page.content();
     expect(html, '页面应讲 Connection OS').toContain('Connection OS');
-    expect(html, '不应出现 Hlua 的结账入口').not.toContain('pay.html');
-    expect(html, '不应把 Hlua Pass 当作本页产品').not.toContain('H-Points');
+
+    // 不导流：任何指向 Hlua 结账页的链接都是回归
+    await expect(page.locator('a[href*="pay.html"]'), '不得出现指向 Hlua 结账页的链接').toHaveCount(0);
+
+    // 不乱标价：Connection OS 未获批 ⇒ 页面上不该出现任何金额
+    const bodyText = await page.locator('body').innerText();
+    expect(bodyText, '未获批定价 ⇒ 页面上不该有金额').not.toMatch(/\$\s?\d/);
+    expect(bodyText, '应显式说明定价尚未公布').toContain('定价尚未公布');
   });
 });

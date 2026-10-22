@@ -86,6 +86,17 @@
 > 这一轮的收获不在"修好了"，而在**归因**：十条一样的红差点把"一个 cookie 名"
 > 记成"七个安全问题"。先让失败可分辨，再谈修复。
 
+**第五红（自己写出来的）**：修完上述四条后 E2E 仍然红，这次是真的跑到了浏览器冒烟。
+爆的是我自己上一轮加的 ⑥：`expect(html).not.toContain('H-Points')`。
+而定价页底部的"这里不卖什么"一节**必须**提到 H-Points 才能把边界说清楚 ——
+**断言与意图相反**。字面串断言容易退化成"禁止解释"，
+改成结构断言：不得有 `a[href*=pay.html]`、正文不得出现金额正则 `\$\s?\d`、
+且必须写明"定价尚未公布"。
+
+顺带补上观测：新增 `tests/e2e-ci/reporters/gha-annotations.cjs`，
+把每条失败写成 `::error`（公开可读）。此前 E2E 红了三轮，每轮只能读到
+"Process completed with exit code 1" —— 等于黑箱。
+
 另外新登记一条风险（**需人工确认**）：用与 CI 同版本的 gitleaks 扫全历史，
 520 个提交里有 55 处命中，涉及 `VERCEL_OIDC_TOKEN` / `TURSO_TOKEN` / Neon 连接串 /
 `.env.test` 的 `AUTH_SECRET` / 一个 GCP key。它们早于扫描门禁，CI 只扫增量永远抓不到。
