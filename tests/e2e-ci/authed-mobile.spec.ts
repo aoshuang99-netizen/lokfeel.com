@@ -71,13 +71,14 @@ test.describe('移动端 · 认证面（真实登录）', () => {
     // 所以这里只做一件事：把文档级请求的轨迹记下来，失败时一起抛出去。
     const docTrace: string[] = [];
     page.on('requestfailed', (req) => {
-      if (req.resourceType() === 'document') {
-        docTrace.push(`✗ requestfailed ${req.url()} :: ${req.failure()?.errorText ?? 'unknown'}`);
-      }
+      docTrace.push(`✗ requestfailed [${req.resourceType()}] ${req.url()} :: ${req.failure()?.errorText ?? 'unknown'}`);
     });
     page.on('response', (res) => {
       if (res.request().resourceType() === 'document') {
-        docTrace.push(`· document ${res.status()} ${res.url()}`);
+        // 记录 Location：上一轮只看到 `307 /dashboard` 却不知道它跳去哪，
+        // 等于知道"有人拐弯"却不知道"拐向哪"，还是定不了性。
+        const loc = res.headers()['location'];
+        docTrace.push(`· document ${res.status()} ${res.url()}${loc ? `  →  ${loc}` : ''}`);
       }
     });
 
