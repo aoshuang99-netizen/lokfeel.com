@@ -32,7 +32,7 @@
  * · 文案里不写 ASCII 裸引号（`react/no-unescaped-entities` 会判红）。
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, ShieldQuestion } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -103,26 +103,36 @@ export function ManageSubscription() {
   const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PostResult | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/payments/cancel", { cache: "no-store" });
-      if (!res.ok) {
-        // 未登录（401）也走这里：不把内部错误摔到用户脸上
-        setLoadError("We could not load your subscription status.");
-        return;
-      }
-      const data = (await res.json()) as Eligibility & { ok: boolean };
-      setEligibility(data);
-      setLoadError(null);
-    } catch {
-      setLoadError("We could not load your subscription status.");
-    }
-  }, []);
+  /**
+   * 取消成功后靠它**重新取一次判定**，而不是在本地把状态改成"已取消"。
+   *
+   * 为什么不是 `await load()`：把 setState 写在 effect 立即执行的那个 async 函数里，
+   * `react-hooks/set-state-in-effect` 会判红（本仓棘轮是逐文件 × 逐规则计数，
+   * 0→1 即红）。改用"计数 → effect 依赖它"的写法，状态更新只发生在
+   * Promise 回调里，既满足规则，也顺手解决了竞态（用 `alive` 标记）。
+   */
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let alive = true;
+    fetch("/api/payments/cancel", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return (await res.json()) as Eligibility & { ok: boolean };
+      })
+      .then((data) => {
+        if (!alive) return;
+        setEligibility(data);
+        setLoadError(null);
+      })
+      .catch(() => {
+        // 未登录（401）也走这里：不把内部错误摔到用户脸上
+        if (alive) setLoadError("We could not load your subscription status.");
+      });
+    return () => {
+      alive = false;
+    };
+  }, [reloadKey]);
 
   const submit = async () => {
     setSubmitting(true);
@@ -134,7 +144,7 @@ export function ManageSubscription() {
       if (res.ok) {
         setConfirming(false);
         // 成功后重新取一次判定：不靠本地状态"假装"已经取消
-        await load();
+        setReloadKey((k) => k + 1);
       }
     } catch {
       setResult({ ok: false, error: "Network error. Please try again." });

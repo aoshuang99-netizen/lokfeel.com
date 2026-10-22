@@ -20,8 +20,8 @@
 | 2 | V18-01 | 隔离环境 + 双组织 + 8 类越权负向 | **DOING** | 无需外部 | SEC-01~08（已有 PASS，需升级到"真实双组织"层级） |
 | 3 | V18-02 | LokFeel / Hlua 商业契约隔离 | **DONE（代码）** | V18-00 | BIZ-01（部分）、UX-11；**生产未部署** |
 | 4 | V18-03 | 退款承诺统一 | TODO | 人工裁决 D-01 | BIZ-02 |
-| 5 | V18-04 | 真实取消订阅能力 | TODO | 无凭据也可做到"诚实失败" | BIZ-02、PAY-09 |
-| 6 | V18-06 | 关键触控目标 ≥24px | TODO | — | UX-08 |
+| 5 | V18-04 | 真实取消订阅能力 | **DONE**（API + UI） | 无凭据下也能做到"诚实失败" | BIZ-02、PAY-09、BIZ-05 |
+| 6 | V18-06 | 关键触控目标 ≥24px | **DONE**（公开面） | 认证面（13 屏）待 V18-08 | UX-08 |
 | 7 | V18-08 | 生产账号 E2E | **BLOCKED** | 需批准建生产测试账号 | UX-12 |
 
 ---
@@ -33,9 +33,9 @@
 | V18-01 | 生产/隔离测试账号与双组织 | P0 | **DONE（行为取证）** | 工程 | 2026-10-22 CI：`CTRL-1/2` + `SEC-01..07` 全 PASS（真实 HTTP + 真实库）；SEC-08 仍 BLOCKED |
 | V18-02 | SaaS 产品目录独立 | P0 | **DONE（代码）** | 工程 | 路由/目录/页面已拆（`18_COMMERCIAL_CONTRACT.md`）；定价仍待 D-02、退款天数待 D-01 |
 | V18-03 | 退款承诺统一 | P0 | **BLOCKED** | 产品 | D-01 定 7 或 14 天；**工程不自行选**。盘点与冲突清单已出（`20_REFUND_PROMISES.md`，C1/C2/C3） |
-| V18-04 | 取消订阅能力 | P0 | **DONE（API）/ TODO（UI）** | 工程 | `POST /api/payments/cancel` + 9 条单测（先确认后写库）；界面入口未接 ⇒ BIZ-05 仍开 |
+| V18-04 | 取消订阅能力 | P0 | **DONE** | 工程 | `GET/POST /api/payments/cancel` + 20 条单测；判定收敛到 `evaluate()`，GET 与 POST 不可能错位；服务商归属 `resolveCancelProvider()` fail-closed（两家都配 ⇒ 409）。UI 在 `/dashboard/subscription#manage-subscription` |
 | V18-05 | 支付凭据与真实收款 | 付费 P0 | **BLOCKED** | 用户 | 4 个凭据 + 一笔可退小额真实交易（D-05） |
-| V18-06 | 关键触控目标修复 | 公开 P0 | TODO | 工程 | ≥24×24 CSS px，优先 44×44 |
+| V18-06 | 关键触控目标修复 | 公开 P0 | **DONE（公开面）** | 工程 | 生产实测 4 页：`/login` 3 个 20px、`/pay.html` 1 个 17px ⇒ 全部撑到 44px；新增 `tests/e2e-ci/mobile.spec.ts`（2 视口 × 6 路由，硬门禁 24px + 溢出 ≤1px）。**认证面 13 屏仍未测**（需 V18-08） |
 | V18-07 | 性能瓶颈治理 | P1 | TODO | 工程 | 先复现 3388ms 基线，再动 TTFB/JS |
 | V18-08 | 生产账号 E2E | P0 | **BLOCKED** | 工程+用户 | 需生产测试账号（D-05） |
 | V18-09 | 真实客户试点 3–5 家 | P1 | **BLOCKED** | 产品 | 有客户才有数据，`NO_DATA` 不是 0 |
@@ -67,8 +67,8 @@
 
 | ID | 问题 | 优先级 | 状态 | 证据 |
 |---|---|---|---|---|
-| OPS-11 | `/api/health` 的 `version` 返 `"unknown"` ⇒ **线上跑哪个 commit 不可从运行时确认** | P1 | TODO | `curl -s https://app.lokfeel.com/api/health` |
-| BIZ-05 | 站内**没有取消订阅入口**，而 `pay.html` 承诺 "cancel in one click" | P0 | **API 已有（V18-04）/ UI 未接** | `src/app/api/payments/cancel/route.ts`；`/refunds:105` 仍指向不存在的 "Account Settings → Manage Subscription" |
+| OPS-11 | `/api/health` 的 `version` 返 `"unknown"` ⇒ **线上跑哪个 commit 不可从运行时确认** | P1 | **DONE（代码）** | `src/lib/build-info.ts` + `next.config.ts` 构建期内联；`/api/health` 现回 `version/commit/builtAt/commitSource`。**生产仍 unknown**，等发版后复测 |
+| BIZ-05 | 站内**没有取消订阅入口**，而 `pay.html` 承诺 "cancel in one click" | P0 | **DONE** | `src/app/api/payments/cancel/route.ts` + `/dashboard/subscription#manage-subscription`；`/refunds` 的指路牌已改为真实路径，并补充"Hlua Pass 由 Gumroad 收款、取消在 Gumroad" |bscription" |
 | BIZ-06 | 两套价格互不相干（`plans.ts` vs `pay.html`），代码里的价用户看不到 | P0 | **DONE（V18-02）** | `npm run check:pricing` |
 | BIZ-07 | **工作区订阅的退款承诺自相矛盾**：`/refunds` 写「首次订阅 14 天」，`/pricing` 写「没有已生效的退款承诺」，`pay.html` 写「7 天」 | P0 | **BLOCKED（D-01）** | `docs/implementation/v18/20_REFUND_PROMISES.md`（C1/C2/C3） |
 | DOC-02 | 会话 cookie 名按 `NODE_ENV` 判、Auth.js 按协议判 ⇒ http 部署登不进去（表现为"登录 200，之后全 401"） | P0 | **DONE** | `v18/19_SESSION_COOKIE_LAYER.md`；`tests/auth/session-cookie.test.ts` |
