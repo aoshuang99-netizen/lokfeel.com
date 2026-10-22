@@ -125,8 +125,12 @@ hlua-pass:  pricing.status = 'NOT_FOR_SALE'   （我们不卖它）
 | `REFERENCED_ONLY` | 只被引用来说明边界（Hlua Pass） | 是（那是它的页面） | **否** | 否，永远 |
 
 `isPurchasable()` 现在先看 `relation`，再看 `status` —— 于是"把 Hlua 标成 APPROVED
-就能在本目录收钱"这条最省事的路被堵住了。静态门禁（`check:products`）只约束
-`connection-os`，行为单测约束**全目录**；两条规则现在同源（都从 `validateCatalog()` 的语义出发）。
+就能在本目录收钱"这条最省事的路被堵住了。
+
+静态门禁（`check:products`）与行为单测（`validateCatalog()` + jest）**不是同一实现**：
+前者零依赖、任何环境能跑，管路由与文本形状；后者管整张目录的状态一致性。
+两者不共享代码（`.mjs` 加载不了 TS），所以"防漂移"靠的是**规则写在同一处注释里 +
+单测覆盖全表**，而不是靠复用。
 
 > 教训：**"两条产品线混在一起"不只是文案问题，它会逼出错误的规则。**
 > 先分清谁在卖，规则才写得下去。
