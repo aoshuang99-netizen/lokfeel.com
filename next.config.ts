@@ -154,15 +154,22 @@ const nextConfig: NextConfig = {
         destination: '/dashboard/explore',
         permanent: true,
       },
-      // ─── 订阅付款页别名 ───
-      // 付款页是 public/pay.html 静态文件（大陆可直连）。/plans 等自然路径此前 404，
-      // 用户真的会这样输入；统一 302 到 canonical（CI 5151513 的 Duplicate identifier 教训：
-      // 本仓 grep 不可靠，改 next.config 前必须用 node 全文搜重名键）。
-      { source: '/plans', destination: '/pay.html', permanent: false },
-      { source: '/pricing', destination: '/pay.html', permanent: false },
-      { source: '/subscribe', destination: '/pay.html', permanent: false },
-      { source: '/membership', destination: '/pay.html', permanent: false },
-      { source: '/pass', destination: '/pay.html', permanent: false },
+      // ─── 定价入口（2026-10-22 · V18-02 拆线）─────────────────────────
+      // 🔴 此前 `/pricing` `/plans` `/subscribe` `/membership` `/pass` **全部** 302 到
+      //    `public/pay.html`。而 pay.html 是 **Hlua Pass**（streaming / H-Points，
+      //    CTA 指向 Gumroad）—— 也就是说：宣称卖 Connection OS 的产品，
+      //    点"定价"买到的是另一个东西。这不是文案问题，是**商业契约错配**。
+      //
+      // 现在按产品线拆开：
+      //   · `/pricing` 是 Connection OS 自己的定价页（真实页面，不再跳转）；
+      //   · `/plans` `/subscribe` 是它的自然语言别名 → 指向 `/pricing`；
+      //   · `/membership` `/pass` 属于旧会员/Hlua 语境 → 指向 `/hlua`，
+      //     由那一页明确交代"这是另一个产品"，再由用户自己决定去不去 pay.html。
+      // 注意：`/pay.html` 本身**不动** —— 已有真实 Hlua 客户的链接和收据不能失效。
+      { source: '/plans', destination: '/pricing', permanent: false },
+      { source: '/subscribe', destination: '/pricing', permanent: false },
+      { source: '/membership', destination: '/hlua', permanent: false },
+      { source: '/pass', destination: '/hlua', permanent: false },
     ]
   },
 

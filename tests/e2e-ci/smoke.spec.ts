@@ -76,4 +76,32 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
     expect(res?.status(), 'GET / 应 200').toBe(200);
     await expect(page.locator('body')).toBeVisible();
   });
+
+  /**
+   * ⑥ 定价页必须是**自己的**页面（V18-02）。
+   *
+   * 这条守的是一个已经发生过的错卖：`/pricing` 曾 307 到 `public/pay.html`，
+   * 而那一页卖的是 Hlua Pass（streaming / H-Points）。用户点"定价"，
+   * 看到的是另一个产品 —— 而且没有任何页面能让人察觉。
+   *
+   * 断言分三层，缺一层就会漏：
+   *   · 状态码 200 —— 挡住"又跳走了"（307 时 Playwright 会跟随后返回 200，
+   *     所以还要看最终 URL，见下）；
+   *   · 最终路径是 `/pricing` —— 挡住跟随重定向后"200 但其实是 pay.html"；
+   *   · 正文含 Connection OS、不含 Hlua 的卖点 —— 挡住"页面在但内容是别人的"。
+   */
+  test('⑥ 定价页是 Connection OS 自己的页面（不是 Hlua 的结账页）', async ({ page }) => {
+    const res = await page.goto('/pricing', { waitUntil: 'domcontentloaded' });
+    expect(res?.status(), 'GET /pricing 应 200').toBe(200);
+
+    // 跟随重定向后的落地路径 —— 这是本用例最关键的一条
+    expect(new URL(page.url()).pathname, '/pricing 不得跳去别处（尤其是 /pay.html）').toBe(
+      '/pricing'
+    );
+
+    const html = await page.content();
+    expect(html, '页面应讲 Connection OS').toContain('Connection OS');
+    expect(html, '不应出现 Hlua 的结账入口').not.toContain('pay.html');
+    expect(html, '不应把 Hlua Pass 当作本页产品').not.toContain('H-Points');
+  });
 });

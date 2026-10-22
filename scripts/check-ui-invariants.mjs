@@ -59,6 +59,11 @@ const SCOPES = [
   'src/lib/living',
   // T08 Slice 4：AC-18 判的就是这七屏 —— 规则 R2/R4 不覆盖它，等于没判。
   'src/app/console',
+  // V18-02：定价页与 Hlua 说明页是**新增的对外售卖面**，必须过同一套规则。
+  // 只加这两页，不整片加 `src/app/(public)` —— 存量法务页（refunds/terms/privacy…）
+  // 从未被扫过，一次性全加会把"历史遗留文案"混进这一次的红里，掩盖真正的新问题。
+  'src/app/(public)/pricing',
+  'src/app/(public)/hlua',
 ]
 
 /**
