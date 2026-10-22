@@ -30,10 +30,10 @@
 
 | ID | 任务 | 优先级 | 状态 | 负责人 | 解除条件 / 备注 |
 |---|---|---|---|---|---|
-| V18-01 | 生产/隔离测试账号与双组织 | P0 | **DOING** | 工程 | 隔离库可建；生产账号需 D-05 批准 |
+| V18-01 | 生产/隔离测试账号与双组织 | P0 | **DONE（行为取证）** | 工程 | 2026-10-22 CI：`CTRL-1/2` + `SEC-01..07` 全 PASS（真实 HTTP + 真实库）；SEC-08 仍 BLOCKED |
 | V18-02 | SaaS 产品目录独立 | P0 | **DONE（代码）** | 工程 | 路由/目录/页面已拆（`18_COMMERCIAL_CONTRACT.md`）；定价仍待 D-02、退款天数待 D-01 |
-| V18-03 | 退款承诺统一 | P0 | **BLOCKED** | 产品 | D-01 定 7 或 14 天；**工程不自行选** |
-| V18-04 | 取消订阅能力 | P0 | TODO | 工程 | 无凭据时做"诚实 503"；有凭据后接 portal |
+| V18-03 | 退款承诺统一 | P0 | **BLOCKED** | 产品 | D-01 定 7 或 14 天；**工程不自行选**。盘点与冲突清单已出（`20_REFUND_PROMISES.md`，C1/C2/C3） |
+| V18-04 | 取消订阅能力 | P0 | **DONE（API）/ TODO（UI）** | 工程 | `POST /api/payments/cancel` + 9 条单测（先确认后写库）；界面入口未接 ⇒ BIZ-05 仍开 |
 | V18-05 | 支付凭据与真实收款 | 付费 P0 | **BLOCKED** | 用户 | 4 个凭据 + 一笔可退小额真实交易（D-05） |
 | V18-06 | 关键触控目标修复 | 公开 P0 | TODO | 工程 | ≥24×24 CSS px，优先 44×44 |
 | V18-07 | 性能瓶颈治理 | P1 | TODO | 工程 | 先复现 3388ms 基线，再动 TTFB/JS |
@@ -68,8 +68,10 @@
 | ID | 问题 | 优先级 | 状态 | 证据 |
 |---|---|---|---|---|
 | OPS-11 | `/api/health` 的 `version` 返 `"unknown"` ⇒ **线上跑哪个 commit 不可从运行时确认** | P1 | TODO | `curl -s https://app.lokfeel.com/api/health` |
-| BIZ-05 | 站内**没有取消订阅入口**，而 `pay.html` 承诺 "cancel in one click" | P0 | TODO（V18-04） | 全仓 grep `cancelSubscription` |
-| BIZ-06 | 两套价格互不相干（`plans.ts` vs `pay.html`），代码里的价用户看不到 | P0 | TODO（V18-02） | `npm run check:pricing` |
+| BIZ-05 | 站内**没有取消订阅入口**，而 `pay.html` 承诺 "cancel in one click" | P0 | **API 已有（V18-04）/ UI 未接** | `src/app/api/payments/cancel/route.ts`；`/refunds:105` 仍指向不存在的 "Account Settings → Manage Subscription" |
+| BIZ-06 | 两套价格互不相干（`plans.ts` vs `pay.html`），代码里的价用户看不到 | P0 | **DONE（V18-02）** | `npm run check:pricing` |
+| BIZ-07 | **工作区订阅的退款承诺自相矛盾**：`/refunds` 写「首次订阅 14 天」，`/pricing` 写「没有已生效的退款承诺」，`pay.html` 写「7 天」 | P0 | **BLOCKED（D-01）** | `docs/implementation/v18/20_REFUND_PROMISES.md`（C1/C2/C3） |
+| DOC-02 | 会话 cookie 名按 `NODE_ENV` 判、Auth.js 按协议判 ⇒ http 部署登不进去（表现为"登录 200，之后全 401"） | P0 | **DONE** | `v18/19_SESSION_COOKIE_LAYER.md`；`tests/auth/session-cookie.test.ts` |
 | DOC-01 | 矩阵汇总表与逐行差 4 项（25/17 vs 29/13） | P0 | **DONE** | `npm run check:acceptance` |
 
 ---
