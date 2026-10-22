@@ -21,7 +21,7 @@
 | 3 | V18-02 | LokFeel / Hlua 商业契约隔离 | **DONE（代码）** | V18-00 | BIZ-01（部分）、UX-11；**生产未部署** |
 | 4 | V18-03 | 退款承诺统一 | TODO | 人工裁决 D-01 | BIZ-02 |
 | 5 | V18-04 | 真实取消订阅能力 | **DONE**（API + UI） | 无凭据下也能做到"诚实失败" | BIZ-02、PAY-09、BIZ-05 |
-| 6 | V18-06 | 关键触控目标 ≥24px | **DONE**（公开面） | 认证面（13 屏）待 V18-08 | UX-08 |
+| 6 | V18-06 | 关键触控目标 ≥24px | **DONE**（公开面 + 认证面 9 屏） | 页签级（/workspace 五个阶段）待下一轮 | UX-08 |
 | 7 | V18-08 | 生产账号 E2E | **BLOCKED** | 需批准建生产测试账号 | UX-12 |
 
 ---
@@ -35,7 +35,7 @@
 | V18-03 | 退款承诺统一 | P0 | **BLOCKED** | 产品 | D-01 定 7 或 14 天；**工程不自行选**。盘点与冲突清单已出（`20_REFUND_PROMISES.md`，C1/C2/C3） |
 | V18-04 | 取消订阅能力 | P0 | **DONE** | 工程 | `GET/POST /api/payments/cancel` + 20 条单测；判定收敛到 `evaluate()`，GET 与 POST 不可能错位；服务商归属 `resolveCancelProvider()` fail-closed（两家都配 ⇒ 409）。UI 在 `/dashboard/subscription#manage-subscription` |
 | V18-05 | 支付凭据与真实收款 | 付费 P0 | **BLOCKED** | 用户 | 4 个凭据 + 一笔可退小额真实交易（D-05） |
-| V18-06 | 关键触控目标修复 | 公开 P0 | **DONE（公开面）** | 工程 | 生产实测 4 页：`/login` 3 个 20px、`/pay.html` 1 个 17px ⇒ 全部撑到 44px；新增 `tests/e2e-ci/mobile.spec.ts`（2 视口 × 6 路由，硬门禁 24px + 溢出 ≤1px）。**认证面 13 屏仍未测**（需 V18-08） |
+| V18-06 | 关键触控目标修复 | 公开 P0 | **DONE（公开 + 认证）** | 工程 | 生产实测 4 页：`/login` 3 个 20px、`/pay.html` 1 个 17px ⇒ 撑到 44px。门禁两组：`mobile.spec.ts`（2 视口 × 6 公开路由）+ `authed-mobile.spec.ts`（2 视口 × 9 屏，globalSetup 登录 + storageState），判据共用 `waitForStableDom` + 24px + 溢出 ≤1px。**新门禁第一次跑就抓到真缺陷**：`/console`「查看全部→」62×16（已修）。`774a1d6` 全绿。**页签级（/workspace 五阶段）仍未测** |
 | V18-07 | 性能瓶颈治理 | P1 | TODO | 工程 | 先复现 3388ms 基线，再动 TTFB/JS |
 | V18-08 | 生产账号 E2E | P0 | **BLOCKED** | 工程+用户 | 需生产测试账号（D-05） |
 | V18-09 | 真实客户试点 3–5 家 | P1 | **BLOCKED** | 产品 | 有客户才有数据，`NO_DATA` 不是 0 |

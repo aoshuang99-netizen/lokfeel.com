@@ -14,10 +14,17 @@
 **但生产仍是旧代码** —— 本轮全部提交都带 `[skip netlify]`，因为"CI 绿"不等于"该发"。
 `D-10`（发不发布）是人的决定，本文只把"发"这件事变成可重复的动作。
 
-> ⚠️ 截至 2026-10-22 15:00Z，**唯一未绿的是认证面那 18 条**：约 1/3 用例在
-> 「登录 → /dashboard」报 `net:ERR_FAILED`，且每轮失败的用例都不一样。
-> 已加纯 HTTP 探针（`probe-authed-nav.mjs`）把「服务端不通」与「浏览器导航不稳」分开定性 ——
-> **在它变绿之前，第 1 条前置不成立，不要发。**
+> ✅ 2026-10-22 15:32Z：**17 项检查全绿**（15 成功 / 2 跳过：Perf 手动、DCO / 0 失败），
+> 对应提交 `774a1d6`。第 1 条前置成立。
+>
+> 达成路径值得写下来，因为它决定了"以后能不能信这个绿"：
+> 认证面那 18 条原本每条各登一次，约 1/3 死在「登录后整页跳 `/dashboard` → 307 →
+> `/dashboard/explore`」这一跳（`net:ERR_FAILED`，每轮失败的用例都不同）。
+> 用三条证据排除了服务端：307 那条 redirect 带 `has: cookie` 条件（能触发就说明 cookie 被认）、
+> `next-start.log` **零错误行**（错误行已改成公开可读的 annotation）、纯 HTTP 探针 3 轮全绿。
+> 结论是用例设计问题：它们要证明的是**版面**，不该把一次偶发失败放大 18 倍。
+> 改成 globalSetup 登录一次 + storageState 后转绿；登录本身仍由 globalSetup 与探针把守。
+> 🔴 **没有一条版面断言被放宽，没有一条用例被跳过。**
 
 
 ---
@@ -51,9 +58,11 @@
 | 门禁 | 位置 | 守的是什么 |
 |---|---|---|
 | `tests/e2e-ci/mobile.spec.ts` | CI · e2e job | 2 视口（390×844 / 360×800）× 6 公开路由：横向溢出 ≤1px、触控目标 ≥24×24（WCAG 2.2 AA 2.5.8）。<44px 只作 annotation 报告，不判红 |
-| `tests/e2e-ci/authed-mobile.spec.ts` | CI · e2e job | 同样的判据，但对象是**登录之后**的 9 屏（`/workspace`、`/console` 七屏、`/dashboard/subscription`）× 2 视口。走**真实登录表单**，不注入 cookie |
+| `tests/e2e-ci/authed-mobile.spec.ts` | CI · e2e job | 同样的判据，但对象是**登录之后**的 9 屏（`/workspace`、`/console` 七屏、`/dashboard/subscription`）× 2 视口 = 18 条 |
+| `tests/e2e-ci/global-setup.ts` | CI · e2e job（跑用例之前） | 登录**一次**产出 `storageState`，18 条用例带着它开跑。跑不通⇒整轮失败（最强前置断言）；允许 3 次尝试并逐次打印原因 |
 | `tests/e2e-ci/lib/measure.ts` · `waitForStableDom()` | 上述两组共用 | **量之前先等内容落定**：可交互元素数 + 文档高 + 文档宽 连续两次采样不变才开量（上限 2.5s）。不看 `networkidle` —— Next 有轮询，可能永远不空闲 |
 | `scripts/qa/probe-authed-nav.mjs` | CI · e2e job（装浏览器**之前**） | 用纯 HTTP 走「登录 → /dashboard → /console → /workspace」3 轮，打印每一跳的状态码与 Location。把「服务端这条路通不通」与「浏览器导航是否稳」拆成两个互斥判据 |
+| `scripts/qa/browser-login-trace.mjs` | CI · e2e job（装浏览器之后） | **诊断，不是门禁**（永远 exit 0）：一个浏览器 + 12 轮登录，记录 request/response/requestfailed/framenavigated/pageerror，失败轮整段发 annotation |
 
 > 🔴 为什么 `waitForStableDom` 是必须的：`/console/*` 与 `/workspace` 都是 `'use client'`，
 > 首屏返回骨架 + 侧边栏，真实内容后到。**先前的门禁量到的是骨架屏**，于是"没有溢出"成立；
