@@ -111,11 +111,11 @@ V17 原文写「40 项」。按五组编号展开实为 **42 项**（8 + 10 + 12
 | UX-05 | 文本对比度达 WCAG AA | **PASS** | 代码 | 5 板块 × 15 组全达标 |
 | UX-06 | 双世界切换不产生死色 | **PASS** | 代码 | 令牌作用域，对比度门禁覆盖两个世界 |
 | UX-07 | `prefers-reduced-motion` 降级 | **PASS** | 代码 | R11（新）：四档 `[data-lf-motion='0'/'1'/'3']` 存在且 L3 > L1 > 0、默认档落在 L1 与 L3 之间、`@media (prefers-reduced-motion: reduce)` 至少一处把 `--lf-dur*` 清零；2 条变异（删媒体查询 / 把 L3 调成 L1）均被捕获。⚠️ 浏览器实测（`audit:release`）仍需生产账号 ⇒ 本条的 PASS 只是"机制存在" |
-| UX-08 | 移动端（<1024px）不溢出可操作 | **BLOCKED** | 生产 | **部分证据**（`08`）：3 个公开页在 390×844 + 4G + 4×CPU 下 `overflowX = 0`（无横向溢出），但触控目标 13/18、26/31 低于 24px；**十三屏需登录 ⇒ 仍未验** |
+| UX-08 | 移动端（<1024px）不溢出可操作 | **BLOCKED** | **行为** | V18-06（2026-10-22）把它变成 CI 门禁：**公开面 6 路由 × 2 视口（390×844 / 360×800）**，横向溢出 ≤1px 且触控目标 ≥24×24（WCAG 2.5.8）全过；**认证面 3 个核心页**（`/workspace`、`/console`、`/console/missions`）用真实登录表单实测同样全过。**仍 BLOCKED 的部分**：认证面还有 10 屏（`/workspace` 的 Studio/Field/Consent/Outcomes/Agents 五个页签 + console 的 connections/agents/members/outcomes/settings）未逐屏测 —— 门禁只覆盖页面级，没覆盖页签级 |
 | UX-09 | 界面与契约不脱节（枚举漂移） | **PASS** | 代码 | `verify:workspace-drift` 变异自证；本轮已修"从未进 CI" |
 | UX-10 | 不把假数据/示例当真实数据 | **PASS** | 代码 | R5 无假数据标识、R6 agent 节点必须有源 |
 | UX-11 | 空态告诉用户下一步做什么 | **BLOCKED** | — | 有 `emptyText`，未逐屏实测 |
-| UX-12 | 十三屏在真实登录态下完整走通 | **BLOCKED** | — | 无 QA 账号；不得用真实客户数据 |
+| UX-12 | 十三屏在真实登录态下完整走通 | **BLOCKED** | **部分**（行为） | 2026-10-22：CI 已能用**隔离库里的自造账号**真实登录（`seed-authed-e2e-user.mjs` + 登录表单），因此「无 QA 账号」不再是绝对障碍；但**走通 ≠ 渲染**：本轮自动用例只量版面与触控，没有点过任何业务流程（Consent 撤销后是否真的停止执行、Outcome 能否验证等）。仍需一次人工走查（D-06） |
 
 ### 2.4 OPS · 运维与可观测（5 PASS / 3 BLOCKED）
 
