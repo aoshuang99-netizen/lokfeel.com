@@ -504,29 +504,42 @@ jobs:
 
       # 🔴 失败时的取证：日志只打 stdout，等于**只有 workstation 上的人能看见**
       #    （job 日志的 REST 端点要 admin 权限，公开仓库也读不到；而
-      #     `check-runs.output.summary` 是公开可读的）。
-      #    上一轮 5 条用例报 `net:ERR_FAILED`，就是卡在"看不到服务端说了什么"。
-      #    这里把服务端日志里**真正有用的行**写进 step summary，下一轮无需权限即可判断
-      #    「是网络/服务端问题，还是版面问题」。
+      #     check-run 的 **annotations 是公开可读的**）。
+      #    2026-10-22 两轮下来，浏览器侧只告诉我们「/dashboard 307 → /dashboard/explore
+      #    之后导航 ERR_FAILED」—— 缺的正是**服务端那一侧**：它到底抛没抛异常。
+      #    所以把日志里的错误行**逐条发成 annotation**，而不是只写进 step summary
+      #    （实测 step summary 在 check-runs API 上是空的，这条路不通）。
       - name: 失败时打印服务端日志
         if: failure()
         run: |
-          echo "### 服务端日志（next-start · 末尾 200 行里的错误行）" >> "$GITHUB_STEP_SUMMARY"
+          LOG="$RUNNER_TEMP/next-start.log"
+          MATCHES=$(grep -inE "error|fail|exception|unhandled|ECONN|EADDR|locked|timeout|aborted|Cannot|undefined is not" "$LOG" | tail -25 || true)
+
+          if [ -z "$MATCHES" ]; then
+            echo "::error title=next-start.log::服务端日志里**没有任何错误行** —— 这说明失败不是服务端抛异常，应往网络/导航层查（keep-alive、连接被复用、重定向链）"
+          else
+            # annotation 里的多行与冒号要转义，否则会被截断或误解析
+            while IFS= read -r line; do
+              safe=$(printf '%s' "$line" | tr -d '\r' | sed 's/%/%25/g; s/::/%3A%3A/g' | cut -c1-900)
+              echo "::error title=next-start.log::$safe"
+            done <<< "$MATCHES"
+          fi
+
+          echo "### 服务端日志（next-start · 错误行）" >> "$GITHUB_STEP_SUMMARY"
           {
             echo '```'
-            grep -iE "error|fail|exception|unhandled|ECONN|EADDR|locked|timeout" "$RUNNER_TEMP/next-start.log" \
-              | tail -60 || echo "（没有匹配到错误行）"
+            echo "${MATCHES:-（没有匹配到错误行）}"
             echo '```'
             echo
             echo "<details><summary>末尾 120 行原文</summary>"
             echo
             echo '```'
-            tail -120 "$RUNNER_TEMP/next-start.log" || true
+            tail -120 "$LOG" || true
             echo '```'
             echo
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
-          tail -200 "$RUNNER_TEMP/next-start.log" || true
+          tail -200 "$LOG" || true
 
       # 报告摘要也进 summary：注解里只有第一行错误，HTML 报告要登录才能下载。
       - name: 把 Playwright 失败明细写进 CI 摘要

@@ -10,9 +10,15 @@
 ## 0. 一句话现状
 
 代码侧已经具备发布条件：类型、lint 棘轮、单测、构建、迁移、密钥扫描、依赖、
-租户静态/行为审计、支付契约、浏览器冒烟、移动端 390/360 全部有门禁（新增两项见 §2）。
+租户静态/行为审计、支付契约、浏览器冒烟、移动端 390/360（公开面 + 认证面）全部有门禁（见 §2）。
 **但生产仍是旧代码** —— 本轮全部提交都带 `[skip netlify]`，因为"CI 绿"不等于"该发"。
 `D-10`（发不发布）是人的决定，本文只把"发"这件事变成可重复的动作。
+
+> ⚠️ 截至 2026-10-22 15:00Z，**唯一未绿的是认证面那 18 条**：约 1/3 用例在
+> 「登录 → /dashboard」报 `net:ERR_FAILED`，且每轮失败的用例都不一样。
+> 已加纯 HTTP 探针（`probe-authed-nav.mjs`）把「服务端不通」与「浏览器导航不稳」分开定性 ——
+> **在它变绿之前，第 1 条前置不成立，不要发。**
+
 
 ---
 
@@ -26,19 +32,34 @@
 | 4 | 商业契约不串线 | `npm run check:products` | 5 条规则全过（含 9 条自证） |
 | 5 | 未接入支付仍是"合法状态" | CI `payment-off 契约` | 18/18 |
 | 6 | 双组织隔离是**行为级**证据 | CI `双组织隔离取证` | `CTRL-1/2` + `SEC-01..07` 全 PASS |
-| 7 | 移动端 390/360 无溢出、触控 ≥24px | CI `浏览器冒烟`（含 `mobile.spec.ts`） | 12 条全过 |
-| 8 | 数据库无待迁移差异 | `npm run check:migration-drift` | PASS（本轮无 schema 变更） |
+| 7 | 移动端 390/360 无溢出、触控 ≥24px | CI `浏览器冒烟`（`mobile.spec.ts` + `authed-mobile.spec.ts`） | 公开面 12 条 + 认证面 18 条全过 |
+| 8 | 数据库无待迁移差异 | CI `schema 漂移棘轮`（Migration job） | PASS；本轮 `git diff <生产提交>..HEAD -- prisma/` = **0 行** |
+| 9 | 服务端认证导航通 | CI `认证面导航契约探针`（纯 HTTP，3 轮） | 3 轮全 200 |
 
 > 🔴 第 8 条不是形式：本轮**刻意没有**加 `Subscription.provider` 列（见 `D-11`），
 > 就是为了让"发布"不需要碰生产 Turso。发布铁律仍是 **先迁移后发版**。
+>
+> 🔴 第 8 条的实测口径（2026-10-22）：生产在 `dc102cd`（2026-10-21T06:41Z），
+> HEAD 比它多 **34 个提交 / 93 个文件**，而 `prisma/`、`scripts/tenancy`、`scripts/connection`
+> 的差异都是 **0 行** —— 也就是说这次发布**不需要任何数据库迁移**。
+> 这条结论可复算：`git diff dc102cd..HEAD --stat -- prisma/ | wc -l`。
 
 ---
 
-## 2. 本轮新增的两道门禁（发布相关）
+## 2. 本轮新增的门禁（发布相关）
 
 | 门禁 | 位置 | 守的是什么 |
 |---|---|---|
 | `tests/e2e-ci/mobile.spec.ts` | CI · e2e job | 2 视口（390×844 / 360×800）× 6 公开路由：横向溢出 ≤1px、触控目标 ≥24×24（WCAG 2.2 AA 2.5.8）。<44px 只作 annotation 报告，不判红 |
+| `tests/e2e-ci/authed-mobile.spec.ts` | CI · e2e job | 同样的判据，但对象是**登录之后**的 9 屏（`/workspace`、`/console` 七屏、`/dashboard/subscription`）× 2 视口。走**真实登录表单**，不注入 cookie |
+| `tests/e2e-ci/lib/measure.ts` · `waitForStableDom()` | 上述两组共用 | **量之前先等内容落定**：可交互元素数 + 文档高 + 文档宽 连续两次采样不变才开量（上限 2.5s）。不看 `networkidle` —— Next 有轮询，可能永远不空闲 |
+| `scripts/qa/probe-authed-nav.mjs` | CI · e2e job（装浏览器**之前**） | 用纯 HTTP 走「登录 → /dashboard → /console → /workspace」3 轮，打印每一跳的状态码与 Location。把「服务端这条路通不通」与「浏览器导航是否稳」拆成两个互斥判据 |
+
+> 🔴 为什么 `waitForStableDom` 是必须的：`/console/*` 与 `/workspace` 都是 `'use client'`，
+> 首屏返回骨架 + 侧边栏，真实内容后到。**先前的门禁量到的是骨架屏**，于是"没有溢出"成立；
+> 加上稳定判定后，同一条门禁立刻抓到真缺陷：`/console` 的「查看全部→」实测 **62×16**（门槛 24px）。
+> 这是新门禁第一次跑就产出的净收益 —— 它证明的不是"我们很严格"，而是"之前的绿是假的"。
+
 | `GET /api/payments/cancel` + `evaluate()` | jest | 取消按钮的"亮/灰"与 POST 的真实结果**共用一次判定**，7 个 case 逐一对撞 |
 
 > 为什么把阈值定在 24 而不是 44：先用生产实测过一遍（2026-10-22）：
@@ -120,7 +141,7 @@ curl -s https://app.lokfeel.com/api/health | jq '.payments'
 | 4 个支付凭据 | `payments.configured=false` | 付费入口一律 503 + `PAYMENT_NOT_CONFIGURED`（**合法状态**） |
 | 退款天数唯一口径 | `/refunds` 写 14 天、`pay.html` 写 7 天（不同产品，但没标"属于谁"） | `D-01` 待批；工程不自行选 |
 | Creem 订阅的自助取消 | 返回 409 + 指向客服 | 未验证过 Creem 的取消 API，不编调用 |
-| 认证面 13 屏的移动端实测 | 未测（需生产测试账号 `D-06`） | `UX-08` 仍为部分证据 |
+| 认证面 13 屏的移动端实测 | 9 屏已进 CI 门禁（页面级）；**页签级**（`/workspace` 的 Studio/Field/Consent/Outcomes/Agents + console 各屏内部状态）未测 | `UX-08` 仍为部分证据；`D-06` 人工走查仍未做 |
 | 法律主体 | `D-03` 未定 | `privacy@`/`billing@` 背后没有承诺人 |
 
 ---

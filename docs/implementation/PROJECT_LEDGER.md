@@ -6,7 +6,7 @@
 > 规则：本文件只写**可复现的事实**。取不到的数据写 `UNKNOWN` 并附取证命令，不写估计值。
 > 每条事实后面跟一条能当场跑的命令 —— 与 `07_EVIDENCE_LENS.md` 同一套纪律。
 
-**最后核对**：2026-10-22（V18 D1）· 仓库 `nexus-app/` · 分支 `main`
+**最后核对**：2026-10-22（V18 W02 · 15:05Z 复核）· 仓库 `nexus-app/` · 分支 `main`
 
 ---
 
@@ -20,8 +20,12 @@
 | legacy 线 | `/dashboard/*` 交友面 + 匹配引擎 + 3500 bot —— **共用底座，非主线**，不得混入 SaaS 收费 | `ls src/app/dashboard` |
 | 另一条产品线 | **Hlua Pass**（streaming / H-Points 会员），`public/pay.html` 即其页面，CTA 指向 Gumroad | `node -e "console.log(require('fs').readFileSync('public/pay.html','utf8').match(/<title>[^<]*/)[0])"` |
 
-> 🔴 **两条产品线目前是串的**：`/pricing` 307 → `/pay.html`（Hlua）。这是 V18 第一优先级问题，
-> 细节与修复计划见 `18_COMMERCIAL_CONTRACT.md`（D4 产出）。
+> 🔴 **两条产品线在生产上仍是串的**（2026-10-22 15:05Z 实测）：
+> `GET https://app.lokfeel.com/pricing` → **307 → /pay.html**（Hlua），`/hlua` → **404**。
+> **但 HEAD 已经修好**：`src/app/(public)/pricing/page.tsx` 里没有 `redirect()`，
+> `/hlua` 页面存在，`npm run check:products` 5 条规则全过（R5「/pricing 是真实页面」）。
+> 也就是说这不是待修的缺陷，而是**待发布的修复** —— 生产停在 `dc102cd`（见 §2）。
+> 细节见 `18_COMMERCIAL_CONTRACT.md`。
 
 ---
 
@@ -31,12 +35,13 @@
 |---|---|---|
 | 仓库 | `github.com/aoshuang99-netizen/lokfeel.com`（public） | `git remote -v` |
 | 分支 | `main`（单人开发，无 PR 流程） | `git branch --show-current` |
-| 基线 commit | `6b247010e257a98bc97ac6b414832dfac21ebd47`（本轮工作提交）· 参考基线 `f62f342` | `git rev-parse HEAD` |
+| 基线 commit | `ce73b3b`（W02 收口提交）· 参考基线 `f62f342` | `git rev-parse HEAD` |
+| 生产实际部署 | **`dc102cd`**（2026-10-21T06:41Z，`state=ready`）—— 比 HEAD 少 **34 个提交 / 93 个文件**，其中 `prisma/` 与迁移脚本差异为 **0 行**（⇒ 这次发布不需要 DB 迁移） | `curl -s -H "Authorization: Bearer $NF_TOKEN" https://api.netlify.com/api/v1/sites/lokfeel.netlify.app/deploys?per_page=5` · `git diff dc102cd..HEAD --stat -- prisma/ \| wc -l` |
 | 本地 vs 远端 | **一致**（`ls-remote` 同 SHA） | `git -c http.proxy=http://127.0.0.1:10808 ls-remote origin refs/heads/main` |
 | 栈 | Next 16.4.2（App Router / Turbopack）· React 19.3 · Prisma 7.10.1（libSQL/Turso）· NextAuth v5 beta | `node -e "const p=require('./package.json');console.log(p.dependencies.next,p.dependencies.react,p.dependencies.prisma)"` |
 | 中间件 | 仓库根 `proxy.ts`（Next 16 要求，不用 `middleware.ts`） | `ls proxy.ts` |
 | 托管 | Netlify 免费计划 + Cloudflare DNS（`app.lokfeel.com` CNAME → `lokfeel.netlify.app`） | `dig +short app.lokfeel.com` |
-| 生产版本可见性 | 🔴 `/api/health` 返回 `"version": "unknown"` ⇒ **无法从运行时确认线上跑的是哪个 commit** | `curl -s https://app.lokfeel.com/api/health \| grep version` |
+| 生产版本可见性 | 🔴 生产 `/api/health` 仍是 `{"status":"healthy","version":"unknown"}`，**没有 commit 字段** ⇒ 线上跑哪个 commit 不可查。**HEAD 已修**：`src/lib/build-info.ts` + `next.config.ts` 构建期内联 `commit/builtAt/version/commitSource`，healthy 与 unhealthy 两个分支都带 ⇒ 发版后一条 `curl` 可证。**未发布前这条能力不存在** | `curl -s https://app.lokfeel.com/api/health`（现状）· `node -e "console.log(require('fs').readFileSync('src/lib/build-info.ts','utf8').length)"` |
 
 > `version: unknown` 不是小瑕疵：V18 要求"当前 HEAD 与生产一致"，而现在**只能靠 Netlify
 > 部署日志间接推断**。已登记为 `MASTER_BACKLOG.md` 的 OPS 项。
@@ -137,7 +142,7 @@
 | 删除链路 | 应用级 `ERASURE_ACTIONS` + `ERASED_STATUS`；**未做过真实删除演练**（OPS-04 的 PASS 是代码级） |
 | 第三方处理者 | 10 家，逐家"删除时是否同步"见 `v17/04_PRIVACY_REFUND_SOP.md` |
 | 日志/备份残留 | 物理上限已写明，无法承诺"彻底删除"（`04` §6） |
-| 测试数据隔离 | 🔴 **V18 D2 正在建**：独立 `file:` 库 + 双组织，不复用生产 URL/Token |
+| 测试数据隔离 | ✅ **V18 已建成**：CI 里 `file:` 本地库 + 双组织夹具（`v18-isolation-proof.mjs`，7 条行为级断言），以及可登录账号夹具（`seed-authed-e2e-user.mjs`，跑完即删）；两个脚本都自带闸门**拒绝远程库**。不复用生产 URL/Token | `node scripts/qa/v18-isolation-proof.mjs --self-test` |
 
 ---
 
