@@ -25,9 +25,17 @@
  *       想改成 `APPROVED`，必须同时填 `approvalRef`（谁、何时、依据）——
  *       没有审批编号的"已批准"等于自己给自己批。
  *
- *   R2. **结账入口必须属于本产品的服务商。**
- *       Connection OS 现在**没有**结账入口（kind: 'none'）。这不是"待办"，是"当前事实"；
- *       把 `pay.html` 挂上来就是 R1 的反面教材。
+ *   R2. **本目录自己卖的产品，未获批时不得挂外部结账入口。**
+ *       判据里多了一个 `relation`：`SOLD_HERE`（本平台销售）与
+ *       `REFERENCED_ONLY`（只是引用来说明边界的外来产品）。
+ *       `SOLD_HERE` + 未获批 + 外部结账 = "卖错产品"的形状 ⇒ 红；
+ *       `REFERENCED_ONLY` 允许有外部结账（Hlua 的结账页本来就不归我们管），
+ *       但它**永远不许是 APPROVED** —— 我们不替别家产品的价格背书。
+ *
+ *       🔴 这个字段是 CI 逼出来的：单测按"全目录一条规则"跑，
+ *      `hlua-pass`（NOT_FOR_SALE + 外部结账）当场被判红；而静态门禁只约束
+ *      `connection-os`，于是同一件事在门禁与单测里有两套规则 —— 那才是真正的风险。
+ *      两条产品线混在一起时，**先分清"谁在卖"**，规则才写得下去。
  *
  *   R3. **退款政策必须可溯源到一条公开承诺。**
  *       每条 policy 都带 `source`（公开页路径）。三个产品可以有不同的天数，
@@ -47,6 +55,14 @@ export type PricingStatus = 'APPROVED' | 'PENDING_APPROVAL' | 'NOT_FOR_SALE';
 
 /** 结账方式：none = 无结账入口（未接入 / 未获批） */
 export type CheckoutKind = 'none' | 'external';
+
+/**
+ * 这个条目在目录里的**身份**：
+ *   · `SOLD_HERE`       —— 本平台销售的产品，定价与结账都要受 R1/R2 约束
+ *   · `REFERENCED_ONLY` —— 只是被引用来说明边界的**外来**产品（Hlua Pass），
+ *                          它有自己的结账页，但不归本目录销售、不归本目录定价
+ */
+export type ProductRelation = 'SOLD_HERE' | 'REFERENCED_ONLY';
 
 export interface RefundPolicy {
   /** 天数；null = 尚无对外承诺（不得对外宣称具体天数） */
@@ -73,6 +89,8 @@ export interface ProductCheckout {
 
 export interface Product {
   id: ProductId;
+  /** 本平台销售 / 仅引用说明边界 —— 决定 R2 是否适用 */
+  relation: ProductRelation;
   brand: string;
   name: string;
   /** 一句话说清"它是什么"，用于定价页首屏 */
@@ -90,6 +108,7 @@ export interface Product {
 export const PRODUCTS: readonly Product[] = [
   {
     id: 'connection-os',
+    relation: 'SOLD_HERE',
     brand: 'LokFeel',
     name: 'LokFeel Connection OS',
     oneLiner:
@@ -119,6 +138,7 @@ export const PRODUCTS: readonly Product[] = [
   },
   {
     id: 'legacy-membership',
+    relation: 'SOLD_HERE',
     brand: 'LokFeel',
     name: 'LokFeel 旧会员（B2C）',
     oneLiner: '交友产品线的订阅会员：每周匹配数、隐身、保险箱、已读回执等。',
@@ -145,6 +165,7 @@ export const PRODUCTS: readonly Product[] = [
   },
   {
     id: 'hlua-pass',
+    relation: 'REFERENCED_ONLY',
     brand: 'Hlua',
     name: 'Hlua Pass',
     oneLiner: '另一条产品线：streaming 与 H-Points 会员（不是 Connection OS）。',
@@ -183,8 +204,9 @@ export function displayPrice(product: Product): string | null {
   return product.pricing.displayPrice;
 }
 
-/** 是否允许给结账入口：必须同时满足"已获批"与"有服务商" */
+/** 是否允许给结账入口：必须"本平台在卖" + "已获批" + "有服务商" */
 export function isPurchasable(product: Product): boolean {
+  if (product.relation !== 'SOLD_HERE') return false;
   if (product.pricing.status !== 'APPROVED') return false;
   if (product.checkout.kind === 'none') return false;
   return Boolean(product.checkout.href);
@@ -219,11 +241,16 @@ export function validateCatalog(products: readonly Product[] = PRODUCTS): string
       }
     }
 
-    // R2：结账入口与状态必须相容
-    if (p.pricing.status !== 'APPROVED' && p.checkout.kind === 'external') {
+    // R2：结账入口与状态必须相容。
+    //     ⚠️ 只对 `SOLD_HERE` 成立：`REFERENCED_ONLY` 是外来产品，
+    //        它有自己的结账页（Hlua 的 /pay.html），本目录既不代售也不背书。
+    if (p.relation === 'SOLD_HERE' && p.pricing.status !== 'APPROVED' && p.checkout.kind === 'external') {
       problems.push(
-        `${p.id}：未获批定价却挂了外部结账入口 ${p.checkout.href} —— 这正是"卖错产品"的形状`,
+        `${p.id}：本地销售但定价未获批，却挂了外部结账入口 ${p.checkout.href} —— 这正是"卖错产品"的形状`,
       );
+    }
+    if (p.relation === 'REFERENCED_ONLY' && p.pricing.status === 'APPROVED') {
+      problems.push(`${p.id}：外来产品不得是 APPROVED —— 我们不替别家产品的价格背书`);
     }
     if (p.checkout.kind === 'none' && p.checkout.href) {
       problems.push(`${p.id}：checkout.kind='none' 但填了 href`);

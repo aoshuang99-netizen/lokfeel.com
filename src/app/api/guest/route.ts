@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { encode } from "next-auth/jwt"
 import { isSafeRedirect } from "@/lib/auth/safe-redirect"
+import { sessionCookieForRequest } from "@/lib/auth/session-cookie"
 
 /**
  * GET /api/guest
@@ -12,10 +13,9 @@ import { isSafeRedirect } from "@/lib/auth/safe-redirect"
  */
 export const dynamic = "force-dynamic"
 
-const COOKIE_NAME =
-  process.env.NODE_ENV === "production"
-    ? "__Secure-authjs.session-token"
-    : "authjs.session-token"
+// cookie 名与 Secure 标记由 `sessionCookieForRequest()` 统一决定 ——
+// 旧写法 `NODE_ENV === 'production'` 会把 http 部署的游客会话写成
+// `__Secure-…`，浏览器在 http 页面上直接丢弃该 cookie（游客登录等于没登录）。
 
 export async function GET(request: Request) {
   const secret = process.env.AUTH_SECRET
@@ -37,14 +37,15 @@ export async function GET(request: Request) {
     guest: true,
   }
 
+  const cookie = sessionCookieForRequest(request)
+
   const sessionToken = await encode({
     token: tokenPayload,
     secret,
-    salt: COOKIE_NAME,
+    salt: cookie.name,
     maxAge: 24 * 60 * 60, // 24 hours for guest sessions
   })
 
-  const isSecure = process.env.NODE_ENV === "production"
   const url = new URL(request.url)
   const rawCallback = url.searchParams.get("callbackUrl") || "/dashboard"
   // EP-S2 (2026-09-04): validate callbackUrl to prevent open-redirect phishing
@@ -55,9 +56,9 @@ export async function GET(request: Request) {
     new URL(callbackUrl, url.origin)
   )
 
-  response.cookies.set(COOKIE_NAME, sessionToken, {
+  response.cookies.set(cookie.name, sessionToken, {
     httpOnly: true,
-    secure: isSecure,
+    secure: cookie.secure,
     sameSite: "lax",
     path: "/",
     maxAge: 24 * 60 * 60,

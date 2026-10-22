@@ -54,6 +54,7 @@
 | **R-12** | 大陆支付可达性未知 | 大陆客户付款 | 无法收款 | 等 D-04 | **OPEN** |
 | **R-13** | 容量风险：1 人 + 20h/周 | 任务堆积 | 关键路径被拖 | 单周 1 主任务 + 2 附属；BLOCKED 写明解除条件 | **OPEN** |
 | **R-14** | 台账/文档漂移（汇总写 25/17，实际 29/13） | 增量交付只改行 | 决策基于错数字 | `check:acceptance` 强制汇总=重算、台账=生成物 | **CLOSED**（2026-10-22 加了门禁） |
+| **R-15** | **git 历史中存在形似真实凭据的命中**：本地跑同版本 gitleaks 扫全历史，520 个提交里 55 处命中 / 12 个文件（`scripts/export-neon.js` 的 Neon 连接串带密码、`.env.prod`/`.env.pull`/`.env.vercel` 的 `VERCEL_OIDC_TOKEN`、`scripts/fix-bot-avatars-*.js` 的 `TURSO_TOKEN`、`.env.test` 的 `AUTH_SECRET`、`public/firebase-diagnostic.html` 的 GCP key） | 这些提交早于扫描门禁建立 | 若其中任何一个仍是**有效**凭据，等于长期公开泄露；CI 只扫增量，永远抓不到 | ① 已确认它们**不在**当前 CI 的增量范围内（门禁扫的是本次推送的提交）；② **是否仍有效、是否需要轮换，只能由人确认**（见 §6 待批 D-09） | **OPEN**（需人工） |
 
 ---
 
@@ -76,3 +77,11 @@
 3. **D-06（生产测试账号）** → 解锁 UX-08/11/12 + V18-08，约 2h。
 
 其余（D-02/03/04）决定的是 G2 付费 Beta 与 GA，不影响 G0/G1。
+
+---
+
+## 6. 需人工确认（不属于工程决策）
+
+| ID | 事项 | 工程侧已做到哪一步 | 需要你回答的问题 |
+|---|---|---|---|
+| **D-09** | **历史提交里的凭据是否仍有效** | 已用与 CI 同版本的 gitleaks（v8.28.0）扫完全部历史，定位到 55 处命中；**没有**在源码里加 allowlist（那会削弱扫描器），也**没有**删除历史（会改写已发布提交） | ① `VERCEL_OIDC_TOKEN`（`.env.prod` / `.env.pull` / `.env.vercel` / `.env.check`）、`TURSO_TOKEN`（`scripts/fix-bot-avatars-*.js`）、Neon 连接串（`scripts/export-neon.js`）、`AUTH_SECRET`（`.env.test`）、`public/firebase-diagnostic.html` 里的 GCP key —— **哪些还活着？** ② 活着的请在控制台**轮换**，轮换后回填到部署环境变量即可，工程侧无需改动。 |

@@ -22,6 +22,7 @@ import {
 import { db } from "@/lib/db";
 import { encode } from "next-auth/jwt";
 import { isSafeRedirect } from "@/lib/auth/safe-redirect";
+import { sessionCookiePolicy } from "@/lib/auth/session-cookie";
 import { publicOriginOf } from "@/lib/http/public-origin";
 import { twitterCallbackUrl } from "@/lib/auth/twitter-oauth";
 
@@ -226,9 +227,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    const COOKIE_NAME = process.env.NODE_ENV === "production"
-      ? "__Secure-authjs.session-token"
-      : "authjs.session-token";
+    // cookie 名 / Secure 标记与 Auth.js 同源同判（见 lib/auth/session-cookie.ts）。
+    const cookie = sessionCookiePolicy(publicOrigin);
 
     const tokenPayload = {
       id: user.id,
@@ -244,7 +244,7 @@ export async function GET(request: NextRequest) {
     const sessionToken = await encode({
       token: tokenPayload,
       secret,
-      salt: COOKIE_NAME,
+      salt: cookie.name,
       maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
@@ -259,8 +259,8 @@ export async function GET(request: NextRequest) {
     // ⚠️ 用 request.url 会把刚登录的用户送到平台部署专用域名，会话 cookie 不会带过去。
     const response = NextResponse.redirect(new URL(destination, publicOrigin));
 
-    const isSecure = process.env.NODE_ENV === "production";
-    response.cookies.set(COOKIE_NAME, sessionToken, {
+    const isSecure = cookie.secure;
+    response.cookies.set(cookie.name, sessionToken, {
       httpOnly: true,
       secure: isSecure,
       sameSite: "lax",

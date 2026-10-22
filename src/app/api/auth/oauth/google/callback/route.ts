@@ -28,6 +28,7 @@ import { exchangeCodeForTokens, decodeIdToken, getGoogleConfig } from "@/lib/aut
 import { db } from "@/lib/db";
 import { encode } from "next-auth/jwt";
 import { isSafeRedirect } from "@/lib/auth/safe-redirect";
+import { sessionCookiePolicy } from "@/lib/auth/session-cookie";
 import { publicOriginOf } from "@/lib/http/public-origin";
 
 export const dynamic = "force-dynamic";
@@ -260,9 +261,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    const COOKIE_NAME = process.env.NODE_ENV === "production"
-      ? "__Secure-authjs.session-token"
-      : "authjs.session-token";
+    // cookie 名 / Secure 标记与 Auth.js 同源同判（见 lib/auth/session-cookie.ts）。
+    // 旧写法按 NODE_ENV 判定，在 http 站点上会写出浏览器直接丢弃的 __Secure- cookie。
+    const cookie = sessionCookiePolicy(publicOrigin);
 
     const tokenPayload = {
       id: user.id,
@@ -278,7 +279,7 @@ export async function GET(request: NextRequest) {
     const sessionToken = await encode({
       token: tokenPayload,
       secret,
-      salt: COOKIE_NAME,
+      salt: cookie.name,
       maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
@@ -297,8 +298,8 @@ export async function GET(request: NextRequest) {
     // 会话 cookie 不会带过去 → 用户表现为"登录成功却仍是未登录"。
     const response = NextResponse.redirect(new URL(destination, publicOrigin));
 
-    const isSecure = process.env.NODE_ENV === "production";
-    response.cookies.set(COOKIE_NAME, sessionToken, {
+    const isSecure = cookie.secure;
+    response.cookies.set(cookie.name, sessionToken, {
       httpOnly: true,
       secure: isSecure,
       sameSite: "lax",

@@ -60,9 +60,36 @@
 |---|---|
 | W01 开始（V18 原文引用） | 25 PASS / 0 FAIL / 17 BLOCKED |
 | W01 D1（逐行重算，已修正汇总） | **29 PASS / 0 FAIL / 13 BLOCKED** |
+| W01 D4 修复后 | **29 PASS / 0 FAIL / 13 BLOCKED**（**未变** —— 本轮改的是「这些结论能不能被复跑」，不是结论本身） |
 
 > 变的不是产品，是**记账**。4 条本来就已经有代码级证据，只是汇总表没跟上。
 > 这类"数字变好"必须能指出具体条目与依据，否则就是自欺。
+
+## 4.1 D4 补救：CI 四条红，四个不同原因（2026-10-22 晚）
+
+`7971fa8`（D4 商业契约）的 CI 是 **10 成功 / 2 跳过 / 4 失败**。逐条读 annotation 后，四条红互不相干：
+
+| Job | 现象 | 根因 | 性质 |
+|---|---|---|---|
+| **E2E** | `CTRL-1/2` + `SEC-01..07` 全 `HTTP 401` | 会话 cookie 名按 `NODE_ENV` 判、Auth.js 按**站点协议**判；`next start` + http 必然分叉 | **产品缺陷**（http 部署登不进去） |
+| **Test (Jest)** | 「目录自检通过」红 | 目录模型缺「谁在卖」这一维：Hlua（外来产品）被"未获批不得挂外部结账"误判 | 规则缺陷（非测试写错） |
+| **Lint** | `react/no-unescaped-entities` 0→2 | 定价页 JSX 正文里两个 ASCII 双引号 | 笔误 |
+| **Secret scan** | leaks detected | `AUTH_SECRET: ci-only-…` 命中本仓 `lokfeel-nextauth-secret` 规则（形状匹配，与熵无关） | 环境写法 |
+
+修法与依据：
+
+- E2E → 新增 `src/lib/auth/session-cookie.ts`（唯一规则），4 处签发点收敛；隔离取证新增 **AUTH-01**，会话没被识别就 `BLOCKED` 退出，不再吐十条一样的红。见 `v18/19_SESSION_COOKIE_LAYER.md`。
+- Jest → `Product.relation = SOLD_HERE | REFERENCED_ONLY`；`isPurchasable()` 先看 relation 再看 status。
+- Lint → 改中文引号（不写 `&quot;`，因为模板是中文文案）。
+- Secret scan → CI 里**运行时生成**随机密钥写进 `$GITHUB_ENV`，源码不留该形状；**没有**加 allowlist。
+
+> 这一轮的收获不在"修好了"，而在**归因**：十条一样的红差点把"一个 cookie 名"
+> 记成"七个安全问题"。先让失败可分辨，再谈修复。
+
+另外新登记一条风险（**需人工确认**）：用与 CI 同版本的 gitleaks 扫全历史，
+520 个提交里有 55 处命中，涉及 `VERCEL_OIDC_TOKEN` / `TURSO_TOKEN` / Neon 连接串 /
+`.env.test` 的 `AUTH_SECRET` / 一个 GCP key。它们早于扫描门禁，CI 只扫增量永远抓不到。
+**是否仍有效、要不要轮换，只能由人回答** → `RISK_AND_DECISIONS.md` 的 R-15 / D-09。
 
 ## 5. 下周目标（滚动）
 

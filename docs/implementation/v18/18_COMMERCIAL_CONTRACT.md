@@ -106,6 +106,33 @@ V18 原文说"LokFeel 与 Hlua 两条线"。实测下来是三条，而第三条
 
 ---
 
+## 4.1 一个字段是被 CI 逼出来的：`relation`
+
+单测里「目录自检通过」这条**在 CI 红了**，原因不是代码写错，而是**模型缺一个维度**：
+
+```
+hlua-pass:  pricing.status = 'NOT_FOR_SALE'   （我们不卖它）
+            checkout.kind = 'external'        （它有结账页，但在别处）
+            ⇒ 规则「未获批 + 外部结账 = 卖错产品」当场判它红
+```
+
+但 Hlua 的结账页**本来就该存在**（已有客户在用）。所以真正缺的不是"更宽的例外"，
+而是「**谁在卖**」这个事实：
+
+| `relation` | 含义 | 允许外部结账？ | 允许 `APPROVED`？ | 本目录可代收？ |
+|---|---|---|---|---|
+| `SOLD_HERE` | 本平台销售（Connection OS / 旧会员） | 仅在已获批时 | 需 `approvalRef` | 是 |
+| `REFERENCED_ONLY` | 只被引用来说明边界（Hlua Pass） | 是（那是它的页面） | **否** | 否，永远 |
+
+`isPurchasable()` 现在先看 `relation`，再看 `status` —— 于是"把 Hlua 标成 APPROVED
+就能在本目录收钱"这条最省事的路被堵住了。静态门禁（`check:products`）只约束
+`connection-os`，行为单测约束**全目录**；两条规则现在同源（都从 `validateCatalog()` 的语义出发）。
+
+> 教训：**"两条产品线混在一起"不只是文案问题，它会逼出错误的规则。**
+> 先分清谁在卖，规则才写得下去。
+
+---
+
 ## 5. 复跑
 
 ```bash

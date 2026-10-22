@@ -39,11 +39,16 @@ describe('产品目录 · 现状', () => {
 
   it('Hlua 的结账只在它自己的页面上，且被标成外部产品', () => {
     const p = getProduct('hlua-pass');
+    // 🔴 relation 是"谁在卖"的唯一标记：Hlua 不归本目录销售，只引用
+    expect(p.relation).toBe('REFERENCED_ONLY');
     expect(p.checkout.kind).toBe('external');
     expect(p.checkout.href).toBe('/pay.html');
     // 它是「不可购买」的吗？—— 不，它是另一条业务，允许有外部结账
     // 但 status 为 NOT_FOR_SALE 时 isPurchasable() 仍必须为 false（本目录不代售）
     expect(isPurchasable(p)).toBe(false);
+    // 而且即便有人把它的 status 改成 APPROVED，isPurchasable 也必须仍然 false
+    // （外来产品永远不经过本目录结账）—— 这条由 relation 挡住，不由 status 挡住
+    expect(isPurchasable({ ...p, pricing: { status: 'APPROVED', displayPrice: '$12.99' } })).toBe(false);
   });
 
   it('退款承诺各自可溯源：旧会员 14 天（/refunds）、Hlua 7 天（pay.html）', () => {
@@ -113,5 +118,25 @@ describe('产品目录 · 反例（证明规则在承重）', () => {
   it('产品 id 重复 ⇒ 判红', () => {
     const problems = validateCatalog([getProduct('connection-os'), getProduct('connection-os')]);
     expect(problems.join('\n')).toContain('重复');
+  });
+
+  it('外来产品被标成 APPROVED ⇒ 判红（我们不替别家的价格背书）', () => {
+    const problems = validateCatalog([
+      {
+        ...getProduct('hlua-pass'),
+        pricing: {
+          status: 'APPROVED',
+          displayPrice: '$12.99',
+          approvalRef: 'D-02 2026-11-01',
+        },
+      },
+    ]);
+    expect(problems.join('\n')).toContain('外来产品不得是 APPROVED');
+  });
+
+  it('外来产品挂外部结账 ⇒ 不判红（这是它与"卖错产品"的区别所在）', () => {
+    // 正对照：如果这条也红，说明 R2 被写成"一律禁止外部结账"，
+    // 那 Hlua 的入口就只能靠删除来"合规" —— 用户反而找不到它。
+    expect(validateCatalog([getProduct('hlua-pass')])).toEqual([]);
   });
 });

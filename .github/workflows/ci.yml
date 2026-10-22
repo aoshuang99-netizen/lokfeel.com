@@ -356,10 +356,6 @@ jobs:
       DATABASE_AUTH_TOKEN: ''
       # 冒烟阶段不需要任何外部服务；缺失时应用走降级路径（G-4 已验证）
       E2E_BASE_URL: http://127.0.0.1:3000
-      # 🔴 只给本 job 的**一次性会话签名密钥**，与生产 AUTH_SECRET 无关。
-      #    没有它 `/api/auth/login` 无法签发 JWT ⇒ 双组织隔离取证拿不到会话
-      #    ⇒ 所有"越权被拒"会因 401 假绿（脚本会判 BLOCKED，不会判 PASS）。
-      AUTH_SECRET: ci-only-not-a-real-secret
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -368,6 +364,17 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npx prisma generate
+
+      # 🔴 会话签名密钥：**每次运行随机生成**，不写进仓库。
+      #    ① 写死一个值会命中本仓 `.gitleaks.toml` 的 `lokfeel-nextauth-secret`
+      #       规则（形状 = `AUTH_SECRET` + 24 字符以上的值）。上一轮 CI 就是被它判红的；
+      #       正确做法是让源码里**没有**这个形状，而不是往 allowlist 里加白名单（那会削弱扫描器）。
+      #    ② 这份密钥只服务本 job 的本地 `next start`，与生产 AUTH_SECRET 无关。
+      #       随机化比写死更接近真实：没人能用公开仓库里的固定值伪造本地会话。
+      #    ③ 缺了它 `/api/auth/login` 无法签发 JWT ⇒ 隔离取证拿不到会话 ⇒ 一串 401 假绿。
+      - name: 生成本 job 一次性会话签名密钥
+        run: |
+          node -e 'console.log("AUTH_SECRET=" + require("crypto").randomBytes(32).toString("hex"))' >> "$GITHUB_ENV"
 
       - name: 准备本地库（基线 schema + 全部自定义批次）
         run: |

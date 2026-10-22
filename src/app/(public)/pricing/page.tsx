@@ -123,7 +123,7 @@ export default function PricingPage() {
               </li>
               <li className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <span>Verified Outcome：结果要能被验证，不接受"跑完就算"。</span>
+                <span>Verified Outcome：结果要能被验证，不接受「跑完就算」。</span>
               </li>
               <li className="flex items-start gap-3">
                 <Scale className="w-5 h-5 text-primary shrink-0 mt-0.5" />

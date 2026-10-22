@@ -4,6 +4,7 @@ import { verifyPassword } from "@/lib/auth/auth"
 import { encode } from "next-auth/jwt"
 import { isSafeRedirect } from "@/lib/auth/safe-redirect"
 import { isSameSiteRequest, resolveSiteHosts } from "@/lib/http/public-origin"
+import { sessionCookieForRequest } from "@/lib/auth/session-cookie"
 
 /**
  * POST /api/auth/login
@@ -27,10 +28,11 @@ export const dynamic = "force-dynamic"
 // Open-redirect guard shared with the OAuth callbacks (isSafeRedirect) so every
 // auth entry-point enforces the same allow-list. See src/lib/auth/safe-redirect.ts.
 
-// NextAuth JWT cookie names (matches next-auth v5 defaults)
-const COOKIE_NAME = process.env.NODE_ENV === "production"
-  ? "__Secure-authjs.session-token"
-  : "authjs.session-token"
+// NextAuth JWT cookie 的名字与 Secure 标记**不在这里定**。
+// 曾经这里写的是 `NODE_ENV === 'production' ? '__Secure-…' : 'authjs.…'`，
+// 而 Auth.js 是按「站点 URL 的协议」判定的。`next start`（NODE_ENV=production）
+// 但站点是 http（CI / 自托管 / 内网）时，两者分叉 ⇒ 本接口 200 下发 cookie，
+// 后续接口 401。规则已收敛到 `sessionCookieForRequest()`，见该文件开头的表格。
 
 export async function POST(request: NextRequest) {
   try {
@@ -152,14 +154,15 @@ export async function POST(request: NextRequest) {
       tokenVersion: (user as any).tokenVersion || 0,
     }
 
-    // CRITICAL: salt MUST match the cookie name exactly.
-    // NextAuth's getToken() uses cookieName as the salt for decryption.
-    // In production: "__Secure-authjs.session-token"
-    // In development: "authjs.session-token"
+    // CRITICAL: 名字既是 cookie 名，也是 JWT 的 salt —— 两者必须来自同一处，
+    // 否则 decode 出来的东西 Auth.js 读不到（表现为"登录成功但一直 401"）。
+    // 生产 https → "__Secure-authjs.session-token"；http（CI / 自托管）→ "authjs.session-token"。
+    const cookie = sessionCookieForRequest(request)
+
     const sessionToken = await encode({
       token: tokenPayload,
       secret,
-      salt: COOKIE_NAME,
+      salt: cookie.name,
       maxAge: 7 * 24 * 60 * 60, // 7 days (matches config.ts)
     })
 
@@ -187,10 +190,9 @@ export async function POST(request: NextRequest) {
     })
 
     // Set the NextAuth session cookie (same parameters NextAuth uses internally)
-    const isSecure = process.env.NODE_ENV === "production"
-    response.cookies.set(COOKIE_NAME, sessionToken, {
+    response.cookies.set(cookie.name, sessionToken, {
       httpOnly: true,
-      secure: isSecure,
+      secure: cookie.secure,
       sameSite: "lax",
       path: "/",
       maxAge: 7 * 24 * 60 * 60, // 7 days

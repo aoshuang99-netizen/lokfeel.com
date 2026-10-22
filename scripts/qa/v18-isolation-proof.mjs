@@ -42,7 +42,8 @@
  * ── 退出码 ───────────────────────────────────────────────────────
  *   0 = 全部通过
  *   1 = 🔴 有断言失败（含出现越权）
- *   2 = BLOCKED：环境不具备（连不上服务端 / 没有 @libsql/client / 登录拿不到会话）
+ *   2 = BLOCKED：环境不具备（连不上服务端 / 没有 @libsql/client / 登录拿不到会话 /
+ *       会话未被 Auth.js 识别）
  */
 
 import crypto from 'node:crypto';
@@ -83,6 +84,15 @@ export function isRemoteDb(target) {
 /** 只允许打本机；打别处必须显式 --allow-remote-base */
 export function isLocalHost(host) {
   return host === '127.0.0.1' || host === 'localhost' || host === '::1' || host === '[::1]';
+}
+
+/**
+ * `/api/auth/session` 的响应是否代表"会话真的被识别"。
+ * 纯函数，便于自证：登录接口回 200 但 cookie 名不被 Auth.js 认时，
+ * 这个响应是 `{}`（没有 user.id），而不是报错。
+ */
+export function sessionRecognized(json) {
+  return Boolean(json && typeof json === 'object' && json.user && json.user.id);
 }
 
 /* ─────────────────────────── 夹具定义 ─────────────────────────── */
@@ -167,8 +177,26 @@ async function login(email) {
     method: 'POST',
     body: JSON.stringify({ email, password: PASSWORD }),
   });
-  const hasSession = [...c.jar.keys()].some((k) => /session-token/.test(k));
-  return { client: c, status: res.status, hasSession, body: res.text.slice(0, 200) };
+  const jarKeys = [...c.jar.keys()];
+  const hasSession = jarKeys.some((k) => /session-token/.test(k));
+  return { client: c, status: res.status, hasSession, jarKeys, body: res.text.slice(0, 200) };
+}
+
+/**
+ * 会话探针：`/api/auth/session` 是 Auth.js 自己的读侧，不经过任何业务代码。
+ *
+ * 为什么需要它：2026-10-22 那轮 CI 里 CTRL-1 / SEC-01..07 **十条全是 HTTP 401**，
+ * 看上去像"隔离全线崩溃"，其实只有一个原因 —— 写侧签的 cookie 名（按 NODE_ENV 判）
+ * 与 Auth.js 读侧的 cookie 名（按站点协议判）不一致，`next start` + http 下必然分叉。
+ *
+ * 十条一样的红比一条准确的红**信息量更低**：它把"一个前置失败"伪装成"七个安全问题"。
+ * 所以这里先单独判一次「会话是否被识别」，不成立就直接 BLOCKED 退出，
+ * 而不是让下面每条断言各自去撞 401。
+ */
+async function probeSession(c) {
+  const r = await c.req('/api/auth/session');
+  const userId = sessionRecognized(r.json) ? r.json.user.id : null;
+  return { status: r.status, userId, body: r.text.slice(0, 200) };
 }
 
 /* ─────────────────────────── 造数与清理 ─────────────────────────── */
@@ -328,6 +356,7 @@ async function main() {
     for (const [who, r] of [['A', a], ['MEM', mem], ['B', b]]) {
       if (r.status !== 200 || !r.hasSession) {
         console.error(`  ✗ ${who} 登录失败：HTTP ${r.status}，会话 cookie ${r.hasSession ? '有' : '无'}`);
+        console.error(`    收到的 cookie：${r.jarKeys.join(', ') || '(无)'}`);
         console.error(`    ${r.body}`);
         console.error('  ⇒ BLOCKED：拿不到会话时，下面所有"拒绝"都会假绿，故不继续。');
         // 让失败在 annotations 里可见（job logs 要 admin 权限，annotation 不用）
@@ -338,6 +367,30 @@ async function main() {
       }
     }
     console.log('  ✓ A / MEM / B 三条会话均建立');
+
+    // 🔴 会话层前置判定（AUTH-01）：登录 200 不等于会话被识别。
+    //    写侧 cookie 名与 Auth.js 读侧不一致时，登录仍是 200，之后全是 401。
+    console.log('\n②b 会话层（登录 200 ≠ 会话可用）');
+    const probes = [
+      ['A', await probeSession(a.client)],
+      ['MEM', await probeSession(mem.client)],
+      ['B', await probeSession(b.client)],
+    ];
+    const deadSessions = probes.filter(([, p]) => !p.userId);
+    if (deadSessions.length) {
+      const detail = deadSessions
+        .map(([who, p]) => `${who}: /api/auth/session 无 user.id（HTTP ${p.status}）`)
+        .join('；');
+      console.error(`  ✗ AUTH-01 ${detail}`);
+      console.error(`    下发的 cookie：${a.jarKeys.join(', ') || '(无)'}`);
+      console.error(`    会话体：${deadSessions[0][1].body}`);
+      console.error(
+        '  ⇒ BLOCKED：这是**会话层**失败（cookie 名 / 签名 / salt 不一致），不是租户隔离结论。',
+      );
+      console.log(`::error title=V18 隔离取证 BLOCKED::AUTH-01 会话未被识别 —— ${detail}`);
+      process.exit(2);
+    }
+    console.log('  ✓ AUTH-01 三条会话均被 Auth.js 识别（/api/auth/session 有 user.id）');
 
     console.log('\n③ 正对照（先证明"能读自己的"，否则拒绝断言无意义）');
     const aOwn = await a.client.req(`/api/v1/missions/${FX.missionA}`);
@@ -561,6 +614,13 @@ function selfTest() {
     ok('500 不算拒绝（服务端炸了 ≠ 拦住）', !denied(500));
     ok('401 不算越权拦截（那是没会话，另说）', !denied(401));
   }
+
+  // ⑥ AUTH-01 判别器：登录 200 但会话没被识别时，必须判为"未识别"
+  //    （变异：若把 `{}` 当成已登录，这个门禁就变成永远通过）
+  ok('会话体有 user.id ⇒ 已识别', sessionRecognized({ user: { id: 'v18_user_a' } }));
+  ok('会话体为空对象 ⇒ 未识别（cookie 名对不上时的真实形状）', !sessionRecognized({}));
+  ok('会话体 user 无 id ⇒ 未识别', !sessionRecognized({ user: {} }));
+  ok('会话体为 null / 非对象 ⇒ 未识别', !sessionRecognized(null) && !sessionRecognized('ok'));
 
   const failed = cases.filter((c) => !c.ok);
   console.log(`\n${failed.length ? '✗' : '✅'} 自证 ${cases.length} 条：${cases.length - failed.length} 通过 / ${failed.length} 失败`);
