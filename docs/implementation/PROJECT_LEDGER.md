@@ -31,7 +31,7 @@
 |---|---|---|
 | 仓库 | `github.com/aoshuang99-netizen/lokfeel.com`（public） | `git remote -v` |
 | 分支 | `main`（单人开发，无 PR 流程） | `git branch --show-current` |
-| 基线 commit | `f62f34265595313a7666c3230913ade6dff54e74` | `git rev-parse HEAD` |
+| 基线 commit | `6b247010e257a98bc97ac6b414832dfac21ebd47`（本轮工作提交）· 参考基线 `f62f342` | `git rev-parse HEAD` |
 | 本地 vs 远端 | **一致**（`ls-remote` 同 SHA） | `git -c http.proxy=http://127.0.0.1:10808 ls-remote origin refs/heads/main` |
 | 栈 | Next 16.4.2（App Router / Turbopack）· React 19.3 · Prisma 7.10.1（libSQL/Turso）· NextAuth v5 beta | `node -e "const p=require('./package.json');console.log(p.dependencies.next,p.dependencies.react,p.dependencies.prisma)"` |
 | 中间件 | 仓库根 `proxy.ts`（Next 16 要求，不用 `middleware.ts`） | `ls proxy.ts` |
@@ -68,14 +68,33 @@
 > 冷启动另计：V17 `08` 实测移动端 4G 首访 LCP **6284ms**、暖机 3388ms；桌面冷启动
 > `/api/health` TTFB 曾达 13.20s（Netlify 免费计划休眠）。本表是**暖机值**，两者不可混用。
 
+### 3.1 复测（2026-10-22 08:4xZ，经本机代理，含跨境链路）
+
+| 端点 | 状态 | 说明 |
+|---|---|---|
+| `/` | 200 | 落地页 |
+| `/pricing` | **307 → `/pay.html`** | 🔴 **仍是上线前行为** |
+| `/hlua` | **404** | 🔴 新页尚未部署 |
+| `/pay.html` | 200 | Hlua 付款页（不动） |
+| `/workspace` | 307 → `/login?callbackUrl=%2Fworkspace` | 守卫正常 |
+| `/api/health` | 200 | `status: healthy` · `version: unknown` · `payments.configured: false`（缺同 4 键） |
+
+🔴 **本轮全部改动都没有上线**：提交信息统一带 `[skip netlify]`（V18 只批准到"可发布"，
+不批准正式发布）。因此 `/pricing` 仍是 307、`/hlua` 仍 404 ——
+**代码级证据 ≠ 生产事实**，报告里两者必须分开写。
+
 ---
 
 ## 4. CI 事实
 
 | 项 | 事实 | 取证 |
 |---|---|---|
-| `f62f342` 的 check-runs | **23 项 = 21 成功 / 2 跳过 / 0 失败** | `curl -s .../commits/f62f342/check-runs` |
+| `6b24701`（本轮 HEAD） | **CI workflow：13 成功 / 2 跳过 / 0 失败**；全部 check-runs：**18 = 16 成功 / 2 跳过 / 0 失败** | `.../actions/runs/39747005219/jobs` · `.../commits/6b24701/check-runs` |
+| `656954b`（同一轮的中间提交） | CI workflow：**13 成功 / 2 跳过 / 0 失败** | `.../actions/runs/39746527223` |
+| `f62f342` 的 check-runs | 23 项 = 21 成功 / 2 跳过 / 0 失败 | `curl -s .../commits/f62f342/check-runs` |
 | 跳过项 | `Perf 基线实跑（手动）`、`DCO sign-off check` | 同上 |
+| 口径提示 | 「CI workflow 的 job 数」与「commit 的 check-runs 数」不是一回事（后者还含 CodeQL / Firebase key restrict / 存活探针 cron） | 两处 API 对比 |
+| 本轮新增能力 | **行为级隔离取证**（`CTRL-1/2` + `SEC-01..07` 真实 HTTP + 真实库），SEC-08 仍 BLOCKED | e2e job 的「双组织隔离取证」步骤绿 |
 | 必需 job | Typecheck · Lint · Build · Test(Jest) · E2E · Migration · Secret scan · Dependency audit · 租户作用域审计 · 支付凭据自证 · 上线预检口径 · 存活探针（cron） | `.github/workflows/ci.yml` |
 | 判读入口 | job logs 的 REST 需 admin（403）⇒ 失败先看 `check-runs/{id}/annotations`（公开可读） | 见 `docs/implementation/v17/07` §5 |
 

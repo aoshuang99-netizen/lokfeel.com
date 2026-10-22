@@ -85,3 +85,4 @@
 | ID | 事项 | 工程侧已做到哪一步 | 需要你回答的问题 |
 |---|---|---|---|
 | **D-09** | **历史提交里的凭据是否仍有效** | 已用与 CI 同版本的 gitleaks（v8.28.0）扫完全部历史，定位到 55 处命中；**没有**在源码里加 allowlist（那会削弱扫描器），也**没有**删除历史（会改写已发布提交） | ① `VERCEL_OIDC_TOKEN`（`.env.prod` / `.env.pull` / `.env.vercel` / `.env.check`）、`TURSO_TOKEN`（`scripts/fix-bot-avatars-*.js`）、Neon 连接串（`scripts/export-neon.js`）、`AUTH_SECRET`（`.env.test`）、`public/firebase-diagnostic.html` 里的 GCP key —— **哪些还活着？** ② 活着的请在控制台**轮换**，轮换后回填到部署环境变量即可，工程侧无需改动。 |
+| **D-10** | **是否发布**（把本轮改动推到 Netlify） | 全部提交带 `[skip netlify]`，生产仍是旧代码：`/pricing` 仍 307→`pay.html`、`/hlua` 仍 404。CI 在 `6b24701` 全绿 | 现在发布，还是等 D-01/D-02（退款与定价）一起发？**分开发**能先修掉"卖错产品"，但会先上线一个"定价页没有价格"的状态（这是刻意的，也已在页面上写明）。V18 纪律：正式发布需人工确认。 |
