@@ -120,6 +120,8 @@ done
 # ④ 取消能力在未配置支付时是"诚实失败"，不是 500
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://app.lokfeel.com/api/payments/cancel
 # 预期：401（未登录）。登录态下应为 404/409/503 之一，绝不能是 500
+# ⚠️ 发布**前**实测是 404 —— 这条路由还不存在。所以它同时是「版本真的换了」的第二个证据
+#    （第一个是 ① 的 commit 字段；发布前 /api/health 里根本没有 commit 这个键）
 
 # ⑤ 支付缺口仍是可查的一行
 curl -s https://app.lokfeel.com/api/health | jq '.payments'
