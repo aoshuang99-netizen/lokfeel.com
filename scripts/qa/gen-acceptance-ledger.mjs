@@ -72,7 +72,7 @@ function main() {
     process.exit(1);
   }
 
-  const { matrix, summary, text } = built;
+  const { summary, text } = built;
 
   // ① 矩阵自身：汇总表必须等于逐行重算
   if (summary.problems.length) {

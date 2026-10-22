@@ -186,6 +186,17 @@ jobs:
       - name: 定价一致性（算术 + 可溯源）
         run: node scripts/qa/verify-pricing-consistency.mjs
 
+      # 产品线不得串线（V18-02）。守一句话：
+      #   `/pay.html` 是 Hlua 的结账页，Connection OS 的任何入口都不许指向它。
+      # 此前 /pricing /plans /subscribe /membership /pass 全部 302 到 pay.html ——
+      # 点"定价"买到的是 streaming 会员。静态源断言按"先剥注释再匹配"实现
+      # （本仓栽过：块注释被只过滤 // 的守卫读成真代码）。
+      - name: 产品目录自证（变异）
+        run: node scripts/qa/verify-product-catalog.mjs --self-test
+
+      - name: 商业契约（产品线不得串线）
+        run: node scripts/qa/verify-product-catalog.mjs
+
       # 退款链路：真实 Stripe SDK + 真实 HTTP + 本地 Stripe 协议服务端。
       # 不需要任何密钥，所以能进 CI —— 防止「退款只在发布前手验过一次」。
       - name: 退款链路协议层端到端
@@ -348,7 +359,7 @@ jobs:
       # 🔴 只给本 job 的**一次性会话签名密钥**，与生产 AUTH_SECRET 无关。
       #    没有它 `/api/auth/login` 无法签发 JWT ⇒ 双组织隔离取证拿不到会话
       #    ⇒ 所有"越权被拒"会因 401 假绿（脚本会判 BLOCKED，不会判 PASS）。
-      AUTH_SECRET: v18-ci-isolation-only-secret-not-used-in-production-32b
+      AUTH_SECRET: ci-only-not-a-real-secret
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
