@@ -41,13 +41,13 @@
 | ID | 风险 | 触发条件 | 影响 | 缓解 | 状态 |
 |---|---|---|---|---|---|
 | **R-01** | **付款页卖的是另一个产品**（`/pricing` → Hlua Pass，streaming/H-Points） | 用户点"定价" | 客户付钱买错东西 → 退款争议 + 声誉 | 代码已拆（`18_COMMERCIAL_CONTRACT.md` + `check:products`）；**生产尚未部署** ⇒ 线上仍是旧行为，解除要看部署后实测 | **MITIGATING** |
-| **R-02** | 承诺 "cancel in one click" 但站内无取消入口 | 用户想退订 | 消费者保护风险；差评 | V18-04 做真实取消；做不到就先撤文案 | **MITIGATING** |
+| **R-02** | 承诺 "cancel in one click" 但站内无取消入口 | 用户想退订 | 消费者保护风险；差评 | 已做真实取消（`GET/POST /api/payments/cancel` + `/dashboard/subscription#manage-subscription`）；`/refunds` 的指路牌改成真实路径；Hlua 明确写"由 Gumroad 收款、在 Gumroad 取消" | **CLOSED（2026-10-22）** |
 | **R-03** | 退款承诺 7 天 vs 14 天并存 | 用户读两页 | 口径冲突，争议时按宽者 | 等 D-01；工程先扫全量触点 | **OPEN** |
 | **R-04** | 租户隔离只有**代码级**证据，无真实双组织 | 多租户客户入驻 | 越权可能未被发现 | V18-01 建隔离库 + 8 类负向实测 | **MITIGATING** |
-| **R-05** | 生产版本不可见（`/api/health` → `version: "unknown"`） | 出事需要定位 | 无法确认线上 commit，回滚判断靠猜 | 注入构建期版本号（`GIT_SHA`）到 health | **OPEN** |
+| **R-05** | 生产版本不可见（`/api/health` → `version: "unknown"`） | 出事需要定位 | 无法确认线上 commit，回滚判断靠猜 | 已在 `next.config.ts` **构建期**注入 version/commit/builtAt（`lib/build-info.ts`），health 两个分支都回；生产待发版后复测 | **OPEN** |
 | **R-06** | 无错误追踪脱敏（Sentry 无 `beforeSend`） | 线上报错 | 可能把 PII 送进第三方 | 加 `beforeSend` 白名单（OPS-06） | **OPEN** |
 | **R-07** | 移动端首访 LCP 6284ms | 移动网络首访 | 首次访问者流失 | 先治 TTFB + JS（图片已排除） | **OPEN** |
-| **R-08** | 触控目标 16px 高（首页 13/18、登录页 26/31 < 24px） | 移动端操作 | WCAG 2.5.8 AA 不达标，误触 | V18-06 提到 ≥24px，优先 44px | **OPEN** |
+| **R-08** | 触控目标 16px 高（首页 13/18、登录页 26/31 < 24px） | 移动端操作 | WCAG 2.5.8 AA 不达标，误触 | 公开面已修（生产实测 `/login` 3 个 20px、`/pay.html` 1 个 17px → 全部 ≥44px），并加 CI 门禁 `mobile.spec.ts`；**认证面 3 个核心页**由 `authed-mobile.spec.ts` 覆盖，其余 10 屏仍未测 | **MITIGATING** |
 | **R-09** | Netlify 免费计划冷启动（健康检查曾 13.2s） | 长时间无流量后 | 首个访客体验极差 / 探针误报 | 探针已容忍冷启动（20s + 重试）；付费计划待决策 | **OPEN** |
 | **R-10** | 本地依赖不全（缺 `ts-jest`/`@libsql/client`） | 需要本地验证 | 反馈回路只有 CI 一条，单轮 10–20min | 纯 Node 门禁本地跑；DB 相关靠 CI | **OPEN** |
 | **R-11** | 变异测试污染真实源码（已发生 3 次） | 脚本被 SIGKILL | 源码带着变异被提交 | 副本变异 + 落盘快照 + 启动自愈 + 收尾 `git status` 全看 | **MITIGATING** |
@@ -85,4 +85,5 @@
 | ID | 事项 | 工程侧已做到哪一步 | 需要你回答的问题 |
 |---|---|---|---|
 | **D-09** | **历史提交里的凭据是否仍有效** | 已用与 CI 同版本的 gitleaks（v8.28.0）扫完全部历史，定位到 55 处命中；**没有**在源码里加 allowlist（那会削弱扫描器），也**没有**删除历史（会改写已发布提交） | ① `VERCEL_OIDC_TOKEN`（`.env.prod` / `.env.pull` / `.env.vercel` / `.env.check`）、`TURSO_TOKEN`（`scripts/fix-bot-avatars-*.js`）、Neon 连接串（`scripts/export-neon.js`）、`AUTH_SECRET`（`.env.test`）、`public/firebase-diagnostic.html` 里的 GCP key —— **哪些还活着？** ② 活着的请在控制台**轮换**，轮换后回填到部署环境变量即可，工程侧无需改动。 |
-| **D-10** | **是否发布**（把本轮改动推到 Netlify） | 全部提交带 `[skip netlify]`，生产仍是旧代码：`/pricing` 仍 307→`pay.html`、`/hlua` 仍 404。CI 在 `6b24701` 全绿 | 现在发布，还是等 D-01/D-02（退款与定价）一起发？**分开发**能先修掉"卖错产品"，但会先上线一个"定价页没有价格"的状态（这是刻意的，也已在页面上写明）。V18 纪律：正式发布需人工确认。 |
+| **D-10** | **是否发布**（把本轮改动推到 Netlify） | 全部提交带 `[skip netlify]`，生产仍是旧代码：`/pricing` 仍 307→`pay.html`、`/hlua` 仍 404。CI 在 `6b24701` 全绿 | 现在发布，还是等 D-01/D-02（退款与定价）一起发？**分开发**能先修掉"卖错产品"，但会先上线一个"定价页没有价格"的状态（这是刻意的，也已在页面上写明）。V18 纪律：正式发布需人工确认。 || **D-10** | **是否发布**（把本轮改动推到 Netlify） | 全部提交带 `[skip netlify]`，生产仍是旧代码：`/pricing` 仍 307→`pay.html`、`/hlua` 仍 404。CI 在 `6b24701` 全绿 | 现在发布，还是等 D-01/D-02（退款与定价）一起发？**分开发**能先修掉"卖错产品"，但会先上线一个"定价页没有价格"的状态（这是刻意的，也已在页面上写明）。V18 纪律：正式发布需人工确认。 |
+| **D-11** | **是否给 `Subscription` 加 `provider` 列** | 现状：`stripeSubscriptionId` 一列被 **Stripe 与 Creem 共用**（`src/lib/creem.ts` 注释写着 "reuse field"）⇒ 从库里分不出这笔订阅属于谁。本轮用 `resolveCancelProvider()` 按"当前只配了一家凭据"推断，两家都配时**拒绝**自助取消（409）。加列是更干净的解法，但要动生产 Turso（snapshot→plan→apply→verify），属不可逆迁移 | ① 批准并发版窗口内迁移 ② 维持现状（两家都配时拒绝） ③ 干脆约定"同一时间只用一家"并写进运维手册 |

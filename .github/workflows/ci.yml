@@ -421,6 +421,14 @@ jobs:
       - name: 双组织隔离取证（V18-01 · 真实 HTTP + 真实库）
         run: node scripts/qa/v18-isolation-proof.mjs --base=http://127.0.0.1:3000 --db=ci-e2e.db
 
+      # 🔴 认证面移动端实测的夹具（V18-06 · 2026-10-22）
+      #    在此之前，CI 里**没有任何可登录账号**（库是每次 db push 现建的），
+      #    于是"登录后的页面在 390/360 下什么样"永远测不到 —— 而那才是产品本体。
+      #    本步只写本地 file: 库（脚本自带闸门，拒绝远程库），邮箱/口令写进 $GITHUB_ENV，
+      #    供下一步的 Playwright 走**真实登录表单**。跑完由 `--cleanup` 精确删除。
+      - name: 造认证面夹具（登录态实测用）
+        run: node scripts/qa/seed-authed-e2e-user.mjs --db=ci-e2e.db
+
       - name: 安装 Playwright 浏览器
         run: npx playwright install --with-deps chromium
 
@@ -433,6 +441,10 @@ jobs:
       # 证明的是「检测器有牙齿且不是恒红」，不是「今天生产多快」。
       - name: 首屏指标采集器自证（变异）
         run: node scripts/perf/measure-vitals.mjs --self-test
+
+      - name: 清理认证面夹具
+        if: always()
+        run: node scripts/qa/seed-authed-e2e-user.mjs --db=ci-e2e.db --cleanup
 
       - name: 失败时打印服务端日志
         if: failure()
