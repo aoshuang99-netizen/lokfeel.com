@@ -8,7 +8,7 @@
 > 规则：**工程不替产品做产品决策。** 遇到产品/法律/资金事项，登记 + 给出选项与后果，
 > 不擅自选一个继续跑。
 
-**更新于**：2026-10-22（V18 D1）
+**更新于**：2026-10-23（V18.3 发布准备）
 
 ---
 
@@ -44,10 +44,11 @@
 | **R-02** | 承诺 "cancel in one click" 但站内无取消入口 | 用户想退订 | 消费者保护风险；差评 | 已做真实取消（`GET/POST /api/payments/cancel` + `/dashboard/subscription#manage-subscription`）；`/refunds` 的指路牌改成真实路径；Hlua 明确写"由 Gumroad 收款、在 Gumroad 取消" | **CLOSED（2026-10-22）** |
 | **R-03** | 退款承诺 7 天 vs 14 天并存 | 用户读两页 | 口径冲突，争议时按宽者 | 等 D-01；工程先扫全量触点 | **OPEN** |
 | **R-04** | 租户隔离只有**代码级**证据，无真实双组织 | 多租户客户入驻 | 越权可能未被发现 | V18-01 建隔离库 + 8 类负向实测 | **MITIGATING** |
-| **R-05** | 生产版本不可见（`/api/health` → `version: "unknown"`） | 出事需要定位 | 无法确认线上 commit，回滚判断靠猜 | 已在 `next.config.ts` **构建期**注入 version/commit/builtAt（`lib/build-info.ts`），health 两个分支都回；生产待发版后复测 | **OPEN** |
+| **R-05** | 生产版本不可见（`/api/health` → `version: "unknown"`，**无 `commit` 字段**） | 出事需要定位 | 无法确认线上 commit，回滚判断靠猜 | `src/lib/build-info.ts` 已做构建期内联；**但"有代码"≠"线上有字段"**：发布候选 `bba8c36` 未部署，生产仍是 `dc102cd`。判据已钉进冒烟脚本（`C1`：`commit === 发布 SHA`） | **OPEN（待发布后复验）** |
 | **R-06** | 无错误追踪脱敏（Sentry 无 `beforeSend`） | 线上报错 | 可能把 PII 送进第三方 | 加 `beforeSend` 白名单（OPS-06） | **OPEN** |
-| **R-07** | 移动端首访 LCP 6284ms | 移动网络首访 | 首次访问者流失 | 先治 TTFB + JS（图片已排除） | **OPEN** |
-| **R-08** | 触控目标 16px 高（首页 13/18、登录页 26/31 < 24px） | 移动端操作 | WCAG 2.5.8 AA 不达标，误触 | 公开面已修（生产实测 `/login` 3 个 20px、`/pay.html` 1 个 17px → 全部 ≥44px），并加 CI 门禁 `mobile.spec.ts`；**认证面 3 个核心页**由 `authed-mobile.spec.ts` 覆盖，其余 10 屏仍未测 | **MITIGATING** |
+| **R-07** | 首屏性能未达标：真实 Chromium + CDP 节流实测 `/` LCP **3784ms**（暖态 1024ms）、`/pricing` 3044ms、`/login` 3172ms（**暖态无改善**）、`/pay.html` 2348ms | 移动网络首访 | 首次访问者流失 | 见 `v18/36_PERFORMANCE_BASELINE.md`：**判定 `PERF_TARGET_NOT_MET`**。两个既有假设被推翻 —— TTFB 只占 LCP **8–20%**（不是 42–68%），LCP 元素是 `H1` 且图片传输 ≈0KB（图片不是瓶颈）；`/login` 暖态不改善 ⇒ 瓶颈在主线程（239KB / 13 req / TBT 1153ms）。**不拿"改了图片"当性能结论** | **OPEN（已量化，未修复）** |
+| **R-08** | 触控目标 16px 高（首页 13/18、登录页 26/31 < 24px） | 移动端操作 | WCAG 2.5.8 AA 不达标，误触 | 公开面已修（生产实测 `/login` 3 个 20px、`/pay.html` 1 个 17px → 全部 ≥44px）；认证面 9 屏 + `/workspace` 6 页签 + **legacy 6 屏 × 4 视口**（`bba8c36` 27 条全绿）均已进门禁。**新门禁共抓到 3 个真缺陷**（`/console` 62×16、768 链接 119×20、1440 页脚 4×16px），均已修 | **CLOSED（2026-10-23，覆盖到此为止）** |
+| **R-16** | **文档自身漂移（本轮实测）**：`30_PREDEPLOY_GATE` 写"1440 只统计不判红"（代码已改为四视口同判）、`35` 写缓存组"8 条"（实际 10 条）、`PROJECT_LEDGER` 写"站内无取消入口"（R-02 已关闭）、`MASTER_BACKLOG` 有一行尾部残留 `\|bscription"` | 只改代码/只改结论，不同步改文档 | 与人交接时按错文档决策 | 2026-10-23 逐份核对并修：门禁报告按 `bba8c36` 全量重写数字；`35` 改 10 条；`PROJECT_LEDGER` 取消入口改"已有，待发布生效"；`MASTER_BACKLOG` 修残留并补 V18.3 十项 | **MITIGATING**（本轮已清；靠"改结论必须同轮改文档"的习惯守） |
 | **R-09** | Netlify 免费计划冷启动（健康检查曾 13.2s） | 长时间无流量后 | 首个访客体验极差 / 探针误报 | 探针已容忍冷启动（20s + 重试）；付费计划待决策 | **OPEN** |
 | **R-10** | 本地依赖不全（缺 `ts-jest`/`@libsql/client`） | 需要本地验证 | 反馈回路只有 CI 一条，单轮 10–20min | 纯 Node 门禁本地跑；DB 相关靠 CI | **OPEN** |
 | **R-11** | 变异测试污染真实源码（已发生 3 次） | 脚本被 SIGKILL | 源码带着变异被提交 | 副本变异 + 落盘快照 + 启动自愈 + 收尾 `git status` 全看 | **MITIGATING** |
@@ -85,5 +86,5 @@
 | ID | 事项 | 工程侧已做到哪一步 | 需要你回答的问题 |
 |---|---|---|---|
 | **D-09** | **历史提交里的凭据是否仍有效** | 已用与 CI 同版本的 gitleaks（v8.28.0）扫完全部历史，定位到 55 处命中；**没有**在源码里加 allowlist（那会削弱扫描器），也**没有**删除历史（会改写已发布提交） | ① `VERCEL_OIDC_TOKEN`（`.env.prod` / `.env.pull` / `.env.vercel` / `.env.check`）、`TURSO_TOKEN`（`scripts/fix-bot-avatars-*.js`）、Neon 连接串（`scripts/export-neon.js`）、`AUTH_SECRET`（`.env.test`）、`public/firebase-diagnostic.html` 里的 GCP key —— **哪些还活着？** ② 活着的请在控制台**轮换**，轮换后回填到部署环境变量即可，工程侧无需改动。 |
-| **D-10** | **是否发布**（把本轮改动推到 Netlify） | 全部提交带 `[skip netlify]`，生产仍是旧代码：`/pricing` 仍 307→`pay.html`、`/hlua` 仍 404。CI 在 `6b24701` 全绿 | 现在发布，还是等 D-01/D-02（退款与定价）一起发？**分开发**能先修掉"卖错产品"，但会先上线一个"定价页没有价格"的状态（这是刻意的，也已在页面上写明）。V18 纪律：正式发布需人工确认。 || **D-10** | **是否发布**（把本轮改动推到 Netlify） | 全部提交带 `[skip netlify]`，生产仍是旧代码：`/pricing` 仍 307→`pay.html`、`/hlua` 仍 404。CI 在 `6b24701` 全绿 | 现在发布，还是等 D-01/D-02（退款与定价）一起发？**分开发**能先修掉"卖错产品"，但会先上线一个"定价页没有价格"的状态（这是刻意的，也已在页面上写明）。V18 纪律：正式发布需人工确认。 |
+| **D-10** | **是否发布**（把本轮改动推到 Netlify） | 全部提交带 `[skip netlify]`，生产仍是旧代码：`/pricing` 仍 307→`pay.html`、`/hlua` 仍 404。发布候选 CI 见 `30_PREDEPLOY_GATE.md` | 现在发布，还是等 D-01/D-02（退款与定价）一起发？**分开发**能先修掉"卖错产品"，但会先上线一个"定价页没有价格"的状态（这是刻意的，也已在页面上写明）。V18 纪律：正式发布需人工确认。 |
 | **D-11** | **是否给 `Subscription` 加 `provider` 列** | 现状：`stripeSubscriptionId` 一列被 **Stripe 与 Creem 共用**（`src/lib/creem.ts` 注释写着 "reuse field"）⇒ 从库里分不出这笔订阅属于谁。本轮用 `resolveCancelProvider()` 按"当前只配了一家凭据"推断，两家都配时**拒绝**自助取消（409）。加列是更干净的解法，但要动生产 Turso（snapshot→plan→apply→verify），属不可逆迁移 | ① 批准并发版窗口内迁移 ② 维持现状（两家都配时拒绝） ③ 干脆约定"同一时间只用一家"并写进运维手册 |

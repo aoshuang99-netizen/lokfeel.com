@@ -8,7 +8,7 @@
 >
 > **单周主任务 ≤ 1 个，附属修复 ≤ 2 个**（V18 §7）。超了就是并行过多，不是效率高。
 
-**基线**：`f62f342` · **本周主任务**：V18-01 租户隔离可证明 · **更新于**：2026-10-22（D1）
+**基线**：`bba8c36` · **本周主任务**：V18.3 受控 Beta 发布准备 · **更新于**：2026-10-23（V18.3）
 
 ---
 
@@ -26,6 +26,26 @@
 
 ---
 
+## 0.5 V18.3 受控 Beta 发布准备（WB18-30 ~ WB18-39 · 发布候选 `bba8c36`）
+
+> 纪律：**批准进入"发布准备"，不等于批准发布。** `D-10` 未点头 ⇒ 生产继续停在 `dc102cd`。
+> 全部提交带 `[skip netlify]`，所以"CI 全绿"没有触发任何部署。
+
+| ID | 任务 | 优先级 | 状态 | 交付物 / 卡点 |
+|---|---|---|---|---|
+| WB18-30 | 发布前最终门禁 | P0 | **DONE** | `v18/30_PREDEPLOY_GATE.md`：九条前置全 PASS，结论「工程侧 GO / 授权侧 BLOCKED」 |
+| WB18-31 | 受控 Beta 发布 | P0 | **BLOCKED（D-10）** | 批准后按 `22_RELEASE_RUNBOOK.md` §3 执行，产出 `31_DEPLOYMENT_RECORD.md`；**未批准 ⇒ 不部署** |
+| WB18-32 | 生产五项冒烟 | P0 | **DONE（可执行）/ 五项 NOT_EXECUTED** | `scripts/qa/prod-smoke.mjs`（15 条，三态 PASS/FAIL/UNVERIFIED）；判据严格取 Runbook §4 五项。**对当前生产实跑 9 PASS / 6 FAIL**，6 条红即"生产仍是旧代码"的六个症状（无 `commit` 字段、`/pricing` 307、`/hlua` 404、`cancel` 404、两条 `public`）⇒ 发布后必须全绿 |
+| WB18-33 | 安全与支付关闭 | P0 | **DONE** | `v18/33_SECURITY_PAYMENT_GATE.md`：支付四键缺失=设计，7 入口 503 稳定码；D-09 凭据哈希比对（`.env.test` 7 键与生产**全部不同**） |
+| WB18-34 | Legacy B2C 四视口 | P1 | **DONE（27 条全绿）** | `v18/34_LEGACY_MOBILE_AUDIT.md` + `tests/e2e-ci/legacy-mobile.spec.ts`；纠正任务书路由（`/matches`、`/profile` 实测 404）；抓到 2 个真缺陷 |
+| WB18-35 | 登录缓存与 307 稳定性 | P1 | **DONE（缓存修好 / ERR_FAILED 收窄未根治）** | `v18/35_AUTH_NAVIGATION_STABILITY.md`；7 个认证入口改 `private, no-store`，10 条响应头门禁 |
+| WB18-36 | 性能专项 | P1 | **DONE（判定 PERF_TARGET_NOT_MET）** | `v18/36_PERFORMANCE_BASELINE.md`：5 冷 5 暖真实采样，推翻"TTFB 占 42–68%"与"图片是瓶颈"两个前提；**不伪称通过** |
+| WB18-37 | 真实用户 Mission 试点 | P1 | **BLOCKED（D-06）** | 需生产账号 + 真实用户；`37_CUSTOMER_PILOT.md` 待写 |
+| WB18-38 | 商业决策收口 | P1 | **DONE** | `v18/38_HUMAN_DECISION_REGISTER.md`：D-01~D-11 逐条给选项与后果，工程不代拍 |
+| WB18-39 | 7 天观察 | P2 | **BLOCKED（无发布）** | 观察期只能从发布日起算，`39_SEVEN_DAY_OBSERVATION.md` 待写 |
+
+---
+
 ## 1. V18 十项任务（含负责人与解除条件）
 
 | ID | 任务 | 优先级 | 状态 | 负责人 | 解除条件 / 备注 |
@@ -35,7 +55,7 @@
 | V18-03 | 退款承诺统一 | P0 | **BLOCKED** | 产品 | D-01 定 7 或 14 天；**工程不自行选**。盘点与冲突清单已出（`20_REFUND_PROMISES.md`，C1/C2/C3） |
 | V18-04 | 取消订阅能力 | P0 | **DONE** | 工程 | `GET/POST /api/payments/cancel` + 20 条单测；判定收敛到 `evaluate()`，GET 与 POST 不可能错位；服务商归属 `resolveCancelProvider()` fail-closed（两家都配 ⇒ 409）。UI 在 `/dashboard/subscription#manage-subscription` |
 | V18-05 | 支付凭据与真实收款 | 付费 P0 | **BLOCKED** | 用户 | 4 个凭据 + 一笔可退小额真实交易（D-05） |
-| V18-06 | 关键触控目标修复 | 公开 P0 | **DONE（公开 + 认证）** | 工程 | 生产实测 4 页：`/login` 3 个 20px、`/pay.html` 1 个 17px ⇒ 撑到 44px。门禁两组：`mobile.spec.ts`（2 视口 × 6 公开路由）+ `authed-mobile.spec.ts`（2 视口 × 9 屏，globalSetup 登录 + storageState），判据共用 `waitForStableDom` + 24px + 溢出 ≤1px。**新门禁第一次跑就抓到真缺陷**：`/console`「查看全部→」62×16（已修）。`774a1d6` 全绿。**页签级（/workspace 五阶段）仍未测** |
+| V18-06 | 关键触控目标修复 | 公开 P0 | **DONE（公开 + 认证 + 页签 + legacy）** | 工程 | 生产实测 4 页：`/login` 3 个 20px、`/pay.html` 1 个 17px ⇒ 撑到 44px。门禁四组：`mobile.spec.ts`（2 视口 × 6 公开路由）+ `authed-mobile.spec.ts`（2 视口 × 9 屏）+ `workspace-tabs.spec.ts`（2 视口 × 6 页签，先证 `aria-current` 转移）+ `legacy-mobile.spec.ts`（**4 视口 × 6 屏**，`bba8c36` 27 条全绿）。判据共用 `waitForStableDom` + 24px + 溢出 ≤1px。**新门禁共抓到 3 个真缺陷**：`/console`「查看全部→」62×16、768「Discover people →」119×20、1440 页脚 4 个 16px 链接（均已修） |
 | V18-07 | 性能瓶颈治理 | P1 | TODO | 工程 | 先复现 3388ms 基线，再动 TTFB/JS |
 | V18-08 | 生产账号 E2E | P0 | **BLOCKED** | 工程+用户 | 需生产测试账号（D-05） |
 | V18-09 | 真实客户试点 3–5 家 | P1 | **BLOCKED** | 产品 | 有客户才有数据，`NO_DATA` 不是 0 |
@@ -68,7 +88,7 @@
 | ID | 问题 | 优先级 | 状态 | 证据 |
 |---|---|---|---|---|
 | OPS-11 | `/api/health` 的 `version` 返 `"unknown"` ⇒ **线上跑哪个 commit 不可从运行时确认** | P1 | **DONE（代码）** | `src/lib/build-info.ts` + `next.config.ts` 构建期内联；`/api/health` 现回 `version/commit/builtAt/commitSource`。**生产仍 unknown**，等发版后复测 |
-| BIZ-05 | 站内**没有取消订阅入口**，而 `pay.html` 承诺 "cancel in one click" | P0 | **DONE** | `src/app/api/payments/cancel/route.ts` + `/dashboard/subscription#manage-subscription`；`/refunds` 的指路牌已改为真实路径，并补充"Hlua Pass 由 Gumroad 收款、取消在 Gumroad" |bscription" |
+| BIZ-05 | 站内**没有取消订阅入口**，而 `pay.html` 承诺 "cancel in one click" | P0 | **DONE** | `src/app/api/payments/cancel/route.ts` + `/dashboard/subscription#manage-subscription`；`/refunds` 的指路牌已改为真实路径，并补充"Hlua Pass 由 Gumroad 收款、取消在 Gumroad" |
 | BIZ-06 | 两套价格互不相干（`plans.ts` vs `pay.html`），代码里的价用户看不到 | P0 | **DONE（V18-02）** | `npm run check:pricing` |
 | BIZ-07 | **工作区订阅的退款承诺自相矛盾**：`/refunds` 写「首次订阅 14 天」，`/pricing` 写「没有已生效的退款承诺」，`pay.html` 写「7 天」 | P0 | **BLOCKED（D-01）** | `docs/implementation/v18/20_REFUND_PROMISES.md`（C1/C2/C3） |
 | DOC-02 | 会话 cookie 名按 `NODE_ENV` 判、Auth.js 按协议判 ⇒ http 部署登不进去（表现为"登录 200，之后全 401"） | P0 | **DONE** | `v18/19_SESSION_COOKIE_LAYER.md`；`tests/auth/session-cookie.test.ts` |

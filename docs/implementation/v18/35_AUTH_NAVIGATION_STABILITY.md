@@ -69,7 +69,8 @@ Cache-Control: private, no-store, max-age=0, must-revalidate
 
 ### 1.5 让这条结论可以被 CI 证伪
 
-新增 `tests/e2e-ci/cache-headers.spec.ts`（8 条），打真实请求读响应头：
+新增 `tests/e2e-ci/cache-headers.spec.ts`（**10 条** = 7 个认证入口 + 2 个端点 + 1 条反证），
+打真实请求读响应头：
 
 - 7 个认证入口：`must contain no-store` **且** `must not contain public`
   （只查前一半不够 —— `public, no-store` 这种自相矛盾的值也能过）
@@ -122,7 +123,8 @@ Cache-Control: private, no-store, max-age=0, must-revalidate
 |---|---|---|
 | `774a1d6` 之前 | 18 条各登一次 | 约 6/18 ≈ 33% 的**用例**失败（不是 33% 的登录失败） |
 | `774a1d6` 之后 | 登录 1 次 | 0（该轮 42 条全绿） |
-| `1170073` | 78 条 | 见 §3 |
+| `1170073` | 85 条（结构枚举） | 24 条新版面全绿；3 条交互探针红（选择器问题，非登录） |
+| `bba8c36`（发布候选） | 85 条（结构枚举） | E2E job **success**，零失败；缓存 10 条全绿 |
 
 **影响范围**：仅影响"同一浏览器短时间内重复整页登录"这一种形态。
 真实用户一次会话只登一次，因此**对终端用户的影响未被证实**（不是"没有"，是"没有证据"）。

@@ -3,8 +3,8 @@
 > 一页回答一个问题：**现在按 Runbook 发版，会不会把已经验证过的东西搞坏？**
 > 本文只写可复算的事实与命令。取不到的值写 `UNKNOWN`，不写估计值。
 
-- 核验时间：2026-10-23 07:00–07:35Z
-- 发布候选（Release SHA）：`1170073`
+- 核验时间：2026-10-23 07:00–08:10Z
+- 发布候选（Release SHA）：`bba8c36`（CI 17 项：15 成功 / 2 跳过 / 0 失败）
 - 生产现行（Production Commit）：`dc102cd`
 - 生产域名：`app.lokfeel.com`（Netlify `lokfeel.netlify.app` + Cloudflare 代理）
 
@@ -14,10 +14,10 @@
 
 | 项 | 结论 | 依据 |
 |---|---|---|
-| HEAD 与远端一致 | **PASS** | 本地 `1170073` == `refs/heads/main`（`ls-remote` 核对） |
+| HEAD 与远端一致 | **PASS** | 本地 `bba8c36` == `origin/main`（`git rev-parse` / `ls-remote` 核对） |
 | 工作树干净 | **PASS** | `git status --short` 空 |
-| 发布候选 CI | **PASS** | 见 §3.1（`d922bf9`：20 成功 / 2 跳过 / 0 失败，Lint 已 PASS） |
-| 需要数据库迁移 | **不需要** | `git diff dc102cd..1170073 -- prisma/` = **0 文件**，迁移脚本 = **0 文件** |
+| 发布候选 CI | **PASS** | 见 §3.1：17 项 **15 成功 / 2 跳过 / 0 失败**，含 E2E 浏览器冒烟 success |
+| 需要数据库迁移 | **不需要** | `git diff dc102cd..bba8c36 -- prisma/` = **0 文件**，迁移脚本 = **0 文件** |
 | 回滚目标可用 | **PASS** | 部署 `6ad85eb3122dcb59f86a64c3`（`dc102cd`，state=ready） |
 | **是否可发** | **工程侧 GO / 授权侧 BLOCKED** | `D-10` 未批准 ⇒ **不执行部署** |
 
@@ -31,11 +31,11 @@
 
 | 项 | 值 |
 |---|---|
-| `git rev-parse HEAD` | `11700735588867cc72c7d15a037251f6de44dfc8` |
-| `git ls-remote origin refs/heads/main` | 同上 |
+| `git rev-parse HEAD` | `bba8c36` |
+| `git ls-remote origin refs/heads/main` | 同上（`bba8c36`） |
 | 工作树 | 干净（无未提交改动） |
-| 与生产差距 | **43 个提交 / 100 个文件 / +14,700 −459** |
-| `prisma/` 差异 | `git diff --name-only dc102cd..HEAD -- prisma \| wc -l` = **0** |
+| 与生产差距 | **47 个提交 / 110 个文件 / +16,262 −487** |
+| `prisma/` 差异 | `git diff --stat dc102cd..HEAD -- prisma/` = **空** |
 | 迁移脚本差异 | `git diff --name-only dc102cd..HEAD -- scripts/tenancy scripts/connection \| wc -l` = **0** |
 
 ### 2.2 生产构建身份（发布前基线）
@@ -45,7 +45,7 @@
 ```
 
 - **没有 `commit` 字段** ⇒ 这正是 OPS-11 要解决的那件事，也是"发布成功"最硬的判据：
-  **发布前它不存在，发布后它必须等于 `1170073`。**
+  **发布前它不存在，发布后它必须等于 `bba8c36`。**
 - `version: "unknown"` 是旧实现的证据（读 `npm_package_version`，Netlify 直接起 Node ⇒ 恒为 unknown）。
 - 首次读到的 `dbLatency: 4770` **不是缓存假象**：随后连打三次得到 `138 / 10 / 6`ms。
   响应头是 `cache-control: no-store,max-age=0` + `cf-cache-status: DYNAMIC`。
@@ -114,27 +114,35 @@ Netlify 站点级共 **44** 个变量。与发布相关的关键项：
 
 | # | 判据 | 结论 | 证据 |
 |---|---|---|---|
-| 1 | 头提交 CI 全绿 | **PASS**（`d922bf9`） | 20 成功 / 2 跳过（Perf 手动、DCO）/ **0 失败**；Lint 15:53:05→15:54:39 success ⇒ W02 里"Lint 仍在跑"的疑问已闭合 |
+| 1 | 头提交 CI 全绿 | **PASS**（`bba8c36`） | 17 项 **15 成功 / 2 跳过（Perf 手动、DCO）/ 0 失败**；另有 CodeQL run `39920104205` success。Lint 15:53:05→15:54:39 success ⇒ W02 里"Lint 仍在跑"的疑问已闭合 |
 | 2 | 构建身份可读 | **PASS（逻辑）/ 待发布复验** | `tests/lib/build-info.test.ts` 覆盖非法 SHA→unknown；CI Build 通过。生产出现 `commit` 字段只能在发布后验证 |
 | 3 | 验收台账不漂移 | **PASS** | `npm run check:acceptance` → `42 条 = 29 PASS / 0 FAIL / 13 BLOCKED` |
 | 4 | 商业契约不串线 | **PASS** | `npm run check:products` → **5/5**（含 9 条自证）；本轮被 R2 抓过一次并已修 |
 | 5 | 未接入支付仍是合法状态 | **PASS** | `/api/health.payments.configured=false`、`missing` 恰为 4 个键；CI `支付凭据灌注自证` success |
 | 6 | 双组织隔离是行为级证据 | **PASS** | CI `租户作用域审计（跨租户风险）` success；Jest 内 `withTenant` 真相表与 `discloseSubject()` fail-closed 用例 |
-| 7 | 移动端无溢出、触控 ≥24px | **PASS（`d922bf9` 的 42 条）/ 本轮机扩到 78 条** | 见 §3.1 |
+| 7 | 移动端无溢出、触控 ≥24px | **PASS（85 条全绿，含 4 视口 legacy）** | 见 §3.1 |
 | 8 | 数据库无待迁移差异 | **PASS** | §2.5；CI `Migration`（含 `schema 漂移棘轮`）success |
 | 9 | 服务端认证导航通 | **PASS** | CI `认证面导航契约探针`（纯 HTTP 3 轮）success |
 
 ### 3.1 E2E 用例数的变化（本轮）
 
-| 组 | `d922bf9` | `1170073` | 说明 |
+| 组 | `d922bf9` | `bba8c36` | 构成 |
 |---|---|---|---|
 | 公开面移动端 | 12 | 12 | 2 视口 × 6 路由 |
 | 认证面 9 屏 | 18 | 18 | globalSetup + storageState |
-| `/workspace` 页签 | 12 | 12 | 每页签先证 `aria-current` 转移 |
-| **legacy B2C** | 0 | **24** | 4 视口 × 6 屏（WB18-34） |
-| legacy 交互探针 | 0 | **3** | 只读 |
-| **认证页缓存头** | 0 | **8** | 7 个入口 + `/api/health` + `/api/auth/session` + `/` 反证 |
-| **合计** | **42** | **78** | |
+| `/workspace` 页签 | 12 | 12 | 2 视口 × 6 页签，每页签先证 `aria-current` 转移 |
+| **legacy B2C 版面** | 0 | **24** | **4 视口 × 6 屏**（WB18-34） |
+| legacy 交互探针 | 0 | **3** | 只读（资料编辑 / 连接空态 CTA / 聊天出路） |
+| **认证页缓存头** | 0 | **10** | 7 个认证入口 + `/api/health` + `/api/auth/session` + `/` 反证 |
+| **合计** | **42** | **85** | 2×(6+9+6) + 6 + 27 + 10 |
+
+> ⚠️ **85 是静态枚举值**：对 6 个 spec 文件的数组长度与循环结构逐个数出来的
+> （`VIEWPORTS`=2、`ROUTES`=6、`AUTHED_ROUTES`=9、`VIEWS`=6、`LEGACY_VIEWPORTS`=4 ×
+> `LEGACY_ROUTES`=6 + 3 探针、`AUTH_ENTRY`=7 + 3）。
+> CI 的 `passed` 计数在**无 token 时读不到**（job log 需 admin、Playwright 报告是需鉴权的 artifact），
+> 所以这里不写"CI 报告 85 passed"，只写"结构上共 85 条，且 E2E job 的结论是 success"。
+> 上一版本文写「78 条」，是当时把缓存组误记为 8 条（实际 10 条：7+2+1）导致的估算偏差，
+> `35_AUTH_NAVIGATION_STABILITY.md` 已同步更正。
 
 > 用例变多不等于更严格，但这一轮的三组各自守的是**之前完全没有证据**的地方：
 > legacy 线一条版面证据都没有、认证页缓存策略从没人验过。
@@ -165,7 +173,7 @@ Netlify 站点级共 **44** 个变量。与发布相关的关键项：
 
 1. 发版提交的**标题与正文都不能**出现 `[skip netlify]`（否则 Netlify 不构建）。
 2. 构建日志里 `next build` 的 `Compiled successfully` 与 Netlify 的 `Deploy is live`。
-3. 部署完成后立刻 `curl -s https://app.lokfeel.com/api/health`，**`commit` 必须等于 `1170073`**。
+3. 部署完成后立刻 `curl -s https://app.lokfeel.com/api/health`，**`commit` 必须等于 `bba8c36`**。
    只要这一条不成立，后面所有"看起来正常"都不算数。
 4. `/pricing` 必须 200（不再 307 到 Hlua Pass）、`/hlua` 必须 200。
 5. 前 10 分钟盯 5xx 与函数冷启动（预期首批请求 3–5s，属正常）。
@@ -178,7 +186,8 @@ Netlify 站点级共 **44** 个变量。与发布相关的关键项：
 |---|---|---|
 | 生产错误率基线 | **UNKNOWN** | 无 Sentry 读取凭据 |
 | 发布后五项冒烟 | **未执行** | `D-10` 未批准，生产仍是 `dc102cd`（见 `32_PRODUCTION_SMOKE_EVIDENCE.md` 的前置条件） |
-| 1440 桌面触控尺寸 | **未覆盖** | 本组是移动端补证；桌面只统计不判红，见 `34_LEGACY_MOBILE_AUDIT.md` |
+| 1440 桌面触控尺寸 | **已覆盖**（不再是缺口） | 本轮改为**四视口同一把尺子**，1440 也判红；当时只报出页脚 4 个 16px 链接，已修。原表格写"桌面只统计不判红"是**过期表述**，代码里那段 annotation 分支本就是死代码 —— 见 `34_LEGACY_MOBILE_AUDIT.md` §2 |
+| `/dashboard/chats/[roomId]` 聊天输入区 | **仍无证据** | 夹具没有真实会话 + 长连接页面无法稳定测量 ⇒ UX-08 继续 BLOCKED 的**唯一**剩余项 |
 | 真实扣款 | **NOT_APPLICABLE** | 支付四键缺失，属设计 |
 
 ---
@@ -189,4 +198,4 @@ Netlify 站点级共 **44** 个变量。与发布相关的关键项：
 
 **执行侧：BLOCKED。** `D-10` 未获批准，本轮**不部署**。
 `22_RELEASE_RUNBOOK.md` §3 的动作清单已经可以照着执行；
-一旦批准，从"开始发布"到"`commit` 字段等于 `1170073`"预计 5–8 分钟（含构建）。
+一旦批准，从"开始发布"到"`commit` 字段等于 `bba8c36`"预计 5–8 分钟（含构建）。

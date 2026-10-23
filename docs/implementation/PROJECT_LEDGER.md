@@ -6,7 +6,7 @@
 > 规则：本文件只写**可复现的事实**。取不到的数据写 `UNKNOWN` 并附取证命令，不写估计值。
 > 每条事实后面跟一条能当场跑的命令 —— 与 `07_EVIDENCE_LENS.md` 同一套纪律。
 
-**最后核对**：2026-10-22（V18 W02 · 15:05Z 复核）· 仓库 `nexus-app/` · 分支 `main`
+**最后核对**：2026-10-23（V18.3 发布前门禁 · 08:10Z 复核）· 仓库 `nexus-app/` · 分支 `main`
 
 ---
 
@@ -35,9 +35,9 @@
 |---|---|---|
 | 仓库 | `github.com/aoshuang99-netizen/lokfeel.com`（public） | `git remote -v` |
 | 分支 | `main`（单人开发，无 PR 流程） | `git branch --show-current` |
-| 基线 commit | `3046f2b`（W02 收口提交）· 参考基线 `f62f342` | `git rev-parse HEAD` |
-| CI 现状 | `3046f2b` = **17 项检查：0 失败**（仅 Perf 手动与 DCO 两项按设计跳过）；E2E 共 **42 条**：公开 12 + 认证 18 + `/workspace` 页签 12 | `curl -s "https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/commits/3046f2b/check-runs?per_page=100"` |
-| 生产实际部署 | **`dc102cd`**（2026-10-21T06:41Z，`state=ready`）—— 比 HEAD 少 **34 个提交 / 93 个文件**，其中 `prisma/` 与迁移脚本差异为 **0 行**（⇒ 这次发布不需要 DB 迁移） | `curl -s -H "Authorization: Bearer $NF_TOKEN" https://api.netlify.com/api/v1/sites/lokfeel.netlify.app/deploys?per_page=5` · `git diff dc102cd..HEAD --stat -- prisma/ \| wc -l` |
+| 基线 commit | `bba8c36`（V18.3 发布候选）· 上一基线 `3046f2b` | `git rev-parse HEAD` |
+| CI 现状 | `bba8c36` = **17 项检查：15 成功 / 2 跳过 / 0 失败**（跳过项=Perf 手动、DCO）；另有 CodeQL run `39920104205` success。E2E 共 **85 条（结构枚举）**：公开 12 + 认证 18 + `/workspace` 页签 12 + legacy 四视口 27 + 缓存头 10 + 冒烟 6 | `curl -s "https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/commits/bba8c36/check-runs?per_page=100"` |
+| 生产实际部署 | **`dc102cd`**（2026-10-21T06:41Z，`state=ready`，部署 ID `6ad85eb3122dcb59f86a64c3`）—— 比 HEAD 少 **47 个提交 / 110 个文件 / +16,262 −487**，其中 `prisma/` 与迁移脚本差异为 **0 行**（⇒ 这次发布不需要 DB 迁移） | `curl -s -H "Authorization: Bearer $NF_TOKEN" https://api.netlify.com/api/v1/sites/lokfeel.netlify.app/deploys?per_page=5` · `git diff --stat dc102cd..HEAD -- prisma/ \| wc -l` |
 | 本地 vs 远端 | **一致**（`ls-remote` 同 SHA） | `git -c http.proxy=http://127.0.0.1:10808 ls-remote origin refs/heads/main` |
 | 栈 | Next 16.4.2（App Router / Turbopack）· React 19.3 · Prisma 7.10.1（libSQL/Turso）· NextAuth v5 beta | `node -e "const p=require('./package.json');console.log(p.dependencies.next,p.dependencies.react,p.dependencies.prisma)"` |
 | 中间件 | 仓库根 `proxy.ts`（Next 16 要求，不用 `middleware.ts`） | `ls proxy.ts` |
@@ -127,7 +127,7 @@
 | 支付接入 | **未接入**。7 个入口统一 503 + `PAYMENT_NOT_CONFIGURED`（按端点实测：公共端点匿名 503 / 需登录 401 / `GET checkout` 405） | `npm run verify:payment:off` |
 | 真实交易 | **0 笔**（从未发生） | Stripe/Creem 后台 |
 | 真实客户 | **0 个** | 同上 + DB |
-| 取消订阅入口 | **站内不存在**（全仓与 cancel 相关的只有 webhook 被动处理） | `grep -rn "cancelSubscription\|billing-portal" src` |
+| 取消订阅入口 | ✅ **站内已有**（V18 补）：`GET/POST /api/payments/cancel` + `/dashboard/subscription#manage-subscription`；Hlua 明确写"由 Gumroad 收款、在 Gumroad 取消"。⚠️ 生产仍是旧代码（`/api/payments/cancel` 实测 404）⇒ 待发布生效 | `grep -rn "payments/cancel" src` · `curl -s -o /dev/null -w "%{http_code}" https://app.lokfeel.com/api/payments/cancel` |
 | 对外价格 | **两套互不相干**：`src/config/plans.ts` $19.99/月·$149.99/年 vs `public/pay.html` $12.99/$99.99/$32.99 | `npm run check:pricing` |
 | 退款承诺 | `/refunds` 写 **14 天**；`pay.html:167` 写 **7 天** —— 待人工裁决（`RISK_AND_DECISIONS.md` D-01） | `grep -n "天" public/pay.html` |
 | 法律主体 | **未确定**（数据控制者是谁尚无答案） | — |
