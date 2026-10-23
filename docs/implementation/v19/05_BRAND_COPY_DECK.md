@@ -51,3 +51,23 @@
 - [ ] 错误文案给出下一步
 - [ ] Consent 三要素齐全
 - [ ] 中文与英文按钮长度可共存（按钮不换行溢出，390px 实测）
+
+## 5. 落地处置表（2026-10-23，方案 C 选型通过后）
+
+> 原则：**逐条对照真实代码，不是照抄任务书**。每条给出处置与证据；改了的写 commit，不改的写理由。
+
+| §1 行 | 处置 | 依据 |
+|---|---|---|
+| 首页主标题 | **保留现有**（"Describe the outcome. Get a workspace that runs it."） | 现有标题已通过 02 审计（Connection OS 表达），且比候选更具体；"Turn intent…" 作为品牌句保留在 meta/命名层 |
+| 首页副标题 | 保留现有 | 现文案已含"consent + missions + agents"三钉子 |
+| 主 CTA | 保留（"Open your workspace" → `openWorkspace`） | 真实目标已存在；"Create a Workspace" 语义重复 |
+| 次 CTA | 保留（"Create an account" → signup） | 注册是公开面真实转化路径 |
+| Intent 输入框 | ✅ **已改**（`living-workspace.tsx` composer 占位符 → 「你想完成什么目标？例如：…」） | 与候选中文一致，保留示例值；无测试断言旧文案 |
+| Agent 状态·运行/等待 | ⬜ 第三轮对照 `agent-board.tsx` 逐态改 | 需先核对真实事件名（不许文案先于行为） |
+| Consent 三条 | ⬜ 第三轮对照 `consent-gate.tsx`（**服务端逻辑零改动**，只动字符串） | Consent 是红线区，改动必须逐条过审查清单 |
+| Outcomes / 证据不足 | ⬜ 第三轮对照 `outcome-observatory.tsx` | 同上 |
+| Error · 网络 / Loading | ⬜ 第三轮统一（含 Toast 收敛，见 `06` §4） | 与 `--lf-*` 语义色一起做 |
+| 空态 | 保留 | `living-states.tsx` 的"未接通清单"已是诚实空态范本 |
+| 订阅·支付关闭 | 保留现状 | 生产口径 = 503 + `PAYMENT_NOT_CONFIGURED`，前端文案已一致；改文案不改变 503 事实 |
+
+**首页 demo 组件**（`(public)/page.tsx` 内的浏览器端演示）不属于本轮落地对象 —— 它的文案已经对齐（"demo · runs in your browser" 明示非真实执行）。

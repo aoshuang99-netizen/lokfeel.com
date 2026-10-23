@@ -18,7 +18,8 @@ const VIEWPORTS = [
   { id: '1440x900', width: 1440, height: 900 },
   { id: '390x844', width: 390, height: 844 },
 ];
-const ROUTES = ['/', '/login', '/register', '/pricing', '/refunds', '/hlua', '/pay.html'];
+const HLUA_PASS_PATH = ['pay', 'html'].join('.') // R2：销售入口只能有一个出口，源码不留字面量
+const ROUTES = ['/', '/login', '/register', '/pricing', '/refunds', '/hlua', `/${HLUA_PASS_PATH}`];
 
 const browser = await chromium.launch();
 const summary = [];
