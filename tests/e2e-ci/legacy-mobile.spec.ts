@@ -28,8 +28,9 @@ import { assertMobileLayout, waitForStableDom } from './lib/measure';
  * 🔴 为什么现在可以测 `/dashboard/chats` 了
  * ------------
  * 上一轮把它从认证面排除，理由是"它开 WebSocket，稳定判定会退化成超时"。
- * 读代码后纠正：开长连接的是 `/dashboard/chats/[roomId]`，
- * **列表页 `/dashboard/chats` 是纯静态空态**（`page.tsx` 42 行，无数据请求、无 socket）。
+ * 读代码后纠正：开长连接的是 `/dashboard/chats/[roomId]`。
+ * 列表这一层由 `chats/layout.tsx` 渲染（拉一次会话列表，无 socket），
+ * `page.tsx` 只是 42 行的静态空态。
  * 用一个通用理由排除一个不需要它的页面，属于把"不确定"当成"不测"。
  * `[roomId]` 仍不在范围内：夹具没有真实会话，且长连接页面无法稳定测量 ——
  * 这条限制写在报告里，不写成"已通过"。
@@ -66,11 +67,17 @@ interface LegacyRoute {
 }
 
 const LEGACY_ROUTES: LegacyRoute[] = [
-  { path: '/dashboard/chats', name: '聊天列表（空态）', ready: 'text=LokFee! Messages' },
+  // ⚠️ 锚点必须**在手机宽度下也可见**。第一版把 `/dashboard/chats` 的锚点写成页面里的
+  //    「LokFee! Messages」，CI 直接给了答案：`locator resolved to <h3>...` 但 `hidden`
+  //    —— 手机上聊天布局只显示列表面板，页面那份空态是隐藏的。
+  //    改用布局内的搜索框（所有宽度都渲染），它才是"这一屏真的来了"的证据。
+  { path: '/dashboard/chats', name: '聊天列表（空态）', ready: 'input[placeholder="Search or start new chat"]' },
   { path: '/dashboard/connections', name: '连接 / 匹配操作', ready: 'h1:has-text("Connections")' },
   { path: '/dashboard/profile', name: '资料编辑', ready: 'input[placeholder="Your name"]' },
   { path: '/dashboard/notifications', name: '通知', ready: 'h1:has-text("Notifications")' },
-  { path: '/dashboard/explore', name: '发现（刷卡）', ready: 'h1:has-text("Discover")' },
+  // 同一个路由有三种状态：loading（无 h1）/ 空态（h2「No more profiles」）/ 有候选人（h1「Discover」）。
+  // 夹具没有候选人 ⇒ 必然落在空态。第一版只等 h1「Discover」，等于要求一个**不会出现**的元素。
+  { path: '/dashboard/explore', name: '发现（刷卡）', ready: 'h1:has-text("Discover"), h2:has-text("No more profiles")' },
   { path: '/dashboard/settings', name: '设置', ready: 'h1:has-text("Settings")' },
 ];
 
@@ -226,18 +233,25 @@ test.describe('Legacy B2C · 交互可用性（390×844 · 只读）', () => {
     });
   });
 
-  test('聊天列表的空态给出两条真实出路（不是死胡同）', async ({ page }) => {
+  test('聊天列表在手机上给出真实出路，且那条链接够大、没被遮住', async ({ page }) => {
     await page.goto('/dashboard/chats', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('LokFee! Messages')).toBeVisible({ timeout: 20_000 });
+    // 手机上这一屏只渲染列表面板（页面那份空态是隐藏的），所以锚点用列表里的搜索框
+    await expect(page.locator('input[placeholder="Search or start new chat"]')).toBeVisible({
+      timeout: 20_000,
+    });
     await waitForStableDom(page);
 
-    const findMatches = page.locator('a[href="/dashboard/connections"]').first();
-    const browse = page.locator('a[href="/dashboard/explore"]').first();
-    await expect(findMatches, '聊天空态应有「Find Matches」出路').toBeVisible();
-    await expect(browse, '聊天空态应有「Browse」出路').toBeVisible();
+    // 夹具没有会话 ⇒ 列表必然为空态。空态不是"没测到"，它是新用户看到的第一屏。
+    await expect(page.getByText('No conversations yet')).toBeVisible();
 
-    for (const href of ['a[href="/dashboard/connections"]', 'a[href="/dashboard/explore"]']) {
-      await assertNotOccluded(page, href, `聊天空态链接 ${href}`);
-    }
+    const discover = page.locator('a[href="/dashboard/explore"]').first();
+    await expect(discover, '空态必须给出下一步，不能是死胡同').toBeVisible();
+
+    // 这条链接在 768×1024 曾被新门禁判红：119×20 < 24px。这里把它钉成固定判据，
+    // 免得以后改样式时又退回去。
+    const box = await discover.boundingBox();
+    expect(box?.height ?? 0, `「Discover people →」高度 ${box?.height ?? 0}px < 24px`).toBeGreaterThanOrEqual(24);
+
+    await assertNotOccluded(page, 'a[href="/dashboard/explore"]', '聊天空态的「Discover people →」');
   });
 });

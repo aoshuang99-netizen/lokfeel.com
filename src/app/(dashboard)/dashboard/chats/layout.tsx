@@ -309,7 +309,11 @@ export default function ChatLayout({
               {activeTab === "all" && !searchQuery && (
                 <Link
                   href="/dashboard/explore"
-                  className="inline-block mt-4 text-primary text-sm hover:underline"
+                  // V18.3：这条链接原为 `inline-block text-sm`，实测 119×20 ——
+                  // WCAG 2.2 AA 2.5.8 要求 24×24。新门禁在 768×1024 抓到了它
+                  // （手机宽度下列表面板不显示，所以只在平板/桌面暴露）。
+                  // 只补可点区域，不改字号与位置。
+                  className="inline-flex items-center min-h-6 px-1 mt-4 text-primary text-sm hover:underline"
                 >
                   Discover people →
                 </Link>
