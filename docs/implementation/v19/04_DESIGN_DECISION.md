@@ -26,10 +26,10 @@
 
 ## 3. 选型后的实现顺序
 
-1. ✅ 令牌映射：C 案令牌与 `src/app/globals.css` 既有 `--lf-*` 体系**逐一对照**（见 `06` §3，多数为 1:1，差异点已列明）；
-2. ⬜ `/workspace` 阶段条"阶段→世界"映射复核（`adaptive/stages.ts` 已有实现，确认与 C 案原型一致）；
-3. ⬜ Copy Deck 落地（`/`、`/login`、`/pricing`、composer）；
-4. ⬜ 每屏八元组：`Figma Node ID (N/A until Figma connector) / Route / Component / API / Commit / Screenshot / E2E / Acceptance`。
+1. ✅ 令牌映射：C 案令牌与 `src/app/globals.css` 既有 `--lf-*` 体系**逐一对照**（`06` §2/§3；发现原型 21 个自由色，已裁决归一到既有体系）；
+2. ✅ `/workspace` 阶段条"阶段→世界"映射复核（`07` §3：代码方案 = 阶段聚焦视图 + 双世界并置恒定，裁决保留；整树翻转不采纳）；
+3. ✅ Copy Deck 落地（`05` §5 处置表全表闭环：1 改 / 其余保留且给出组件级证据）；
+4. ⬜ 每屏八元组：`07`/`08` 已建表，Figma Node ID 暂记 `N/A (HTML source)`（连接器补齐后回填）。
 
 ## 4. 决策记录
 
