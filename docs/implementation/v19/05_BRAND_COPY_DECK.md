@@ -63,9 +63,9 @@
 | 主 CTA | 保留（"Open your workspace" → `openWorkspace`） | 真实目标已存在；"Create a Workspace" 语义重复 |
 | 次 CTA | 保留（"Create an account" → signup） | 注册是公开面真实转化路径 |
 | Intent 输入框 | ✅ **已改**（`living-workspace.tsx` composer 占位符 → 「你想完成什么目标？例如：…」） | 与候选中文一致，保留示例值；无测试断言旧文案 |
-| Agent 状态·运行/等待 | ⬜ 第三轮对照 `agent-board.tsx` 逐态改 | 需先核对真实事件名（不许文案先于行为） |
-| Consent 三条 | ⬜ 第三轮对照 `consent-gate.tsx`（**服务端逻辑零改动**，只动字符串） | Consent 是红线区，改动必须逐条过审查清单 |
-| Outcomes / 证据不足 | ⬜ 第三轮对照 `outcome-observatory.tsx` | 同上 |
+| Agent 状态·运行/等待 | **保留（已核，2026-10-23）** | 真实组件 `agent-board.tsx` 的状态标签来自服务端（`LIVING_AGENT_*` 常量），且现有文案诚实度高于候选：批准≠执行、服务端重判 409、花 0 分≠免费三条纪律原文在屏。前端改字符串 = 编造语义 |
+| Consent 三条 | **保留（已核）** | `consent-gate.tsx` 三列并置 + 只按服务端 `actions` 渲染；「对象/范围/后果」三要素由服务端逐字段披露投影承载，前端不重算（组件头注释纪律 ①②） |
+| Outcomes / 证据不足 | **保留（已核）** | `outcome-observatory.tsx` 已实现"自报不算验证成功""假设随指标显示""—该端点尚未返回因此不显示数字"，正是候选行想表达的诚实原则 |
 | Error · 网络 / Loading | ⬜ 第三轮统一（含 Toast 收敛，见 `06` §4） | 与 `--lf-*` 语义色一起做 |
 | 空态 | 保留 | `living-states.tsx` 的"未接通清单"已是诚实空态范本 |
 | 订阅·支付关闭 | 保留现状 | 生产口径 = 503 + `PAYMENT_NOT_CONFIGURED`，前端文案已一致；改文案不改变 503 事实 |
