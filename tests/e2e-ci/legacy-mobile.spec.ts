@@ -103,25 +103,34 @@ function watchPage(page: Page): PageIssues {
  *
  * 为什么需要它：横向溢出为 0、尺寸也达标，仍然可能被一个固定定位的浮层
  * （底栏、Toast、Cookie 条）压在下面 —— 那种缺陷在纯几何测量里完全看不出来。
- * 判据用 `contains` 双向包含，避免"命中的是子元素（图标）"被误判成遮挡。
+ *
+ * 为什么收 Locator 而不是选择器字符串：
+ * 第一版收字符串，内部用 `document.querySelector(sel)` ——
+ * 一是 `:visible` 这类 Playwright 伪类在浏览器里不认，
+ * 二是"Playwright 的 `.first()`"和"querySelector 的第一个"**不一定指同一个元素**
+ * （同名的隐藏链接在 DOM 里可能排在前面）。所以直接让 Locator 交出 box 与 element，
+ * 一个对象贯穿到底，不给"两次解析结果不一致"留空间。
  */
-async function assertNotOccluded(page: Page, selector: string, label: string): Promise<void> {
-  const box = await page.locator(selector).first().boundingBox();
+async function assertNotOccluded(
+  locator: ReturnType<Page['locator']>,
+  label: string,
+): Promise<void> {
+  const box = await locator.boundingBox();
   expect(box, `${label} 应该有可见几何（拿不到 boundingBox）`).not.toBeNull();
   if (!box) return;
 
-  const hit = await page.evaluate(
-    ({ x, y, sel }) => {
-      const target = document.querySelector(sel);
-      const el = document.elementFromPoint(x, y);
-      if (!target || !el) return { ok: false, reason: 'elementFromPoint 返回 null' };
-      const ok = el === target || target.contains(el) || el.contains(target);
+  const hit = await locator.evaluate(
+    (el, pt) => {
+      const found = document.elementFromPoint(pt.x, pt.y);
+      if (!found) return { ok: false, reason: 'elementFromPoint 返回 null' };
+      // 双向包含：命中的可能是元素的子节点（图标、文字），那不是遮挡
+      const ok = found === el || el.contains(found) || found.contains(el);
       return {
         ok,
-        reason: ok ? '' : `命中的是 <${el.tagName.toLowerCase()} class="${String(el.className).slice(0, 60)}">`,
+        reason: ok ? '' : `命中的是 <${found.tagName.toLowerCase()} class="${String(found.className).slice(0, 60)}">`,
       };
     },
-    { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2), sel: selector },
+    { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2) },
   );
 
   expect(hit.ok, `${label} 被其它元素遮挡：${hit.reason}`).toBe(true);
@@ -222,11 +231,12 @@ test.describe('Legacy B2C · 交互可用性（390×844 · 只读）', () => {
     expect(count, '连接页应有空态文案（夹具无候选人的预期形态）').toBeGreaterThan(0);
     await expect(emptyTitles.first()).toBeVisible();
 
-    // 空态里的 CTA 必须点得到（不被固定底栏覆盖）
-    const cta = page.locator('main a[href], main button').first();
-    if (await cta.count()) {
-      await assertNotOccluded(page, 'main a[href]', '连接页空态的首个 CTA');
-    }
+    // 空态里的 CTA 必须点得到（不被固定底栏覆盖）。
+    // 只找**可见**的锚点：同名的隐藏链接在 DOM 里可能排在前面，
+    // 用 `.first()` 会命中一个 display:none 的导航项，然后报"拿不到 box" —— 那是假红。
+    const cta = page.locator('a[href]:visible').first();
+    await expect(cta, '连接页应至少有一个可见的可点链接').toBeVisible();
+    await assertNotOccluded(cta, '连接页的首个可见 CTA');
 
     test.info().annotations.push({
       type: 'connections-empty-state',
@@ -245,7 +255,9 @@ test.describe('Legacy B2C · 交互可用性（390×844 · 只读）', () => {
     // 夹具没有会话 ⇒ 列表必然为空态。空态不是"没测到"，它是新用户看到的第一屏。
     await expect(page.getByText('No conversations yet')).toBeVisible();
 
-    const discover = page.locator('a[href="/dashboard/explore"]').first();
+    // 空态里的出路。` :visible` 不能省：同一 href 在侧栏/底栏还有一份隐藏的副本，
+    // 不带它 `.first()` 会命中隐藏那个（上一轮就是这么红的）。
+    const discover = page.locator('a[href="/dashboard/explore"]:visible').first();
     await expect(discover, '空态必须给出下一步，不能是死胡同').toBeVisible();
 
     // 这条链接在 768×1024 曾被新门禁判红：119×20 < 24px。这里把它钉成固定判据，
@@ -253,6 +265,6 @@ test.describe('Legacy B2C · 交互可用性（390×844 · 只读）', () => {
     const box = await discover.boundingBox();
     expect(box?.height ?? 0, `「Discover people →」高度 ${box?.height ?? 0}px < 24px`).toBeGreaterThanOrEqual(24);
 
-    await assertNotOccluded(page, 'a[href="/dashboard/explore"]', '聊天空态的「Discover people →」');
+    await assertNotOccluded(discover, '聊天空态的「Discover people →」');
   });
 });
