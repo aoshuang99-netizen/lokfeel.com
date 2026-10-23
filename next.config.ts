@@ -8,6 +8,24 @@ import { readFileSync } from 'node:fs'
 import { withSentryConfig } from '@sentry/nextjs/config'
 
 /**
+ * 认证入口页清单（V18.3 · WB18-35）
+ *
+ * 这些页面都会在**服务端**读会话（`await auth()`）并据此决定渲染还是 `redirect()`，
+ * 响应形状随 cookie 变化 ⇒ 一律 `private, no-store`。
+ * 列在这里而不是写成一条 `/(auth)/:path*`：Next 的 `headers()` 按 URL 路径匹配，
+ * 并不知道路由组，写精确路径才不会被误认为"覆盖了整个组"。
+ */
+const AUTH_ENTRY_PATHS = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-request',
+  '/auto-login',
+  '/admin-login',
+] as const
+
+/**
  * ─── 构建身份（OPS-11）────────────────────────────────────────────────
  *
  * 为什么在 next.config 里算：`/api/health` 的 `version` 一直返回 `"unknown"`，
@@ -295,18 +313,34 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
         ],
       },
-      {
-        source: '/login',
+      // ─── 认证入口页：禁止任何缓存（V18.3 · WB18-35 · 2026-10-23）─────────
+      //
+      // 起因是生产实测，不是推断：
+      //   /login     → `cache-control: public`，`age` 从 106 一路涨到 193（不归零）
+      //   /register  → `cache-control: public`，`age: 173745`（≈ 自 dc102cd 部署至今）
+      // 而**同一个 `(auth)` 路由组里**的 `/forgot-password`、`/reset-password`
+      // 返回的是 `private, no-cache, no-store, max-age=0, must-revalidate`。
+      // 那两个页面同样 `await auth()`、同样读 cookies —— 框架给的默认值本来就是对的。
+      // 差别只在上面的配置：原规则照抄了"给 ISR 页面开 CDN 缓存"的写法，
+      // 却套到了会**在服务端读会话**的页面上。
+      //
+      // 为什么 `public` + `s-maxage=300` 是错的：
+      //   `/login/page.tsx` 里 `const session = await auth()`，已登录就 `redirect()`。
+      //   也就是说**响应形状随 cookie 变化**，却被标成"任何人可缓存 5 分钟"：
+      //     1) 已登录用户点回 `/login`，可能拿到缓存里的匿名表单页而没被跳走；
+      //     2) 万一把某次 307 缓存下来，匿名用户会被送去 `/dashboard` 再弹回登录页 ——
+      //        这与观测到的"登录回跳偶发不稳"是同一个形状。
+      // 认证入口的流量极小，为省这点 CDN 命中让"我到底登录了没有"变得不确定不划算。
+      //
+      // 顺带把另外五个认证页也显式钉成 no-store：它们现在拿到的
+      // `public, max-age=0, must-revalidate` 虽然要回源校验，但语义上仍是"公共"，
+      // 而且 `age` 同样涨到了 48 小时。认证面一律 private。
+      ...AUTH_ENTRY_PATHS.map((source) => ({
+        source,
         headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
+          { key: 'Cache-Control', value: 'private, no-store, max-age=0, must-revalidate' },
         ],
-      },
-      {
-        source: '/register',
-        headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
-        ],
-      },
+      })),
       // Default API: no caching (for mutation-heavy endpoints)
       {
         source: '/api/:path*',
