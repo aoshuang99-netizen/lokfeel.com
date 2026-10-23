@@ -153,7 +153,7 @@ curl -s https://app.lokfeel.com/api/health | jq '.payments'
 | 4 个支付凭据 | `payments.configured=false` | 付费入口一律 503 + `PAYMENT_NOT_CONFIGURED`（**合法状态**） |
 | 退款天数唯一口径 | `/refunds` 写 14 天、`pay.html` 写 7 天（不同产品，但没标"属于谁"） | `D-01` 待批；工程不自行选 |
 | Creem 订阅的自助取消 | 返回 409 + 指向客服 | 未验证过 Creem 的取消 API，不编调用 |
-| 认证面 13 屏的移动端实测 | 9 屏已进 CI 门禁（页面级）；**页签级**（`/workspace` 的 Studio/Field/Consent/Outcomes/Agents + console 各屏内部状态）未测 | `UX-08` 仍为部分证据；`D-06` 人工走查仍未做 |
+| 认证面与 `/workspace` 的移动端实测 | 认证 9 屏（2 视口）+ `/workspace` 6 页签（2 视口）+ legacy 6 屏（**4 视口**）已进 CI 门禁；**`/console/*` 各屏内部状态与 `/dashboard/chats/[roomId]` 未测** | `UX-08` 仍为部分证据；`D-06` 人工走查仍未做 |
 | 法律主体 | `D-03` 未定 | `privacy@`/`billing@` 背后没有承诺人 |
 
 ---
