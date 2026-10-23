@@ -1,0 +1,668 @@
+{
+  "base": "https://app.lokfeel.com",
+  "at": "2026-10-23T14:05:35.857Z",
+  "rows": [
+    {
+      "route": "/",
+      "viewport": "390x844",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Describe the outcome.Get a workspacethat runs it.",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "keyboard": [
+        "a: LokFeel home",
+        "button: Open workspace",
+        "button: Open your workspace",
+        "button: Create an account",
+        "textarea: Connect our climate-tech"
+      ],
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/root__390x844.png",
+      "state": "ok"
+    },
+    {
+      "route": "/login",
+      "viewport": "390x844",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/login",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "keyboard": [
+        "input: ",
+        "input: ",
+        "a: Forgot password?",
+        "button: Log In",
+        "button: Continue as Guest"
+      ],
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/login__390x844.png",
+      "state": "ok"
+    },
+    {
+      "route": "/register",
+      "viewport": "390x844",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/register",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/register",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Join LokFeel!",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/register__390x844.png",
+      "state": "ok"
+    },
+    {
+      "route": "/forgot-password",
+      "viewport": "390x844",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/forgot-password",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/forgot-password",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Forgot Password?",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/forgot-password__390x844.png",
+      "state": "ok"
+    },
+    {
+      "route": "/pricing",
+      "viewport": "390x844",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/pricing",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/pay.html",
+      "authRedirect": false,
+      "title": "Hlua Pass — Choose your plan",
+      "h1": "Go unlimited. Cancel anytime.",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/pricing__390x844.png",
+      "state": "ok"
+    },
+    {
+      "route": "/refunds",
+      "viewport": "390x844",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/refunds",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/refunds",
+      "authRedirect": false,
+      "title": "Refunds Policy | LokFeel",
+      "h1": "Refunds Policy",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/refunds__390x844.png",
+      "state": "ok"
+    },
+    {
+      "route": "/hlua",
+      "viewport": "390x844",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/hlua",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "failedResponses": [
+        "404 https://app.lokfeel.com/hlua"
+      ],
+      "httpStatus": 404,
+      "finalUrl": "https://app.lokfeel.com/hlua",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Page Not Found",
+      "overflowX": {
+        "scrollWidth": 453,
+        "clientWidth": 390,
+        "overflow": true
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/hlua__390x844.png",
+      "state": "ok"
+    },
+    {
+      "route": "/pay.html",
+      "viewport": "390x844",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/pay.html",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/pay.html",
+      "authRedirect": false,
+      "title": "Hlua Pass — Choose your plan",
+      "h1": "Go unlimited. Cancel anytime.",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/pay.html__390x844.png",
+      "state": "ok"
+    },
+    {
+      "route": "/workspace",
+      "viewport": "390x844",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/workspace",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fworkspace",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/workspace__390x844.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console",
+      "viewport": "390x844",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console__390x844.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/agents",
+      "viewport": "390x844",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/agents",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_agents__390x844.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/connections",
+      "viewport": "390x844",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/connections",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_connections__390x844.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/members",
+      "viewport": "390x844",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/members",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_members__390x844.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/missions",
+      "viewport": "390x844",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/missions",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_missions__390x844.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/outcomes",
+      "viewport": "390x844",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/outcomes",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_outcomes__390x844.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/settings",
+      "viewport": "390x844",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/settings",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_settings__390x844.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/",
+      "viewport": "1440x900",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Describe the outcome.Get a workspacethat runs it.",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/root__1440x900.png",
+      "state": "ok"
+    },
+    {
+      "route": "/login",
+      "viewport": "1440x900",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/login",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/login__1440x900.png",
+      "state": "ok"
+    },
+    {
+      "route": "/register",
+      "viewport": "1440x900",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/register",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/register",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Join LokFeel!",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/register__1440x900.png",
+      "state": "ok"
+    },
+    {
+      "route": "/forgot-password",
+      "viewport": "1440x900",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/forgot-password",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/forgot-password",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Forgot Password?",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/forgot-password__1440x900.png",
+      "state": "ok"
+    },
+    {
+      "route": "/pricing",
+      "viewport": "1440x900",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/pricing",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/pay.html",
+      "authRedirect": false,
+      "title": "Hlua Pass — Choose your plan",
+      "h1": "Go unlimited. Cancel anytime.",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/pricing__1440x900.png",
+      "state": "ok"
+    },
+    {
+      "route": "/refunds",
+      "viewport": "1440x900",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/refunds",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/refunds",
+      "authRedirect": false,
+      "title": "Refunds Policy | LokFeel",
+      "h1": "Refunds Policy",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/refunds__1440x900.png",
+      "state": "ok"
+    },
+    {
+      "route": "/hlua",
+      "viewport": "1440x900",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/hlua",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "failedResponses": [
+        "404 https://app.lokfeel.com/hlua"
+      ],
+      "httpStatus": 404,
+      "finalUrl": "https://app.lokfeel.com/hlua",
+      "authRedirect": false,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Page Not Found",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/hlua__1440x900.png",
+      "state": "ok"
+    },
+    {
+      "route": "/pay.html",
+      "viewport": "1440x900",
+      "kind": "public",
+      "requestedUrl": "https://app.lokfeel.com/pay.html",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/pay.html",
+      "authRedirect": false,
+      "title": "Hlua Pass — Choose your plan",
+      "h1": "Go unlimited. Cancel anytime.",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/pay.html__1440x900.png",
+      "state": "ok"
+    },
+    {
+      "route": "/workspace",
+      "viewport": "1440x900",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/workspace",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fworkspace",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/workspace__1440x900.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console",
+      "viewport": "1440x900",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console__1440x900.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/agents",
+      "viewport": "1440x900",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/agents",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_agents__1440x900.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/connections",
+      "viewport": "1440x900",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/connections",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_connections__1440x900.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/members",
+      "viewport": "1440x900",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/members",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_members__1440x900.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/missions",
+      "viewport": "1440x900",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/missions",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_missions__1440x900.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/outcomes",
+      "viewport": "1440x900",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/outcomes",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_outcomes__1440x900.png",
+      "state": "auth-redirect"
+    },
+    {
+      "route": "/console/settings",
+      "viewport": "1440x900",
+      "kind": "protected",
+      "requestedUrl": "https://app.lokfeel.com/console/settings",
+      "consoleErrors": [],
+      "failedResponses": [],
+      "httpStatus": 200,
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "authRedirect": true,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "overflowX": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflow": false
+      },
+      "screenshot": "docs/implementation/v19/screenshots/v194-audit/console_settings__1440x900.png",
+      "state": "auth-redirect"
+    }
+  ]
+}
