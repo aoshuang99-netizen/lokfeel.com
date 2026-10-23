@@ -48,12 +48,12 @@ const AUTHED_STATE = 'test-results/authed-state.json';
 
 test.use({ storageState: AUTHED_STATE });
 
-/** 任务书要求的四个视口。手机两个 + 平板 + 桌面。 */
+/** 任务书要求的四个视口。手机两个 + 平板 + 桌面。**四个都按同一把尺子判。** */
 const LEGACY_VIEWPORTS = [
-  { id: '390×844', width: 390, height: 844, phone: true },
-  { id: '360×800', width: 360, height: 800, phone: true },
-  { id: '768×1024', width: 768, height: 1024, phone: true },
-  { id: '1440×900', width: 1440, height: 900, phone: false },
+  { id: '390×844', width: 390, height: 844 },
+  { id: '360×800', width: 360, height: 800 },
+  { id: '768×1024', width: 768, height: 1024 },
+  { id: '1440×900', width: 1440, height: 900 },
 ] as const;
 
 interface LegacyRoute {
@@ -152,15 +152,16 @@ test.describe('Legacy B2C · 四视口版面与可用性', () => {
 
         const m = await assertMobileLayout(page, { viewportId: vp.id, route: route.path });
 
-        // 平板上仍然按 24px 判红（触摸设备）；1440 桌面只统计不判红，
-        // 理由写在报告里：本组是「移动端补证」，桌面端的触控尺寸属于**未覆盖**，
-        // 不声称通过，也不假装它没问题。
-        if (!vp.phone) {
-          test.info().annotations.push({
-            type: 'desktop-touch-not-gated',
-            description: `${vp.id} ${route.path}: ${m.tooSmall.length} 个 <24px（${m.total} 个目标中，未纳入本轮门禁）`,
-          });
-        }
+        // 四个视口用同一把尺子。原本打算 1440 只统计不判红（"移动端补证"范围外），
+        // 但第一次跑就发现那段"仅统计"的意图**根本没生效** —— `assertMobileLayout`
+        // 内部已经把 tooSmall 断言掉了，外面的 annotation 分支永远走不到。
+        // 与其加一个 `enforceTouch: false` 开关把判据变软，不如就按同一标准判：
+        // 1440 当时只报出页脚 4 个 16px 链接，修完即过。
+        // 一个会骗人的开关，比一条更严的判据危险得多。
+        test.info().annotations.push({
+          type: 'touch-44',
+          description: `${vp.id} ${route.path}: ${m.belowRecommended.length}/${m.total} 个目标 <44px`,
+        });
 
         // 未捕获异常判红；控制台 error 只报告 —— 缺图/第三方脚本失败会被记为
         // console error，但页面并没有坏，拿它判红会制造与版面无关的红。
