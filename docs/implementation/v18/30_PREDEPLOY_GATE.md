@@ -3,8 +3,10 @@
 > 一页回答一个问题：**现在按 Runbook 发版，会不会把已经验证过的东西搞坏？**
 > 本文只写可复算的事实与命令。取不到的值写 `UNKNOWN`，不写估计值。
 
-- 核验时间：2026-10-23 07:00–08:10Z
-- 发布候选（Release SHA）：`bba8c36`（CI 17 项：15 成功 / 2 跳过 / 0 失败）
+- 核验时间：2026-10-23 07:00–08:20Z
+- 发布候选（Release SHA）：**批准时 `main` 的 HEAD**
+  - 本文核验时 = `ff23b23`：它是 `bba8c36`（E2E 27 条全绿的那一版）+ 2 个**纯文档**提交，代码零差异
+  - 判据不写死 SHA，而是：**`/api/health.commit` 必须等于你实际推送的那一个**
 - 生产现行（Production Commit）：`dc102cd`
 - 生产域名：`app.lokfeel.com`（Netlify `lokfeel.netlify.app` + Cloudflare 代理）
 
@@ -14,7 +16,7 @@
 
 | 项 | 结论 | 依据 |
 |---|---|---|
-| HEAD 与远端一致 | **PASS** | 本地 `bba8c36` == `origin/main`（`git rev-parse` / `ls-remote` 核对） |
+| HEAD 与远端一致 | **PASS** | 核验时本地 `ff23b23` == `origin/main`（`git rev-parse` / `ls-remote` 核对）。判据是这条等式成立，不是某个具体 SHA |
 | 工作树干净 | **PASS** | `git status --short` 空 |
 | 发布候选 CI | **PASS** | 见 §3.1：17 项 **15 成功 / 2 跳过 / 0 失败**，含 E2E 浏览器冒烟 success |
 | 需要数据库迁移 | **不需要** | `git diff dc102cd..bba8c36 -- prisma/` = **0 文件**，迁移脚本 = **0 文件** |
@@ -31,8 +33,8 @@
 
 | 项 | 值 |
 |---|---|
-| `git rev-parse HEAD` | `bba8c36` |
-| `git ls-remote origin refs/heads/main` | 同上（`bba8c36`） |
+| `git rev-parse HEAD`（核验时） | `ff23b23` |
+| `git ls-remote origin refs/heads/main`（核验时） | 同上（`ff23b23`） |
 | 工作树 | 干净（无未提交改动） |
 | 与生产差距 | **47 个提交 / 110 个文件 / +16,262 −487** |
 | `prisma/` 差异 | `git diff --stat dc102cd..HEAD -- prisma/` = **空** |
@@ -45,7 +47,7 @@
 ```
 
 - **没有 `commit` 字段** ⇒ 这正是 OPS-11 要解决的那件事，也是"发布成功"最硬的判据：
-  **发布前它不存在，发布后它必须等于 `bba8c36`。**
+  **发布前它不存在，发布后它必须等于 `ff23b23`。**
 - `version: "unknown"` 是旧实现的证据（读 `npm_package_version`，Netlify 直接起 Node ⇒ 恒为 unknown）。
 - 首次读到的 `dbLatency: 4770` **不是缓存假象**：随后连打三次得到 `138 / 10 / 6`ms。
   响应头是 `cache-control: no-store,max-age=0` + `cf-cache-status: DYNAMIC`。
@@ -114,7 +116,7 @@ Netlify 站点级共 **44** 个变量。与发布相关的关键项：
 
 | # | 判据 | 结论 | 证据 |
 |---|---|---|---|
-| 1 | 头提交 CI 全绿 | **PASS**（`bba8c36`） | 17 项 **15 成功 / 2 跳过（Perf 手动、DCO）/ 0 失败**；另有 CodeQL run `39920104205` success。Lint 15:53:05→15:54:39 success ⇒ W02 里"Lint 仍在跑"的疑问已闭合 |
+| 1 | 头提交 CI 全绿 | **PASS**（`bba8c36`，代码与 HEAD 相同） | 17 项 **15 成功 / 2 跳过（Perf 手动、DCO）/ 0 失败**；另有 CodeQL run `39920104205` success。Lint 15:53:05→15:54:39 success ⇒ W02 里"Lint 仍在跑"的疑问已闭合。`bba8c36` 之后的 3 个提交**只改文档**，同样带 `[skip netlify]` |
 | 2 | 构建身份可读 | **PASS（逻辑）/ 待发布复验** | `tests/lib/build-info.test.ts` 覆盖非法 SHA→unknown；CI Build 通过。生产出现 `commit` 字段只能在发布后验证 |
 | 3 | 验收台账不漂移 | **PASS** | `npm run check:acceptance` → `42 条 = 29 PASS / 0 FAIL / 13 BLOCKED` |
 | 4 | 商业契约不串线 | **PASS** | `npm run check:products` → **5/5**（含 9 条自证）；本轮被 R2 抓过一次并已修 |
@@ -126,7 +128,7 @@ Netlify 站点级共 **44** 个变量。与发布相关的关键项：
 
 ### 3.1 E2E 用例数的变化（本轮）
 
-| 组 | `d922bf9` | `bba8c36` | 构成 |
+| 组 | `d922bf9` | `bba8c36`（E2E 实跑于此） | 构成 |
 |---|---|---|---|
 | 公开面移动端 | 12 | 12 | 2 视口 × 6 路由 |
 | 认证面 9 屏 | 18 | 18 | globalSetup + storageState |
@@ -173,7 +175,7 @@ Netlify 站点级共 **44** 个变量。与发布相关的关键项：
 
 1. 发版提交的**标题与正文都不能**出现 `[skip netlify]`（否则 Netlify 不构建）。
 2. 构建日志里 `next build` 的 `Compiled successfully` 与 Netlify 的 `Deploy is live`。
-3. 部署完成后立刻 `curl -s https://app.lokfeel.com/api/health`，**`commit` 必须等于 `bba8c36`**。
+3. 部署完成后立刻 `curl -s https://app.lokfeel.com/api/health`，**`commit` 必须等于 `ff23b23`**。
    只要这一条不成立，后面所有"看起来正常"都不算数。
 4. `/pricing` 必须 200（不再 307 到 Hlua Pass）、`/hlua` 必须 200。
 5. 前 10 分钟盯 5xx 与函数冷启动（预期首批请求 3–5s，属正常）。
@@ -198,4 +200,4 @@ Netlify 站点级共 **44** 个变量。与发布相关的关键项：
 
 **执行侧：BLOCKED。** `D-10` 未获批准，本轮**不部署**。
 `22_RELEASE_RUNBOOK.md` §3 的动作清单已经可以照着执行；
-一旦批准，从"开始发布"到"`commit` 字段等于 `bba8c36`"预计 5–8 分钟（含构建）。
+一旦批准，从"开始发布"到"`commit` 字段等于 `ff23b23`"预计 5–8 分钟（含构建）。

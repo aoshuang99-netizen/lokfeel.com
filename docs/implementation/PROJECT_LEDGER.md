@@ -35,7 +35,7 @@
 |---|---|---|
 | 仓库 | `github.com/aoshuang99-netizen/lokfeel.com`（public） | `git remote -v` |
 | 分支 | `main`（单人开发，无 PR 流程） | `git branch --show-current` |
-| 基线 commit | `bba8c36`（V18.3 发布候选）· 上一基线 `3046f2b` | `git rev-parse HEAD` |
+| 基线 commit | `bba8c36`（**V18.3 代码冻结点**：E2E 27 条全绿的版本；其后的提交只改文档）· 上一基线 `3046f2b` | `git rev-parse HEAD` · `git log --oneline bba8c36..HEAD --stat` |
 | CI 现状 | `bba8c36` = **17 项检查：15 成功 / 2 跳过 / 0 失败**（跳过项=Perf 手动、DCO）；另有 CodeQL run `39920104205` success。E2E 共 **85 条（结构枚举）**：公开 12 + 认证 18 + `/workspace` 页签 12 + legacy 四视口 27 + 缓存头 10 + 冒烟 6 | `curl -s "https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/commits/bba8c36/check-runs?per_page=100"` |
 | 生产实际部署 | **`dc102cd`**（2026-10-21T06:41Z，`state=ready`，部署 ID `6ad85eb3122dcb59f86a64c3`）—— 比 HEAD 少 **47 个提交 / 110 个文件 / +16,262 −487**，其中 `prisma/` 与迁移脚本差异为 **0 行**（⇒ 这次发布不需要 DB 迁移） | `curl -s -H "Authorization: Bearer $NF_TOKEN" https://api.netlify.com/api/v1/sites/lokfeel.netlify.app/deploys?per_page=5` · `git diff --stat dc102cd..HEAD -- prisma/ \| wc -l` |
 | 本地 vs 远端 | **一致**（`ls-remote` 同 SHA） | `git -c http.proxy=http://127.0.0.1:10808 ls-remote origin refs/heads/main` |
