@@ -8,7 +8,7 @@
 > 规则：**工程不替产品做产品决策。** 遇到产品/法律/资金事项，登记 + 给出选项与后果，
 > 不擅自选一个继续跑。
 
-**更新于**：2026-10-23（V18.3 发布准备）
+**更新于**：2026-10-25（V19.4 · R-17/R-18 登记）
 
 ---
 
@@ -56,6 +56,8 @@
 | **R-13** | 容量风险：1 人 + 20h/周 | 任务堆积 | 关键路径被拖 | 单周 1 主任务 + 2 附属；BLOCKED 写明解除条件 | **OPEN** |
 | **R-14** | 台账/文档漂移（汇总写 25/17，实际 29/13） | 增量交付只改行 | 决策基于错数字 | `check:acceptance` 强制汇总=重算、台账=生成物 | **CLOSED**（2026-10-22 加了门禁） |
 | **R-15** | **git 历史中存在形似真实凭据的命中**：本地跑同版本 gitleaks 扫全历史，520 个提交里 55 处命中 / 12 个文件（`scripts/export-neon.js` 的 Neon 连接串带密码、`.env.prod`/`.env.pull`/`.env.vercel` 的 `VERCEL_OIDC_TOKEN`、`scripts/fix-bot-avatars-*.js` 的 `TURSO_TOKEN`、`.env.test` 的 `AUTH_SECRET`、`public/firebase-diagnostic.html` 的 GCP key） | 这些提交早于扫描门禁建立 | 若其中任何一个仍是**有效**凭据，等于长期公开泄露；CI 只扫增量，永远抓不到 | ① 已确认它们**不在**当前 CI 的增量范围内（门禁扫的是本次推送的提交）；② **是否仍有效、是否需要轮换，只能由人确认**（见 §6 待批 D-09） | **OPEN**（需人工） |
+| **R-17** | **性能目标未达 + 第三方注入**：`/login` 冷 LCP 6544ms / 暖 5472ms（目标 2500）；`cloudflareinsights` beacon 占 1.0–2.1s（Cloudflare Auto-Inject）；GTM 在生产生效进首屏；Netlify 徽章暴露 | 移动端真实用户首访 | 首访流失（V16 已证明 LCP 与转化相关） | 代码侧：LazyMotion 已下放（`8720868`，PR #32 CI 验证中）。面板侧只能由人操作：关 CF Web Analytics Auto-Inject / 清 GTM 变量 / 关 Netlify 徽章（`20_LOGIN_PERFORMANCE.md` §7.5） | **MITIGATING**（代码侧已动，面板侧待用户） |
+| **R-18** | **PR #32 开启了 V19→main 的合并通道** | 误点合并按钮 | 设计分支未完全验收就进 main | PR 描述首行写明「合并需人工批准，本 PR 存在只为触发 CI 与 preview」；main 分支保护未配置（单人仓库）→ 合并动作只能由人执行 | **MITIGATING** |
 
 ---
 
