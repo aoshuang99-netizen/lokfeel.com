@@ -14,7 +14,6 @@
  * 只测不判：exit 0；判定在 16_REAL_UI_AUDIT.md 里由人/复核做。
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
