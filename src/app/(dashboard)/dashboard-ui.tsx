@@ -6,6 +6,14 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, AlertCircle, RefreshCw, Home, ArrowLeft } from "lucide-react";
 import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
+// 🔴 V19.4（WB19-45）：LazyMotion 从根布局下放到这里。
+// 全仓使用 m.（LazyMotion 特性版）的组件只存在于 (dashboard)：
+// chats（chat-container/message-bubble/message-list/conversation-item）
+// 与 explore/page-content。挂在根布局曾迫使 /login、/register、/pricing
+// 等零动画页面也加载 framer-motion 运行时。
+// 注意：console/*、workspace/* 的组件全部用 motion.（全量导入，自带特性），
+// 不依赖 LazyMotion，移除后不受影响（已用扫描脚本核实，见 20_LOGIN_PERFORMANCE.md §4）。
+import { LazyMotion, domAnimation } from "framer-motion";
 // 直接 import — 导航组件体积小，SSG 首屏必须可见，禁用 SSR 会导致"导航丢失"
 import SidebarV2 from "@/components/layout/sidebar-v2";
 import BottomNav from "@/components/layout/bottom-nav";
@@ -197,6 +205,9 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
 
   return (
     <SessionProvider session={session} refetchInterval={5 * 60} refetchOnWindowFocus={false}>
+      {/* LazyMotion 从根布局下放到此（WB19-45）—— 只为 (dashboard) 内的 m. 组件提供特性。
+          不能加 strict：dashboard 里还有多个 motion.（全量导入）组件，strict 会抛错。 */}
+      <LazyMotion features={domAnimation}>
       <ProfileContext.Provider value={profileContextValue}>
         <ErrorBoundary>
           <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
@@ -276,6 +287,7 @@ export default function DashboardUI({ children, session }: DashboardLayoutProps)
           </div>
         </ErrorBoundary>
       </ProfileContext.Provider>
+      </LazyMotion>
     </SessionProvider>
   );
 }

@@ -45,3 +45,51 @@
 - PERF-03（优化前后数据）：⬜ **未实施优化** —— 本轮仅测量与归因
 - PERF-04（无安全/功能回退）：⬜ 同上
 - **目标 LCP ≤2500ms：NOT MET（6544ms 冷 / 5472ms 暖）**
+
+---
+
+## 7. 【2026-10-25 实施】优化 #1：LazyMotion 下放（framer-motion 迁出根布局）
+
+### 7.1 归因（代码级，扫描脚本 `scripts/qa/scan-framer-usage.mjs`）
+
+- 全仓 **30 个文件** import framer-motion；其中依赖根布局 `LazyMotion` 的只有 **`m.`** 用法：
+  `chats`（chat-container / message-bubble / message-list / conversation-item）与
+  `explore/page-content` —— **全部位于 `(dashboard)`**。
+- `UserAvatarMenu`（用 `m.`）经全仓引用扫描确认为**零挂载死代码**。
+- `console/*` 与 `workspace/*` 组件全部用 `motion.`（全量导入，自带特性），不依赖 LazyMotion。
+- 结论：根布局的 `<LazyMotion features={domAnimation}>` 迫使 `/login`、`/register`、
+  `/pricing`、`/` 等零动画页面也加载 framer-motion 运行时 —— 纯浪费。
+
+### 7.2 代码改动（2 文件）
+
+| 文件 | 改动 |
+|---|---|
+| `src/app/layout.tsx` | 删除 `LazyMotion` import 与 JSX 包裹（根布局 0 framer 残留，机械核对） |
+| `src/app/(dashboard)/dashboard-ui.tsx` | `<LazyMotion features={domAnimation}>` 挂到 `(dashboard)` 客户端壳，包裹 `ProfileContext` 全树。**不加 `strict`**：dashboard 内还有多个 `motion.` 全量组件，strict 会抛错 |
+
+### 7.3 风险评估
+
+- `m.` 组件失去 provider 会抛 `lazy functionality` 错 —— 已核实全部存活 `m.` 挂载点都在
+  `(dashboard)` 内（`conversation-list` 挂在 `chats/layout.tsx` ✓）。判定为**零行为变化**。
+- E2E 门禁（认证 18 条 + 页签 12 条 + chats 相关）将在 PR CI 里复跑，作为行为不变的证据。
+
+### 7.4 前后对照（PERF-03）
+
+- 测量环境：PR 的 **Netlify deploy preview**（与生产同构构建，但不触碰生产）。
+- 流程：preview 就绪后，同会话内跑 `perf-baseline.mjs --samples=5` 指向 preview URL，
+  与本文件 §2 的生产基线（同会话测得）对照。**跨会话绝对值不可比（§3 已实证），
+  对照口径 = 同会话先测生产、再测 preview。**
+
+### 7.5 第三方注入的处置（代码之外，需人工/面板操作）
+
+| 注入源 | 实测影响 | 处置 | 谁能做 |
+|---|---|---|---|
+| `static.cloudflareinsights.com` | beacon 占 **1.0–2.1s** | Cloudflare 控制台关闭 Web Analytics 的 Auto-Inject（或换自托管） | **你**（DNS/CF 面板） |
+| GTM（`NEXT_PUBLIC_GTM_ID` 已在生产生效） | `googletagmanager.com/gtm.js` 进首屏 | 若分析非必需，清掉 Netlify 变量即全站少一个阻塞脚本 | **你**（Netlify env） |
+| Netlify "Powered by" 徽章 | 品牌一致性 P2，404 页可见 | Netlify 账户设置可关（免费档允许） | **你**（Netlify 面板） |
+
+### 7.6 本轮判定更新
+
+- PERF-03：**部分达成** —— 优化已实施，前后对照待 preview 测量（本节 §7.4）
+- PERF-04：⬜ 待 CI E2E 绿 + preview 走查
+- **总体仍标 `PERF_TARGET_NOT_MET`**，直到同会话对照数据证明目标达成或确认不可达。

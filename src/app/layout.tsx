@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Outfit, Sora } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/auth-provider";
-import { LazyMotion, domAnimation } from "framer-motion";
 import { registerServiceWorker } from "@/lib/service-worker";
 
 // Self-hosted fonts via next/font — eliminates Google Fonts CDN dependency
@@ -159,9 +158,13 @@ if ('serviceWorker' in navigator) {
             />
           </noscript>
         )}
-        <LazyMotion features={domAnimation}>
-          <AuthProvider>{children}</AuthProvider>
-        </LazyMotion>
+        {/* 🔴 V19.4（WB19-45）：LazyMotion 不再挂根布局。
+            之前它把 framer-motion 运行时塞进全站共享 chunk —— /login 自己
+            不用任何动画，却要为此加载；且全仓 m. 组件只存在于 (dashboard)。
+            LazyMotion 已下放到 (dashboard)/dashboard-ui.tsx。
+            注意：这里不能再包 LazyMotion，否则下放等于没做（双 provider 会
+            掩盖漏挂问题，但 /login 的 JS 不会下降）。 */}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
