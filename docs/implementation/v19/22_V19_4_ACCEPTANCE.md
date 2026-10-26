@@ -41,22 +41,24 @@
 |---|---|---|
 | PERF-01 条件可复现 | **PASS** | `20` §1 |
 | PERF-02 冷暖分离 | **PASS** | `20` §2 |
-| PERF-03 优化前后数据 | **PENDING** | 本轮仅测量归因（`20` §5），未实施优化 |
-| PERF-04 无安全/功能回退 | **PENDING** | 同上 |
+| PERF-03 优化前后数据 | **PASS（载荷级）** | 优化 #1 已实施 + 同会话前后对照（`20` §7.4）：preview 实测 `/login` JS **244KB/13req → 201KB/11req**（−37KB = framer-motion 移除）；LCP 跨环境对照因 GFW 干扰不具判定力，口径已实证落档 |
+| PERF-04 无安全/功能回退 | **PASS** | CI 19 success / 0 失败（HEAD `44e49c5`）；preview `/login`、`/api/health` 200；E2E 全绿作为行为不变证据 |
 
-**性能现状：`PERF_TARGET_NOT_MET`**（`/login` 冷 6544ms / 暖 5472ms vs 目标 2500ms）。
+**性能现状：`PERF_TARGET_NOT_MET` 维持**（冷态 LCP 未达 2500ms）。剩余主因：
+cloudflareinsights 注入（面板操作，`20` §7.5）+ `/login` 剩余 201KB 客户端 JS +
+`/pricing` 192KB（main 自带新页，非本分支引入，另立项审计）。
 
 ## CI（8 项）
 
 | # | 判定 | 证据 |
 |---|---|---|
-| CI-01 Typecheck / CI-02 Lint / CI-03 Build / CI-04 Jest / CI-05 Playwright | **PASS（`main` = `c3213fd`）** | 17 项 CI 0 失败（2026-10-23 复核仍为远端 main）；分支无完整 CI（如实说明） |
-| CI-06 原有安全门禁 | **PASS** | 同上（tenant/consent/secret scan 含在 17 项内） |
+| CI-01 Typecheck / CI-02 Lint / CI-03 Build / CI-04 Jest / CI-05 Playwright | **PASS（PR #32 分支 CI 全绿）** | HEAD `44e49c5`：**19 success / 1 skipped（手动档）/ 0 失败**（2026-10-26 实测 check-runs；DCO/依赖棘轮/lint 棘轮三红已修转绿） |
+| CI-06 原有安全门禁 | **PASS** | tenant/consent/secret scan 均在上述 19 success 内 |
 | CI-07 证据矩阵可复跑 | **PASS** | 本轮新增 3 个可复跑脚本（审计/性能/原型），全部只测不判或增量落盘 |
-| CI-08 main 与生产未被擅自修改 | **PASS** | `origin/main` = `c3213fd`（今日 fetch 复核）；生产 health 无 commit 字段 = 仍 `dc102cd` |
+| CI-08 main 与生产未被擅自修改 | **PASS** | `origin/main` = `c3213fd`（2026-10-26 `ls-remote` 复核）；生产仍 `dc102cd`。工程仅开启 Netlify Deploy Previews 设置（`skip_prs` false，不影响生产构建），未触碰生产部署 |
 
 ## 汇总
 
-**PASS 17 · PENDING 5 · BLOCKED 3 · NOT_MET 1（PERF 目标）· 部分 PASS 4**
+**PASS 19 · PENDING 3 · BLOCKED 3 · NOT_MET 1（PERF 目标）· 部分 PASS 4**
 
-**关键 P0 未清零 ⇒ 本轮不标完成。** 三条主线遗留：① D-06 账号（解锁 UX-02/SEC-04/认证面证据）；② 性能优化实施（PERF-03/04）；③ Figma 连接器（FIG-01）。
+**关键 P0 未清零 ⇒ 本轮不标完成。** 三条主线遗留：① D-06 账号（解锁 UX-02/SEC-04/认证面证据）；② 性能冷态 LCP 仍超标（PERF 目标 NOT_MET，载荷优化已实证）；③ Figma 连接器（FIG-01）。

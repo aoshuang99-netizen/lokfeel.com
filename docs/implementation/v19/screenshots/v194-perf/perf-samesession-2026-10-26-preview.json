@@ -1,0 +1,1040 @@
+{
+  "capturedAt": "2026-10-26T07:25:11.670Z",
+  "base": "https://deploy-preview-32--lokfeel.netlify.app",
+  "conditions": {
+    "device": {
+      "width": 390,
+      "height": 844
+    },
+    "throttle": {
+      "downloadKbps": 1600,
+      "uploadKbps": 750,
+      "latencyMs": 150
+    },
+    "cpuSlowdown": 4,
+    "samplesPerRoute": 5
+  },
+  "caveat": "RTT 为「本机真实 RTT + 150ms」，不是受控机房环境；绝对值偏悲观，只可用于同机前后对照与路由间比较。",
+  "routes": [
+    {
+      "path": "/",
+      "name": "首页（落地页）",
+      "status": 200,
+      "cold": {
+        "ttfbs": [
+          1333,
+          702,
+          752,
+          1102,
+          1045
+        ],
+        "ttfb": 1045,
+        "docDownload": 250,
+        "preRequest": 691,
+        "fcp": 6120,
+        "lcp": 6120,
+        "cls": 0,
+        "tbt": 4541,
+        "load": 39101,
+        "jsBytes": 267609,
+        "jsRequests": 12,
+        "totalTransfer": 426638
+      },
+      "warm": {
+        "ttfb": 4,
+        "lcp": 1412,
+        "jsBytes": 0
+      },
+      "spread": {
+        "ttfb": "702–1333",
+        "lcp": "4188–9740"
+      },
+      "thirdParty": [
+        "767ms app.netlify.com"
+      ],
+      "raw": {
+        "cold": [
+          {
+            "status": 200,
+            "wallMs": 30635,
+            "navTtfb": 1333.1000000238419,
+            "docDownload": 53.29999998211861,
+            "preRequest": 628.5,
+            "domContentLoaded": 5384.5,
+            "load": 30599.20000001788,
+            "fcp": 5360,
+            "lcp": 5360,
+            "cls": 0,
+            "tbt": 2476,
+            "longestTask": 562,
+            "jsBytes": 267872,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 426696,
+            "thirdParty": [
+              "767ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 39211,
+            "navTtfb": 701.7999999821186,
+            "docDownload": 250.40000000596046,
+            "preRequest": 1489.300000011921,
+            "domContentLoaded": 6129.5999999940395,
+            "load": 39101.40000000596,
+            "fcp": 6120,
+            "lcp": 6120,
+            "cls": 0,
+            "tbt": 3349,
+            "longestTask": 985,
+            "jsBytes": 267612,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 426579,
+            "thirdParty": [
+              "720ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 43432,
+            "navTtfb": 752.3000000119209,
+            "docDownload": 403.7999999821186,
+            "preRequest": 1463.300000011921,
+            "domContentLoaded": 7185.300000011921,
+            "load": 43427.20000001788,
+            "fcp": 6496,
+            "lcp": 6496,
+            "cls": 0,
+            "tbt": 4541,
+            "longestTask": 985,
+            "jsBytes": 267609,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 426638,
+            "thirdParty": [
+              "681ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 38184,
+            "navTtfb": 1102,
+            "docDownload": 60.599999994039536,
+            "preRequest": 429.09999999403954,
+            "domContentLoaded": 4363.199999988079,
+            "load": 38177.5,
+            "fcp": 4188,
+            "lcp": 4188,
+            "cls": 0,
+            "tbt": 5415,
+            "longestTask": 959,
+            "jsBytes": 267467,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 426342,
+            "thirdParty": [
+              "884ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 53918,
+            "navTtfb": 1044.5,
+            "docDownload": 493.19999998807907,
+            "preRequest": 691.1999999880791,
+            "domContentLoaded": 9738.799999982119,
+            "load": 53907.39999997616,
+            "fcp": 9424,
+            "lcp": 9740,
+            "cls": 0,
+            "tbt": 5759,
+            "longestTask": 1671,
+            "jsBytes": 267609,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 426640,
+            "thirdParty": [
+              "2000ms app.netlify.com"
+            ]
+          }
+        ],
+        "warm": [
+          {
+            "status": 200,
+            "wallMs": 13395,
+            "navTtfb": 5263.4000000059605,
+            "docDownload": 1276.4000000059605,
+            "preRequest": 1.7999999821186066,
+            "domContentLoaded": 8132.299999982119,
+            "load": 13378.299999982119,
+            "fcp": 6508,
+            "lcp": 6508,
+            "cls": 0,
+            "tbt": 3507,
+            "longestTask": 945,
+            "jsBytes": 1936,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 7176,
+            "thirdParty": [
+              "202ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 6435,
+            "navTtfb": 3.600000023841858,
+            "docDownload": 2.699999988079071,
+            "preRequest": 1.5,
+            "domContentLoaded": 2194.7000000178814,
+            "load": 6432.300000011921,
+            "fcp": 1376,
+            "lcp": 1376,
+            "cls": 0,
+            "tbt": 3455,
+            "longestTask": 969,
+            "jsBytes": 0,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 608,
+            "thirdParty": [
+              "256ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 6182,
+            "navTtfb": 2.5,
+            "docDownload": 2.5999999940395355,
+            "preRequest": 1,
+            "domContentLoaded": 2338.699999988079,
+            "load": 6175.699999988079,
+            "fcp": 964,
+            "lcp": 1540,
+            "cls": 0,
+            "tbt": 3209,
+            "longestTask": 889,
+            "jsBytes": 0,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 300,
+            "thirdParty": [
+              "256ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 5816,
+            "navTtfb": 3.5999999940395355,
+            "docDownload": 4.5,
+            "preRequest": 1.800000011920929,
+            "domContentLoaded": 2521.4000000059605,
+            "load": 5811.5,
+            "fcp": 792,
+            "lcp": 1036,
+            "cls": 0,
+            "tbt": 2659,
+            "longestTask": 625,
+            "jsBytes": 0,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 916,
+            "thirdParty": [
+              "301ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 44629,
+            "navTtfb": 3.2000000178813934,
+            "docDownload": 3.2999999821186066,
+            "preRequest": 1.2999999821186066,
+            "domContentLoaded": 3175,
+            "load": 44625.29999998212,
+            "fcp": 1412,
+            "lcp": 1412,
+            "cls": 0,
+            "tbt": 5859,
+            "longestTask": 1221,
+            "jsBytes": 0,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 916,
+            "thirdParty": [
+              "37965ms app.netlify.com"
+            ]
+          }
+        ]
+      },
+      "ttfbShareOfLcp": 17,
+      "headerToLcpShare": 32
+    },
+    {
+      "path": "/pricing",
+      "name": "定价",
+      "status": 200,
+      "cold": {
+        "ttfbs": [
+          842,
+          206,
+          1073,
+          1135,
+          939
+        ],
+        "ttfb": 939,
+        "docDownload": 206,
+        "preRequest": 503,
+        "fcp": 6372,
+        "lcp": 6372,
+        "cls": 0,
+        "tbt": 3813,
+        "load": 34288,
+        "jsBytes": 196573,
+        "jsRequests": 9,
+        "totalTransfer": 291188
+      },
+      "warm": {
+        "ttfb": 303,
+        "lcp": 2404,
+        "jsBytes": 0
+      },
+      "spread": {
+        "ttfb": "206–1135",
+        "lcp": "2344–9404"
+      },
+      "thirdParty": [
+        "976ms app.netlify.com"
+      ],
+      "raw": {
+        "cold": [
+          {
+            "status": 200,
+            "wallMs": 16570,
+            "navTtfb": 841.5,
+            "docDownload": 45.5,
+            "preRequest": 503.19999998807907,
+            "domContentLoaded": 4784.5,
+            "load": 16559.09999999404,
+            "fcp": 4504,
+            "lcp": 4504,
+            "cls": 0,
+            "tbt": 3400,
+            "longestTask": 1323,
+            "jsBytes": 196188,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 290643,
+            "thirdParty": [
+              "976ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 19233,
+            "navTtfb": 206.40000000596046,
+            "docDownload": 206.30000001192093,
+            "preRequest": 401.09999999403954,
+            "domContentLoaded": 3160.5,
+            "load": 19230.19999998808,
+            "fcp": 2344,
+            "lcp": 2344,
+            "cls": 0,
+            "tbt": 3813,
+            "longestTask": 911,
+            "jsBytes": 196713,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 291188,
+            "thirdParty": [
+              "1324ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 36221,
+            "navTtfb": 1072.699999988079,
+            "docDownload": 40.60000002384186,
+            "preRequest": 1499.4000000059605,
+            "domContentLoaded": 9403.90000000596,
+            "load": 36215.40000000596,
+            "fcp": 9404,
+            "lcp": 9404,
+            "cls": 0,
+            "tbt": 4100,
+            "longestTask": 1510,
+            "jsBytes": 196652,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 291260,
+            "thirdParty": [
+              "834ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 34312,
+            "navTtfb": 1135.4000000059605,
+            "docDownload": 967.5999999940395,
+            "preRequest": 753.5,
+            "domContentLoaded": 8659.09999999404,
+            "load": 34287.5,
+            "fcp": 8652,
+            "lcp": 8652,
+            "cls": 0,
+            "tbt": 3934,
+            "longestTask": 1147,
+            "jsBytes": 196393,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 290846,
+            "thirdParty": [
+              "1002ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 40072,
+            "navTtfb": 938.6999999880791,
+            "docDownload": 207.09999999403954,
+            "preRequest": 419.7000000178814,
+            "domContentLoaded": 6648.5,
+            "load": 40058.40000000596,
+            "fcp": 6372,
+            "lcp": 6372,
+            "cls": 0,
+            "tbt": 3590,
+            "longestTask": 804,
+            "jsBytes": 196573,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 291217,
+            "thirdParty": [
+              "664ms app.netlify.com"
+            ]
+          }
+        ],
+        "warm": [
+          {
+            "status": 200,
+            "wallMs": 31457,
+            "navTtfb": 4543.899999976158,
+            "docDownload": 5.800000011920929,
+            "preRequest": 1.800000011920929,
+            "domContentLoaded": 7888.300000011921,
+            "load": 31453.40000000596,
+            "fcp": 6688,
+            "lcp": 6688,
+            "cls": 0,
+            "tbt": 4053,
+            "longestTask": 1316,
+            "jsBytes": 1936,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 8459,
+            "thirdParty": [
+              "19214ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 5723,
+            "navTtfb": 241.09999999403954,
+            "docDownload": 2.9000000059604645,
+            "preRequest": 1.100000023841858,
+            "domContentLoaded": 747.2000000178814,
+            "load": 5720.4000000059605,
+            "fcp": 2128,
+            "lcp": 2128,
+            "cls": 0,
+            "tbt": 3169,
+            "longestTask": 1299,
+            "jsBytes": 0,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 608,
+            "thirdParty": [
+              "203ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 6275,
+            "navTtfb": 303.39999997615814,
+            "docDownload": 3.300000011920929,
+            "preRequest": 1.7000000178813934,
+            "domContentLoaded": 935.3000000119209,
+            "load": 6264.700000017881,
+            "fcp": 2340,
+            "lcp": 2340,
+            "cls": 0,
+            "tbt": 3836,
+            "longestTask": 1322,
+            "jsBytes": 0,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 608,
+            "thirdParty": [
+              "210ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 5989,
+            "navTtfb": 228.90000000596046,
+            "docDownload": 3.699999988079071,
+            "preRequest": 0.9000000059604645,
+            "domContentLoaded": 2904.300000011921,
+            "load": 5987.199999988079,
+            "fcp": 2404,
+            "lcp": 2404,
+            "cls": 0,
+            "tbt": 3376,
+            "longestTask": 1451,
+            "jsBytes": 0,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 300,
+            "thirdParty": [
+              "217ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 7170,
+            "navTtfb": 510.59999999403954,
+            "docDownload": 3,
+            "preRequest": 1.300000011920929,
+            "domContentLoaded": 4062.600000023842,
+            "load": 7164.700000017881,
+            "fcp": 2948,
+            "lcp": 2948,
+            "cls": 0,
+            "tbt": 4031,
+            "longestTask": 1491,
+            "jsBytes": 0,
+            "jsRequests": 9,
+            "imgBytes": 0,
+            "totalTransfer": 608,
+            "thirdParty": [
+              "217ms app.netlify.com"
+            ]
+          }
+        ]
+      },
+      "ttfbShareOfLcp": 15,
+      "headerToLcpShare": 26
+    },
+    {
+      "path": "/login",
+      "name": "登录",
+      "status": 200,
+      "cold": {
+        "ttfbs": [
+          935,
+          612,
+          1088,
+          1294,
+          813
+        ],
+        "ttfb": 935,
+        "docDownload": 47,
+        "preRequest": 452,
+        "fcp": 5656,
+        "lcp": 5656,
+        "cls": 0,
+        "tbt": 3382,
+        "load": 26076,
+        "jsBytes": 206303,
+        "jsRequests": 11,
+        "totalTransfer": 295758
+      },
+      "warm": {
+        "ttfb": 554,
+        "lcp": 2436,
+        "jsBytes": 0
+      },
+      "spread": {
+        "ttfb": "612–1294",
+        "lcp": "3040–7984"
+      },
+      "thirdParty": [
+        "723ms app.netlify.com"
+      ],
+      "raw": {
+        "cold": [
+          {
+            "status": 200,
+            "wallMs": 21757,
+            "navTtfb": 934.5999999940395,
+            "docDownload": 211.80000001192093,
+            "preRequest": 774.2000000178814,
+            "domContentLoaded": 5713.700000017881,
+            "load": 21741,
+            "fcp": 5656,
+            "lcp": 5656,
+            "cls": 0,
+            "tbt": 3382,
+            "longestTask": 1101,
+            "jsBytes": 206204,
+            "jsRequests": 11,
+            "imgBytes": 0,
+            "totalTransfer": 295758,
+            "thirdParty": [
+              "723ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 27511,
+            "navTtfb": 611.8000000119209,
+            "docDownload": 598.7999999821186,
+            "preRequest": 405.59999999403954,
+            "domContentLoaded": 7637.5999999940395,
+            "load": 27507.5,
+            "fcp": 7356,
+            "lcp": 7836,
+            "cls": 0,
+            "tbt": 3255,
+            "longestTask": 1167,
+            "jsBytes": 206204,
+            "jsRequests": 11,
+            "imgBytes": 0,
+            "totalTransfer": 294053,
+            "thirdParty": [
+              "809ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 43915,
+            "navTtfb": 1087.699999988079,
+            "docDownload": 42.5,
+            "preRequest": 431.60000002384186,
+            "domContentLoaded": 7637.5,
+            "load": 43908.40000000596,
+            "fcp": 7436,
+            "lcp": 7984,
+            "cls": 0,
+            "tbt": 4056,
+            "longestTask": 1119,
+            "jsBytes": 290444,
+            "jsRequests": 16,
+            "imgBytes": 0,
+            "totalTransfer": 433063,
+            "thirdParty": [
+              "686ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 26084,
+            "navTtfb": 1293.5999999940395,
+            "docDownload": 46.79999998211861,
+            "preRequest": 517.1000000238419,
+            "domContentLoaded": 4656.300000011921,
+            "load": 26075.80000001192,
+            "fcp": 4508,
+            "lcp": 4852,
+            "cls": 0,
+            "tbt": 3798,
+            "longestTask": 917,
+            "jsBytes": 210467,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 340825,
+            "thirdParty": [
+              "618ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 11989,
+            "navTtfb": 813.0999999940395,
+            "docDownload": 43.900000005960464,
+            "preRequest": 451.5,
+            "domContentLoaded": 3147.699999988079,
+            "load": 11982.699999988079,
+            "fcp": 3040,
+            "lcp": 3040,
+            "cls": 0,
+            "tbt": 1899,
+            "longestTask": 760,
+            "jsBytes": 206303,
+            "jsRequests": 11,
+            "imgBytes": 0,
+            "totalTransfer": 294143,
+            "thirdParty": [
+              "790ms app.netlify.com"
+            ]
+          }
+        ],
+        "warm": [
+          {
+            "status": 200,
+            "wallMs": 48083,
+            "navTtfb": 1316.5,
+            "docDownload": 233.80000001192093,
+            "preRequest": 3.5,
+            "domContentLoaded": 3545.9000000059605,
+            "load": 48000.09999999404,
+            "fcp": 2632,
+            "lcp": 3768,
+            "cls": 0,
+            "tbt": 2613,
+            "longestTask": 982,
+            "jsBytes": 78477,
+            "jsRequests": 16,
+            "imgBytes": 0,
+            "totalTransfer": 640998,
+            "thirdParty": [
+              "41799ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4542,
+            "navTtfb": 815.5,
+            "docDownload": 190.7999999821186,
+            "preRequest": 1.100000023841858,
+            "domContentLoaded": 1854,
+            "load": 4538.5,
+            "fcp": 1724,
+            "lcp": 2236,
+            "cls": 0,
+            "tbt": 1360,
+            "longestTask": 583,
+            "jsBytes": 0,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 608,
+            "thirdParty": [
+              "241ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 5273,
+            "navTtfb": 553.5,
+            "docDownload": 189.80000001192093,
+            "preRequest": 1,
+            "domContentLoaded": 2339.5,
+            "load": 5250.0999999940395,
+            "fcp": 1780,
+            "lcp": 2396,
+            "cls": 0,
+            "tbt": 1595,
+            "longestTask": 473,
+            "jsBytes": 0,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 916,
+            "thirdParty": [
+              "231ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 6759,
+            "navTtfb": 473.7000000178814,
+            "docDownload": 185.19999998807907,
+            "preRequest": 1.399999976158142,
+            "domContentLoaded": 2603.2999999821186,
+            "load": 6749.399999976158,
+            "fcp": 1480,
+            "lcp": 2816,
+            "cls": 0,
+            "tbt": 3018,
+            "longestTask": 816,
+            "jsBytes": 0,
+            "jsRequests": 12,
+            "imgBytes": 0,
+            "totalTransfer": 916,
+            "thirdParty": [
+              "206ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 6677,
+            "navTtfb": 493.80000001192093,
+            "docDownload": 250.2999999821186,
+            "preRequest": 1.0999999940395355,
+            "domContentLoaded": 2385.199999988079,
+            "load": 6668,
+            "fcp": 1580,
+            "lcp": 2436,
+            "cls": 0,
+            "tbt": 2871,
+            "longestTask": 765,
+            "jsBytes": 0,
+            "jsRequests": 16,
+            "imgBytes": 0,
+            "totalTransfer": 916,
+            "thirdParty": [
+              "288ms app.netlify.com"
+            ]
+          }
+        ]
+      },
+      "ttfbShareOfLcp": 17,
+      "headerToLcpShare": 25
+    },
+    {
+      "path": "/pay.html",
+      "name": "Hlua Pass",
+      "status": 200,
+      "cold": {
+        "ttfbs": [
+          969,
+          553,
+          613,
+          576,
+          795
+        ],
+        "ttfb": 613,
+        "docDownload": 22,
+        "preRequest": 697,
+        "fcp": 2564,
+        "lcp": 2564,
+        "cls": 0,
+        "tbt": 2687,
+        "load": 15374,
+        "jsBytes": 1936,
+        "jsRequests": 1,
+        "totalTransfer": 3668
+      },
+      "warm": {
+        "ttfb": 213,
+        "lcp": 840,
+        "jsBytes": 1936
+      },
+      "spread": {
+        "ttfb": "553–969",
+        "lcp": "1784–2892"
+      },
+      "thirdParty": [
+        "1011ms app.netlify.com"
+      ],
+      "raw": {
+        "cold": [
+          {
+            "status": 200,
+            "wallMs": 15382,
+            "navTtfb": 968.9000000059605,
+            "docDownload": 17.5,
+            "preRequest": 697.3999999761581,
+            "domContentLoaded": 1894.199999988079,
+            "load": 15373.699999988079,
+            "fcp": 2564,
+            "lcp": 2564,
+            "cls": 0,
+            "tbt": 2687,
+            "longestTask": 652,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 3665,
+            "thirdParty": [
+              "1011ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 17325,
+            "navTtfb": 553.1999999880791,
+            "docDownload": 254.90000000596046,
+            "preRequest": 657.6000000238419,
+            "domContentLoaded": 2610.600000023842,
+            "load": 17322.70000001788,
+            "fcp": 2588,
+            "lcp": 2588,
+            "cls": 0,
+            "tbt": 2893,
+            "longestTask": 1348,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 3681,
+            "thirdParty": [
+              "987ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 25280,
+            "navTtfb": 613.2999999821186,
+            "docDownload": 21.700000017881393,
+            "preRequest": 1490.4000000059605,
+            "domContentLoaded": 2908.0999999940395,
+            "load": 25272,
+            "fcp": 2892,
+            "lcp": 2892,
+            "cls": 0,
+            "tbt": 1544,
+            "longestTask": 918,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 3681,
+            "thirdParty": [
+              "718ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 8723,
+            "navTtfb": 575.9000000059605,
+            "docDownload": 17.599999994039536,
+            "preRequest": 717.8000000119209,
+            "domContentLoaded": 1505.1000000238419,
+            "load": 8714.600000023842,
+            "fcp": 2240,
+            "lcp": 2240,
+            "cls": 0,
+            "tbt": 3165,
+            "longestTask": 1097,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 3665,
+            "thirdParty": [
+              "667ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 6288,
+            "navTtfb": 795.4000000059605,
+            "docDownload": 21.5,
+            "preRequest": 421.5,
+            "domContentLoaded": 1802,
+            "load": 6285.200000017881,
+            "fcp": 1784,
+            "lcp": 1784,
+            "cls": 0,
+            "tbt": 2104,
+            "longestTask": 898,
+            "jsBytes": 1924,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 3668,
+            "thirdParty": [
+              "600ms app.netlify.com"
+            ]
+          }
+        ],
+        "warm": [
+          {
+            "status": 200,
+            "wallMs": 4170,
+            "navTtfb": 212.69999998807907,
+            "docDownload": 5.300000011920929,
+            "preRequest": 2.4000000059604645,
+            "domContentLoaded": 654.1999999880791,
+            "load": 4164.800000011921,
+            "fcp": 656,
+            "lcp": 656,
+            "cls": 0,
+            "tbt": 2142,
+            "longestTask": 913,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 2236,
+            "thirdParty": [
+              "273ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4052,
+            "navTtfb": 206.89999997615814,
+            "docDownload": 6.800000011920929,
+            "preRequest": 1.5,
+            "domContentLoaded": 441.59999999403954,
+            "load": 4049.399999976158,
+            "fcp": 840,
+            "lcp": 840,
+            "cls": 0,
+            "tbt": 1804,
+            "longestTask": 1015,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 2236,
+            "thirdParty": [
+              "207ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4256,
+            "navTtfb": 254.69999998807907,
+            "docDownload": 2.100000023841858,
+            "preRequest": 1.300000011920929,
+            "domContentLoaded": 1042.6000000238419,
+            "load": 4221.200000017881,
+            "fcp": 1020,
+            "lcp": 1020,
+            "cls": 0,
+            "tbt": 2280,
+            "longestTask": 846,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 2236,
+            "thirdParty": [
+              "235ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 2746,
+            "navTtfb": 204.90000000596046,
+            "docDownload": 8.400000005960464,
+            "preRequest": 1.5,
+            "domContentLoaded": 466.30000001192093,
+            "load": 2737,
+            "fcp": 1052,
+            "lcp": 1052,
+            "cls": 0,
+            "tbt": 1172,
+            "longestTask": 495,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 2236,
+            "thirdParty": [
+              "221ms app.netlify.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 2409,
+            "navTtfb": 221.90000000596046,
+            "docDownload": 3.399999976158142,
+            "preRequest": 1.5999999940395355,
+            "domContentLoaded": 638,
+            "load": 2383.899999976158,
+            "fcp": 692,
+            "lcp": 692,
+            "cls": 0,
+            "tbt": 665,
+            "longestTask": 396,
+            "jsBytes": 1936,
+            "jsRequests": 1,
+            "imgBytes": 0,
+            "totalTransfer": 2236,
+            "thirdParty": [
+              "278ms app.netlify.com"
+            ]
+          }
+        ]
+      },
+      "ttfbShareOfLcp": 24,
+      "headerToLcpShare": 52
+    }
+  ]
+}

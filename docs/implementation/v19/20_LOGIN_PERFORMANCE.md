@@ -1,7 +1,7 @@
 # V19-20 · `/login` 性能专项（WB19-45）
 
-> **状态：`PERF_TARGET_NOT_MET`（2026-10-23 重测）。** 目标 LCP ≤2500ms；实测冷态中位 **6544ms**（4608–9796）、暖态 **5472ms**。未达目标，且不做修饰。
-> 数据：`screenshots/v194-perf/perf-2026-10-23.json`（5 冷 + 5 暖 × 4 路由原始样本）。
+> **状态：`PERF_TARGET_NOT_MET`（2026-10-26 复核维持）。** 目标 LCP ≤2500ms；2026-10-23 重测冷态中位 **6544ms**（4608–9796）、暖态 **5472ms**。优化 #1（LazyMotion 下放）已实施并经 deploy preview 实证载荷收益（§7.4：JS −37KB/−2req），但冷态 LCP 未达标，不做修饰。
+> 数据：`screenshots/v194-perf/perf-2026-10-23.json`（5 冷 + 5 暖 × 4 路由原始样本）；2026-10-26 同会话前后对照 `perf-samesession-2026-10-26-{prod,preview}.json`。
 
 ## 1. 测量条件（可复算）
 
@@ -73,12 +73,40 @@
   `(dashboard)` 内（`conversation-list` 挂在 `chats/layout.tsx` ✓）。判定为**零行为变化**。
 - E2E 门禁（认证 18 条 + 页签 12 条 + chats 相关）将在 PR CI 里复跑，作为行为不变的证据。
 
-### 7.4 前后对照（PERF-03）
+### 7.4 前后对照（PERF-03）【2026-10-26 已完成】
 
-- 测量环境：PR 的 **Netlify deploy preview**（与生产同构构建，但不触碰生产）。
-- 流程：preview 就绪后，同会话内跑 `perf-baseline.mjs --samples=5` 指向 preview URL，
-  与本文件 §2 的生产基线（同会话测得）对照。**跨会话绝对值不可比（§3 已实证），
-  对照口径 = 同会话先测生产、再测 preview。**
+测量环境：PR #32 的 **Netlify deploy preview**（`deploy-preview-32--lokfeel.netlify.app`，
+构建自 `44e49c5` = 分支 HEAD；`skip_prs` 原为 `true`，本轮经 API 改 `false` 后触发）。
+**同会话先测生产、再测 preview**，各 5 冷样本（§1 同脚本同条件）。
+原始数据：`screenshots/v194-perf/perf-samesession-2026-10-26-{prod,preview}.json`。
+
+**跨环境 LCP 不可判的实证（先说清，再给结论）**：preview 走 `*.netlify.app` 裸域，
+本会话实测 **GFW 连接重置**（Chromium `net::ERR_CONNECTION_RESET`，脚本已带 3 次重试）、
+TTFB 全线 +65%（`/login` 566→935ms）、冷样本方差 ±2×（3040–7984ms）。
+生产走 Cloudflare 边缘（国内可达）。**因此 LCP/TTFB 的跨环境差值不具判定力**，
+可比的是**载荷（JS 字节/请求数）与 TBT（主线程指标，网络无关）**。
+
+| `/login` 冷态中位 | 生产 `dc102cd` | preview `44e49c5` | 差值 | 判读 |
+|---|---|---|---|---|
+| JS 传输 | **244KB / 13req** | **201KB / 11req** | **−37KB / −2req** | ✅ framer-motion 运行时已从 `/login` 移除 |
+| TBT | 3313ms | 3382ms | +2% | ➖ 噪声内：framer-motion 不是 `/login` TBT 主因 |
+| 冷 LCP | 3524ms | 5656ms | — | ⚠️ 网络混杂不可判（见上） |
+| 暖 LCP | 1732ms | 2436ms | — | ⚠️ 同上；两会话均 <2500 但方差大 |
+| 第三方 | cloudflareinsights 1239ms | app.netlify.com 723ms（preview 徽章注入，生产无） | — | 各自环境特有 |
+
+**两条结构性结论**：
+1. 优化 #1（LazyMotion 下放）**载荷级收益实证**：−37KB JS、−2 请求，且 E2E 全绿（零行为回退）；
+2. 但它**不是 LCP/TBT 的主要矛盾**——`/login` 剩余 201KB、cloudflareinsights beacon（1–2s）、
+   字体/关键 CSS 才是下一批目标（§7.5 的两项面板操作仍是零代码最大杠杆）。
+
+**本轮新发现（非 V19 分支引入）**：`/pricing` 冷态 JS **11KB/2req（生产 dc102cd）→ 192KB/9req（preview）**。
+经 `git diff` 隔离核实：**V19 分支只改了 3 个 src 文件**（`layout.tsx`、`dashboard-ui.tsx`、
+`living-workspace.tsx`），pricing 未动；该 192KB 来自 main 自带的 pricing 页新增
+（`dc102cd..c3213fd` 之间 +166 行）。已列为后续审计项，不计入本分支验收。
+
+**测量过程注释**：preview 构建需先在 Netlify 侧开启 Deploy Previews（原设置 `skip_prs: true`
+导致 PR #32 从未生成过 preview）；已通过 API 将其改为 `false`（`allowed_branches` 仍仅 `main`，
+不影响生产行为），空提交 `44e49c5` 触发构建，约 2.5 分钟就绪。
 
 ### 7.5 第三方注入的处置（代码之外，需人工/面板操作）
 
@@ -88,8 +116,11 @@
 | GTM（`NEXT_PUBLIC_GTM_ID` 已在生产生效） | `googletagmanager.com/gtm.js` 进首屏 | 若分析非必需，清掉 Netlify 变量即全站少一个阻塞脚本 | **你**（Netlify env） |
 | Netlify "Powered by" 徽章 | 品牌一致性 P2，404 页可见 | Netlify 账户设置可关（免费档允许） | **你**（Netlify 面板） |
 
-### 7.6 本轮判定更新
+### 7.6 本轮判定更新（2026-10-26）
 
-- PERF-03：**部分达成** —— 优化已实施，前后对照待 preview 测量（本节 §7.4）
-- PERF-04：⬜ 待 CI E2E 绿 + preview 走查
-- **总体仍标 `PERF_TARGET_NOT_MET`**，直到同会话对照数据证明目标达成或确认不可达。
+- PERF-03：**部分达成 → 结构性收益已实证**（§7.4：`/login` JS −37KB/−2req、TBT 持平、E2E 全绿），
+  LCP 级前后对照因 preview 域名受 GFW 干扰不具判定力（已在 §7.4 实证并说明口径）。
+- PERF-04：✅ CI 19 success / 1 skipped（手动档）/ 0 失败（HEAD `44e49c5`），preview 走查 `/login`、
+  `/api/health` 均 200。
+- **总体仍标 `PERF_TARGET_NOT_MET`**：冷态 LCP 未达 ≤2500ms。剩余主因 = cloudflareinsights 注入
+  （§7.5，面板操作）+ `/login` 其余 201KB 客户端 JS（下一轮审计目标）+ `/pricing` 192KB（main 自带，另立项）。
