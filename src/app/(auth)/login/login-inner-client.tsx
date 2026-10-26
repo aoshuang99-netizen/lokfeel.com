@@ -323,7 +323,8 @@ export default function LoginInnerClient({
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              tabIndex={-1}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
               disabled={isLoading}
               className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-foreground-subtle hover:text-foreground p-1"
             >

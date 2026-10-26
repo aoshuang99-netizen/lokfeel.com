@@ -921,6 +921,8 @@ export default function LandingPage() {
         </nav>
       </header>
 
+      {/* ── MAIN ── 无障碍：4 个公开路由原本全缺 <main> landmark（键盘/读屏审计实测），此处补齐 */}
+      <main>
       {/* ── HERO ── */}
       <section className="relative overflow-hidden pb-14 pt-28 sm:pb-16 sm:pt-32">
         <div
@@ -1194,6 +1196,8 @@ REST  /api/v1/missions · /intents · /connections · /outcomes`}
           </div>
         </div>
       </section>
+
+      </main>
 
       <SiteFooter />
 

@@ -54,9 +54,11 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
           {Object.entries(footerSections).map(([key, section]) => (
             <div key={key}>
-              <h4 className="text-[11px] font-bold tracking-widest text-white/40 uppercase mb-4">
+              {/* 无障碍：原为 h4，页面只有 h1 时构成 h1→h4 跳级（键盘/读屏审计实测）。
+                  页脚栏目是 footer 内的一级分组，用 h2 才是正确的结构层级；样式由 class 决定，视觉不变。 */}
+              <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase mb-4">
                 {section.title}
-              </h4>
+              </h2>
               <ul className="space-y-2 list-none p-0 m-0">
                 {section.links.map((link) => (
                   <li key={link.href}>

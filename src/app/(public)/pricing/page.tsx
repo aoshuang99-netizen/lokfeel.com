@@ -41,7 +41,8 @@ export default function PricingPage() {
   const purchasable = isPurchasable(product);
 
   return (
-    <div className="pt-24 pb-20">
+    // 无障碍：本页无自带 nav/footer，整页即主内容区 ⇒ 用 <main> 作根元素补 landmark
+    <main className="pt-24 pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-14">
@@ -161,6 +162,6 @@ export default function PricingPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
