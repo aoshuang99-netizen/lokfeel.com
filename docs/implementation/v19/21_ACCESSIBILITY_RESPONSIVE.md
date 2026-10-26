@@ -32,3 +32,61 @@
 2. 错误提示 aria-describedby 关联逐屏核；
 3. 软键盘弹出后输入与提交控件可见性（390px 真机/模拟）；
 4. 全屏键盘走查（16 审计只抽样 2 屏）。
+
+---
+
+## 5. 【2026-10-26】公开面键盘走查（WB19-46 补证）+ 三处缺陷已修
+
+### 5.1 方法与工具
+
+新增可复跑脚本 `scripts/qa/v19-a11y-public-audit.mjs`（**只测不判，永远 exit 0**）：
+真实 Chromium 对 4 个公开路由 × 2 视口（390×844 / 1440×900）做**逐 Tab 遍历**，
+记录每个停点的标签/可访问名/**焦点指示**（outline / box-shadow），并统计文档结构
+（h1 数量、标题跳级、landmark、图片 alt、控件可访问名）。
+
+🔴 两个测量坑（都实际踩到，写下来避免复发）：
+1. **必须显式绕过系统代理**：macOS 系统代理指向本地端口（如 10808），代理一挂，
+   Chromium 全部 `ERR_TIMED_OUT`，而 `curl` 直连正常 —— 会误判成"站点挂了"。
+   → `chromium.launch({ args: ['--proxy-server=direct://', '--proxy-bypass-list=*'] })`。
+2. **可访问名不能只看元素自身文本**：复选框包在 `<label>` 里时，名字来自 label，
+   按元素自身算会得到"无名"的**假阳性**（本报告初版就误报过一次，已剔除）。
+
+### 5.2 修复前（生产 `dc102cd`）→ 修复后（preview `429bf31`，真实浏览器实测）
+
+| 判据 | 修复前（4 路由 × 2 视口） | 修复后 | 结论 |
+|---|---|---|---|
+| `<main>` landmark | **全 8 页 = N（全缺）** | **全 8 页 = Y** | ✅ 已修 |
+| 标题跳级（h1→h4） | `/login` = 1 处 | **全 8 页 = 0** | ✅ 已修 |
+| Tab 序闭环（无陷阱） | 8/8 闭环 | 8/8 闭环 | ✅ 本来就对 |
+| 自有控件焦点指示 | 缺失 0（唯一 1 处是 Netlify 徽章 iframe） | 同样仅第三方 iframe | ✅ 本来就对 |
+| 无名控件 | `/login` = 1（密码可见性按钮） | **0** | ✅ 已修 |
+| 图片缺 alt | 0（1 张图有 alt） | 0 | ✅ |
+
+`/login` 的 **Tab 停点 27 → 28**：多出来的正是密码可见性按钮 —— 它原本带
+`tabIndex={-1}`（键盘用户完全够不到，属 WCAG 2.1.1 键盘可达性问题），
+本次去掉并补 `aria-label` + `aria-pressed`，`reset-password` 的两个同款按钮一并修。
+
+数据：`screenshots/v194-a11y/a11y-before-prod-dc102cd.json`、
+`screenshots/v194-a11y/a11y-after-preview-429bf31.json`（含逐停点明细）。
+
+### 5.3 代码改动（6 文件 + 1 脚本）
+
+| 文件 | 改动 |
+|---|---|
+| `src/app/(public)/page.tsx` | `<header>` 之后、`<SiteFooter />` 之前包 `<main>`（nav/footer 留在 main 外） |
+| `src/app/(public)/pricing/page.tsx` | 页面无自带 nav/footer，根 `<div>` → `<main>` |
+| `src/app/(auth)/layout.tsx` | 认证面主内容容器 `<div>` → `<main>`（登录/注册/重置密码全部受益） |
+| `public/pay.html` | `</header>` 后 `<main>`，`<footer>` 前闭合 |
+| `src/app/(auth)/login/login-inner-client.tsx` | 密码可见性按钮：去掉 `tabIndex={-1}`，补 `aria-label` / `aria-pressed` |
+| `src/app/(auth)/reset-password/reset-password-client.tsx` | 两个同款按钮同样处理（一致修） |
+| `src/components/layout/footer.tsx` | 栏目标题 `h4` → `h2`（页脚分组是 footer 内一级，样式走 class，视觉不变；`globals.css` 无 h4 选择器，已核） |
+
+### 5.4 诚实边界
+
+- 修复的**浏览器复验只在 preview**（`deploy-preview-32`，构建自 `429bf31`）做了；
+  生产仍是旧代码，要等 D-10/合并后才在 `app.lokfeel.com` 生效。
+- 生产侧 `/pricing` 实测是 **307 → `/pay.html`**，所以"修复前 `/pricing`"那一行
+  实际量的是 pay.html 的表单元素（这也解释了它和 pay.html 的 Tab 数相同）。
+- 仍有 **PENDING（本轮未解）**：抽屉/弹窗 **focus trap**（`living-shell` Inspector）、
+  错误提示的 `aria-describedby` 逐个核、软键盘遮挡（需真机/可信模拟）、
+  登录后业务面（`/workspace`、`/console/*`）的键盘走查 —— 后两项都要 D-06 账号才能测。
