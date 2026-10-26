@@ -124,3 +124,51 @@ TTFB 全线 +65%（`/login` 566→935ms）、冷样本方差 ±2×（3040–7984
   `/api/health` 均 200。
 - **总体仍标 `PERF_TARGET_NOT_MET`**：冷态 LCP 未达 ≤2500ms。剩余主因 = cloudflareinsights 注入
   （§7.5，面板操作）+ `/login` 其余 201KB 客户端 JS（下一轮审计目标）+ `/pricing` 192KB（main 自带，另立项）。
+
+---
+
+## 8. 【2026-10-26】JS 载荷逐 chunk 归因（§7.4 遗留项闭案）
+
+方法：抓取 preview `/login` HTML 引用的全部 11 个 chunk（含 preload），逐个测
+原始字节 + br 线上字节（Netlify 对静态资源按浏览器 `Accept-Encoding` 回 br；
+单独 `Accept-Encoding: gzip` 会拿到 identity —— 测量时必须带浏览器同款头），
+再按特征串归因库。脚本化可复跑（临时脚本，方法论已记录于此节）。
+
+### 8.1 `/login` JS 构成（preview `44e49c5`，br 线上字节）
+
+| chunk | br | raw | 归因（特征串证据） |
+|---|---|---|---|
+| `0-xp6wqbpfi8p` | **123.3KB** | 396KB | react-dom + turbopack 模块运行时 + next-auth/client |
+| `15x7omkljizoe` | **42.2KB** | 159KB | Next App Router 运行时（RSC / segment cache / router actions） |
+| `0cz1d0mv5g_q7` | **38.5KB** | 113KB | **core-js 3.38.1 polyfills**（`github.com/zloirock/core-js` LICENSE 实锤） |
+| `0st90f40nk269` | 8.2KB | 31KB | react-dom 客户端钩子（useFormState 等） |
+| `22fufvf59dnfn` | 5.5KB | 16KB | lucide 图标 + twitter |
+| `1-id7ni8nentj` | 4.6KB | 12KB | **业务代码**（含 `LokFeel` 字样） |
+| `turbopack-*` | 4.4KB | 12KB | turbopack runtime |
+| `33ds62_*` / `1o-pn8*` / `3rdmja*` | 10.6KB | 36KB | 小块未识别（合计 <11KB br） |
+| `2kcpt4ody1qu9` | 2.5KB | 6KB | next-auth client |
+
+**结构结论：框架基线（react-dom + router + polyfills + turbopack runtime）≈ 216KB br，
+占 `/login` JS 的 ~88%；业务代码 ≈ 30KB。代码级可裁空间已榨干**——剩余三大块都是
+Next 16 (Turbopack) 的固定成本：polyfills 无 browserslist 开关（App Router 固定打包，
+仓库也未配置 browserslist）、react-dom 不可省、router 是 App Router 必载。
+
+### 8.2 `/pricing` 192KB 闭案：无页面级浪费
+
+`/pricing` 的 chunk 集合与 `/login` **几乎相同**（同一套共享框架基线），
+页面专属增量仅 `0mi2qmrho5xf5`（lucide 图标，10.5KB raw / ~3KB br）。
+§7.6 所列「`/pricing` 192KB 另立项审计」**就此闭案**：那 192KB 就是全站共享的
+框架基线，不是 pricing 页自带膨胀；此前 §2 生产口径的「11KB/2req」是旧版
+pricing 页（`dc102cd..c3213fd` 之间 main 重写了该页）。
+
+### 8.3 剩余优化杠杆（重排，全部非代码或需立项）
+
+| 杠杆 | 预期收益 | 归属 |
+|---|---|---|
+| GTM（HTML 内联 + `gtm.js` 每页加载） | −35KB 级 JS + 主线程 | **你**（Netlify env，§7.5） |
+| cloudflareinsights beacon | −1.0–2.1s 主线程/网络 | **你**（CF 面板，§7.5） |
+| 框架基线 216KB br | 理论仅 Preact 替换（大改，不建议） | 不动 |
+| 业务代码 30KB | 已无显著浪费 | 闭案 |
+
+**工程侧结论：`/login` 代码级优化在优化 #1（LazyMotion 下放）之后已无下一刀；
+性能达标与否取决于 §7.5 两项面板操作的落地（预期砍掉 1–2s 主线程 + 35KB JS）。**

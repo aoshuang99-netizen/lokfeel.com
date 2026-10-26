@@ -44,9 +44,10 @@
 | PERF-03 优化前后数据 | **PASS（载荷级）** | 优化 #1 已实施 + 同会话前后对照（`20` §7.4）：preview 实测 `/login` JS **244KB/13req → 201KB/11req**（−37KB = framer-motion 移除）；LCP 跨环境对照因 GFW 干扰不具判定力，口径已实证落档 |
 | PERF-04 无安全/功能回退 | **PASS** | CI 19 success / 0 失败（HEAD `44e49c5`）；preview `/login`、`/api/health` 200；E2E 全绿作为行为不变证据 |
 
-**性能现状：`PERF_TARGET_NOT_MET` 维持**（冷态 LCP 未达 2500ms）。剩余主因：
-cloudflareinsights 注入（面板操作，`20` §7.5）+ `/login` 剩余 201KB 客户端 JS +
-`/pricing` 192KB（main 自带新页，非本分支引入，另立项审计）。
+**性能现状：`PERF_TARGET_NOT_MET` 维持**（冷态 LCP 未达 2500ms）。剩余主因已闭案归因
+（`20` §8）：JS 构成 ~88% 为框架基线（react-dom 123KB br + router 42KB + core-js polyfills 38KB，
+代码级不可裁）；`/pricing` 192KB = 同一框架基线（页面增量仅 ~3KB，闭案）。
+工程侧代码级优化已无下一刀，达标取决于两项面板操作（GTM 移除 / cloudflareinsights 关闭，`20` §7.5）。
 
 ## CI（8 项）
 
