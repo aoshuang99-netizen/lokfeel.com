@@ -33,7 +33,6 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
   const [otp, setOtp] = useState("");
 
   const dialogRef = useRef<HTMLDivElement>(null);
-  useDialogA11y({ isOpen, onClose: handleClose, containerRef: dialogRef });
 
   const resetState = () => {
     setStep(defaultTab);
@@ -52,6 +51,8 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
     resetState();
     onClose();
   };
+
+  useDialogA11y({ isOpen, onClose: handleClose, containerRef: dialogRef });
 
   // Email signup flow
   const handleEmailStep = (e: FormEvent<HTMLFormElement>) => {
