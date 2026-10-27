@@ -270,6 +270,7 @@ export default function ResetPasswordClient({ token, email }: Props) {
       {/* Error */}
       {error && (
         <div
+          role="alert"
           style={{
             marginBottom: "24px",
             padding: "12px 16px",

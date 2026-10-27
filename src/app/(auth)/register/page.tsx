@@ -351,7 +351,7 @@ export default function RegisterPage() {
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
+          <div role="alert" className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
             {error}
           </div>
         )}
@@ -450,7 +450,7 @@ export default function RegisterPage() {
 
         {/* Twitter error */}
         {error && error.includes("X") && (
-          <div className="mt-2 p-2.5 rounded-lg bg-error-muted border border-error/20 text-xs text-error">
+          <div role="alert" className="mt-2 p-2.5 rounded-lg bg-error-muted border border-error/20 text-xs text-error">
             {error}
           </div>
         )}
@@ -463,7 +463,7 @@ export default function RegisterPage() {
 
       {/* Error (non-Twitter) */}
       {error && !error.includes("X") && (
-        <div className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
+        <div role="alert" className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
           {error}
         </div>
       )}

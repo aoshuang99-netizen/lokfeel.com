@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Check, Mail, Lock, User as UserIcon, Cake, Heart, ArrowRight } from "lucide-react";
 import { GENDER_OPTIONS, SEXUALITY_OPTIONS } from "@/constants";
 import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
+import { useDialogA11y } from "@/lib/a11y/use-dialog-a11y";
 
 type Step = "email" | "social" | "basic" | "gender" | "verify" | "success";
 
@@ -30,6 +31,9 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
   const [gender, setGender] = useState("");
   const [sexuality, setSexuality] = useState("");
   const [otp, setOtp] = useState("");
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y({ isOpen, onClose: handleClose, containerRef: dialogRef });
 
   const resetState = () => {
     setStep(defaultTab);
@@ -203,6 +207,10 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
 
           {/* Modal */}
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sign up for LokFeel"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -212,6 +220,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
             {/* Close button */}
             <button
               onClick={handleClose}
+              aria-label="Close signup dialog"
               className="absolute top-4 right-4 p-2 rounded-lg text-foreground-subtle hover:text-foreground hover:bg-background-tertiary transition-all"
             >
               <X className="w-5 h-5" />
@@ -264,10 +273,11 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
 
                     <form onSubmit={handleEmailStep} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-foreground-muted mb-1.5">Display Name</label>
+                        <label htmlFor="qs-display-name" className="block text-sm font-medium text-foreground-muted mb-1.5">Display Name</label>
                         <div className="relative">
                           <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-faint" />
                           <input
+                            id="qs-display-name"
                             type="text"
                             value={displayName}
                             onChange={(e) => setDisplayName(e.target.value)}
@@ -279,10 +289,11 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-foreground-muted mb-1.5">Date of Birth</label>
+                        <label htmlFor="qs-dob" className="block text-sm font-medium text-foreground-muted mb-1.5">Date of Birth</label>
                         <div className="relative">
                           <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-faint" />
                           <input
+                            id="qs-dob"
                             type="date"
                             value={dob}
                             onChange={(e) => setDob(e.target.value)}
@@ -293,7 +304,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
                       </div>
 
                       {error && (
-                        <p className="text-sm text-red-400">{error}</p>
+                        <p role="alert" className="text-sm text-red-400">{error}</p>
                       )}
 
                       <button type="submit" className="btn-primary w-full">
@@ -363,7 +374,7 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
                       </div>
 
                       {error && (
-                        <p className="text-sm text-red-400">{error}</p>
+                        <p role="alert" className="text-sm text-red-400">{error}</p>
                       )}
 
                       <button onClick={handleGenderStep} className="btn-primary w-full">
@@ -391,38 +402,42 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
 
                     <form onSubmit={handleEmailSubmit} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-foreground-muted mb-1.5">Email</label>
+                        <label htmlFor="qs-email" className="block text-sm font-medium text-foreground-muted mb-1.5">Email</label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-faint" />
                           <input
+                            id="qs-email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@example.com"
                             className="input-field w-full pl-11"
+                            aria-describedby={error ? "qs-email-error" : undefined}
                             required
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-foreground-muted mb-1.5">Password</label>
+                        <label htmlFor="qs-password" className="block text-sm font-medium text-foreground-muted mb-1.5">Password</label>
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-faint" />
                           <input
+                            id="qs-password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Min 8 characters"
                             minLength={8}
                             className="input-field w-full pl-11"
+                            aria-describedby={error ? "qs-email-error" : undefined}
                             required
                           />
                         </div>
                       </div>
 
                       {error && (
-                        <p className="text-sm text-red-400">{error}</p>
+                        <p id="qs-email-error" role="alert" className="text-sm text-red-400">{error}</p>
                       )}
 
                       <button type="submit" disabled={loading} className="btn-primary w-full">
@@ -450,19 +465,24 @@ export default function QuickSignupModal({ isOpen, onClose, defaultTab = "email"
 
                     <form onSubmit={handleVerify} className="space-y-4">
                       <div>
+                        <label htmlFor="qs-otp" className="sr-only">Verification code</label>
                         <input
+                          id="qs-otp"
                           type="text"
                           value={otp}
                           onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
                           placeholder="123456"
                           className="input-field w-full text-center text-2xl tracking-[0.5em] font-bold"
                           maxLength={6}
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          aria-describedby={error ? "qs-otp-error" : undefined}
                           required
                         />
                       </div>
 
                       {error && (
-                        <p className="text-sm text-red-400">{error}</p>
+                        <p id="qs-otp-error" role="alert" className="text-sm text-red-400">{error}</p>
                       )}
 
                       <button type="submit" disabled={loading} className="btn-primary w-full">
