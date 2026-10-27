@@ -26,11 +26,14 @@ interface DialogA11yOptions {
  * touches visual state.
  */
 export function useDialogA11y({ isOpen, onClose, containerRef }: DialogA11yOptions): void {
-  // onClose 保持最新，但不作为 effect 依赖 —— 否则调用方传内联箭头函数时
+  // onClose 保持最新，但不作为主 effect 依赖 —— 否则调用方传内联箭头函数时
   // 每次渲染都会重建 effect，cleanup 恢复焦点后又被 focusFirst() 抢走，
   // 表现为「每输入一个字符就失焦」。
+  // 赋值放在 effect 内（而非渲染期直接写 ref），避免 react-hooks/refs 报错。
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useEffect(() => {
     if (!isOpen) return
