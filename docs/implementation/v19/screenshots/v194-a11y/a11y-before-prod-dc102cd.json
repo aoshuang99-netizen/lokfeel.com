@@ -1,0 +1,211 @@
+{
+  "base": "https://app.lokfeel.com",
+  "routes": [
+    "/",
+    "/login",
+    "/pricing",
+    "/pay.html"
+  ],
+  "rows": [
+    {
+      "viewport": "390",
+      "route": "/",
+      "status": 200,
+      "tabStops": 20,
+      "cycled": true,
+      "noRing": 1,
+      "noRingList": [
+        "iframe:Powered by Netlify"
+      ],
+      "nameless": 0,
+      "structure": {
+        "h1": 1,
+        "headings": 13,
+        "levelSkips": 0,
+        "main": false,
+        "nav": 1,
+        "imgTotal": 1,
+        "imgNoAlt": 0,
+        "controlsTotal": 22,
+        "controlsNoName": 0,
+        "skipLink": true
+      },
+      "at": "2026-10-26T13:30:14.992Z"
+    },
+    {
+      "viewport": "390",
+      "route": "/login",
+      "status": 200,
+      "tabStops": 27,
+      "cycled": true,
+      "noRing": 1,
+      "noRingList": [
+        "iframe:Powered by Netlify"
+      ],
+      "nameless": 1,
+      "structure": {
+        "h1": 1,
+        "headings": 5,
+        "levelSkips": 1,
+        "main": false,
+        "nav": 0,
+        "imgTotal": 0,
+        "imgNoAlt": 0,
+        "controlsTotal": 28,
+        "controlsNoName": 1,
+        "skipLink": false
+      },
+      "at": "2026-10-26T13:30:21.254Z"
+    },
+    {
+      "viewport": "390",
+      "route": "/pricing",
+      "status": 200,
+      "tabStops": 7,
+      "cycled": true,
+      "noRing": 1,
+      "noRingList": [
+        "iframe:Powered by Netlify"
+      ],
+      "nameless": 0,
+      "structure": {
+        "h1": 1,
+        "headings": 4,
+        "levelSkips": 0,
+        "main": false,
+        "nav": 0,
+        "imgTotal": 0,
+        "imgNoAlt": 0,
+        "controlsTotal": 6,
+        "controlsNoName": 0,
+        "skipLink": false
+      },
+      "at": "2026-10-26T13:30:25.969Z"
+    },
+    {
+      "viewport": "390",
+      "route": "/pay.html",
+      "status": 200,
+      "tabStops": 7,
+      "cycled": true,
+      "noRing": 1,
+      "noRingList": [
+        "iframe:Powered by Netlify"
+      ],
+      "nameless": 0,
+      "structure": {
+        "h1": 1,
+        "headings": 4,
+        "levelSkips": 0,
+        "main": false,
+        "nav": 0,
+        "imgTotal": 0,
+        "imgNoAlt": 0,
+        "controlsTotal": 6,
+        "controlsNoName": 0,
+        "skipLink": false
+      },
+      "at": "2026-10-26T13:30:31.485Z"
+    },
+    {
+      "viewport": "1440",
+      "route": "/",
+      "status": 200,
+      "tabStops": 24,
+      "cycled": true,
+      "noRing": 1,
+      "noRingList": [
+        "iframe:Powered by Netlify"
+      ],
+      "nameless": 0,
+      "structure": {
+        "h1": 1,
+        "headings": 13,
+        "levelSkips": 0,
+        "main": false,
+        "nav": 1,
+        "imgTotal": 1,
+        "imgNoAlt": 0,
+        "controlsTotal": 22,
+        "controlsNoName": 0,
+        "skipLink": true
+      },
+      "at": "2026-10-26T13:30:37.132Z"
+    },
+    {
+      "viewport": "1440",
+      "route": "/login",
+      "status": 200,
+      "tabStops": 27,
+      "cycled": true,
+      "noRing": 1,
+      "noRingList": [
+        "iframe:Powered by Netlify"
+      ],
+      "nameless": 1,
+      "structure": {
+        "h1": 1,
+        "headings": 5,
+        "levelSkips": 1,
+        "main": false,
+        "nav": 0,
+        "imgTotal": 0,
+        "imgNoAlt": 0,
+        "controlsTotal": 28,
+        "controlsNoName": 1,
+        "skipLink": false
+      },
+      "at": "2026-10-26T13:30:46.573Z"
+    },
+    {
+      "viewport": "1440",
+      "route": "/pricing",
+      "status": 200,
+      "tabStops": 7,
+      "cycled": true,
+      "noRing": 1,
+      "noRingList": [
+        "iframe:Powered by Netlify"
+      ],
+      "nameless": 0,
+      "structure": {
+        "h1": 1,
+        "headings": 4,
+        "levelSkips": 0,
+        "main": false,
+        "nav": 0,
+        "imgTotal": 0,
+        "imgNoAlt": 0,
+        "controlsTotal": 6,
+        "controlsNoName": 0,
+        "skipLink": false
+      },
+      "at": "2026-10-26T13:30:51.368Z"
+    },
+    {
+      "viewport": "1440",
+      "route": "/pay.html",
+      "status": 200,
+      "tabStops": 7,
+      "cycled": true,
+      "noRing": 1,
+      "noRingList": [
+        "iframe:Powered by Netlify"
+      ],
+      "nameless": 0,
+      "structure": {
+        "h1": 1,
+        "headings": 4,
+        "levelSkips": 0,
+        "main": false,
+        "nav": 0,
+        "imgTotal": 0,
+        "imgNoAlt": 0,
+        "controlsTotal": 6,
+        "controlsNoName": 0,
+        "skipLink": false
+      },
+      "at": "2026-10-26T13:30:55.329Z"
+    }
+  ]
+}

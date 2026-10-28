@@ -55,10 +55,11 @@ export default function AuthLayout({
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#4c1d95]/20 rounded-full blur-[120px] pointer-events-none" />
       </div>
 
-      {/* Auth Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-6 pt-20 pb-20">
+      {/* Auth Content — 无障碍：认证面此前整片无 landmark（键盘/读屏审计实测 main=N），
+          此处就是主内容区，用 <main> 而不是再加一层 div */}
+      <main className="relative z-10 min-h-screen flex items-center justify-center px-6 pt-20 pb-20">
         {children}
-      </div>
+      </main>
 
       {/* Footer */}
       <Footer />

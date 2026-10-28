@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V19 Concept C — Adaptive Dual World · LokFeel Connection OS</title>
+<style>
+/* ═══ Concept C · Adaptive Dual World — Deep Field ⇄ Paper，随任务阶段切换（继承 V16） ═══
+   设计原型：非真实产品。流程为交互演示，所有"执行"均为模拟并显式标注。
+   令牌作用域：[data-world]，组件不自带主题色 —— 与 V16 双世界实现同构。 */
+:root{
+  --font:'SF Pro Display',-apple-system,'PingFang SC','Segoe UI',sans-serif;
+  --mono:'SF Mono',monospace; --r:16px;
+}
+/* ── Deep Field（生成式·探索态）── */
+[data-world="field"]{
+  --bg:#0a0f1e; --bg2:#0d1428; --panel:rgba(17,25,48,.78); --line:rgba(110,150,230,.18);
+  --ink:#e9eeff; --ink2:#a6b3d8; --ink3:#65739c;
+  --hi:#5eead4; --hi2:#7c9bff; --ok:#4ade80; --warn:#fbbf24; --danger:#fb7185;
+  --shadow:0 30px 80px rgba(3,6,16,.6);
+  --hero-size:clamp(34px,4.6vw,54px);
+}
+/* ── Paper（结构化·执行态）── */
+[data-world="paper"]{
+  --bg:#f6f3ea; --bg2:#efe9db; --panel:rgba(255,255,255,.9); --line:rgba(58,50,35,.14);
+  --ink:#231f17; --ink2:#5b5343; --ink3:#948a73;
+  --hi:#0f766e; --hi2:#a16207; --ok:#15803d; --warn:#b45309; --danger:#b91c1c;
+  --shadow:0 18px 50px rgba(70,60,40,.12);
+  --hero-size:clamp(30px,3.8vw,44px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);min-height:100vh;
+  transition:background .5s ease,color .5s ease}
+body[data-world="field"]{background:
+  radial-gradient(1000px 600px at 75% -10%,rgba(94,234,212,.08) 0%,transparent 55%),
+  radial-gradient(800px 500px at 8% 105%,rgba(124,155,255,.1) 0%,transparent 55%),var(--bg)}
+body[data-world="paper"]{background:
+  radial-gradient(1000px 500px at 80% -15%,rgba(161,98,7,.07) 0%,transparent 55%),var(--bg)}
+.shell{max-width:1140px;margin:0 auto;padding:0 24px 90px;transition:max-width .4s}
+.shell.mobile{max-width:400px;padding:0 14px 70px}
+nav{display:flex;align-items:center;gap:24px;padding:22px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
+.logo .dot{width:26px;height:26px;border-radius:50%;background:var(--hi);color:#04211c;display:grid;place-items:center;font-weight:800;font-size:12px}
+.os{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+nav .links{margin-left:auto;display:flex;gap:20px;font-size:13.5px;color:var(--ink2)}
+nav .links a{color:inherit;text-decoration:none}
+nav .links a:hover{color:var(--ink)}
+.btn{border:0;cursor:pointer;font-family:var(--font);font-weight:600;font-size:13.5px;border-radius:12px;
+  padding:11px 18px;min-height:42px;display:inline-flex;align-items:center;gap:8px;transition:.18s}
+.btn-hi{background:var(--hi);color:#04211c}
+.btn-hi:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--line)}
+.btn-ghost:hover{color:var(--ink)}
+.btn-no{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.vp{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-left:6px}
+.vp button{background:transparent;border:0;color:var(--ink3);font-size:12px;padding:8px 12px;cursor:pointer;font-family:var(--mono)}
+.vp button.on{background:var(--panel);color:var(--ink)}
+.worldbtn{font-family:var(--mono);font-size:11px;letter-spacing:.08em;background:var(--panel);border:1px solid var(--line);
+  color:var(--ink2);border-radius:10px;padding:8px 12px;cursor:pointer}
+/* 阶段条 */
+.phases{display:flex;gap:6px;margin:26px 0 8px;flex-wrap:wrap}
+.phase{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;border:1px solid var(--line);
+  border-radius:999px;padding:7px 14px;color:var(--ink3);cursor:pointer;background:transparent;transition:.2s}
+.phase.on{background:var(--hi);border-color:var(--hi);color:#04211c;font-weight:700}
+.phase.done{color:var(--ok);border-color:var(--ok)}
+.phase-note{font-size:12.5px;color:var(--ink3);margin-bottom:26px}
+.phase-note b{color:var(--ink2);font-weight:600}
+.screen{display:none;animation:fade .4s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:var(--hero-size);line-height:1.08;font-weight:800;letter-spacing:-.015em;max-width:620px}
+h1 em{font-style:normal;color:var(--hi)}
+.lede{color:var(--ink2);font-size:16px;line-height:1.65;max-width:540px;margin-top:16px}
+.kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--hi);text-transform:uppercase;margin-bottom:16px}
+.demo-tag{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  color:var(--warn);border:1px dashed var(--warn);border-radius:6px;padding:3px 8px;text-transform:uppercase}
+/* Composer（Paper 面 · 对话态） */
+.composer{margin-top:34px;background:var(--panel);border:1px solid var(--line);border-radius:20px;
+  padding:20px;max-width:620px;box-shadow:var(--shadow);backdrop-filter:blur(12px)}
+.composer textarea{width:100%;background:transparent;border:0;outline:0;resize:none;color:var(--ink);
+  font-size:17px;line-height:1.55;min-height:54px;font-family:var(--font)}
+.composer textarea::placeholder{color:var(--ink3)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{font-size:12.5px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:7px 13px;cursor:pointer;background:transparent}
+.chip:hover{border-color:var(--hi);color:var(--ink)}
+.compile{margin-top:12px;display:none;font-family:var(--mono);font-size:12.5px;color:var(--ink2)}
+.compile div{padding:4px 0;opacity:.4}
+.compile div.on{opacity:1}
+.compile div.done{opacity:.75;color:var(--ok)}
+/* 双态画布 */
+.duo{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);backdrop-filter:blur(10px)}
+.card h4{font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:var(--ink3);text-transform:uppercase;margin-bottom:10px}
+.mission{cursor:pointer;transition:.18s}
+.mission:hover{border-color:var(--hi);transform:translateY(-2px)}
+.mission .t{font-weight:650;font-size:15px;margin-bottom:6px}
+.mission .d{color:var(--ink2);font-size:13.5px;line-height:1.55}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);border-radius:999px;padding:4px 11px;margin-top:12px}
+.p-wait{background:rgba(251,191,36,.14);color:var(--warn)}
+.p-run{background:rgba(94,234,212,.14);color:var(--hi)}
+.p-ok{background:rgba(74,222,128,.14);color:var(--ok)}
+/* 状态可视化：同一数据，两种世界的呈现 */
+.canvas-viz{border:1px dashed var(--line);border-radius:12px;padding:14px;margin-top:10px}
+.canvas-viz .node{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:9px;
+  padding:7px 11px;font-size:12px;margin:4px 6px 0 0;background:var(--bg2)}
+[data-world="field"] .canvas-viz .node.hot{border-color:var(--hi);box-shadow:0 0 14px rgba(94,234,212,.35)}
+.rowlist{border:1px solid var(--line);border-radius:12px;margin-top:10px;overflow:hidden}
+.rowlist .r{display:flex;justify-content:space-between;gap:10px;padding:9px 13px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.rowlist .r:last-child{border-bottom:0}
+.rowlist .r b{color:var(--ink);font-weight:600}
+.agents{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.agent{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:999px;padding:8px 15px 8px 9px;font-size:13px;background:var(--panel)}
+.agent .st{width:8px;height:8px;border-radius:50%;background:var(--ink3)}
+.agent.working .st{background:var(--hi);box-shadow:0 0 10px var(--hi);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.45}}
+/* Consent */
+.consent-box{max-width:640px}
+.scope{font-family:var(--mono);font-size:12px;line-height:1.9;border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;color:var(--ink2)}
+.scope .a{color:var(--ok)}.scope .n{color:var(--danger)}
+/* Outcome */
+.gap-note{margin-top:10px;font-size:12.5px;color:var(--warn)}
+.evi{font-family:var(--mono);font-size:12px;color:var(--ink3);line-height:1.7;margin-top:10px}
+footer{margin-top:80px;padding-top:22px;border-top:1px solid var(--line);color:var(--ink3);font-size:12.5px;
+  display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between}
+@media(max-width:900px){.duo{grid-template-columns:1fr}}
+.shell.mobile .duo{grid-template-columns:1fr}
+.shell.mobile .composer{max-width:none}
+.shell.mobile h1{font-size:30px}
+.shell.mobile nav .links{display:none}
+</style>
+</head>
+<body data-world="field">
+<div class="shell" id="stage">
+  <nav>
+    <div class="logo"><span class="dot">L</span> LokFeel <span class="os">CONNECTION OS</span></div>
+    <div class="links"><a href="#" data-go="intent">Intent</a><a href="#" data-go="workspace">Workspace</a><a href="#" data-go="outcome">Outcomes</a></div>
+    <button class="worldbtn" id="worldBtn">◉ world: field ⇄ paper</button>
+    <div class="vp"><button class="on" data-vp="desktop">1440</button><button data-vp="mobile">390</button></div>
+  </nav>
+
+  <div class="phases" id="phases">
+    <button class="phase on" data-go="intent">01 · Intent</button>
+    <button class="phase" data-go="workspace">02 · Workspace</button>
+    <button class="phase" data-go="consent">03 · Consent</button>
+    <button class="phase" data-go="outcome">04 · Outcome</button>
+  </div>
+  <p class="phase-note">界面随阶段切换世界：<b>Intent</b> 是 Paper（对话），<b>Workspace / Consent</b> 切入 Deep Field（结构化画布），<b>Outcome</b> 回到 Paper（可读记录）。也可手动切换。</p>
+
+  <!-- INTENT（Paper） -->
+  <section class="screen on" id="s-intent">
+    <div class="kicker">Adaptive · starts as a conversation</div>
+    <h1>What are you trying to <em>accomplish</em>?</h1>
+    <p class="lede">Describe the outcome, not the steps. LokFeel compiles your intent into a structured workspace — where people and agents move work forward with consent and measurable results.</p>
+    <div class="composer">
+      <textarea id="intent" placeholder="What are you trying to accomplish?" rows="2"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+        <span class="demo-tag">prototype · simulated compile</span>
+        <button class="btn btn-hi" style="margin-left:auto" id="go">Create a Workspace →</button>
+      </div>
+      <div class="compile" id="compile">
+        <div>① Reading intent → WorkspaceSpec（schema 白名单校验）</div>
+        <div>② Proposing missions · assigning agents · finding consent gates</div>
+        <div>③ Switching to Deep Field canvas — nothing executes yet</div>
+      </div>
+      <div class="chips">
+        <button class="chip" data-fill="Launch a design-system beta with 10 pilot teams and synthesize their feedback.">Launch a beta program…</button>
+        <button class="chip" data-fill="Organize next quarter's customer research: interviews, themes, follow-ups.">Organize customer research…</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKSPACE（Field） -->
+  <section class="screen" id="s-workspace">
+    <div class="kicker">Deep Field · structure emerges from your intent</div>
+    <h1 style="font-size:32px" id="wsTitle">Launch the design-system beta</h1>
+    <div class="duo" style="margin-top:22px">
+      <div>
+        <div class="card"><h4>Workspace canvas · schema-whitelisted nodes</h4>
+          <div class="canvas-viz">
+            <span class="node hot">◎ Workspace</span><span class="node">▣ Mission M01</span><span class="node">▣ Mission M02</span>
+            <span class="node">◇ Agent · research</span><span class="node">◇ Agent · ops</span><span class="node">◐ Consent gate</span><span class="node">✓ Outcome x2</span>
+          </div>
+          <p style="font-size:12.5px;color:var(--ink3);margin-top:10px">每个节点对应真实的 Workspace / Mission / Agent / Outcome 记录 —— 不是装饰图形。</p>
+        </div>
+        <div class="agents">
+          <div class="agent working"><span class="st"></span> research-agent · gathering templates</div>
+          <div class="agent"><span class="st"></span> ops-agent · awaiting consent</div>
+          <div class="agent"><span class="st"></span> you · owner</div>
+        </div>
+      </div>
+      <div>
+        <div class="card mission" data-go="consent"><div class="t">M01 · Recruit 10 pilot teams</div>
+          <div class="d">Draft outreach, shortlist from approved connections, schedule intros.</div>
+          <span class="pill p-wait">⏸ consent required · sends on your behalf</span></div>
+        <div class="card mission" data-go="outcome" style="margin-top:12px"><div class="t">M02 · Collect &amp; cluster feedback</div>
+          <div class="d">Weekly digest clustered by theme, sources attached.</div>
+          <span class="pill p-run">▶ running · within granted scope</span></div>
+        <div class="card mission" data-go="outcome" style="margin-top:12px"><div class="t">M03 · Ship beta welcome kit</div>
+          <div class="d">Onboarding doc assembled from approved templates only.</div>
+          <span class="pill p-ok">✓ done · evidence attached</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONSENT（Field） -->
+  <section class="screen" id="s-consent">
+    <div class="kicker">Deep Field · the boundary is yours to set</div>
+    <h1 style="font-size:28px">Allow research-agent to message 10 pilot candidates?</h1>
+    <div class="card consent-box" style="margin-top:20px">
+      <h4>授权范围 · per-field, revocable</h4>
+      <div class="scope">
+        <span class="a">✓ send_message × 10</span> — connections you approved<br>
+        <span class="a">✓ read</span> — your name, workspace title<br>
+        <span class="n">✕ never</span> — payment info · private files · contacts export
+      </div>
+      <p style="color:var(--ink2);font-size:13.5px;line-height:1.65">You control what gets shared and executed. Revoking stops queued messages that haven't been sent. Enforcement is server-side — the interface only reflects it.</p>
+      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+        <button class="btn btn-hi" id="approve">Approve for this mission</button>
+        <button class="btn btn-no" data-go="workspace">Reject</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- OUTCOME（Paper） -->
+  <section class="screen" id="s-outcome">
+    <div class="kicker">Paper · readable records, not confetti</div>
+    <h1 style="font-size:30px">See what actually moved forward</h1>
+    <div class="duo" style="margin-top:22px">
+      <div class="card"><h4>M03 · Welcome kit — shipped</h4>
+        <p style="font-size:14px;color:var(--ink2)">10 recipients · 2026-10-23</p>
+        <div class="evi">evidence: doc.rev 7 · send log 10/10 · consent ref #c-2291</div></div>
+      <div class="card"><h4>M02 · Feedback digest — week 1</h4>
+        <p style="font-size:14px;color:var(--ink2)">3 themes from 14 responses</p>
+        <div class="evi">evidence: 14 receipt rows · clustering run 2f9c</div>
+        <div class="gap-note">⚠ 4 responses lack quoting consent — counted, never quoted</div></div>
+      <div class="card"><h4>M01 · Recruit — awaiting your decision</h4>
+        <p style="font-size:14px;color:var(--ink2)">no progress recorded</p>
+        <div class="evi">the agent has not acted — and says so</div></div>
+    </div>
+    <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" data-go="workspace">← Workspace</button>
+      <button class="btn btn-ghost" data-go="intent">Start a new intent</button>
+    </div>
+  </section>
+
+  <footer>
+    <span>V19 Concept C — Adaptive Dual World（继承 V16 Deep Field ⇄ Paper）· 推荐方向</span>
+    <span>Design prototype · flows simulated &amp; labelled · not the real product</span>
+  </footer>
+</div>
+<script>
+const AUTO={intent:'paper',workspace:'field',consent:'field',outcome:'paper'};
+let manual=false;
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  const order=['intent','workspace','consent','outcome'];const idx=order.indexOf(id);
+  document.querySelectorAll('.phase').forEach((p,i)=>{
+    p.classList.toggle('on',p.dataset.go===id);
+    p.classList.toggle('done',i<idx)});
+  if(!manual)document.body.dataset.world=AUTO[id]||'field';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('worldBtn').addEventListener('click',()=>{
+  manual=true;document.body.dataset.world=document.body.dataset.world==='field'?'paper':'field';
+  document.getElementById('worldBtn').textContent='◉ world: '+(document.body.dataset.world==='field'?'FIELD (manual)':'PAPER (manual)')+' ⇄'});
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');if(g){e.preventDefault();show(g.dataset.go);return}
+  const v=e.target.closest('[data-vp]');if(v){document.querySelectorAll('.vp button').forEach(b=>b.classList.remove('on'));
+    v.classList.add('on');document.getElementById('stage').classList.toggle('mobile',v.dataset.vp==='mobile');return}
+  const c=e.target.closest('.chip');if(c)document.getElementById('intent').value=c.dataset.fill;
+});
+document.getElementById('go').addEventListener('click',()=>{
+  const steps=[...document.querySelectorAll('#compile div')];const box=document.getElementById('compile');
+  box.style.display='block';steps.forEach(s=>s.classList.remove('on','done'));let i=0;
+  const t=setInterval(()=>{if(i>0)steps[i-1].classList.replace('on','done');
+    if(i>=steps.length){clearInterval(t);
+      const v=document.getElementById('intent').value.trim();
+      document.getElementById('wsTitle').textContent=v?v.slice(0,58):'Launch the design-system beta';
+      setTimeout(()=>show('workspace'),400);return}
+    steps[i].classList.add('on');i++},520)});
+document.getElementById('approve').addEventListener('click',()=>show('outcome'));
+</script>
+</body>
+</html>

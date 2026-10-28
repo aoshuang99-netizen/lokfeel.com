@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V19 Concept A — Living Intelligence · LokFeel Connection OS</title>
+<style>
+/* ═══ Concept A · Living Intelligence — 深色沉浸式 AI 工作区 ═══
+   设计原型：非真实产品。流程为交互演示，所有"执行"均为模拟并显式标注。 */
+:root{
+  --bg:#070a14; --bg2:#0c1224; --panel:rgba(20,28,52,.72); --panel-line:rgba(122,148,255,.16);
+  --ink:#eef2ff; --ink-dim:#9aa8d0; --ink-faint:#5f6d96;
+  --accent:#7c9bff; --accent2:#b48cff; --ok:#4ade80; --warn:#fbbf24; --danger:#fb7185;
+  --r:14px; --gap:16px;
+  --font:'SF Pro Display',-apple-system,'PingFang SC','Segoe UI',sans-serif;
+  --mono:'SF Mono','JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:radial-gradient(1200px 700px at 70% -10%,#141d3d 0%,transparent 60%),
+     radial-gradient(900px 600px at 10% 110%,#1a1030 0%,transparent 55%),var(--bg);
+     color:var(--ink);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+.shell{max-width:1180px;margin:0 auto;padding:0 24px 80px}
+/* 顶部导航 */
+nav{display:flex;align-items:center;gap:28px;padding:20px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em}
+.logo .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;font-size:13px;font-weight:800;color:#0b1020}
+.badge-os{font-size:10px;letter-spacing:.14em;color:var(--ink-faint);border:1px solid var(--panel-line);
+  border-radius:999px;padding:3px 8px;font-family:var(--mono)}
+nav .links{display:flex;gap:22px;margin-left:auto;font-size:13.5px;color:var(--ink-dim)}
+nav .links a{color:inherit;text-decoration:none}
+nav .links a:hover{color:var(--ink)}
+.btn{border:0;cursor:pointer;font-family:var(--font);font-weight:600;font-size:13.5px;border-radius:10px;
+  padding:10px 18px;transition:.18s;display:inline-flex;align-items:center;gap:8px;min-height:40px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b1020}
+.btn-primary:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--ink-dim);border:1px solid var(--panel-line)}
+.btn-ghost:hover{color:var(--ink);border-color:var(--accent)}
+/* 视口切换 */
+.vp{margin-left:12px;display:flex;border:1px solid var(--panel-line);border-radius:9px;overflow:hidden}
+.vp button{background:transparent;border:0;color:var(--ink-faint);font-size:12px;padding:8px 12px;cursor:pointer;font-family:var(--mono)}
+.vp button.on{background:rgba(124,155,255,.18);color:var(--ink)}
+/* Hero */
+.hero{padding:72px 0 40px;position:relative}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;margin-bottom:18px}
+h1{font-size:clamp(38px,5.2vw,62px);line-height:1.04;font-weight:800;letter-spacing:-.02em;max-width:640px}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--ink-dim);font-size:16.5px;line-height:1.65;max-width:560px;margin-top:20px}
+/* Constellation */
+.constellation{position:absolute;right:-40px;top:30px;width:480px;opacity:.9;pointer-events:none}
+@media(max-width:960px){.constellation{display:none}}
+/* Composer */
+.composer{margin-top:38px;background:var(--panel);border:1px solid var(--panel-line);border-radius:18px;
+  padding:18px;backdrop-filter:blur(14px);max-width:640px;box-shadow:0 24px 70px rgba(5,8,20,.55)}
+.composer textarea{width:100%;background:transparent;border:0;outline:0;resize:none;color:var(--ink);
+  font-family:var(--font);font-size:17px;line-height:1.5;min-height:56px}
+.composer textarea::placeholder{color:var(--ink-faint)}
+.composer .row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{font-size:12.5px;color:var(--ink-dim);border:1px solid var(--panel-line);border-radius:999px;
+  padding:7px 13px;cursor:pointer;background:transparent;font-family:var(--font)}
+.chip:hover{color:var(--ink);border-color:var(--accent)}
+/* 编译过程 */
+.compile{margin-top:14px;display:none;font-family:var(--mono);font-size:12.5px;color:var(--ink-dim)}
+.compile .step{display:flex;gap:10px;align-items:center;padding:5px 0;opacity:.35;transition:.3s}
+.compile .step.on{opacity:1;color:var(--ink)}
+.compile .step.done{opacity:.75;color:var(--ok)}
+.demo-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+  color:var(--warn);border:1px dashed rgba(251,191,36,.45);border-radius:6px;padding:3px 8px;text-transform:uppercase}
+/* 屏幕容器 */
+.screen{display:none;animation:fade .35s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* Workspace */
+.ws-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:36px 0 18px;flex-wrap:wrap}
+.ws-head h2{font-size:26px;font-weight:750;letter-spacing:-.01em}
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--gap)}
+.card{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--r);padding:18px;backdrop-filter:blur(12px)}
+.card h4{font-size:12px;font-family:var(--mono);letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:10px}
+.mission{cursor:pointer;transition:.18s;position:relative}
+.mission:hover{border-color:var(--accent);transform:translateY(-2px)}
+.mission .title{font-weight:650;font-size:15.5px;margin-bottom:6px}
+.mission .desc{color:var(--ink-dim);font-size:13.5px;line-height:1.55}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);
+  border-radius:999px;padding:4px 10px;margin-top:12px}
+.pill-wait{background:rgba(251,191,36,.12);color:var(--warn)}
+.pill-run{background:rgba(124,155,255,.14);color:var(--accent)}
+.pill-ok{background:rgba(74,222,128,.12);color:var(--ok)}
+.pill-no{background:rgba(251,113,133,.12);color:var(--danger)}
+/* Agent 行 */
+.agents{display:flex;gap:12px;flex-wrap:wrap;margin-top:var(--gap)}
+.agent{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--panel-line);
+  border-radius:999px;padding:9px 16px 9px 10px;font-size:13px}
+.agent .st{width:8px;height:8px;border-radius:50%;background:var(--ink-faint)}
+.agent.working .st{background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.6s infinite}
+.agent.idle .st{background:var(--ink-faint)}
+.agent.done .st{background:var(--ok)}
+@keyframes pulse{50%{opacity:.4}}
+/* Consent 面板 */
+.modal-wrap{position:fixed;inset:0;background:rgba(4,6,14,.7);display:none;place-items:center;z-index:50;backdrop-filter:blur(6px)}
+.modal-wrap.on{display:grid}
+.modal{width:min(520px,92vw);background:#101730;border:1px solid var(--panel-line);border-radius:20px;padding:26px}
+.modal h3{font-size:19px;margin-bottom:6px}
+.modal .scope{font-family:var(--mono);font-size:12px;color:var(--ink-dim);background:rgba(124,155,255,.08);
+  border:1px solid var(--panel-line);border-radius:10px;padding:12px;margin:14px 0;line-height:1.8}
+.modal .actions{display:flex;gap:10px;margin-top:18px}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(251,113,133,.4)}
+/* Outcome */
+.outcome{border-left:2px solid var(--ok)}
+.evi{font-family:var(--mono);font-size:12px;color:var(--ink-dim);line-height:1.7;margin-top:10px}
+.gap-note{margin-top:10px;font-size:12.5px;color:var(--warn)}
+/* Console */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;
+  text-align:left;padding:10px 12px;border-bottom:1px solid var(--panel-line)}
+td{padding:12px;border-bottom:1px solid rgba(122,148,255,.08);color:var(--ink-dim)}
+td:first-child{color:var(--ink)}
+/* 移动端框架 */
+.stage{transition:max-width .35s ease;margin:0 auto}
+.stage.mobile{max-width:390px}
+.stage.mobile .hero h1{font-size:34px}
+.stage.mobile .composer{max-width:none}
+.stage.mobile .constellation{display:none}
+.stage.mobile .spec{grid-template-columns:1fr}
+.stage.mobile nav .links{display:none}
+footer{margin-top:70px;padding-top:22px;border-top:1px solid var(--panel-line);color:var(--ink-faint);
+  font-size:12.5px;display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+<div class="shell">
+  <nav>
+    <div class="logo"><span class="dot">L</span> LokFeel <span class="badge-os">CONNECTION OS</span></div>
+    <div class="links"><a href="#" data-go="home">Home</a><a href="#" data-go="ws">Workspace</a><a href="#" data-go="console">Console</a></div>
+    <div class="vp">
+      <button class="on" data-vp="desktop">1440</button><button data-vp="mobile">390</button>
+    </div>
+    <button class="btn btn-primary" data-go="ws">Open workspace</button>
+  </nav>
+
+  <!-- ═══ SCREEN: HOME ═══ -->
+  <section class="screen on" id="s-home">
+    <div class="hero">
+      <svg class="constellation" viewBox="0 0 480 380" fill="none">
+        <g stroke="rgba(124,155,255,.25)"><path d="M80 300 L210 180 L330 240 L400 110"/><path d="M210 180 L150 80"/><path d="M330 240 L430 300"/><path d="M150 80 L330 240"/></g>
+        <g fill="#7c9bff"><circle cx="80" cy="300" r="7"/><circle cx="210" cy="180" r="10" fill="#b48cff"/><circle cx="330" cy="240" r="8"/><circle cx="400" cy="110" r="6"/><circle cx="150" cy="80" r="5"/><circle cx="430" cy="300" r="5"/></g>
+        <g font-family="monospace" font-size="10" fill="#9aa8d0"><text x="222" y="170">agent.research</text><text x="90" y="290">mission.01</text><text x="340" y="232">consent.gate</text></g>
+      </svg>
+      <div class="kicker">AI-Native Workspace · Teams &amp; Agents</div>
+      <h1>Turn intent into <em>coordinated action</em>.</h1>
+      <p class="sub">Describe what you want to achieve. LokFeel turns it into a structured workspace where people and agents move work forward — with consent and measurable outcomes.</p>
+      <div class="composer">
+        <textarea id="intent" placeholder="What are you trying to accomplish?" rows="2"></textarea>
+        <div class="row">
+          <span class="demo-tag">prototype · simulated compile</span>
+          <button class="btn btn-primary" style="margin-left:auto" id="go">Create a Workspace →</button>
+        </div>
+        <div class="compile" id="compile">
+          <div class="step" data-s="0">① Parsing intent into a WorkspaceSpec</div>
+          <div class="step" data-s="1">② Proposing missions &amp; assigning agents</div>
+          <div class="step" data-s="2">③ Checking what needs your consent</div>
+        </div>
+        <div class="chips">
+          <button class="chip" data-fill="Launch a beta program for our design system and collect feedback from 10 teams.">Launch a beta program…</button>
+          <button class="chip" data-fill="Prepare next week's customer advisory board: agenda, pre-reads, follow-ups.">Prepare an advisory board…</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCREEN: WORKSPACE ═══ -->
+  <section class="screen" id="s-ws">
+    <div class="ws-head">
+      <div><div class="kicker">Workspace · compiled from your intent</div>
+      <h2 id="wsTitle">Launch the design-system beta</h2></div>
+      <span class="pill pill-run">3 missions · 2 agents assigned</span>
+    </div>
+    <div class="spec">
+      <div class="card"><h4>WorkspaceSpec</h4>
+        <p style="color:var(--ink-dim);font-size:13.5px;line-height:1.6">Goal parsed into 3 missions with owners, consent gates and measurable outcomes. Schema-validated.</p></div>
+      <div class="card"><h4>Consent</h4>
+        <p style="color:var(--ink-dim);font-size:13.5px;line-height:1.6">1 action needs your approval before any agent may execute it. Nothing runs without you.</p></div>
+      <div class="card"><h4>Outcome</h4>
+        <p style="color:var(--ink-dim);font-size:13.5px;line-height:1.6">Progress is recorded against real events — no simulated success, no invented confidence numbers.</p></div>
+    </div>
+    <div class="agents">
+      <div class="agent working"><span class="st"></span> research-agent · gathering feedback templates</div>
+      <div class="agent idle"><span class="st"></span> ops-agent · waiting for consent</div>
+      <div class="agent done"><span class="st"></span> you · owner</div>
+    </div>
+    <div class="spec" style="margin-top:var(--gap)">
+      <div class="card mission" data-go="consent"><div class="title">Mission 01 · Recruit 10 pilot teams</div>
+        <div class="desc">Draft outreach, shortlist candidates from connections, schedule intros.</div>
+        <span class="pill pill-wait">⏸ consent required · sends messages on your behalf</span></div>
+      <div class="card mission" data-go="outcome"><div class="title">Mission 02 · Collect &amp; cluster feedback</div>
+        <div class="desc">Weekly digest of pilot feedback, clustered by theme with sources.</div>
+        <span class="pill pill-run">▶ running · agent has scope</span></div>
+      <div class="card mission" data-go="outcome"><div class="title">Mission 03 · Ship beta welcome kit</div>
+        <div class="desc">Assemble onboarding doc and checklist from approved templates only.</div>
+        <span class="pill pill-ok">✓ done · evidence attached</span></div>
+    </div>
+    <p style="margin-top:22px;color:var(--ink-faint);font-size:13px">Click a mission to open its consent gate or outcome record. <span class="demo-tag">prototype</span></p>
+  </section>
+
+  <!-- ═══ SCREEN: CONSENT ═══ -->
+  <section class="screen" id="s-consent">
+    <div class="ws-head"><div><div class="kicker">Consent gate · you decide the boundary</div>
+      <h2>Allow research-agent to message 10 pilot candidates?</h2></div></div>
+    <div class="card" style="max-width:640px">
+      <h4>What will be shared &amp; executed</h4>
+      <div class="scope" style="background:rgba(124,155,255,.08);border:1px solid var(--panel-line);border-radius:10px;padding:14px">
+        send_message × 10 · connections you approved<br>
+        read: your name, workspace title<br>
+        never: payment info · private files · contacts export
+      </div>
+      <p style="color:var(--ink-dim);font-size:13.5px;line-height:1.65">You can revoke this at any time. Revoking stops queued messages that have not been sent yet; consent applies per-field, not per-agent.</p>
+      <div class="actions" style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn btn-primary" id="approve">Approve for this mission</button>
+        <button class="btn btn-danger" data-go="ws">Reject</button>
+        <button class="btn btn-ghost" data-go="ws">Back</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCREEN: OUTCOME ═══ -->
+  <section class="screen" id="s-outcome">
+    <div class="ws-head"><div><div class="kicker">Outcome · what actually moved forward</div>
+      <h2>2 of 3 missions completed, 1 awaiting you</h2></div></div>
+    <div class="spec">
+      <div class="card outcome"><h4>Mission 03 · Welcome kit</h4>
+        <p style="font-size:14px">Shipped to 10 recipients · 2026-10-23</p>
+        <div class="evi">evidence: doc.rev 7 · send log (10/10) · consent ref #c-2291</div></div>
+      <div class="card outcome"><h4>Mission 02 · Feedback digest</h4>
+        <p style="font-size:14px">Week 1 digest ready · 3 themes from 14 responses</p>
+        <div class="evi">evidence: 14 receipt rows · clustering run 2f9c</div>
+        <div class="gap-note">⚠ 4 responses lack consent for quoting — shown as counts only</div></div>
+      <div class="card"><h4>Mission 01 · Recruit pilots</h4>
+        <p style="font-size:14px">Blocked on your consent decision</p>
+        <div class="evi">no progress recorded — agent has not acted</div></div>
+    </div>
+    <div style="margin-top:26px;display:flex;gap:10px">
+      <button class="btn btn-ghost" data-go="ws">← Workspace</button>
+      <button class="btn btn-primary" data-go="console">Open Console →</button>
+    </div>
+  </section>
+
+  <!-- ═══ SCREEN: CONSOLE ═══ -->
+  <section class="screen" id="s-console">
+    <div class="ws-head"><div><div class="kicker">Console · organization view</div>
+      <h2>Coordinate people, agents, and outcomes</h2></div>
+      <span class="pill pill-run">ACME Design Co · owner</span></div>
+    <div class="card" style="padding:6px 4px">
+      <table><thead><tr><th>Mission</th><th>Owner</th><th>Agents</th><th>Consent</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>Design-system beta</td><td>You</td><td>2</td><td><span class="pill pill-wait">1 pending</span></td><td>2 / 3</td></tr>
+        <tr><td>Q4 customer research</td><td>Mei</td><td>1</td><td><span class="pill pill-ok">granted</span></td><td>1 / 2</td></tr>
+        <tr><td>Onboarding automation</td><td>Sam</td><td>3</td><td><span class="pill pill-no">revoked</span></td><td>0 / 4</td></tr>
+      </tbody></table>
+    </div>
+    <p style="margin-top:18px;color:var(--ink-faint);font-size:13px">Members see only what their role allows; revoked consent stops execution — both enforced server-side.</p>
+    <div style="margin-top:22px"><button class="btn btn-ghost" data-go="home">← Back to start</button></div>
+  </section>
+
+  <footer>
+    <span>V19 Concept A — Living Intelligence · 深色沉浸式</span>
+    <span>Design prototype · flows are simulated &amp; labelled · not the real product</span>
+  </footer>
+</div>
+</div>
+<script>
+const show=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');window.scrollTo({top:0,behavior:'smooth'})};
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');if(g){e.preventDefault();
+    if(g.dataset.go==='consent')show('consent');else show(g.dataset.go);return}
+  const v=e.target.closest('[data-vp]');if(v){document.querySelectorAll('.vp button').forEach(b=>b.classList.remove('on'));
+    v.classList.add('on');document.getElementById('stage').classList.toggle('mobile',v.dataset.vp==='mobile');return}
+  const c=e.target.closest('.chip');if(c){document.getElementById('intent').value=c.dataset.fill}
+});
+document.getElementById('go').addEventListener('click',()=>{
+  const steps=[...document.querySelectorAll('#compile .step')];const box=document.getElementById('compile');
+  box.style.display='block';steps.forEach(s=>s.classList.remove('on','done'));
+  let i=0;const t=setInterval(()=>{if(i>0)steps[i-1].classList.replace('on','done');
+    if(i>=steps.length){clearInterval(t);
+      document.getElementById('wsTitle').textContent=
+        document.getElementById('intent').value.trim().slice(0,60)||'Launch the design-system beta';
+      setTimeout(()=>show('ws'),350);return}
+    steps[i].classList.add('on');i++},520);
+});
+document.getElementById('approve').addEventListener('click',()=>show('outcome'));
+</script>
+</body>
+</html>

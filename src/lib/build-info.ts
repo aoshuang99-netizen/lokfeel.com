@@ -69,12 +69,28 @@ export function normalizeBuiltAt(raw: string | undefined | null): string | null 
 }
 
 /**
+ * 静态成员访问视图 —— 必须是 `process.env.X` 的字面写法。
+ * 打包器只替换 `process.env.键名` 这种静态成员表达式；写成
+ * `readBuildInfo(env = process.env)` 再 `env.X` 时不会被替换，
+ * 运行期函数容器里也没有这些键 ⇒ 四值全 unknown（2026-10-27 线上实证）。
+ */
+const BUILD_ENV: BuildEnv = {
+  NEXT_PUBLIC_BUILD_COMMIT: process.env.NEXT_PUBLIC_BUILD_COMMIT,
+  NEXT_PUBLIC_BUILD_VERSION: process.env.NEXT_PUBLIC_BUILD_VERSION,
+  NEXT_PUBLIC_BUILD_COMMIT_SOURCE: process.env.NEXT_PUBLIC_BUILD_COMMIT_SOURCE,
+  NEXT_PUBLIC_BUILD_TIME: process.env.NEXT_PUBLIC_BUILD_TIME,
+  npm_package_version: process.env.npm_package_version,
+  COMMIT_REF: process.env.COMMIT_REF,
+  GITHUB_SHA: process.env.GITHUB_SHA,
+};
+
+/**
  * 从环境视图读出构建身份。
  *
  * 优先级：`NEXT_PUBLIC_BUILD_COMMIT`（构建设置的最终值）→ `COMMIT_REF`（Netlify）
  * → `GITHUB_SHA`（GitHub Actions）。三者都没有 ⇒ `unknown` + `commitSource: 'none'`。
  */
-export function readBuildInfo(env: BuildEnv = process.env): BuildInfo {
+export function readBuildInfo(env: BuildEnv = BUILD_ENV): BuildInfo {
   const commitFromEnv =
     normalizeCommit(env.NEXT_PUBLIC_BUILD_COMMIT) ??
     normalizeCommit(env.COMMIT_REF) ??

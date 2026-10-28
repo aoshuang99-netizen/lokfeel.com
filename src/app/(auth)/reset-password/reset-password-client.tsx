@@ -270,6 +270,7 @@ export default function ResetPasswordClient({ token, email }: Props) {
       {/* Error */}
       {error && (
         <div
+          role="alert"
           style={{
             marginBottom: "24px",
             padding: "12px 16px",
@@ -333,7 +334,8 @@ export default function ResetPasswordClient({ token, email }: Props) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              tabIndex={-1}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
               disabled={isLoading}
               style={{
                 position: "absolute",
@@ -423,7 +425,8 @@ export default function ResetPasswordClient({ token, email }: Props) {
             <button
               type="button"
               onClick={() => setShowConfirm(!showConfirm)}
-              tabIndex={-1}
+              aria-label={showConfirm ? "Hide password confirmation" : "Show password confirmation"}
+              aria-pressed={showConfirm}
               disabled={isLoading}
               style={{
                 position: "absolute",

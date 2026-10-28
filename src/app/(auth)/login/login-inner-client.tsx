@@ -250,7 +250,7 @@ export default function LoginInnerClient({
             Continue with X
           </button>
           {twitterError && (
-            <div className="mt-2 p-3 rounded-xl bg-error-muted border border-error-muted text-error text-sm">
+            <div role="alert" className="mt-2 p-3 rounded-xl bg-error-muted border border-error-muted text-error text-sm">
               {twitterError}
             </div>
           )}
@@ -264,7 +264,7 @@ export default function LoginInnerClient({
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-error-muted border border-error-muted text-error text-sm">
+        <div id="login-error" role="alert" className="mb-4 p-3 rounded-xl bg-error-muted border border-error-muted text-error text-sm">
           {error}
         </div>
       )}
@@ -294,6 +294,7 @@ export default function LoginInnerClient({
             autoFocus
             disabled={isLoading}
             placeholder="Enter your email or phone"
+            aria-describedby={error ? "login-error" : undefined}
             className="auth-input w-full"
           />
         </div>
@@ -318,12 +319,14 @@ export default function LoginInnerClient({
               autoComplete="current-password"
               disabled={isLoading}
               placeholder="Enter your password"
+              aria-describedby={error ? "login-error" : undefined}
               className="auth-input w-full pr-12"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              tabIndex={-1}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
               disabled={isLoading}
               className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-foreground-subtle hover:text-foreground p-1"
             >

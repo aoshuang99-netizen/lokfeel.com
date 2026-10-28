@@ -1,0 +1,1038 @@
+{
+  "capturedAt": "2026-10-23T14:07:20.835Z",
+  "base": "https://app.lokfeel.com",
+  "conditions": {
+    "device": {
+      "width": 390,
+      "height": 844
+    },
+    "throttle": {
+      "downloadKbps": 1600,
+      "uploadKbps": 750,
+      "latencyMs": 150
+    },
+    "cpuSlowdown": 4,
+    "samplesPerRoute": 5
+  },
+  "caveat": "RTT 为「本机真实 RTT + 150ms」，不是受控机房环境；绝对值偏悲观，只可用于同机前后对照与路由间比较。",
+  "routes": [
+    {
+      "path": "/",
+      "name": "首页（落地页）",
+      "status": 200,
+      "cold": {
+        "ttfbs": [
+          976,
+          882,
+          502,
+          692,
+          748
+        ],
+        "ttfb": 748,
+        "docDownload": 289,
+        "preRequest": 2237,
+        "fcp": 8028,
+        "lcp": 8028,
+        "cls": 0.0009,
+        "tbt": 8945,
+        "load": 17425,
+        "jsBytes": 278121,
+        "jsRequests": 14,
+        "totalTransfer": 430899
+      },
+      "warm": {
+        "ttfb": 7,
+        "lcp": 1708,
+        "jsBytes": 0
+      },
+      "spread": {
+        "ttfb": "502–976",
+        "lcp": "6852–9708"
+      },
+      "thirdParty": [
+        "21452ms static.cloudflareinsights.com"
+      ],
+      "raw": {
+        "cold": [
+          {
+            "status": 200,
+            "wallMs": 26477,
+            "navTtfb": 975.9000000059605,
+            "docDownload": 289.09999999403954,
+            "preRequest": 2477.2000000029802,
+            "domContentLoaded": 26312.5,
+            "load": 26313.60000000894,
+            "fcp": 7372,
+            "lcp": 7860,
+            "cls": 0.0009,
+            "tbt": 12504,
+            "longestTask": 2779,
+            "jsBytes": 278037,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 445890,
+            "thirdParty": [
+              "21452ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 20295,
+            "navTtfb": 882.4000000059605,
+            "docDownload": 257,
+            "preRequest": 2088.3999999910593,
+            "domContentLoaded": 6869.5,
+            "load": 20288.89999999106,
+            "fcp": 6852,
+            "lcp": 6852,
+            "cls": 0.0009,
+            "tbt": 1280,
+            "longestTask": 506,
+            "jsBytes": 278145,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 430923,
+            "thirdParty": [
+              "879ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 17443,
+            "navTtfb": 502.20000000298023,
+            "docDownload": 301.3999999910593,
+            "preRequest": 2237.4000000059605,
+            "domContentLoaded": 15793,
+            "load": 17424.80000001192,
+            "fcp": 9708,
+            "lcp": 9708,
+            "cls": 0.0009,
+            "tbt": 11790,
+            "longestTask": 3738,
+            "jsBytes": 278223,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 430701,
+            "thirdParty": [
+              "11793ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 17116,
+            "navTtfb": 691.7999999970198,
+            "docDownload": 773.7999999970198,
+            "preRequest": 3505.7000000029802,
+            "domContentLoaded": 17035.90000000596,
+            "load": 17045.10000000894,
+            "fcp": 8028,
+            "lcp": 8028,
+            "cls": 0.0009,
+            "tbt": 3582,
+            "longestTask": 770,
+            "jsBytes": 278037,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 430815,
+            "thirdParty": [
+              "11521ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 14999,
+            "navTtfb": 747.5,
+            "docDownload": 76.70000000298023,
+            "preRequest": 1816.5,
+            "domContentLoaded": 9390.5,
+            "load": 14895.300000011921,
+            "fcp": 8860,
+            "lcp": 8860,
+            "cls": 0.0009,
+            "tbt": 8945,
+            "longestTask": 3265,
+            "jsBytes": 278121,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 430899,
+            "thirdParty": [
+              "2131ms static.cloudflareinsights.com"
+            ]
+          }
+        ],
+        "warm": [
+          {
+            "status": 200,
+            "wallMs": 5210,
+            "navTtfb": 663.2999999970198,
+            "docDownload": 213.8999999910593,
+            "preRequest": 2,
+            "domContentLoaded": 4481.5,
+            "load": 5183.5999999940395,
+            "fcp": 2480,
+            "lcp": 2480,
+            "cls": 0.0009,
+            "tbt": 2748,
+            "longestTask": 991,
+            "jsBytes": 10992,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 11292,
+            "thirdParty": [
+              "2ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 5961,
+            "navTtfb": 5.200000002980232,
+            "docDownload": 4.200000002980232,
+            "preRequest": 1.699999988079071,
+            "domContentLoaded": 5057.399999991059,
+            "load": 5953.5999999940395,
+            "fcp": 1880,
+            "lcp": 1880,
+            "cls": 0.0009,
+            "tbt": 3057,
+            "longestTask": 911,
+            "jsBytes": 0,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 10990,
+            "thirdParty": []
+          },
+          {
+            "status": 200,
+            "wallMs": 6537,
+            "navTtfb": 7.100000008940697,
+            "docDownload": 4.899999991059303,
+            "preRequest": 3.5999999940395355,
+            "domContentLoaded": 5760.899999991059,
+            "load": 6526.0999999940395,
+            "fcp": 1708,
+            "lcp": 1708,
+            "cls": 0.0009,
+            "tbt": 4349,
+            "longestTask": 1198,
+            "jsBytes": 0,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 10990,
+            "thirdParty": [
+              "23ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4957,
+            "navTtfb": 7.5,
+            "docDownload": 7.4000000059604645,
+            "preRequest": 2.199999988079071,
+            "domContentLoaded": 3978.5,
+            "load": 4925.79999999702,
+            "fcp": 1680,
+            "lcp": 1680,
+            "cls": 0.0009,
+            "tbt": 2936,
+            "longestTask": 775,
+            "jsBytes": 0,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 10990,
+            "thirdParty": [
+              "19ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4172,
+            "navTtfb": 3.7999999970197678,
+            "docDownload": 3.6000000089406967,
+            "preRequest": 1.2000000029802322,
+            "domContentLoaded": 3457.1000000089407,
+            "load": 4165.600000008941,
+            "fcp": 756,
+            "lcp": 1124,
+            "cls": 0.0009,
+            "tbt": 2603,
+            "longestTask": 1079,
+            "jsBytes": 0,
+            "jsRequests": 14,
+            "imgBytes": 0,
+            "totalTransfer": 10990,
+            "thirdParty": [
+              "23ms static.cloudflareinsights.com"
+            ]
+          }
+        ]
+      },
+      "ttfbShareOfLcp": 9,
+      "headerToLcpShare": 41
+    },
+    {
+      "path": "/pricing",
+      "name": "定价",
+      "status": 200,
+      "cold": {
+        "ttfbs": [
+          243,
+          213,
+          256,
+          270,
+          453
+        ],
+        "ttfb": 256,
+        "docDownload": 22,
+        "preRequest": 1937,
+        "fcp": 3540,
+        "lcp": 3540,
+        "cls": 0.0009,
+        "tbt": 1190,
+        "load": 4893,
+        "jsBytes": 10990,
+        "jsRequests": 2,
+        "totalTransfer": 11290
+      },
+      "warm": {
+        "ttfb": 246,
+        "lcp": 2224,
+        "jsBytes": 10992
+      },
+      "spread": {
+        "ttfb": "213–453",
+        "lcp": "2168–4460"
+      },
+      "thirdParty": [
+        "1790ms static.cloudflareinsights.com"
+      ],
+      "raw": {
+        "cold": [
+          {
+            "status": 200,
+            "wallMs": 4914,
+            "navTtfb": 243.29999999701977,
+            "docDownload": 37.29999999701977,
+            "preRequest": 2708.5,
+            "domContentLoaded": 4858.79999999702,
+            "load": 4892.5,
+            "fcp": 3972,
+            "lcp": 3972,
+            "cls": 0.0009,
+            "tbt": 1190,
+            "longestTask": 931,
+            "jsBytes": 10990,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11290,
+            "thirdParty": [
+              "1790ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4910,
+            "navTtfb": 212.79999999701977,
+            "docDownload": 760.4000000059605,
+            "preRequest": 1936.5,
+            "domContentLoaded": 4903.79999999702,
+            "load": 4905.79999999702,
+            "fcp": 3396,
+            "lcp": 3396,
+            "cls": 0,
+            "tbt": 539,
+            "longestTask": 448,
+            "jsBytes": 10990,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11290,
+            "thirdParty": [
+              "1832ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 3710,
+            "navTtfb": 255.59999999403954,
+            "docDownload": 20.400000005960464,
+            "preRequest": 1330.2000000029802,
+            "domContentLoaded": 3694.5,
+            "load": 3707.2000000029802,
+            "fcp": 2168,
+            "lcp": 2168,
+            "cls": 0.0009,
+            "tbt": 406,
+            "longestTask": 388,
+            "jsBytes": 10992,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11292,
+            "thirdParty": [
+              "1818ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4357,
+            "navTtfb": 270.1000000089407,
+            "docDownload": 21.5,
+            "preRequest": 1559.2000000029802,
+            "domContentLoaded": 4330.9000000059605,
+            "load": 4351.4000000059605,
+            "fcp": 3540,
+            "lcp": 3540,
+            "cls": 0.0009,
+            "tbt": 1526,
+            "longestTask": 1302,
+            "jsBytes": 10992,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11292,
+            "thirdParty": [
+              "1705ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 7277,
+            "navTtfb": 453.20000000298023,
+            "docDownload": 17.5,
+            "preRequest": 2084.5999999940395,
+            "domContentLoaded": 7220.199999988079,
+            "load": 7267.199999988079,
+            "fcp": 4460,
+            "lcp": 4460,
+            "cls": 0.0009,
+            "tbt": 1701,
+            "longestTask": 1371,
+            "jsBytes": 10990,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11290,
+            "thirdParty": [
+              "4247ms static.cloudflareinsights.com"
+            ]
+          }
+        ],
+        "warm": [
+          {
+            "status": 200,
+            "wallMs": 3760,
+            "navTtfb": 242.70000000298023,
+            "docDownload": 21.799999997019768,
+            "preRequest": 488.29999999701977,
+            "domContentLoaded": 2879.9000000059605,
+            "load": 3756.5,
+            "fcp": 1844,
+            "lcp": 1844,
+            "cls": 0.0009,
+            "tbt": 1700,
+            "longestTask": 902,
+            "jsBytes": 10992,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 22284,
+            "thirdParty": [
+              "13ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 3194,
+            "navTtfb": 246.40000000596046,
+            "docDownload": 17.5,
+            "preRequest": 337.29999999701977,
+            "domContentLoaded": 2304.1000000089407,
+            "load": 3176.7999999970198,
+            "fcp": 2220,
+            "lcp": 2220,
+            "cls": 0.0009,
+            "tbt": 1541,
+            "longestTask": 1314,
+            "jsBytes": 10992,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11292,
+            "thirdParty": [
+              "6ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 2958,
+            "navTtfb": 263.19999998807907,
+            "docDownload": 248.6000000089407,
+            "preRequest": 350.80000001192093,
+            "domContentLoaded": 2353.2000000029802,
+            "load": 2950.300000011921,
+            "fcp": 2224,
+            "lcp": 2224,
+            "cls": 0.0009,
+            "tbt": 1290,
+            "longestTask": 1113,
+            "jsBytes": 10992,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11292,
+            "thirdParty": [
+              "13ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 2978,
+            "navTtfb": 295.6000000089407,
+            "docDownload": 17.69999998807907,
+            "preRequest": 348.3999999910593,
+            "domContentLoaded": 2410.199999988079,
+            "load": 2967.3999999910593,
+            "fcp": 2396,
+            "lcp": 2396,
+            "cls": 0.0009,
+            "tbt": 1352,
+            "longestTask": 1165,
+            "jsBytes": 10992,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11292,
+            "thirdParty": [
+              "20ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 3313,
+            "navTtfb": 214.69999998807907,
+            "docDownload": 768.9000000059605,
+            "preRequest": 738.3000000119209,
+            "domContentLoaded": 2667.2000000029802,
+            "load": 3308.9000000059605,
+            "fcp": 2524,
+            "lcp": 2524,
+            "cls": 0.0009,
+            "tbt": 1394,
+            "longestTask": 1158,
+            "jsBytes": 10992,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11292,
+            "thirdParty": [
+              "19ms static.cloudflareinsights.com"
+            ]
+          }
+        ]
+      },
+      "ttfbShareOfLcp": 7,
+      "headerToLcpShare": 63
+    },
+    {
+      "path": "/login",
+      "name": "登录",
+      "status": 200,
+      "cold": {
+        "ttfbs": [
+          791,
+          1547,
+          377,
+          571,
+          498
+        ],
+        "ttfb": 571,
+        "docDownload": 267,
+        "preRequest": 2015,
+        "fcp": 5792,
+        "lcp": 6544,
+        "cls": 0.0009,
+        "tbt": 3450,
+        "load": 11204,
+        "jsBytes": 244403,
+        "jsRequests": 13,
+        "totalTransfer": 918882
+      },
+      "warm": {
+        "ttfb": 695,
+        "lcp": 5472,
+        "jsBytes": 0
+      },
+      "spread": {
+        "ttfb": "377–1547",
+        "lcp": "4608–9796"
+      },
+      "thirdParty": [
+        "2072ms static.cloudflareinsights.com"
+      ],
+      "raw": {
+        "cold": [
+          {
+            "status": 200,
+            "wallMs": 11216,
+            "navTtfb": 791.0999999940395,
+            "docDownload": 50.5,
+            "preRequest": 2797.1000000089407,
+            "domContentLoaded": 10255.20000000298,
+            "load": 11203.90000000596,
+            "fcp": 5932,
+            "lcp": 7688,
+            "cls": 0.0009,
+            "tbt": 3246,
+            "longestTask": 1753,
+            "jsBytes": 244270,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 929669,
+            "thirdParty": [
+              "2072ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 10853,
+            "navTtfb": 1547.2000000029802,
+            "docDownload": 267.20000000298023,
+            "preRequest": 2015.4000000059605,
+            "domContentLoaded": 6796.100000008941,
+            "load": 10846.800000011921,
+            "fcp": 5792,
+            "lcp": 6544,
+            "cls": 0.0009,
+            "tbt": 3450,
+            "longestTask": 1511,
+            "jsBytes": 244403,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 918882,
+            "thirdParty": [
+              "1029ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 14835,
+            "navTtfb": 377.40000000596046,
+            "docDownload": 60.69999998807907,
+            "preRequest": 1628,
+            "domContentLoaded": 5606.0999999940395,
+            "load": 14825.40000000596,
+            "fcp": 4164,
+            "lcp": 4980,
+            "cls": 0.0009,
+            "tbt": 3481,
+            "longestTask": 1485,
+            "jsBytes": 244403,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 366466,
+            "thirdParty": [
+              "2990ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 12208,
+            "navTtfb": 570.5,
+            "docDownload": 273,
+            "preRequest": 2801.2999999970198,
+            "domContentLoaded": 7836.4000000059605,
+            "load": 12190.29999999702,
+            "fcp": 6188,
+            "lcp": 9796,
+            "cls": 0.0009,
+            "tbt": 3275,
+            "longestTask": 1632,
+            "jsBytes": 244403,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 918882,
+            "thirdParty": [
+              "2683ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 10269,
+            "navTtfb": 497.59999999403954,
+            "docDownload": 582.2999999970198,
+            "preRequest": 1149.2999999970198,
+            "domContentLoaded": 4651,
+            "load": 10254.59999999404,
+            "fcp": 4332,
+            "lcp": 4608,
+            "cls": 0.0009,
+            "tbt": 3564,
+            "longestTask": 1485,
+            "jsBytes": 244273,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 918752,
+            "thirdParty": [
+              "1967ms static.cloudflareinsights.com"
+            ]
+          }
+        ],
+        "warm": [
+          {
+            "status": 200,
+            "wallMs": 7282,
+            "navTtfb": 928.2999999970198,
+            "docDownload": 54.5,
+            "preRequest": 2.2000000029802322,
+            "domContentLoaded": 5945.800000011921,
+            "load": 7279.100000008941,
+            "fcp": 2552,
+            "lcp": 5472,
+            "cls": 0.0009,
+            "tbt": 3547,
+            "longestTask": 992,
+            "jsBytes": 11053,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 22106,
+            "thirdParty": [
+              "9ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 6351,
+            "navTtfb": 694.5,
+            "docDownload": 177.09999999403954,
+            "preRequest": 1.2000000029802322,
+            "domContentLoaded": 5684,
+            "load": 6345.100000008941,
+            "fcp": 2748,
+            "lcp": 4980,
+            "cls": 0.0009,
+            "tbt": 2779,
+            "longestTask": 1124,
+            "jsBytes": 0,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 11053,
+            "thirdParty": [
+              "52ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 7138,
+            "navTtfb": 556.4000000059605,
+            "docDownload": 816,
+            "preRequest": 1.3999999910593033,
+            "domContentLoaded": 6122.20000000298,
+            "load": 7135.70000000298,
+            "fcp": 4092,
+            "lcp": 5408,
+            "cls": 0.4489,
+            "tbt": 3312,
+            "longestTask": 1160,
+            "jsBytes": 0,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 0,
+            "thirdParty": [
+              "13ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 6865,
+            "navTtfb": 856.7000000029802,
+            "docDownload": 697.5,
+            "preRequest": 1.5,
+            "domContentLoaded": 6015.79999999702,
+            "load": 6862.100000008941,
+            "fcp": 3132,
+            "lcp": 5484,
+            "cls": 0.0009,
+            "tbt": 3324,
+            "longestTask": 1107,
+            "jsBytes": 0,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 11053,
+            "thirdParty": [
+              "5ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 7124,
+            "navTtfb": 416.30000001192093,
+            "docDownload": 1302.199999988079,
+            "preRequest": 1.199999988079071,
+            "domContentLoaded": 6169.199999988079,
+            "load": 7121.5999999940395,
+            "fcp": 5264,
+            "lcp": 5976,
+            "cls": 0.4489,
+            "tbt": 2721,
+            "longestTask": 881,
+            "jsBytes": 0,
+            "jsRequests": 13,
+            "imgBytes": 0,
+            "totalTransfer": 11053,
+            "thirdParty": [
+              "4ms static.cloudflareinsights.com"
+            ]
+          }
+        ]
+      },
+      "ttfbShareOfLcp": 9,
+      "headerToLcpShare": 44
+    },
+    {
+      "path": "/pay.html",
+      "name": "Hlua Pass",
+      "status": 200,
+      "cold": {
+        "ttfbs": [
+          1269,
+          319,
+          2551,
+          575,
+          237
+        ],
+        "ttfb": 575,
+        "docDownload": 235,
+        "preRequest": 1788,
+        "fcp": 4592,
+        "lcp": 4592,
+        "cls": 0.0009,
+        "tbt": 1496,
+        "load": 5630,
+        "jsBytes": 10923,
+        "jsRequests": 2,
+        "totalTransfer": 11223
+      },
+      "warm": {
+        "ttfb": 263,
+        "lcp": 2580,
+        "jsBytes": 10990
+      },
+      "spread": {
+        "ttfb": "237–2551",
+        "lcp": "3388–6472"
+      },
+      "thirdParty": [
+        "6520ms static.cloudflareinsights.com"
+      ],
+      "raw": {
+        "cold": [
+          {
+            "status": 200,
+            "wallMs": 10312,
+            "navTtfb": 1269,
+            "docDownload": 235.40000000596046,
+            "preRequest": 2093.8999999910593,
+            "domContentLoaded": 10297.5,
+            "load": 10303.29999999702,
+            "fcp": 5128,
+            "lcp": 5128,
+            "cls": 0.0009,
+            "tbt": 1517,
+            "longestTask": 1397,
+            "jsBytes": 10923,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11223,
+            "thirdParty": [
+              "6520ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 5642,
+            "navTtfb": 319.1000000089407,
+            "docDownload": 1492.7999999970198,
+            "preRequest": 1151.8999999910593,
+            "domContentLoaded": 5625.899999991059,
+            "load": 5629.699999988079,
+            "fcp": 4592,
+            "lcp": 4592,
+            "cls": 0.0009,
+            "tbt": 1425,
+            "longestTask": 1283,
+            "jsBytes": 10923,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11223,
+            "thirdParty": [
+              "2493ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 11832,
+            "navTtfb": 2550.7999999970198,
+            "docDownload": 200.30000001192093,
+            "preRequest": 1787.8999999910593,
+            "domContentLoaded": 11824.39999999106,
+            "load": 11829,
+            "fcp": 6472,
+            "lcp": 6472,
+            "cls": 0.0009,
+            "tbt": 2104,
+            "longestTask": 1621,
+            "jsBytes": 10923,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11223,
+            "thirdParty": [
+              "7040ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4441,
+            "navTtfb": 574.6999999880791,
+            "docDownload": 23.5,
+            "preRequest": 1078,
+            "domContentLoaded": 4429.79999999702,
+            "load": 4438.5999999940395,
+            "fcp": 3388,
+            "lcp": 3388,
+            "cls": 0.0009,
+            "tbt": 1474,
+            "longestTask": 1381,
+            "jsBytes": 11013,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11313,
+            "thirdParty": [
+              "2507ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4652,
+            "navTtfb": 236.70000000298023,
+            "docDownload": 242.29999999701977,
+            "preRequest": 1878.1000000089407,
+            "domContentLoaded": 4637.600000008941,
+            "load": 4646.100000008941,
+            "fcp": 3704,
+            "lcp": 3704,
+            "cls": 0.0009,
+            "tbt": 1496,
+            "longestTask": 1216,
+            "jsBytes": 10923,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11223,
+            "thirdParty": [
+              "1903ms static.cloudflareinsights.com"
+            ]
+          }
+        ],
+        "warm": [
+          {
+            "status": 200,
+            "wallMs": 3295,
+            "navTtfb": 212.29999999701977,
+            "docDownload": 830.9000000059605,
+            "preRequest": 3,
+            "domContentLoaded": 2645.5999999940395,
+            "load": 3282.7999999970198,
+            "fcp": 2580,
+            "lcp": 2580,
+            "cls": 0.0009,
+            "tbt": 1487,
+            "longestTask": 1395,
+            "jsBytes": 10990,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11290,
+            "thirdParty": [
+              "16ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 3616,
+            "navTtfb": 223.40000000596046,
+            "docDownload": 717.7000000029802,
+            "preRequest": 1.7999999970197678,
+            "domContentLoaded": 3102.7999999970198,
+            "load": 3577.2000000029802,
+            "fcp": 2080,
+            "lcp": 2080,
+            "cls": 0.0009,
+            "tbt": 1880,
+            "longestTask": 839,
+            "jsBytes": 10990,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 22280,
+            "thirdParty": [
+              "30ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 3792,
+            "navTtfb": 280.29999999701977,
+            "docDownload": 22.5,
+            "preRequest": 1.6000000089406967,
+            "domContentLoaded": 2770.2000000029802,
+            "load": 3789.1000000089407,
+            "fcp": 2648,
+            "lcp": 2648,
+            "cls": 0.0009,
+            "tbt": 2215,
+            "longestTask": 1931,
+            "jsBytes": 10990,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11290,
+            "thirdParty": [
+              "20ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 4041,
+            "navTtfb": 263,
+            "docDownload": 86.59999999403954,
+            "preRequest": 2.300000011920929,
+            "domContentLoaded": 2948.9000000059605,
+            "load": 4036.1000000089407,
+            "fcp": 1520,
+            "lcp": 1520,
+            "cls": 0.0009,
+            "tbt": 2295,
+            "longestTask": 1177,
+            "jsBytes": 10990,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11290,
+            "thirdParty": [
+              "40ms static.cloudflareinsights.com"
+            ]
+          },
+          {
+            "status": 200,
+            "wallMs": 3599,
+            "navTtfb": 331.09999999403954,
+            "docDownload": 49.30000001192093,
+            "preRequest": 3.0999999940395355,
+            "domContentLoaded": 2815.199999988079,
+            "load": 3595.5,
+            "fcp": 2732,
+            "lcp": 2732,
+            "cls": 0.0009,
+            "tbt": 2169,
+            "longestTask": 1922,
+            "jsBytes": 10990,
+            "jsRequests": 2,
+            "imgBytes": 0,
+            "totalTransfer": 11290,
+            "thirdParty": [
+              "3ms static.cloudflareinsights.com"
+            ]
+          }
+        ]
+      },
+      "ttfbShareOfLcp": 13,
+      "headerToLcpShare": 57
+    }
+  ]
+}

@@ -588,7 +588,7 @@ export default function LivingWorkspace() {
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         rows={2}
-        placeholder="描述一个目标，例如：帮助我们社群在 30 天内促成 20 次高质量的渠道合作交流…"
+        placeholder="你想完成什么目标？例如：帮助我们社群在 30 天内促成 20 次高质量的渠道合作…"
         className="lf-focus-ring w-full resize-none rounded-lf bg-lf-surface-2 p-2 text-sm text-lf-text placeholder:text-lf-text-faint"
         style={{ transitionDuration: 'var(--lf-dur-fast)' }}
       />
