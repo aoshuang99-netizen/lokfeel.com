@@ -91,9 +91,13 @@ ACTUAL_HOURS:      ≈5.5h（含本地构建环境排查 2h，未计入可交付
 
 ```
 6fe9ece  fix(a11y): onClose ref 赋值移入 effect，消除 react-hooks/refs 报错   ← 本轮基线
-8301454  feat(a11y): 焦点算法下沉纯函数 + 滚动锁引用计数 + 注册字段级错误关联   ← CI 21 全绿
-（后一条）docs(v19): V19.5 焦点/弹窗/注册/ReportModal/Figma 五份报告 + 台账 §7
+8301454  feat(a11y): 焦点算法下沉纯函数 + 滚动锁引用计数 + 注册字段级错误关联
+         CI 21 success / 1 skipped / 0 失败（E2E job 243s，8 例弹窗用例）
+bf8e5e4  docs(v19): 弹窗验收 + 总验收矩阵 + 台账 §7；dialogs.spec 补 390/1440 两档视口
+         CI 21 success / 1 skipped / 0 失败（E2E job 265s，10 例弹窗用例；+22s 与 +2 例相符）
 ```
+
+两个提交的 CI 结论一致：**Typecheck 82s / Lint 96s / Jest 113s / Build 106s / E2E 265s，全 success**。
 
 ## 7. 环境限制记录（供后续排障，不属产品缺陷）
 
