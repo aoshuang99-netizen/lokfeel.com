@@ -32,6 +32,43 @@ async function openDeleteDialog(page: Page) {
 }
 
 test.describe('ConfirmDialog · 键盘与语义', () => {
+  /**
+   * 视口维度：默认用例跑 1280×720（配置默认值）。
+   * 这里补 390（移动）与 1440（桌面宽屏）两档，因为「弹窗被挤成什么形状」会改变
+   * 可聚焦元素的实际可见性 —— 而被 `isVisible()` 过滤掉一个按钮，Tab 圈就少一格。
+   * 768 平板不做单独一档：它的布局规则与 390 同属单列断点，由既有移动端用例覆盖版面。
+   */
+  for (const vp of [
+    { id: '390×844', width: 390, height: 844 },
+    { id: '1440×900', width: 1440, height: 900 },
+  ]) {
+    test.describe(`视口 ${vp.id}`, () => {
+      test.use({ viewport: { width: vp.width, height: vp.height } });
+
+      test('初始焦点 + Tab 圈定（视口相关）', async ({ page }) => {
+        const { dialog } = await openDeleteDialog(page);
+
+        await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+
+        await page.keyboard.press('Tab');
+        await expect(page.getByRole('button', { name: 'Delete Account', exact: true })).toBeFocused();
+
+        await page.keyboard.press('Tab');
+        await expect(page.getByRole('button', { name: 'Cancel' })).toBeFocused();
+
+        const inDialog = await page.evaluate(() => {
+          const el = document.activeElement;
+          const dlg = document.querySelector('[role="dialog"]');
+          return !!el && !!dlg && dlg.contains(el);
+        });
+        expect(inDialog).toBe(true);
+
+        // 移动视口下背景滚动锁同样要生效（弹窗超屏时最容易露出破绽）
+        expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+      });
+    });
+  }
+
   test('语义完整：role/aria-modal/labelledby/describedby 都指向真实节点', async ({ page }) => {
     const { dialog } = await openDeleteDialog(page);
 

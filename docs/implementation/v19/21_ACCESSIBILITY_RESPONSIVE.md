@@ -136,3 +136,31 @@
   等**认证面弹窗尚未接入 hook**（无法在无账号环境实测，等 D-06；hook 本身可复用）。
 - register 多步表单的逐字段 `aria-describedby` 关联、Inspector 抽屉 focus trap、
   软键盘遮挡、登录后业务面键盘走查：仍 PENDING（需 D-06 或另排期）。
+
+> ⚠️ 上述两条是 **2026-10-27 当天**的真实状态，已被 §7（2026-10-28）部分推翻：
+> `ConfirmDialog` 与 register 表单已完成，`ReportModal` 完成实现但行为仍 BLOCKED。以 §7 为准。
+
+## 7. 【2026-10-28】V19.5 · 焦点算法下沉 + 滚动锁 + 注册字段级关联
+
+> 提交 `8301454`（+ 本文件所在的文档提交）｜CI 21 项全绿（E2E job 4m03s，success）
+
+### 7.1 本轮闭环项
+
+| 项 | 改前 | 改后 | 证据 |
+|---|---|---|---|
+| 焦点算法 | 2 个函数，判定与 DOM 混在 hook 里 | `focus-trap.ts` 4 个纯函数 + 描述符类型，node 内可穷举 | `tests/a11y` 29 例 |
+| 背景滚动锁 | 每个组件自写 `body.style.overflow`，互踩且丢原值 | `scroll-lock.ts` 引用计数 + 保存原值 | 5 例单测 + E2E 断言 |
+| ConfirmDialog 初始焦点 | 靠「DOM 里第一个按钮恰好是取消」 | 显式 `initialFocusRef` → 取消按钮 | E2E「初始焦点 = Cancel 且不是 Delete Account」 |
+| ConfirmDialog 重复 id | 硬编码 `id="dialog-title"` | `useId()` + `aria-describedby` | E2E 断言 id 唯一且存在 |
+| ConfirmDialog 重复 Escape | 组件与 hook 各装一个监听 | 只留 hook 一处 | `24_FOCUS_HOOK_AUDIT.md` §3 D1 |
+| 注册字段描述 | 全部指向同一个 `#reg-error`；DOB 与勾选框**零关联** | 每字段独立错误节点 + `aria-invalid` + 焦点引导 | `26_REGISTER_FORM_ACCESSIBILITY.md` |
+| ReportModal 语义容器 | `role/ref` 挂在 `next/dynamic` 包装上（ref 不可证） | 语义与 ref 移到动画层内部的真实 `div` | `27_REPORT_MODAL_DECISION.md` |
+
+### 7.2 仍未闭合
+
+| 项 | 状态 | 卡在哪 |
+|---|---|---|
+| ReportModal 的 8 项键盘行为 | **BLOCKED** | 认证聊天面无可登录账号（D-06）+ 需 2 用户 + 1 聊天室夹具 |
+| `VideoCallModal` / Inspector 抽屉 | 未做 | 同上；且 `VideoCallModal` 依赖通话上下文 |
+| 多视口的业务面键盘走查 | 部分 | 仅 `ConfirmDialog` 补了 390 / 1440 两档 |
+| 屏幕阅读器人工验收 | 未做 | 无 NVDA/VoiceOver 会话记录；axe 只能覆盖可检测子集 |
