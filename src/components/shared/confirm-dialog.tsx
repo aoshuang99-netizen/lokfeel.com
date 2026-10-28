@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, ReactNode } from "react";
+import { useId, useRef, ReactNode } from "react";
 import { X, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { useDialogA11y } from "@/lib/a11y/use-dialog-a11y";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -56,30 +57,19 @@ export function ConfirmDialog({
   children,
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
 
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
-
-  // Prevent body scroll when open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  // Escape / Tab 圈定 / 焦点进出 / 背景滚动锁，全部由统一 hook 接管。
+  // 初始焦点显式指向「取消」：这是危险操作确认框，默认落在破坏性按钮上
+  // 会让「回车 = 删除」变成一次误触。不靠「DOM 里第一个按钮恰好是取消」这种巧合。
+  useDialogA11y({
+    isOpen,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: cancelRef,
+  });
 
   if (!isOpen) return null;
 
@@ -101,7 +91,8 @@ export function ConfirmDialog({
           className="glass-card max-w-md w-full p-6 animate-slide-up"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="dialog-title"
+          aria-labelledby={titleId}
+          aria-describedby={description ? descriptionId : undefined}
         >
           {/* Icon */}
           <div className={`w-14 h-14 mx-auto rounded-full ${config.iconBg} flex items-center justify-center mb-5`}>
@@ -109,13 +100,13 @@ export function ConfirmDialog({
           </div>
 
           {/* Title */}
-          <h2 id="dialog-title" className="text-xl font-semibold text-foreground text-center mb-2">
+          <h2 id={titleId} className="text-xl font-semibold text-foreground text-center mb-2">
             {title}
           </h2>
 
           {/* Description */}
           {description && (
-            <p className="text-foreground-muted text-center mb-6">
+            <p id={descriptionId} className="text-foreground-muted text-center mb-6">
               {description}
             </p>
           )}
@@ -126,6 +117,7 @@ export function ConfirmDialog({
           {/* Actions */}
           <div className="flex gap-3">
             <button
+              ref={cancelRef}
               onClick={onClose}
               disabled={isLoading}
               className="flex-1 btn-secondary"

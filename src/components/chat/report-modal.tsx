@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useId, useRef, useState, type MouseEvent } from "react";
 import { MotionDiv, LazyAnimatePresence } from "@/components/ui/motion-lazy";
 import { X, Flag, AlertTriangle, Check, Loader2 } from "lucide-react";
+import { useDialogA11y } from "@/lib/a11y/use-dialog-a11y";
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -27,6 +28,25 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  // 🔴 焦点容器必须是一个**真实 DOM 节点**，不能是 `MotionDiv`。
+  // `MotionDiv` 是 `next/dynamic` 包出来的（`loadable.js` 里就是个普通函数组件，
+  // 没有 forwardRef），ref 能不能到 DOM 取决于 React 19 的 ref-as-prop 透传到哪一层 ——
+  // 那是个「大概能行」的假设，不是可验证的保证。所以动画层归动画层，
+  // 语义与焦点挂到它内部那个货真价实的 div 上：这里不依赖任何 ref 透传。
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const firstReasonRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  const reasonLabelId = useId();
+  const errorId = useId();
+
+  useDialogA11y({
+    isOpen,
+    onClose,
+    containerRef: dialogRef,
+    // 任务是「选一个原因」，所以初始焦点给第一个选项，而不是右上角关闭按钮
+    initialFocusRef: firstReasonRef,
+  });
 
   const handleSubmit = async () => {
     if (!selectedReason) return;
@@ -85,148 +105,162 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-md bg-background-tertiary rounded-2xl overflow-hidden"
-          style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+          className="w-full max-w-md"
           onClick={(e: MouseEvent) => e.stopPropagation()}
         >
-          {isSuccess ? (
-            // Success State
-            <div className="p-8 text-center">
-              <MotionDiv
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4"
-              >
-                <Check className="w-8 h-8 text-green-400" />
-              </MotionDiv>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Report Submitted</h3>
-              <p className="text-sm text-foreground-muted">
-                Thank you for helping keep our community safe. We&apos;ll review this report promptly.
-              </p>
-            </div>
-          ) : (
-            // Report Form
-            <>
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-card-border">
-                <div className="flex items-center gap-2">
-                  <Flag className="w-5 h-5 text-red-400" />
-                  <h3 className="text-lg font-semibold text-foreground">Report User</h3>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-lg hover:bg-background-tertiary transition-colors"
+          {/* 语义 + 焦点容器：纯 div，ref 一定有值 */}
+          <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={error ? errorId : undefined}
+            className="bg-background-tertiary rounded-2xl overflow-hidden"
+            style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+          >
+            {isSuccess ? (
+              // Success State
+              <div className="p-8 text-center">
+                <MotionDiv
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4"
                 >
-                  <X className="w-5 h-5 text-foreground-muted" />
-                </button>
+                  <Check className="w-8 h-8 text-green-400" />
+                </MotionDiv>
+                <h3 id={titleId} className="text-xl font-semibold text-foreground mb-2">Report Submitted</h3>
+                <p className="text-sm text-foreground-muted">
+                  Thank you for helping keep our community safe. We&apos;ll review this report promptly.
+                </p>
               </div>
-
-              <div className="p-4 space-y-4">
-                {/* Warning */}
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                  <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-yellow-200/80">
-                    You&apos;re reporting <strong>{reportedUserName}</strong>. This report will be reviewed by our team.
-                  </p>
-                </div>
-
-                {/* Error */}
-                {error && (
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                    <p className="text-sm text-red-300">{error}</p>
+            ) : (
+              // Report Form
+              <>
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-card-border">
+                  <div className="flex items-center gap-2">
+                    <Flag className="w-5 h-5 text-red-400" />
+                    <h3 id={titleId} className="text-lg font-semibold text-foreground">Report User</h3>
                   </div>
-                )}
+                  <button
+                    onClick={onClose}
+                    aria-label="Close report dialog"
+                    className="p-2 rounded-lg hover:bg-background-tertiary transition-colors"
+                  >
+                    <X className="w-5 h-5 text-foreground-muted" />
+                  </button>
+                </div>
 
-                {/* Reason Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-3">
-                    Why are you reporting this user? <span className="text-red-400">*</span>
-                  </label>
-                  <div className="space-y-2">
-                    {REPORT_REASONS.map((reason) => (
-                      <button
-                        key={reason.value}
-                        onClick={() => setSelectedReason(reason.value)}
-                        className={`w-full p-3 rounded-xl border text-left transition-all ${
-                          selectedReason === reason.value
-                            ? "border-primary/50 bg-primary/10"
-                            : "border-card-border hover:border-card-border"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
-                              selectedReason === reason.value
-                                ? "border-primary bg-primary"
-                                : "border-card-border"
-                            }`}
-                          >
-                            {selectedReason === reason.value && (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-accent-lime" />
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <span className="block text-sm font-medium text-foreground">
-                              {reason.label}
-                            </span>
-                            <span className="block text-xs text-foreground-muted mt-0.5">
-                              {reason.description}
-                            </span>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                <div className="p-4 space-y-4">
+                  {/* Warning */}
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-yellow-200/80">
+                      You&apos;re reporting <strong>{reportedUserName}</strong>. This report will be reviewed by our team.
+                    </p>
                   </div>
-                </div>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Additional Details <span className="text-foreground-subtle">(optional)</span>
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Tell us more about what happened..."
-                    maxLength={500}
-                    rows={3}
-                    className="w-full p-3 rounded-xl bg-background-tertiary border border-card-border text-foreground placeholder:text-foreground-subtle text-sm resize-none focus:outline-none focus:border-card-border"
-                  />
-                  <p className="text-xs text-foreground-subtle mt-1 text-right">
-                    {description.length}/500
-                  </p>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  onClick={handleSubmit}
-                  disabled={!selectedReason || isSubmitting}
-                  className="w-full py-3 px-4 rounded-xl bg-red-500 text-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <Flag className="w-4 h-4" />
-                      Submit Report
-                    </>
+                  {/* Error */}
+                  {error && (
+                    <div id={errorId} role="alert" className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <p className="text-sm text-red-300">{error}</p>
+                    </div>
                   )}
-                </button>
 
-                <button
-                  onClick={onClose}
-                  className="w-full py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
+                  {/* Reason Selection */}
+                  <div>
+                    {/* label 没有可关联的控件（这里是 6 个按钮），用 group + labelledby 交代归属 */}
+                    <p id={reasonLabelId} className="block text-sm font-medium text-foreground mb-3">
+                      Why are you reporting this user? <span className="text-red-400">*</span>
+                    </p>
+                    <div role="group" aria-labelledby={reasonLabelId} className="space-y-2">
+                      {REPORT_REASONS.map((reason, index) => (
+                        <button
+                          key={reason.value}
+                          ref={index === 0 ? firstReasonRef : undefined}
+                          onClick={() => setSelectedReason(reason.value)}
+                          aria-pressed={selectedReason === reason.value}
+                          className={`w-full p-3 rounded-xl border text-left transition-all ${
+                            selectedReason === reason.value
+                              ? "border-primary/50 bg-primary/10"
+                              : "border-card-border hover:border-card-border"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
+                                selectedReason === reason.value
+                                  ? "border-primary bg-primary"
+                                  : "border-card-border"
+                              }`}
+                            >
+                              {selectedReason === reason.value && (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <div className="w-2 h-2 rounded-full bg-accent-lime" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <span className="block text-sm font-medium text-foreground">
+                                {reason.label}
+                              </span>
+                              <span className="block text-xs text-foreground-muted mt-0.5">
+                                {reason.description}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Additional Details <span className="text-foreground-subtle">(optional)</span>
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Tell us more about what happened..."
+                      maxLength={500}
+                      rows={3}
+                      className="w-full p-3 rounded-xl bg-background-tertiary border border-card-border text-foreground placeholder:text-foreground-subtle text-sm resize-none focus:outline-none focus:border-card-border"
+                    />
+                    <p className="text-xs text-foreground-subtle mt-1 text-right">
+                      {description.length}/500
+                    </p>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!selectedReason || isSubmitting}
+                    className="w-full py-3 px-4 rounded-xl bg-red-500 text-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Flag className="w-4 h-4" />
+                        Submit Report
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={onClose}
+                    className="w-full py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </MotionDiv>
       </MotionDiv>
     </LazyAnimatePresence>

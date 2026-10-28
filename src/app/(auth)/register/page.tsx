@@ -67,6 +67,39 @@ function clearRegState() {
   try { localStorage.removeItem(REG_STATE_KEY); } catch { /* ignore */ }
 }
 
+// ─── 字段级错误：谁能被指到，就只指向谁 ───
+// 之前所有错误都塞进一个 `#reg-error` 横幅，三个输入框同时 aria-describedby 指向它，
+// 而 DOB 三个下拉和两个勾选框**一个都没接**。结果是：读屏用户在最该听清原因的那几个
+// 控件上什么也听不到，而已经填对的输入框反而被挂上一条跟自己无关的描述。
+type RegField = 'name' | 'email' | 'dob' | 'password' | 'agreeToTerms' | 'confirmAge';
+
+/** 出错时焦点该落到哪个控件（DOM id）。 */
+const FIELD_INPUT_ID: Record<RegField, string> = {
+  name: 'reg-name',
+  email: 'reg-email',
+  dob: 'dob-year',
+  password: 'reg-password',
+  agreeToTerms: 'reg-agreeToTerms',
+  confirmAge: 'reg-confirmAge',
+};
+
+/** 该字段的错误文本节点 id —— 只在错误存在时才渲染，不允许指向不存在的节点。 */
+const FIELD_ERROR_ID: Record<RegField, string> = {
+  name: 'reg-name-error',
+  email: 'reg-email-error',
+  dob: 'reg-dob-error',
+  password: 'reg-password-error',
+  agreeToTerms: 'reg-terms-error',
+  confirmAge: 'reg-age-error',
+};
+
+const PASSWORD_HELP_ID = 'reg-password-help';
+
+interface FieldError {
+  field: RegField;
+  message: string;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [phase, setPhase] = useState<'form' | 'verify'>('form');
@@ -84,6 +117,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState<FieldError | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [sentInfo, setSentInfo] = useState<{ maskedIdentifier?: string; devMode?: boolean; code?: string }>({});
   const [dobYear, setDobYear] = useState("");
@@ -140,7 +174,12 @@ export default function RegisterPage() {
       ...prev,
       [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
+    // 用户开始改这个字段了，就把它的提示撤掉 —— 否则一边改一边挂着红字
+    setFieldError(prev => (prev?.field === name ? null : prev));
   };
+
+  /** DOB 没有 `name`（三个 state 拼出来的），单独清。 */
+  const clearDobError = () => setFieldError(prev => (prev?.field === 'dob' ? null : prev));
 
   const startCountdown = () => {
     setCountdown(60);
@@ -156,28 +195,50 @@ export default function RegisterPage() {
   };
 
   // ─── Validation ───
-  const validateForm = (): string | null => {
-    if (!formData.name.trim()) return "Please enter your name";
+  // 返回值带上「是哪个字段」，才能把错误挂到那个控件上、并把焦点送过去。
+  const validateForm = (): FieldError | null => {
+    if (!formData.name.trim()) return { field: 'name', message: "Please enter your name" };
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      return "Please enter a valid email address";
-    if (!formData.dob) return "Please enter your date of birth";
+      return { field: 'email', message: "Please enter a valid email address" };
+    if (!formData.dob) return { field: 'dob', message: "Please enter your date of birth" };
     // Check age >= 18
     const dob = new Date(formData.dob);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
     const monthDiff = today.getMonth() - dob.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
-    if (age < 18) return "You must be at least 18 years old";
-    if (formData.password.length < 8) return "Password must be at least 8 characters";
-    if (!formData.agreeToTerms) return "You must agree to the Terms of Service and Privacy Policy";
-    if (!formData.confirmAge) return "You must confirm you are at least 18 years old";
+    if (age < 18) return { field: 'dob', message: "You must be at least 18 years old" };
+    if (formData.password.length < 8)
+      return { field: 'password', message: "Password must be at least 8 characters" };
+    if (!formData.agreeToTerms)
+      return { field: 'agreeToTerms', message: "You must agree to the Terms of Service and Privacy Policy" };
+    if (!formData.confirmAge)
+      return { field: 'confirmAge', message: "You must confirm you are at least 18 years old" };
     return null;
   };
 
-  const handleSendCode = async () => {
-    const validationError = validateForm();
-    if (validationError) { setError(validationError); return; }
+  /**
+   * 把焦点送到出错的控件上。
+   * 放到下一帧做：错误文本节点要等这次渲染提交后才存在，
+   * 先 focus 再渲染的话，读屏读到的 aria-describedby 还是上一帧的值。
+   */
+  const focusField = (field: RegField) => {
+    if (typeof window === 'undefined') return;
+    window.requestAnimationFrame(() => {
+      document.getElementById(FIELD_INPUT_ID[field])?.focus();
+    });
+  };
 
+  const handleSendCode = async () => {
+    const invalid = validateForm();
+    if (invalid) {
+      setFieldError(invalid);
+      setError("");
+      focusField(invalid.field);
+      return;
+    }
+
+    setFieldError(null);
     setIsSendingCode(true);
     setError("");
 
@@ -351,7 +412,7 @@ export default function RegisterPage() {
 
         {/* Error */}
         {error && (
-          <div role="alert" className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
+          <div id="reg-code-error" role="alert" className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
             {error}
           </div>
         )}
@@ -366,6 +427,9 @@ export default function RegisterPage() {
               inputMode="numeric"
               maxLength={1}
               value={digit}
+              aria-label={`Verification code digit ${index + 1} of 6`}
+              aria-describedby={error ? "reg-code-error" : undefined}
+              autoComplete={index === 0 ? "one-time-code" : undefined}
               onChange={(e) => handleCodeChange(index, e.target.value)}
               onKeyDown={(e) => handleCodeKeyDown(index, e)}
               onFocus={(e) => { e.target.select(); }}
@@ -448,12 +512,6 @@ export default function RegisterPage() {
           Continue with X
         </button>
 
-        {/* Twitter error */}
-        {error && error.includes("X") && (
-          <div role="alert" className="mt-2 p-2.5 rounded-lg bg-error-muted border border-error/20 text-xs text-error">
-            {error}
-          </div>
-        )}
       </div>
 
       {/* Divider */}
@@ -461,9 +519,15 @@ export default function RegisterPage() {
         <span>or continue with email</span>
       </div>
 
-      {/* Error (non-Twitter) */}
-      {error && !error.includes("X") && (
-        <div role="alert" className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
+      {/*
+        页面级错误（服务端 / 网络）。客户端校验错误不再走这里 ——
+        它挂在具体字段下面，见 fieldError。
+        原先这里还有一段 `error.includes("X")` 的分流：只要有哪个报错文案里带个字母 X，
+        它就会被渲染到社交登录按钮下面、并且从主错误区消失。这个分支从来没人写入过
+        （全仓没有任何 setError 产出含 X 的文案），留着只会等一次误判。
+      */}
+      {error && (
+        <div id="reg-error" role="alert" className="mb-4 p-3 rounded-xl bg-error-muted border border-error/20 text-sm text-error">
           {error}
         </div>
       )}
@@ -492,8 +556,15 @@ export default function RegisterPage() {
             autoComplete="name"
             autoFocus
             placeholder="Enter your name"
+            aria-invalid={fieldError?.field === 'name' || undefined}
+            aria-describedby={fieldError?.field === 'name' ? FIELD_ERROR_ID.name : undefined}
             className="auth-input w-full"
           />
+          {fieldError?.field === 'name' && (
+            <p id={FIELD_ERROR_ID.name} role="alert" className="mt-1.5 text-xs text-error">
+              {fieldError.message}
+            </p>
+          )}
         </div>
 
         {/* Email */}
@@ -513,8 +584,15 @@ export default function RegisterPage() {
             required
             autoComplete="email"
             placeholder="Enter your email"
+            aria-invalid={fieldError?.field === 'email' || undefined}
+            aria-describedby={fieldError?.field === 'email' ? FIELD_ERROR_ID.email : undefined}
             className="auth-input w-full"
           />
+          {fieldError?.field === 'email' && (
+            <p id={FIELD_ERROR_ID.email} role="alert" className="mt-1.5 text-xs text-error">
+              {fieldError.message}
+            </p>
+          )}
         </div>
 
         {/* Password */}
@@ -535,23 +613,50 @@ export default function RegisterPage() {
             minLength={8}
             autoComplete="new-password"
             placeholder="Min 8 characters"
+            aria-invalid={fieldError?.field === 'password' || undefined}
+            aria-describedby={
+              fieldError?.field === 'password'
+                ? `${PASSWORD_HELP_ID} ${FIELD_ERROR_ID.password}`
+                : PASSWORD_HELP_ID
+            }
             className="auth-input w-full"
           />
+          {/* 帮助文本常驻：密码规则不该只存在于 placeholder 里（输入第一个字符就没了） */}
+          <p id={PASSWORD_HELP_ID} className="mt-1.5 text-xs text-foreground-subtle">
+            At least 8 characters.
+          </p>
+          {fieldError?.field === 'password' && (
+            <p id={FIELD_ERROR_ID.password} role="alert" className="mt-1.5 text-xs text-error">
+              {fieldError.message}
+            </p>
+          )}
         </div>
 
         {/* Date of Birth — 3 dropdowns */}
-        <div className="form-group">
-          <label
-            htmlFor="dob-year"
+        {/*
+          三个下拉共用一个可见标题，但 `htmlFor` 只能指向一个控件 —— 之前它指向年，
+          月和日就成了「没有名字的组合框」，读屏只会念一句 “Jan”。改成 group：
+          可见标题给它命名，每个下拉各自 aria-label 说清是年/月/日。
+        */}
+        <div
+          className="form-group"
+          role="group"
+          aria-labelledby="reg-dob-label"
+          aria-describedby={fieldError?.field === 'dob' ? FIELD_ERROR_ID.dob : undefined}
+        >
+          <span
+            id="reg-dob-label"
             className="block text-sm font-medium text-foreground-muted mb-2"
           >
             <Calendar size={13} className="inline mr-1.5 align-middle" />Date of Birth <span className="text-error">*</span>
-          </label>
+          </span>
           <div className="grid grid-cols-3 gap-2.5">
             <select
               id="dob-year"
+              aria-label="Birth year"
+              aria-invalid={fieldError?.field === 'dob' || undefined}
               value={dobYear}
-              onChange={(e) => setDobYear(e.target.value)}
+              onChange={(e) => { setDobYear(e.target.value); clearDobError(); }}
               required
               className="auth-input !py-3 !px-3"
             >
@@ -562,8 +667,10 @@ export default function RegisterPage() {
             </select>
             <select
               id="dob-month"
+              aria-label="Birth month"
+              aria-invalid={fieldError?.field === 'dob' || undefined}
               value={dobMonth}
-              onChange={(e) => setDobMonth(e.target.value)}
+              onChange={(e) => { setDobMonth(e.target.value); clearDobError(); }}
               required
               className="auth-input !py-3 !px-3"
             >
@@ -574,8 +681,10 @@ export default function RegisterPage() {
             </select>
             <select
               id="dob-day"
+              aria-label="Birth day"
+              aria-invalid={fieldError?.field === 'dob' || undefined}
               value={dobDay}
-              onChange={(e) => setDobDay(e.target.value)}
+              onChange={(e) => { setDobDay(e.target.value); clearDobError(); }}
               required
               className="auth-input !py-3 !px-3"
             >
@@ -585,6 +694,11 @@ export default function RegisterPage() {
               ))}
             </select>
           </div>
+          {fieldError?.field === 'dob' && (
+            <p id={FIELD_ERROR_ID.dob} role="alert" className="mt-1.5 text-xs text-error">
+              {fieldError.message}
+            </p>
+          )}
         </div>
 
         {/* Terms + Privacy Checkbox — merged into one */}
@@ -596,6 +710,8 @@ export default function RegisterPage() {
             checked={formData.agreeToTerms}
             onChange={handleChange}
             required
+            aria-invalid={fieldError?.field === 'agreeToTerms' || undefined}
+            aria-describedby={fieldError?.field === 'agreeToTerms' ? FIELD_ERROR_ID.agreeToTerms : undefined}
             className="mt-0.5 w-4 h-4 accent-primary flex-shrink-0 cursor-pointer"
           />
           <label htmlFor="reg-agreeToTerms" className="text-xs text-foreground-subtle leading-relaxed cursor-pointer">
@@ -605,6 +721,11 @@ export default function RegisterPage() {
             <Link href="/privacy" target="_blank" className="text-primary hover:text-primary-hover font-semibold">Privacy Policy</Link>
           </label>
         </div>
+        {fieldError?.field === 'agreeToTerms' && (
+          <p id={FIELD_ERROR_ID.agreeToTerms} role="alert" className="text-xs text-error -mt-2">
+            {fieldError.message}
+          </p>
+        )}
 
         {/* Age confirmation */}
         <div className="flex items-start gap-2.5">
@@ -615,12 +736,19 @@ export default function RegisterPage() {
             checked={formData.confirmAge}
             onChange={handleChange}
             required
+            aria-invalid={fieldError?.field === 'confirmAge' || undefined}
+            aria-describedby={fieldError?.field === 'confirmAge' ? FIELD_ERROR_ID.confirmAge : undefined}
             className="mt-0.5 w-4 h-4 accent-primary flex-shrink-0 cursor-pointer"
           />
           <label htmlFor="reg-confirmAge" className="text-xs text-foreground-subtle leading-relaxed cursor-pointer">
             I confirm I am at least 18 years old
           </label>
         </div>
+        {fieldError?.field === 'confirmAge' && (
+          <p id={FIELD_ERROR_ID.confirmAge} role="alert" className="text-xs text-error -mt-2">
+            {fieldError.message}
+          </p>
+        )}
 
         {/* Submit */}
         <button
