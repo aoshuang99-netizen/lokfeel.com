@@ -52,6 +52,12 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL || 'http://127.0.0.1:3000',
     headless: true,
     viewport: { width: 1280, height: 720 },
+    // V19.6：VideoCallModal 的适用行为矩阵需要 getUserMedia 能打开——
+    // runner 上没有摄像头，用假设备 + 自动授权。这两个 flag 只影响
+    // 发起媒体请求的用例，对其余用例零副作用。
+    launchOptions: {
+      args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+    },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
     // 本地构建产物没有跨境延迟，超时给紧一些，让真问题更快暴露

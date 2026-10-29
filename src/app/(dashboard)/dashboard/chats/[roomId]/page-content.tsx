@@ -789,6 +789,8 @@ export default function ChatRoomPage() {
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
+              aria-label="More actions"
+              aria-expanded={showMoreMenu}
               className="p-2 rounded-full hover:bg-background-tertiary transition-colors"
             >
               <MoreVertical className="w-5 h-5 text-foreground-muted" />

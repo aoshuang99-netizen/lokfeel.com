@@ -14,8 +14,9 @@
  *   4. `prefers-reduced-motion` 时强制 L0（由 globals.css 的媒体查询兜底，这里同步 data 属性）。
  */
 
-import { useCallback, useSyncExternalStore, useState, type ReactNode } from 'react'
+import { useCallback, useRef, useSyncExternalStore, useState, type ReactNode } from 'react'
 import { Contrast, PanelRight, PanelRightClose } from 'lucide-react'
+import { useDialogA11y } from '@/lib/a11y/use-dialog-a11y'
 
 export interface LivingNavItem {
   key: string
@@ -102,6 +103,14 @@ export default function LivingShell({
   const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'field' as LivingTheme)
   const [inspectorOpen, setInspectorOpen] = useState(true)
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false)
+  // 移动端证据浮层：真实 div 容器（非动画包装），焦点圈定 / Escape / 焦点恢复 / 滚动锁
+  // 全部复用 V19.5 的统一 hook —— 不在这里重写第四份焦点逻辑。
+  const mobileInspectorRef = useRef<HTMLDivElement>(null)
+  useDialogA11y({
+    isOpen: mobileInspectorOpen,
+    onClose: () => setMobileInspectorOpen(false),
+    containerRef: mobileInspectorRef,
+  })
 
   const toggleTheme = useCallback(() => {
     writeTheme(theme === 'field' ? 'paper' : 'field')
@@ -249,6 +258,10 @@ export default function LivingShell({
             className="absolute inset-0 bg-black/50"
           />
           <div
+            ref={mobileInspectorRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="证据与详情"
             data-lf-world={dualWorld ? 'inspector' : undefined}
             className="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-lf-lg border-t border-lf-line bg-lf-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
           >
