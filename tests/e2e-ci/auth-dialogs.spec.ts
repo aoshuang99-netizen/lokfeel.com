@@ -32,6 +32,33 @@ const ENV_C_EMAIL = process.env.E2E_CHAT_C_EMAIL ?? '';
 const ENV_C_PASSWORD = process.env.E2E_CHAT_C_PASSWORD ?? '';
 const CONV_ID = process.env.E2E_CHAT_CONV_ID ?? '';
 
+/**
+ * 服务端 `reason` 枚举 → 弹窗里那个按钮的**真实可访问名**。
+ *
+ * 🔴 踩过的坑：按钮内容 = `label` + `description` 两行，可访问名是二者拼接
+ *    （如 "Harassment Bullying, threats, or persistent unwanted contact"）。
+ *    早先这里直接拿 API 返回的枚举值 `HARASSMENT` 当正则去点，大小写与文本
+ *    都对不上 ⇒ 定位器等 15s 超时。要按 API 认枚举、按 UI 认标签，两边分开。
+ */
+const REASON_LABELS: Record<string, string> = {
+  INAPPROPRIATE_CONTENT: 'Inappropriate Content',
+  HARASSMENT: 'Harassment',
+  FAKE_PROFILE: 'Fake Profile',
+  SPAM: 'Spam',
+  OFFENSIVE_BEHAVIOR: 'Offensive Behavior',
+  OTHER: 'Other',
+};
+
+/** 取某个枚举对应的原因按钮（锚定标签开头，避免 "Other" 命中别的文案） */
+function reasonButton(
+  dialog: import('@playwright/test').Locator,
+  reason: string,
+): import('@playwright/test').Locator {
+  const label = REASON_LABELS[reason];
+  if (!label) throw new Error(`未知的举报原因枚举：${reason}`);
+  return dialog.getByRole('button', { name: new RegExp(`^${label}\\b`) });
+}
+
 /** 缺夹具 = 前置条件失败，硬红（不做 skip —— skip 会把缺口伪装成通过） */
 function requireFixture(): void {
   if (!ENV_A_EMAIL || !ENV_A_PASSWORD || !CONV_ID) {
@@ -42,43 +69,72 @@ function requireFixture(): void {
   }
 }
 
-/** 真实表单登录，带 3 次重试（前置条件允许重试并留痕；被测断言绝不重试放宽） */
-async function loginViaUi(
-  browser: import('@playwright/test').Browser,
+/**
+ * 真实表单登录，带 3 次重试（前置条件允许重试并留痕；被测断言绝不重试放宽）。
+ *
+ * 为什么走 HTTP 登录而不是 UI 登录：沙箱里「登录后整页跳转」有已知的网络层
+ * 偶发失败（global-setup 的 3 次重试机制就是为此而生）。这里要证明的是
+ * 「**登录后的弹窗行为**」，不是「登录跳转能连点 N 次」—— 所以凭据仍走
+ * 真实服务器 `/api/auth/login`（不 mock cookie），但把偶发跳转从被测路径里拿掉。
+ */
+async function loginViaHttp(
+  _browser: import('@playwright/test').Browser,
   email: string,
   password: string,
 ): Promise<string> {
   const base = (process.env.E2E_BASE_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
   const reasons: string[] = [];
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const ctx = await browser.newContext();
     try {
-      const page = await ctx.newPage();
-      await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded' });
-      await page.fill('#login-email', email);
-      await page.fill('#login-password', password);
-      await page.click('button[type="submit"]');
-      await page.waitForURL((u) => !u.pathname.startsWith('/login'), {
-        timeout: 30_000,
-        waitUntil: 'domcontentloaded',
+      const res = await fetch(`${base}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Origin: base },
+        body: JSON.stringify({ email, password }),
+        redirect: 'manual',
       });
-      const state = await ctx.storageState();
+      const setCookies = res.headers.getSetCookie?.() ?? [];
+      const sessionCookie = setCookies.find((c) => /session-token/i.test(c));
+      if (!sessionCookie) {
+        reasons.push(`第 ${attempt} 次：无 session cookie（status=${res.status}）`);
+        continue;
+      }
+      const [pair] = sessionCookie.split(';');
+      const idx = pair.indexOf('=');
+      const name = pair.slice(0, idx).trim();
+      const value = pair.slice(idx + 1).trim();
+      const host = new URL(base).hostname;
+      const state = {
+        cookies: [
+          {
+            name,
+            value,
+            domain: host,
+            path: '/',
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Lax' as const,
+          },
+        ],
+        origins: [],
+      };
       return JSON.stringify(state);
     } catch (err) {
       reasons.push(`第 ${attempt} 次：${String((err as Error).message || '').split('\n')[0]}`);
-    } finally {
-      await ctx.close().catch(() => {});
     }
   }
-  throw new Error(`登录连续 3 次失败（${email}）：\n${reasons.join('\n')}`);
+  throw new Error(`HTTP 登录连续 3 次失败（${email}）：\n${reasons.join('\n')}`);
 }
 
 async function openReportModal(page: Page): Promise<void> {
   const more = page.getByRole('button', { name: 'More actions' });
   await expect(more).toBeVisible();
-  // 键盘打开：焦点 → Enter（真实键盘路径，不用 .click() 作弊）
+  // 键盘打开：焦点 → Enter 展开菜单 → 再 Enter/点击「Report User」
+  // （More 是下拉菜单的开关，弹窗挂在菜单项上 —— 少点这一层就只是展开了菜单）
   await more.focus();
   await page.keyboard.press('Enter');
+  const item = page.getByRole('button', { name: 'Report User' });
+  await expect(item).toBeVisible();
+  await item.click();
   const dialog = page.getByRole('dialog', { name: 'Report User' });
   await expect(dialog).toBeVisible();
 }
@@ -98,18 +154,23 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
     requireFixture();
     browser = b;
     fs.mkdirSync('test-results', { recursive: true });
-    const state = await loginViaUi(browser, ENV_A_EMAIL, ENV_A_PASSWORD);
+    const state = await loginViaHttp(browser, ENV_A_EMAIL, ENV_A_PASSWORD);
     fs.writeFileSync(STATE_PATH, state, 'utf8');
   });
 
   test.use({ storageState: STATE_PATH });
 
-  test('① 会话页真实渲染 + More 按钮有 accessible name 且可键盘打开', async ({ page }) => {
+  test('① 会话页真实渲染 + More 按钮有 accessible name 且可键盘打开菜单与弹窗', async ({ page }) => {
     await chatPage(page);
     // V19.5 之前这个图标按钮没有任何可访问名 —— 读屏用户听不到它是什么
     const more = page.getByRole('button', { name: 'More actions' });
     await expect(more).toBeVisible();
     await more.focus();
+    await page.keyboard.press('Enter');
+    // 菜单项键盘可达，再用键盘进入弹窗
+    const item = page.getByRole('button', { name: 'Report User' });
+    await expect(item).toBeVisible();
+    await item.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('dialog', { name: 'Report User' })).toBeVisible();
   });
@@ -158,17 +219,16 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
   test('⑥ Escape 关闭且焦点恢复到 More 按钮；滚动锁不泄漏', async ({ page }) => {
     await chatPage(page);
     const more = page.getByRole('button', { name: 'More actions' });
-    await more.focus();
-    await page.keyboard.press('Enter');
-    const dialog = page.getByRole('dialog', { name: 'Report User' });
-    await expect(dialog).toBeVisible();
+    await openReportModal(page);
 
     // 打开时背景滚动被锁（scroll-lock.ts：overflow hidden）
     const locked = await page.evaluate(() => document.body.style.overflow);
     expect(locked).toBe('hidden');
 
     await page.keyboard.press('Escape');
+    const dialog = page.getByRole('dialog', { name: 'Report User' });
     await expect(dialog).toBeHidden();
+    // V19.6 修复的验证点：触发它的菜单项已随菜单卸载，焦点必须还给仍然存在的 More 按钮
     await expect(more).toBeFocused();
 
     // 关闭后滚动锁必须释放
@@ -184,21 +244,30 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
     const submit = dialog.getByRole('button', { name: /Submit Report/ });
     await expect(submit).toBeDisabled(); // 没选原因时提交必须禁用
 
-    // 选一个 24h 内没举报过的原因（夹具库跨轮复用时不会撞 429 假红）
+    // 🔴 前置：这一对（举报人, 被举报人）24h 内必须没有举报记录。
+    //    `/api/reports` 的去重是 **per 用户对**，不是 per 原因 ——
+    //    换一个原因再报同一人同样 429。所以这条用例只能证明"首次举报成功"，
+    //    重复举报由 ⑧ 覆盖。前置不干净时给出可执行的清理指令，而不是让
+    //    断言在 15s 后以"成功页没出现"这种误导性形态红。
     const res0 = await page.request.get('/api/reports?type=my-reports');
-    const reported0 = new Set(
-      ((await res0.json()) as { reports: Array<{ reason: string }> }).reports.map((r) => r.reason),
-    );
-    const reason = ['HARASSMENT', 'FAKE_PROFILE', 'SPAM', 'OFFENSIVE_BEHAVIOR', 'INAPPROPRIATE_CONTENT', 'OTHER']
-      .find((r) => !reported0.has(r));
-    expect(reason, '六个原因用尽说明夹具库被反复使用过度，应清理后重跑').toBeTruthy();
+    const priorReports = ((await res0.json()) as { reports: Array<{ reason: string }> }).reports;
+    expect(
+      priorReports.length,
+      '24h 内该用户对已有举报（去重是 per 用户对）—— 前置不干净。' +
+        '请先 `node scripts/qa/seed-chat-fixture.mjs --cleanup` 再重新 seed 后重跑',
+    ).toBe(0);
 
-    const reasonBtn = dialog.getByRole('button', { name: new RegExp(reason!) });
+    const reason = 'HARASSMENT';
+    const reasonBtn = reasonButton(dialog, reason);
     await reasonBtn.click();
     await expect(reasonBtn).toHaveAttribute('aria-pressed', 'true');
     await expect(submit).toBeEnabled();
     await submit.click();
-    await expect(dialog.getByText('Report Submitted')).toBeVisible({ timeout: 15_000 });
+    // 🔴 成功页会**换掉 aria-labelledby 指向的标题**（"Report User" → "Report Submitted"），
+    //    于是 `role=dialog` 的可访问名跟着变，原来的 `dialog` 定位符从此不匹配。
+    //    这里显式按新名断言 —— 顺带把"成功页仍是一个有名字的可访问对话框"这件事钉住。
+    const successDialog = page.getByRole('dialog', { name: 'Report Submitted' });
+    await expect(successDialog).toBeVisible({ timeout: 15_000 });
 
     // 真实持久化：不是只改 UI 状态 —— 用同一会话查自己的举报列表
     const res = await page.request.get('/api/reports?type=my-reports');
@@ -222,17 +291,20 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
     let target = reported0[0];
     if (!target) {
       await openReportModal(page);
-      const firstFree = ['SPAM', 'OFFENSIVE_BEHAVIOR', 'INAPPROPRIATE_CONTENT'].find((r) => r);
-      await dialog.getByRole('button', { name: new RegExp(firstFree!) }).click();
+      target = Object.keys(REASON_LABELS).find((r) => !reported0.includes(r));
+      expect(target, '六个原因 24h 内全被举报过，无法构造 429 前置').toBeTruthy();
+      await reasonButton(dialog, target!).click();
       await dialog.getByRole('button', { name: /Submit Report/ }).click();
-      await expect(dialog.getByText('Report Submitted')).toBeVisible({ timeout: 15_000 });
+      // 成功页的可访问名会变成 "Report Submitted"（见 ⑦ 的说明）
+      await expect(page.getByRole('dialog', { name: 'Report Submitted' })).toBeVisible({
+        timeout: 15_000,
+      });
       // 成功页 ~2s 后自动关闭
-      await expect(dialog).toBeHidden({ timeout: 10_000 });
-      target = firstFree;
+      await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 10_000 });
     }
 
     await openReportModal(page);
-    await dialog.getByRole('button', { name: new RegExp(target!) }).click();
+    await reasonButton(dialog, target!).click();
     await dialog.getByRole('button', { name: /Submit Report/ }).click();
     // 服务端 24h 去重 → 429，错误必须以 role=alert 播报而不是无声失败
     const alert = dialog.locator('[role="alert"]');
@@ -242,14 +314,22 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
 
   test('⑨ Cancel 关闭弹窗且不产生任何举报', async ({ page }) => {
     await chatPage(page);
+    // 前后对比（夹具库跨轮复用，绝不能断言"绝对为 0"—— 那是把环境干净当成被测行为）
+    const countOther = async (): Promise<number> => {
+      const res = await page.request.get('/api/reports?type=my-reports');
+      const data = (await res.json()) as { reports: Array<{ reason: string }> };
+      return data.reports.filter((r) => r.reason === 'OTHER').length;
+    };
+    const before = await countOther();
+
     await openReportModal(page);
     const dialog = page.getByRole('dialog', { name: 'Report User' });
+    // 先选一个原因（证明是「选了但不提交」也不落库，而不是「没选所以没落库」）
+    await reasonButton(dialog, 'OTHER').click();
     await dialog.getByRole('button', { name: 'Cancel' }).click();
     await expect(dialog).toBeHidden();
-    const res = await page.request.get('/api/reports?type=my-reports');
-    const data = (await res.json()) as { reports: Array<{ reason: string }> };
-    // Cancel 这条没提交过 OTHER —— 断言它没有新增（前后对比，不依赖夹具库干净）
-    expect(data.reports.filter((r) => r.reason === 'OTHER').length).toBe(0);
+
+    expect(await countOther()).toBe(before);
   });
 });
 
@@ -259,7 +339,7 @@ test.describe('跨租户 · 会话外用户被拒（ENV-04）', () => {
     if (!ENV_C_EMAIL || !ENV_C_PASSWORD) {
       throw new Error('缺少 E2E_CHAT_C_* —— 夹具必须包含第二租户用户');
     }
-    const state = await loginViaUi(browser, ENV_C_EMAIL, ENV_C_PASSWORD);
+    const state = await loginViaHttp(browser, ENV_C_EMAIL, ENV_C_PASSWORD);
     const ctx = await browser.newContext({ storageState: {
       cookies: JSON.parse(state).cookies,
       origins: JSON.parse(state).origins,

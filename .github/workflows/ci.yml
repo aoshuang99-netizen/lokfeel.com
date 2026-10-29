@@ -421,6 +421,13 @@ jobs:
       - name: 双组织隔离取证（V18-01 · 真实 HTTP + 真实库）
         run: node scripts/qa/v18-isolation-proof.mjs --base=http://127.0.0.1:3000 --db=ci-e2e.db
 
+      # 🔴 V19.6 · WB19-62：Mission 真实闭环探针（真实 HTTP + 真实库，不 mock）
+      #    Intent → Mission → 加入 → Intent → Agent 运行（幂等/审批/驳回/执行）→ Outcome。
+      #    Provider 缺位时 DEGRADED / FAILED 是**真实的诚实状态**（按 V19.6 Phase 3 口径
+      #    验收），探针绝不伪造"执行成功"。夹具 v196_ 前缀，跑完即删。
+      - name: Mission 真实闭环探针（V19.6）
+        run: node scripts/qa/v196-mission-flow.mjs --base=http://127.0.0.1:3000 --db=ci-e2e.db
+
       # 🔴 认证面移动端实测的夹具（V18-06 · 2026-10-22）
       #    在此之前，CI 里**没有任何可登录账号**（库是每次 db push 现建的），
       #    于是"登录后的页面在 390/360 下什么样"永远测不到 —— 而那才是产品本体。

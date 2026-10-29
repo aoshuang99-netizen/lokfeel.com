@@ -271,6 +271,9 @@ export default function ChatRoomPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  // V19.6：ReportModal 的触发项是下拉菜单项，菜单在弹窗打开时就会卸载 ——
+  // 焦点恢复的落点必须是仍然存在的 More 按钮（否则 Escape/Cancel 后焦点掉回 body）。
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
   const [sendingImage, setSendingImage] = useState(false);
   const hasInitialLoaded = useRef(false);
 
@@ -788,6 +791,7 @@ export default function ChatRoomPage() {
           )}
           <div className="relative">
             <button
+              ref={moreButtonRef}
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               aria-label="More actions"
               aria-expanded={showMoreMenu}
@@ -1307,7 +1311,11 @@ export default function ChatRoomPage() {
       {/* Report Modal */}
       <ReportModal
         isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
+        onClose={() => {
+          setShowReportModal(false);
+          // 弹窗的焦点恢复兜底：触发它的菜单项已随菜单卸载，把焦点还给 More 按钮
+          moreButtonRef.current?.focus();
+        }}
         reportedUserId={roomInfo?.otherUser?.id || ""}
         reportedUserName={roomInfo?.otherUser?.name || "User"}
         chatRoomId={roomId}

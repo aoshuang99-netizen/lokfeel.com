@@ -23,7 +23,11 @@ export default defineConfig({
 
   // 全局登录一次，产出 storageState（见 tests/e2e-ci/global-setup.ts 里"为什么"）。
   // 作用：认证面 18 条用例不再各登一次 —— 它们要证明的是版面，不是登录能连点 18 次。
-  globalSetup: './tests/e2e-ci/global-setup.ts',
+  //
+  // PW_SKIP_GLOBAL_SETUP=1 仅供**本地取证**：沙箱里登录页水合慢，表单会退化成
+  // 原生 GET 提交（URL 里带凭据），前置登录必然超时。此时由用例自己用 HTTP
+  // 登录构造 storageState（见 auth-dialogs.spec.ts 的 loginViaHttp）。CI 不设该变量。
+  globalSetup: process.env.PW_SKIP_GLOBAL_SETUP ? undefined : './tests/e2e-ci/global-setup.ts',
 
   timeout: 60_000,
   expect: { timeout: 15_000 },
@@ -37,7 +41,7 @@ export default defineConfig({
   // 没有它，E2E 红了只能读到 "exit code 1"，等于黑箱。
   reporter: [
     ['list'],
-    ['html', { open: 'never', outputFolder: 'test-results/ci/html' }],
+    ['html', { open: 'never', outputFolder: process.env.PW_HTML_DIR || 'test-results/ci/html' }],
     // JSON 报告不是给人看的，是给 CI 摘要用的：注解里只有每条的**第一行**错误，
     // HTML 报告要下载才能看（需要权限），而 `check-runs.output.summary` 公开可读。
     // 有了它，失败明细可以被写进 step summary，下一轮不必再"等日志权限"。
@@ -45,7 +49,9 @@ export default defineConfig({
     ['./tests/e2e-ci/reporters/gha-annotations.cjs'],
   ],
 
-  outputDir: 'test-results/ci/artifacts',
+  // 本地取证：沙箱的批量删除守卫会在"清理上一轮 artifacts"时拦下运行，
+  // 指向全新目录即可绕开（CI 不设该变量，路径与之前一致）。
+  outputDir: process.env.PW_OUTPUT_DIR || 'test-results/ci/artifacts',
 
   use: {
     // 默认指向本机构建产物；CI 里由 env 显式给定
@@ -55,8 +61,18 @@ export default defineConfig({
     // V19.6：VideoCallModal 的适用行为矩阵需要 getUserMedia 能打开——
     // runner 上没有摄像头，用假设备 + 自动授权。这两个 flag 只影响
     // 发起媒体请求的用例，对其余用例零副作用。
+    // proxy-server=direct:// ：沙箱/系统代理会劫持 127.0.0.1 的请求
+    // （CI 无代理不受影响，本地取证时必需）。
     launchOptions: {
-      args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+      // 🔴 本地取证用：Playwright 1.64 不支持 mac13 的下载版 Chromium，
+      //    本机已装 Chrome 时用 PW_CHANNEL=chrome 借道（CI 不设此变量，走下载版）。
+      ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}),
+      args: [
+        '--use-fake-ui-for-media-stream',
+        '--use-fake-device-for-media-stream',
+        '--proxy-server=direct://',
+        '--proxy-bypass-list=*',
+      ],
     },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',

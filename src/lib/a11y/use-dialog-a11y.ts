@@ -98,30 +98,58 @@ export function useDialogA11y({
       )
     }
 
-    const focusInto = (container: HTMLElement) => {
-      const explicit = initialFocusRef?.current
-      if (explicit && isVisible(explicit)) {
-        explicit.focus()
-        return
+    /**
+     * 把焦点放进容器。返回 true = 本帧已经安排好；false = 显式目标还没挂载，等下一帧。
+     *
+     * 🔴 2026-10-29 实测（ReportModal 初始焦点偶发落在 textarea）：
+     *    显式 `initialFocusRef` 指向的元素常常比容器晚一两帧挂上（动画/dynamic chunk）。
+     *    旧实现在"显式目标为 null"时直接退回启发式（优先表单项）—— 于是焦点落到
+     *    textarea，而循环判据是「容器里已有焦点就停」，从此再也不纠正。
+     *    现在只要调用方**声明了**显式目标，就等它，不退回启发式。
+     */
+    const focusInto = (container: HTMLElement): boolean => {
+      if (initialFocusRef) {
+        const explicit = initialFocusRef.current
+        if (explicit && isVisible(explicit)) {
+          explicit.focus()
+          return true
+        }
+        return false
       }
       const usable = collect(container)
       const index = pickInitialFocusIndex(usable)
       const target = index >= 0 ? usable[index] : null
       if (target) target.el.focus()
       else container.focus()
+      return true
     }
 
     // 容器可能是懒加载出来的（`next/dynamic` 的 MotionDiv 首帧还只是 fallback），
-    // 效果跑完那一刻拿不到节点很正常。所以按帧重试，最多 ~500ms；
+    // 效果跑完那一刻拿不到节点很正常。所以按帧重试，最多 ~1.5s（90 帧）——
+    // 比原来的 30 帧（~0.5s）更能容忍慢设备/慢 chunk；
     // 一旦焦点已经进到容器里就立刻停手，避免和用户自己的点击抢。
     let frame = 0
     let attempts = 0
     const settleInitialFocus = () => {
       const container = containerRef.current
-      if (container && container.contains(document.activeElement)) return
-      if (container) focusInto(container)
+      let pending = false
+      if (container) {
+        if (container.contains(document.activeElement)) return
+        pending = !focusInto(container)
+      } else {
+        pending = true
+      }
       attempts += 1
-      if (attempts <= 30) frame = requestAnimationFrame(settleInitialFocus)
+      if (attempts <= 90) {
+        frame = requestAnimationFrame(settleInitialFocus)
+      } else if (pending && container) {
+        // 兜底：显式目标始终没出现 —— 退回启发式，别让焦点留在背景页面上
+        const usable = collect(container)
+        const index = pickInitialFocusIndex(usable)
+        const target = index >= 0 ? usable[index] : null
+        if (target) target.el.focus()
+        else container.focus()
+      }
     }
     settleInitialFocus()
 

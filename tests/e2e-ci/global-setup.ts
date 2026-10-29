@@ -51,7 +51,11 @@ export default async function globalSetup(): Promise<void> {
 
   fs.mkdirSync(STATE_DIR, { recursive: true });
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(
+    // PW_CHANNEL=chrome 时借本机 Chrome（Playwright 1.64 不支持 mac13 的下载版浏览器，
+    // 本地取证用；CI 不设该变量，行为与之前完全一致）。
+    process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {},
+  );
   const reasons: string[] = [];
 
   try {
