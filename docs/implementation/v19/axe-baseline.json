@@ -1,0 +1,133 @@
+{
+  "$comment": "axe 四视口基线（WB19-64）。逐 page×viewport×ruleId 比对，只有新增才判红。由 v196-axe-scan.mjs --update 生成。",
+  "generatedAt": "2026-10-30T08:03:50.046Z",
+  "axeVersion": "4.13.0",
+  "frozen": {
+    "/|360x800": {
+      "status": "ok",
+      "rules": {
+        "color-contrast": 31,
+        "scrollable-region-focusable": 1
+      }
+    },
+    "/login|360x800": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/register|360x800": {
+      "status": "ok",
+      "rules": {
+        "color-contrast": 5
+      }
+    },
+    "/dashboard/explore|360x800": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/workspace|360x800": {
+      "status": "ok",
+      "rules": {
+        "region": 3
+      }
+    },
+    "/dashboard/chats/e2e_conv_chat|360x800": {
+      "status": "ok",
+      "rules": {
+        "heading-order": 1
+      }
+    },
+    "/|390x844": {
+      "status": "ok",
+      "rules": {
+        "color-contrast": 31,
+        "scrollable-region-focusable": 1
+      }
+    },
+    "/login|390x844": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/register|390x844": {
+      "status": "ok",
+      "rules": {
+        "color-contrast": 5
+      }
+    },
+    "/dashboard/explore|390x844": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/workspace|390x844": {
+      "status": "ok",
+      "rules": {
+        "region": 3
+      }
+    },
+    "/dashboard/chats/e2e_conv_chat|390x844": {
+      "status": "ok",
+      "rules": {
+        "heading-order": 1
+      }
+    },
+    "/|768x1024": {
+      "status": "ok",
+      "rules": {
+        "color-contrast": 31
+      }
+    },
+    "/login|768x1024": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/register|768x1024": {
+      "status": "ok",
+      "rules": {
+        "color-contrast": 4
+      }
+    },
+    "/dashboard/explore|768x1024": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/workspace|768x1024": {
+      "status": "ok",
+      "rules": {
+        "region": 3
+      }
+    },
+    "/dashboard/chats/e2e_conv_chat|768x1024": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/|1440x900": {
+      "status": "ok",
+      "rules": {
+        "color-contrast": 32
+      }
+    },
+    "/login|1440x900": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/register|1440x900": {
+      "status": "ok",
+      "rules": {
+        "color-contrast": 5
+      }
+    },
+    "/dashboard/explore|1440x900": {
+      "status": "ok",
+      "rules": {}
+    },
+    "/workspace|1440x900": {
+      "status": "ok",
+      "rules": {
+        "region": 3
+      }
+    },
+    "/dashboard/chats/e2e_conv_chat|1440x900": {
+      "status": "ok",
+      "rules": {}
+    }
+  }
+}

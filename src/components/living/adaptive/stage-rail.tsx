@@ -66,7 +66,10 @@ export default function StageRail({ stages, activeView, onFocusView }: StageRail
                   {stage.count === null ? '—' : stage.count}
                 </span>
               </span>
-              <span className="mt-1 block truncate text-[10px] text-lf-text-faint">{status}</span>
+              {/* 🔴 V19.6 axe 实测：faint 叠在聚焦卡的 signal-soft 底上，
+                  暗色主题只有 ~3.78:1（10px 小字按 AA 需 4.5）；muted 实测 5.02:1 达标。
+                  10px 字号本就不该用最淡的文字层级。 */}
+              <span className="mt-1 block truncate text-[10px] text-lf-text-muted">{status}</span>
             </>
           )
 

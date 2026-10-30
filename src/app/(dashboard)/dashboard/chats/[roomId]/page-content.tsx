@@ -735,6 +735,7 @@ export default function ChatRoomPage() {
           <Link
             href="/dashboard/chats"
             className="md:hidden p-2 -ml-2 rounded-full hover:bg-background-tertiary"
+            aria-label="Back to chats"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </Link>
@@ -1018,6 +1019,7 @@ export default function ChatRoomPage() {
               <button
                 onClick={() => setShowAiSuggestions(false)}
                 className="ml-auto text-foreground-subtle hover:text-foreground"
+                aria-label="Dismiss AI suggestions"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1106,6 +1108,7 @@ export default function ChatRoomPage() {
             className={`p-2 rounded-full transition-colors ${
               showEmojiPicker ? "bg-primary/20 text-primary" : "hover:bg-background-tertiary text-foreground-muted"
             }`}
+            aria-label="Emoji picker"
           >
             <Smile className="w-5 h-5" />
           </button>
@@ -1115,6 +1118,7 @@ export default function ChatRoomPage() {
             onClick={() => imageInputRef.current?.click()}
             disabled={sendingImage}
             className="p-2 rounded-full hover:bg-background-tertiary text-foreground-muted transition-colors disabled:opacity-30"
+            aria-label="Send image"
           >
             {sendingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
           </button>
@@ -1175,6 +1179,7 @@ export default function ChatRoomPage() {
             className={`p-2 rounded-full transition-colors ${
               showQuickReplies ? "bg-primary/20 text-primary" : "hover:bg-background-tertiary text-foreground-muted"
             }`}
+            aria-label="Quick replies"
           >
             <Zap className="w-5 h-5" />
           </button>
@@ -1211,7 +1216,10 @@ export default function ChatRoomPage() {
               )}
             </button>
           ) : (
-            <button className="p-2 rounded-full hover:bg-background-tertiary text-foreground-muted transition-colors">
+            <button
+              className="p-2 rounded-full hover:bg-background-tertiary text-foreground-muted transition-colors"
+              aria-label="Voice message (coming soon)"
+            >
               <Mic className="w-5 h-5" />
             </button>
           )}

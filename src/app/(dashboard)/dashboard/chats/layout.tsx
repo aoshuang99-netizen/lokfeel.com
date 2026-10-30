@@ -208,6 +208,11 @@ export default function ChatLayout({
 
   return (
     <div className="flex h-[calc(100vh-4rem)] -mx-4 -mt-6 bg-background">
+      {/* V19.6 axe 实测：本页此前没有任何 h1（page-has-heading-one）。
+          🔴 必须挂在**根节点**下 —— 放进侧栏的话，360 视口侧栏是
+          `hidden md:flex`，整棵子树 display:none，h1 就不被计入。
+          sr-only：对读屏是层级标题，对视觉零影响。 */}
+      <h1 className="sr-only">Messages</h1>
       {/* ═══════════════════════════════════════════════════════
           LEFT SIDEBAR - Chat List (WhatsApp Style + Tabs)
           ═══════════════════════════════════════════════════════ */}
@@ -221,10 +226,16 @@ export default function ChatLayout({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-foreground">Messages</h2>
             <div className="flex items-center gap-2">
-              <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors">
+              <button
+                className="p-2 rounded-full hover:bg-background-tertiary transition-colors"
+                aria-label="Filter conversations"
+              >
                 <Filter className="w-5 h-5 text-foreground-muted" />
               </button>
-              <button className="p-2 rounded-full hover:bg-background-tertiary transition-colors">
+              <button
+                className="p-2 rounded-full hover:bg-background-tertiary transition-colors"
+                aria-label="More options"
+              >
                 <MoreVertical className="w-5 h-5 text-foreground-muted" />
               </button>
             </div>

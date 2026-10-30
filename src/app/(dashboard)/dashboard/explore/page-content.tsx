@@ -411,6 +411,9 @@ export default function DiscoverPage() {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
+        {/* V19.6 axe 实测：加载/空态是本页最常见形态（含新用户首访），
+            但只有"有人可刷"的主视图才有 h1 ⇒ 补一个视觉零影响的 h1。 */}
+        <h1 className="sr-only">Discover people</h1>
         <div className="text-center">
           <div className="w-14 h-14 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
           <p className="text-foreground-muted text-sm">Loading profiles...</p>
@@ -423,6 +426,7 @@ export default function DiscoverPage() {
   if (users.length === 0) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <h1 className="sr-only">Discover people</h1>
         <div className="text-center max-w-sm">
           <div className="w-20 h-20 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-6">
             <Heart className="w-10 h-10 text-foreground-faint" />
