@@ -280,6 +280,19 @@ if (GATE) {
     console.error('\n✗ 门禁模式下基线不存在 —— 先跑 --update 生成基线（并把 diff 一起 review）');
     process.exit(2);
   }
+  // 🔴 可扫面完整性闸门（WB19-64 后补，V19.8 取证抓出假绿）：
+  //    实测对死服务跑 --gate，24 格全部 nav-failed，旧逻辑打 24 个 □ 后 exit 0
+  //    报"零新增"—— 空集恒真。门禁必须先证明"该扫的都扫到了"再谈比对。
+  const expectTotal = pages.length * VIEWPORTS.length;
+  if (scannedKeys.length < expectTotal) {
+    const bad = results.filter((r) => r.status !== 'ok');
+    console.error(
+      `\n✗ axe 门禁：可扫面不完整 ${scannedKeys.length}/${expectTotal} —— ` +
+        `${bad.length} 格未成功扫描（服务挂了/重定向/HTTP 错误都不能当零违规过门禁）`,
+    );
+    for (const r of bad.slice(0, 10)) console.error(`  □ ${r.page} @ ${r.viewport}: ${r.status}`);
+    process.exit(2);
+  }
   const baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8')).frozen;
   const news = [];
   for (const k of scannedKeys) {
@@ -289,11 +302,8 @@ if (GATE) {
       news.push(`新扫描面（基线缺失）: ${k}`);
       continue;
     }
-    if (cur.status !== 'ok') {
-      // 扫描面状态变化不算"新增违规"，但要显式说出来
-      console.log(`□ 状态变化: ${k} -> ${cur.status}`);
-      continue;
-    }
+    // 扫描面全部成功（上面已保证）才会到这里；基线里存的若当年是非 ok 状态，
+    // 现在能扫了 ⇒ 以"当前违规对 0 基线"判定，新增即红（收紧方向，符合棘轮语义）。
     for (const [rule, n] of Object.entries(cur.rules)) {
       const b = base.rules?.[rule] ?? 0;
       if (n > b) news.push(`${k} :: ${rule}  ${b} -> ${n}`);

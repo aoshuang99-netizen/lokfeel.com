@@ -32,6 +32,13 @@ const BUILD_ARTIFACTS = [
   ".wrangler/**", // wrangler 本地状态
   ".vercel/**", // vercel 本地状态
   ".stage5-probe/**", // chat-merge 门禁的合成夹具（运行期创建/清理）
+  // V19.8（2026-10-30）：沙箱本地取证用 NEXT_DIST_DIR 指到 .next-vXXX，
+  // 全仓 lint 会把几十万条构建产物噪音算成"新增债务"（实测 +153283）。
+  // CI 的 distDir 恒为 .next（下一行已排），这里排的是本地取证目录。
+  ".next-v*/**",
+  ".next-dev-*/**",
+  ".next/dev-stale-*/**",
+  ".trash-audit/**", // 沙箱 safe-delete 回收站（gitignore 已含，lint 同步排除）
 ];
 
 const eslintConfig = defineConfig([

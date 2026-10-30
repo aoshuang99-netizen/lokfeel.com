@@ -516,6 +516,16 @@ jobs:
       - name: 浏览器冒烟
         run: npx playwright test --config=playwright.ci.config.ts
 
+      # 🔴 V19.8 · axe 四视口棘轮门禁（WB19-64 交付、V19-80 接线）：
+      #    6 页 × 4 视口，注入仓内 axe-core；与 lint 棘轮同构 —— 逐 page×viewport×ruleId
+      #    比对 docs/implementation/v19/axe-baseline.json，**只有新增才红**（存量对比度债
+      #    冻结在基线里，不许上涨）。退出码：0=零新增 / 1=新增违规 / 2=可扫面不完整
+      #    或基线缺失（V19.8 修复了"全格导航失败仍报零新增"的假绿：服务挂了绝不当
+      #    零违规过门禁）。登录态来自上面的聊天夹具（GITHUB_ENV），认证面才有证据。
+      - name: axe 四视口棘轮门禁（V19.8）
+        timeout-minutes: 15
+        run: node scripts/qa/v196-axe-scan.mjs --base=http://127.0.0.1:3000 --gate
+
       # 首屏指标采集器自证（WB17-08）。只跑自证，**不测生产**：
       # 生产指标受跨境链路与共享 runner 抖动影响，塞进 push 门禁会退化成恒红。
       # 自证本身是离线的（本地起两个页面：一个快、一个服务端延迟 3.6s），
