@@ -428,6 +428,16 @@ jobs:
       - name: Mission 真实闭环探针（V19.6）
         run: node scripts/qa/v196-mission-flow.mjs --base=http://127.0.0.1:3000 --db=ci-e2e.db
 
+      # 🔴 V19.8 · WB19-82：Workspace 真实闭环探针（Intent → Spec → Mission，含 UI 层）
+      #    补的是 v196 没覆盖的两层：
+      #      · Schema 拒绝（need<4 / 受保护字段 disclosure.email / 缺幂等键）
+      #      · UI 层（390 移动端）：编译禁用说明 → 编译 → Studio 创建 → 刷新恢复
+      #    本轮据此修掉真实 P1：compiler 从不产出 offer，而创建按钮要求 offer 非空，
+      #    UI 却提示"补进描述里再重新编译"——死路。现在句级抽取 offer（抽不到仍不编默认值）。
+      #    夹具 v198_ 前缀，跑完由下面的 always 步骤清理。
+      - name: Workspace 真实闭环探针（V19.8）
+        run: node scripts/qa/v198-workspace-loop.mjs --base=http://127.0.0.1:3000 --db=ci-e2e.db
+
       # 🔴 认证面移动端实测的夹具（V18-06 · 2026-10-22）
       #    在此之前，CI 里**没有任何可登录账号**（库是每次 db push 现建的），
       #    于是"登录后的页面在 390/360 下什么样"永远测不到 —— 而那才是产品本体。
@@ -540,6 +550,10 @@ jobs:
       - name: 清理聊天夹具
         if: always()
         run: node scripts/qa/seed-chat-fixture.mjs --db=ci-e2e.db --cleanup
+
+      - name: 清理 Workspace 闭环夹具（V19.8）
+        if: always()
+        run: node scripts/qa/v198-workspace-loop.mjs --db=ci-e2e.db --cleanup
 
       # 🔴 失败时的取证：日志只打 stdout，等于**只有 workstation 上的人能看见**
       #    （job 日志的 REST 端点要 admin 权限，公开仓库也读不到；而

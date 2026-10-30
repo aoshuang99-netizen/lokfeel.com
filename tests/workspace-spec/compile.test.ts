@@ -66,6 +66,31 @@ describe('extractDraftFields', () => {
     expect(r.successCriteria).toEqual([])
     expect(r.expiresAt).toBeUndefined()
   })
+
+  // ── V19.8 · 对价抽取（W-08 死路修复的回归守卫）──
+  it('写了"提供…"的句子被抽为 offer（句级，含上下文）', () => {
+    const r = extractDraftFields('30 天内对接 5 家渠道伙伴。我们提供项目预算与联合品牌支持。')
+    expect(r.offer).toContain('提供')
+    expect(r.offer).toContain('预算')
+  })
+
+  it('没写对价 → offer 为 undefined（不编默认对价）', () => {
+    const r = extractDraftFields('30 天内对接 5 家渠道伙伴')
+    expect(r.offer).toBeUndefined()
+  })
+
+  it('对价关键词在句中但不占整句时，抽的是**整句**（保留可读性）', () => {
+    const r = extractDraftFields('希望找到长期伙伴，我们可以承担内容制作成本，两个月内启动')
+    expect(r.offer).toContain('我们可以承担内容制作成本')
+  })
+
+  it('compileWorkspaceSpec：抽到 offer 时 intent 节点带上它，missionDraft 不再缺对价', () => {
+    const r = compileWorkspaceSpec('30 天内促成 20 次渠道合作，我们提供预算与渠道资源作为对价，每周复盘一次进展')
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    const intent = r.spec.nodes.find((n) => n.type === 'intent')
+    expect(intent && 'offer' in intent.data ? (intent.data as { offer?: string }).offer : undefined).toBeDefined()
+  })
 })
 
 describe('compileWorkspaceSpec', () => {

@@ -159,6 +159,7 @@ function toNumber(raw: string): number | null {
 export function extractDraftFields(input: string): {
   constraints: string[]
   successCriteria: string[]
+  offer?: string
   expiresAt?: string
 } {
   const constraints: string[] = []
@@ -204,6 +205,16 @@ export function extractDraftFields(input: string): {
     successCriteria.push(`达成 ${phrase}`)
   }
 
+  // 对价（V19.8 修复）：包含"提供/给予/付出/作为对价/换取/我们出"等词的**整句**。
+  // 🔴 为什么必须抽：`missionDraftFromSpec` 要求 offer 非空才启用「创建连接任务」，
+  //    而此前的编译器**从不产出 offer**，UI 却提示"把缺的补进描述里再重新编译"——
+  //    用户照做按钮依然禁用（实测死路）。句级抽取不伪造：原文没写就是 undefined，
+  //    缺口说明照旧（与"不编默认对价"的既有纪律一致）。
+  const offerSentence = input
+    .split(/[。；！？!?;\n]/)
+    .map((s) => s.trim())
+    .find((s) => s.length >= 2 && /提供|给予|付出|作为对价|换取|我们出|可以给|愿意出|承担/.test(s))
+
   if (earliestDays !== null && earliestDays > 0 && earliestDays <= 365) {
     const d = new Date()
     d.setUTCDate(d.getUTCDate() + earliestDays)
@@ -211,10 +222,10 @@ export function extractDraftFields(input: string): {
     const expiresAt = new Date(
       Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
     ).toISOString()
-    return { constraints, successCriteria, expiresAt }
+    return { constraints, successCriteria, offer: offerSentence, expiresAt }
   }
 
-  return { constraints, successCriteria }
+  return { constraints, successCriteria, offer: offerSentence }
 }
 
 // ── 编译 ──────────────────────────────────────────────────────────────
@@ -265,7 +276,7 @@ export function compileWorkspaceSpec(rawInput: string): CompileResult {
   }
 
   const playbook = INTENT_PLAYBOOKS[intentClass]
-  const { constraints, successCriteria, expiresAt } = extractDraftFields(input)
+  const { constraints, successCriteria, offer, expiresAt } = extractDraftFields(input)
 
   const draft: WorkspaceSpec = {
     version: WORKSPACE_SPEC_VERSION,
@@ -280,6 +291,7 @@ export function compileWorkspaceSpec(rawInput: string): CompileResult {
           goal: input,
           constraints,
           successCriteria,
+          ...(offer ? { offer } : {}),
           ...(expiresAt ? { expiresAt } : {}),
         },
       },
