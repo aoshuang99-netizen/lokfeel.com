@@ -191,6 +191,20 @@ export function planOf(obj: CreemObject): string | null {
 }
 
 /**
+ * 商品 id（B-16 修复用）。
+ *
+ * `metadata.plan` 可能是 `"dynamic"` 这类不可判定的占位值（旧版 checkout 写死），
+ * 此时必须能退回商品 id 反查套餐 —— 否则年付会被记成月付。
+ * 三个位置都读：顶层 `productId` / 下划线命名 `product_id` / `metadata.productId`。
+ */
+export function productIdOf(obj: CreemObject): string | null {
+  const meta = obj.metadata
+  const fromMeta =
+    meta && typeof meta === 'object' ? str((meta as CreemObject).productId) : null
+  return str(obj.productId) ?? str(obj.product_id) ?? fromMeta
+}
+
+/**
  * 幂等键（写入 `Payment.stripePaymentIntentId`，该列唯一）。
  *
  * 🔴 这是本文件最关键的一个决定：

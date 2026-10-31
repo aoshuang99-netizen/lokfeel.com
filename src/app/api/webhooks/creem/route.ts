@@ -18,11 +18,13 @@ import {
   isStaleDowngrade,
   periodEndOf,
   planOf,
+  productIdOf,
   statusForKind,
   subscriptionIdOf,
   transactionIdOf,
   userIdOf,
 } from "@/lib/payments/creem-events";
+import { resolveWebhookPlan } from "@/lib/payments/creem-plan-resolve";
 
 /**
  * POST /api/webhooks/creem
@@ -40,15 +42,10 @@ import {
  *      退款 `creem:refund:<id>`。原实现一律用 `object.id`（订阅 id），
  *      会让第二期续费与首期同键而被判成重复。
  *   4. 乱序保护：降级类事件若周期早于当前周期，视为陈旧并忽略。
+ *   5. 套餐判定移到 `@/lib/payments/creem-plan-resolve`（B-16）：
+ *      本文件原有一份 `SUPPORTED_PLAN_VALUES` 白名单，但只认 `metadata.plan`，
+ *      遇到 "dynamic" 就静默兜底成月付 —— 年付用户少拿 11 个月权益。
  */
-
-const SUPPORTED_PLAN_VALUES = new Set([
-  "PREMIUM_MONTHLY",
-  "PREMIUM_YEARLY",
-  "LIFETIME",
-  "FREE",
-  "LADY_FREE",
-]);
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -304,10 +301,24 @@ export async function POST(request: NextRequest) {
     }
 
     const rawPlan = planOf(obj);
-    const plan =
-      rawPlan && SUPPORTED_PLAN_VALUES.has(rawPlan)
-        ? (rawPlan as "FREE" | "LADY_FREE" | "PREMIUM_MONTHLY" | "PREMIUM_YEARLY" | "LIFETIME")
-        : existing?.plan ?? "PREMIUM_MONTHLY";
+    // B-16：`metadata.plan` 可能是 "dynamic" 等不可判定值（旧版 checkout 写死），
+    // 此时按 productId 反查套餐，再退回既有记录 —— 否则年付被记成月付。
+    const planResolution = resolveWebhookPlan({
+      rawPlan,
+      productId: productIdOf(obj),
+      env: {
+        CREEM_MONTHLY_PRODUCT_ID: process.env.CREEM_MONTHLY_PRODUCT_ID,
+        CREEM_YEARLY_PRODUCT_ID: process.env.CREEM_YEARLY_PRODUCT_ID,
+      },
+      fallbackPlan: existing?.plan ?? null,
+    });
+    const plan = planResolution.plan;
+    if (planResolution.degraded) {
+      console.warn(
+        `[Creem Webhook] Plan unresolvable (rawPlan=${String(rawPlan)}, productId=${String(productIdOf(obj))}) ` +
+          `→ degraded to ${plan} via ${planResolution.source}`,
+      );
+    }
 
     const customerId = customerIdOf(obj);
 
