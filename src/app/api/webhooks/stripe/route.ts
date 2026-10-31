@@ -21,6 +21,11 @@ import {
   type CheckoutPaymentPort,
   type CheckoutSessionLike,
 } from "@/lib/stripe/checkout-grant";
+import {
+  nextCancelledAt,
+  periodEndOf,
+  translateStripeStatus,
+} from "@/lib/stripe/subscription-status";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -221,29 +226,50 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     return;
   }
 
-  const statusMap: Record<string, "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "TRIALING"> = {
-    active: "ACTIVE",
-    trialing: "TRIALING",
-    past_due: "PAST_DUE",
-    canceled: "CANCELLED",
-    unpaid: "EXPIRED",
-  };
+  // 🔴 B-14：原来这里是 `statusMap[...] || "ACTIVE"`，只映射 5 个状态，
+  //    把 Stripe 的 `incomplete` / `incomplete_expired` / `paused` 一律当 ACTIVE
+  //    ⇒ 没收到钱也发 Premium（且 incomplete_expired 是终态，永不被纠正）。
+  //    改为显式映射 + fail closed，详见 `lib/stripe/subscription-status.ts`。
+  const translation = translateStripeStatus(subscription.status);
+  if (translation.unknown) {
+    // webhook 必须回 200（否则 Stripe 无限重投），因此只告警不改协议：
+    // 未知状态按「不发权益」处理，等下一条件正常事件覆盖。
+    console.warn(
+      `[Webhook] Unknown Stripe subscription status "${translation.raw}" for customer ${customerId} — treated as ${translation.status} (no entitlement)`,
+    );
+  }
 
   // Detect plan from price ID
   const priceId = subscription.items.data[0]?.price.id;
   const detectedPlan = userSubscription.plan;
   // Could map priceId to plan type here if needed
 
+  // 读不到周期就**不写**（不要退回 now+30d，那是 B-12 同类错误）：
+  // `stripeCurrentPeriodEnd` 是到期判据，猜一个比不写更危险。
+  const periodEnd = periodEndOf(subscription);
+
   await db.subscription.update({
     where: { id: userSubscription.id },
     data: {
       plan: detectedPlan,
-      status: statusMap[subscription.status] || "ACTIVE",
-      stripeCurrentPeriodEnd: (subscription as any).current_period_end
-        ? new Date((subscription as any).current_period_end * 1000)
-        : null,
+      status: translation.status,
+      ...(periodEnd
+        ? {
+            stripeCurrentPeriodEnd: periodEnd,
+            // `endsAt` 与 `stripeCurrentPeriodEnd` 同步：全仓只有
+            // `/api/profile/[userId]` 用 `endsAt > now` 判权，而 Stripe 订阅
+            // 从创建到续费**从不写 endsAt**（只有 `subscription.deleted` 才写）。
+            // 结果付费用户在资料页被当成免费用户 —— 两套判权口径的根源就在这。
+            ...(translation.entitled ? { endsAt: periodEnd } : {}),
+          }
+        : {}),
       stripePriceId: priceId,
-      cancelledAt: subscription.cancel_at_period_end ? new Date() : null,
+      // 无权状态（incomplete / expired / paused）不抹掉历史取消记录
+      cancelledAt: nextCancelledAt(
+        userSubscription.cancelledAt,
+        translation,
+        Boolean(subscription.cancel_at_period_end),
+      ),
     },
   });
 }
