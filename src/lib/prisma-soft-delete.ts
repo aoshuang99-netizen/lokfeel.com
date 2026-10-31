@@ -7,7 +7,12 @@ import { Prisma } from "@/generated";
  * Automatically filters out soft-deleted records (deletedAt IS NOT NULL)
  * from all queries on models that have a deletedAt field.
  *
- * Models with soft delete: User, Match, Subscription, Payment, UserReport, ChatRoom, Conversation
+ * Models with soft delete: User, Match, Subscription, Payment, UserReport, Conversation
+ *
+ * BUGFIX (P3 / B-5c): 该清单原含 "ChatRoom"，但 `ChatRoom` 模型已从 schema 移除
+ * （聊天室统一由 `Conversation` 承载）。`model.charAt(0).toLowerCase()+slice(1)`
+ * 会把死条目注册成 `chatRoom` 查询钩子 —— 现在没有调用方，属 dead config，
+ * 但任何人搜 "ChatRoom" 都会被误导以为该表仍存在，故显式删除。
  *
  * FIX: Uses correct defineExtension pattern (plain object, not callback)
  * The previous callback pattern caused a double $extends which silently
@@ -23,7 +28,6 @@ const SOFT_DELETE_MODELS = [
   "Subscription",
   "Payment",
   "UserReport",
-  "ChatRoom",
   "Conversation",
 ] as const;
 
