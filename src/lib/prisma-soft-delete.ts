@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Prisma } from "@/generated";
+import {
+  SOFT_DELETE_MODELS,
+  SOFT_DELETE_OPERATIONS,
+  applySoftDeleteFilter,
+  type SoftDeleteOperation,
+} from "./soft-delete-filter";
 
 /**
  * Soft Delete Prisma Extension
@@ -14,32 +20,32 @@ import { Prisma } from "@/generated";
  * 会把死条目注册成 `chatRoom` 查询钩子 —— 现在没有调用方，属 dead config，
  * 但任何人搜 "ChatRoom" 都会被误导以为该表仍存在，故显式删除。
  *
+ * BUGFIX（P2 / B-20）：此前只包 `find*` / `count`，**漏了 `aggregate` / `groupBy`**。
+ * 这两个恰是「报表与统计专用」的读入口，落在最不该算错数的地方：
+ *   · `admin/dashboard/summary`、`admin/analytics` 用 `payment.aggregate({_sum:{amount}})`
+ *     ⇒ 软删的支付仍计入营收（收入虚高、与明细对不上）；
+ *   · `im/stats.countUnreadForUser` 用 `conversation.aggregate({_sum:{unreadCountA/B}})`
+ *     ⇒ 软删会话的未读仍进徽章（列表说 5 条未读，点进去 0 条）；
+ *   · `admin/analytics` 用 `match.aggregate({_avg:{matchScore}})`
+ *     ⇒ 均值被已删样本污染。
+ * 同时补 `findUniqueOrThrow`（与 findUnique 同语义，漏包则能读到已删记录）。
+ *
+ * 模型/操作清单与过滤逻辑在 `./soft-delete-filter`（纯逻辑、可单测）；
+ * 本文件只负责把它接到 Prisma 扩展上。
+ *
  * FIX: Uses correct defineExtension pattern (plain object, not callback)
  * The previous callback pattern caused a double $extends which silently
  * broke all queries on soft-delete models, causing 500 errors.
  */
 
-/**
- * Models that support soft delete (have deletedAt field)
- */
-const SOFT_DELETE_MODELS = [
-  "User",
-  "Match",
-  "Subscription",
-  "Payment",
-  "UserReport",
-  "Conversation",
-] as const;
-
-/**
- * Add deletedAt: null filter to where clause
- */
-function withSoftDelete(args: Record<string, unknown>): Record<string, unknown> {
-  return {
-    deletedAt: null,
-    ...(args.where as Record<string, unknown> || {}),
-  };
-}
+export {
+  SOFT_DELETE_MODELS,
+  SOFT_DELETE_OPERATIONS,
+  SOFT_DELETE_EXEMPT_MODELS,
+  applySoftDeleteFilter,
+  withSoftDelete,
+  type SoftDeleteOperation,
+} from "./soft-delete-filter";
 
 /**
  * Create a Prisma client extension that adds soft delete filtering
@@ -50,36 +56,19 @@ export function createSoftDeleteExtension() {
     name: "soft-delete",
     query: SOFT_DELETE_MODELS.reduce((acc, model) => {
       const modelKey = model.charAt(0).toLowerCase() + model.slice(1);
-      (acc as any)[modelKey] = {
-        findMany({ args, query }: { args: Record<string, unknown>; query: (args: Record<string, unknown>) => Promise<unknown> }) {
-          args.where = withSoftDelete(args);
-          return query(args);
-        },
-        findFirst({ args, query }: { args: Record<string, unknown>; query: (args: Record<string, unknown>) => Promise<unknown> }) {
-          args.where = withSoftDelete(args);
-          return query(args);
-        },
-        findFirstOrThrow({ args, query }: { args: Record<string, unknown>; query: (args: Record<string, unknown>) => Promise<unknown> }) {
-          args.where = withSoftDelete(args);
-          return query(args);
-        },
-        findUnique({ args, query }: { args: Record<string, unknown>; query: (args: Record<string, unknown>) => Promise<unknown> }) {
-          // findUnique uses { where: { id } } format - merge deletedAt into existing where
-          if (args.where) {
-            args.where = {
-              ...args.where,
-              deletedAt: null,
-            };
-          } else {
-            args.where = { deletedAt: null };
-          }
-          return query(args);
-        },
-        count({ args, query }: { args: Record<string, unknown>; query: (args: Record<string, unknown>) => Promise<unknown> }) {
-          args.where = withSoftDelete(args);
-          return query(args);
-        },
-      };
+      const operations: Record<string, unknown> = {};
+
+      for (const operation of SOFT_DELETE_OPERATIONS) {
+        operations[operation] = ({
+          args,
+          query,
+        }: {
+          args: Record<string, unknown>;
+          query: (args: Record<string, unknown>) => Promise<unknown>;
+        }) => query(applySoftDeleteFilter(operation as SoftDeleteOperation, args));
+      }
+
+      (acc as any)[modelKey] = operations;
       return acc;
     }, {} as any),
   });
