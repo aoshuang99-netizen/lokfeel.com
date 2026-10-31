@@ -14,6 +14,13 @@ import {
   recordInvoicePayment,
   type PaymentRecordPort,
 } from "@/lib/stripe/invoice-payment-record";
+import {
+  decideCheckoutGrant,
+  recordCheckoutPayment,
+  subscriptionDataFor,
+  type CheckoutPaymentPort,
+  type CheckoutSessionLike,
+} from "@/lib/stripe/checkout-grant";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -63,6 +70,19 @@ export async function POST(request: NextRequest) {
         await handleCheckoutCompleted(session);
         break;
       }
+      // 异步支付方式（SEPA / 银行转账 …）的钱**晚到**：`completed` 先以
+      // `payment_status:"unpaid"` 到达并被跳过，到账后由下面这个事件补授权。
+      // 缺了它，异步支付的用户付了钱却永远拿不到 Premium。
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await handleCheckoutCompleted(session);
+        break;
+      }
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await handleAsyncPaymentFailed(session);
+        break;
+      }
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
@@ -101,74 +121,89 @@ export async function POST(request: NextRequest) {
 }
 
 // ═══ Checkout Completed — Grant Premium ═════════════════════
+// 授权与记账的判定全部交给 `checkout-grant.ts`（纯函数，可单测）。
+// 这里只做 DB 写入，**不再**自己拼金额/周期，以免与发票链路写出两套口径。
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const userId = session.metadata?.userId;
-  const plan = session.metadata?.plan as "PREMIUM_MONTHLY" | "PREMIUM_YEARLY" | undefined;
+  const outcome = decideCheckoutGrant(session as unknown as CheckoutSessionLike);
 
-  if (!userId) {
-    console.error("[Webhook] No userId in checkout session metadata");
+  if (outcome.kind === "skip") {
+    if (outcome.reason === "no-user") {
+      console.error("[Webhook] No userId in checkout session metadata:", session.id);
+    } else {
+      // unpaid 不是错误：异步支付方式的正常第一跳，等 async_payment_succeeded。
+      console.log(
+        `[Webhook] Checkout ${session.id} not settled yet (payment_status=${session.payment_status}); awaiting async payment`
+      );
+    }
     return;
   }
 
-  const customerId = session.customer as string;
-  const subscriptionId = session.subscription as string;
-
-  // ═══ Plan perks ═══
-  const planPerks: Record<string, { weeklyLimit: number; canInitiateChat: boolean; canViewFullProfile: boolean }> = {
-    PREMIUM_MONTHLY: { weeklyLimit: 5, canInitiateChat: true, canViewFullProfile: true },
-    PREMIUM_YEARLY: { weeklyLimit: 5, canInitiateChat: true, canViewFullProfile: true },
-  };
-
-  const perks = planPerks[plan || "PREMIUM_MONTHLY"];
-  const effectivePlan = plan || "PREMIUM_MONTHLY";
+  const { grant } = outcome;
 
   // ═══ Upsert subscription ═══
-  const existingSub = await db.subscription.findFirst({ where: { userId } });
+  const existingSub = await db.subscription.findFirst({ where: { userId: grant.userId } });
+  // 同套餐重复事件（Stripe at-least-once 重投）不再重复发通知；
+  // 升级/换套餐仍然会通知。
+  const alreadyOnThisPlan =
+    existingSub?.status === "ACTIVE" && existingSub?.plan === grant.plan;
 
-  const subData = {
-    plan: effectivePlan as "PREMIUM_MONTHLY" | "PREMIUM_YEARLY",
-    status: "ACTIVE" as const,
-    stripeCustomerId: customerId,
-    stripeSubscriptionId: subscriptionId || undefined,
-    weeklyMatchLimit: perks.weeklyLimit,
-    canInitiateChat: perks.canInitiateChat,
-    canViewFullProfile: perks.canViewFullProfile,
-    startsAt: new Date(),
-    stripeCurrentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    cancelledAt: null,
-  };
+  const subData = subscriptionDataFor(grant);
 
   if (existingSub) {
-    await db.subscription.update({
-      where: { id: existingSub.id },
-      data: subData,
-    });
-    console.log(`[Webhook] Updated subscription for user ${userId} → ${effectivePlan}`);
+    await db.subscription.update({ where: { id: existingSub.id }, data: subData });
+    console.log(`[Webhook] Updated subscription for user ${grant.userId} → ${grant.plan}`);
   } else {
-    await db.subscription.create({ data: { userId, ...subData } });
-    console.log(`[Webhook] Created subscription for user ${userId} → ${effectivePlan}`);
+    await db.subscription.create({ data: { userId: grant.userId, ...subData } });
+    console.log(`[Webhook] Created subscription for user ${grant.userId} → ${grant.plan}`);
   }
 
-  // ═══ Create payment record ═══
-  await db.payment.create({
-    data: {
-      userId,
-      stripePaymentIntentId: (session.payment_intent as string) || undefined,
-      amount: (session.amount_total || 0) / 100,
-      currency: session.currency || "usd",
-      status: "SUCCEEDED",
-      description: `LokFee! ${effectivePlan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium`,
-    },
-  });
+  // ═══ Payment record ═══
+  // 订阅模式的记账权归 `invoice.payment_succeeded`（带 PI、有唯一键判重），
+  // 这里 defer；只有一次性支付才在此落账。详见 checkout-grant.ts 的 B-10 注释。
+  const paymentDescription = `LokFee! ${grant.plan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium`;
+  const recorded = await recordCheckoutPayment(
+    { payments: db.payment as unknown as CheckoutPaymentPort },
+    grant,
+    paymentDescription
+  );
+
+  if (recorded.action === "deferred-to-invoice") {
+    console.log(
+      `[Webhook] Payment for ${session.id} deferred to invoice ${recorded.invoiceId} (avoids double counting)`
+    );
+  }
 
   // ═══ Notification ═══
+  if (!alreadyOnThisPlan) {
+    await db.notification.create({
+      data: {
+        userId: grant.userId,
+        type: "SYSTEM_ANNOUNCEMENT",
+        title: "Premium Activated! 🎉",
+        body: `Your LokFee! ${grant.plan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium is now active. Enjoy unlimited matching!`,
+        data: JSON.stringify({ plan: grant.plan }),
+      },
+    });
+  }
+}
+
+// ═══ Async payment failed ═══════════════════════════════════
+// 异步支付的第二跳是「失败」时，`checkout.session.completed` 早已被跳过，
+// 因此这里不降权（本来就没授权），只通知用户去换个付款方式。
+async function handleAsyncPaymentFailed(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId;
+  if (!userId) {
+    console.warn("[Webhook] Async payment failed without userId:", session.id);
+    return;
+  }
+
   await db.notification.create({
     data: {
       userId,
-      type: "SYSTEM_ANNOUNCEMENT",
-      title: "Premium Activated! 🎉",
-      body: `Your LokFee! ${effectivePlan === "PREMIUM_YEARLY" ? "Yearly" : "Monthly"} Premium is now active. Enjoy unlimited matching!`,
-      data: JSON.stringify({ plan: effectivePlan }),
+      type: "SUBSCRIPTION_EXPIRED",
+      title: "Payment Failed",
+      body: "We could not complete your payment. Please try again with another payment method to activate Premium.",
+      data: JSON.stringify({ sessionId: session.id, reason: "async_payment_failed" }),
     },
   });
 }
