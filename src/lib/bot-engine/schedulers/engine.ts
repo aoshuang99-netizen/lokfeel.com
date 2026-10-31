@@ -185,6 +185,37 @@ export class BotEngine {
     }
   }
 
+  // ─── Serverless Entry Points (B-6) ───────────────────────
+
+  /**
+   * 加载 Bot 配置（幂等）。供 serverless 路由在没有 `start()` 的情况下使用。
+   *
+   * 为什么需要它：`botConfigs` 只在 `start()` → `loadBotUsers()` 内填充，
+   * 而 serverless 下**不应**调用 `start()`（内部 setInterval 不可靠，且首调后
+   * `isRunning=true` 会让后续请求直接 return）。因此必须有一个独立的、
+   * 不启动定时器的加载入口。
+   *
+   * @returns 当前已加载的 Bot 数量
+   */
+  async ensureBotsLoaded(): Promise<number> {
+    assertBotEnabled();
+    if (this.botConfigs.size === 0) {
+      await this.loadBotUsers();
+    }
+    return this.botConfigs.size;
+  }
+
+  /**
+   * 执行**一次** tick（不启动定时器、不置 `isRunning`）。
+   *
+   * ⚠️ 这会真实写库（改写 Bot 在线状态、按策略发送消息 / 建立匹配）。
+   * 调用方必须自己确认灰度与开关，路由层默认由 `BOT_ENGINE_TICK_ENABLED` 把关。
+   */
+  async tickOnce(): Promise<void> {
+    assertBotEnabled();
+    await this.tick();
+  }
+
   // ─── Online Status Management ────────────────────────────
 
   private async processOnlineTransitions(now: Date): Promise<void> {
