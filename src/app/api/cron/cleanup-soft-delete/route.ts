@@ -115,15 +115,21 @@ async function handleCleanup(request: NextRequest) {
       (success ? "" : ` | FAILED models: ${failed.map((f) => f.model).join(", ")}`)
   );
 
-  // success:false 让外部监控能从响应体识别部分失败（此前恒为 true，属监控盲区）
-  return NextResponse.json({
-    success,
-    cutoffDate: cutoffDate.toISOString(),
-    results,
-    totalDeleted,
-    failed,
-    timestamp: new Date().toISOString(),
-  });
+  // success:false 让外部监控能从响应体识别部分失败（此前恒为 true，属监控盲区）。
+  // B-5a：失败时同时返回 HTTP 500 —— 两套调度器（netlify/functions/cron-runner.ts
+  // 只记录 res.status；deploy/selfhost/cron/run-cron.sh 仅 2xx 判成功）都只看状态码，
+  // 仅靠响应体无法触发告警。
+  return NextResponse.json(
+    {
+      success,
+      cutoffDate: cutoffDate.toISOString(),
+      results,
+      totalDeleted,
+      failed,
+      timestamp: new Date().toISOString(),
+    },
+    { status: success ? 200 : 500 }
+  );
 }
 
 // Vercel Cron manifest (add to vercel.json):
