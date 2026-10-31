@@ -18,6 +18,7 @@ import {
   MAX_CONSENT_NODES,
   MAX_NODE_ITEMS,
   MAX_SPEC_NOTES,
+  MISSION_MIN,
   OUTCOME_LEVELS,
   WorkspaceSpecSchema,
   WORKSPACE_SPEC_VERSION,
@@ -29,6 +30,7 @@ import {
   missionDraftFromSpec,
   type WorkspaceSpec,
 } from '@/lib/workspace-spec'
+import { LIMITS } from '@/lib/connection/mission-input'
 
 /** 最小可过校验的草稿 spec（与编译器产出的形态一致）。 */
 function draftSpec(over: Partial<WorkspaceSpec> = {}): WorkspaceSpec {
@@ -449,5 +451,45 @@ describe('missionDraftFromSpec', () => {
     intent.data.expiresAt = new Date(Date.now() + 86_400_000).toISOString()
     const d = missionDraftFromSpec(spec)
     expect(d.body?.expiresAt).toBe(intent.data.expiresAt)
+  })
+})
+
+// ── V19-85 · 前后端校验规则一致性（执行令 Batch 附加要求）──────────────────
+// MISSION_MIN 此前是手抄数字；现改为从服务端 LIMITS 派生（不可能漂移）。
+// 本测试守住「派生关系」本身：若有人改回手抄字面量或 LIMITS 语义变化，这里即红。
+describe('MISSION_MIN · 与服务端 LIMITS 同源（V19-85）', () => {
+  it('MISSION_MIN 逐项等于服务端 LIMITS 对应下限', () => {
+    expect(MISSION_MIN.goal).toBe(LIMITS.goalMin)
+    expect(MISSION_MIN.offer).toBe(LIMITS.offerMin)
+    expect(MISSION_MIN.successCriteria).toBe(LIMITS.successCriteriaMin)
+  })
+
+  it('下限语义与执行令要求一致（goal≥8 / offer≥1 / successCriteria≥5）', () => {
+    expect(LIMITS.goalMin).toBe(8)
+    expect(LIMITS.offerMin).toBe(1)
+    expect(LIMITS.successCriteriaMin).toBe(5)
+  })
+
+  it('边界复核：恰好达到下限被放行，判据差 1 字被拒绝（与服务端同门）', () => {
+    const spec = (goal: string, offer: string, sc: string) => {
+      const s = draftSpec()
+      const intent = s.nodes[0]
+      if (intent.type !== 'intent') throw new Error('夹具错误')
+      intent.data.goal = goal
+      intent.data.offer = offer
+      intent.data.successCriteria = sc.length ? [sc] : []
+      return s
+    }
+    const ok = missionDraftFromSpec(
+      spec('x'.repeat(LIMITS.goalMin), 'y'.repeat(LIMITS.offerMin), 'z'.repeat(LIMITS.successCriteriaMin)),
+    )
+    expect(ok.body).not.toBeNull()
+    expect(ok.missing).toEqual([])
+
+    const short = missionDraftFromSpec(
+      spec('x'.repeat(LIMITS.goalMin), 'y'.repeat(LIMITS.offerMin), 'z'.repeat(LIMITS.successCriteriaMin - 1)),
+    )
+    expect(short.body).toBeNull()
+    expect(short.missing.join('；')).toContain('成功判据')
   })
 })

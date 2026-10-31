@@ -124,6 +124,8 @@ export default function ConsoleDashboardPage() {
   if (overview.isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-foreground-muted py-10">
+        {/* 加载/错误分支也保持标题层完整（屏幕阅读器不因状态分支而丢失页面身份）。 */}
+        <h1 className="sr-only">社群总览</h1>
         <RefreshCw className="w-4 h-4 animate-spin" />
         正在读取队列状态…
       </div>
@@ -136,6 +138,7 @@ export default function ConsoleDashboardPage() {
     const denied = /permission|forbidden|403/i.test(overview.error ?? '')
     return (
       <div className="rounded-2xl border border-card-border bg-background-secondary p-6">
+        <h1 className="sr-only">社群总览</h1>
         <div className="flex items-center gap-2 text-warning mb-2">
           <AlertTriangle className="w-4 h-4" />
           <p className="text-sm font-medium">{denied ? '权限不足' : '暂时读不到队列状态'}</p>

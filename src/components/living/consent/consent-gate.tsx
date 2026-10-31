@@ -372,11 +372,12 @@ function FieldRow({
   return (
     <tr className={['border-t border-lf-line', selected ? 'bg-lf-signal-soft' : ''].join(' ')}>
       <th scope="row" className="px-3 py-2 text-left align-top font-normal">
+        {/* V19-85 触控修复：min-h-6 = 24px（WCAG 2.5.8 最低目标尺寸）。 */}
         <button
           type="button"
           aria-pressed={selected}
           onClick={() => onSelect(selected ? null : row.key)}
-          className="lf-focus-ring rounded-lf text-left text-sm text-lf-text"
+          className="lf-focus-ring inline-flex min-h-6 items-center rounded-lf text-left text-sm text-lf-text"
         >
           {row.label}
           {row.sensitive && (

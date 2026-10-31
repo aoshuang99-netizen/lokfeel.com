@@ -335,7 +335,7 @@ console.log('— A-04：拒绝 —');
     input: { goal: '为拒绝路径准备：把合作目标整理成结构化工作区草稿。' },
     subjectLabel: 'B4 待拒绝',
   });
-  const r = await req(`/api/v1/agents/runs/${R7.run?.id}/reject`, { method: 'POST', body: '{}' });
+  await req(`/api/v1/agents/runs/${R7.run?.id}/reject`, { method: 'POST', body: '{}' });
   const row = await dbOne(`SELECT status FROM "AgentRun" WHERE id=?`, [R7.run?.id]);
   const appr = await dbOne(`SELECT decision, "deciderRole" FROM "AgentApproval" WHERE runId=?`, [R7.run?.id]);
   const audit = await auditCount('agent.run.rejected', R7.run?.id ?? '');

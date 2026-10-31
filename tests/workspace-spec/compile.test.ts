@@ -14,6 +14,7 @@ import {
   classifyIntent,
   compileWorkspaceSpec,
   extractDraftFields,
+  missionDraftFromSpec,
   supportedIntentHints,
 } from '@/lib/workspace-spec'
 import { RESERVED_NODE_TYPES, WorkspaceSpecSchema } from '@/lib/workspace-spec'
@@ -174,5 +175,70 @@ describe('compileWorkspaceSpec', () => {
     const snapshot = String(raw)
     compileWorkspaceSpec(raw)
     expect(raw).toBe(snapshot)
+  })
+})
+
+// ── V19-85 · 对价抽取回归（执行令 Batch 附加要求）──────────────────────────
+// 五条红线：模糊描述不得误判为明确 offer / 无 offer 不得自动生成虚假对价 /
+//          用户修改描述后可以重新编译 / 前后端校验规则一致 / 重复提交不产第二个 Mission
+//          （最后一条在 API 层由 v198-agent-consent-outcome.mjs O-01 幂等键覆盖）。
+describe('extractDraftFields · 模糊措辞守卫（V19-85）', () => {
+  it('模糊意向句（"看情况可以给…"）不得误判为明确 offer', () => {
+    const r = extractDraftFields('30 天内对接 5 家渠道伙伴。看情况可以给一些资源。')
+    expect(r.offer).toBeUndefined()
+  })
+
+  it('含模糊词的"提供"句同样不算 offer（关键词命中≠承诺）', () => {
+    const r = extractDraftFields('30 天内对接 5 家渠道伙伴。到时候也许能提供一点支持。')
+    expect(r.offer).toBeUndefined()
+  })
+
+  it('模糊句在前、具体承诺句在后 → 跳过模糊句、抽中具体句', () => {
+    const r = extractDraftFields('看情况可以给一些资源。我们提供项目预算与联合品牌支持。30 天内对接 5 家渠道伙伴')
+    expect(r.offer).toContain('联合品牌')
+    expect(r.offer).not.toContain('看情况')
+  })
+
+  it('明确承诺句仍被正常抽取（守卫不误伤）', () => {
+    const r = extractDraftFields('30 天内对接 5 家渠道伙伴。我们愿意承担全部活动经费。')
+    expect(r.offer).toContain('经费')
+  })
+})
+
+describe('missionDraftFromSpec · 修改描述后可重新编译（V19-85）', () => {
+  const withOffer = '30 天内促成 20 次渠道合作，我们提供预算与渠道资源作为对价'
+
+  it('无 offer → body 为 null，缺口说明里点名对价（不编虚假对价）', () => {
+    const r = compileWorkspaceSpec('30 天内促成 20 次渠道合作')
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    const draft = missionDraftFromSpec(r.spec)
+    expect(draft.body).toBeNull()
+    expect(draft.missing.join('；')).toContain('对价')
+  })
+
+  it('用户补写对价后重新编译 → offer 出现且 body 可用（不是死路）', () => {
+    const before = compileWorkspaceSpec('30 天内促成 20 次渠道合作')
+    expect(before.ok).toBe(true)
+    if (!before.ok) return
+    expect(missionDraftFromSpec(before.spec).body).toBeNull()
+
+    // 用户按缺口提示修改了描述（同一意图、同一编译器）→ 重新编译
+    const after = compileWorkspaceSpec(withOffer)
+    expect(after.ok).toBe(true)
+    if (!after.ok) return
+    const intent = after.spec.nodes.find((n) => n.type === 'intent')
+    expect(intent && 'offer' in intent.data ? (intent.data as { offer?: string }).offer : undefined).toBeDefined()
+    const draft = missionDraftFromSpec(after.spec)
+    expect(draft.body).not.toBeNull()
+    if (draft.body) {
+      expect(draft.body.offer).toContain('预算')
+      expect(draft.missing).toEqual([])
+    }
+  })
+
+  it('重新编译是确定性的：修改前后各自的输出与重复编译一致', () => {
+    expect(compileWorkspaceSpec('30 天内促成 20 次渠道合作')).toEqual(compileWorkspaceSpec('30 天内促成 20 次渠道合作'))
+    expect(compileWorkspaceSpec(withOffer)).toEqual(compileWorkspaceSpec(withOffer))
   })
 })

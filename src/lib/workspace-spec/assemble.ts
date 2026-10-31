@@ -45,6 +45,7 @@ import {
   type WorkspaceSpec,
 } from './schema'
 import { z } from 'zod'
+import { LIMITS } from '@/lib/connection/mission-input'
 
 // ── 与契约同源的上限（改一处必须改两处，故在此显式声明并断言） ──────────────
 /** `WorkspaceSpec.nodes` 的上限。 */
@@ -438,8 +439,18 @@ export function mergeTenantNodes(spec: WorkspaceSpec, assembly: TenantAssembly):
 //    若"凑一个"默认值发出去，就是在**凭空发明用户没说的对价** ——
 //    所以这里**不补默认值**，而是把缺什么原样报出来，由调用方禁用按钮并说明。
 
-/** 与服务端 `LIMITS`（`src/lib/connection/mission-input.ts`）同源的下限。 */
-export const MISSION_MIN = { goal: 8, offer: 1, successCriteria: 5 } as const
+/**
+ * 与服务端 `LIMITS`（`src/lib/connection/mission-input.ts`）同源的下限。
+ *
+ * 🔴 V19-85 起不再手抄数字：直接从服务端 `LIMITS` **派生**，两处不可能漂移
+ *    （此前是手写的 `{goal:8, offer:1, successCriteria:5}`，服务端改 LIMITS 时
+ *    这里会静默失配 —— 前端认为可以创建、服务端 400，死路复活）。
+ */
+export const MISSION_MIN = {
+  goal: LIMITS.goalMin,
+  offer: LIMITS.offerMin,
+  successCriteria: LIMITS.successCriteriaMin,
+} as const
 
 export interface MissionCreateBody {
   goal: string

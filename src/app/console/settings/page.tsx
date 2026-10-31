@@ -225,6 +225,7 @@ export default function ConsoleSettingsPage() {
   if (org.isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-foreground-muted py-10">
+        <h1 className="sr-only">设置</h1>
         <RefreshCw className="w-4 h-4 animate-spin" />
         正在读取社群档案…
       </div>
@@ -234,6 +235,7 @@ export default function ConsoleSettingsPage() {
   if (org.error || !organization) {
     return (
       <div className="rounded-2xl border border-card-border bg-background-secondary p-6">
+        <h1 className="sr-only">设置</h1>
         <div className="flex items-center gap-2 text-warning mb-2">
           <AlertTriangle className="w-4 h-4" />
           <p className="text-sm font-medium">读不到社群档案</p>

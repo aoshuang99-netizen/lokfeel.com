@@ -229,11 +229,12 @@ function RunCard({
         ].join(' ')}
       >
         <div className="flex flex-wrap items-center gap-2">
+          {/* V19-85 触控修复：min-h-6 = 24px（WCAG 2.5.8 最低目标尺寸）。 */}
           <button
             type="button"
             aria-pressed={selected}
             onClick={() => onSelect(selected ? null : run.id)}
-            className="lf-focus-ring rounded-lf border border-lf-line px-1.5 py-0.5 text-[11px] text-lf-text"
+            className="lf-focus-ring inline-flex min-h-6 items-center rounded-lf border border-lf-line px-2 py-0.5 text-[11px] text-lf-text"
           >
             {run.skillLabel}
           </button>

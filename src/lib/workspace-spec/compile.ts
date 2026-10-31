@@ -210,10 +210,17 @@ export function extractDraftFields(input: string): {
   //    而此前的编译器**从不产出 offer**，UI 却提示"把缺的补进描述里再重新编译"——
   //    用户照做按钮依然禁用（实测死路）。句级抽取不伪造：原文没写就是 undefined，
   //    缺口说明照旧（与"不编默认对价"的既有纪律一致）。
+  // 🔴 模糊措辞守卫（V19-85 回归）：意向 ≠ 承诺。"看情况可以给一些资源"这类句子
+  //    只是模糊意向，若当 offer 抽出，`missionDraftFromSpec` 会放行「创建连接任务」——
+  //    等于替用户编了一个他没承诺的对价（正是"不伪造"纪律要防的事）。
+  //    命中模糊词的句子**跳过**（不终止：后面可能还有具体承诺句）。
+  const OFFER_WORD_RE = /提供|给予|付出|作为对价|换取|我们出|可以给|愿意出|承担/
+  const OFFER_VAGUE_RE =
+    /看情况|视情况|再说|再议|待定|暂定|到时候|不一定|不确定|也许|或许|尽量|酌情|考虑一下|如果方便|有需要的话|可能/
   const offerSentence = input
     .split(/[。；！？!?;\n]/)
     .map((s) => s.trim())
-    .find((s) => s.length >= 2 && /提供|给予|付出|作为对价|换取|我们出|可以给|愿意出|承担/.test(s))
+    .find((s) => s.length >= 2 && OFFER_WORD_RE.test(s) && !OFFER_VAGUE_RE.test(s))
 
   if (earliestDays !== null && earliestDays > 0 && earliestDays <= 365) {
     const d = new Date()
