@@ -164,6 +164,20 @@ export function transactionIdOf(obj: CreemObject): string | null {
   return str(obj.last_transaction_id) ?? str(obj.transaction_id)
 }
 
+/**
+ * checkout 对象 id（`chk_xxx`）。
+ *
+ * 首购入账的幂等键族是 `creem:checkout:<id>`（见 `idempotencyKeyOf`），
+ * 而 `refund.created` 的对象只带 `last_transaction_id`（`tran_xxx`）。
+ * 两个键族不同 ⇒ 退款单靠 tran 键永远找不到首购那笔账（B-8）。
+ */
+export function checkoutIdOf(obj: CreemObject): string | null {
+  const c = obj.checkout
+  if (typeof c === 'string') return c
+  if (c && typeof c === 'object') return str((c as CreemObject).id)
+  return str(obj.checkout_id)
+}
+
 export function userIdOf(obj: CreemObject): string | null {
   const meta = obj.metadata
   if (!meta || typeof meta !== 'object') return null

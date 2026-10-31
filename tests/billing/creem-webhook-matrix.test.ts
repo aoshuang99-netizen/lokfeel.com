@@ -237,7 +237,19 @@ describe('取消 / 过期', () => {
 
 describe('退款', () => {
   it('refund.created → 原账单翻 REFUNDED，订阅状态不动', async () => {
-    paymentFindFirst.mockResolvedValueOnce({ id: 'p_1', description: 'Creem checkout' })
+    // B-8 之后退款先按 `creem:refund:<id>` 去重、再按键族追原账单，
+    // 因此这里不能再"一次 mock 喂给所有查询"——按 where 分派，
+    // 顺带把「查的是哪个键」也断言出来（旧写法从不校验键，才让键族错配潜伏）。
+    const refundQueries: string[] = []
+    paymentFindFirst.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
+      if (typeof where.stripePaymentIntentId === 'string') {
+        refundQueries.push(where.stripePaymentIntentId)
+        return where.stripePaymentIntentId === 'creem:tran:tran_2'
+          ? { id: 'p_1', description: 'Creem checkout' }
+          : null
+      }
+      return null
+    })
 
     const res = await post({
       id: 'evt_refund',
@@ -246,6 +258,8 @@ describe('退款', () => {
     })
 
     expect(res.status).toBe(200)
+    expect(refundQueries).toContain('creem:refund:ref_1') // 幂等前缀
+    expect(refundQueries).toContain('creem:tran:tran_2') // 原单键族
     const update = paymentUpdate.mock.calls[0][0]
     expect(update.where.id).toBe('p_1')
     expect(update.data.status).toBe('REFUNDED')

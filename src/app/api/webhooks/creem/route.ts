@@ -9,6 +9,7 @@ import {
 } from "@/lib/payments/availability";
 import { paymentNotConfigured } from "@/lib/payments/not-configured";
 import {
+  checkoutIdOf,
   classifyCreemEvent,
   creemObjectOf,
   customerIdOf,
@@ -136,25 +137,122 @@ export async function POST(request: NextRequest) {
     }
 
     // ── 退款：只翻原账单，不改订阅状态（退一期不等于退订） ──
+    //
+    // B-8（P1）：原实现只用 `creem:tran:<tran>` 找原账单，而**首购**入账的键是
+    // `creem:checkout:<checkout id>` —— 两个键族不同，首购退款 100% 匹配不到，
+    // 只打一条 warn 就 200 返回：钱退出去了，账本仍 SUCCEEDED，报表照样算收入。
+    // 且退款分支提前 return，`isMonetaryKind('refund')` / `idempotencyKeyOf('refund')`
+    // 这两段**从来没被执行过**（死代码）⇒ 退款自身不落账、重放无法去重。
+    //
+    // 现在的顺序：先去重（`creem:refund:<id>`）→ 多键族追原账单（tran → checkout）
+    // → 金额可覆盖的最近一笔 SUCCEEDED 兜底 → 翻单 + 退款自身落账（负数）。
     if (kind === "refund") {
-      const tran = transactionIdOf(obj);
-      const key = tran ? `creem:tran:${tran}` : null;
-      if (key) {
-        const original = await db.payment.findFirst({ where: { stripePaymentIntentId: key } });
-        if (original) {
-          await db.payment.update({
-            where: { id: original.id },
-            data: {
-              status: "REFUNDED",
-              description: `${original.description ?? "Creem payment"} (refunded)`,
-            },
-          });
-          console.log(`[Creem Webhook] Payment ${original.id} marked REFUNDED`);
-        } else {
-          console.warn("[Creem Webhook] Refund without matching payment", { eventId, key });
+      const refundId = typeof obj.id === "string" && obj.id ? obj.id : null;
+      const refundKey = refundId ? `creem:refund:${refundId}` : null;
+
+      // ① 幂等：同一退款事件重放，什么都没发生过
+      if (refundKey) {
+        const alreadyRefunded = await db.payment.findFirst({
+          where: { stripePaymentIntentId: refundKey },
+        });
+        if (alreadyRefunded) {
+          console.log(`[Creem Webhook] Duplicate refund, already recorded: ${refundKey}`);
+          return NextResponse.json({ received: true, kind, duplicate: true });
         }
       }
-      return NextResponse.json({ received: true, kind, refunded: Boolean(tran) });
+
+      const refundAmount =
+        typeof obj.amount === "number" ? Math.abs(obj.amount) / 100 : 0;
+      const currency = typeof obj.currency === "string" ? obj.currency : "usd";
+      const tran = transactionIdOf(obj);
+      const checkoutId = checkoutIdOf(obj);
+
+      // ② 多键族追原账单（顺序即优先级：交易键最精确，checkout 键覆盖首购）
+      const candidateKeys = [
+        tran ? `creem:tran:${tran}` : null,
+        checkoutId ? `creem:checkout:${checkoutId}` : null,
+      ].filter((k): k is string => Boolean(k));
+
+      let original: { id: string; description: string | null } | null = null;
+      let matchedBy: string | null = null;
+      for (const key of candidateKeys) {
+        const found = await db.payment.findFirst({ where: { stripePaymentIntentId: key } });
+        if (found) {
+          original = found;
+          matchedBy = key;
+          break;
+        }
+      }
+
+      // ③ 兜底：该用户最近一笔「同币种、金额可覆盖本次退款」的成功账单。
+      //    只在退款金额已知时启用 —— 金额未知时宁可只记流出不猜测原单。
+      if (!original && refundAmount > 0) {
+        const found = await db.payment.findFirst({
+          where: {
+            userId,
+            status: "SUCCEEDED",
+            currency,
+            amount: { gte: refundAmount },
+          },
+          orderBy: { createdAt: "desc" },
+        });
+        if (found) {
+          original = found;
+          matchedBy = "fallback:latest-succeeded";
+        }
+      }
+
+      if (original) {
+        await db.payment.update({
+          where: { id: original.id },
+          data: {
+            status: "REFUNDED",
+            description: `${original.description ?? "Creem payment"} (refunded)`,
+          },
+        });
+        console.log(
+          `[Creem Webhook] Payment ${original.id} marked REFUNDED (matched by ${matchedBy})`,
+        );
+      } else {
+        console.warn("[Creem Webhook] Refund without matching payment", {
+          eventId,
+          tran,
+          checkoutId,
+          refundAmount,
+          userId,
+        });
+      }
+
+      // ④ 退款自身落账：负数金额 + REFUNDED。报表只聚合 SUCCEEDED，
+      //    翻单已把原账剔除，这里再记一笔是为了留下可审计的流出流水。
+      if (refundKey) {
+        await db.payment.create({
+          data: {
+            userId,
+            stripePaymentIntentId: refundKey,
+            amount: -refundAmount,
+            currency,
+            status: "REFUNDED",
+            description: `Creem refund${original ? ` (of ${original.id})` : ""}`,
+            metadata: JSON.stringify({
+              eventId,
+              eventType,
+              kind,
+              subId,
+              originalPaymentId: original?.id ?? null,
+              matchedBy,
+            }),
+          },
+        });
+        console.log(`[Creem Webhook] Refund recorded: ${refundKey} (-${refundAmount} ${currency})`);
+      }
+
+      return NextResponse.json({
+        received: true,
+        kind,
+        refunded: Boolean(original),
+        matchedBy,
+      });
     }
 
     // ── 乱序保护 ──
