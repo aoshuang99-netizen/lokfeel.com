@@ -73,6 +73,18 @@ export default async function globalSetup(): Promise<void> {
 
       try {
         await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded' });
+        // 🔴 必须等 React 水合完成再点提交（V19.8 · 本地取证踩坑）：
+        //    `domcontentloaded` 之后水合可能仍未完成 —— 此刻点击 submit 会走
+        //    **原生 GET 提交**（/login?email=…&password=…），永远等不到跳转，
+        //    三次重试全灭且症状像"登录坏了"。以 `__reactFiber*` 键挂上为准 ——
+        //    这正是 React 接管表单的那一刻（CI 上同样适用，只是平时更快碰不到）。
+        await page.waitForFunction(
+          () => {
+            const el = document.querySelector('#login-email');
+            return !!el && Object.keys(el).some((k) => k.startsWith('__reactFiber'));
+          },
+          { timeout: 20_000, polling: 200 },
+        );
         await page.fill('#login-email', email);
         await page.fill('#login-password', password);
         await page.click('button[type="submit"]');

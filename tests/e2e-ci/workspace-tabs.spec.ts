@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForHydration } from './lib/hydration';
 
 import { VIEWPORTS, assertMobileLayout } from './lib/measure';
 
@@ -48,6 +49,8 @@ test.describe('移动端 · /workspace 页签', () => {
         const nav = page.getByRole('navigation', { name: '工作区导航' });
         const tab = nav.getByRole('button', { name: view.label, exact: true });
         await expect(tab, `导航里应有「${view.label}」按钮`).toBeVisible();
+        // 🔴 点击前必须等水合（V19.8 踩坑）：否则点击走原生提交、视图不切换，aria-current 永远不来
+        await waitForHydration(page, '[aria-label="工作区导航"]');
 
         await tab.click();
 

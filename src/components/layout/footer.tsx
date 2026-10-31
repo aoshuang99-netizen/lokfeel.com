@@ -56,7 +56,8 @@ export default function Footer() {
             <div key={key}>
               {/* 无障碍：原为 h4，页面只有 h1 时构成 h1→h4 跳级（键盘/读屏审计实测）。
                   页脚栏目是 footer 内的一级分组，用 h2 才是正确的结构层级；样式由 class 决定，视觉不变。 */}
-              <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase mb-4">
+              {/* V19.8：white/40 只有 3.77:1（axe color-contrast 判红）→ white/60 ≈ 6.9:1 */}
+              <h2 className="text-[11px] font-bold tracking-widest text-white/60 uppercase mb-4">
                 {section.title}
               </h2>
               <ul className="space-y-2 list-none p-0 m-0">
@@ -88,7 +89,8 @@ export default function Footer() {
 
         {/* Bottom bar — 仅版权，不重复 Follow Us 栏 */}
         <div className="pt-8 border-t border-white/10 flex items-center justify-center">
-          <p className="text-[13px] text-white/40">
+          {/* V19.8：同上，white/40 → white/60（对比度 3.78 → ≈6.9:1） */}
+          <p className="text-[13px] text-white/60">
             &copy; 2026 LokFeel Inc. All rights reserved.
           </p>
         </div>

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { waitForHydration } from './lib/hydration';
 
 /**
  * 注册表单的可访问性（V19.5 · WB19-53）
@@ -47,6 +48,7 @@ async function submitEmpty(page: Page) {
 test.describe('注册表单 · 字段语义', () => {
   test('每个可见输入/下拉都有可访问名，且描述引用不悬空', async ({ page }) => {
     await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await waitForHydration(page, '#reg-name');
 
     // 用 Playwright 的「按可访问名找得到」当断言：名字为空时这里直接超时
     await expect(page.getByRole('textbox', { name: /Name/i })).toBeVisible();
@@ -63,6 +65,7 @@ test.describe('注册表单 · 字段语义', () => {
 
   test('密码规则是常驻帮助文本，不是只在 placeholder 里', async ({ page }) => {
     await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await waitForHydration(page, '#reg-name');
 
     const password = page.getByLabel(/Password/i);
     const describedby = (await password.getAttribute('aria-describedby')) ?? '';
@@ -75,6 +78,7 @@ test.describe('注册表单 · 字段语义', () => {
 
   test('空表单提交：焦点落到姓名字段，且该字段被标记 aria-invalid', async ({ page }) => {
     await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await waitForHydration(page, '#reg-name');
     await submitEmpty(page);
 
     await expect(page.getByLabel(/Name/i)).toBeFocused();
@@ -91,6 +95,7 @@ test.describe('注册表单 · 字段语义', () => {
 
   test('填了姓名/邮箱/密码但没填生日：焦点落到年份下拉，三个下拉都标错误', async ({ page }) => {
     await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await waitForHydration(page, '#reg-name');
 
     await page.getByLabel(/Name/i).fill('Audit User');
     await page.getByLabel(/Email/i).fill('audit.v195@example.invalid');
@@ -107,6 +112,7 @@ test.describe('注册表单 · 字段语义', () => {
 
   test('未勾选条款：错误挂在勾选框自己身上，而不是页面顶部横幅', async ({ page }) => {
     await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await waitForHydration(page, '#reg-name');
 
     await page.getByLabel(/Name/i).fill('Audit User');
     await page.getByLabel(/Email/i).fill('audit.v195@example.invalid');
@@ -127,6 +133,7 @@ test.describe('注册表单 · 字段语义', () => {
 
   test('改动了出错的字段，错误立刻撤掉（不长期挂着红字）', async ({ page }) => {
     await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await waitForHydration(page, '#reg-name');
     await submitEmpty(page);
     await expect(page.locator('#reg-name-error')).toBeVisible();
 
@@ -149,6 +156,7 @@ test.describe('注册表单 · 多步流程', () => {
     });
 
     await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await waitForHydration(page, '#reg-name');
     await page.getByLabel(/Name/i).fill('Audit User');
     await page.getByLabel(/Email/i).fill('audit.v195@example.invalid');
     await page.getByLabel(/Password/i).fill(PASSWORD);
